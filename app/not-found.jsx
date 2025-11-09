@@ -23,11 +23,11 @@ const modern404 = () => {
   // Quick links to help users navigate
   const quickLinks = [
     { name: 'Home', href: '/', icon: FiHome, description: 'Return to homepage' },
-    { name: 'Academics', href: '/academics', icon: FiBook, description: 'Explore academic programs' },
-    { name: 'Gallery', href: '/gallery', icon: IoLibraryOutline, description: 'View school gallery' },
-    { name: 'Admissions', href: '/admissions', icon: IoPeopleOutline, description: 'Admission process' },
-    { name: 'Events', href: '/events', icon: FiCalendar, description: 'Upcoming events' },
-    { name: 'Contact', href: '/contact', icon: FiMail, description: 'Get in touch' },
+    { name: 'Academics', href: '/pages/academics', icon: FiBook, description: 'Explore academic programs' },
+    { name: 'Gallery', href: '/pages/gallery', icon: IoLibraryOutline, description: 'View school gallery' },
+    { name: 'Admissions', href: '/pages/admissions', icon: IoPeopleOutline, description: 'Admission process' },
+    { name: 'Events', href: '/pages/eventsandnews', icon: FiCalendar, description: 'Upcoming events' },
+    { name: 'Contact', href: '/pages/contact', icon: FiMail, description: 'Get in touch' },
   ];
 
   // Fun school-related error messages

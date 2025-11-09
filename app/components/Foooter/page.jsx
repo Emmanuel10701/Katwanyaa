@@ -29,16 +29,16 @@ export default function ModernFooter() {
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { name: 'About Us', href: '/about' },
-    { name: 'Academics', href: '/academics' },
-    { name: 'Admissions', href: '/admissions' },
-    { name: 'Campus Life', href: '/campus-life' },
-    { name: 'Sports', href: '/sports' },
-    { name: 'News & Events', href: '/news' },
+    { name: 'About Us', href: '/pages/AboutUs' },
+    { name: 'Academics', href: '/pages/academics' },
+    { name: 'Admissions', href: '/pages/admissions' },
+    { name: 'Assigments', href: '/pages/assigments' },
+    { name: 'Contact ', href: '/pages/contact' },
+    { name: 'News & Events', href: '/pages/eventsandnews' },
   ];
 
   const resources = [
-    { name: 'Student Portal', href: '/portal' },
+    { name: 'Student Portal', href: '/pages/' },
     { name: 'Career Counseling', href: '/counseling' },
     { name: 'School Policies', href: '/policies' },
     { name: 'Guidance & Counseling', href: '/guidance' },
@@ -705,10 +705,10 @@ export default function ModernFooter() {
               <h3 className="text-xl font-bold mb-3">Sitemap</h3>
               <div className="prose max-h-72 overflow-auto text-sm text-gray-700 mb-4">
                 <ul className="list-disc pl-5">
-                  <li><a href="/about" className="text-blue-600">About</a></li>
-                  <li><a href="/admissions" className="text-blue-600">Admissions</a></li>
-                  <li><a href="/academics" className="text-blue-600">Academics</a></li>
-                  <li><a href="/news" className="text-blue-600">News & Events</a></li>
+                  <li><a href="/pages/AboutUs" className="text-blue-600">About</a></li>
+                  <li><a href="/pages/admissions" className="text-blue-600">Admissions</a></li>
+                  <li><a href="/pages/academics" className="text-blue-600">Academics</a></li>
+                  <li><a href="/pages/eventsandnews" className="text-blue-600">News & Events</a></li>
 
                 </ul>
 
