@@ -1,0 +1,24 @@
+
+
+
+### Register user (POST)
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+  "name": "John Mrcos",
+  "email": "john@tokatwanyaa.ac.ke",
+  "password": "SecurePass123!",
+  "phone": "+254712345678",
+  "role": "TEACHER"
+}
+
+
+
+###login testing 
+POST http://localhost:3000/api/login
+Content-Type: application/json
+{
+  "email": "john.doe@tokatwanyaa.ac.ke",
+  "password": "SecurePass123!"
+}

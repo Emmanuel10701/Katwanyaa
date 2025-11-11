@@ -2,7 +2,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import ClientLayoutWrapper from "./-app"; // 👈 New client wrapper
 
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -21,10 +20,10 @@ export const metadata = {
     "Official website for Katwanyaa High School. Discover our academic programs, vibrant community, and achievements in STEAM and co-curricular activities.",
   icons: {
     icon: [
-      { url: "./public/logo.jpg", type: "image/jpg", sizes: "32x32" },
-      { url: "/public/logo.png", type: "image/png", sizes: "32x32" },
+      { url: "../public/logo.jpg", type: "image/jpg", sizes: "32x32" },
+      { url: "../public/logo.png", type: "image/png", sizes: "32x32" },
     ],
-    apple: "./public/logo.jpg",
+    apple: "../public/logo.jpg",
   },
 };
 
