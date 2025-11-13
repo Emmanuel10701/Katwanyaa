@@ -210,5 +210,28 @@ CREATE TABLE `Student` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `SchoolInfo` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `videoTour` VARCHAR(191) NULL,
+    `videoType` VARCHAR(191) NULL,
+    `studentCount` INTEGER NOT NULL,
+    `staffCount` INTEGER NOT NULL,
+    `feesBoarding` DOUBLE NOT NULL,
+    `feesDay` DOUBLE NOT NULL,
+    `feesDistribution` JSON NOT NULL,
+    `openDate` DATETIME(3) NOT NULL,
+    `closeDate` DATETIME(3) NOT NULL,
+    `subjects` JSON NOT NULL,
+    `departments` JSON NOT NULL,
+    `curriculumPDF` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `PasswordReset` ADD CONSTRAINT `PasswordReset_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

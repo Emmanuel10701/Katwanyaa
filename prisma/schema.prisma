@@ -228,3 +228,23 @@ model Student {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 }
+
+model SchoolInfo {
+  id               Int       @id @default(autoincrement())
+  name             String
+  description      String?
+  videoTour        String?   // URL or local path
+  videoType        String?   // "youtube" | "file"
+  studentCount     Int
+  staffCount       Int
+  feesBoarding     Float
+  feesDay          Float
+  feesDistribution Json
+  openDate         DateTime
+  closeDate        DateTime
+  subjects         Json
+  departments      Json
+  curriculumPDF    String?   // uploaded curriculum PDF path
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
