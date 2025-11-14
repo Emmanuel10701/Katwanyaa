@@ -2,6 +2,8 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { 
   FiUser, 
   FiLock, 
@@ -16,18 +18,16 @@ import {
   FiBook,
   FiCalendar,
   FiMail,
-  FiPhone,
-  FiMapPin
+  FiPhone
 } from 'react-icons/fi';
 import { 
   IoRocketOutline,
-  IoStatsChartOutline,
-  IoPeopleOutline
+  IoStatsChartOutline
 } from 'react-icons/io5';
 
-export default function AdminLogin() { // Added component function
+export default function AdminLogin() {
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     rememberMe: false
   });
@@ -42,7 +42,6 @@ export default function AdminLogin() { // Added component function
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -51,14 +50,14 @@ export default function AdminLogin() { // Added component function
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
     }
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
     }
     
     setErrors(newErrors);
@@ -72,13 +71,41 @@ export default function AdminLogin() { // Added component function
     
     setIsLoading(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // Handle successful login here
-      console.log('Login successful', formData);
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        toast.success('🎉 Login successful! Redirecting...');
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        router.push('/MainDashboard');
+      } else {
+        throw new Error(data.message || 'Login failed');
+      }
+      
     } catch (error) {
-      setErrors({ submit: 'Invalid credentials. Please try again.' });
+      console.error('Login error:', error);
+      toast.error(`❌ ${error.message}`);
+      setErrors({ submit: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +143,19 @@ export default function AdminLogin() { // Added component function
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Animated Background Elements */}
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+      
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"
@@ -135,7 +174,6 @@ export default function AdminLogin() { // Added component function
           transition={{ duration: 8, repeat: Infinity, delay: 2 }}
         />
         
-        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
@@ -147,7 +185,6 @@ export default function AdminLogin() { // Added component function
       <div className="relative min-h-screen flex items-center justify-center p-6">
         <div className="container mx-auto max-w-7xl">
           <div className="grid lg:grid-cols-2 gap-12 items-stretch">
-            {/* Left Side - Login Form */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -155,14 +192,12 @@ export default function AdminLogin() { // Added component function
               className="flex justify-center"
             >
               <div className="w-full max-w-lg">
-                {/* Login Card - Increased height to match right side */}
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-10 shadow-2xl h-full flex flex-col justify-center min-h-[700px]" // Increased height
+                  className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-10 shadow-2xl h-full flex flex-col justify-center min-h-[700px]"
                 >
-                  {/* Header */}
                   <div className="text-center mb-10">
                     <motion.div
                       initial={{ scale: 0 }}
@@ -180,38 +215,36 @@ export default function AdminLogin() { // Added component function
                     </p>
                   </div>
 
-                  {/* Login Form */}
                   <form onSubmit={handleSubmit} className="space-y-8 flex-1 flex flex-col justify-center">
-                    {/* Username Field */}
                     <div className="space-y-3">
                       <label className="flex items-center gap-3 text-white/80 text-base font-medium">
-                        <FiUser className="text-blue-400 text-lg" />
-                        Username
+                        <FiMail className="text-blue-400 text-lg" />
+                        Email
                       </label>
                       <div className="relative">
                         <input
-                          type="text"
-                          name="username"
-                          value={formData.username}
+                          type="email"
+                          name="email"
+                          value={formData.email}
                           onChange={handleInputChange}
                           className={`w-full bg-white/5 border ${
-                            errors.username ? 'border-red-400/50' : 'border-white/10'
+                            errors.email ? 'border-red-400/50' : 'border-white/10'
                           } rounded-xl px-5 py-4 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all text-lg`}
-                          placeholder="Enter your username"
+                          placeholder="Enter your email"
+                          disabled={isLoading}
                         />
-                        {errors.username && (
+                        {errors.email && (
                           <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="text-red-400 text-sm mt-2"
                           >
-                            {errors.username}
+                            {errors.email}
                           </motion.p>
                         )}
                       </div>
                     </div>
 
-                    {/* Password Field */}
                     <div className="space-y-3">
                       <label className="flex items-center gap-3 text-white/80 text-base font-medium">
                         <FiLock className="text-purple-400 text-lg" />
@@ -227,11 +260,13 @@ export default function AdminLogin() { // Added component function
                             errors.password ? 'border-red-400/50' : 'border-white/10'
                           } rounded-xl px-5 py-4 pr-14 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all text-lg`}
                           placeholder="Enter your password"
+                          disabled={isLoading}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors p-2"
+                          disabled={isLoading}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors p-2 disabled:opacity-50"
                         >
                           {showPassword ? <FiEyeOff className="text-xl" /> : <FiEye className="text-xl" />}
                         </button>
@@ -246,7 +281,6 @@ export default function AdminLogin() { // Added component function
                         )}
                       </div>
                     
-                    {/* Remember Me & Forgot Password */}
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-3 text-white/60 text-base cursor-pointer">
                         <input
@@ -254,21 +288,21 @@ export default function AdminLogin() { // Added component function
                           name="rememberMe"
                           checked={formData.rememberMe}
                           onChange={handleInputChange}
-                          className="w-5 h-5 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50"
+                          disabled={isLoading}
+                          className="w-5 h-5 bg-white/5 border border-white/20 rounded focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50"
                         />
                         Remember me
                       </label>
                       <button
                         type="button"
-                        className="text-blue-400 hover:text-blue-300 text-base transition-colors"
-                        onClick={() => router.push('/pages/forgotpassword')}
+                        disabled={isLoading}
+                        className="text-blue-400 hover:text-blue-300 text-base transition-colors disabled:opacity-50"
                       >
                         Forgot password?
                       </button>
                     </div>
                     </div>
 
-                    {/* Submit Button */}
                     <motion.button
                       type="submit"
                       disabled={isLoading}
@@ -300,7 +334,6 @@ export default function AdminLogin() { // Added component function
                     )}
                   </form>
 
-                  {/* Security Notice */}
                   <div className="mt-8 p-5 bg-white/5 rounded-xl border border-white/10">
                     <div className="flex items-center gap-4 text-white/60 text-base">
                       <FiShield className="text-green-400 flex-shrink-0 text-xl" />
@@ -311,14 +344,12 @@ export default function AdminLogin() { // Added component function
               </div>
             </motion.div>
 
-            {/* Right Side - Features & Info */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="space-y-8"
             >
-              {/* Welcome Section */}
               <div className="text-white">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -342,7 +373,6 @@ export default function AdminLogin() { // Added component function
                 </p>
               </div>
 
-              {/* Quick Stats */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -361,7 +391,6 @@ export default function AdminLogin() { // Added component function
                 ))}
               </motion.div>
 
-              {/* Features Grid */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -387,7 +416,6 @@ export default function AdminLogin() { // Added component function
                 ))}
               </motion.div>
 
-              {/* Contact Support */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -415,4 +443,4 @@ export default function AdminLogin() { // Added component function
       </div>
     </div>
   );
-} // Added closing brace for the component
+}

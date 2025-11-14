@@ -34,22 +34,41 @@ import {
 } from 'react-icons/md';
 import { useEffect, useState } from 'react';
 
-// logo is served from public/ — use string path '/logo.jpg'
-AdminSidebar.defaultProps = {
-  user: {
-    name: 'Admin User',
-    email: 'admin@katwanyaa.edu',
-    role: 'administrator'
-  },
-  activeTab: 'overview',
-  setActiveTab: () => {},
-  sidebarOpen: true,
-  setSidebarOpen: () => {},
-  tabs: []
-};
-
-export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, tabs, user }) {
+export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, tabs }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Get user data from localStorage on component mount
+  useEffect(() => {
+    const getUserData = () => {
+      try {
+        const userData = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
+        if (userData && token) {
+          setUser(JSON.parse(userData));
+        } else {
+          // Fallback to default user data
+          setUser({
+            name: 'Admin User',
+            email: 'admin@katwanyaa.edu',
+            role: 'administrator',
+            phone: '+254700000000'
+          });
+        }
+      } catch (error) {
+        console.error('Error getting user data:', error);
+        setUser({
+          name: 'Admin User',
+          email: 'admin@katwanyaa.edu',
+          role: 'administrator',
+          phone: '+254700000000'
+        });
+      }
+    };
+
+    getUserData();
+  }, []);
 
   // Detect screen size and set initial sidebar state
   useEffect(() => {
@@ -76,8 +95,10 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   }, [setSidebarOpen]);
 
   const handleLogout = () => {
-    // Implement logout logic
-    console.log('Logging out...');
+    // Clear localStorage and redirect to login
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/adminLogin';
   };
 
   const handleTabClick = (tabId) => {
@@ -147,7 +168,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     { label: 'Success', value: '98%', icon: IoSparkles, color: 'orange', change: '+3%' }
   ];
 
-  // Define default tabs if none provided - UPDATED WITH BOTH TABS
+  // Define default tabs if none provided
   const defaultTabs = [
     { id: 'overview', label: 'Dashboard Overview', icon: FiUser },
     { id: 'school-info', label: 'School Information', icon: FiInfo },
@@ -164,6 +185,13 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
 
   // Use provided tabs if non-empty, otherwise fall back to defaults
   const safeTabs = Array.isArray(tabs) && tabs.length > 0 ? tabs : defaultTabs;
+
+  // Use user data or fallback
+  const currentUser = user || {
+    name: 'Admin User',
+    email: 'admin@katwanyaa.edu',
+    role: 'administrator'
+  };
 
   return (
     <>
@@ -376,7 +404,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             >
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
-                  {user.name.charAt(0)}
+                  {currentUser.name.charAt(0)}
                 </div>
                 <motion.div 
                   animate={{ 
@@ -391,12 +419,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 text-sm truncate">{user.name}</p>
-                <p className="text-gray-600 text-xs truncate">{user.email}</p>
+                <p className="font-semibold text-gray-800 text-sm truncate">{currentUser.name}</p>
+                <p className="text-gray-600 text-xs truncate">{currentUser.email}</p>
                 <div className="flex items-center gap-1 mt-1">
                   <FiShield className="text-emerald-500 text-xs" />
                   <span className="text-emerald-600 text-xs font-medium capitalize">
-                    {user.role.replace('_', ' ')}
+                    {currentUser.role.replace('_', ' ')}
                   </span>
                 </div>
               </div>

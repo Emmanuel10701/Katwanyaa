@@ -40,7 +40,7 @@ const validateInput = (name, email, password, role) => {
 // Main POST
 export async function POST(request) {
   try {
-    const { name, email, password, phone, role = 'TEACHER' } = await request.json();
+const { name, email, password, phone, role = 'ADMIN' } = await request.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Name, email and password are required' }, { status: 400 });

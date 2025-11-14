@@ -1,6 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { 
   FiPlus, 
   FiSearch, 
@@ -15,55 +17,55 @@ import {
   FiMessageCircle,
   FiClock,
   FiCalendar,
-  FiMapPin,
   FiSave,
   FiX,
-  FiEye,
   FiImage,
-  FiVideo,
-  FiLink,
-  FiShare2,
-  FiDownload
+  FiUpload,
+  FiRotateCw
 } from 'react-icons/fi';
 
-// Modern Card Component with Image Support
-const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
+// Modern loading spinner component
+const LoadingSpinner = ({ size = 'small', color = 'blue' }) => (
+  <div className={`animate-spin rounded-full border-2 border-${color}-200 border-t-${color}-600 ${
+    size === 'small' ? 'w-4 h-4' : 
+    size === 'medium' ? 'w-6 h-6' : 
+    'w-8 h-8'
+  }`} />
+);
+
+// Modern Card Component
+const CounselingEventCard = ({ event, onEdit, onDelete, onView, index }) => {
   const [imageError, setImageError] = useState(false);
 
   const getPriorityColor = (priority) => {
     const colors = {
-      urgent: 'linear-gradient(135deg, #EF4444, #DC2626)',
-      high: 'linear-gradient(135deg, #F59E0B, #D97706)',
-      medium: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-      low: 'linear-gradient(135deg, #10B981, #059669)'
+      High: 'linear-gradient(135deg, #EF4444, #DC2626)',
+      Medium: 'linear-gradient(135deg, #F59E0B, #D97706)',
+      Low: 'linear-gradient(135deg, #10B981, #059669)'
     };
     return colors[priority] || 'linear-gradient(135deg, #6B7280, #4B5563)';
   };
 
   const getCategoryIcon = (category) => {
     const icons = {
-      academic: <FiBook className="text-blue-500" />,
-      career: <FiBarChart2 className="text-green-500" />,
-      personal: <FiUser className="text-purple-500" />,
-      social: <FiUsers className="text-pink-500" />,
-      crisis: <FiAlertTriangle className="text-red-500" />
+      Drugs: <FiAlertTriangle className="text-red-500" />,
+      Relationships: <FiUsers className="text-pink-500" />,
+      Worship: <FiUser className="text-purple-500" />,
+      Discipline: <FiBarChart2 className="text-orange-500" />,
+      Academics: <FiBook className="text-blue-500" />,
     };
     return icons[category] || <FiMessageCircle className="text-gray-500" />;
   };
 
   const getCategoryColor = (category) => {
     const colors = {
-      academic: 'bg-blue-100 text-blue-800 border-blue-200',
-      career: 'bg-green-100 text-green-800 border-green-200',
-      personal: 'bg-purple-100 text-purple-800 border-purple-200',
-      social: 'bg-pink-100 text-pink-800 border-pink-200',
-      crisis: 'bg-red-100 text-red-800 border-red-200'
+      Drugs: 'bg-red-100 text-red-800 border-red-200',
+      Relationships: 'bg-pink-100 text-pink-800 border-pink-200',
+      Worship: 'bg-purple-100 text-purple-800 border-purple-200',
+      Discipline: 'bg-orange-100 text-orange-800 border-orange-200',
+      Academics: 'bg-blue-100 text-blue-800 border-blue-200',
     };
     return colors[category] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
-
-  const formatTime = (time) => {
-    return time ? time.replace(/:\d+$/, '') : ''; // Added null check
   };
 
   return (
@@ -82,9 +84,8 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
         transition: { duration: 0.3 }
       }}
       className="group bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/60 overflow-hidden transition-all duration-500 hover:shadow-2xl cursor-pointer relative"
-      onClick={onEdit}
+      onClick={onView}
     >
-      {/* Premium Glow Effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       {/* Image Section */}
@@ -92,12 +93,11 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
         <div className="relative h-48 overflow-hidden">
           <img
             src={event.image}
-            alt={event.counselor}
+            alt={`Counseling session with ${event.counselor}`}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             onError={() => setImageError(true)}
           />
           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300" />
-          {/* Priority Badge on Image */}
           <div 
             className="absolute top-4 right-4 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg"
             style={{ background: getPriorityColor(event.priority) }}
@@ -106,7 +106,6 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
           </div>
         </div>
       ) : (
-        // Fallback with gradient background when no image
         <div 
           className="h-32 relative overflow-hidden"
           style={{ background: getPriorityColor(event?.priority) }}
@@ -126,7 +125,7 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
         {/* Category Badge */}
         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border mb-4 ${getCategoryColor(event?.category)}`}>
           {getCategoryIcon(event?.category)}
-          {event?.category ? event.category.charAt(0).toUpperCase() + event.category.slice(1) : 'Unknown'}
+          {event?.category || 'General'}
         </div>
 
         {/* Description */}
@@ -148,11 +147,11 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <FiClock className="text-gray-400 flex-shrink-0" />
-            <span>{formatTime(event?.time)}</span>
+            <span>{event?.time || 'No time'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <FiUser className="text-gray-400 flex-shrink-0" />
-            <span className="truncate">{event?.studentName || 'Not specified'}</span>
+            <span className="truncate">{event?.counselor || 'Not specified'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <div className="w-4 h-4 flex items-center justify-center">
@@ -201,68 +200,323 @@ const CounselingEventCard = ({ event, onEdit, onDelete, index }) => {
   );
 };
 
-// Enhanced Edit Dialog with Image Upload
+// Custom Modal Component
+const CustomModal = ({ isOpen, onClose, title, children }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6 lg:p-8 border-b border-gray-200/60">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
+                  <FiUser className="text-white text-xl" />
+                </div>
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-800">
+                  {title}
+                </h2>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-all duration-200"
+              >
+                <FiX className="text-xl text-gray-600" />
+              </button>
+            </div>
+          </div>
+          {children}
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+// Button Component
+const CustomButton = ({ 
+  children, 
+  variant = 'primary', 
+  onClick, 
+  disabled = false,
+  loading = false,
+  className = '',
+  ...props 
+}) => {
+  const baseClasses = "px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  const variants = {
+    primary: "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg shadow-blue-500/25",
+    secondary: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400",
+    danger: "bg-red-500 hover:bg-red-600 text-white"
+  };
+
+  return (
+    <motion.button
+      whileHover={{ scale: disabled ? 1 : 1.02 }}
+      whileTap={{ scale: disabled ? 1 : 0.98 }}
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`${baseClasses} ${variants[variant]} ${className}`}
+      {...props}
+    >
+      {loading && (
+        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      )}
+      {children}
+    </motion.button>
+  );
+};
+
+// View Modal Component
+const ViewEventModal = ({ event, onClose, onEdit }) => {
+  if (!event) return null;
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      Drugs: <FiAlertTriangle className="text-red-500" />,
+      Relationships: <FiUsers className="text-pink-500" />,
+      Worship: <FiUser className="text-purple-500" />,
+      Discipline: <FiBarChart2 className="text-orange-500" />,
+      Academics: <FiBook className="text-blue-500" />,
+    };
+    return icons[category] || <FiMessageCircle className="text-gray-500" />;
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      High: 'bg-red-500',
+      Medium: 'bg-orange-500',
+      Low: 'bg-green-500'
+    };
+    return colors[priority] || 'bg-gray-500';
+  };
+
+  return (
+    <CustomModal
+      isOpen={true}
+      onClose={onClose}
+      title="Counseling Session Details"
+    >
+      <div className="p-6 lg:p-8 space-y-6">
+        {/* Image */}
+        {event.image && (
+          <div className="relative h-64 rounded-xl overflow-hidden">
+            <img
+              src={event.image}
+              alt={`Counseling session with ${event.counselor}`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          </div>
+        )}
+
+        {/* Basic Info Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl">
+            <FiUser className="text-blue-500 text-xl" />
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Counselor</p>
+              <p className="text-lg font-semibold text-gray-800">{event.counselor}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-xl">
+            {getCategoryIcon(event.category)}
+            <div>
+              <p className="text-sm text-purple-600 font-medium">Category</p>
+              <p className="text-lg font-semibold text-gray-800">{event.category}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl">
+            <FiCalendar className="text-green-500 text-xl" />
+            <div>
+              <p className="text-sm text-green-600 font-medium">Date</p>
+              <p className="text-lg font-semibold text-gray-800">
+                {new Date(event.date).toLocaleDateString('en-US', { 
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-xl">
+            <FiClock className="text-orange-500 text-xl" />
+            <div>
+              <p className="text-sm text-orange-600 font-medium">Time</p>
+              <p className="text-lg font-semibold text-gray-800">{event.time}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Priority and Type */}
+        <div className="flex gap-4">
+          <div className="flex-1 p-4 bg-gray-50 rounded-xl">
+            <p className="text-sm text-gray-600 font-medium">Session Type</p>
+            <p className="text-lg font-semibold text-gray-800">{event.type}</p>
+          </div>
+          <div className="flex-1 p-4 bg-gray-50 rounded-xl">
+            <p className="text-sm text-gray-600 font-medium">Priority</p>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold text-white ${getPriorityColor(event.priority)}`}>
+              {event.priority}
+            </span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Session Description</h3>
+          <p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl">
+            {event.description}
+          </p>
+        </div>
+
+        {/* Notes */}
+        {event.notes && (
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Additional Notes</h3>
+            <p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl">
+              {event.notes}
+            </p>
+          </div>
+        )}
+
+        {/* Timestamps */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+          <div>
+            <p className="text-sm text-gray-500">Created</p>
+            <p className="text-sm font-medium text-gray-700">
+              {new Date(event.createdAt).toLocaleDateString()} at {new Date(event.createdAt).toLocaleTimeString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Last Updated</p>
+            <p className="text-sm font-medium text-gray-700">
+              {new Date(event.updatedAt).toLocaleDateString()} at {new Date(event.updatedAt).toLocaleTimeString()}
+            </p>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-4 pt-6 border-t border-gray-200">
+          <CustomButton
+            variant="secondary"
+            onClick={onClose}
+            className="flex-1"
+          >
+            <FiX className="text-lg" />
+            Close
+          </CustomButton>
+          <CustomButton
+            variant="primary"
+            onClick={onEdit}
+            className="flex-1"
+          >
+            <FiEdit3 className="text-lg" />
+            Edit Session
+          </CustomButton>
+        </div>
+      </div>
+    </CustomModal>
+  );
+};
+
+// Enhanced Edit Dialog with corrected API URLs
 const GuidanceEditDialog = ({ event, onSave, onCancel, showSnackbar }) => {
   const [formData, setFormData] = useState({
     counselor: '',
-    category: 'academic',
+    category: 'Academics',
     description: '',
     notes: '',
     date: new Date().toISOString().split('T')[0],
     time: '09:00',
-    type: 'individual',
-    priority: 'medium',
-    studentName: '',
-    studentClass: '',
-    image: null
+    type: 'Guidance',
+    priority: 'Medium'
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (event) {
       setFormData({
-        ...event,
-        date: event.date ? new Date(event.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        counselor: event.counselor || '',
+        category: event.category || 'Academics',
+        description: event.description || '',
+        notes: event.notes || '',
+        date: event.date ? new Date(event.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        time: event.time || '09:00',
+        type: event.type || 'Guidance',
+        priority: event.priority || 'Medium'
       });
       if (event.image) {
         setImagePreview(event.image);
       }
+    } else {
+      setFormData({
+        counselor: '',
+        category: 'Academics',
+        description: '',
+        notes: '',
+        date: new Date().toISOString().split('T')[0],
+        time: '09:00',
+        type: 'Guidance',
+        priority: 'Medium'
+      });
+      setImagePreview('');
+      setImageFile(null);
     }
   }, [event]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         showSnackbar('Please upload an image file', 'error');
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         showSnackbar('Image size should be less than 5MB', 'error');
         return;
       }
 
+      setImageFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target.result);
-        setFormData(prev => ({ ...prev, image: file }));
       };
       reader.readAsDataURL(file);
+      showSnackbar('Image selected successfully');
     }
   };
 
   const removeImage = () => {
-    setImagePreview(null);
-    setFormData(prev => ({ ...prev, image: null }));
+    setImagePreview('');
+    setImageFile(null);
   };
 
   const handleSave = async () => {
-    if (!formData.counselor.trim() || !formData.description.trim()) {
-      showSnackbar('Please fill in all required fields', 'error');
+    if (!formData.counselor.trim()) {
+      showSnackbar('Please enter counselor name', 'error');
+      return;
+    }
+    if (!formData.description.trim()) {
+      showSnackbar('Please enter session description', 'error');
       return;
     }
 
@@ -270,32 +524,43 @@ const GuidanceEditDialog = ({ event, onSave, onCancel, showSnackbar }) => {
     try {
       const submitData = new FormData();
       
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== undefined) {
-          if (key === 'image' && formData[key] instanceof File) {
-            submitData.append('image', formData[key]);
-          } else {
-            submitData.append(key, formData[key]);
-          }
-        }
-      });
+      submitData.append('counselor', formData.counselor);
+      submitData.append('category', formData.category);
+      submitData.append('description', formData.description);
+      submitData.append('notes', formData.notes);
+      submitData.append('date', formData.date);
+      submitData.append('time', formData.time);
+      submitData.append('type', formData.type);
+      submitData.append('priority', formData.priority);
 
-      if (event?.id) submitData.append('id', event.id.toString());
+      if (imageFile) {
+        submitData.append('image', imageFile);
+      }
 
-      const response = await fetch('/api/guidance', {
-        method: event ? 'PUT' : 'POST',
+      // CORRECTED: Use route parameters instead of query parameters
+      let url = '/api/guidance';
+      let method = 'POST';
+
+      if (event?.id) {
+        url = `/api/guidance/${event.id}`; // Changed from ?id=${event.id} to /${event.id}
+        method = 'PUT';
+      }
+
+      const response = await fetch(url, {
+        method: method,
         body: submitData,
       });
 
       const result = await response.json();
       if (result.success) {
-        onSave();
         showSnackbar(event ? 'Session updated successfully!' : 'Session created successfully!');
+        onSave();
       } else {
-        showSnackbar(result.error || 'An error occurred', 'error');
+        throw new Error(result.error || 'An error occurred');
       }
     } catch (error) {
-      showSnackbar('Error saving session', 'error');
+      console.error('Save error:', error);
+      showSnackbar(error.message, 'error');
     } finally {
       setIsSaving(false);
     }
@@ -306,292 +571,280 @@ const GuidanceEditDialog = ({ event, onSave, onCancel, showSnackbar }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4"
-      onClick={onCancel}
+    <CustomModal
+      isOpen={true}
+      onClose={onCancel}
+      title={`${event ? 'Edit' : 'Create'} Counseling Session`}
     >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 50 }}
-        transition={{ type: "spring", damping: 25 }}
-        className="bg-white/95 backdrop-blur-sm rounded-3xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-white/20"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8 border-b border-white/20">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">
-                {event ? 'Edit Counseling Session' : 'New Counseling Session'}
-              </h2>
-              <p className="text-blue-100 opacity-90">
-                {event ? 'Update session details' : 'Create a new counseling session'}
-              </p>
+      <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="p-6 lg:p-8 space-y-6">
+        {/* Image Upload Section */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Session Image
+          </label>
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-300 overflow-hidden bg-gray-50">
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <FiImage className="text-gray-400 text-2xl" />
+                  </div>
+                )}
+              </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={onCancel}
-              className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            <div className="flex-1">
+              <label className="block cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <div className="px-6 py-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-200 flex items-center gap-3">
+                  <FiUpload className="text-blue-500 text-xl" />
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700">
+                      {imageFile ? 'Change Image' : 'Upload Image'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG, WEBP up to 5MB
+                    </p>
+                  </div>
+                </div>
+              </label>
+              {imageFile && (
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-xs text-green-600 font-medium">
+                    ✓ {imageFile.name}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Counselor Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.counselor}
+              onChange={(e) => updateField('counselor', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
+              placeholder="Enter counselor name"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Category *
+            </label>
+            <select
+              required
+              value={formData.category}
+              onChange={(e) => updateField('category', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 appearance-none cursor-pointer"
+              disabled={isSaving}
             >
-              <FiX size={24} />
-            </motion.button>
+              <option value="Academics">📚 Academics</option>
+              <option value="Drugs">🚫 Drugs</option>
+              <option value="Relationships">💕 Relationships</option>
+              <option value="Worship">🙏 Worship</option>
+              <option value="Discipline">⚖️ Discipline</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Session Type *
+            </label>
+            <select
+              required
+              value={formData.type}
+              onChange={(e) => updateField('type', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 appearance-none cursor-pointer"
+              disabled={isSaving}
+            >
+              <option value="Guidance">💬 Guidance</option>
+              <option value="Counseling">🧠 Counseling</option>
+              <option value="Group Session">👥 Group Session</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Date *
+            </label>
+            <input
+              type="date"
+              required
+              value={formData.date}
+              onChange={(e) => updateField('date', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Time *
+            </label>
+            <input
+              type="time"
+              required
+              value={formData.time}
+              onChange={(e) => updateField('time', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50"
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Priority *
+            </label>
+            <select
+              required
+              value={formData.priority}
+              onChange={(e) => updateField('priority', e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 appearance-none cursor-pointer"
+              disabled={isSaving}
+            >
+              <option value="Low">💚 Low</option>
+              <option value="Medium">💛 Medium</option>
+              <option value="High">🧡 High</option>
+            </select>
+          </div>
+
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Session Description *
+            </label>
+            <textarea
+              required
+              value={formData.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              rows="3"
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 resize-none"
+              placeholder="Describe the counseling session..."
+              disabled={isSaving}
+            />
+          </div>
+
+          <div className="lg:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Additional Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => updateField('notes', e.target.value)}
+              rows="4"
+              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 resize-none"
+              placeholder="Any additional notes or comments..."
+              disabled={isSaving}
+            />
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Image & Basic Info */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Image Upload */}
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200/50">
-                <label className="block text-sm font-semibold text-gray-700 mb-4">Session Image</label>
-                <div className="space-y-4">
-                  {imagePreview ? (
-                    <div className="relative group">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-2xl shadow-lg"
-                      />
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={removeImage}
-                        className="absolute top-3 right-3 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-colors"
-                      >
-                        <FiX size={16} />
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 transition-colors group">
-                      <FiImage className="mx-auto text-gray-400 text-3xl mb-3 group-hover:text-blue-500" />
-                      <p className="text-gray-500 text-sm mb-3">Click to upload image</p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Info */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200/50">
-                <h3 className="font-semibold text-gray-700 mb-4">Quick Info</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Created:</span>
-                    <span className="font-medium">
-                      {event ? new Date(event.createdAt).toLocaleDateString() : 'New'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Last Updated:</span>
-                    <span className="font-medium">
-                      {event ? new Date(event.updatedAt).toLocaleDateString() : 'Never'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Form Fields */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Counselor Name *</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="text"
-                    value={formData.counselor}
-                    onChange={(e) => updateField('counselor', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    placeholder="Enter counselor name"
-                    required
-                    disabled={isSaving}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Category *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => updateField('category', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    disabled={isSaving}
-                  >
-                    <option value="academic">📚 Academic</option>
-                    <option value="career">💼 Career</option>
-                    <option value="personal">👤 Personal</option>
-                    <option value="social">👥 Social</option>
-                    <option value="crisis">🚨 Crisis</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Session Description *</label>
-                  <motion.textarea
-                    whileFocus={{ scale: 1.01 }}
-                    rows={3}
-                    value={formData.description}
-                    onChange={(e) => updateField('description', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80 resize-none"
-                    placeholder="Describe the counseling session..."
-                    required
-                    disabled={isSaving}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Student Name</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="text"
-                    value={formData.studentName}
-                    onChange={(e) => updateField('studentName', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    placeholder="Optional"
-                    disabled={isSaving}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Student Class</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="text"
-                    value={formData.studentClass}
-                    onChange={(e) => updateField('studentClass', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    placeholder="Optional"
-                    disabled={isSaving}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Date *</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => updateField('date', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    disabled={isSaving}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Time *</label>
-                  <motion.input
-                    whileFocus={{ scale: 1.02 }}
-                    type="time"
-                    value={formData.time}
-                    onChange={(e) => updateField('time', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    disabled={isSaving}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Session Type *</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) => updateField('type', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    disabled={isSaving}
-                  >
-                    <option value="individual">👤 Individual</option>
-                    <option value="group">👥 Group</option>
-                    <option value="workshop">🎯 Workshop</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Priority *</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => updateField('priority', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
-                    disabled={isSaving}
-                  >
-                    <option value="low">💚 Low</option>
-                    <option value="medium">💛 Medium</option>
-                    <option value="high">🧡 High</option>
-                    <option value="urgent">❤️ Urgent</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Additional Notes</label>
-                  <motion.textarea
-                    whileFocus={{ scale: 1.01 }}
-                    rows={4}
-                    value={formData.notes}
-                    onChange={(e) => updateField('notes', e.target.value)}
-                    className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80 resize-none"
-                    placeholder="Any additional notes or comments..."
-                    disabled={isSaving}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Actions */}
-        <div className="flex justify-between items-center p-8 border-t border-gray-200/50 bg-gradient-to-r from-gray-50 to-gray-100/80">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+        <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200/60">
+          <CustomButton
+            type="button"
+            variant="secondary"
             onClick={onCancel}
             disabled={isSaving}
-            className="px-8 py-3 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-semibold rounded-2xl border-2 border-gray-300 hover:border-gray-400 transition-all duration-300 bg-white shadow-lg hover:shadow-xl"
+            className="flex-1"
           >
+            <FiX className="text-lg" />
             Cancel
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleSave}
+          </CustomButton>
+          <CustomButton
+            type="submit"
+            variant="primary"
+            loading={isSaving}
             disabled={isSaving}
-            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl px-8 py-3 font-bold hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+            className="flex-1"
           >
-            {isSaving ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                />
-                Saving...
-              </>
-            ) : (
-              <>
-                <FiSave />
-                {event ? 'Update Session' : 'Create Session'}
-              </>
-            )}
-          </motion.button>
+            <FiSave className="text-lg" />
+            {event ? 'Update Session' : 'Create Session'}
+          </CustomButton>
         </div>
-      </motion.div>
-    </motion.div>
+      </form>
+    </CustomModal>
   );
 };
 
-// Main Component with Enhanced Features
-export default function GuidanceCounselingTab({ events = [], onUpdate, showSnackbar }) {
+// Main Component with corrected DELETE URL
+export default function GuidanceCounselingTab() {
+  const [events, setEvents] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
   const [currentEvent, setCurrentEvent] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Ensure events is always an array
-  const safeEvents = Array.isArray(events) ? events : [];
+  // Fetch events from API
+  const fetchEvents = async (showRefresh = false) => {
+    if (showRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
+    try {
+      const response = await fetch('/api/guidance');
+      const result = await response.json();
+      
+      if (result.success) {
+        setEvents(result.events || []);
+        if (showRefresh) {
+          showSnackbar('Data refreshed successfully!');
+        }
+      } else {
+        throw new Error(result.error || 'Failed to fetch events');
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      showSnackbar('Failed to load counseling sessions', 'error');
+      setEvents([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // Show toast notification
+  const showSnackbar = (message, type = 'success') => {
+    if (type === 'error') {
+      toast.error(message);
+    } else {
+      toast.success(message);
+    }
+  };
 
   const handleNewEvent = () => {
     setCurrentEvent(null);
@@ -603,33 +856,40 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
     setIsEditing(true);
   };
 
+  const handleView = (event) => {
+    setCurrentEvent(event);
+    setIsViewing(true);
+  };
+
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this counseling session? This action cannot be undone.')) {
       try {
-        const response = await fetch(`/api/guidance?id=${id}`, { 
+        // CORRECTED: Use route parameters instead of query parameters
+        const response = await fetch(`/api/guidance/${id}`, { // Changed from ?id=${id} to /${id}
           method: 'DELETE' 
         });
         const result = await response.json();
         if (result.success) {
-          onUpdate?.();
-          showSnackbar?.('Counseling session deleted successfully!');
+          await fetchEvents();
+          showSnackbar('Counseling session deleted successfully!');
         } else {
-          showSnackbar?.(result.error || 'Error deleting session', 'error');
+          showSnackbar(result.error || 'Error deleting session', 'error');
         }
       } catch (error) {
-        showSnackbar?.('Error deleting session', 'error');
+        showSnackbar('Error deleting session', 'error');
       }
     }
   };
 
-  // Fixed filter function with null checks
-  const filteredEvents = safeEvents.filter(event => {
+  // Filter events
+  const filteredEvents = events.filter(event => {
     if (!event) return false;
     
     const matchesSearch = 
       (event.counselor?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (event.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (event.studentName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      (event.notes?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (event.category?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesCategory = filterCategory === 'all' || event.category === filterCategory;
     const matchesPriority = filterPriority === 'all' || event.priority === filterPriority;
@@ -637,15 +897,44 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
     return matchesSearch && matchesCategory && matchesPriority;
   });
 
-  // Stats for the header with null checks
+  // Stats for the header
   const stats = {
-    total: safeEvents.length,
-    urgent: safeEvents.filter(e => e?.priority === 'urgent').length,
-    today: safeEvents.filter(e => e?.date && new Date(e.date).toDateString() === new Date().toDateString()).length
+    total: events.length,
+    high: events.filter(e => e?.priority === 'High').length,
+    today: events.filter(e => {
+      if (!e?.date) return false;
+      const eventDate = new Date(e.date);
+      const today = new Date();
+      return eventDate.toDateString() === today.toDateString();
+    }).length
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <LoadingSpinner size="large" color="blue" />
+          <p className="text-gray-600 text-lg mt-4 font-medium">Loading Counseling Sessions...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
+      <ToastContainer 
+        position="top-right" 
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Enhanced Header */}
         <motion.div
@@ -654,7 +943,6 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
           transition={{ duration: 0.7, type: "spring" }}
         >
           <div className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
-            {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden">
               {[...Array(3)].map((_, i) => (
                 <motion.div
@@ -705,8 +993,8 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                     <div className="text-cyan-100 text-sm">Total Sessions</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-red-200">{stats.urgent}</div>
-                    <div className="text-cyan-100 text-sm">Urgent</div>
+                    <div className="text-2xl font-bold text-red-200">{stats.high}</div>
+                    <div className="text-cyan-100 text-sm">High Priority</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-200">{stats.today}</div>
@@ -716,15 +1004,27 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
               </div>
 
               <div className="lg:col-span-2 space-y-4">
-                <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleNewEvent}
-                  className="w-full bg-white/20 backdrop-blur-sm text-white rounded-2xl px-6 py-4 font-bold hover:bg-white/30 transition-all duration-300 shadow-2xl flex items-center justify-center gap-3 text-lg border border-white/20 group"
-                >
-                  <FiPlus className="group-hover:rotate-90 transition-transform duration-300" />
-                  Create New Session
-                </motion.button>
+                <div className="flex gap-3">
+                  <CustomButton
+                    variant="secondary"
+                    onClick={() => fetchEvents(true)}
+                    disabled={refreshing}
+                    loading={refreshing}
+                    className="flex-1"
+                  >
+                    <FiRotateCw className="text-lg" />
+                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                  </CustomButton>
+                  
+                  <CustomButton
+                    variant="primary"
+                    onClick={handleNewEvent}
+                    className="flex-1"
+                  >
+                    <FiPlus className="text-lg" />
+                    Create Session
+                  </CustomButton>
+                </div>
 
                 {/* View Toggle */}
                 <div className="flex gap-2">
@@ -768,7 +1068,7 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                 <motion.input
                   whileFocus={{ scale: 1.02 }}
                   type="text"
-                  placeholder="Search sessions, counselors, or students..."
+                  placeholder="Search counselors, descriptions, notes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
@@ -782,11 +1082,11 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
               >
                 <option value="all">All Categories</option>
-                <option value="academic">Academic</option>
-                <option value="career">Career</option>
-                <option value="personal">Personal</option>
-                <option value="social">Social</option>
-                <option value="crisis">Crisis</option>
+                <option value="Academics">Academics</option>
+                <option value="Drugs">Drugs</option>
+                <option value="Relationships">Relationships</option>
+                <option value="Worship">Worship</option>
+                <option value="Discipline">Discipline</option>
               </select>
             </div>
             <div>
@@ -796,10 +1096,9 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                 className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
               >
                 <option value="all">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
               </select>
             </div>
             <div>
@@ -841,6 +1140,7 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                     index={index}
                     onEdit={() => handleEdit(event)}
                     onDelete={() => handleDelete(event?.id)}
+                    onView={() => handleView(event)}
                   />
                 ))}
               </motion.div>
@@ -858,16 +1158,16 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-6 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                    onClick={() => handleEdit(event)}
+                    onClick={() => handleView(event)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="text-2xl">
-                          {event?.category === 'academic' && '📚'}
-                          {event?.category === 'career' && '💼'}
-                          {event?.category === 'personal' && '👤'}
-                          {event?.category === 'social' && '👥'}
-                          {event?.category === 'crisis' && '🚨'}
+                          {event?.category === 'Academics' && '📚'}
+                          {event?.category === 'Drugs' && '🚫'}
+                          {event?.category === 'Relationships' && '💕'}
+                          {event?.category === 'Worship' && '🙏'}
+                          {event?.category === 'Discipline' && '⚖️'}
                         </div>
                         <div>
                           <h3 className="font-bold text-lg text-gray-800">{event?.counselor}</h3>
@@ -879,9 +1179,8 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
                           {event?.date ? new Date(event.date).toLocaleDateString() : 'No date'} at {event?.time}
                         </div>
                         <div className={`inline-flex px-3 py-1 rounded-full text-xs font-bold text-white ${
-                          event?.priority === 'urgent' ? 'bg-red-500' :
-                          event?.priority === 'high' ? 'bg-orange-500' :
-                          event?.priority === 'medium' ? 'bg-blue-500' : 'bg-green-500'
+                          event?.priority === 'High' ? 'bg-red-500' :
+                          event?.priority === 'Medium' ? 'bg-orange-500' : 'bg-green-500'
                         }`}>
                           {event?.priority}
                         </div>
@@ -929,13 +1228,30 @@ export default function GuidanceCounselingTab({ events = [], onUpdate, showSnack
             onSave={() => {
               setIsEditing(false);
               setCurrentEvent(null);
-              onUpdate?.();
+              fetchEvents();
             }}
             onCancel={() => {
               setIsEditing(false);
               setCurrentEvent(null);
             }}
             showSnackbar={showSnackbar}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* View Dialog */}
+      <AnimatePresence>
+        {isViewing && (
+          <ViewEventModal
+            event={currentEvent}
+            onClose={() => {
+              setIsViewing(false);
+              setCurrentEvent(null);
+            }}
+            onEdit={() => {
+              setIsViewing(false);
+              setIsEditing(true);
+            }}
           />
         )}
       </AnimatePresence>

@@ -391,7 +391,13 @@ Content-Type: application/json
 }
 
 
+#####
+GET  http://0.0.0.0:3001/api/guidance
+Content-Type: application/json
 
+{
+  "email": "newsubscriber@gmail.com"
+}
 
 
 
@@ -610,6 +616,107 @@ Content-Type: image/png
 ### ✔ TEST CREATE ASSIGNMENT (WITHOUT FILES)
 ### ----------------------------------------
 GET  http://0.0.0.0:3001/api/assignment
+
+
+### GET all counseling events
+GET http://localhost:3000/api/counseling
+Accept: application/json
+
+
+
+### CREATE Counseling Event (multipart/form-data)
+GET  http://0.0.0.0:3001/api/guidance
+
+POST  http://0.0.0.0:3001/api/guidance
+
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryX
+
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="counselor"
+
+Mr. James
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="category"
+
+Discipline
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="description"
+
+A student was reported for repeated class disruption.
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="notes"
+
+Follow-up scheduled next week.
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="date"
+
+2025-11-14T09:00:00.000Z
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="time"
+
+09:00 AM
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="type"
+
+Guidance
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="priority"
+
+High
+------WebKitFormBoundaryX
+Content-Disposition: form-data; name="image"; filename="example.jpg"
+Content-Type: image/jpeg
+
+< ./example.jpg
+------WebKitFormBoundaryX--
+
+
+
+
+
+
+### POST new counseling event (multipart/form-data)
+GET  http://0.0.0.0:3001/api/guidance/1
+Content-Type: multipart/form-data; boundary=---BOUNDARY
+
+---BOUNDARY
+Content-Disposition: form-data; name="counselor"
+
+Mr. Patrick
+---BOUNDARY
+Content-Disposition: form-data; name="category"
+
+Behavioral
+---BOUNDARY
+Content-Disposition: form-data; name="description"
+
+Student counseling on behavioral issues
+---BOUNDARY
+Content-Disposition: form-data; name="notes"
+
+Student showing signs of progress
+---BOUNDARY
+Content-Disposition: form-data; name="date"
+
+2025-11-20
+---BOUNDARY
+Content-Disposition: form-data; name="time"
+
+10:30 AM
+---BOUNDARY
+Content-Disposition: form-data; name="type"
+
+One-on-One
+---BOUNDARY
+Content-Disposition: form-data; name="priority"
+
+High
+---BOUNDARY
+Content-Disposition: form-data; name="image"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test.jpg
+---BOUNDARY--
 
 
 
