@@ -145,10 +145,7 @@ const PDFViewer = ({ curriculumPDF }) => {
 
 // Stats Cards Component
 const StatsCard = ({ icon: Icon, label, value, color }) => (
-  <motion.div
-    whileHover={{ y: -5, scale: 1.02 }}
-    className={`bg-gradient-to-br ${color} p-6 rounded-2xl text-white shadow-lg`}
-  >
+  <div className={`bg-gradient-to-br ${color} p-6 rounded-2xl text-white shadow-lg`}>
     <div className="flex items-center justify-between">
       <div>
         <p className="text-white/80 text-sm font-medium">{label}</p>
@@ -158,7 +155,7 @@ const StatsCard = ({ icon: Icon, label, value, color }) => (
         <Icon className="text-xl" />
       </div>
     </div>
-  </motion.div>
+  </div>
 );
 
 // Custom File Upload Component
@@ -216,14 +213,14 @@ const CustomFileUpload = ({
 };
 
 // Edit Dialog Component
-const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) => {
+const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    studentCount: 0,
-    staffCount: 0,
-    feesBoarding: 0,
-    feesDay: 0,
+    studentCount: '',
+    staffCount: '',
+    feesBoarding: '',
+    feesDay: '',
     feesDistribution: {},
     openDate: '',
     closeDate: '',
@@ -243,6 +240,12 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
       // Initialize form with existing school info
       const initialData = {
         ...schoolInfo,
+        studentCount: schoolInfo.studentCount?.toString() || '',
+        staffCount: schoolInfo.staffCount?.toString() || '',
+        feesBoarding: schoolInfo.feesBoarding?.toString() || '',
+        feesDay: schoolInfo.feesDay?.toString() || '',
+        openDate: schoolInfo.openDate ? new Date(schoolInfo.openDate).toISOString().split('T')[0] : '',
+        closeDate: schoolInfo.closeDate ? new Date(schoolInfo.closeDate).toISOString().split('T')[0] : '',
         youtubeLink: schoolInfo.videoType === 'youtube' ? schoolInfo.videoTour : '',
         videoTour: null,
         curriculumPDF: null,
@@ -260,7 +263,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
             items.push({ 
               type: 'general', 
               name, 
-              amount 
+              amount: amount.toString()
             });
           }
         });
@@ -271,10 +274,10 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
       setFormData({
         name: '',
         description: '',
-        studentCount: 0,
-        staffCount: 0,
-        feesBoarding: 0,
-        feesDay: 0,
+        studentCount: '',
+        staffCount: '',
+        feesBoarding: '',
+        feesDay: '',
         feesDistribution: {},
         openDate: '',
         closeDate: '',
@@ -323,7 +326,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
   };
 
   const handleAddFeeItem = () => {
-    setFeeItems(prev => [...prev, { type: 'general', name: '', amount: 0 }]);
+    setFeeItems(prev => [...prev, { type: 'general', name: '', amount: '' }]);
   };
 
   const handleUpdateFeeItem = (index, field, value) => {
@@ -339,27 +342,37 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
   const handleSave = async () => {
     // Validation
     if (!formData.name.trim()) {
-      showSnackbar('School name is required', 'error');
+      alert('School name is required');
       return;
     }
 
-    if (formData.studentCount < 0 || formData.staffCount < 0) {
-      showSnackbar('Student and staff counts must be positive numbers', 'error');
+    if (!formData.studentCount || parseInt(formData.studentCount) < 0) {
+      alert('Student count must be a positive number');
       return;
     }
 
-    if (formData.feesBoarding < 0 || formData.feesDay < 0) {
-      showSnackbar('Fees must be positive numbers', 'error');
+    if (!formData.staffCount || parseInt(formData.staffCount) < 0) {
+      alert('Staff count must be a positive number');
+      return;
+    }
+
+    if (!formData.feesBoarding || parseFloat(formData.feesBoarding) < 0) {
+      alert('Boarding fees must be a positive number');
+      return;
+    }
+
+    if (!formData.feesDay || parseFloat(formData.feesDay) < 0) {
+      alert('Day fees must be a positive number');
       return;
     }
 
     if (!formData.openDate || !formData.closeDate) {
-      showSnackbar('Opening and closing dates are required', 'error');
+      alert('Opening and closing dates are required');
       return;
     }
 
     if (new Date(formData.openDate) >= new Date(formData.closeDate)) {
-      showSnackbar('Opening date must be before closing date', 'error');
+      alert('Opening date must be before closing date');
       return;
     }
 
@@ -368,8 +381,8 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
       // Prepare fee distribution as a simple object
       const feesDistribution = {};
       feeItems.forEach(item => {
-        if (item.name.trim() && item.amount > 0) {
-          feesDistribution[item.name] = Number(item.amount);
+        if (item.name.trim() && item.amount && parseFloat(item.amount) > 0) {
+          feesDistribution[item.name] = parseFloat(item.amount);
         }
       });
 
@@ -378,10 +391,10 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
       // Append basic fields
       submitData.append('name', formData.name.trim());
       submitData.append('description', formData.description.trim());
-      submitData.append('studentCount', formData.studentCount.toString());
-      submitData.append('staffCount', formData.staffCount.toString());
-      submitData.append('feesBoarding', formData.feesBoarding.toString());
-      submitData.append('feesDay', formData.feesDay.toString());
+      submitData.append('studentCount', formData.studentCount);
+      submitData.append('staffCount', formData.staffCount);
+      submitData.append('feesBoarding', formData.feesBoarding);
+      submitData.append('feesDay', formData.feesDay);
       submitData.append('feesDistribution', JSON.stringify(feesDistribution));
       submitData.append('openDate', formData.openDate);
       submitData.append('closeDate', formData.closeDate);
@@ -408,16 +421,15 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
       const result = await response.json();
       if (result.success) {
         onSave();
-        showSnackbar(
-          schoolInfo ? 'School information updated successfully!' : 'School information created successfully!',
-          'success'
+        alert(
+          schoolInfo ? 'School information updated successfully!' : 'School information created successfully!'
         );
       } else {
-        showSnackbar(result.error || 'An error occurred while saving', 'error');
+        alert(result.error || 'An error occurred while saving');
       }
     } catch (error) {
       console.error('Save error:', error);
-      showSnackbar('Network error: Could not save school information', 'error');
+      alert('Network error: Could not save school information');
     } finally {
       setIsSaving(false);
     }
@@ -453,23 +465,10 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4"
-      onClick={onCancel}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 50 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 50 }}
-        transition={{ type: "spring", damping: 25 }}
-        className="bg-white/95 backdrop-blur-sm rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-white/20"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8 border-b border-white/20">
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-bold mb-2">
@@ -479,14 +478,12 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                 {schoolInfo ? 'Update your school details and information' : 'Set up your school information to get started'}
               </p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.1, rotate: 90 }}
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={onCancel}
               className="p-2 hover:bg-white/20 rounded-xl transition-colors"
             >
               <FiX size={24} />
-            </motion.button>
+            </button>
           </div>
         </div>
 
@@ -529,10 +526,11 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                   </label>
                   <input
                     type="number"
-                    min="0"
+                    min="1"
                     value={formData.studentCount}
-                    onChange={(e) => updateField('studentCount', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateField('studentCount', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="0"
                     required
                   />
                 </div>
@@ -542,10 +540,11 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                   </label>
                   <input
                     type="number"
-                    min="0"
+                    min="1"
                     value={formData.staffCount}
-                    onChange={(e) => updateField('staffCount', parseInt(e.target.value) || 0)}
+                    onChange={(e) => updateField('staffCount', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="0"
                     required
                   />
                 </div>
@@ -561,8 +560,9 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                     step="0.01"
                     min="0"
                     value={formData.feesBoarding}
-                    onChange={(e) => updateField('feesBoarding', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => updateField('feesBoarding', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="0.00"
                     required
                   />
                 </div>
@@ -575,8 +575,9 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                     step="0.01"
                     min="0"
                     value={formData.feesDay}
-                    onChange={(e) => updateField('feesDay', parseFloat(e.target.value) || 0)}
+                    onChange={(e) => updateField('feesDay', e.target.value)}
                     className="w-full border-2 border-gray-200 rounded-2xl px-4 py-3.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
+                    placeholder="0.00"
                     required
                   />
                 </div>
@@ -684,10 +685,8 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                 </div>
                 <div className="flex flex-wrap gap-2 min-h-[40px]">
                   {formData.subjects.map((subject, index) => (
-                    <motion.span
+                    <span
                       key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
                       className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium"
                     >
                       {subject}
@@ -697,7 +696,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                       >
                         <FiX size={12} />
                       </button>
-                    </motion.span>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -726,10 +725,8 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                 </div>
                 <div className="flex flex-wrap gap-2 min-h-[40px]">
                   {formData.departments.map((department, index) => (
-                    <motion.span
+                    <span
                       key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
                       className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
                     >
                       {department}
@@ -739,7 +736,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                       >
                         <FiX size={12} />
                       </button>
-                    </motion.span>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -766,34 +763,10 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
               </button>
             </div>
             
-            {/* Fee Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
-                <p className="text-blue-800 font-semibold text-sm">Total Boarding Fees</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  KES {formData.feesBoarding?.toLocaleString() || '0'}
-                </p>
-              </div>
-              <div className="bg-green-50 rounded-2xl p-4 border border-green-200">
-                <p className="text-green-800 font-semibold text-sm">Total Day Fees</p>
-                <p className="text-2xl font-bold text-green-600">
-                  KES {formData.feesDay?.toLocaleString() || '0'}
-                </p>
-              </div>
-              <div className="bg-purple-50 rounded-2xl p-4 border border-purple-200">
-                <p className="text-purple-800 font-semibold text-sm">Distributed Amount</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  KES {feeItems.reduce((sum, item) => sum + (item.amount || 0), 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-
             <div className="space-y-3">
               {feeItems.map((item, index) => (
-                <motion.div
+                <div
                   key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
                   className="grid grid-cols-12 gap-3 items-center"
                 >
                   <div className="col-span-5">
@@ -811,7 +784,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                       step="0.01"
                       min="0"
                       value={item.amount}
-                      onChange={(e) => handleUpdateFeeItem(index, 'amount', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => handleUpdateFeeItem(index, 'amount', e.target.value)}
                       className="w-full border-2 border-gray-200 rounded-2xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/80"
                       placeholder="Amount"
                     />
@@ -825,7 +798,7 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                       Remove
                     </button>
                   </div>
-                </motion.div>
+                </div>
               ))}
               
               {feeItems.length === 0 && (
@@ -840,29 +813,21 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
 
         {/* Actions */}
         <div className="flex justify-between items-center p-8 border-t border-gray-200/50 bg-gradient-to-r from-gray-50 to-gray-100/80">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={onCancel}
             disabled={isSaving}
             className="px-8 py-3 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed font-semibold rounded-2xl border-2 border-gray-300 hover:border-gray-400 transition-all duration-300 bg-white shadow-lg hover:shadow-xl"
           >
             Cancel
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          </button>
+          <button
             onClick={handleSave}
             disabled={isSaving}
             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl px-8 py-3 font-bold hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
           >
             {isSaving ? (
               <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Saving...
               </>
             ) : (
@@ -871,15 +836,15 @@ const SchoolInfoEditDialog = ({ schoolInfo, onSave, onCancel, showSnackbar }) =>
                 {schoolInfo ? 'Update School Info' : 'Create School Info'}
               </>
             )}
-          </motion.button>
+          </button>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
 // Main Component
-export default function SchoolInfoTab({ showSnackbar }) {
+export default function SchoolInfoTab() {
   const [schoolInfo, setSchoolInfo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -901,7 +866,7 @@ export default function SchoolInfoTab({ showSnackbar }) {
       }
     } catch (error) {
       console.error('Error fetching school info:', error);
-      showSnackbar?.('Error loading school information', 'error');
+      alert('Error loading school information');
       setSchoolInfo(null);
     } finally {
       setLoading(false);
@@ -916,12 +881,12 @@ export default function SchoolInfoTab({ showSnackbar }) {
         
         if (result.success) {
           setSchoolInfo(null);
-          showSnackbar?.('School information deleted successfully!', 'success');
+          alert('School information deleted successfully!');
         } else {
-          showSnackbar?.(result.error || 'Error deleting school information', 'error');
+          alert(result.error || 'Error deleting school information');
         }
       } catch (error) {
-        showSnackbar?.('Error deleting school information', 'error');
+        alert('Error deleting school information');
       }
     }
   };
@@ -930,11 +895,7 @@ export default function SchoolInfoTab({ showSnackbar }) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
-          />
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4 animate-spin" />
           <p className="text-gray-600 text-lg">Loading school information...</p>
         </div>
       </div>
@@ -950,11 +911,7 @@ export default function SchoolInfoTab({ showSnackbar }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl"
-        >
+        <div className="bg-gradient-to-r from-cyan-600 to-blue-600 rounded-3xl p-8 sm:p-10 text-white relative overflow-hidden shadow-2xl">
           <div className="relative grid grid-cols-1 lg:grid-cols-4 gap-8 items-center">
             <div className="lg:col-span-3">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-cyan-100 bg-clip-text text-transparent">
@@ -966,30 +923,26 @@ export default function SchoolInfoTab({ showSnackbar }) {
             </div>
 
             <div className="space-y-4">
-              <motion.button
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={() => setIsEditing(true)}
                 className="w-full bg-white/20 backdrop-blur-sm text-white rounded-2xl px-6 py-4 font-bold hover:bg-white/30 transition-all duration-300 shadow-2xl flex items-center justify-center gap-3 text-lg border border-white/20"
               >
                 <FiEdit3 />
                 {schoolInfo ? 'Edit Information' : 'Create Information'}
-              </motion.button>
+              </button>
               
               {schoolInfo && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={handleDelete}
                   className="w-full bg-red-500/20 backdrop-blur-sm text-red-100 rounded-2xl px-6 py-4 font-bold hover:bg-red-500/30 transition-all duration-300 shadow-2xl flex items-center justify-center gap-3 text-lg border border-red-500/20"
                 >
                   <FiTrash2 />
                   Delete All
-                </motion.button>
+                </button>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {schoolInfo ? (
           <>
@@ -1023,11 +976,7 @@ export default function SchoolInfoTab({ showSnackbar }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Video Tour */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <FiVideo className="text-blue-500" />
                   School Video Tour
@@ -1036,29 +985,21 @@ export default function SchoolInfoTab({ showSnackbar }) {
                   videoTour={schoolInfo.videoTour} 
                   videoType={schoolInfo.videoType} 
                 />
-              </motion.div>
+              </div>
 
               {/* Curriculum PDF */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <FiBook className="text-green-500" />
                   Curriculum
                 </h3>
                 <PDFViewer curriculumPDF={schoolInfo.curriculumPDF} />
-              </motion.div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Subjects */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <FiBook className="text-purple-500" />
                   Subjects ({displaySubjects.length})
@@ -1077,14 +1018,10 @@ export default function SchoolInfoTab({ showSnackbar }) {
                     <p className="text-gray-500 text-sm">No subjects added yet</p>
                   )}
                 </div>
-              </motion.div>
+              </div>
 
               {/* Departments */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <FiAward className="text-orange-500" />
                   Departments ({displayDepartments.length})
@@ -1103,16 +1040,12 @@ export default function SchoolInfoTab({ showSnackbar }) {
                     <p className="text-gray-500 text-sm">No departments added yet</p>
                   )}
                 </div>
-              </motion.div>
+              </div>
             </div>
 
             {/* Fee Distribution Display */}
             {Object.keys(displayFeesDistribution).length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                   <FiDollarSign className="text-green-500" />
                   Fee Distribution
@@ -1125,16 +1058,12 @@ export default function SchoolInfoTab({ showSnackbar }) {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Academic Calendar */}
             {schoolInfo.openDate && schoolInfo.closeDate && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6"
-              >
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                   <FiCalendar className="text-cyan-500" />
                   Academic Calendar
@@ -1165,47 +1094,38 @@ export default function SchoolInfoTab({ showSnackbar }) {
                     </p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
           </>
         ) : (
           /* Empty State */
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-16 text-center"
-          >
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200/50 p-16 text-center">
             <div className="text-8xl mb-6">🏫</div>
             <h3 className="text-2xl font-bold text-gray-700 mb-3">No School Information Found</h3>
             <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto">
               Set up your school information to showcase your institution to students and parents.
             </p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => setIsEditing(true)}
               className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl px-8 py-4 font-bold hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-2xl flex items-center gap-3 mx-auto text-lg"
             >
               <FiPlus /> Create School Information
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         )}
       </div>
 
       {/* Edit Dialog */}
-      <AnimatePresence>
-        {isEditing && (
-          <SchoolInfoEditDialog
-            schoolInfo={schoolInfo}
-            onSave={() => {
-              setIsEditing(false);
-              fetchSchoolInfo(); // Refresh data
-            }}
-            onCancel={() => setIsEditing(false)}
-            showSnackbar={showSnackbar}
-          />
-        )}
-      </AnimatePresence>
+      {isEditing && (
+        <SchoolInfoEditDialog
+          schoolInfo={schoolInfo}
+          onSave={() => {
+            setIsEditing(false);
+            fetchSchoolInfo(); // Refresh data
+          }}
+          onCancel={() => setIsEditing(false)}
+        />
+      )}
     </div>
   );
 }
