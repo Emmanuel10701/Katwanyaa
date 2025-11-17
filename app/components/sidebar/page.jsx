@@ -174,6 +174,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     { id: 'school-info', label: 'School Information', icon: FiInfo },
     { id: 'guidance-counseling', label: 'Guidance Counseling', icon: FiMessageCircle },
     { id: 'students', label: 'Student Management', icon: FiUsers },
+    { id: 'student-council', label: 'Student Council', icon: FiUsers }, // Add this line
     { id: 'staff', label: 'Staff Management', icon: FiUserCheck },
     { id: 'assignments', label: 'Assignments', icon: FiBook },
     { id: 'newsevents', label: 'News & Events', icon: IoNewspaper },

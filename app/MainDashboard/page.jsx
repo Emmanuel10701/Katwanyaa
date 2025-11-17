@@ -38,6 +38,8 @@ import StudentManager from '../components/students/page';
 import SubscriberManager from '../components/subscriber/page';
 import EmailManager from '../components/email/page';
 import GalleryManager from '../components/gallery/page';
+import StudentCouncil from '../components/studentCouncil/page';
+
 import AdminsProfileManager from '../components/adminsandprofile/page';
 
 // Import the new components
@@ -104,6 +106,8 @@ export default function AdminDashboard() {
         return <GuidanceCounselingTab />;
       case 'students':
         return <StudentManager />;
+      case 'student-council': // Add this case
+       return <StudentCouncil />;
       case 'staff':
         return <StaffManager />;
       case 'assignments':
@@ -129,6 +133,7 @@ export default function AdminDashboard() {
     { id: 'school-info', label: 'School Information', icon: FiInfo },
     { id: 'guidance-counseling', label: 'Guidance Counseling', icon: FiMessageCircle },
     { id: 'students', label: 'Student Management', icon: FiUsers },
+    { id: 'student-council', label: 'Student Council', icon: FiUsers }, // Add this line
     { id: 'staff', label: 'Staff & BOM Management', icon: IoPeopleCircle },
     { id: 'assignments', label: 'Assignments Manager', icon: FiBook },
     { id: 'newsevents', label: 'News & Events', icon: IoNewspaper },

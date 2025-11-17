@@ -228,10 +228,79 @@ model Student {
   status              String   @default("Active")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  councilPositions StudentCouncil[]   @relation("StudentToStudentCouncil")
 
   promotionHistory PromotionHistory[]
 }
 
+
+// ==========================================
+// Student Council & Leadership
+// ==========================================
+model StudentCouncil {
+  id                String           @id @default(cuid())
+  position          CouncilPosition
+  department        CouncilDepartment
+  studentId         Int
+  student           Student          @relation(name: "StudentToStudentCouncil", fields: [studentId], references: [id], onDelete: Cascade)
+  startDate         DateTime
+  endDate           DateTime?
+  status            CouncilStatus    @default(Active)
+  image             String?          // Add image field for council member photos
+  achievements      String?
+  responsibilities  String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([studentId, position, department])
+  @@map("student_councils")
+}
+
+
+
+enum CouncilStatus {
+  Active
+  Inactive
+  Graduated
+}
+
+enum CouncilPosition {
+  President
+  DeputyPresident
+  SchoolCaptain
+  DeputyCaptain
+  AcademicsSecretary
+  SportsSecretary
+  EntertainmentSecretary
+  CleaningSecretary
+  MealsSecretary
+  BellRinger
+  DisciplineSecretary
+  HealthSecretary
+  LibrarySecretary
+  TransportSecretary
+  EnvironmentSecretary
+  SpiritualSecretary
+  TechnologySecretary
+  Assistant
+}
+
+enum CouncilDepartment {
+  Presidency
+  Academics
+  Sports
+  Entertainment
+  Cleaning
+  Meals
+  Discipline
+  Health
+  Library
+  Transport
+  Environment
+  Spiritual
+  Technology
+  General
+}
 model PromotionHistory {
   id          Int      @id @default(autoincrement())
   studentId   Int
@@ -266,3 +335,6 @@ model SchoolInfo {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
+
+
+
