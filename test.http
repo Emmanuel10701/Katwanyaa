@@ -1,715 +1,584 @@
-### Test HTTP Requests for Staff API (Multipart Form Data)
-@baseUrl = http://0.0.0.0:3001
-
-### Get All Staff
-GET {{baseUrl}}/api/staff
-
-### Create Principal (Only One Allowed)
-POST {{baseUrl}}/api/staff
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
-
-Dr. James Kamau
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
-
-Principal
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
-
-School Principal
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
-
-Administration
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
-
-principal@katwanyaa.ac.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
-
-+254722100001
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
-
-Dedicated educator with 20+ years of experience in academic leadership and school administration.
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
-
-["Overall school management", "Academic oversight", "Staff supervision", "Strategic planning"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
-
-["Educational Leadership", "Curriculum Development", "Strategic Planning", "Staff Development"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
-
-["National Education Award 2020", "School Performance Improvement 85%", "Staff Development Program"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-
-
-########## Test HTTP Requests for User Registration API
+##########
 @baseUrl = http://0.0.0.0:3001
 @contentType = application/json
 
-### Get All Users
-GET {{baseUrl}}/api/auth/register
-
-### Register Super Admin User
-POST {{baseUrl}}/api/login
-Content-Type: {{contentType}}
-
-{
-  "name": "Super Administrator",
-  "email": "superadmin@katwanyaa.ac.ke",
-  "password": "admin123456",
-  "phone": "+254722100001",
-  "role": "ADMIN"
-}
-
-### Register Principal User
-POST {{baseUrl}}/api/auth/register
-Content-Type: {{contentType}}
-
-{
-  "name": "Dr. James Kamau",
-  "email": "principal@katwanyaa.ac.ke",
-  "password": "principal123",
-  "phone": "+254722100002",
-  "role": "PRINCIPAL"
-}
-
-### Register Teacher User
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Create Deputy Principal - Academics
-POST {{baseUrl}}/api/staff
+### 1. Create Math Assignment with PDF Worksheet
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mrs. Grace Wanjiku
+Algebra Fundamentals Worksheet
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
-
-Deputy Principal
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
-
-Deputy Principal - Academics
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
-
-Administration
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
-
-deputy.academics@katwanyaa.ac.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
-
-+254722100002
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
-
-Experienced academic administrator with 15 years in curriculum development and student performance enhancement.
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
-
-["Academic programs", "Teacher supervision", "Student performance", "Curriculum implementation"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
-
-["Curriculum Development", "Academic Assessment", "Teacher Training", "Performance Analysis"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
-
-["Improved KCSE results by 25%", "Implemented new curriculum successfully", "Teacher mentorship program"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### Create Deputy Principal - Administration
-POST {{baseUrl}}/api/staff
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
-
-Mr. Peter Maina
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
-
-Deputy Principal
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
-
-Deputy Principal - Administration
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
-
-Administration
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
-
-deputy.admin@katwanyaa.ac.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
-
-+254722100003
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
-
-Administrative expert with 12 years experience in school operations and student welfare management.
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
-
-["School operations", "Student discipline", "Facility management", "Staff welfare"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
-
-["School Administration", "Operations Management", "Student Welfare", "Resource Management"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
-
-["Streamlined school operations", "Improved student discipline", "Enhanced facility maintenance"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### Create Head of Sciences Department
-POST {{baseUrl}}/api/staff
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
-
-Mr. David Ochieng
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
-
-Teacher
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
-
-Head of Sciences Department
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
-
-Sciences
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
-
-david.ochieng@katwanyaa.ac.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
-
-+254722100004
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
-
-Passionate physics and chemistry teacher with 10 years experience, specializing in practical science education.
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
-
-["Science department leadership", "Physics and Chemistry instruction", "Laboratory management", "Science club"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
-
-["Physics", "Chemistry", "Laboratory Techniques", "Science Education"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
-
-["National Science Fair Winners 2023", "Improved science performance by 40%", "Established modern science lab"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW--
-
-### Create Mathematics Teacher
-POST {{baseUrl}}/api/staff
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
-
-Mrs. Sarah Mwangi
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
-
-Teacher
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
-
-Mathematics Teacher
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="subject"
 
 Mathematics
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="className"
 
-sarah.mwangi@katwanyaa.ac.ke
+Grade 9A
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="teacher"
 
-+254722100005
+Mr. Johnson
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="dueDate"
 
-Mathematics specialist with 8 years experience in making complex concepts accessible to students.
+2024-12-15T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="description"
 
-["Mathematics instruction", "Math club coordination", "Student tutoring", "Curriculum development"]
+Complete the algebra worksheet covering linear equations and inequalities.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="instructions"
 
-["Advanced Mathematics", "Calculus", "Statistics", "Mathematics Pedagogy"]
+Show all work step by step. Submit your completed worksheet as PDF.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="priority"
 
-["Math Olympiad National Champions", "100% pass rate in mathematics", "Developed math learning app"]
+high
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="estimatedTime"
+
+2 hours
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="learningObjectives"
+
+["Solve linear equations", "Graph inequalities", "Apply algebraic properties"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="assignmentFiles"; filename="algebra_worksheet.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/algebra_worksheet.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="formula_sheet.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/formula_sheet.pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create English and Literature Teacher
-POST {{baseUrl}}/api/staff
+### 2. Create Science Lab with Multiple Files
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mr. Benjamin Kiprop
+Chemical Reactions Lab Report
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Teacher
+Science
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-English and Literature Teacher
+Grade 10B
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Languages
+Dr. Martinez
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-benjamin.kiprop@katwanyaa.ac.ke
+2024-12-18T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100006
+Write a comprehensive lab report on chemical reactions observed in the classroom experiment
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Literature enthusiast and language expert with 7 years experience in teaching English and communication skills.
+Include hypothesis, materials, procedure, results, and conclusion sections. Use the lab template provided.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["English language instruction", "Literature studies", "Debate club", "Drama club"]
+medium
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["English Literature", "Language Arts", "Creative Writing", "Public Speaking"]
+3 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="lab_template.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
 
-["National Debate Champions", "Published student writers", "Drama festival winners"]
+< ./sample_files/lab_template.docx
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="safety_protocols.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/safety_protocols.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="periodic_table.jpg"
+Content-Type: image/jpeg
+
+< ./sample_files/periodic_table.jpg
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create History and Geography Teacher
-POST {{baseUrl}}/api/staff
+### 3. Create English Essay with Reading Materials
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Ms. Faith Akinyi
+Macbeth Literary Analysis Essay
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Teacher
+English
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-History and Geography Teacher
+Grade 11A
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Humanities
+Mrs. Thompson
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-faith.akinyi@katwanyaa.ac.ke
+2024-12-20T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100007
+Analyze the theme of ambition in Shakespeare's Macbeth
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Social studies expert with 6 years experience in making history and geography engaging for students.
+Write a 5-paragraph essay with thesis statement and textual evidence. Use MLA format.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["History instruction", "Geography studies", "Social studies club", "Field trips coordination"]
+high
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["African History", "World Geography", "Social Studies", "Research Methods"]
+4 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="macbeth_text.pdf"
+Content-Type: application/pdf
 
-["History competition winners", "Geography field research projects", "Cultural exchange programs"]
+< ./sample_files/macbeth_text.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="mla_guide.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/mla_guide.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="essay_rubric.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ./sample_files/essay_rubric.docx
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create Physical Education Teacher
-POST {{baseUrl}}/api/staff
+### 4. Create History Research with Source Documents
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mr. Joseph Mutiso
+World War II Research Project
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Teacher
+History
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-Physical Education Teacher
+Grade 12C
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Sports
+Mr. Davis
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-joseph.mutiso@katwanyaa.ac.ke
+2024-12-22T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100008
+Research and write about a significant battle or event from World War II
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Former national athlete with 9 years experience in physical education and sports coaching.
+Minimum 1500 words, include bibliography with at least 5 sources. Use the research template.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Physical education", "Sports coaching", "Athletics training", "Health education"]
+medium
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Athletics Coaching", "Physical Fitness", "Sports Medicine", "Team Sports"]
+6 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="research_template.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
 
-["County sports champions", "National athletics medals", "Health and wellness program"]
+< ./sample_files/research_template.docx
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="primary_sources.zip"
+Content-Type: application/zip
+
+< ./sample_files/primary_sources.zip
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="citation_guide.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/citation_guide.pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create Biology Teacher
-POST {{baseUrl}}/api/staff
+### 5. Create Physics Problem Set with Diagrams
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Dr. Lucy Njeru
+Newton's Laws Problem Set
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Teacher
+Physics
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-Biology Teacher
+Grade 11B
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Sciences
+Dr. Chen
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-lucy.njeru@katwanyaa.ac.ke
+2024-12-14T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100009
+Solve problems involving Newton's three laws of motion with free-body diagrams
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Biology specialist with PhD in Microbiology, passionate about environmental science and biotechnology.
+Show all calculations and include free-body diagrams for each problem.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Biology instruction", "Laboratory practicals", "Environmental club", "Science research"]
+high
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Microbiology", "Environmental Science", "Biotechnology", "Genetics"]
+2.5 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="physics_problems.pdf"
+Content-Type: application/pdf
 
-["Science research awards", "Environmental conservation projects", "Biotechnology innovations"]
+< ./sample_files/physics_problems.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="formula_sheet.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/formula_sheet.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="diagram_examples.png"
+Content-Type: image/png
+
+< ./sample_files/diagram_examples.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create Chemistry Teacher
-POST {{baseUrl}}/api/staff
+### 6. Create Computer Science Programming Assignment
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mr. Samuel Gitonga
+Python Functions and Loops Project
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Teacher
+Computer Science
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-Chemistry Teacher
+Grade 11C
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Sciences
+Mr. Wilson
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-samuel.gitonga@katwanyaa.ac.ke
+2024-12-16T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100010
+Create Python programs using functions and loop structures to solve various problems
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Chemistry expert with 11 years experience, specializing in practical chemistry and industrial applications.
+Complete all 5 programming challenges. Submit .py files with proper comments.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Chemistry instruction", "Laboratory safety", "Chemical management", "Science competitions"]
+medium
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Organic Chemistry", "Analytical Chemistry", "Laboratory Safety", "Industrial Chemistry"]
+3 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="python_challenges.pdf"
+Content-Type: application/pdf
 
-["Chemistry olympiad winners", "Laboratory safety awards", "Industry partnerships"]
+< ./sample_files/python_challenges.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="starter_code.zip"
+Content-Type: application/zip
+
+< ./sample_files/starter_code.zip
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="python_style_guide.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/python_style_guide.pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create Board of Management Chairman
-POST {{baseUrl}}/api/staff
+### 7. Create Art Project with Reference Images
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mr. John Mwaura
+Color Theory Art Portfolio
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-BOM Member
+Art
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-Board Chairman
+Grade 10A
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Administration
+Ms. Rodriguez
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-john.mwaura@katwanyaa.ac.ke
+2024-12-25T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100013
+Create a series of artworks demonstrating understanding of color theory principles
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Experienced board chairman with background in education policy and school governance.
+Include 3 pieces exploring different color schemes with artist statements.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Board leadership", "Policy development", "Strategic oversight", "Stakeholder engagement"]
+low
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Education Policy", "School Governance", "Strategic Planning", "Financial Oversight"]
+5 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="project_guidelines.pdf"
+Content-Type: application/pdf
 
-["School expansion projects", "Policy improvements", "Community partnerships"]
+< ./sample_files/project_guidelines.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="color_wheel.jpg"
+Content-Type: image/jpeg
+
+< ./sample_files/color_wheel.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="artist_examples.zip"
+Content-Type: application/zip
+
+< ./sample_files/artist_examples.zip
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create Librarian
-POST {{baseUrl}}/api/staff
+### 8. Create Geography Map Assignment
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Ms. Grace Nyokabi
+European Countries and Capitals Map
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Librarian
+Geography
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-School Librarian
+Grade 9B
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Administration
+Mrs. Brown
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-grace.nyokabi@katwanyaa.ac.ke
+2024-12-13T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100016
+Label European countries and their capitals on a provided map
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Professional librarian with 7 years experience in library management and information literacy.
+Print the blank map or use digital tools to complete the labeling.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Library management", "Resource acquisition", "Information literacy", "Reading programs"]
+medium
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Library Science", "Information Management", "Digital Resources", "Research Skills"]
+1.5 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="blank_europe_map.pdf"
+Content-Type: application/pdf
 
-["Library modernization", "Digital resource integration", "Reading culture improvement"]
+< ./sample_files/blank_europe_map.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="reference_map.jpg"
+Content-Type: image/jpeg
+
+< ./sample_files/reference_map.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="country_list.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/country_list.pdf
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create School Counselor
-POST {{baseUrl}}/api/staff
+### 9. Create Music Theory Assignment
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mrs. Ann Wambui
+Chord Progressions and Harmony
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Counselor
+Music
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-School Counselor
+Grade 12A
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Guidance
+Mr. Taylor
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-ann.wambui@katwanyaa.ac.ke
+2024-12-19T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100017
+Analyze and create chord progressions in major and minor keys
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-Professional counselor with 8 years experience in student guidance and career counseling.
+Complete the worksheet and compose 2 original 8-bar progressions.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["Student counseling", "Career guidance", "Mental health support", "Parent consultations"]
+low
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Career Counseling", "Mental Health", "Student Development", "Crisis Intervention"]
+2 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="music_worksheet.pdf"
+Content-Type: application/pdf
 
-["Improved student wellbeing", "Career placement success", "Mental health awareness"]
+< ./sample_files/music_worksheet.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="chord_chart.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/chord_chart.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="audio_examples.mp3"
+Content-Type: audio/mpeg
+
+< ./sample_files/audio_examples.mp3
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Create IT Technician (Support Staff)
-POST {{baseUrl}}/api/staff
+### 10. Create Biology Cell Diagram Assignment
+POST {{baseUrl}}/api/assignment
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="title"
 
-Mr. Paul Kimani
+Cell Structure and Function Diagrams
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="role"
+Content-Disposition: form-data; name="subject"
 
-Support Staff
+Biology
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="position"
+Content-Disposition: form-data; name="className"
 
-IT Technician
+Grade 10C
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="department"
+Content-Disposition: form-data; name="teacher"
 
-Administration
+Dr. Kim
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="email"
+Content-Disposition: form-data; name="dueDate"
 
-paul.kimani@katwanyaa.ac.ke
+2024-12-17T23:59:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="phone"
+Content-Disposition: form-data; name="description"
 
-+254722100018
+Diagram and explain the functions of cell organelles in plant and animal cells
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="bio"
+Content-Disposition: form-data; name="instructions"
 
-IT professional with 5 years experience in educational technology and network management.
+Create labeled diagrams and write detailed functions for each organelle.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="responsibilities"
+Content-Disposition: form-data; name="priority"
 
-["IT support", "Network maintenance", "Computer labs", "Technical training"]
+high
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="expertise"
+Content-Disposition: form-data; name="estimatedTime"
 
-["Network Administration", "Hardware Maintenance", "Software Support", "Educational Technology"]
+2 hours
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="achievements"
+Content-Disposition: form-data; name="assignmentFiles"; filename="cell_diagram_template.pdf"
+Content-Type: application/pdf
 
-["Network infrastructure upgrade", "Computer lab setup", "Digital learning implementation"]
+< ./sample_files/cell_diagram_template.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="organelle_functions.pdf"
+Content-Type: application/pdf
+
+< ./sample_files/organelle_functions.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachments"; filename="microscope_images.zip"
+Content-Type: application/zip
+
+< ./sample_files/microscope_images.zip
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
-### Test with Image Upload (if you have an image file)
-# Note: This requires a file upload which is complex in .http files
-# You might need to use Postman or another client for file uploads
+### GET All Assignments
+GET {{baseUrl}}/api/assignment
 
-### Get Staff Count
-GET {{baseUrl}}/api/staff
+### GET Math Assignments Only
+GET {{baseUrl}}/api/assignments?subject=Mathematics
 
-### Search Staff by Name
-GET {{baseUrl}}/api/staff/search?q=physics
+### GET Assignments with Search
+GET {{baseUrl}}/api/assignments?search=lab
 
-### Filter by Department
-GET {{baseUrl}}/api/staff?department=Sciences
-
-### Filter by Role
-GET {{baseUrl}}/api/staff?role=Teacher
+### GET Assignments with Pagination
+GET {{baseUrl}}/api/assignments?page=1&limit=5
