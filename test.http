@@ -1,847 +1,715 @@
-### 21. Add Student 7 - Form 1 West
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/007",
-  "name": "Kevin Omondi",
-  "form": "Form 1",
-  "stream": "West",
-  "gender": "Male",
-  "dateOfBirth": "2009-02-18",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 342,
-  "previousSchool": "St. Mary's Primary",
-  "parentName": "Richard Omondi",
-  "parentEmail": "richard.omondi@email.com",
-  "parentPhone": "+254712998877",
-  "emergencyContact": "+254798877665",
-  "address": "234 Valley Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Basketball, Drama",
-  "academicPerformance": "Average",
-  "attendance": "89%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 22. Add Student 8 - Form 1 South
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/008",
-  "name": "Lucy Akinyi",
-  "form": "Form 1",
-  "stream": "South",
-  "gender": "Female",
-  "dateOfBirth": "2009-11-05",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 398,
-  "previousSchool": "Excel Academy",
-  "parentName": "Grace Akinyi",
-  "parentEmail": "grace.akinyi@email.com",
-  "parentPhone": "+254723445566",
-  "emergencyContact": "+254787665544",
-  "address": "567 Garden Estate, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Debate, Science Club",
-  "academicPerformance": "Excellent",
-  "attendance": "99%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 23. Add Student 9 - Form 2 East
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/009",
-  "name": "Brian Maina",
-  "form": "Form 2",
-  "stream": "East",
-  "gender": "Male",
-  "dateOfBirth": "2008-07-22",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 355,
-  "previousSchool": "Hillcrest Primary",
-  "parentName": "Joseph Maina",
-  "parentEmail": "joseph.maina@email.com",
-  "parentPhone": "+254734556677",
-  "emergencyContact": "+254776655443",
-  "address": "890 Mountain View, Nairobi",
-  "medicalInfo": "Asthmatic",
-  "hobbies": "Football, Photography",
-  "academicPerformance": "Good",
-  "attendance": "91%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 24. Add Student 10 - Form 2 West
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/010",
-  "name": "Nancy Atieno",
-  "form": "Form 2",
-  "stream": "West",
-  "gender": "Female",
-  "dateOfBirth": "2008-04-14",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 367,
-  "previousSchool": "Riverside Academy",
-  "parentName": "Paul Atieno",
-  "parentEmail": "paul.atieno@email.com",
-  "parentPhone": "+254745667788",
-  "emergencyContact": "+254765544332",
-  "address": "111 Lake Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Music, Dance",
-  "academicPerformance": "Good",
-  "attendance": "93%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 25. Add Student 11 - Form 3 North
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/011",
-  "name": "Daniel Kipchoge",
-  "form": "Form 3",
-  "stream": "North",
-  "gender": "Male",
-  "dateOfBirth": "2007-09-30",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 385,
-  "previousSchool": "Eldoret Academy",
-  "parentName": "Samuel Kipchoge",
-  "parentEmail": "samuel.kipchoge@email.com",
-  "parentPhone": "+254756778899",
-  "emergencyContact": "+254754433221",
-  "address": "222 Forest Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Athletics, Chess",
-  "academicPerformance": "Excellent",
-  "attendance": "96%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 26. Add Student 12 - Form 3 South
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/012",
-  "name": "Faith Chebet",
-  "form": "Form 3",
-  "stream": "South",
-  "gender": "Female",
-  "dateOfBirth": "2007-12-25",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 392,
-  "previousSchool": "Highland Primary",
-  "parentName": "David Chebet",
-  "parentEmail": "david.chebet@email.com",
-  "parentPhone": "+254767889900",
-  "emergencyContact": "+254743322110",
-  "address": "333 Plains View, Nairobi",
-  "medicalInfo": "Allergic to seafood",
-  "hobbies": "Art, Writing",
-  "academicPerformance": "Excellent",
-  "attendance": "98%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 27. Add Student 13 - Form 4 East
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/013",
-  "name": "Peter Njoroge",
-  "form": "Form 4",
-  "stream": "East",
-  "gender": "Male",
-  "dateOfBirth": "2006-06-18",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 378,
-  "previousSchool": "Central Academy",
-  "parentName": "John Njoroge",
-  "parentEmail": "john.njoroge@email.com",
-  "parentPhone": "+254778990011",
-  "emergencyContact": "+254732211009",
-  "address": "444 City Center, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Football, Music",
-  "academicPerformance": "Good",
-  "attendance": "90%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 28. Add Student 14 - Form 4 West
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/014",
-  "name": "Ruth Wambui",
-  "form": "Form 4",
-  "stream": "West",
-  "gender": "Female",
-  "dateOfBirth": "2006-03-08",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 405,
-  "previousSchool": "Premier Academy",
-  "parentName": "Stephen Wambui",
-  "parentEmail": "stephen.wambui@email.com",
-  "parentPhone": "+254789001122",
-  "emergencyContact": "+254721100998",
-  "address": "555 Uptown, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Science Club, Reading",
-  "academicPerformance": "Excellent",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 29. Add Student 15 - Form 1 North (Transferred)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/015",
-  "name": "Samuel Gitau",
-  "form": "Form 1",
-  "stream": "North",
-  "gender": "Male",
-  "dateOfBirth": "2009-01-12",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 348,
-  "previousSchool": "Transfer School",
-  "parentName": "Michael Gitau",
-  "parentEmail": "michael.gitau@email.com",
-  "parentPhone": "+254799112233",
-  "emergencyContact": "+254788223344",
-  "address": "666 Transfer Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Swimming, Video Games",
-  "academicPerformance": "Average",
-  "attendance": "85%",
-  "disciplineRecord": "Fair",
-  "status": "Transferred"
-}
-
-### 30. Add Student 16 - Form 2 South (Inactive)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/016",
-  "name": "Esther Muthoni",
-  "form": "Form 2",
-  "stream": "South",
-  "gender": "Female",
-  "dateOfBirth": "2008-10-17",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 362,
-  "previousSchool": "Hope Academy",
-  "parentName": "James Muthoni",
-  "parentEmail": "james.muthoni@email.com",
-  "parentPhone": "+254788334455",
-  "emergencyContact": "+254777445566",
-  "address": "777 Hope Street, Nairobi",
-  "medicalInfo": "Chronic headaches",
-  "hobbies": "Reading, Painting",
-  "academicPerformance": "Good",
-  "attendance": "87%",
-  "disciplineRecord": "Good",
-  "status": "Inactive"
-}
-
-### 31. Add Student 17 - Form 3 East (Excellent Student)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/017",
-  "name": "Benjamin Odhiambo",
-  "form": "Form 3",
-  "stream": "East",
-  "gender": "Male",
-  "dateOfBirth": "2007-05-21",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 412,
-  "previousSchool": "Star Academy",
-  "parentName": "Thomas Odhiambo",
-  "parentEmail": "thomas.odhiambo@email.com",
-  "parentPhone": "+254777556677",
-  "emergencyContact": "+254766667788",
-  "address": "888 Star Avenue, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Math Club, Programming",
-  "academicPerformance": "Excellent",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 32. Add Student 18 - Form 4 North (Sports Talent)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/018",
-  "name": "Catherine Adhiambo",
-  "form": "Form 4",
-  "stream": "North",
-  "gender": "Female",
-  "dateOfBirth": "2006-08-14",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 352,
-  "previousSchool": "Sports Academy",
-  "parentName": "Robert Adhiambo",
-  "parentEmail": "robert.adhiambo@email.com",
-  "parentPhone": "+254766778899",
-  "emergencyContact": "+254755889900",
-  "address": "999 Sports Complex, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Athletics, Basketball, Volleyball",
-  "academicPerformance": "Average",
-  "attendance": "88%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 33. Add Student 19 - Form 1 West (Arts Student)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/019",
-  "name": "Diana Nyambura",
-  "form": "Form 1",
-  "stream": "West",
-  "gender": "Female",
-  "dateOfBirth": "2009-07-30",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 338,
-  "previousSchool": "Creative Arts Primary",
-  "parentName": "Charles Nyambura",
-  "parentEmail": "charles.nyambura@email.com",
-  "parentPhone": "+254755990011",
-  "emergencyContact": "+254744001122",
-  "address": "101 Art Street, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Painting, Drama, Music",
-  "academicPerformance": "Below Average",
-  "attendance": "82%",
-  "disciplineRecord": "Fair",
-  "status": "Active"
-}
-
-### 34. Add Student 20 - Form 2 North (Science Enthusiast)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/020",
-  "name": "Eric Mwangi",
-  "form": "Form 2",
-  "stream": "North",
-  "gender": "Male",
-  "dateOfBirth": "2008-02-28",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 395,
-  "previousSchool": "Science Primary",
-  "parentName": "George Mwangi",
-  "parentEmail": "george.mwangi@email.com",
-  "parentPhone": "+254744112233",
-  "emergencyContact": "+254733223344",
-  "address": "202 Science Park, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Science Experiments, Robotics",
-  "academicPerformance": "Excellent",
-  "attendance": "97%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 35. Add Student 21 - Form 3 West (Language Talent)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/021",
-  "name": "Fiona Akoth",
-  "form": "Form 3",
-  "stream": "West",
-  "gender": "Female",
-  "dateOfBirth": "2007-04-11",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 388,
-  "previousSchool": "Language Academy",
-  "parentName": "Henry Akoth",
-  "parentEmail": "henry.akoth@email.com",
-  "parentPhone": "+254733334455",
-  "emergencyContact": "+254722445566",
-  "address": "303 Language Lane, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "French, German, Writing",
-  "academicPerformance": "Excellent",
-  "attendance": "99%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 36. Add Student 22 - Form 4 South (Prefect)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/022",
-  "name": "Gabriel Kariuki",
-  "form": "Form 4",
-  "stream": "South",
-  "gender": "Male",
-  "dateOfBirth": "2006-01-05",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 401,
-  "previousSchool": "Leadership Academy",
-  "parentName": "Martin Kariuki",
-  "parentEmail": "martin.kariuki@email.com",
-  "parentPhone": "+254722556677",
-  "emergencyContact": "+254711667788",
-  "address": "404 Leadership Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Debate, Student Council",
-  "academicPerformance": "Excellent",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 37. Add Student 23 - Form 1 East (Special Needs)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/023",
-  "name": "Hannah Wairimu",
-  "form": "Form 1",
-  "stream": "East",
-  "gender": "Female",
-  "dateOfBirth": "2009-09-19",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 325,
-  "previousSchool": "Inclusive Primary",
-  "parentName": "Daniel Wairimu",
-  "parentEmail": "daniel.wairimu@email.com",
-  "parentPhone": "+254711778899",
-  "emergencyContact": "+254700889900",
-  "address": "505 Inclusive Street, Nairobi",
-  "medicalInfo": "Requires hearing aid",
-  "hobbies": "Art, Reading",
-  "academicPerformance": "Below Average",
-  "attendance": "80%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 38. Add Student 24 - Form 2 West (Math Prodigy)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/024",
-  "name": "Ian Chege",
-  "form": "Form 2",
-  "stream": "West",
-  "gender": "Male",
-  "dateOfBirth": "2008-12-08",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 420,
-  "previousSchool": "Math Excellence Primary",
-  "parentName": "Patrick Chege",
-  "parentEmail": "patrick.chege@email.com",
-  "parentPhone": "+254700990011",
-  "emergencyContact": "+254789001122",
-  "address": "606 Math Avenue, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Math Olympiad, Chess",
-  "academicPerformance": "Excellent",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 39. Add Student 25 - Form 3 North (Music Talent)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/025",
-  "name": "Joyce Njeri",
-  "form": "Form 3",
-  "stream": "North",
-  "gender": "Female",
-  "dateOfBirth": "2007-03-27",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 345,
-  "previousSchool": "Music Primary",
-  "parentName": "Simon Njeri",
-  "parentEmail": "simon.njeri@email.com",
-  "parentPhone": "+254789112233",
-  "emergencyContact": "+254778223344",
-  "address": "707 Music Lane, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Piano, Violin, Choir",
-  "academicPerformance": "Average",
-  "attendance": "86%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 40. Add Student 26 - Form 4 East (Graduating Soon)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/026",
-  "name": "Kenneth Omollo",
-  "form": "Form 4",
-  "stream": "East",
-  "gender": "Male",
-  "dateOfBirth": "2006-11-15",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 395,
-  "previousSchool": "Future Leaders Primary",
-  "parentName": "Victor Omollo",
-  "parentEmail": "victor.omollo@email.com",
-  "parentPhone": "+254778334455",
-  "emergencyContact": "+254767445566",
-  "address": "808 Future Street, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Career Guidance, Mentoring",
-  "academicPerformance": "Good",
-  "attendance": "94%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 41. Add Student 27 - Form 1 South (New Admission)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/027",
-  "name": "Linda Mumbi",
-  "form": "Form 1",
-  "stream": "South",
-  "gender": "Female",
-  "dateOfBirth": "2009-06-23",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 360,
-  "previousSchool": "New Hope Primary",
-  "parentName": "Andrew Mumbi",
-  "parentEmail": "andrew.mumbi@email.com",
-  "parentPhone": "+254767556677",
-  "emergencyContact": "+254756667788",
-  "address": "909 Hope Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Dancing, Community Service",
-  "academicPerformance": "Good",
-  "attendance": "92%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 42. Add Student 28 - Form 2 East (Average Student)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/028",
-  "name": "Mark Thiong'o",
-  "form": "Form 2",
-  "stream": "East",
-  "gender": "Male",
-  "dateOfBirth": "2008-05-17",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 350,
-  "previousSchool": "Community Primary",
-  "parentName": "Francis Thiong'o",
-  "parentEmail": "francis.thiongo@email.com",
-  "parentPhone": "+254756778899",
-  "emergencyContact": "+254745889900",
-  "address": "1010 Community Ave, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Football, Movies",
-  "academicPerformance": "Average",
-  "attendance": "88%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 43. Add Student 29 - Form 3 West (Discipline Case)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/029",
-  "name": "Naomi Auma",
-  "form": "Form 3",
-  "stream": "West",
-  "gender": "Female",
-  "dateOfBirth": "2007-10-09",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 340,
-  "previousSchool": "Various Schools",
-  "parentName": "Phillip Auma",
-  "parentEmail": "phillip.auma@email.com",
-  "parentPhone": "+254745990011",
-  "emergencyContact": "+254734001122",
-  "address": "1111 Second Chance, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "None",
-  "academicPerformance": "Below Average",
-  "attendance": "75%",
-  "disciplineRecord": "Needs Improvement",
-  "status": "Active"
-}
-
-### 44. Add Student 30 - Form 4 North (Perfect Attendance)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/030",
-  "name": "Oliver Otieno",
-  "form": "Form 4",
-  "stream": "North",
-  "gender": "Male",
-  "dateOfBirth": "2006-04-02",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 385,
-  "previousSchool": "Perfect Attendance Primary",
-  "parentName": "Brian Otieno",
-  "parentEmail": "brian.otieno@email.com",
-  "parentPhone": "+254734112233",
-  "emergencyContact": "+254723223344",
-  "address": "1212 Perfect Street, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "All school activities",
-  "academicPerformance": "Good",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 45. Add Student 31 - Form 1 North (Youngest)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/031",
-  "name": "Patricia Wangui",
-  "form": "Form 1",
-  "stream": "North",
-  "gender": "Female",
-  "dateOfBirth": "2009-12-31",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 375,
-  "previousSchool": "Young Achievers",
-  "parentName": "Edward Wangui",
-  "parentEmail": "edward.wangui@email.com",
-  "parentPhone": "+254723334455",
-  "emergencyContact": "+254712445566",
-  "address": "1313 Young Street, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Reading, Puzzles",
-  "academicPerformance": "Good",
-  "attendance": "95%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 46. Add Student 32 - Form 2 South (Oldest in Class)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/032",
-  "name": "Quincy Adongo",
-  "form": "Form 2",
-  "stream": "South",
-  "gender": "Male",
-  "dateOfBirth": "2007-01-15",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 332,
-  "previousSchool": "Late Starter Primary",
-  "parentName": "Wilson Adongo",
-  "parentEmail": "wilson.adongo@email.com",
-  "parentPhone": "+254712556677",
-  "emergencyContact": "+254701667788",
-  "address": "1414 Mature Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Leadership, Counseling",
-  "academicPerformance": "Average",
-  "attendance": "90%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 47. Add Student 33 - Form 3 East (International Student)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2022/033",
-  "name": "Rachel Smith",
-  "form": "Form 3",
-  "stream": "East",
-  "gender": "Female",
-  "dateOfBirth": "2007-08-20",
-  "enrollmentDate": "2022-01-20",
-  "kcpeMarks": 368,
-  "previousSchool": "International School",
-  "parentName": "David Smith",
-  "parentEmail": "david.smith@email.com",
-  "parentPhone": "+254701778899",
-  "emergencyContact": "+254790889900",
-  "address": "1515 International Drive, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Languages, Travel",
-  "academicPerformance": "Good",
-  "attendance": "93%",
-  "disciplineRecord": "Good",
-  "status": "Active"
-}
-
-### 48. Add Student 34 - Form 4 West (Sibling Legacy)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2021/034",
-  "name": "Steve Mbugua",
-  "form": "Form 4",
-  "stream": "West",
-  "gender": "Male",
-  "dateOfBirth": "2006-02-28",
-  "enrollmentDate": "2021-01-18",
-  "kcpeMarks": 390,
-  "previousSchool": "Family Legacy Primary",
-  "parentName": "Christopher Mbugua",
-  "parentEmail": "christopher.mbugua@email.com",
-  "parentPhone": "+254790990011",
-  "emergencyContact": "+254779001122",
-  "address": "1616 Legacy Lane, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "School History, Alumni Activities",
-  "academicPerformance": "Good",
-  "attendance": "96%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 49. Add Student 35 - Form 1 South (Scholarship Student)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2024/035",
-  "name": "Tracy Mwende",
-  "form": "Form 1",
-  "stream": "South",
-  "gender": "Female",
-  "dateOfBirth": "2009-03-14",
-  "enrollmentDate": "2024-01-10",
-  "kcpeMarks": 425,
-  "previousSchool": "Scholarship Primary",
-  "parentName": "Anthony Mwende",
-  "parentEmail": "anthony.mwende@email.com",
-  "parentPhone": "+254779112233",
-  "emergencyContact": "+254768223344",
-  "address": "1717 Scholarship Road, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Academic Competitions, Research",
-  "academicPerformance": "Excellent",
-  "attendance": "100%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-### 50. Add Student 36 - Form 2 North (Community Service)
-POST http://0.0.0.0:3001/api/student
-Content-Type: application/json
-
-{
-  "admissionNumber": "ADM/2023/036",
-  "name": "Ursula Chepkoech",
-  "form": "Form 2",
-  "stream": "North",
-  "gender": "Female",
-  "dateOfBirth": "2008-07-07",
-  "enrollmentDate": "2023-01-15",
-  "kcpeMarks": 355,
-  "previousSchool": "Community Primary",
-  "parentName": "Nicholas Chepkoech",
-  "parentEmail": "nicholas.chepkoech@email.com",
-  "parentPhone": "+254768334455",
-  "emergencyContact": "+254757445566",
-  "address": "1818 Service Street, Nairobi",
-  "medicalInfo": "None",
-  "hobbies": "Volunteering, Environmental Club",
-  "academicPerformance": "Good",
-  "attendance": "91%",
-  "disciplineRecord": "Excellent",
-  "status": "Active"
-}
-
-
-### get all the student coulcul
-
-
-
-### CREATE CLASS REPRESENTATIVE
-POST http://0.0.0.0:3001/api/studentCouncil
+### Test HTTP Requests for Staff API (Multipart Form Data)
+@baseUrl = http://0.0.0.0:3001
+
+### Get All Staff
+GET {{baseUrl}}/api/staff
+
+### Create Principal (Only One Allowed)
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="studentId"
+Content-Disposition: form-data; name="name"
 
-1
+Dr. James Kamau
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Principal
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="position"
 
-ClassRepresentative
+School Principal
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="department"
 
-Class
+Administration
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="form"
+Content-Disposition: form-data; name="email"
 
-Form 3
+principal@katwanyaa.ac.ke
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="stream"
+Content-Disposition: form-data; name="phone"
 
-West
++254722100001
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="startDate"
+Content-Disposition: form-data; name="bio"
 
-2024-01-15
+Dedicated educator with 20+ years of experience in academic leadership and school administration.
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="responsibilities"
 
-Represent class in council meetings
+["Overall school management", "Academic oversight", "Staff supervision", "Strategic planning"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Educational Leadership", "Curriculum Development", "Strategic Planning", "Staff Development"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["National Education Award 2020", "School Performance Improvement 85%", "Staff Development Program"]
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+
+
+########## Test HTTP Requests for User Registration API
+@baseUrl = http://0.0.0.0:3001
+@contentType = application/json
+
+### Get All Users
+GET {{baseUrl}}/api/auth/register
+
+### Register Super Admin User
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+
+{
+  "name": "Super Administrator",
+  "email": "superadmin@katwanyaa.ac.ke",
+  "password": "admin123456",
+  "phone": "+254722100001",
+  "role": "ADMIN"
+}
+
+### Register Principal User
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Dr. James Kamau",
+  "email": "principal@katwanyaa.ac.ke",
+  "password": "principal123",
+  "phone": "+254722100002",
+  "role": "PRINCIPAL"
+}
+
+### Register Teacher User
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Create Deputy Principal - Academics
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mrs. Grace Wanjiku
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Deputy Principal
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Deputy Principal - Academics
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+deputy.academics@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100002
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Experienced academic administrator with 15 years in curriculum development and student performance enhancement.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Academic programs", "Teacher supervision", "Student performance", "Curriculum implementation"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Curriculum Development", "Academic Assessment", "Teacher Training", "Performance Analysis"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Improved KCSE results by 25%", "Implemented new curriculum successfully", "Teacher mentorship program"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Deputy Principal - Administration
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. Peter Maina
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Deputy Principal
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Deputy Principal - Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+deputy.admin@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100003
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Administrative expert with 12 years experience in school operations and student welfare management.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["School operations", "Student discipline", "Facility management", "Staff welfare"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["School Administration", "Operations Management", "Student Welfare", "Resource Management"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Streamlined school operations", "Improved student discipline", "Enhanced facility maintenance"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Head of Sciences Department
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. David Ochieng
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Head of Sciences Department
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Sciences
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+david.ochieng@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100004
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Passionate physics and chemistry teacher with 10 years experience, specializing in practical science education.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Science department leadership", "Physics and Chemistry instruction", "Laboratory management", "Science club"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Physics", "Chemistry", "Laboratory Techniques", "Science Education"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["National Science Fair Winners 2023", "Improved science performance by 40%", "Established modern science lab"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Mathematics Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mrs. Sarah Mwangi
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Mathematics Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Mathematics
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+sarah.mwangi@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100005
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Mathematics specialist with 8 years experience in making complex concepts accessible to students.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Mathematics instruction", "Math club coordination", "Student tutoring", "Curriculum development"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Advanced Mathematics", "Calculus", "Statistics", "Mathematics Pedagogy"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Math Olympiad National Champions", "100% pass rate in mathematics", "Developed math learning app"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create English and Literature Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. Benjamin Kiprop
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+English and Literature Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Languages
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+benjamin.kiprop@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100006
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Literature enthusiast and language expert with 7 years experience in teaching English and communication skills.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["English language instruction", "Literature studies", "Debate club", "Drama club"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["English Literature", "Language Arts", "Creative Writing", "Public Speaking"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["National Debate Champions", "Published student writers", "Drama festival winners"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create History and Geography Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Ms. Faith Akinyi
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+History and Geography Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Humanities
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+faith.akinyi@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100007
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Social studies expert with 6 years experience in making history and geography engaging for students.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["History instruction", "Geography studies", "Social studies club", "Field trips coordination"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["African History", "World Geography", "Social Studies", "Research Methods"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["History competition winners", "Geography field research projects", "Cultural exchange programs"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Physical Education Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. Joseph Mutiso
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Physical Education Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Sports
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+joseph.mutiso@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100008
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Former national athlete with 9 years experience in physical education and sports coaching.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Physical education", "Sports coaching", "Athletics training", "Health education"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Athletics Coaching", "Physical Fitness", "Sports Medicine", "Team Sports"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["County sports champions", "National athletics medals", "Health and wellness program"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Biology Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Dr. Lucy Njeru
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Biology Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Sciences
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+lucy.njeru@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100009
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Biology specialist with PhD in Microbiology, passionate about environmental science and biotechnology.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Biology instruction", "Laboratory practicals", "Environmental club", "Science research"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Microbiology", "Environmental Science", "Biotechnology", "Genetics"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Science research awards", "Environmental conservation projects", "Biotechnology innovations"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Chemistry Teacher
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. Samuel Gitonga
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Chemistry Teacher
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Sciences
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+samuel.gitonga@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100010
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Chemistry expert with 11 years experience, specializing in practical chemistry and industrial applications.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Chemistry instruction", "Laboratory safety", "Chemical management", "Science competitions"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Organic Chemistry", "Analytical Chemistry", "Laboratory Safety", "Industrial Chemistry"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Chemistry olympiad winners", "Laboratory safety awards", "Industry partnerships"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Board of Management Chairman
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. John Mwaura
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+BOM Member
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+Board Chairman
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+john.mwaura@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100013
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Experienced board chairman with background in education policy and school governance.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Board leadership", "Policy development", "Strategic oversight", "Stakeholder engagement"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Education Policy", "School Governance", "Strategic Planning", "Financial Oversight"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["School expansion projects", "Policy improvements", "Community partnerships"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create Librarian
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Ms. Grace Nyokabi
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Librarian
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+School Librarian
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+grace.nyokabi@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100016
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Professional librarian with 7 years experience in library management and information literacy.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Library management", "Resource acquisition", "Information literacy", "Reading programs"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Library Science", "Information Management", "Digital Resources", "Research Skills"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Library modernization", "Digital resource integration", "Reading culture improvement"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create School Counselor
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mrs. Ann Wambui
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Counselor
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+School Counselor
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Guidance
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+ann.wambui@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100017
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+Professional counselor with 8 years experience in student guidance and career counseling.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["Student counseling", "Career guidance", "Mental health support", "Parent consultations"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Career Counseling", "Mental Health", "Student Development", "Crisis Intervention"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Improved student wellbeing", "Career placement success", "Mental health awareness"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Create IT Technician (Support Staff)
+POST {{baseUrl}}/api/staff
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
+
+Mr. Paul Kimani
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="role"
+
+Support Staff
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="position"
+
+IT Technician
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="department"
+
+Administration
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="email"
+
+paul.kimani@katwanyaa.ac.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="phone"
+
++254722100018
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="bio"
+
+IT professional with 5 years experience in educational technology and network management.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="responsibilities"
+
+["IT support", "Network maintenance", "Computer labs", "Technical training"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="expertise"
+
+["Network Administration", "Hardware Maintenance", "Software Support", "Educational Technology"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="achievements"
+
+["Network infrastructure upgrade", "Computer lab setup", "Digital learning implementation"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Test with Image Upload (if you have an image file)
+# Note: This requires a file upload which is complex in .http files
+# You might need to use Postman or another client for file uploads
+
+### Get Staff Count
+GET {{baseUrl}}/api/staff
+
+### Search Staff by Name
+GET {{baseUrl}}/api/staff/search?q=physics
+
+### Filter by Department
+GET {{baseUrl}}/api/staff?department=Sciences
+
+### Filter by Role
+GET {{baseUrl}}/api/staff?role=Teacher

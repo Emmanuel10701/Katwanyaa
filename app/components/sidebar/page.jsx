@@ -7,7 +7,6 @@ import {
   FiSettings, 
   FiHelpCircle, 
   FiChevronRight,
-  FiBell,
   FiBook, 
   FiImage,
   FiMail,
@@ -16,7 +15,9 @@ import {
   FiUsers,
   FiUserCheck,
   FiInfo,
-  FiMessageCircle
+  FiMessageCircle,
+  FiCalendar,
+  FiUserPlus
 } from 'react-icons/fi';
 
 import { 
@@ -37,38 +38,177 @@ import { useEffect, useState } from 'react';
 export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, tabs }) {
   const [isMobile, setIsMobile] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [realStats, setRealStats] = useState({
+    totalStudents: 0,
+    totalStaff: 0,
+    totalSubscribers: 0,
+    studentCouncil: 0,
+    upcomingEvents: 0,
+    totalNews: 0,
+    activeAssignments: 0,
+    galleryItems: 0,
+    guidanceSessions: 0
+  });
 
-  // Get user data from localStorage on component mount
+  // Get user data from localStorage same way as dashboard
   useEffect(() => {
-    const getUserData = () => {
+    const initializeUser = async () => {
+      setLoading(true);
+      
       try {
-        const userData = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
+        console.log('🔍 Sidebar: Checking localStorage for user data...');
         
-        if (userData && token) {
-          setUser(JSON.parse(userData));
-        } else {
-          // Fallback to default user data
-          setUser({
-            name: 'Admin User',
-            email: 'admin@katwanyaa.edu',
-            role: 'administrator',
-            phone: '+254700000000'
-          });
+        // Check ALL possible localStorage keys for user data (same as dashboard)
+        const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
+        const possibleTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
+        
+        let userData = null;
+        let token = null;
+        
+        // Find user data in any possible key
+        for (const key of possibleUserKeys) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            console.log(`✅ Sidebar: Found user data in key: ${key}`);
+            userData = data;
+            break;
+          }
         }
+        
+        // Find token in any possible key
+        for (const key of possibleTokenKeys) {
+          const data = localStorage.getItem(key);
+          if (data) {
+            console.log(`✅ Sidebar: Found token in key: ${key}`);
+            token = data;
+            break;
+          }
+        }
+        
+        if (!userData) {
+          console.log('❌ Sidebar: No user data found in localStorage');
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
+
+        // Parse user data
+        const user = JSON.parse(userData);
+        console.log('📋 Sidebar: Parsed user data:', user);
+        
+        // Verify token is still valid (if available) - same as dashboard
+        if (token) {
+          try {
+            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+            const currentTime = Date.now() / 1000;
+            
+            if (tokenPayload.exp < currentTime) {
+              console.log('❌ Sidebar: Token expired');
+              // Clear all auth data
+              possibleUserKeys.forEach(key => localStorage.removeItem(key));
+              possibleTokenKeys.forEach(key => localStorage.removeItem(key));
+              window.location.href = '/pages/adminLogin';
+              return;
+            }
+            console.log('✅ Sidebar: Token is valid');
+          } catch (tokenError) {
+            console.log('⚠️ Sidebar: Token validation skipped:', tokenError.message);
+          }
+        }
+
+        // Check if user has valid role - same as dashboard
+        const userRole = user.role;
+        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL'];
+        
+        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+          console.log('❌ Sidebar: User does not have valid role:', userRole);
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
+
+        console.log('✅ Sidebar: User authenticated successfully:', user.name);
+        setUser(user);
+        
       } catch (error) {
-        console.error('Error getting user data:', error);
-        setUser({
-          name: 'Admin User',
-          email: 'admin@katwanyaa.edu',
-          role: 'administrator',
-          phone: '+254700000000'
-        });
+        console.error('❌ Sidebar: Error initializing user:', error);
+        // Clear all auth data on error
+        localStorage.clear();
+        window.location.href = '/pages/adminLogin';
+      } finally {
+        setLoading(false);
       }
     };
 
-    getUserData();
+    initializeUser();
   }, []);
+
+  // Fetch real counts from APIs
+  const fetchRealCounts = async () => {
+    try {
+      const [
+        studentsRes,
+        staffRes,
+        subscribersRes,
+        councilRes,
+        eventsRes,
+        newsRes,
+        assignmentsRes,
+        galleryRes,
+        guidanceRes
+      ] = await Promise.allSettled([
+        fetch('/api/student'),
+        fetch('/api/staff'),
+        fetch('/api/subscriber'),
+        fetch('/api/studentCouncil'),
+        fetch('/api/events'),
+        fetch('/api/news'),
+        fetch('/api/assignment'),
+        fetch('/api/gallery'),
+        fetch('/api/guidance')
+      ]);
+
+      // Process responses and get actual counts
+      const students = studentsRes.status === 'fulfilled' ? await studentsRes.value.json() : { students: [] };
+      const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
+      const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
+      const council = councilRes.status === 'fulfilled' ? await councilRes.value.json() : { councilMembers: [] };
+      const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
+      const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
+      const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
+      const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
+      const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
+
+      // Calculate real counts
+      const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
+      const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
+      const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
+      const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
+
+      setRealStats({
+        totalStudents: students.students?.length || 0,
+        activeStudents,
+        totalStaff: staff.staff?.length || 0,
+        totalSubscribers: subscribers.subscribers?.length || 0,
+        studentCouncil: activeCouncil,
+        upcomingEvents,
+        totalNews: news.news?.length || 0,
+        activeAssignments,
+        galleryItems: gallery.galleries?.length || 0,
+        guidanceSessions: guidance.events?.length || 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching real counts:', error);
+    }
+  };
+
+  // Fetch counts when component mounts
+  useEffect(() => {
+    if (!loading) {
+      fetchRealCounts();
+    }
+  }, [loading]);
 
   // Detect screen size and set initial sidebar state
   useEffect(() => {
@@ -95,10 +235,14 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   }, [setSidebarOpen]);
 
   const handleLogout = () => {
-    // Clear localStorage and redirect to login
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/adminLogin';
+    // Clear ALL possible auth data - same as dashboard
+    const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
+    const possibleTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
+    
+    possibleUserKeys.forEach(key => localStorage.removeItem(key));
+    possibleTokenKeys.forEach(key => localStorage.removeItem(key));
+    
+    window.location.href = '/pages/adminLogin';
   };
 
   const handleTabClick = (tabId) => {
@@ -107,6 +251,10 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     if (isMobile) {
       setSidebarOpen(false);
     }
+  };
+
+  const handleSupportClick = () => {
+    setShowSupportModal(true);
   };
 
   const sidebarVariants = {
@@ -161,41 +309,253 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     }
   };
 
+  // Enhanced quick stats with real data
   const quickStats = [
-    { label: 'Students', value: '1.2K', icon: FiUser, color: 'blue', change: '+12%' },
-    { label: 'Staff', value: '68', icon: IoStatsChart, color: 'green', change: '+5%' },
-    { label: 'Active', value: '45', icon: IoRocket, color: 'purple', change: '+8%' },
-    { label: 'Success', value: '98%', icon: IoSparkles, color: 'orange', change: '+3%' }
+    { 
+      label: 'Students', 
+      value: realStats.totalStudents?.toLocaleString() || '0', 
+      icon: FiUser, 
+      color: 'blue', 
+      change: '+12%' 
+    },
+    { 
+      label: 'Staff', 
+      value: realStats.totalStaff?.toLocaleString() || '0', 
+      icon: IoStatsChart, 
+      color: 'green', 
+      change: '+5%' 
+    },
+    { 
+      label: 'Active', 
+      value: realStats.activeAssignments?.toLocaleString() || '0', 
+      icon: IoRocket, 
+      color: 'purple', 
+      change: '+8%' 
+    },
+    { 
+      label: 'Council', 
+      value: realStats.studentCouncil?.toLocaleString() || '0', 
+      icon: IoSparkles, 
+      color: 'orange', 
+      change: '+3%' 
+    }
   ];
 
-  // Define default tabs if none provided
+  // Define default tabs if none provided - now with real counts
   const defaultTabs = [
-    { id: 'overview', label: 'Dashboard Overview', icon: FiUser },
-    { id: 'school-info', label: 'School Information', icon: FiInfo },
-    { id: 'guidance-counseling', label: 'Guidance Counseling', icon: FiMessageCircle },
-    { id: 'students', label: 'Student Management', icon: FiUsers },
-    { id: 'student-council', label: 'Student Council', icon: FiUsers }, // Add this line
-    { id: 'staff', label: 'Staff Management', icon: FiUserCheck },
-    { id: 'assignments', label: 'Assignments', icon: FiBook },
-    { id: 'newsevents', label: 'News & Events', icon: IoNewspaper },
-    { id: 'gallery', label: 'Media Gallery', icon: FiImage },
-    { id: 'subscribers', label: 'Subscribers', icon: IoPeopleCircle },
-    { id: 'email', label: 'Email Manager', icon: FiMail },
-    { id: 'admins-profile', label: 'Admins & Profile', icon: MdAdminPanelSettings }
+    { 
+      id: 'overview', 
+      label: 'Dashboard Overview', 
+      icon: FiUser,
+      count: null,
+      badge: 'primary'
+    },
+    { 
+      id: 'school-info', 
+      label: 'School Information', 
+      icon: FiInfo,
+      count: null,
+      badge: 'info'
+    },
+    { 
+      id: 'guidance-counseling', 
+      label: 'Guidance Counseling', 
+      icon: FiMessageCircle,
+      count: realStats.guidanceSessions,
+      badge: 'purple'
+    },
+    { 
+      id: 'students', 
+      label: 'Student Management', 
+      icon: FiUsers,
+      count: realStats.totalStudents,
+      badge: 'blue'
+    },
+    { 
+      id: 'student-council', 
+      label: 'Student Council', 
+      icon: FiUsers,
+      count: realStats.studentCouncil,
+      badge: 'green'
+    },
+    { 
+      id: 'staff', 
+      label: 'Staff Management', 
+      icon: FiUserCheck,
+      count: realStats.totalStaff,
+      badge: 'orange'
+    },
+    { 
+      id: 'assignments', 
+      label: 'Assignments', 
+      icon: FiBook,
+      count: realStats.activeAssignments,
+      badge: 'red'
+    },
+    { 
+      id: 'newsevents', 
+      label: 'News & Events', 
+      icon: IoNewspaper,
+      count: (realStats.upcomingEvents + realStats.totalNews) || null,
+      badge: 'yellow'
+    },
+    { 
+      id: 'gallery', 
+      label: 'Media Gallery', 
+      icon: FiImage,
+      count: realStats.galleryItems,
+      badge: 'pink'
+    },
+    { 
+      id: 'subscribers', 
+      label: 'Subscribers', 
+      icon: IoPeopleCircle,
+      count: realStats.totalSubscribers,
+      badge: 'teal'
+    },
+    { 
+      id: 'email', 
+      label: 'Email Manager', 
+      icon: FiMail,
+      count: null,
+      badge: 'indigo'
+    },
+    { 
+      id: 'admins-profile', 
+      label: 'Admins & Profile', 
+      icon: MdAdminPanelSettings,
+      count: null,
+      badge: 'gray'
+    }
   ];
 
   // Use provided tabs if non-empty, otherwise fall back to defaults
   const safeTabs = Array.isArray(tabs) && tabs.length > 0 ? tabs : defaultTabs;
 
-  // Use user data or fallback
-  const currentUser = user || {
-    name: 'Admin User',
-    email: 'admin@katwanyaa.edu',
-    role: 'administrator'
+  // Count badge component
+  const CountBadge = ({ count, color = 'blue' }) => {
+    if (count === null || count === undefined) return null;
+    
+    return (
+      <motion.span
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className={`ml-auto px-2 py-1 text-xs font-bold rounded-full bg-${color}-100 text-${color}-600 border border-${color}-200`}
+      >
+        {count > 99 ? '99+' : count}
+      </motion.span>
+    );
   };
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="fixed lg:sticky lg:top-0 inset-y-0 left-0 z-50 w-[416px] lg:w-[374px] xl:w-[416px] bg-white shadow-xl border-r border-gray-200 backdrop-blur-xl overflow-hidden flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-gray-600 text-sm">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user but loading is false, it means we're redirecting
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
+      {/* Support Modal */}
+      <AnimatePresence>
+        {showSupportModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-lg z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSupportModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full mx-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <FiHelpCircle className="text-blue-500" />
+                  Technical Support
+                </h3>
+                <button
+                  onClick={() => setShowSupportModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <FiX className="text-lg text-gray-600" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Need help with the admin panel? I'm here to provide technical assistance anytime!
+                </p>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white">
+                      <FiMessageCircle className="text-lg" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">WhatsApp</p>
+                      <p className="text-gray-600">079347260</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-200">
+                    <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white">
+                      <FiMail className="text-lg" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">Email</p>
+                      <p className="text-gray-600">emmannuelmakau90@gmail.com</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-600 text-center">
+                    💡 Available for technical assistance, bug fixes, and feature requests
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowSupportModal(false)}
+                  className="flex-1 px-4 py-3 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 border border-gray-300 hover:border-gray-400"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    // Open WhatsApp
+                    window.open('https://wa.me/25479347260', '_blank');
+                  }}
+                  className="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold"
+                >
+                  Contact WhatsApp
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mobile Overlay */}
       <AnimatePresence>
         {sidebarOpen && isMobile && (
@@ -332,10 +692,17 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                     )}
                   </div>
 
-                  {/* Label */}
-                  <span className="font-semibold text-sm lg:text-base relative z-10 flex-1 text-left">
-                    {tab.label}
-                  </span>
+                  {/* Label and Count */}
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <span className="font-semibold text-sm lg:text-base relative z-10 text-left">
+                      {tab.label}
+                    </span>
+                    
+                    {/* Count Badge */}
+                    {tab.count !== null && tab.count !== undefined && (
+                      <CountBadge count={tab.count} color={tab.badge} />
+                    )}
+                  </div>
 
                   {/* Active chevron */}
                   {activeTab === tab.id && (
@@ -352,7 +719,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             })}
             </motion.div>
 
-            {/* Quick Stats */}
+            {/* Quick Stats with Real Data */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -405,7 +772,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             >
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
-                  {currentUser.name.charAt(0)}
+                  {user.name?.charAt(0) || 'A'}
                 </div>
                 <motion.div 
                   animate={{ 
@@ -420,12 +787,16 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 text-sm truncate">{currentUser.name}</p>
-                <p className="text-gray-600 text-xs truncate">{currentUser.email}</p>
+                <p className="font-semibold text-gray-800 text-sm truncate">
+                  {user.name}
+                </p>
+                <p className="text-gray-600 text-xs truncate">
+                  {user.email}
+                </p>
                 <div className="flex items-center gap-1 mt-1">
                   <FiShield className="text-emerald-500 text-xs" />
                   <span className="text-emerald-600 text-xs font-medium capitalize">
-                    {currentUser.role.replace('_', ' ')}
+                    {user.role?.replace('_', ' ') || 'administrator'}
                   </span>
                 </div>
               </div>
@@ -446,6 +817,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                 whileHover={{ scale: 1.05, backgroundColor: 'rgba(0,0,0,0.05)' }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-sm"
+                onClick={handleSupportClick}
               >
                 <FiHelpCircle className="text-base" />
                 <span>Support</span>

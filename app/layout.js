@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import ClientLayoutWrapper from "./-app"; // 👈 New client wrapper
-
+import ClientLayoutWrapper from "./-app";
+import { SessionProvider } from './session/sessiowrapper'; 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -33,7 +33,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900`}
       >
-        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        <SessionProvider> {/* 👈 Wrap with custom provider */}
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        </SessionProvider>
       </body>
     </html>
   );

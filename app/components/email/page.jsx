@@ -17,8 +17,14 @@ import {
   FiChevronRight,
   FiCalendar,
   FiRotateCw,
-  FiCheck
+  FiCheck,
+  FiUser,
+  FiAward,
+  FiShield,
+  FiBook
 } from 'react-icons/fi';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function EmailManager() {
   const [campaigns, setCampaigns] = useState([]);
@@ -41,22 +47,71 @@ export default function EmailManager() {
     status: 'draft'
   });
 
-  // Fetch emails from APIs
+  // Enhanced email fetching with proper categorization
   const fetchEmails = async () => {
     try {
-      // Fetch students
+      console.log('Fetching emails from APIs...');
+      
+      // Fetch students from the correct API endpoint
       const studentRes = await fetch('/api/student');
       const studentData = await studentRes.json();
-      const students = studentData.success ? studentData.student || [] : [];
-      const parentEmails = students.map(s => s.parentEmail).filter(Boolean);
+      console.log('Student API response:', studentData);
+      
+      const students = studentData.success ? studentData.students || studentData.data || [] : [];
+      const parentEmails = students
+        .filter(s => s.parentEmail && s.parentEmail.trim() !== '')
+        .map(s => s.parentEmail.trim());
 
-      // Fetch staff
+      // Fetch staff from the correct API endpoint
       const staffRes = await fetch('/api/staff');
       const staffData = await staffRes.json();
-      const staff = staffData.success ? staffData.staff || [] : [];
-      const teacherEmails = staff.filter(s => s.role === 'Teacher').map(s => s.email).filter(Boolean);
-      const bomEmails = staff.filter(s => s.role === 'BOM Member').map(s => s.email).filter(Boolean);
-      const allStaffEmails = staff.map(s => s.email).filter(Boolean);
+      console.log('Staff API response:', staffData);
+      
+      const staff = staffData.success ? staffData.staff || staffData.data || [] : [];
+      
+      // Enhanced staff categorization
+      const teachingStaff = staff.filter(s => 
+        s.role === 'Teacher' || 
+        s.department === 'Sciences' || 
+        s.department === 'Mathematics' || 
+        s.department === 'Languages' || 
+        s.department === 'Humanities' ||
+        s.department === 'Sports'
+      );
+      
+      const administrativeStaff = staff.filter(s => 
+        s.role === 'Principal' || 
+        s.role === 'Deputy Principal' ||
+        s.department === 'Administration'
+      );
+      
+      const bomMembers = staff.filter(s => 
+        s.role === 'BOM Member' || 
+        (s.position && s.position.toLowerCase().includes('board'))
+      );
+      
+      const supportStaff = staff.filter(s => 
+        s.role === 'Support Staff' || 
+        s.role === 'Librarian' || 
+        s.role === 'Counselor' ||
+        (!teachingStaff.includes(s) && !administrativeStaff.includes(s) && !bomMembers.includes(s))
+      );
+
+      // Get emails for each category
+      const teacherEmails = teachingStaff.map(s => s.email).filter(email => email && email.trim() !== '');
+      const adminEmails = administrativeStaff.map(s => s.email).filter(email => email && email.trim() !== '');
+      const bomEmails = bomMembers.map(s => s.email).filter(email => email && email.trim() !== '');
+      const supportEmails = supportStaff.map(s => s.email).filter(email => email && email.trim() !== '');
+      const allStaffEmails = staff.map(s => s.email).filter(email => email && email.trim() !== '');
+
+      console.log('Email counts:', {
+        parents: parentEmails.length,
+        teachers: teacherEmails.length,
+        admin: adminEmails.length,
+        bom: bomEmails.length,
+        support: supportEmails.length,
+        allStaff: allStaffEmails.length
+      });
 
       // Update state
       setStudents(students);
@@ -65,16 +120,29 @@ export default function EmailManager() {
       return {
         parentEmails,
         teacherEmails,
+        adminEmails,
         bomEmails,
-        allStaffEmails
+        supportEmails,
+        allStaffEmails,
+        teachingStaff,
+        administrativeStaff,
+        bomMembers,
+        supportStaff
       };
     } catch (error) {
       console.error('Error fetching emails:', error);
+      toast.error('Error fetching email data');
       return {
         parentEmails: [],
         teacherEmails: [],
+        adminEmails: [],
         bomEmails: [],
-        allStaffEmails: []
+        supportEmails: [],
+        allStaffEmails: [],
+        teachingStaff: [],
+        administrativeStaff: [],
+        bomMembers: [],
+        supportStaff: []
       };
     }
   };
@@ -87,78 +155,197 @@ export default function EmailManager() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      console.log('Fetching all data...');
+      
       // Fetch campaigns
       const campaignsRes = await fetch('/api/emails');
       const campaignsData = await campaignsRes.json();
-      if (campaignsData.success) setCampaigns(campaignsData.campaigns || []);
+      console.log('Campaigns API response:', campaignsData);
+      
+      if (campaignsData.success) {
+        setCampaigns(campaignsData.campaigns || campaignsData.data || []);
+      } else {
+        toast.error('Failed to fetch campaigns');
+      }
 
       // Fetch students & staff emails
       await fetchEmails();
+      toast.success('Data loaded successfully');
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast.error('Error loading data');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate recipient groups from API data
+  // Enhanced recipient groups with proper categorization
   const recipientGroups = [
     { 
       value: 'all', 
       label: 'All Recipients', 
       count: calculateTotalRecipients(),
-      color: 'blue'
+      color: 'blue',
+      description: 'All parents and staff members',
+      icon: FiUsers
     },
     { 
       value: 'parents', 
       label: 'Parents Only', 
-      count: students.filter(s => s.parentEmail).length,
-      color: 'green'
+      count: students.filter(s => s.parentEmail && s.parentEmail.trim() !== '').length,
+      color: 'green',
+      description: 'All parent email addresses',
+      icon: FiUser
     },
     { 
       value: 'teachers', 
       label: 'Teaching Staff', 
-      count: staff.filter(s => s.role === 'Teacher').length,
-      color: 'purple'
+      count: staff.filter(s => 
+        s.role === 'Teacher' || 
+        ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Sports'].includes(s.department)
+      ).length,
+      color: 'purple',
+      description: 'All teaching staff members',
+      icon: FiBook
+    },
+    { 
+      value: 'administration', 
+      label: 'Administration', 
+      count: staff.filter(s => 
+        s.role === 'Principal' || 
+        s.role === 'Deputy Principal' ||
+        s.department === 'Administration'
+      ).length,
+      color: 'orange',
+      description: 'Principal, Deputy Principals, and administrative staff',
+      icon: FiAward
     },
     { 
       value: 'bom', 
       label: 'Board of Management', 
-      count: staff.filter(s => s.role === 'BOM Member').length,
-      color: 'red'
+      count: staff.filter(s => 
+        s.role === 'BOM Member' || 
+        (s.position && s.position.toLowerCase().includes('board'))
+      ).length,
+      color: 'red',
+      description: 'Board of Management members',
+      icon: FiShield
+    },
+    { 
+      value: 'support', 
+      label: 'Support Staff', 
+      count: staff.filter(s => 
+        s.role === 'Support Staff' || 
+        s.role === 'Librarian' || 
+        s.role === 'Counselor'
+      ).length,
+      color: 'indigo',
+      description: 'Librarians, counselors, and support staff',
+      icon: FiUsers
     },
     { 
       value: 'staff', 
       label: 'All Staff', 
-      count: staff.filter(s => s.email).length,
-      color: 'orange'
+      count: staff.filter(s => s.email && s.email.trim() !== '').length,
+      color: 'cyan',
+      description: 'All teaching, administrative, and support staff',
+      icon: FiUsers
     }
   ];
 
   function calculateTotalRecipients() {
-    const parentEmails = students.map(s => s.parentEmail).filter(Boolean).length;
-    const staffEmails = staff.map(s => s.email).filter(Boolean).length;
+    const parentEmails = students.filter(s => s.parentEmail && s.parentEmail.trim() !== '').length;
+    const staffEmails = staff.filter(s => s.email && s.email.trim() !== '').length;
     return parentEmails + staffEmails;
   }
 
-  // Get emails for a recipient group
+  // Enhanced email retrieval with proper formatting
   const getRecipientEmails = (recipientType) => {
+    console.log(`Getting emails for recipient type: ${recipientType}`);
+    
+    let emails = [];
+    
     switch (recipientType) {
       case 'parents':
-        return students.map(s => s.parentEmail).filter(Boolean);
+        emails = students
+          .map(s => s.parentEmail)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
       case 'teachers':
-        return staff.filter(s => s.role === 'Teacher').map(s => s.email).filter(Boolean);
+        emails = staff
+          .filter(s => 
+            s.role === 'Teacher' || 
+            ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Sports'].includes(s.department)
+          )
+          .map(s => s.email)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
+      case 'administration':
+        emails = staff
+          .filter(s => 
+            s.role === 'Principal' || 
+            s.role === 'Deputy Principal' ||
+            s.department === 'Administration'
+          )
+          .map(s => s.email)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
       case 'bom':
-        return staff.filter(s => s.role === 'BOM Member').map(s => s.email).filter(Boolean);
+        emails = staff
+          .filter(s => 
+            s.role === 'BOM Member' || 
+            (s.position && s.position.toLowerCase().includes('board'))
+          )
+          .map(s => s.email)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
+      case 'support':
+        emails = staff
+          .filter(s => 
+            s.role === 'Support Staff' || 
+            s.role === 'Librarian' || 
+            s.role === 'Counselor'
+          )
+          .map(s => s.email)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
       case 'staff':
-        return staff.map(s => s.email).filter(Boolean);
+        emails = staff
+          .map(s => s.email)
+          .filter(email => email && email.trim() !== '')
+          .map(email => email.trim());
+        break;
+        
       case 'all':
       default:
-        return [
-          ...students.map(s => s.parentEmail).filter(Boolean),
-          ...staff.map(s => s.email).filter(Boolean)
+        emails = [
+          ...students
+            .map(s => s.parentEmail)
+            .filter(email => email && email.trim() !== '')
+            .map(email => email.trim()),
+          ...staff
+            .map(s => s.email)
+            .filter(email => email && email.trim() !== '')
+            .map(email => email.trim())
         ];
+        break;
     }
+    
+    // Remove duplicates and ensure proper formatting
+    const uniqueEmails = [...new Set(emails)];
+    console.log(`Found ${uniqueEmails.length} emails for ${recipientType}`);
+    
+    return uniqueEmails;
   };
 
   // Filtering and pagination
@@ -168,7 +355,8 @@ export default function EmailManager() {
     if (searchTerm) {
       filtered = filtered.filter(campaign =>
         campaign.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        campaign.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        campaign.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.recipientType?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -186,6 +374,64 @@ export default function EmailManager() {
   const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Enhanced Pagination Component
+  const Pagination = () => {
+    const maxVisiblePages = 5;
+    const getPageNumbers = () => {
+      const pages = [];
+      const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      return pages;
+    };
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+        <p className="text-sm text-gray-700">
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredCampaigns.length)} of {filteredCampaigns.length} campaigns
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+          >
+            <FiChevronLeft className="text-lg" />
+          </button>
+          
+          {getPageNumbers().map((page, index, array) => (
+            <div key={page} className="flex items-center">
+              {index > 0 && array[index - 1] !== page - 1 && (
+                <span className="px-2 text-gray-500">...</span>
+              )}
+              <button
+                onClick={() => paginate(page)}
+                className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                  currentPage === page
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/25'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            </div>
+          ))}
+
+          <button
+            onClick={() => paginate(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+          >
+            <FiChevronRight className="text-lg" />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // CRUD Operations
   const handleCreate = () => {
@@ -205,7 +451,7 @@ export default function EmailManager() {
       title: campaign.title,
       subject: campaign.subject,
       content: campaign.content,
-      recipients: 'all',
+      recipients: campaign.recipientType || 'all',
       status: campaign.status
     });
     setEditingCampaign(campaign);
@@ -223,13 +469,13 @@ export default function EmailManager() {
         
         if (result.success) {
           setCampaigns(campaigns.filter(campaign => campaign.id !== id));
-          alert('Campaign deleted successfully!');
+          toast.success('Campaign deleted successfully!');
         } else {
-          alert(result.error || 'Failed to delete campaign');
+          toast.error(result.error || 'Failed to delete campaign');
         }
       } catch (error) {
         console.error('Error deleting campaign:', error);
-        alert('Error deleting campaign');
+        toast.error('Error deleting campaign');
       }
     }
   };
@@ -241,7 +487,7 @@ export default function EmailManager() {
       const recipientEmails = getRecipientEmails(formData.recipients);
       
       if (recipientEmails.length === 0) {
-        alert('No recipients found for the selected group. Please check your data.');
+        toast.error('No recipients found for the selected group. Please check your data.');
         return;
       }
 
@@ -251,31 +497,44 @@ export default function EmailManager() {
         content: formData.content,
         recipients: recipientEmails.join(', '),
         status: formData.status,
-        recipientType: formData.recipients
+        recipientType: formData.recipients,
+        recipientCount: recipientEmails.length,
+        sentAt: formData.status === 'published' ? new Date().toISOString() : null
       };
 
-      console.log('Creating campaign:', campaignData);
+      console.log('Creating campaign with data:', campaignData);
 
-      const response = await fetch('/api/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(campaignData),
-      });
+      let response;
+      if (editingCampaign) {
+        response = await fetch(`/api/emails?id=${editingCampaign.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(campaignData),
+        });
+      } else {
+        response = await fetch('/api/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(campaignData),
+        });
+      }
 
       const result = await response.json();
 
       if (result.success) {
         await fetchData(); // Refresh campaigns
         setShowModal(false);
-        alert('Campaign created successfully!');
+        toast.success(`Campaign ${editingCampaign ? 'updated' : 'created'} successfully!`);
       } else {
-        alert(result.error || 'Failed to create campaign');
+        toast.error(result.error || `Failed to ${editingCampaign ? 'update' : 'create'} campaign`);
       }
     } catch (error) {
       console.error('Error creating campaign:', error);
-      alert('Error creating campaign');
+      toast.error('Error creating campaign');
     }
   };
 
@@ -283,8 +542,7 @@ export default function EmailManager() {
     if (confirm(`Send this campaign to ${campaign.recipients.split(',').length} recipients?`)) {
       setSending(true);
       try {
-        // Update campaign status to published to trigger sending
-        const response = await fetch('/api/emails', {
+        const response = await fetch(`/api/emails?id=${campaign.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -300,13 +558,13 @@ export default function EmailManager() {
         
         if (result.success) {
           await fetchData(); // Refresh to update status
-          alert('Campaign sent successfully!');
+          toast.success('Campaign sent successfully!');
         } else {
-          alert(result.error || 'Failed to send campaign');
+          toast.error(result.error || 'Failed to send campaign');
         }
       } catch (error) {
         console.error('Error sending campaign:', error);
-        alert('Error sending campaign');
+        toast.error('Error sending campaign');
       } finally {
         setSending(false);
       }
@@ -341,50 +599,15 @@ export default function EmailManager() {
     }
   ];
 
-  const Pagination = () => (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-      <p className="text-sm text-gray-700">
-        Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredCampaigns.length)} of {filteredCampaigns.length} campaigns
-      </p>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-        >
-          <FiChevronLeft className="text-lg" />
-        </button>
-        
-        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1)
-          .map((page, index, array) => (
-            <div key={page} className="flex items-center">
-              {index > 0 && array[index - 1] !== page - 1 && (
-                <span className="px-2 text-gray-500">...</span>
-              )}
-              <button
-                onClick={() => paginate(page)}
-                className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
-                  currentPage === page
-                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {page}
-              </button>
-            </div>
-          ))
-        }
-
-        <button
-          onClick={() => paginate(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-        >
-          <FiChevronRight className="text-lg" />
-        </button>
-      </div>
-    </div>
-  );
+  // Enhanced audience overview
+  const audienceOverview = [
+    { label: 'Total Parents', value: students.filter(s => s.parentEmail && s.parentEmail.trim() !== '').length },
+    { label: 'Teaching Staff', value: staff.filter(s => s.role === 'Teacher' || ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Sports'].includes(s.department)).length },
+    { label: 'Administration', value: staff.filter(s => s.role === 'Principal' || s.role === 'Deputy Principal' || s.department === 'Administration').length },
+    { label: 'BOM Members', value: staff.filter(s => s.role === 'BOM Member' || (s.position && s.position.toLowerCase().includes('board'))).length },
+    { label: 'Support Staff', value: staff.filter(s => s.role === 'Support Staff' || s.role === 'Librarian' || s.role === 'Counselor').length },
+    { label: 'Total Audience', value: calculateTotalRecipients() }
+  ];
 
   if (loading) {
     return (
@@ -403,10 +626,26 @@ export default function EmailManager() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 lg:p-6 space-y-6">
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">Email Campaigns</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            Email Campaign Manager
+          </h1>
           <p className="text-gray-600 mt-2">Create and manage email campaigns for school communication</p>
         </div>
         <div className="flex gap-3">
@@ -508,7 +747,10 @@ export default function EmailManager() {
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-                onClick={() => setFormData({ ...formData, status: 'draft' })}
+                onClick={() => {
+                  setFormData({ ...formData, status: 'draft' });
+                  handleSubmit({ preventDefault: () => {} });
+                }}
               >
                 <FiSave className="text-lg" />
                 Save Draft
@@ -517,7 +759,7 @@ export default function EmailManager() {
                 className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-green-500/25"
                 onClick={() => {
                   setFormData({ ...formData, status: 'published' });
-                  handleSubmit({ preventDefault: () => {} } );
+                  handleSubmit({ preventDefault: () => {} });
                 }}
               >
                 <FiSend className="text-lg" />
@@ -543,9 +785,12 @@ export default function EmailManager() {
                   className={`flex items-center justify-between p-3 border border-${group.color}-200 rounded-xl cursor-pointer transition-all duration-200 hover:border-${group.color}-300 hover:bg-${group.color}-50`}
                   onClick={() => setFormData({ ...formData, recipients: group.value })}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full bg-${group.color}-500`}></div>
-                    <span className="font-medium text-gray-700 text-sm">{group.label}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <group.icon className={`text-${group.color}-500 text-sm`} />
+                      <span className="font-medium text-gray-700 text-sm">{group.label}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 ml-6">{group.description}</p>
                   </div>
                   <span className={`bg-${group.color}-100 text-${group.color}-800 px-2 py-1 rounded-full text-xs font-semibold`}>
                     {group.count}
@@ -561,31 +806,13 @@ export default function EmailManager() {
               <FiBarChart2 className="text-green-500" />
               Audience Overview
             </h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600">Total Parents</p>
-                <p className="text-xl font-bold text-gray-800">
-                  {students.filter(s => s.parentEmail).length}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Teaching Staff</p>
-                <p className="text-xl font-bold text-gray-800">
-                  {staff.filter(s => s.role === 'Teacher').length}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">BOM Members</p>
-                <p className="text-xl font-bold text-gray-800">
-                  {staff.filter(s => s.role === 'BOM Member').length}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Audience</p>
-                <p className="text-xl font-bold text-gray-800">
-                  {calculateTotalRecipients()}
-                </p>
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              {audienceOverview.map((item, index) => (
+                <div key={index} className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">{item.label}</p>
+                  <p className="text-xl font-bold text-gray-800">{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -643,13 +870,16 @@ export default function EmailManager() {
                         {campaign.title}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">{campaign.subject}</p>
+                      <p className="text-xs text-gray-400 mt-1 capitalize">
+                        {campaign.recipientType || 'all'} • {campaign.recipientCount || campaign.recipients?.split(',').length || 0} recipients
+                      </p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <FiUsers className="text-gray-400" />
                       <span className="text-sm text-gray-600">
-                        {campaign.recipients?.split(',').length || 0} recipients
+                        {campaign.recipientCount || campaign.recipients?.split(',').length || 0} recipients
                       </span>
                     </div>
                   </td>
@@ -834,7 +1064,7 @@ export default function EmailManager() {
                   <div>
                     <p className="text-sm font-semibold text-blue-800">Recipient Preview</p>
                     <p className="text-xs text-blue-600">
-                      This will be sent to {getRecipientEmails(formData.recipients).length} recipients
+                      This will be sent to {getRecipientEmails(formData.recipients).length} recipients in the {recipientGroups.find(g => g.value === formData.recipients)?.label} group
                     </p>
                   </div>
                 </div>
