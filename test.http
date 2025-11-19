@@ -1,63 +1,155 @@
 ##########
-@baseUrl = http://0.0.0.0:3001
+@baseUrl = http://0.0.0.0:3001/api/guidance
 @contentType = application/json
 
-##########
-@baseUrl = http://0.0.0.0:3001
-@contentType = application/json
-
-############################################
-### 1️⃣ TEST: Create Admin (Emmanuel Makau)
-############################################
-POST {{baseUrl}}/api/register
-Content-Type: {{contentType}}
-
-{
-  "name": "Emmanuel Makau",
-  "email": "emmanuelmakau90@gmail.com",
-  "password": "StrongPass123",
-  "phone": "0793472960",
-  "role": "ADMIN"
-}
+#############################################
+### 1) GET ALL EVENTS
+#############################################
+GET {{baseUrl}}
+Content-Type: application/json
 
 ###
 
-############################################
-### 2️⃣ TEST: Create Teacher (Grace Wambui)
-############################################
-POST {{baseUrl}}/api/register
-Content-Type: {{contentType}}
+#############################################
+### 2) CREATE COUNSELING EVENT — SAMPLE 1
+### Category: Drugs | Counselor: Mr. Kariuki
+#############################################
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=----BOUNDARY1
 
-{
-  "name": "Grace Wambui",
-  "email": "gracewambui@example.com",
-  "password": "TeacherPass01",
-  "phone": "0712345678",
-  "role": "TEACHER"
-}
+------BOUNDARY1
+Content-Disposition: form-data; name="counselor"
+
+Mr. Kariuki
+------BOUNDARY1
+Content-Disposition: form-data; name="category"
+
+Drugs
+------BOUNDARY1
+Content-Disposition: form-data; name="description"
+
+Student caught with substance abuse concerns—initial assessment.
+------BOUNDARY1
+Content-Disposition: form-data; name="notes"
+
+Requires urgent follow-up.
+------BOUNDARY1
+Content-Disposition: form-data; name="date"
+
+2025-01-15
+------BOUNDARY1
+Content-Disposition: form-data; name="time"
+
+10:30 AM
+------BOUNDARY1
+Content-Disposition: form-data; name="type"
+
+Counseling
+------BOUNDARY1
+Content-Disposition: form-data; name="priority"
+
+High
+------BOUNDARY1
+Content-Disposition: form-data; name="image"; filename="case1.jpg"
+Content-Type: image/jpeg
+
+< ./files/case1.jpg
+------BOUNDARY1--
 
 ###
 
-############################################
-### 3️⃣ TEST: Create Principal (John Kiprono)
-############################################
-POST {{baseUrl}}/api/register
-Content-Type: {{contentType}}
+#############################################
+### 3) CREATE COUNSELING EVENT — SAMPLE 2
+### Category: Relationships | Counselor: Ms. Wanjiku
+#############################################
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=----BOUNDARY2
 
-{
-  "name": "John Kiprono",
-  "email": "johnkiprono@example.com",
-  "password": "Principal2024",
-  "phone": "0789123456",
-  "role": "PRINCIPAL"
-}
+------BOUNDARY2
+Content-Disposition: form-data; name="counselor"
+
+Ms. Wanjiku
+------BOUNDARY2
+Content-Disposition: form-data; name="category"
+
+Relationships
+------BOUNDARY2
+Content-Disposition: form-data; name="description"
+
+Conflict between two students needing mediation.
+------BOUNDARY2
+Content-Disposition: form-data; name="notes"
+
+Both students cooperative.
+------BOUNDARY2
+Content-Disposition: form-data; name="date"
+
+2025-01-18
+------BOUNDARY2
+Content-Disposition: form-data; name="time"
+
+02:00 PM
+------BOUNDARY2
+Content-Disposition: form-data; name="type"
+
+Guidance
+------BOUNDARY2
+Content-Disposition: form-data; name="priority"
+
+Medium
+------BOUNDARY2
+Content-Disposition: form-data; name="image"; filename="session2.png"
+Content-Type: image/png
+
+< ./files/session2.png
+------BOUNDARY2--
 
 ###
 
-############################################
-### GET all users
-############################################
-GET {{baseUrl}}/api/student
-Content-Type: {{contentType}}
+#############################################
+### 4) CREATE COUNSELING EVENT — SAMPLE 3
+### Category: Academics | Counselor: Emmanuel Makau
+#############################################
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=----BOUNDARY3
+
+------BOUNDARY3
+Content-Disposition: form-data; name="counselor"
+
+Emmanuel Makau
+------BOUNDARY3
+Content-Disposition: form-data; name="category"
+
+Academics
+------BOUNDARY3
+Content-Disposition: form-data; name="description"
+
+Student struggling in mathematics—recommended weekly follow-up.
+------BOUNDARY3
+Content-Disposition: form-data; name="notes"
+
+Parent informed.
+------BOUNDARY3
+Content-Disposition: form-data; name="date"
+
+2025-01-20
+------BOUNDARY3
+Content-Disposition: form-data; name="time"
+
+11:45 AM
+------BOUNDARY3
+Content-Disposition: form-data; name="type"
+
+Counseling
+------BOUNDARY3
+Content-Disposition: form-data; name="priority"
+
+Low
+------BOUNDARY3
+Content-Disposition: form-data; name="image"; filename="math_help.pdf"
+Content-Type: application/pdf
+
+< ./files/math_help.pdf
+------BOUNDARY3--
 
 ###
