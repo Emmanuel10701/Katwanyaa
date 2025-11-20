@@ -1,6 +1,6 @@
 'use client';
-import { motion } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiArrowRight, 
   FiStar, 
@@ -13,22 +13,39 @@ import {
   FiBook,
   FiActivity,
   FiShare2,
-  FiMail
+  FiMail,
+  FiUser,
+  FiBookOpen,
+  FiHome,
+  FiPhone,
+  FiClock,
+  FiTrendingUp,
+  FiTarget,
+  FiCheckCircle,
+  FiGlobe,
+  FiHeart,
+  FiShield
 } from 'react-icons/fi';
 import { 
   IoRocketOutline, 
-  IoPeopleOutline
+  IoPeopleOutline,
+  IoLibraryOutline,
+  IoBusinessOutline,
+  IoSparkles,
+  IoSchoolOutline,
+  IoStatsChart,
+  IoMedalOutline,
+  IoClose
 } from 'react-icons/io5';
 import { 
   GiGraduateCap, 
   GiModernCity,
-  GiTreeGrowth
+  GiTreeGrowth,
+  GiBrain,
+  GiTeacher
 } from 'react-icons/gi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-
-import ChatBot from './components/chat/page';
-
 
 // Material-UI Components
 import { 
@@ -39,6 +56,98 @@ import {
   Fade
 } from '@mui/material';
 
+// ChatBot Component
+import ChatBot from './components/chat/page';
+
+// Sample data for leadership staff
+const sampleLeadershipStaff = [
+  {
+    id: 1,
+    name: "Dr. John Kamau",
+    role: "Principal",
+    department: "School Administration",
+    email: "principal@katwanyaa.ac.ke",
+    bio: "With over 20 years of experience in educational leadership, Dr. Kamau is committed to academic excellence and student development.",
+    expertise: ["Educational Leadership", "Curriculum Development"],
+    qualifications: ["PhD in Education", "M.Ed in Administration"],
+    image: "https://images.unsplash.com/photo-1566753323558-f4e0952af115?w=400&h=400&fit=crop"
+  },
+  {
+    id: 2,
+    name: "Mrs. Sarah Wanjiku",
+    role: "Deputy Principal - Academics",
+    department: "Academic Affairs",
+    email: "academics@katwanyaa.ac.ke",
+    bio: "Dedicated to ensuring high academic standards and innovative teaching methodologies across all departments.",
+    expertise: ["Academic Planning", "Teacher Development"],
+    qualifications: ["M.Sc in Mathematics", "B.Ed in Sciences"],
+    image: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop"
+  },
+  {
+    id: 3,
+    name: "Mr. Peter Ochieng",
+    role: "Deputy Principal - Administration",
+    department: "School Administration",
+    email: "administration@katwanyaa.ac.ke",
+    bio: "Focused on creating a conducive learning environment through efficient administrative systems and student welfare.",
+    expertise: ["School Management", "Student Affairs"],
+    qualifications: ["M.Ed in Administration", "B.A in Education"],
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop"
+  }
+];
+
+// Sample events data
+const sampleEvents = [
+  {
+    id: 1,
+    title: "Annual Science Fair",
+    description: "Showcasing innovative science projects from our students. Open to parents and visitors.",
+    date: "2024-03-15",
+    time: "9:00 AM - 3:00 PM",
+    location: "School Science Block",
+    category: "Academic",
+    featured: true,
+    registration: true,
+    image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop"
+  },
+  {
+    id: 2,
+    title: "Sports Day Competition",
+    description: "Inter-house sports competition featuring track and field events.",
+    date: "2024-03-22",
+    time: "8:00 AM - 5:00 PM",
+    location: "School Playground",
+    category: "Sports",
+    featured: true,
+    registration: false,
+    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop"
+  },
+  {
+    id: 3,
+    title: "Music Festival Auditions",
+    description: "Annual music festival preparations and student auditions for various categories.",
+    date: "2024-03-18",
+    time: "2:00 PM - 5:00 PM",
+    location: "School Hall",
+    category: "Music",
+    featured: false,
+    registration: true,
+    image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=800&fit=crop"
+  },
+  {
+    id: 4,
+    title: "Career Guidance Day",
+    description: "Professional career guidance and university representatives visit.",
+    date: "2024-03-25",
+    time: "10:00 AM - 2:00 PM",
+    location: "School Library",
+    category: "Academic",
+    featured: true,
+    registration: true,
+    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop"
+  }
+];
+
 export default function ModernHero() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -46,173 +155,389 @@ export default function ModernHero() {
   const [isLoading, setIsLoading] = useState(true);
   const [imagesLoaded, setImagesLoaded] = useState(0);
   const [totalImages, setTotalImages] = useState(0);
-  const videoRef = useRef(null);
+  const [apiData, setApiData] = useState({
+    events: [],
+    news: [],
+    staff: [],
+    schoolInfo: null,
+    guidanceEvents: []
+  });
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   const splashTimerRef = useRef(null);
   const router = useRouter();
 
-  // YouTube video ID extracted from the URL
-  const youtubeVideoId = 'iWHpv3ihfDQ';
-  const youtubeEmbedUrl = `https://www.youtube.com/embed/${youtubeVideoId}`;
-
-  // Simple image URLs with reduced size for faster loading
-  const onlineImages = {
-    campus: "https://images.unsplash.com/photo-1562774053-701939374585?w=800",
-    students: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800",
-    scienceLab: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800",
-    library: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=800",
-    sports: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
-    arts: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800",
-    teacher1: "https://images.unsplash.com/photo-1566753323558-f4e0952af115?w=400",
-    teacher2: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400",
-    teacher3: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400",
-    teacher4: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400",
-    graduation: "https://images.unsplash.com-1523050854058-8df90110c9f1?w=800",
-    event1: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
-    event2: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800",
-    event3: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800"
+  // Real images for Katwanyaa High School
+  const defaultImages = {
+    campus: "https://images.unsplash.com/photo-1562774053-701939374585?w=1200&h=800&fit=crop",
+    students: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop",
+    scienceLab: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop",
+    library: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=1200&h=800&fit=crop",
+    sports: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop",
+    arts: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=800&fit=crop",
+    teacher1: "https://images.unsplash.com/photo-1566753323558-f4e0952af115?w=400&h=400&fit=crop",
+    teacher2: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop",
+    teacher3: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+    event1: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop",
+    event2: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop",
+    event3: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop"
   };
 
-  const stats = [
-    { value: 98, suffix: '%', label: 'Graduation Rate', icon: FiAward, image: onlineImages.graduation },
-    { value: 2000, suffix: '+', label: 'Students Enrolled', icon: FiUsers, image: onlineImages.students },
-    { value: 150, suffix: '+', label: 'Expert Faculty', icon: IoPeopleOutline, image: onlineImages.teacher1 },
-    { value: 25, suffix: '', label: 'Sports Teams', icon: FiActivity, image: onlineImages.sports }
-  ];
-
-  const features = [
+  // Enhanced hero slides with rich content
+  const heroSlides = [
     {
-      icon: GiGraduateCap,
-      title: 'College Prep',
-      description: 'Advanced placement and honors programs',
-      image: onlineImages.library
+      title: "Excellence in Education",
+      subtitle: "Nurturing Future Leaders Through Innovative Learning",
+      description: "At Katwanyaa, we combine traditional values with modern educational approaches to create well-rounded individuals ready for the challenges of tomorrow.",
+      background: "bg-gradient-to-br from-blue-600 via-purple-700 to-indigo-800",
+      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      stats: { 
+        students: "1300+", 
+        excellence: "98% Success", 
+        years: "Since 1985" 
+      },
+      features: ["Modern Curriculum", "Expert Faculty", "State-of-the-Art Facilities"],
+      cta: "Start Your Journey"
     },
     {
-      icon: IoRocketOutline,
-      title: 'STEM Focus',
-      description: 'State-of-the-art labs and technology',
-      image: onlineImages.scienceLab
+      title: "Holistic Development",
+      subtitle: "Balancing Academics, Sports, and Character Building",
+      description: "Our comprehensive programs ensure students develop not just academically, but also physically, socially, and spiritually in a nurturing environment.",
+      background: "bg-gradient-to-br from-emerald-600 via-teal-700 to-green-800",
+      image: "https://images.unsplash.com/photo-1541336032412-2048a678540d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      stats: { 
+        teams: "8+", 
+        clubs: "12+", 
+        activities: "Daily" 
+      },
+      features: ["Sports Excellence", "Creative Arts", "Leadership Programs"],
+      cta: "Explore Programs"
     },
     {
-      icon: GiModernCity,
-      title: 'Urban Campus',
-      description: 'Located in the heart of the city',
-      image: onlineImages.campus
-    },
-    {
-      icon: GiTreeGrowth,
-      title: 'Personal Growth',
-      description: 'Leadership and character development',
-      image: onlineImages.arts
+      title: "Modern Learning Environment",
+      subtitle: "Technology-Enhanced Education for the Digital Age",
+      description: "Experience cutting-edge learning with smart classrooms, advanced laboratories, and digital resources that prepare students for future careers.",
+      background: "bg-gradient-to-br from-orange-500 via-red-600 to-pink-700",
+      image: "https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+      stats: { 
+        labs: "4", 
+        tech: "Smart Classes", 
+        support: "24/7" 
+      },
+      features: ["Digital Classrooms", "Science Labs", "Computer Centers"],
+      cta: "View Facilities"
     }
   ];
 
-  // STAFF SECTION DATA
-  const staffMembers = [
-    {
-      name: 'Dr. Sarah Johnson',
-      role: 'Principal',
-      department: 'Administration',
-      image: onlineImages.teacher1,
-      experience: '15+ years',
-      specialization: 'Educational Leadership',
-      email: 's.johnson@school.edu'
-    },
-    {
-      name: 'Prof. Michael Chen',
-      role: 'Head of Science',
-      department: 'STEM Department',
-      image: onlineImages.teacher2,
-      experience: '12+ years',
-      specialization: 'Physics & Robotics',
-      email: 'm.chen@school.edu'
-    },
-    {
-      name: 'Ms. Emily Rodriguez',
-      role: 'Art Director',
-      department: 'Creative Arts',
-      image: onlineImages.teacher3,
-      experience: '10+ years',
-      specialization: 'Visual Arts & Design',
-      email: 'e.rodriguez@school.edu'
-    },
-    {
-      name: 'Coach David Wilson',
-      role: 'Athletic Director',
-      department: 'Sports & Wellness',
-      image: onlineImages.teacher4,
-      experience: '8+ years',
-      specialization: 'Sports Science',
-      email: 'd.wilson@school.edu'
-    }
-  ];
-
-  // EVENTS SECTION DATA
-  const upcomingEvents = [
-    {
-      title: 'Annual Science Fair 2024',
-      date: 'March 25, 2024',
-      time: '9:00 AM - 3:00 PM',
-      location: 'Science Building',
-      image: onlineImages.event1,
-      category: 'Academic',
-      description: 'Showcasing innovative student projects in STEM fields',
-      registration: true
-    },
-    {
-      title: 'Spring Music Festival',
-      date: 'April 12, 2024',
-      time: '6:00 PM - 9:00 PM',
-      location: 'Auditorium',
-      image: onlineImages.event2,
-      category: 'Cultural',
-      description: 'An evening of musical performances by our talented students',
-      registration: false
-    },
-    {
-      title: 'Robotics Competition',
-      date: 'May 5, 2024',
-      time: '10:00 AM - 5:00 PM',
-      location: 'Innovation Lab',
-      image: onlineImages.event3,
-      category: 'Competition',
-      description: 'Inter-school robotics challenge showcasing engineering skills',
-      registration: true
-    }
-  ];
-
-  const campusGallery = [
-    {
-      title: 'Modern Library',
-      image: onlineImages.library,
-      description: '24/7 access to digital and physical resources'
-    },
-    {
-      title: 'Science Labs',
-      image: onlineImages.scienceLab,
-      description: 'Cutting-edge equipment for hands-on learning'
-    },
-    {
-      title: 'Athletic Center',
-      image: onlineImages.sports,
-      description: 'Olympic-grade training facilities'
-    },
-    {
-      title: 'Arts Studio',
-      image: onlineImages.arts,
-      description: 'Creative spaces for artistic expression'
-    }
-  ];
-
+  // Enhanced API data fetching with better error handling
   useEffect(() => {
-    // Calculate total images to load
+    const fetchAllData = async () => {
+      try {
+        setIsLoading(true);
+        
+        const endpoints = [
+          { key: 'events', url: '/api/events' },
+          { key: 'staff', url: '/api/staff' },
+          { key: 'school', url: '/api/school' },
+          { key: 'guidance', url: '/api/guidance' },
+          { key: 'news', url: '/api/news' }
+        ];
+
+        const results = await Promise.allSettled(
+          endpoints.map(endpoint => 
+            fetch(endpoint.url)
+              .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+              })
+              .then(data => ({ key: endpoint.key, data }))
+              .catch(error => ({ 
+                key: endpoint.key, 
+                data: getDefaultData(endpoint.key),
+                error: error.message 
+              }))
+          )
+        );
+
+        const apiData = {
+          events: [],
+          news: [],
+          staff: [],
+          schoolInfo: null,
+          guidanceEvents: []
+        };
+
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            const { key, data } = result.value;
+            switch (key) {
+              case 'events':
+                apiData.events = data.events && data.events.length > 0 ? data.events : sampleEvents;
+                break;
+              case 'staff':
+                apiData.staff = data.staff && data.staff.length > 0 ? data.staff : sampleLeadershipStaff;
+                break;
+              case 'school':
+                apiData.schoolInfo = data.school || data || getDefaultData('school').school;
+                break;
+              case 'guidance':
+                apiData.guidanceEvents = data.events || data || [];
+                break;
+              case 'news':
+                apiData.news = data.news || data || [];
+                break;
+            }
+          }
+        });
+
+        console.log('Fetched API data:', {
+          events: apiData.events.length,
+          staff: apiData.staff.length,
+          guidance: apiData.guidanceEvents.length,
+          schoolInfo: apiData.schoolInfo ? 'Loaded' : 'Not loaded',
+          news: apiData.news.length
+        });
+
+        setApiData(apiData);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setApiData({
+          events: sampleEvents,
+          news: [],
+          staff: sampleLeadershipStaff,
+          schoolInfo: getDefaultData('school').school,
+          guidanceEvents: []
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const getDefaultData = (key) => {
+      switch (key) {
+        case 'events':
+          return { events: sampleEvents };
+        case 'staff':
+          return { staff: sampleLeadershipStaff };
+        case 'school':
+          return { 
+            school: {
+              name: 'Katwanyaa Secondary School',
+              motto: 'Striving for Excellence in Education',
+              description: 'We are committed to bring the best quality of education to the students',
+              established: 1985,
+              location: {
+                county: 'Machakos County, Kenya',
+                subCounty: 'Matungulu Sub-County',
+                postal: 'P.O. Box 363 – 90131, Tala, Machakos'
+              },
+              vision: 'To produce fully empowered, God-fearing citizens',
+              mission: 'Dedicated to empowering our students through quality education, discipline, and integrity, while providing a safe and supportive environment where every child can discover their potential and thrive',
+              coreValues: ['Integrity', 'Excellence', 'Discipline', 'Faith', 'Community', 'Respect'],
+              studentCount: 1300,
+              staffCount: 55,
+              classrooms: 24,
+              laboratories: 4,
+              sportsTeams: 8,
+              clubs: 12
+            }
+          };
+        case 'guidance':
+          return { events: [] };
+        case 'news':
+          return { news: [] };
+        default:
+          return {};
+      }
+    };
+
+    fetchAllData();
+  }, []);
+
+  // Filter staff to show only Principal and Deputy Principals
+  const leadershipStaff = apiData.staff
+    .filter(member => 
+      member.role?.includes('Principal') || 
+      member.role?.includes('Deputy') ||
+      member.role?.includes('Head') ||
+      member.department?.includes('Administration')
+    )
+    .sort((a, b) => {
+      // Sort by role importance
+      const roleOrder = {
+        'Principal': 1,
+        'Deputy Principal': 2,
+        'Head Teacher': 3,
+        'Director': 4
+      };
+      return (roleOrder[a.role] || 5) - (roleOrder[b.role] || 5);
+    })
+    .slice(0, 3)
+    .map(staff => ({
+      ...staff,
+      image: staff.image ? `/api/uploads${staff.image}` : defaultImages.teacher1
+    }));
+
+  // Enhanced event filtering with better date handling
+  const upcomingEvents = apiData.events
+    .filter(event => {
+      if (!event.date) return false;
+      
+      const eventDate = new Date(event.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Only show future events and events for students (not staff-only)
+      const isFutureEvent = eventDate >= today;
+      const isStudentEvent = !event.attendees || event.attendees === 'students' || event.attendees === 'all';
+      
+      return isFutureEvent && isStudentEvent;
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 4)
+    .map((event, index) => ({
+      ...event,
+      image: event.image ? `/api/uploads${event.image}` : defaultImages[`event${(index % 3) + 1}`],
+      category: event.category || event.type || 'School Event',
+      description: event.description || 'Join us for this school activity',
+      registration: event.registration || false,
+      formattedDate: new Date(event.date).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      // Ensure required fields
+      time: event.time || 'TBA',
+      location: event.location || 'School Premises'
+    }));
+
+  // Enhanced stats data from real school info with fallbacks
+  const stats = [
+    { 
+      value: apiData.schoolInfo?.studentCount || 1250, 
+      suffix: '+', 
+      label: 'Students Enrolled', 
+      icon: FiUsers,
+      growth: 8.5,
+      description: 'Active students across all forms'
+    },
+    { 
+      value: apiData.staff.length || apiData.schoolInfo?.staffCount || 48, 
+      suffix: '+', 
+      label: 'Teaching Staff', 
+      icon: GiTeacher,
+      growth: 12.3,
+      description: 'Qualified educators'
+    },
+    { 
+      value: apiData.schoolInfo?.completionRate || apiData.schoolInfo?.successRate || 96, 
+      suffix: '%', 
+      label: 'Success Rate', 
+      icon: IoMedalOutline,
+      growth: 3.2,
+      description: 'Academic performance'
+    },
+    { 
+      value: upcomingEvents.length, 
+      suffix: '', 
+      label: 'Upcoming Events', 
+      icon: FiActivity,
+      growth: 15.7,
+      description: 'School activities'
+    }
+  ];
+
+  // Academic Programs based on actual subjects
+  const academicPrograms = [
+    {
+      department: "Sciences & Technology",
+      programs: ["Physics", "Chemistry", "Biology", "Computer Studies"],
+      icon: IoRocketOutline,
+      color: "from-blue-500 to-cyan-500",
+      description: "Hands-on scientific exploration with modern laboratories and cutting-edge technology",
+      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.25),
+      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.35),
+      image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    },
+    {
+      department: "Mathematics & Analytics",
+      programs: ["Pure Mathematics", "Applied Mathematics", "Statistics"],
+      icon: FiTarget,
+      color: "from-purple-500 to-pink-500",
+      description: "Developing critical thinking and problem-solving skills through mathematical excellence",
+      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.15),
+      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.32),
+      image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    },
+    {
+      department: "Humanities & Social Sciences",
+      programs: ["History", "Geography", "Business Studies", "Religious Education"],
+      icon: IoLibraryOutline,
+      color: "from-green-500 to-teal-500",
+      description: "Understanding human society, culture, and business principles for global citizenship",
+      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.20),
+      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.28),
+      image: "https://images.unsplash.com/photo-1588072432836-390afc58bfc4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    },
+    {
+      department: "Languages & Communication",
+      programs: ["English", "Kiswahili", "French", "German"],
+      icon: FiBookOpen,
+      color: "from-orange-500 to-red-500",
+      description: "Mastering communication skills and linguistic proficiency for effective global interaction",
+      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.18),
+      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.30),
+      image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    }
+  ];
+
+  // Why Choose Us Section
+  const whyChooseUs = [
+    {
+      icon: FiShield,
+      title: "Safe & Nurturing Environment",
+      description: "Providing a secure, supportive atmosphere where every student can thrive and discover their unique potential",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: FiTrendingUp,
+      title: "Proven Academic Excellence",
+      description: "Consistent outstanding results with 98% success rate in national examinations and university placements",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: FiHeart,
+      title: "Holistic Development",
+      description: "Comprehensive programs nurturing academic, physical, spiritual, and social growth for complete development",
+      color: "from-green-500 to-teal-500"
+    },
+    {
+      icon: FiGlobe,
+      title: "Values-Based Education",
+      description: "Rooted in strong moral principles to produce responsible, God-fearing citizens with integrity",
+      color: "from-orange-500 to-red-500"
+    }
+  ];
+
+  // Auto-slide for hero carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [heroSlides.length]);
+
+  // Image loading and initialization
+  useEffect(() => {
     const allImages = [
-      ...Object.values(onlineImages),
-      ...stats.map(stat => stat.image),
-      ...features.map(feature => feature.image),
-      ...staffMembers.map(staff => staff.image),
-      ...upcomingEvents.map(event => event.image),
-      ...campusGallery.map(item => item.image)
-    ];
+      ...Object.values(defaultImages),
+      ...heroSlides.map(slide => slide.image),
+      ...academicPrograms.map(program => program.image),
+      ...leadershipStaff.map(staff => staff.image),
+      ...upcomingEvents.map(event => event.image)
+    ].filter(Boolean);
     
     const uniqueImages = [...new Set(allImages)];
     setTotalImages(uniqueImages.length);
@@ -220,30 +545,27 @@ export default function ModernHero() {
     const handleScroll = () => setIsScrolled(window.scrollY > 100);
     window.addEventListener('scroll', handleScroll);
 
-    // fallback splash so loader never hangs — ~900ms branded splash
     splashTimerRef.current = setTimeout(() => {
       setIsLoading(false);
-    }, 900);
+    }, 2000);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(splashTimerRef.current);
     };
   }, []);
- 
+
   useEffect(() => {
-    // If all assets loaded earlier than the splash fallback, hide loader immediately
     if (totalImages > 0 && imagesLoaded >= totalImages) {
       setIsLoading(false);
       clearTimeout(splashTimerRef.current);
     }
   }, [imagesLoaded, totalImages]);
- 
+
   const handleImageLoad = () => {
     setImagesLoaded(prev => prev + 1);
   };
- 
-  // disable page scroll while loading
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (isLoading) {
@@ -254,574 +576,837 @@ export default function ModernHero() {
     return () => { document.body.style.overflow = ''; };
   }, [isLoading]);
 
-  // Loading Component (overlay)
-   const LoadingScreen = () => (
-     <Fade in={isLoading} timeout={800}>
-       <Backdrop
-         sx={{
-           backgroundColor: 'rgba(15, 23, 42, 0.95)',
-           backdropFilter: 'blur(10px)',
-           zIndex: 9999,
-           display: 'flex',
-           flexDirection: 'column',
-           alignItems: 'center',
-           justifyContent: 'center',
-         }}
-         open={isLoading}
-       >
-         <motion.div
-           initial={{ scale: 0.8, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           transition={{ duration: 0.5 }}
-           className="text-center"
-         >
-           {/* Animated Logo/Icon */}
-           <motion.div
-             animate={{ 
-               rotate: 360,
-               scale: [1, 1.1, 1]
-             }}
-             transition={{ 
-               rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-               scale: { duration: 1.5, repeat: Infinity }
-             }}
-             className="mb-8"
-           >
-             <GiGraduateCap className="text-6xl text-blue-400 mx-auto" />
-           </motion.div>
- 
-           {/* Indeterminate spinner (no percentage) */}
-           <Box sx={{ display: 'inline-flex', mb: 3 }}>
-             <CircularProgress
-               size={80}
-               thickness={4}
-               sx={{
-                 color: 'primary.main',
-                 '& .MuiCircularProgress-circle': {
-                   strokeLinecap: 'round',
-                 }
-               }}
-             />
-           </Box>
- 
-           {/* Loading Text */}
-           <motion.div
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ delay: 0.3 }}
-           >
-             <Typography 
-               variant="h6" 
-               className="text-white mb-2 font-semibold"
-             >
-               Preparing Your Journey
-             </Typography>
-             <Typography 
-               variant="body2" 
-               className="text-blue-200"
-             >
-               Loading katz Wewbpage...
-             </Typography>
-           </motion.div>
- 
-           {/* Animated Dots */}
-           <motion.div className="flex justify-center mt-4 space-x-1">
-             {[0, 1, 2].map((index) => (
-               <motion.div
-                 key={index}
-                 animate={{ 
-                   y: [0, -10, 0],
-                   opacity: [0.5, 1, 0.5]
-                 }}
-                 transition={{ 
-                   duration: 1.5,
-                   repeat: Infinity,
-                   delay: index * 0.2
-                 }}
-                 className="w-2 h-2 bg-blue-400 rounded-full"
-               />
-             ))}
-           </motion.div>
-         </motion.div>
-       </Backdrop>
-     </Fade>
-   );
+  // Navigation handlers
+  const handleAcademicsClick = () => {
+    router.push('/pages/academics');
+  };
 
-   // Navigation / UI handlers (single definitions)
-   const handleAcademicsClick = () => {
-     router.push('/pages/academics');
-   };
-   const handleWatchTour = () => setShowVideoModal(true);
-   const closeVideoModal = () => setShowVideoModal(false);
-   const handleEventClick = () => router.push('/pages/eventsandnews'); // fixed typo
-   const handleStaffClick = () => router.push('/pages/staff');
- 
- // Main content rendering
-   return (
-     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Loading Screen overlay */}
-      <LoadingScreen />
- 
-      {/* Simplified Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0">
-          <Image
-            src={onlineImages.campus}
-            alt="School Campus"
-            fill
-            className="object-cover opacity-20"
-            priority
-            onLoad={handleImageLoad}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-purple-900/80 to-slate-900/90"></div>
-        </div>
-      </div>
+  const handleWatchTour = () => {
+    setShowVideoModal(true);
+  };
 
-      {/* Main Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }} 
-              className="text-white"
+  const closeVideoModal = () => setShowVideoModal(false);
+  const handleEventClick = () => router.push('/pages/eventsandnews');
+  const handleStaffClick = () => router.push('/pages/staff');
+
+  // Enhanced YouTube video handling
+  const getYouTubeVideoId = (url) => {
+    if (!url) return 'iWHpv3ihfDQ'; // Default school tour video
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/,
+      /youtube\.com\/embed\/([^?]+)/,
+      /youtube\.com\/v\/([^?]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return 'iWHpv3ihfDQ'; // Fallback
+  };
+
+  const youtubeVideoId = getYouTubeVideoId(apiData.schoolInfo?.videoTour);
+  const youtubeEmbedUrl = `https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&rel=0&modestbranding=1`;
+
+  // Enhanced event sharing functionality
+  const handleAddToCalendar = (event) => {
+    const startDate = new Date(event.date);
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours later
+    
+    const calendarData = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.description}`,
+      `LOCATION:${event.location}`,
+      `DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      `DTEND:${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\n');
+    
+    const blob = new Blob([calendarData], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${event.title.replace(/\s+/g, '-')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleShareEvent = (event) => {
+    if (navigator.share) {
+      navigator.share({
+        title: event.title,
+        text: event.description,
+        url: window.location.href,
+      });
+    } else {
+      setSelectedEvent(event);
+      setShowShareModal(true);
+    }
+  };
+
+  const handleSocialShare = (platform, event) => {
+    const text = `Join us for: ${event.title} - ${event.description}`;
+    const url = window.location.href;
+    
+    const shareUrls = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`,
+    };
+    
+    window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+    setShowShareModal(false);
+  };
+
+  // Animation variants
+  const fadeInUp = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
+  };
+
+  const fadeInLeft = {
+    initial: { opacity: 0, x: -50 },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.6 }
+  };
+
+  const fadeInRight = {
+    initial: { opacity: 0, x: 50 },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.6 }
+  };
+
+  const scaleIn = {
+    initial: { opacity: 0, scale: 0.9 },
+    animate: { opacity: 1, scale: 1 },
+    transition: { duration: 0.5 }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  // Loading Screen Component
+  const LoadingScreen = () => (
+    <Fade in={isLoading} timeout={800}>
+      <Backdrop
+        sx={{
+          backgroundColor: 'white',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        open={isLoading}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="mb-8"
+          >
+            <GiGraduateCap className="text-6xl gradient-text mx-auto" />
+          </motion.div>
+
+          <Box sx={{ display: 'inline-flex', mb: 3 }}>
+            <CircularProgress
+              size={80}
+              thickness={4}
+              sx={{
+                color: '#667eea',
+              }}
+            />
+          </Box>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Typography 
+              variant="h6" 
+              className="text-gray-800 mb-2 font-semibold"
             >
-              <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6 border border-white/20">
+              {apiData.schoolInfo?.name || 'Katwanyaa High School'}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              className="text-gray-600"
+            >
+              Loading school information...
+            </Typography>
+          </motion.div>
+
+          <div className="flex justify-center mt-4 space-x-1">
+            {[0, 1, 2].map((index) => (
+              <motion.div
+                key={index}
+                className="w-2 h-2 bg-blue-500 rounded-full"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: index * 0.2 }}
+              />
+            ))}
+          </div>
+        </motion.div>
+      </Backdrop>
+    </Fade>
+  );
+
+  return (
+    <div className="min-h-screen bg-white overflow-hidden">
+      {/* Loading Screen */}
+      <LoadingScreen />
+
+      {/* Enhanced Hero Section with Smooth Carousel */}
+      <section className="relative min-h-screen flex items-center justify-center pt-20 z-10 overflow-hidden bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className={`absolute inset-0 ${heroSlides[currentSlide]?.background}`}
+          >
+            {/* Background Image with Smooth Zoom */}
+            <motion.div 
+              className="absolute inset-0"
+              style={{ 
+                backgroundImage: `url(${heroSlides[currentSlide]?.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+              animate={{ scale: [1, 1.1] }}
+              transition={{ duration: 10, ease: "easeInOut" }}
+            />
+            <div className="absolute inset-0 bg-black/40"></div>
+          </motion.div>
+        </AnimatePresence>
+        
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+            {/* Left Content */}
+            <motion.div 
+              className="text-white text-center lg:text-left"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              <motion.div 
+                variants={fadeInUp}
+                className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6 border border-white/20"
+              >
                 <FiStar className="text-yellow-400" />
-                <span className="text-sm font-medium">Ranked #1 in State for STEM Programs</span>
-              </div>
-
-              <h1 className="text-6xl lg:text-7xl font-bold leading-tight mb-6">
-                Where Future
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  Innovators Thrive
+                <span className="text-sm font-medium text-white">
+                  {apiData.schoolInfo?.motto || 'Excellence in Education Since 1985'}
                 </span>
-              </h1>
+              </motion.div>
 
-              <p className="text-xl text-white/80 mb-8 leading-relaxed">
-                Join a community of curious minds, passionate educators, and future leaders. 
-                Our cutting-edge campus and innovative curriculum prepare students for the world of tomorrow.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleAcademicsClick}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-lg"
+              <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                {apiData.schoolInfo?.name || 'Katwanyaa High School'}
+                <motion.span 
+                  variants={fadeInUp}
+                  transition={{ delay: 0.2 }}
+                  className="block gradient-text"
                 >
-                  Our Schools <FiArrowRight className="text-xl" />
+                  {heroSlides[currentSlide]?.title}
+                </motion.span>
+              </motion.h1>
+
+              <motion.p 
+                variants={fadeInUp}
+                transition={{ delay: 0.3 }}
+                className="text-lg sm:text-xl text-gray-200 mb-4 leading-relaxed font-semibold"
+              >
+                {heroSlides[currentSlide]?.subtitle}
+              </motion.p>
+              
+              <motion.p 
+                variants={fadeInUp}
+                transition={{ delay: 0.4 }}
+                className="text-gray-300 mb-8 leading-relaxed max-w-2xl"
+              >
+                {heroSlides[currentSlide]?.description}
+              </motion.p>
+
+              {/* Features */}
+              <motion.div 
+                variants={fadeInUp}
+                transition={{ delay: 0.5 }}
+                className="flex flex-wrap gap-3 mb-8"
+              >
+                {heroSlides[currentSlide]?.features.map((feature, index) => (
+                  <motion.span 
+                    key={index}
+                    variants={fadeInUp}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold border border-white/30"
+                  >
+                    {feature}
+                  </motion.span>
+                ))}
+              </motion.div>
+
+              <motion.div 
+                variants={fadeInUp}
+                transition={{ delay: 0.6 }}
+                className="flex flex-col sm:flex-row gap-4 mb-12"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleAcademicsClick}
+                  className="gradient-bg text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
+                >
+                  {heroSlides[currentSlide]?.cta} <FiArrowRight className="text-xl" />
                 </motion.button>
 
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleWatchTour}
-                  className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-xl font-semibold border border-white/20 flex items-center justify-center gap-3 text-lg"
+                  className="bg-white/10 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold border border-white/20 flex items-center justify-center gap-3 text-base sm:text-lg transition-all duration-300 shadow-lg hover:bg-white/20"
                 >
                   <FiPlay className="text-xl" />
-                  Watch Tour
+                  Virtual Tour
                 </motion.button>
-              </div>
+              </motion.div>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
+              <motion.div 
+                className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+                variants={staggerContainer}
+              >
+                {Object.entries(heroSlides[currentSlide]?.stats || {}).map(([key, value], index) => (
                   <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1, duration: 0.3 }} 
-                    className="text-center group cursor-pointer"
+                    key={key}
+                    variants={scaleIn}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="text-center group cursor-pointer bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20"
                   >
-                    <div className="relative overflow-hidden rounded-2xl mb-3 h-20">
-                      <Image
-                        src={stat.image}
-                        alt={stat.label}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-200"
-                        onLoad={handleImageLoad}
-                        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 200px"
-                      />
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <stat.icon className="text-white text-2xl" />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <span className="text-2xl font-bold text-white">
-                        {stat.value}{stat.suffix}
-                      </span>
-                    </div>
-                    <p className="text-white/60 text-sm">{stat.label}</p>
+                    <div className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</div>
+                    <p className="text-gray-300 text-xs sm:text-sm font-semibold capitalize">{key}</p>
                   </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* Right Content - Interactive Showcase */}
-            <motion.div
+            <motion.div 
+              className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="relative"
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {/* Main Showcase Card */}
-              <div className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-8 relative overflow-hidden">
-                {/* Image Gallery Slider */}
-                <div className="relative rounded-2xl overflow-hidden bg-black mb-6 h-64">
-                  <Image
-                    src={features[currentSlide].image}
-                    alt={features[currentSlide].title}
-                    fill
-                    className="object-cover"
-                    onLoad={handleImageLoad}
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                    <div className="flex gap-1">
-                      {features.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setCurrentSlide(index)}
-                          className={`w-3 h-3 rounded-full transition-all ${
-                            currentSlide === index ? 'bg-white' : 'bg-white/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-white bg-black/50 px-3 py-1 rounded-full text-sm">
-                      {features[currentSlide].title}
-                    </div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-white/20"
+              >
+                {/* Academic Programs Preview */}
+                <div className="mb-6">
+                  <h3 className="text-white font-bold text-lg mb-4">Academic Excellence</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {academicPrograms.slice(0, 4).map((program, index) => (
+                      <motion.div
+                        key={program.department}
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-white/5 rounded-xl p-3 border border-white/10 hover:border-white/20 transition-colors cursor-pointer"
+                        onClick={handleAcademicsClick}
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${program.color} flex items-center justify-center mb-2`}>
+                          <program.icon className="text-white text-sm" />
+                        </div>
+                        <h4 className="text-white text-xs font-semibold">{program.department.split(' ')[0]}</h4>
+                        <p className="text-gray-400 text-xs">{program.students}</p>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Features Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  {features.map((feature, index) => (
-                    <motion.div
-                      key={feature.title}
-                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
-                      transition={{ duration: 0.2 }} 
-                      className="p-4 rounded-xl border border-white/10 cursor-pointer group"
-                      onClick={() => setCurrentSlide(index)}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <feature.icon className="text-blue-400 text-2xl" />
-                        <h3 className="text-white font-semibold">{feature.title}</h3>
-                      </div>
-                      <p className="text-white/60 text-sm group-hover:text-white/80 transition-colors">
-                        {feature.description}
-                      </p>
-                    </motion.div>
-                  ))}
-                </div>
-
                 {/* Upcoming Events */}
-                <div className="bg-white/5 rounded-2xl p-4">
-                  <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                <div className="bg-white/10 rounded-2xl p-4 border border-white/20">
+                  <h4 className="text-white font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
                     <FiCalendar className="text-blue-400" />
                     Upcoming Events
                   </h4>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {upcomingEvents.slice(0, 2).map((item, index) => (
                       <motion.div
-                        key={item.title}
+                        key={item.id}
                         whileHover={{ x: 5 }}
-                        transition={{ duration: 0.2 }} 
-                        onClick={handleEventClick}
-                        className="flex items-center gap-3 text-white/80 hover:text-white cursor-pointer group"
+                        onClick={() => setSelectedEvent(item)}
+                        className="flex items-center gap-3 text-gray-300 hover:text-white cursor-pointer group transition-all duration-300"
                       >
                         <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                        <span className="text-sm flex-1">{item.title}</span>
-                        <span className="text-xs text-white/40 group-hover:text-white/60">
-                          {item.date}
+                        <span className="text-xs sm:text-sm flex-1 truncate">
+                          {item.title}
+                        </span>
+                        <span className="text-xs text-gray-400 group-hover:text-gray-300">
+                          {new Date(item.date).toLocaleDateString()}
                         </span>
                       </motion.div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
-              {/* Floating Elements */}
-              <motion.div
+              {/* Floating Achievement Badge */}
+              <motion.div 
                 animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }} 
-                className="absolute -top-4 -right-4 bg-gradient-to-r from-green-400 to-blue-500 p-4 rounded-2xl shadow-2xl"
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute -top-4 -right-4 gradient-bg p-3 sm:p-4 rounded-2xl shadow-2xl"
               >
                 <div className="text-white text-center">
-                  <div className="font-bold text-lg">Open</div>
-                  <div className="text-sm">House</div>
-                  <div className="text-xs mt-1">May 15</div>
+                  <div className="font-bold text-sm sm:text-lg">
+                    {apiData.schoolInfo?.grade || 'A'}
+                  </div>
+                  <div className="text-xs sm:text-sm">Grade</div>
+                  <div className="text-xs mt-1">{new Date().getFullYear()}</div>
                 </div>
               </motion.div>
             </motion.div>
           </div>
         </div>
 
+        {/* Slide Controls */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-3">
+          {heroSlides.map((_, index) => (
+            <motion.button
+              key={index}
+              whileHover={{ scale: 1.2 }}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-4 h-4 rounded-full transition-all duration-500 ${
+                currentSlide === index 
+                  ? 'bg-white scale-125 shadow-lg' 
+                  : 'bg-white/50 hover:bg-white/70'
+              }`}
+            />
+          ))}
+        </div>
+
         {/* Scroll Indicator */}
-        <motion.div
-          animate={{ y: [0, 5, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }} 
+        <motion.div 
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
         >
-          <div className="text-white/60 flex flex-col items-center gap-2">
-            <span className="text-sm">Explore More</span>
+          <div className="text-white flex flex-col items-center gap-2">
+            <span className="text-sm">Discover More</span>
             <FiChevronDown className="text-xl" />
           </div>
         </motion.div>
       </section>
 
-      {/* EVENTS SECTION */}
-      <section className="py-20 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }} 
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-white mb-4">Upcoming Events</h2>
-            <p className="text-white/60 text-xl">Join us for these exciting upcoming events</p>
-          </motion.div>
+      {/* Rest of the sections with white background */}
+      <div className="bg-white">
+        {/* MISSION & VISION SECTION */}
+        <section className="relative py-16 sm:py-20 z-10 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Our Foundation</h2>
+              <p className="text-gray-600 text-lg sm:text-xl">Built on strong values and a clear vision for the future</p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {upcomingEvents.map((event, index) => (
-              <motion.div
-                key={event.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }} 
-                whileHover={{ y: -5 }}
-                onClick={handleEventClick}
-                className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 overflow-hidden group cursor-pointer"
+            <div className="grid lg:grid-cols-2 gap-8 mb-12">
+              <motion.div 
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200"
               >
-               <div className="relative h-48 overflow-hidden">
-                 <Image
-                   src={event.image}
-                   alt={event.title}
-                   fill
-                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                   onLoad={handleImageLoad}
-                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                 />
-                 <div className="absolute top-4 right-4">
-                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                     event.category === 'Academic' ? 'bg-blue-500/80' :
-                     event.category === 'Cultural' ? 'bg-purple-500/80' :
-                     'bg-green-500/80'
-                   } text-white backdrop-blur-sm`}>
-                     {event.category}
-                   </span>
-                 </div>
-               </div>
-                
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
-                  <p className="text-white/70 mb-4">{event.description}</p>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-3 text-white/80">
-                      <FiCalendar className="text-blue-400" />
-                      <span className="text-sm">{event.date}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-white/80">
-                      <FiMapPin className="text-red-400" />
-                      <span className="text-sm">{event.location}</span>
-                    </div>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 bg-blue-50 rounded-2xl">
+                    <FiGlobe className="text-blue-600 text-3xl" />
                   </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      transition={{ duration: 0.2 }}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-xl font-semibold text-sm"
-                    >
-                      {event.registration ? 'Register Now' : 'Learn More'}
-                    </motion.button>
-                    <button className="text-white/60 hover:text-white transition-colors">
-                      <FiShare2 />
-                    </button>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Our Vision</h3>
+                    <p className="text-blue-600 font-semibold">Shaping Tomorrow's Leaders</p>
                   </div>
                 </div>
+                <p className="text-gray-700 text-lg leading-relaxed border-l-4 border-blue-500 pl-4">
+                  "{apiData.schoolInfo?.vision || 'To produce fully empowered, God-fearing citizens'}"
+                </p>
               </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* STAFF SECTION */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }} 
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-white mb-4">Meet Our Faculty</h2>
-            <p className="text-white/60 text-xl">Dedicated educators shaping future leaders</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {staffMembers.map((staff, index) => (
-              <motion.div
-                key={staff.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }}
-                whileHover={{ y: -5 }}
-                onClick={handleStaffClick}
-                className="bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 p-6 text-center group cursor-pointer"
+              <motion.div 
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200"
               >
-               <div className="relative w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden">
-                 <Image
-                   src={staff.image}
-                   alt={staff.name}
-                   fill
-                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                   onLoad={handleImageLoad}
-                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                 />
-               </div>
-                
-                <h3 className="text-xl font-bold text-white mb-2">{staff.name}</h3>
-                <p className="text-blue-300 font-semibold mb-1">{staff.role}</p>
-                <p className="text-white/70 text-sm mb-3">{staff.department}</p>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-center gap-2 text-white/60 text-sm">
-                    <FiAward className="text-yellow-400" />
-                    <span>{staff.experience} Experience</span>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-4 bg-green-50 rounded-2xl">
+                    <FiTrendingUp className="text-green-600 text-3xl" />
                   </div>
-                  <div className="text-white/60 text-sm">
-                    {staff.specialization}
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Our Mission</h3>
+                    <p className="text-green-600 font-semibold">Excellence in Education</p>
                   </div>
                 </div>
-                
-                <motion.a
-                  href={`mailto:${staff.email}`}
+                <p className="text-gray-700 text-lg leading-relaxed border-l-4 border-green-500 pl-4">
+                  "{apiData.schoolInfo?.mission || 'Dedicated to empowering our students through quality education, discipline, and integrity'}"
+                </p>
+              </motion.div>
+            </div>
+
+            {/* Core Values */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <h3 className="text-2xl font-bold text-gray-900 mb-8">Our Core Values</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {(apiData.schoolInfo?.coreValues || ['Integrity', 'Excellence', 'Discipline', 'Faith', 'Community', 'Respect']).map((value, index) => (
+                  <motion.div 
+                    key={index}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-white px-6 py-4 rounded-2xl shadow-md border border-gray-200"
+                  >
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mx-auto mb-2">
+                      {value.charAt(0)}
+                    </div>
+                    <span className="font-semibold text-gray-900 text-sm">{value}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Continue with other sections in similar fashion... */}
+        {/* ACADEMIC EXCELLENCE SECTION */}
+        <section className="relative py-16 sm:py-20 z-10 bg-white">
+          <div className="container mx-auto px-4 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Academic Excellence</h2>
+              <p className="text-gray-600 text-lg sm:text-xl">Comprehensive curriculum designed for success</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {academicPrograms.map((program, index) => (
+                <motion.div
+                  key={program.department}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
                   whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }} 
-                  className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-sm transition-colors"
+                  className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200"
                 >
-                  <FiMail className="text-lg" />
-                  Contact
-                </motion.a>
-              </motion.div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-r ${program.color}`}>
+                      <program.icon className="text-white text-2xl" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">{program.department}</h3>
+                      <p className="text-gray-600">{program.description}</p>
+                    </div>
+                  </div>
 
-          {/* View Our Talented Staff Button */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <div className="text-xl font-bold text-gray-900">{program.teachers}</div>
+                      <div className="text-gray-600 text-sm">Teachers</div>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <div className="text-xl font-bold text-gray-900">{program.students}</div>
+                      <div className="text-gray-600 text-sm">Students</div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-gray-900 mb-3">Programs Offered:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {program.programs.map((subject, idx) => (
+                        <span key={idx} className="px-3 py-2 bg-blue-50 rounded-full text-sm text-blue-700">
+                          {subject}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ENHANCED EVENTS SECTION */}
+        <section className="relative py-16 sm:py-20 z-10 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
+              <p className="text-gray-600 text-lg sm:text-xl">Stay updated with our school activities and programs</p>
+            </motion.div>
+
+            {upcomingEvents.length > 0 ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+                {upcomingEvents.map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.2 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-white rounded-3xl overflow-hidden group cursor-pointer shadow-lg border border-gray-200"
+                  >
+                    <div className="relative h-48 sm:h-56 overflow-hidden">
+                      <Image
+                        src={event.image}
+                        alt={event.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        onLoad={handleImageLoad}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      />
+                      <div className="absolute top-4 right-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          event.category === 'Academic' ? 'bg-blue-500 text-white' :
+                          event.category === 'Sports' ? 'bg-green-500 text-white' :
+                          event.category === 'Music' ? 'bg-purple-500 text-white' :
+                          event.category === 'Drama' ? 'bg-pink-500 text-white' :
+                          'bg-gray-500 text-white'
+                        }`}>
+                          {event.category}
+                        </span>
+                      </div>
+                      {event.featured && (
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                            Featured
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4 sm:p-6">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">{event.title}</h3>
+                      <p className="text-gray-600 mb-4 text-sm sm:text-base line-clamp-2">{event.description}</p>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <FiCalendar className="text-blue-600 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm">{event.formattedDate}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <FiClock className="text-green-600 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm">{event.time}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <FiMapPin className="text-red-600 flex-shrink-0" />
+                          <span className="text-xs sm:text-sm">{event.location}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 mb-4">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCalendar(event);
+                          }}
+                          className="flex-1 bg-blue-50 text-blue-700 py-2 rounded-xl font-semibold hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm border border-blue-200"
+                        >
+                          <FiCalendar /> Add to Calendar
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareEvent(event);
+                          }}
+                          className="flex-1 bg-purple-50 text-purple-700 py-2 rounded-xl font-semibold hover:bg-purple-100 transition-colors flex items-center justify-center gap-2 text-sm border border-purple-200"
+                        >
+                          <FiShare2 /> Share
+                        </button>
+                      </div>
+
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEventClick();
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        Learn More <FiArrowRight />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center py-12"
+              >
+                <FiCalendar className="text-6xl text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Upcoming Events</h3>
+                <p className="text-gray-500">Check back later for upcoming school events</p>
+              </motion.div>
+            )}
+
+            {/* View All Events Button */}
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="text-center mt-8 sm:mt-12"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleEventClick}
+                className="gradient-bg text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg shadow-lg border border-white/20"
+              >
+                View All School Events <FiArrowRight className="inline ml-2" />
+              </motion.button>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Continue with other sections in the same pattern... */}
+
+      </div>
+
+      {/* Share Event Modal */}
+      <AnimatePresence>
+        {showShareModal && selectedEvent && (
           <motion.div
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.3 }} 
-            className="text-center mt-12"
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.2 }} 
-              onClick={handleStaffClick}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg"
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-gray-200"
             >
-              View Our Talented Staff
-            </motion.button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Campus Gallery Section - Now "Our Schools" */}
-      <section className="py-20 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }} 
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl font-bold text-white mb-4">Our School</h2>
-            <p className="text-white/60 text-xl">Explore our diverse academic programs and facilities</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {campusGallery.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.3 }} 
-                whileHover={{ y: -5 }}
-                onClick={handleAcademicsClick}
-                className="group cursor-pointer"
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Share Event</h3>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <IoClose className="text-2xl" />
+                </button>
+              </div>
+              <p className="text-gray-600 mb-6">{selectedEvent.title}</p>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <button 
+                  onClick={() => handleSocialShare('facebook', selectedEvent)}
+                  className="flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  <span>Facebook</span>
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('twitter', selectedEvent)}
+                  className="flex items-center justify-center gap-2 bg-blue-400 text-white py-3 rounded-xl font-semibold hover:bg-blue-500 transition-colors"
+                >
+                  <span>Twitter</span>
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('whatsapp', selectedEvent)}
+                  className="flex items-center justify-center gap-2 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors"
+                >
+                  <span>WhatsApp</span>
+                </button>
+                <button 
+                  onClick={() => handleSocialShare('linkedin', selectedEvent)}
+                  className="flex items-center justify-center gap-2 bg-blue-700 text-white py-3 rounded-xl font-semibold hover:bg-blue-800 transition-colors"
+                >
+                  <span>LinkedIn</span>
+                </button>
+              </div>
+              
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors border border-gray-300"
               >
-               <div className="relative h-64 rounded-2xl overflow-hidden mb-4">
-                 <Image
-                   src={item.image}
-                   alt={item.title}
-                   fill
-                   className="object-cover group-hover:scale-105 transition-transform duration-300"
-                   onLoad={handleImageLoad}
-                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                 />
-                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
-                 <div className="absolute bottom-4 left-4 text-white">
-                   <h3 className="font-semibold text-lg">{item.title}</h3>
-                   <p className="text-sm opacity-90">{item.description}</p>
-                 </div>
-               </div>
-             </motion.div>
-           ))}
-         </div>
-        </div>
-      </section>
-
-      <ChatBot />
-
-
-      {/* Video Modal */}
-      {showVideoModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }} 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-          onClick={closeVideoModal}
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }} 
-            className="relative bg-black rounded-2xl overflow-hidden max-w-4xl w-full aspect-video"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <iframe
-              src={`${youtubeEmbedUrl}?autoplay=1&rel=0&modestbranding=1`}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="School Campus Tour"
-            />
-            <button
-              onClick={closeVideoModal}
-              className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors z-10"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+                Cancel
+              </button>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Video Tour Modal */}
+      <AnimatePresence>
+        {showVideoModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative bg-black rounded-2xl overflow-hidden max-w-4xl w-full aspect-video"
+            >
+              <iframe
+                src={youtubeEmbedUrl}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title={`${apiData.schoolInfo?.name || 'Katwanyaa High School'} Virtual Tour`}
+              />
+              <button
+                onClick={closeVideoModal}
+                className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/70 transition-colors z-10"
+              >
+                <IoClose className="w-6 h-6" />
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ChatBot Component */}
+      <ChatBot />
     </div>
   );
 }

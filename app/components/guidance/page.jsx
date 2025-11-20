@@ -24,13 +24,15 @@ import {
   FiRotateCw
 } from 'react-icons/fi';
 
-// Modern loading spinner component
-const LoadingSpinner = ({ size = 'small', color = 'blue' }) => (
-  <div className={`animate-spin rounded-full border-2 border-${color}-200 border-t-${color}-600 ${
-    size === 'small' ? 'w-4 h-4' : 
-    size === 'medium' ? 'w-6 h-6' : 
-    'w-8 h-8'
-  }`} />
+// Material-UI Spinner only
+import { CircularProgress } from '@mui/material';
+
+// Modern loading spinner component using Material-UI
+const LoadingSpinner = ({ size = 'small', color = 'primary' }) => (
+  <CircularProgress 
+    size={size === 'small' ? 20 : size === 'medium' ? 24 : 32} 
+    color={color}
+  />
 );
 
 // Modern Card Component
@@ -271,7 +273,7 @@ const CustomButton = ({
       {...props}
     >
       {loading && (
-        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner size="small" color="inherit" />
       )}
       {children}
     </motion.button>
@@ -913,7 +915,7 @@ export default function GuidanceCounselingTab() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <LoadingSpinner size="large" color="blue" />
+          <LoadingSpinner size="large" color="primary" />
           <p className="text-gray-600 text-lg mt-4 font-medium">Loading Counseling Sessions...</p>
         </div>
       </div>
