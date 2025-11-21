@@ -243,7 +243,7 @@ export default function StaffDetailPage() {
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <Link 
-                href="/staff" 
+                href="/pages/staff" 
                 className="text-gray-600 hover:text-gray-800 font-medium flex items-center gap-2 transition-all text-sm group"
               >
                 <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
@@ -270,7 +270,7 @@ export default function StaffDetailPage() {
             </li>
             <li className="flex items-center">
               <FiChevronRight className="text-gray-400 mx-2" />
-              <Link href="/staff" className="hover:text-blue-600 transition-colors">Staff Directory</Link>
+              <Link href="/pages/staff" className="hover:text-blue-600 transition-colors">Staff Directory</Link>
             </li>
             <li className="flex items-center">
               <FiChevronRight className="text-gray-400 mx-2" />
@@ -489,19 +489,19 @@ export default function StaffDetailPage() {
                   </h3>
                   <div className="space-y-2">
                     <Link 
-                      href="/staff" 
+                      href="/pages/staff" 
                       className="block p-3 bg-gray-50 rounded-lg border border-gray-200/50 hover:bg-gray-100 transition-all text-sm text-gray-700"
                     >
                       View All Staff Members
                     </Link>
                     <Link 
-                      href="/academics" 
+                      href="/pages/academics" 
                       className="block p-3 bg-gray-50 rounded-lg border border-gray-200/50 hover:bg-gray-100 transition-all text-sm text-gray-700"
                     >
                       Academic Programs
                     </Link>
                     <Link 
-                      href="/admissions" 
+                      href="/pages/admissions" 
                       className="block p-3 bg-gray-50 rounded-lg border border-gray-200/50 hover:bg-gray-100 transition-all text-sm text-gray-700"
                     >
                       Admissions Information
