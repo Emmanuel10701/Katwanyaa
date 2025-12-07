@@ -17,7 +17,8 @@ import {
   FiMessageCircle,
   FiInfo,
   FiTrendingUp,
-  FiAward
+  FiAward,
+  FiClipboard // Added for applications
 } from 'react-icons/fi';
 import { 
   IoStatsChart,
@@ -40,6 +41,7 @@ import StudentCouncil from '../components/studentCouncil/page';
 import AdminsProfileManager from '../components/adminsandprofile/page';
 import GuidanceCounselingTab from '../components/guidance/page';
 import SchoolInfoTab from '../components/schoolinfo/page';
+import ApplicationsManager from '../components/applications/page'; // You'll need to create this component
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -55,7 +57,9 @@ export default function AdminDashboard() {
     totalNews: 0,
     activeAssignments: 0,
     galleryItems: 0,
-    guidanceSessions: 0
+    guidanceSessions: 0,
+    totalApplications: 0, // Added applications count
+    pendingApplications: 0 // Added pending applications count
   });
 
   // Fetch real counts from all APIs
@@ -70,7 +74,8 @@ export default function AdminDashboard() {
         newsRes,
         assignmentsRes,
         galleryRes,
-        guidanceRes
+        guidanceRes,
+        admissionsRes // Added admissions API
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -80,7 +85,8 @@ export default function AdminDashboard() {
         fetch('/api/news'),
         fetch('/api/assignment'),
         fetch('/api/gallery'),
-        fetch('/api/guidance')
+        fetch('/api/guidance'),
+        fetch('/api/admissions/applications') // Added
       ]);
 
       // Process responses and get actual counts
@@ -93,12 +99,19 @@ export default function AdminDashboard() {
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
       const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
+      const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
 
       // Calculate real counts
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
       const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
       const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
+      
+      // Admission statistics
+      const admissionsData = admissions.applications || [];
+      const pendingApps = admissionsData.filter(app => app.status === 'PENDING').length || 0;
+      const acceptedApps = admissionsData.filter(app => app.status === 'ACCEPTED').length || 0;
+      const rejectedApps = admissionsData.filter(app => app.status === 'REJECTED').length || 0;
 
       setRealStats({
         totalStudents: students.students?.length || 0,
@@ -110,7 +123,11 @@ export default function AdminDashboard() {
         totalNews: news.news?.length || 0,
         activeAssignments,
         galleryItems: gallery.galleries?.length || 0,
-        guidanceSessions: guidance.events?.length || 0
+        guidanceSessions: guidance.events?.length || 0,
+        totalApplications: admissionsData.length || 0,
+        pendingApplications: pendingApps,
+        acceptedApplications: acceptedApps,
+        rejectedApplications: rejectedApps
       });
 
     } catch (error) {
@@ -247,6 +264,8 @@ export default function AdminDashboard() {
         return <StaffManager />;
       case 'assignments':
         return <AssignmentsManager />;
+      case 'admissions': // Added case for admissions
+        return <ApplicationsManager />;
       case 'newsevents':
         return <NewsEventsManager />;
       case 'gallery':
@@ -262,7 +281,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // Modern navigation items with real counts
+  // Modern navigation items with real counts including admissions
   const navigationItems = [
     { 
       id: 'overview', 
@@ -312,6 +331,15 @@ export default function AdminDashboard() {
       icon: FiBook,
       count: realStats.activeAssignments,
       badge: 'red'
+    },
+    { 
+      id: 'admissions', // Changed from 'applications' to 'admissions' to match sidebar
+      label: 'Admission Applications', 
+      icon: FiClipboard,
+      count: realStats.totalApplications,
+      badge: 'purple',
+      showPending: realStats.pendingApplications > 0,
+      pendingCount: realStats.pendingApplications
     },
     { 
       id: 'newsevents', 
@@ -420,13 +448,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar - Now properly passes the navigation items */}
       <AdminSidebar 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        tabs={navigationItems}
+        tabs={navigationItems} // Pass the updated navigation items
       />
 
       {/* Main Content */}
@@ -464,6 +492,7 @@ export default function AdminDashboard() {
                         students: 'Student Management',
                         staff: 'Staff & BOM Management',
                         assignments: 'Assignments Manager',
+                        admissions: 'Admission Applications', // Added
                         newsevents: 'News & Events',
                         gallery: 'Media Gallery',
                         subscribers: 'Subscriber Management',
@@ -481,7 +510,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Modern Quick Stats */}
+              {/* Modern Quick Stats - Updated with Applications */}
               <div className="hidden xl:flex items-center gap-3">
                 <HeaderStat 
                   icon={FiUsers} 
@@ -498,10 +527,17 @@ export default function AdminDashboard() {
                   trend="up"
                 />
                 <HeaderStat 
+                  icon={FiClipboard} 
+                  value={realStats.totalApplications} 
+                  label="Applications" 
+                  color="purple"
+                  trend="up"
+                />
+                <HeaderStat 
                   icon={FiUserPlus} 
                   value={realStats.studentCouncil} 
                   label="Council" 
-                  color="purple"
+                  color="orange"
                   trend="up"
                 />
               </div>

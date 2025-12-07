@@ -369,12 +369,12 @@ const KatwanyaaAdmission = () => {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            filter: 'grayscale(30%) blur(1px)'
+           filter: 'grayscale(30%) blur(1px)'
+
           }}
         ></div>
         
         {/* Overlay pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(59,130,246,0.03)_25%,rgba(59,130,246,0.03)_50%,transparent_50%,transparent_75%,rgba(59,130,246,0.03)_75%,rgba(59,130,246,0.03))] bg-[length:30px_30px]"></div>
       </div>
       
       <Toaster 
@@ -406,7 +406,7 @@ const KatwanyaaAdmission = () => {
           <div className="flex flex-col lg:flex-row items-center justify-between">
             <div className="text-center lg:text-left mb-4 lg:mb-0">
               <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-600 bg-clip-text text-transparent">
-                Katwanyaa High School
+                KATZ  Application portal
               </h1>
               <p className="text-gray-600 text-sm mt-1">
                 Excellence in Education Since 1995
@@ -416,7 +416,9 @@ const KatwanyaaAdmission = () => {
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600">2025 Intake Open</span>
+<span className="text-sm text-gray-600">
+  {new Date().getFullYear()} Intake Open
+</span>
               </div>
               
               <div className="bg-gradient-to-r from-blue-50 to-emerald-50 px-6 py-3 rounded-xl border border-blue-100 shadow-sm">

@@ -22,17 +22,36 @@ import {
   FiBarChart2,
   FiAward,
   FiTarget,
-  FiActivity
+  FiActivity,
+  // Admission icons
+  FiClipboard,
+  FiCheckCircle,
+  FiClock,
+  FiAlertCircle,
+  FiThumbsUp,
+  FiThumbsDown,
+  FiPercent,
+  FiZap,
+  FiGlobe,
+  FiMapPin,
+  FiBookOpen,
+  FiHeart,
+  FiCpu
 } from 'react-icons/fi';
 import { 
   IoPeopleCircle,
   IoNewspaper,
   IoSparkles,
-  IoClose
+  IoClose,
+  IoStatsChart,
+  IoAnalytics,
+  IoSchool,
+  IoDocumentText
 } from 'react-icons/io5';
 
 export default function DashboardOverview() {
   const [stats, setStats] = useState({
+    // School Management Stats
     totalStudents: 0,
     totalStaff: 0,
     totalSubscribers: 0,
@@ -42,14 +61,42 @@ export default function DashboardOverview() {
     galleryItems: 0,
     studentCouncil: 0,
     guidanceSessions: 0,
-    totalNews: 0
+    totalNews: 0,
+    
+    // Admission Application Stats
+    totalApplications: 0,
+    pendingApplications: 0,
+    acceptedApplications: 0,
+    rejectedApplications: 0,
+    underReviewApplications: 0,
+    interviewedApplications: 0,
+    waitlistedApplications: 0,
+    conditionalApplications: 0,
+    withdrawnApplications: 0,
+    monthlyApplications: 0,
+    dailyApplications: 0,
+    applicationConversionRate: 0,
+    averageProcessingTime: 0,
+    
+    // Admission Analytics
+    scienceApplications: 0,
+    artsApplications: 0,
+    businessApplications: 0,
+    technicalApplications: 0,
+    maleApplications: 0,
+    femaleApplications: 0,
+    topCountyApplications: '',
+    averageKCPEScore: 0,
+    averageAge: 0
   });
   
   const [recentActivity, setRecentActivity] = useState([]);
   const [performanceData, setPerformanceData] = useState([]);
   const [quickStats, setQuickStats] = useState([]);
+  const [admissionStats, setAdmissionStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [growthMetrics, setGrowthMetrics] = useState({});
+  const [admissionGrowth, setAdmissionGrowth] = useState({});
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showQuickTour, setShowQuickTour] = useState(false);
   const [schoolVideo, setSchoolVideo] = useState(null);
@@ -59,13 +106,13 @@ export default function DashboardOverview() {
     activeVsInactive: { active: 0, inactive: 0 }
   });
 
-  // Fetch all data from APIs
+  // Fetch all data from APIs including admissions
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
         
-        // Fetch data from all endpoints with correct API routes
+        // Fetch data from all endpoints
         const [
           studentsRes,
           staffRes,
@@ -77,7 +124,8 @@ export default function DashboardOverview() {
           guidanceRes,
           newsRes,
           schoolInfoRes,
-          adminsRes
+          adminsRes,
+          admissionsRes  // Admissions API
         ] = await Promise.allSettled([
           fetch('/api/student'),
           fetch('/api/staff'),
@@ -89,7 +137,8 @@ export default function DashboardOverview() {
           fetch('/api/guidance'),
           fetch('/api/news'),
           fetch('/api/school'),
-          fetch('/api/register')
+          fetch('/api/register'),
+          fetch('/api/admissions/applications')  // Admissions endpoint
         ]);
 
         // Process responses
@@ -104,6 +153,7 @@ export default function DashboardOverview() {
         const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
         const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
         const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
+        const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
 
         // Store school video for quick tour
         if (schoolInfo.school?.videoTour) {
@@ -113,7 +163,7 @@ export default function DashboardOverview() {
           });
         }
 
-        // Calculate real stats with proper filtering
+        // Calculate school management stats
         const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
         const inactiveStudents = students.students?.filter(s => s.status !== 'Active').length || 0;
         const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
@@ -122,50 +172,93 @@ export default function DashboardOverview() {
         const completedAssignments = assignments.assignments?.filter(a => a.status === 'completed').length || 0;
         const totalAssignments = assignments.assignments?.length || 1;
 
-        // Calculate form distribution for students
-        const formDistribution = {};
-        students.students?.forEach(student => {
-          const form = student.form || 'Unknown';
-          formDistribution[form] = (formDistribution[form] || 0) + 1;
+        // Calculate admission statistics
+        const applications = admissions.applications || [];
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        // Admission calculations
+        const monthlyApplications = applications.filter(app => {
+          const appDate = new Date(app.createdAt);
+          return appDate.getMonth() === currentMonth && appDate.getFullYear() === currentYear;
+        }).length;
+
+        const dailyApplications = applications.filter(app => {
+          const appDate = new Date(app.createdAt);
+          return appDate.toDateString() === today.toDateString();
+        }).length;
+
+        const pendingApps = applications.filter(app => app.status === 'PENDING').length;
+        const acceptedApps = applications.filter(app => app.status === 'ACCEPTED').length;
+        const rejectedApps = applications.filter(app => app.status === 'REJECTED').length;
+        const underReviewApps = applications.filter(app => app.status === 'UNDER_REVIEW').length;
+        const interviewedApps = applications.filter(app => app.status === 'INTERVIEWED').length;
+        const waitlistedApps = applications.filter(app => app.status === 'WAITLISTED').length;
+        const conditionalApps = applications.filter(app => app.status === 'CONDITIONAL_ACCEPTANCE').length;
+        const withdrawnApps = applications.filter(app => app.status === 'WITHDRAWN').length;
+
+        // Calculate conversion rate
+        const conversionRate = applications.length > 0 ? 
+          Math.round((acceptedApps / applications.length) * 100) : 0;
+
+        // Calculate average processing time (in days)
+        const processedApps = applications.filter(app => 
+          ['ACCEPTED', 'REJECTED', 'WITHDRAWN'].includes(app.status)
+        );
+        
+        let totalProcessingTime = 0;
+        processedApps.forEach(app => {
+          const submittedDate = new Date(app.createdAt);
+          const processedDate = app.updatedAt ? new Date(app.updatedAt) : today;
+          const daysDiff = Math.ceil((processedDate - submittedDate) / (1000 * 60 * 60 * 24));
+          totalProcessingTime += daysDiff;
         });
+        
+        const avgProcessingTime = processedApps.length > 0 ? 
+          Math.round(totalProcessingTime / processedApps.length) : 0;
 
-        // Modern growth calculations based on actual data patterns
-        const calculateModernGrowth = (currentData, dataType) => {
-          const baseRates = {
-            students: {
-              base: 8.5,
-              multiplier: students.students?.length > 1000 ? 1.2 : 1.0,
-              seasonal: new Date().getMonth() >= 7 ? 1.15 : 1.0 // Higher growth in second half
-            },
-            staff: {
-              base: 3.2,
-              multiplier: 1.0
-            },
-            subscribers: {
-              base: 12.7,
-              multiplier: subscribers.subscribers?.length > 2000 ? 0.9 : 1.1
-            },
-            assignments: {
-              base: 15.3,
-              multiplier: assignments.assignments?.length > 50 ? 1.25 : 1.0
-            },
-            council: {
-              base: 6.4,
-              multiplier: activeCouncil > 20 ? 0.8 : 1.2
-            }
-          };
+        // Admission analytics
+        const scienceApps = applications.filter(app => app.preferredStream === 'SCIENCE').length;
+        const artsApps = applications.filter(app => app.preferredStream === 'ARTS').length;
+        const businessApps = applications.filter(app => app.preferredStream === 'BUSINESS').length;
+        const technicalApps = applications.filter(app => app.preferredStream === 'TECHNICAL').length;
+        
+        const maleApps = applications.filter(app => app.gender === 'MALE').length;
+        const femaleApps = applications.filter(app => app.gender === 'FEMALE').length;
+        
+        // Find top county
+        const countyCounts = {};
+        applications.forEach(app => {
+          if (app.county) {
+            countyCounts[app.county] = (countyCounts[app.county] || 0) + 1;
+          }
+        });
+        const topCounty = Object.entries(countyCounts).sort((a, b) => b[1] - a[1])[0];
+        
+        // Calculate average KCPE score
+        const kcpeScores = applications
+          .filter(app => app.kcpeMarks && !isNaN(app.kcpeMarks))
+          .map(app => parseInt(app.kcpeMarks));
+        const avgKCPEScore = kcpeScores.length > 0 ? 
+          Math.round(kcpeScores.reduce((a, b) => a + b, 0) / kcpeScores.length) : 0;
+        
+        // Calculate average age
+        const ages = applications
+          .filter(app => app.dateOfBirth)
+          .map(app => {
+            const birthDate = new Date(app.dateOfBirth);
+            const age = today.getFullYear() - birthDate.getFullYear();
+            return age;
+          });
+        const avgAge = ages.length > 0 ? 
+          Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
 
-          const config = baseRates[dataType] || { base: 5.0, multiplier: 1.0 };
-          return (config.base * config.multiplier * (config.seasonal || 1.0)).toFixed(1);
-        };
-
-        const studentGrowth = parseFloat(calculateModernGrowth(students.students, 'students'));
-        const staffGrowth = parseFloat(calculateModernGrowth(staff.staff, 'staff'));
-        const subscriberGrowth = parseFloat(calculateModernGrowth(subscribers.subscribers, 'subscribers'));
-        const assignmentGrowth = parseFloat(calculateModernGrowth(assignments.assignments, 'assignments'));
-        const councilGrowth = parseFloat(calculateModernGrowth(council.councilMembers, 'council'));
-
+        // Update stats with all data
         setStats({
+          // School Management
           totalStudents: students.students?.length || 0,
           activeStudents,
           inactiveStudents,
@@ -179,12 +272,44 @@ export default function DashboardOverview() {
           guidanceSessions: guidance.events?.length || 0,
           totalNews: news.news?.length || 0,
           completedAssignments,
-          totalAssignments
+          totalAssignments,
+          
+          // Admission Applications
+          totalApplications: applications.length,
+          pendingApplications: pendingApps,
+          acceptedApplications: acceptedApps,
+          rejectedApplications: rejectedApps,
+          underReviewApplications: underReviewApps,
+          interviewedApplications: interviewedApps,
+          waitlistedApplications: waitlistedApps,
+          conditionalApplications: conditionalApps,
+          withdrawnApplications: withdrawnApps,
+          monthlyApplications,
+          dailyApplications,
+          applicationConversionRate: conversionRate,
+          averageProcessingTime: avgProcessingTime,
+          
+          // Admission Analytics
+          scienceApplications: scienceApps,
+          artsApplications: artsApps,
+          businessApplications: businessApps,
+          technicalApplications: technicalApps,
+          maleApplications: maleApps,
+          femaleApplications: femaleApps,
+          topCountyApplications: topCounty ? topCounty[0] : 'N/A',
+          averageKCPEScore: avgKCPEScore,
+          averageAge: avgAge
         });
 
-        // Enhanced student growth data
+        // Form distribution for students
+        const formDistribution = {};
+        students.students?.forEach(student => {
+          const form = student.form || 'Unknown';
+          formDistribution[form] = (formDistribution[form] || 0) + 1;
+        });
+
         setStudentGrowthData({
-          monthlyGrowth: studentGrowth,
+          monthlyGrowth: 8.5,
           formDistribution,
           activeVsInactive: {
             active: activeStudents,
@@ -193,24 +318,35 @@ export default function DashboardOverview() {
           councilParticipation: Math.round((activeCouncil / (students.students?.length || 1)) * 100)
         });
 
-        // Set growth metrics
+        // Growth metrics
         setGrowthMetrics({
-          studentGrowth,
-          staffGrowth,
-          subscriberGrowth,
-          assignmentGrowth,
-          councilGrowth,
+          studentGrowth: 8.5,
+          staffGrowth: 3.2,
+          subscriberGrowth: 12.7,
+          assignmentGrowth: 15.3,
+          councilGrowth: 6.4,
           eventGrowth: -2.1,
           galleryGrowth: 25.8,
           guidanceGrowth: 18.9,
           newsGrowth: 9.7
         });
 
-        // Generate comprehensive recent activity from ALL APIs
+        // Admission growth metrics
+        setAdmissionGrowth({
+          monthlyGrowth: monthlyApplications,
+          dailyGrowth: dailyApplications,
+          acceptanceGrowth: conversionRate > 0 ? conversionRate : 0,
+          scienceGrowth: scienceApps > 0 ? Math.round((scienceApps / applications.length) * 100) : 0,
+          businessGrowth: businessApps > 0 ? Math.round((businessApps / applications.length) * 100) : 0,
+          processingEfficiency: avgProcessingTime > 0 ? 
+            Math.round((30 / avgProcessingTime) * 100) : 100 // Efficiency percentage
+        });
+
+        // Generate recent activity including admissions
         const generateRecentActivity = () => {
           const activities = [];
           
-          // Recent students (latest 2)
+          // Recent students
           const recentStudents = students.students?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 2);
           recentStudents?.forEach(student => {
             activities.push({
@@ -225,7 +361,42 @@ export default function DashboardOverview() {
             });
           });
 
-          // Recent assignments (latest 2)
+          // Recent admission applications (latest 3)
+          const recentAdmissions = applications
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 3);
+          
+          recentAdmissions?.forEach(application => {
+            const statusIcon = {
+              'PENDING': FiClock,
+              'ACCEPTED': FiCheckCircle,
+              'REJECTED': FiX,
+              'UNDER_REVIEW': FiEye,
+              'INTERVIEWED': FiCalendar
+            }[application.status] || FiClipboard;
+
+            const statusColor = {
+              'PENDING': 'yellow',
+              'ACCEPTED': 'green',
+              'REJECTED': 'red',
+              'UNDER_REVIEW': 'blue',
+              'INTERVIEWED': 'purple'
+            }[application.status] || 'gray';
+
+            activities.push({
+              id: `admission-${application._id}`,
+              action: 'Admission application submitted',
+              target: `${application.firstName} ${application.lastName} - ${application.preferredStream}`,
+              status: application.status,
+              time: new Date(application.createdAt).toLocaleDateString(),
+              type: 'admission',
+              icon: statusIcon,
+              color: statusColor,
+              timestamp: new Date(application.createdAt)
+            });
+          });
+
+          // Recent assignments
           const recentAssignments = assignments.assignments?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 2);
           recentAssignments?.forEach(assignment => {
             activities.push({
@@ -240,107 +411,16 @@ export default function DashboardOverview() {
             });
           });
 
-          // Recent staff (latest 1)
-          const recentStaff = staff.staff?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 1);
-          recentStaff?.forEach(staffMember => {
-            activities.push({
-              id: `staff-${staffMember.id}`,
-              action: 'New staff member added',
-              target: `${staffMember.name} - ${staffMember.position}`,
-              time: new Date(staffMember.createdAt).toLocaleDateString(),
-              type: 'staff',
-              icon: FiUsers,
-              color: 'green',
-              timestamp: new Date(staffMember.createdAt)
-            });
-          });
-
-          // Recent admins (latest 1)
-          const recentAdmins = admins.users?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 1);
-          recentAdmins?.forEach(admin => {
-            activities.push({
-              id: `admin-${admin.id}`,
-              action: 'Admin registered',
-              target: `${admin.name} - ${admin.role}`,
-              time: new Date(admin.createdAt).toLocaleDateString(),
-              type: 'admin',
-              icon: FiUser,
-              color: 'purple',
-              timestamp: new Date(admin.createdAt)
-            });
-          });
-
-          // Recent school info updates (if any)
-          if (schoolInfo.school?.updatedAt) {
-            activities.push({
-              id: `school-${schoolInfo.school.id}`,
-              action: 'School information updated',
-              target: 'School profile and details',
-              time: new Date(schoolInfo.school.updatedAt).toLocaleDateString(),
-              type: 'school',
-              icon: FiAward,
-              color: 'orange',
-              timestamp: new Date(schoolInfo.school.updatedAt)
-            });
-          }
-
-          // Recent news (latest 1)
-          const recentNews = news.news?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 1);
-          recentNews?.forEach(newsItem => {
-            activities.push({
-              id: `news-${newsItem.id}`,
-              action: 'News article published',
-              target: newsItem.title,
-              time: new Date(newsItem.createdAt).toLocaleDateString(),
-              type: 'news',
-              icon: IoNewspaper,
-              color: 'red',
-              timestamp: new Date(newsItem.createdAt)
-            });
-          });
-
-          // Recent events (latest 1)
-          const recentEvents = events.events?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 1);
-          recentEvents?.forEach(event => {
-            activities.push({
-              id: `event-${event.id}`,
-              action: 'Event published',
-              target: event.title,
-              time: new Date(event.createdAt).toLocaleDateString(),
-              type: 'event',
-              icon: FiCalendar,
-              color: 'purple',
-              timestamp: new Date(event.createdAt)
-            });
-          });
-
-          // Recent student council (latest 1)
-          const recentCouncil = council.councilMembers?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 1);
-          recentCouncil?.forEach(member => {
-            activities.push({
-              id: `council-${member.id}`,
-              action: 'Student council member added',
-              target: `${member.student?.name} - ${member.position}`,
-              time: new Date(member.createdAt).toLocaleDateString(),
-              type: 'council',
-              icon: IoPeopleCircle,
-              color: 'indigo',
-              timestamp: new Date(member.createdAt)
-            });
-          });
-
           return activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
         };
 
         setRecentActivity(generateRecentActivity());
 
-        // Calculate real performance metrics based on actual data
+        // Performance metrics including admissions
         const calculatePerformanceMetrics = () => {
           const totalStudents = students.students?.length || 1;
           const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
           const assignmentCompletionRate = Math.round((completedAssignments / totalAssignments) * 100);
-          const eventAttendanceRate = 78;
-          const resourceUtilization = Math.min(Math.round((gallery.galleries?.length || 0) / 50 * 100), 100);
           const councilEngagement = Math.round((activeCouncil / totalStudents) * 100);
 
           return [
@@ -350,6 +430,13 @@ export default function DashboardOverview() {
               change: 2.5,
               color: 'green',
               description: 'Percentage of active students'
+            },
+            { 
+              label: 'Admission Conversion Rate', 
+              value: conversionRate,
+              change: conversionRate > 0 ? 3.2 : 0,
+              color: 'purple',
+              description: 'Applications to acceptances'
             },
             { 
               label: 'Assignment Completion', 
@@ -362,22 +449,22 @@ export default function DashboardOverview() {
               label: 'Council Engagement', 
               value: councilEngagement,
               change: 8.2,
-              color: 'purple',
+              color: 'indigo',
               description: 'Student participation in council'
             },
             { 
-              label: 'Resource Utilization', 
-              value: resourceUtilization,
+              label: 'Admission Processing', 
+              value: avgProcessingTime > 0 ? Math.min(100, Math.round((30 / avgProcessingTime) * 100)) : 100,
               change: 6.3,
               color: 'orange',
-              description: 'Gallery and resource usage'
+              description: 'Processing efficiency'
             }
           ];
         };
 
         setPerformanceData(calculatePerformanceMetrics());
 
-        // Quick stats with real calculations
+        // Quick stats
         const quickStatsData = [
           { 
             label: 'Academic Excellence', 
@@ -385,7 +472,15 @@ export default function DashboardOverview() {
             change: 2.3, 
             icon: FiTrendingUp, 
             color: 'green',
-            calculation: 'Based on assignment completion and test scores'
+            calculation: 'Based on assignment completion'
+          },
+          { 
+            label: 'Admission Growth', 
+            value: `${monthlyApplications}`, 
+            change: monthlyApplications > 10 ? 15.7 : 5.2, 
+            icon: monthlyApplications > 10 ? FiTrendingUp : FiTrendingDown, 
+            color: monthlyApplications > 10 ? 'purple' : 'red',
+            calculation: 'Monthly applications'
           },
           { 
             label: 'Student Engagement', 
@@ -394,18 +489,48 @@ export default function DashboardOverview() {
             icon: FiActivity, 
             color: 'blue',
             calculation: 'Council participation rate'
-          },
-          { 
-            label: 'Institutional Growth', 
-            value: `${studentGrowth}%`, 
-            change: studentGrowth, 
-            icon: studentGrowth >= 0 ? FiTrendingUp : FiTrendingDown, 
-            color: studentGrowth >= 0 ? 'purple' : 'red',
-            calculation: 'Student population growth rate'
           }
         ];
 
         setQuickStats(quickStatsData);
+
+        // Admission specific stats
+        const admissionStatsData = [
+          { 
+            label: 'Total Applications', 
+            value: applications.length, 
+            icon: IoDocumentText, 
+            color: 'purple',
+            trend: monthlyApplications > 0 ? 'up' : 'down',
+            subtitle: `${dailyApplications} today`
+          },
+          { 
+            label: 'Pending Review', 
+            value: pendingApps, 
+            icon: FiClock, 
+            color: 'yellow',
+            trend: pendingApps > 5 ? 'warning' : 'stable',
+            subtitle: 'Requires attention'
+          },
+          { 
+            label: 'Acceptance Rate', 
+            value: `${conversionRate}%`, 
+            icon: FiPercent, 
+            color: 'green',
+            trend: conversionRate > 20 ? 'up' : 'down',
+            subtitle: `${acceptedApps} accepted`
+          },
+          { 
+            label: 'Avg Processing Time', 
+            value: `${avgProcessingTime}d`, 
+            icon: FiZap, 
+            color: 'blue',
+            trend: avgProcessingTime < 7 ? 'good' : 'slow',
+            subtitle: 'Days to process'
+          }
+        ];
+
+        setAdmissionStats(admissionStatsData);
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -417,7 +542,7 @@ export default function DashboardOverview() {
     fetchAllData();
   }, []);
 
-  // Enhanced Analytics Modal with Modern Growth Calculations
+  // Enhanced Analytics Modal with Admission Analytics
   const AnalyticsModal = () => (
     <AnimatePresence>
       {showAnalyticsModal && (
@@ -437,7 +562,7 @@ export default function DashboardOverview() {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                <FiBarChart2 className="text-blue-500" />
+                <IoAnalytics className="text-blue-500" />
                 Advanced Analytics Dashboard
               </h2>
               <button
@@ -448,160 +573,185 @@ export default function DashboardOverview() {
               </button>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-6 mb-6">
-              {/* Student Growth Analytics */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
-                  <FiTrendingUp className="text-blue-600" />
-                  Student Growth Analytics
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4 border border-blue-200">
-                      <p className="text-sm text-blue-600 font-medium">Monthly Growth</p>
-                      <p className="text-2xl font-bold text-blue-800">{studentGrowthData.monthlyGrowth}%</p>
+            {/* Admission Analytics Section */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <FiClipboard className="text-purple-500" />
+                Admission Application Analytics
+              </h3>
+              
+              <div className="grid lg:grid-cols-2 gap-6 mb-6">
+                {/* Admission Overview */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                  <h4 className="text-lg font-semibold text-purple-800 mb-4">Application Overview</h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-4 border border-purple-200">
+                        <p className="text-sm text-purple-600 font-medium">Total Applications</p>
+                        <p className="text-2xl font-bold text-purple-800">{stats.totalApplications}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-4 border border-green-200">
+                        <p className="text-sm text-green-600 font-medium">Conversion Rate</p>
+                        <p className="text-2xl font-bold text-green-800">{stats.applicationConversionRate}%</p>
+                      </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-green-200">
-                      <p className="text-sm text-green-600 font-medium">Council Participation</p>
-                      <p className="text-2xl font-bold text-green-800">{studentGrowthData.councilParticipation}%</p>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <p className="text-sm text-blue-600 font-medium">Monthly Growth</p>
+                        <p className="text-2xl font-bold text-blue-800">{stats.monthlyApplications}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-4 border border-orange-200">
+                        <p className="text-sm text-orange-600 font-medium">Avg Processing Time</p>
+                        <p className="text-2xl font-bold text-orange-800">{stats.averageProcessingTime} days</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Form Distribution */}
-                  <div>
-                    <p className="text-sm font-medium text-blue-700 mb-2">Form Distribution</p>
-                    <div className="space-y-2">
-                      {Object.entries(studentGrowthData.formDistribution).map(([form, count]) => (
-                        <div key={form} className="flex items-center justify-between">
-                          <span className="text-sm text-blue-600">{form}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 bg-blue-200 rounded-full h-2">
-                              <div 
-                                className="bg-blue-500 h-2 rounded-full" 
-                                style={{ 
-                                  width: `${(count / stats.totalStudents) * 100}%` 
-                                }}
-                              />
-                            </div>
-                            <span className="text-sm font-medium text-blue-800">{count}</span>
-                          </div>
+                </div>
+
+                {/* Stream Distribution */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+                  <h4 className="text-lg font-semibold text-blue-800 mb-4">Stream Preference Analysis</h4>
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Science', value: stats.scienceApplications, color: 'blue' },
+                      { label: 'Arts', value: stats.artsApplications, color: 'purple' },
+                      { label: 'Business', value: stats.businessApplications, color: 'green' },
+                      { label: 'Technical', value: stats.technicalApplications, color: 'orange' }
+                    ].map((stream) => (
+                      <div key={stream.label} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full bg-${stream.color}-500`}></div>
+                          <span className="text-sm text-gray-700">{stream.label}</span>
                         </div>
-                      ))}
-                    </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`bg-${stream.color}-500 h-2 rounded-full`}
+                              style={{ 
+                                width: `${(stream.value / stats.totalApplications) * 100 || 0}%` 
+                              }}
+                            />
+                          </div>
+                          <span className="text-sm font-semibold text-gray-800">{stream.value}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              {/* Performance Summary */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
-                  <FiTarget className="text-green-600" />
-                  Institutional Performance
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-green-700">Student Activity Rate</span>
-                    <span className="font-semibold text-green-600">
-                      {Math.round((stats.activeStudents / stats.totalStudents) * 100)}%
-                    </span>
+              {/* Status Breakdown */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 mb-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4">Application Status Breakdown</h4>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Pending', value: stats.pendingApplications, color: 'yellow', icon: FiClock },
+                    { label: 'Under Review', value: stats.underReviewApplications, color: 'blue', icon: FiEye },
+                    { label: 'Interviewed', value: stats.interviewedApplications, color: 'purple', icon: FiCalendar },
+                    { label: 'Accepted', value: stats.acceptedApplications, color: 'green', icon: FiCheckCircle },
+                    { label: 'Rejected', value: stats.rejectedApplications, color: 'red', icon: FiX },
+                    { label: 'Waitlisted', value: stats.waitlistedApplications, color: 'orange', icon: FiClock },
+                    { label: 'Conditional', value: stats.conditionalApplications, color: 'teal', icon: FiAlertCircle },
+                    { label: 'Withdrawn', value: stats.withdrawnApplications, color: 'gray', icon: FiUser }
+                  ].map((status) => (
+                    <div key={status.label} className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`p-2 bg-${status.color}-100 rounded-lg`}>
+                          <status.icon className={`text-${status.color}-600`} />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">{status.label}</p>
+                          <p className="text-xl font-bold text-gray-800">{status.value}</p>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {Math.round((status.value / stats.totalApplications) * 100) || 0}% of total
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Demographic Analysis */}
+              <div className="grid lg:grid-cols-3 gap-6 mb-6">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+                  <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+                    <FiGlobe className="text-green-600" />
+                    Top County
+                  </h4>
+                  <div className="text-center">
+                    <p className="text-3xl font-bold text-green-800 mb-2">{stats.topCountyApplications}</p>
+                    <p className="text-sm text-green-600">Most applications received</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-green-700">Council Growth</span>
-                    <span className="font-semibold text-green-600">+{growthMetrics.councilGrowth}%</span>
+                </div>
+
+                <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200">
+                  <h4 className="text-lg font-semibold text-pink-800 mb-4 flex items-center gap-2">
+                    <FiUser className="text-pink-600" />
+                    Gender Distribution
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-pink-700">Male</span>
+                      <span className="font-semibold text-pink-800">{stats.maleApplications}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-pink-700">Female</span>
+                      <span className="font-semibold text-pink-800">{stats.femaleApplications}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-green-700">Academic Efficiency</span>
-                    <span className="font-semibold text-green-600">87%</span>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border border-orange-200">
+                  <h4 className="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2">
+                    <FiBookOpen className="text-orange-600" />
+                    Academic Profile
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-orange-700">Avg KCPE Score</span>
+                      <span className="font-semibold text-orange-800">{stats.averageKCPEScore}/500</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-orange-700">Avg Age</span>
+                      <span className="font-semibold text-orange-800">{stats.averageAge} years</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modern Growth Metrics */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-purple-600 font-medium">Student Growth</p>
-                    <p className="text-2xl font-bold text-purple-800">+{growthMetrics.studentGrowth}%</p>
-                  </div>
-                  <FiTrendingUp className="text-purple-500 text-xl" />
-                </div>
-                <p className="text-xs text-purple-600 mt-2">Monthly increase</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Council Growth</p>
-                    <p className="text-2xl font-bold text-blue-800">+{growthMetrics.councilGrowth}%</p>
-                  </div>
-                  <FiActivity className="text-blue-500 text-xl" />
-                </div>
-                <p className="text-xs text-blue-600 mt-2">Leadership expansion</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Academic Progress</p>
-                    <p className="text-2xl font-bold text-green-800">+{growthMetrics.assignmentGrowth}%</p>
-                  </div>
-                  <FiBook className="text-green-500 text-xl" />
-                </div>
-                <p className="text-xs text-green-600 mt-2">Assignment completion</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-orange-600 font-medium">Engagement Rate</p>
-                    <p className="text-2xl font-bold text-orange-800">{studentGrowthData.councilParticipation}%</p>
-                  </div>
-                  <FiUsers className="text-orange-500 text-xl" />
-                </div>
-                <p className="text-xs text-orange-600 mt-2">Student participation</p>
-              </div>
-            </div>
-
-            {/* Student & Council Relationship */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Student & Council Relationship Analysis</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Student Distribution</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Active Students</span>
-                      <span className="font-semibold text-green-600">{stats.activeStudents}</span>
+            {/* Performance Metrics Chart */}
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200">
+              <h4 className="text-lg font-semibold text-indigo-800 mb-4">Admission Performance Metrics</h4>
+              <div className="space-y-4">
+                {performanceData.map((metric, index) => (
+                  <div key={index} className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <span className="font-medium text-gray-700 text-sm">{metric.label}</span>
+                      <span className="text-xs text-gray-500 block">{metric.description}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Inactive Students</span>
-                      <span className="font-semibold text-red-600">{stats.inactiveStudents}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Council Members</span>
-                      <span className="font-semibold text-blue-600">{stats.studentCouncil}</span>
+                    <div className="flex items-center gap-4 w-64">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${metric.value}%` }}
+                          transition={{ duration: 1, delay: 0.2 }}
+                          className={`bg-${metric.color}-500 h-2 rounded-full`}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 w-20">
+                        <span className="text-sm font-bold text-gray-800">{metric.value}%</span>
+                        {metric.change > 0 ? (
+                          <FiTrendingUp className="text-green-500 text-sm" />
+                        ) : (
+                          <FiTrendingDown className="text-red-500 text-sm" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-700 mb-3">Growth Indicators</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Student → Council Ratio</span>
-                      <span className="font-semibold text-purple-600">
-                        1:{Math.round(stats.totalStudents / stats.studentCouncil) || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Monthly Growth Potential</span>
-                      <span className="font-semibold text-green-600">
-                        +{Math.round(stats.totalStudents * (growthMetrics.studentGrowth / 100))} students
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -700,10 +850,10 @@ export default function DashboardOverview() {
               {trend === 'up' ? (
                 <FiTrendingUp className="text-green-500 text-sm" />
               ) : (
-                <FiTrendingDown className="text-red-500 text-sm" />
+                <FiTrendingDown className="text-red-500 text-sm" /> 
               )}
               <span className={`text-sm font-semibold ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                {change}% {trend === 'up' ? 'increase' : 'decrease'}
+                {change}%
               </span>
             </div>
           )}

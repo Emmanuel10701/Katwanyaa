@@ -1,7 +1,8 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import ClientLayoutWrapper from "./-app";
-import { SessionProvider } from './session/sessiowrapper'; 
+import { SessionProvider } from './session/sessionwrapper'; 
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -15,15 +16,16 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Katwanyaa High School | Nurturing Excellence, Shaping Futures",
+  title: "Nyaribu Secondary School | Soaring for Excellence",
   description:
-    "Official website for Katwanyaa High School. Discover our academic programs, vibrant community, and achievements in STEAM and co-curricular activities.",
+    "Official website for Nyaribu Secondary School. Guided by our motto 'Soaring for Excellence,' we provide quality education, academic programs, and holistic development for our students.",
   icons: {
     icon: [
-      { url: "/lll.png", type: "image/png", sizes: "32x32" },
-      { url: "/lll.png", type: "image/png", sizes: "32x32" },
+      { url: "/logo.png", type: "image/png", sizes: "32x32" },
+      { url: "/logo.png", type: "image/png", sizes: "32x32" },
     ],
-  apple: "/lll.png",},
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {

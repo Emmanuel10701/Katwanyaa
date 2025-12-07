@@ -59,9 +59,6 @@ import {
 // ChatBot Component
 import ChatBot from './components/chat/page';
 
-
-
-
 export default function ModernHero() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -81,65 +78,146 @@ export default function ModernHero() {
   const splashTimerRef = useRef(null);
   const router = useRouter();
 
-  // Real images for Katwanyaa High School
+  // Real images for Nyaribu Secondary School
   const defaultImages = {
-    campus: "https://images.unsplash.com/photo-1562774053-701939374585?w=1200&h=800&fit=crop",
-    students: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&h=800&fit=crop",
-    scienceLab: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop",
-    library: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=1200&h=800&fit=crop",
-    sports: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop",
-    arts: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=1200&h=800&fit=crop",
-    teacher1: "https://images.unsplash.com/photo-1566753323558-f4e0952af115?w=400&h=400&fit=crop",
-    teacher2: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&h=400&fit=crop",
-    teacher3: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
-    event1: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=800&fit=crop",
-    event2: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=1200&h=800&fit=crop",
-    event3: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=1200&h=800&fit=crop"
+    campus: "/images/campus.jpg",
+    students: "/images/students.jpg",
+    scienceLab: "/images/science-lab.jpg",
+    library: "/images/library.jpg",
+    sports: "/images/sports.jpg",
+    arts: "/images/arts.jpg",
+    principal: "/images/principal.jpg",
+    deputy: "/images/deputy.jpg",
+    teacher1: "/images/teacher1.jpg",
+    event1: "/images/event1.jpg",
+    event2: "/images/event2.jpg",
+    event3: "/images/event3.jpg"
   };
 
   // Enhanced hero slides with rich content
   const heroSlides = [
     {
-      title: "Excellence in Education",
-      subtitle: "Nurturing Future Leaders Through Innovative Learning",
-      description: "At Katwanyaa, we combine traditional values with modern educational approaches to create well-rounded individuals ready for the challenges of tomorrow.",
+      title: "Soaring for Excellence",
+      subtitle: "Nurturing Future Leaders Through Quality Education",
+      description: "At Nyaribu Secondary School, we combine academic excellence with character development to create responsible citizens ready for global challenges.",
       background: "bg-gradient-to-br from-blue-600 via-purple-700 to-indigo-800",
-      image: "/teachers.png",
+      image: "/images/campus.jpg",
       stats: { 
-        students: "1300+", 
-        excellence: "98% Success", 
-        years: "Since 1985" 
+        students: "1200+", 
+        excellence: "94% Success", 
+        years: "Since 1980" 
       },
-      features: ["Modern Curriculum", "Expert Faculty", "State-of-the-Art Facilities"],
+      features: ["Modern Curriculum", "Experienced Faculty", "Excellent Facilities"],
       cta: "Start Your Journey"
     },
     {
       title: "Holistic Development",
-      subtitle: "Balancing Academics, Sports, and Character Building",
-      description: "Our comprehensive programs ensure students develop not just academically, but also physically, socially, and spiritually in a nurturing environment.",
+      subtitle: "Balancing Academics, Sports, and Moral Values",
+      description: "Our comprehensive programs ensure students develop academically, physically, and spiritually in a nurturing Christian environment.",
       background: "bg-gradient-to-br from-emerald-600 via-teal-700 to-green-800",
-      image: "/teachers.png",
+      image: "/images/sports.jpg",
       stats: { 
-        teams: "8+", 
-        clubs: "12+", 
-        activities: "Daily" 
+        teams: "10+", 
+        clubs: "15+", 
+        activities: "Weekly" 
       },
-      features: ["Sports Excellence", "Creative Arts", "Leadership Programs"],
+      features: ["Sports Excellence", "Creative Arts", "Spiritual Growth"],
       cta: "Explore Programs"
     },
     {
-      title: "Modern Learning Environment",
-      subtitle: "Technology-Enhanced Education for the Digital Age",
-      description: "Experience cutting-edge learning with smart classrooms, advanced laboratories, and digital resources that prepare students for future careers.",
+      title: "Technology-Enhanced Learning",
+      subtitle: "Preparing Students for the Digital Age",
+      description: "Experience modern learning with computer labs, digital resources, and innovative teaching methods that prepare students for future careers.",
       background: "bg-gradient-to-br from-orange-500 via-red-600 to-pink-700",
-      image: "/teachers.png",
+      image: "/images/science-lab.jpg",
       stats: { 
-        labs: "4", 
-        tech: "Smart Classes", 
-        support: "24/7" 
+        labs: "3", 
+        tech: "Computer Labs", 
+        support: "Modern" 
       },
-      features: ["Digital Classrooms", "Science Labs", "Computer Centers"],
+      features: ["Computer Studies", "Science Labs", "Digital Resources"],
       cta: "View Facilities"
+    }
+  ];
+
+  // Sample data for Nyaribu Secondary School
+  const sampleEvents = [
+    {
+      id: 1,
+      title: "Academic Excellence Day",
+      description: "Annual celebration of academic achievements and awards ceremony for top performers",
+      date: "2024-04-15",
+      time: "9:00 AM - 2:00 PM",
+      location: "School Main Hall",
+      category: "Academic",
+      registration: true,
+      attendees: "students"
+    },
+    {
+      id: 2,
+      title: "Sports Day Competition",
+      description: "Inter-house athletics competition featuring track and field events",
+      date: "2024-04-20",
+      time: "8:00 AM - 4:00 PM",
+      location: "School Playground",
+      category: "Sports",
+      registration: true,
+      attendees: "students"
+    },
+    {
+      id: 3,
+      title: "Science and Technology Fair",
+      description: "Showcasing innovative student projects in science and technology",
+      date: "2024-05-05",
+      time: "10:00 AM - 3:00 PM",
+      location: "Science Laboratories",
+      category: "Academic",
+      registration: false,
+      attendees: "students"
+    },
+    {
+      id: 4,
+      title: "Parents' Meeting",
+      description: "Quarterly parents' meeting to discuss academic progress and school development",
+      date: "2024-05-10",
+      time: "2:00 PM - 4:00 PM",
+      location: "Administration Block",
+      category: "Academic",
+      registration: false,
+      attendees: "all"
+    }
+  ];
+
+  const sampleLeadershipStaff = [
+    {
+      id: 1,
+      name: "Mr. Peter Mwangi",
+      role: "Principal",
+      department: "Administration",
+      qualification: "M.Ed, B.Ed",
+      experience: "25 years",
+      email: "principal@nyaribusecondary.sc.ke",
+      phone: "+254 712 345 678"
+    },
+    {
+      id: 2,
+      name: "Mrs. Jane Wambui",
+      role: "Deputy Principal (Academics)",
+      department: "Administration",
+      qualification: "M.Sc, B.Ed",
+      experience: "20 years",
+      email: "deputy.academics@nyaribusecondary.sc.ke",
+      phone: "+254 723 456 789"
+    },
+    {
+      id: 3,
+      name: "Mr. David Kimani",
+      role: "Deputy Principal (Administration)",
+      department: "Administration",
+      qualification: "M.A, B.Ed",
+      experience: "18 years",
+      email: "deputy.admin@nyaribusecondary.sc.ke",
+      phone: "+254 734 567 890"
     }
   ];
 
@@ -237,24 +315,31 @@ export default function ModernHero() {
         case 'school':
           return { 
             school: {
-              name: 'Katwanyaa Secondary School',
-              motto: 'Striving for Excellence in Education',
-              description: 'We are committed to bring the best quality of education to the students',
-              established: 1985,
+              name: 'Nyaribu Secondary School',
+              motto: 'Soaring for Excellence',
+              description: 'A premier learning institution committed to providing quality education and holistic development for students',
+              established: 1980,
               location: {
-                county: 'Machakos County, Kenya',
-                subCounty: 'Matungulu Sub-County',
-                postal: 'P.O. Box 363 – 90131, Tala, Machakos'
+                county: 'Nyamira County, Kenya',
+                subCounty: 'Nyamira North Sub-County',
+                postal: 'P.O. Box 123-40500, Nyamira',
+                address: 'Nyaribu, Nyamira North'
               },
-              vision: 'To produce fully empowered, God-fearing citizens',
-              mission: 'Dedicated to empowering our students through quality education, discipline, and integrity, while providing a safe and supportive environment where every child can discover their potential and thrive',
-              coreValues: ['Integrity', 'Excellence', 'Discipline', 'Faith', 'Community', 'Respect'],
-              studentCount: 1300,
-              staffCount: 55,
-              classrooms: 24,
-              laboratories: 4,
-              sportsTeams: 8,
-              clubs: 12
+              vision: 'To be a center of excellence in holistic education, producing God-fearing and responsible citizens',
+              mission: 'To provide quality education through innovative teaching, modern facilities, and Christian values, nurturing students to achieve their full potential',
+              coreValues: ['Excellence', 'Integrity', 'Discipline', 'Faith', 'Innovation', 'Teamwork'],
+              studentCount: 1200,
+              staffCount: 45,
+              classrooms: 28,
+              laboratories: 3,
+              sportsTeams: 10,
+              clubs: 15,
+              grade: 'B+',
+              contact: {
+                phone: '+254 720 123 456',
+                email: 'info@nyaribusecondary.sc.ke',
+                website: 'www.nyaribusecondary.sc.ke'
+              }
             }
           };
         case 'guidance':
@@ -322,7 +407,6 @@ export default function ModernHero() {
         month: 'long',
         day: 'numeric'
       }),
-      // Ensure required fields
       time: event.time || 'TBA',
       location: event.location || 'School Premises'
     }));
@@ -330,107 +414,107 @@ export default function ModernHero() {
   // Enhanced stats data from real school info with fallbacks
   const stats = [
     { 
-      value: apiData.schoolInfo?.studentCount || 1250, 
+      value: apiData.schoolInfo?.studentCount || 1200, 
       suffix: '+', 
-      label: 'Students Enrolled', 
+      label: 'Students', 
       icon: FiUsers,
-      growth: 8.5,
+      growth: 7.2,
       description: 'Active students across all forms'
     },
     { 
-      value: apiData.staff.length || apiData.schoolInfo?.staffCount || 48, 
+      value: apiData.schoolInfo?.staffCount || 45, 
       suffix: '+', 
-      label: 'Teaching Staff', 
+      label: 'Staff Members', 
       icon: GiTeacher,
-      growth: 12.3,
-      description: 'Qualified educators'
+      growth: 10.5,
+      description: 'Qualified teachers and support staff'
     },
     { 
-      value: apiData.schoolInfo?.completionRate || apiData.schoolInfo?.successRate || 96, 
+      value: 94, 
       suffix: '%', 
       label: 'Success Rate', 
       icon: IoMedalOutline,
-      growth: 3.2,
-      description: 'Academic performance'
+      growth: 2.8,
+      description: 'Academic performance 2023'
     },
     { 
       value: upcomingEvents.length, 
       suffix: '', 
       label: 'Upcoming Events', 
       icon: FiActivity,
-      growth: 15.7,
-      description: 'School activities'
+      growth: 12.3,
+      description: 'School activities this month'
     }
   ];
 
   // Academic Programs based on actual subjects
   const academicPrograms = [
     {
-      department: "Sciences & Technology",
+      department: "Sciences",
       programs: ["Physics", "Chemistry", "Biology", "Computer Studies"],
       icon: IoRocketOutline,
       color: "from-blue-500 to-cyan-500",
-      description: "Hands-on scientific exploration with modern laboratories and cutting-edge technology",
-      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.25),
-      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.35),
-      image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+      description: "Practical scientific exploration with modern laboratories and technology",
+      teachers: 12,
+      students: 420,
+      image: "/images/science-lab.jpg"
     },
     {
-      department: "Mathematics & Analytics",
-      programs: ["Pure Mathematics", "Applied Mathematics", "Statistics"],
+      department: "Mathematics",
+      programs: ["Mathematics", "Business Mathematics", "Statistics"],
       icon: FiTarget,
       color: "from-purple-500 to-pink-500",
-      description: "Developing critical thinking and problem-solving skills through mathematical excellence",
-      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.15),
-      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.32),
-      image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+      description: "Developing critical thinking and problem-solving skills",
+      teachers: 8,
+      students: 380,
+      image: "/images/math-class.jpg"
     },
     {
-      department: "Humanities & Social Sciences",
-      programs: ["History", "Geography", "Business Studies", "Religious Education"],
+      department: "Humanities",
+      programs: ["History", "Geography", "Business Studies", "CRE", "IRE"],
       icon: IoLibraryOutline,
       color: "from-green-500 to-teal-500",
-      description: "Understanding human society, culture, and business principles for global citizenship",
-      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.20),
-      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.28),
-      image: "https://images.unsplash.com/photo-1588072432836-390afc58bfc4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+      description: "Understanding human society, culture, and business principles",
+      teachers: 10,
+      students: 350,
+      image: "/images/humanities.jpg"
     },
     {
-      department: "Languages & Communication",
-      programs: ["English", "Kiswahili", "French", "German"],
+      department: "Languages",
+      programs: ["English", "Kiswahili", "French"],
       icon: FiBookOpen,
       color: "from-orange-500 to-red-500",
-      description: "Mastering communication skills and linguistic proficiency for effective global interaction",
-      teachers: Math.floor((apiData.schoolInfo?.staffCount || 55) * 0.18),
-      students: Math.floor((apiData.schoolInfo?.studentCount || 1300) * 0.30),
-      image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+      description: "Mastering communication skills and linguistic proficiency",
+      teachers: 7,
+      students: 400,
+      image: "/images/languages.jpg"
     }
   ];
 
-  // Why Choose Us Section
+  // Why Choose Nyaribu Section
   const whyChooseUs = [
     {
       icon: FiShield,
-      title: "Safe & Nurturing Environment",
-      description: "Providing a secure, supportive atmosphere where every student can thrive and discover their unique potential",
+      title: "Safe Learning Environment",
+      description: "Secure, supportive Christian environment where every student can thrive and reach their potential",
       color: "from-blue-500 to-cyan-500"
     },
     {
       icon: FiTrendingUp,
       title: "Proven Academic Excellence",
-      description: "Consistent outstanding results with 98% success rate in national examinations and university placements",
+      description: "Consistent outstanding results with 94% success rate in KCSE examinations",
       color: "from-purple-500 to-pink-500"
     },
     {
       icon: FiHeart,
       title: "Holistic Development",
-      description: "Comprehensive programs nurturing academic, physical, spiritual, and social growth for complete development",
+      description: "Balanced programs nurturing academic, physical, spiritual, and social growth",
       color: "from-green-500 to-teal-500"
     },
     {
       icon: FiGlobe,
       title: "Values-Based Education",
-      description: "Rooted in strong moral principles to produce responsible, God-fearing citizens with integrity",
+      description: "Rooted in Christian values to produce responsible, God-fearing citizens",
       color: "from-orange-500 to-red-500"
     }
   ];
@@ -446,7 +530,7 @@ export default function ModernHero() {
   // Image loading and initialization
   useEffect(() => {
     const allImages = [
-      ...Object.values(defaultImages),
+      ...Object.values(defaultImages).filter(img => img),
       ...heroSlides.map(slide => slide.image),
       ...academicPrograms.map(program => program.image),
       ...leadershipStaff.map(staff => staff.image),
@@ -638,7 +722,7 @@ export default function ModernHero() {
             transition={{ duration: 2, repeat: Infinity }}
             className="mb-8"
           >
-            <GiGraduateCap className="text-6xl gradient-text mx-auto" />
+            <GiGraduateCap className="text-6xl text-blue-600 mx-auto" />
           </motion.div>
 
           <Box sx={{ display: 'inline-flex', mb: 3 }}>
@@ -660,11 +744,17 @@ export default function ModernHero() {
               variant="h6" 
               className="text-gray-800 mb-2 font-semibold"
             >
-              {apiData.schoolInfo?.name || 'Katwanyaa High School'}
+              {apiData.schoolInfo?.name || 'Nyaribu Secondary School'}
             </Typography>
             <Typography 
               variant="body2" 
-              className="text-gray-600"
+              className="text-gray-600 mb-1"
+            >
+              Soaring for Excellence
+            </Typography>
+            <Typography 
+              variant="body2" 
+              className="text-gray-500 text-sm"
             >
               Loading school information...
             </Typography>
@@ -731,16 +821,16 @@ export default function ModernHero() {
               >
                 <FiStar className="text-yellow-400" />
                 <span className="text-sm font-medium text-white">
-                  {apiData.schoolInfo?.motto || 'Excellence in Education Since 1985'}
+                  {apiData.schoolInfo?.motto || 'Soaring for Excellence'}
                 </span>
               </motion.div>
 
               <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                {apiData.schoolInfo?.name || 'Katwanyaa High School'}
+                {apiData.schoolInfo?.name || 'Nyaribu Secondary School'}
                 <motion.span 
                   variants={fadeInUp}
                   transition={{ delay: 0.2 }}
-                  className="block gradient-text"
+                  className="block text-blue-300"
                 >
                   {heroSlides[currentSlide]?.title}
                 </motion.span>
@@ -789,7 +879,7 @@ export default function ModernHero() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={handleAcademicsClick}
-                  className="gradient-bg text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold flex items-center justify-center gap-3 text-base sm:text-lg shadow-lg"
                 >
                   {heroSlides[currentSlide]?.cta} <FiArrowRight className="text-xl" />
                 </motion.button>
@@ -851,7 +941,7 @@ export default function ModernHero() {
                           <program.icon className="text-white text-sm" />
                         </div>
                         <h4 className="text-white text-xs font-semibold">{program.department.split(' ')[0]}</h4>
-                        <p className="text-gray-400 text-xs">{program.students}</p>
+                        <p className="text-gray-400 text-xs">{program.students} students</p>
                       </motion.div>
                     ))}
                   </div>
@@ -888,14 +978,14 @@ export default function ModernHero() {
               <motion.div 
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -top-4 -right-4 gradient-bg p-3 sm:p-4 rounded-2xl shadow-2xl"
+                className="absolute -top-4 -right-4 bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 rounded-2xl shadow-2xl"
               >
                 <div className="text-white text-center">
                   <div className="font-bold text-sm sm:text-lg">
-                    {apiData.schoolInfo?.grade || 'A'}
+                    {apiData.schoolInfo?.grade || 'B+'}
                   </div>
-                  <div className="text-xs sm:text-sm">Grade</div>
-                  <div className="text-xs mt-1">{new Date().getFullYear()}</div>
+                  <div className="text-xs sm:text-sm">KCSE Grade</div>
+                  <div className="text-xs mt-1">2023</div>
                 </div>
               </motion.div>
             </motion.div>
@@ -964,7 +1054,7 @@ export default function ModernHero() {
                   </div>
                 </div>
                 <p className="text-gray-700 text-lg leading-relaxed border-l-4 border-blue-500 pl-4">
-                  "{apiData.schoolInfo?.vision || 'To produce fully empowered, God-fearing citizens'}"
+                  "{apiData.schoolInfo?.vision || 'To be a center of excellence in holistic education, producing God-fearing and responsible citizens'}"
                 </p>
               </motion.div>
 
@@ -985,7 +1075,7 @@ export default function ModernHero() {
                   </div>
                 </div>
                 <p className="text-gray-700 text-lg leading-relaxed border-l-4 border-green-500 pl-4">
-                  "{apiData.schoolInfo?.mission || 'Dedicated to empowering our students through quality education, discipline, and integrity'}"
+                  "{apiData.schoolInfo?.mission || 'To provide quality education through innovative teaching, modern facilities, and Christian values, nurturing students to achieve their full potential'}"
                 </p>
               </motion.div>
             </div>
@@ -999,13 +1089,20 @@ export default function ModernHero() {
             >
               <h3 className="text-2xl font-bold text-gray-900 mb-8">Our Core Values</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {(apiData.schoolInfo?.coreValues || ['Integrity', 'Excellence', 'Discipline', 'Faith', 'Community', 'Respect']).map((value, index) => (
+                {(apiData.schoolInfo?.coreValues || ['Excellence', 'Integrity', 'Discipline', 'Faith', 'Innovation', 'Teamwork']).map((value, index) => (
                   <motion.div 
                     key={index}
                     whileHover={{ scale: 1.05 }}
                     className="bg-white px-6 py-4 rounded-2xl shadow-md border border-gray-200"
                   >
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mx-auto mb-2">
+                    <div className={`w-12 h-12 bg-gradient-to-r ${
+                      index === 0 ? 'from-blue-500 to-cyan-500' :
+                      index === 1 ? 'from-purple-500 to-pink-500' :
+                      index === 2 ? 'from-green-500 to-teal-500' :
+                      index === 3 ? 'from-yellow-500 to-orange-500' :
+                      index === 4 ? 'from-red-500 to-pink-500' :
+                      'from-indigo-500 to-purple-500'
+                    } rounded-xl flex items-center justify-center text-white font-bold text-lg mx-auto mb-2`}>
                       {value.charAt(0)}
                     </div>
                     <span className="font-semibold text-gray-900 text-sm">{value}</span>
@@ -1016,7 +1113,6 @@ export default function ModernHero() {
           </div>
         </section>
 
-        {/* Continue with other sections in similar fashion... */}
         {/* ACADEMIC EXCELLENCE SECTION */}
         <section className="relative py-16 sm:py-20 z-10 bg-white">
           <div className="container mx-auto px-4 sm:px-6">
@@ -1047,7 +1143,7 @@ export default function ModernHero() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">{program.department}</h3>
-                      <p className="text-gray-600">{program.description}</p>
+                      <p className="text-gray-600 text-sm">{program.description}</p>
                     </div>
                   </div>
 
@@ -1063,10 +1159,10 @@ export default function ModernHero() {
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">Programs Offered:</h4>
+                    <h4 className="font-semibold text-gray-900 mb-3">Subjects Offered:</h4>
                     <div className="flex flex-wrap gap-2">
                       {program.programs.map((subject, idx) => (
-                        <span key={idx} className="px-3 py-2 bg-blue-50 rounded-full text-sm text-blue-700">
+                        <span key={idx} className="px-3 py-1 bg-blue-50 rounded-full text-sm text-blue-700">
                           {subject}
                         </span>
                       ))}
@@ -1102,6 +1198,7 @@ export default function ModernHero() {
                     transition={{ delay: index * 0.2 }}
                     whileHover={{ scale: 1.05 }}
                     className="bg-white rounded-3xl overflow-hidden group cursor-pointer shadow-lg border border-gray-200"
+                    onClick={() => setSelectedEvent(event)}
                   >
                     <div className="relative h-48 sm:h-56 overflow-hidden">
                       <Image
@@ -1123,13 +1220,6 @@ export default function ModernHero() {
                           {event.category}
                         </span>
                       </div>
-                      {event.featured && (
-                        <div className="absolute top-4 left-4">
-                          <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                            Featured
-                          </span>
-                        </div>
-                      )}
                     </div>
                     
                     <div className="p-4 sm:p-6">
@@ -1210,7 +1300,7 @@ export default function ModernHero() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleEventClick}
-                className="gradient-bg text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg shadow-lg border border-white/20"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg shadow-lg border border-white/20"
               >
                 View All School Events <FiArrowRight className="inline ml-2" />
               </motion.button>
@@ -1218,8 +1308,104 @@ export default function ModernHero() {
           </div>
         </section>
 
-        {/* Continue with other sections in the same pattern... */}
+        {/* WHY CHOOSE NYARIBU SECTION */}
+        <section className="relative py-16 sm:py-20 z-10 bg-white">
+          <div className="container mx-auto px-4 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Why Choose Nyaribu?</h2>
+              <p className="text-gray-600 text-lg sm:text-xl">Discover what makes our school special</p>
+            </motion.div>
 
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {whyChooseUs.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white rounded-3xl p-6 shadow-lg border border-gray-200 group"
+                >
+                  <div className={`p-4 rounded-2xl bg-gradient-to-r ${item.color} w-16 h-16 flex items-center justify-center mb-6`}>
+                    <item.icon className="text-white text-2xl" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">{item.title}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{item.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* SCHOOL LEADERSHIP SECTION */}
+        <section className="relative py-16 sm:py-20 z-10 bg-gray-50">
+          <div className="container mx-auto px-4 sm:px-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12 sm:mb-16"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">School Leadership</h2>
+              <p className="text-gray-600 text-lg sm:text-xl">Meet our dedicated administration team</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {leadershipStaff.map((staff, index) => (
+                <motion.div
+                  key={staff.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-white rounded-3xl p-6 shadow-lg border border-gray-200 text-center"
+                >
+                  <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-gray-100">
+                    <Image
+                      src={staff.image}
+                      alt={staff.name}
+                      fill
+                      className="object-cover"
+                      onLoad={handleImageLoad}
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{staff.name}</h3>
+                  <p className="text-blue-600 font-semibold mb-3">{staff.role}</p>
+                  <p className="text-gray-600 text-sm mb-4">{staff.qualification}</p>
+                  <div className="text-gray-500 text-sm">
+                    <p className="mb-1">{staff.experience} experience</p>
+                    <p className="text-xs">{staff.email}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="text-center mt-8 sm:mt-12"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleStaffClick}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg shadow-lg border border-white/20"
+              >
+                Meet All Staff Members <FiArrowRight className="inline ml-2" />
+              </motion.button>
+            </motion.div>
+          </div>
+        </section>
       </div>
 
       {/* Share Event Modal */}
@@ -1306,7 +1492,7 @@ export default function ModernHero() {
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title={`${apiData.schoolInfo?.name || 'Katwanyaa High School'} Virtual Tour`}
+                title={`${apiData.schoolInfo?.name || 'Nyaribu Secondary School'} Virtual Tour`}
               />
               <button
                 onClick={closeVideoModal}

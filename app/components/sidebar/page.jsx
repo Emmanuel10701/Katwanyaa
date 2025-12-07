@@ -17,7 +17,13 @@ import {
   FiInfo,
   FiMessageCircle,
   FiCalendar,
-  FiUserPlus
+  FiUserPlus,
+  FiClipboard,
+  FiFileText,
+  FiCheckCircle,
+  FiDownload,
+  FiFilter,
+  FiSearch
 } from 'react-icons/fi';
 
 import { 
@@ -49,7 +55,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     totalNews: 0,
     activeAssignments: 0,
     galleryItems: 0,
-    guidanceSessions: 0
+    guidanceSessions: 0,
+    totalApplications: 0,
+    pendingApplications: 0,
+    acceptedApplications: 0,
+    rejectedApplications: 0
   });
 
   // Get user data from localStorage same way as dashboard
@@ -155,7 +165,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         newsRes,
         assignmentsRes,
         galleryRes,
-        guidanceRes
+        guidanceRes,
+        admissionsRes
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -165,7 +176,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         fetch('/api/news'),
         fetch('/api/assignment'),
         fetch('/api/gallery'),
-        fetch('/api/guidance')
+        fetch('/api/guidance'),
+        fetch('/api/admissions/applications')
       ]);
 
       // Process responses and get actual counts
@@ -178,12 +190,19 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
       const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
+      const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
 
       // Calculate real counts
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
       const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
       const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
+      
+      // Admission statistics
+      const admissionsData = admissions.applications || [];
+      const pendingApps = admissionsData.filter(app => app.status === 'PENDING').length || 0;
+      const acceptedApps = admissionsData.filter(app => app.status === 'ACCEPTED').length || 0;
+      const rejectedApps = admissionsData.filter(app => app.status === 'REJECTED').length || 0;
 
       setRealStats({
         totalStudents: students.students?.length || 0,
@@ -195,7 +214,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         totalNews: news.news?.length || 0,
         activeAssignments,
         galleryItems: gallery.galleries?.length || 0,
-        guidanceSessions: guidance.events?.length || 0
+        guidanceSessions: guidance.events?.length || 0,
+        totalApplications: admissionsData.length || 0,
+        pendingApplications: pendingApps,
+        acceptedApplications: acceptedApps,
+        rejectedApplications: rejectedApps
       });
 
     } catch (error) {
@@ -326,11 +349,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       change: '+5%' 
     },
     { 
-      label: 'Active', 
-      value: realStats.activeAssignments?.toLocaleString() || '0', 
-      icon: IoRocket, 
+      label: 'Applications', 
+      value: realStats.totalApplications?.toLocaleString() || '0', 
+      icon: FiFileText, 
       color: 'purple', 
-      change: '+8%' 
+      change: realStats.pendingApplications > 0 ? `${realStats.pendingApplications} pending` : '+8%' 
     },
     { 
       label: 'Council', 
@@ -341,7 +364,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     }
   ];
 
-  // Define default tabs if none provided - now with real counts
+  // Define default tabs if none provided - now with real counts including admissions
   const defaultTabs = [
     { 
       id: 'overview', 
@@ -393,6 +416,15 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       badge: 'red'
     },
     { 
+      id: 'admissions', 
+      label: 'Admission Applications', 
+      icon: FiClipboard,
+      count: realStats.totalApplications,
+      badge: 'purple',
+      showPending: realStats.pendingApplications > 0,
+      pendingCount: realStats.pendingApplications
+    },
+    { 
       id: 'newsevents', 
       label: 'News & Events', 
       icon: IoNewspaper,
@@ -432,9 +464,30 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   // Use provided tabs if non-empty, otherwise fall back to defaults
   const safeTabs = Array.isArray(tabs) && tabs.length > 0 ? tabs : defaultTabs;
 
-  // Count badge component
-  const CountBadge = ({ count, color = 'blue' }) => {
+  // Count badge component with pending indicator
+  const CountBadge = ({ count, color = 'blue', showPending = false, pendingCount = 0 }) => {
     if (count === null || count === undefined) return null;
+    
+    if (showPending && pendingCount > 0) {
+      return (
+        <div className="ml-auto flex flex-col items-end gap-1">
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className={`px-2 py-1 text-xs font-bold rounded-full bg-${color}-100 text-${color}-600 border border-${color}-200`}
+          >
+            {count > 99 ? '99+' : count}
+          </motion.span>
+          <motion.span
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-red-100 text-red-600 border border-red-200"
+          >
+            {pendingCount} pending
+          </motion.span>
+        </div>
+      );
+    }
     
     return (
       <motion.span
@@ -698,9 +751,14 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                       {tab.label}
                     </span>
                     
-                    {/* Count Badge */}
+                    {/* Count Badge with pending indicator for admissions */}
                     {tab.count !== null && tab.count !== undefined && (
-                      <CountBadge count={tab.count} color={tab.badge} />
+                      <CountBadge 
+                        count={tab.count} 
+                        color={tab.badge} 
+                        showPending={tab.showPending}
+                        pendingCount={tab.pendingCount}
+                      />
                     )}
                   </div>
 
