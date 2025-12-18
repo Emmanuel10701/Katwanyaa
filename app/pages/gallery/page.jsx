@@ -39,6 +39,7 @@ import {
   FiFileText,
   FiInfo
 } from 'react-icons/fi';
+import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
 import { 
   IoClose,
   IoMenu
@@ -1031,20 +1032,45 @@ export default function ModernGallery() {
     }
   };
 
-  // Loading Spinner Component
-  const LoadingSpinner = () => (
-    <Backdrop
-      sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-      open={loading}
-    >
-      <div className="text-center">
-        <CircularProgress color="inherit" size={60} thickness={4} />
-        <div className="mt-4 text-white text-lg font-semibold">
-          Loading Nyaribu Secondary School Gallery...
-        </div>
+// In your main component file, replace your existing LoadingSpinner with this:
+
+// Loading Spinner Component
+const LoadingSpinner = () => (
+  <Backdrop
+    sx={{ 
+      color: '#fff', 
+      zIndex: (theme) => theme.zIndex.drawer + 1,
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(8px)',
+    }}
+    open={loading}
+  >
+    <div className="text-center">
+      <div className="relative inline-flex mb-6">
+        <CircularProgress
+          variant="determinate"
+          value={100}
+          size={80}
+          thickness={4}
+          sx={{ color: 'rgba(0, 0, 0, 0.1)' }}
+        />
+        <CircularProgress
+          color="primary"
+          size={80}
+          thickness={4}
+          className="absolute left-0"
+        />
       </div>
-    </Backdrop>
-  );
+      
+      <div className="text-gray-800 text-lg font-semibold mb-2">
+        Nyaribu Secondary School
+      </div>
+      <div className="text-gray-600">
+        Loading Gallery...
+      </div>
+    </div>
+  </Backdrop>
+);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -1733,44 +1759,48 @@ export default function ModernGallery() {
               <p className="text-slate-600 mb-6 text-center text-sm">
                 Share "{selectedMedia.title}" from Nyaribu Secondary School Gallery
               </p>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <ModernButton
-                  variant="secondary"
-                  size="md"
-                  icon={FiMessageSquare}
-                  onClick={shareOnWhatsApp}
-                >
-                  WhatsApp
-                </ModernButton>
-                
-                <ModernButton
-                  variant="secondary"
-                  size="md"
-                  icon={FiFacebook}
-                  onClick={shareOnFacebook}
-                >
-                  Facebook
-                </ModernButton>
-                
-                <ModernButton
-                  variant="secondary"
-                  size="md"
-                  icon={FiTwitter}
-                  onClick={shareOnTwitter}
-                >
-                  Twitter
-                </ModernButton>
-                
-                <ModernButton
-                  variant="secondary"
-                  size="md"
-                  icon={FiShare2}
-                  onClick={copyToClipboard}
-                >
-                  Copy Link
-                </ModernButton>
-              </div>
+      
+<div className="grid grid-cols-2 gap-3">
+  <ModernButton
+    variant="secondary"
+    size="md"
+    icon={FaWhatsapp}
+    onClick={shareOnWhatsApp}
+    className="text-green-600 hover:text-green-700"
+  >
+    WhatsApp
+  </ModernButton>
+  
+  <ModernButton
+    variant="secondary"
+    size="md"
+    icon={FaFacebookF}
+    onClick={shareOnFacebook}
+    className="text-blue-600 hover:text-blue-700"
+  >
+    Facebook
+  </ModernButton>
+  
+  <ModernButton
+    variant="secondary"
+    size="md"
+    icon={FaTwitter}
+    onClick={shareOnTwitter}
+    className="text-sky-500 hover:text-sky-600"
+  >
+    Twitter
+  </ModernButton>
+  
+  <ModernButton
+    variant="secondary"
+    size="md"
+    icon={FaCopy}
+    onClick={copyToClipboard}
+    className="text-gray-600 hover:text-gray-700"
+  >
+    Copy Link
+  </ModernButton>
+</div>
             </div>
           </ModernCard>
         </div>
