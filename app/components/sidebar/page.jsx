@@ -75,6 +75,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     totalResources: 0,
     recentResources: 0,
     activeResources: 0,
+    totalCareers: 0,
     resourcesByType: {
       documents: 0,
       videos: 0,
@@ -188,7 +189,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         galleryRes,
         guidanceRes,
         admissionsRes,
-        resourcesRes
+        resourcesRes,
+        careersRes
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -201,6 +203,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         fetch('/api/guidance'),
         fetch('/api/applyadmission'),
         fetch('/api/resources?accessLevel=admin&limit=100'),
+        fetch('/api/career')
       ]);
 
       // Process responses and get actual counts
@@ -215,6 +218,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
+      const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
 
       // Calculate real counts for existing data
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
@@ -265,7 +269,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         totalResources: resourcesData.length || 0,
         recentResources,
         activeResources,
-        resourcesByType
+        resourcesByType,
+        totalCareers: careers.careers?.length || 0
       });
 
     } catch (error) {
@@ -431,6 +436,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       icon: FiBook,
       badge: 'red'
     },
+{
+id: 'careers',
+      label: 'Careers',
+      icon: FiCalendar,
+      badge: 'lime'
+},
     { 
       id: 'resources', 
       label: 'Learning Resources', 
@@ -514,7 +525,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
               </h3>
               <button
                 onClick={() => setShowSupportModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-200 hover:scale-110"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-200 hover:scale-101"
               >
                 <FiX className="text-lg text-gray-600" />
               </button>
@@ -527,7 +538,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200 hover:border-blue-300 transition-colors duration-200">
-                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
+                  <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center text-white hover:scale-101 transition-transform duration-200">
                     <FiMessageCircle className="text-lg" />
                   </div>
                   <div>
@@ -537,7 +548,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                 </div>
                 
                 <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors duration-200">
-                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white hover:scale-105 transition-transform duration-200">
+                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white hover:scale-101 transition-transform duration-200">
                     <FiMail className="text-lg" />
                   </div>
                   <div>
@@ -566,7 +577,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                   // Open WhatsApp
                   window.open('https://wa.me/25479347260', '_blank');
                 }}
-                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold hover:scale-105"
+                className="flex-1 px-4 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold hover:scale-101"
               >
                 Contact WhatsApp
               </button>
@@ -603,7 +614,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
           {/* Header */}
           <div className="flex items-center justify-between p-4 lg:p-5 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="relative hover:scale-105 transition-transform duration-200">
+              <div className="relative hover:scale-101 transition-transform duration-200">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
                   <img 
                     src="/llil.png" 
@@ -625,7 +636,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             {isMobile && (
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-xl transition-all duration-200 text-gray-600 hover:text-gray-800 hover:bg-gray-100 hover:scale-110"
+                className="p-2 rounded-xl transition-all duration-200 text-gray-600 hover:text-gray-800 hover:bg-gray-100 hover:scale-101"
               >
                 <FiX className="text-xl" />
               </button>
@@ -653,7 +664,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                   )}
                   
                   {/* Icon */}
-                  <div className={`relative p-2 rounded-xl transition-all duration-200 group-hover:scale-110 ${
+                  <div className={`relative p-2 rounded-xl transition-all duration-200 group-hover:scale-101 ${
                     activeTab === tab.id 
                       ? 'bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg' 
                       : 'bg-gray-100 text-gray-600 group-hover:bg-gray-200 group-hover:text-gray-800'
@@ -693,7 +704,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
                     return (
                      <div
                        key={stat.label}
-                       className="text-center p-2 lg:p-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:scale-105 cursor-pointer shadow-sm"
+                       className="text-center p-2 lg:p-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:scale-101 cursor-pointer shadow-sm"
                      >
                       <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg bg-${stat.color}-100 flex items-center justify-center mx-auto mb-1 lg:mb-2 transition-transform hover:scale-110`}>
                         <StatIcon className={`text-${stat.color}-600 text-xs lg:text-sm`} />
@@ -749,11 +760,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
           <div className="p-4 lg:p-5 border-t border-gray-200 flex-shrink-0">
             {/* User Profile */}
             <div 
-              className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 rounded-2xl border border-gray-200 mb-3 lg:mb-4 cursor-pointer transition-all duration-200 hover:scale-102 hover:bg-blue-50 hover:border-blue-200"
+              className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 rounded-2xl border border-gray-200 mb-3 lg:mb-4 cursor-pointer transition-all duration-200 hover:scale-101 hover:bg-blue-50 hover:border-blue-200"
               onClick={() => handleTabClick('admins-profile')}
             >
               <div className="relative">
-                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg hover:scale-105 transition-transform duration-200">
+                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg hover:scale-101 transition-transform duration-200">
                   {user.name?.charAt(0) || 'A'}
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-2 h-2 lg:w-3 lg:h-3 bg-emerald-400 rounded-full border-2 border-white animate-pulse"></div>
@@ -777,14 +788,14 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-1 lg:gap-2 mb-2 lg:mb-3">
               <button
-                className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100 hover:scale-105"
+                className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100 hover:scale-101"
                 onClick={() => handleTabClick('admins-profile')}
               >
                 <FiSettings className="text-sm lg:text-base" />
                 <span className="truncate">Settings</span>
               </button>
               <button
-                className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100 hover:scale-105"
+                className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100 hover:scale-101"
                 onClick={handleSupportClick}
               >
                 <FiHelpCircle className="text-sm lg:text-base" />

@@ -3,26 +3,29 @@
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
 import { 
-  FaBriefcase, FaEdit, FaTrash, FaPlus, FaSearch, FaSync,
-  FaCalendar, FaUsers, FaGraduationCap, FaClock, FaCheckCircle,
-  FaTimesCircle, FaFilter, FaChevronLeft, FaChevronRight,
-  FaBuilding, FaUserTie, FaTools, FaStethoscope, FaChalkboardTeacher,
-  FaFileAlt, FaEnvelope, FaPhone, FaExternalLinkAlt,
+  FaBriefcase, FaPlus, FaCalendar, FaUsers, FaGraduationCap, 
+  FaClock, FaFilter, FaChevronLeft, FaChevronRight,
+  FaBuilding, FaUserTie, FaStethoscope, FaEnvelope, FaPhone, 
   FaBookOpen, FaLaptopCode, FaCalculator, FaFlask,
   FaRocket, FaSparkles, FaMagic, FaPalette, FaGem,
   FaChartLine, FaTrendingUp, FaAward, FaStar, FaCrown,
   FaLightbulb, FaBrain, FaHandshake, FaHeart,
-  FaShieldAlt, FaLock, FaGlobe, FaCloudUpload,
-  FaArrowRight, FaExpandAlt, FaCompressAlt,
+  FaLock, FaGlobe, FaCloudUpload, FaArrowRight,
   FaRegHeart, FaHeartbeat, FaFire, FaBolt,
-  FaRegClock, FaHistory, FaCalendarCheck,
-  FaUserFriends, FaUserPlus, FaUserCheck,
-  FaMapMarkerAlt, FaRoute, FaDirections,
-  FaChartBar, FaChartPie, FaChartArea,
-  FaQrcode, FaFingerprint, FaIdCard,
-  FaMobileAlt, FaDesktop, FaTabletAlt,
+  FaRegClock, FaCalendarCheck, FaUserFriends, 
+  FaUserPlus, FaUserCheck, FaRoute, FaDirections, 
+  FaChartBar, FaChartPie, FaChartArea, FaQrcode, 
+  FaFingerprint, FaIdCard, FaDesktop,
   FaMagicWandSparkles, FaWandMagicSparkles
 } from 'react-icons/fa6';
+import { 
+  FaEdit, FaTrash, FaSearch, FaSync, FaCheckCircle, 
+  FaTimesCircle, FaTools, FaHistory, FaChalkboardTeacher, 
+  FaFileAlt, FaExternalLinkAlt, FaShieldAlt, FaExpandAlt, 
+  FaCompressAlt, FaMapMarkerAlt, FaMobileAlt, FaTabletAlt 
+} from 'react-icons/fa';
+
+
 import { CircularProgress, Modal, Box, TextField, TextareaAutosize } from '@mui/material';
 
 // Modern Loading Spinner
@@ -410,7 +413,7 @@ function ModernJobModal({ open, onClose, onSave, job, loading }) {
             {/* Positions & Deadline Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <label className=" text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
                   <FaUsers /> Positions Available
                 </label>
                 <TextField 
@@ -971,7 +974,7 @@ export default function ModernCareersPage() {
       if (department) params.append('department', department);
       if (jobType) params.append('jobType', jobType);
       
-      const response = await fetch(`/api/careers?${params}`);
+      const response = await fetch(`/api/career?${params}`);
       if (!response.ok) throw new Error('Failed to fetch jobs');
       
       const data = await response.json();
@@ -988,7 +991,7 @@ export default function ModernCareersPage() {
   const handleCreateJob = async (formData) => {
     try {
       setActionLoading(true);
-      const response = await fetch('/api/careers', {
+      const response = await fetch('/api/career', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -1013,7 +1016,7 @@ export default function ModernCareersPage() {
   const handleUpdateJob = async (formData) => {
     try {
       setActionLoading(true);
-      const response = await fetch(`/api/careers/${selectedJob.id}`, {
+      const response = await fetch(`/api/career/${selectedJob.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -1039,7 +1042,7 @@ export default function ModernCareersPage() {
   const handleDeleteJob = async () => {
     try {
       setActionLoading(true);
-      const response = await fetch(`/api/careers/${selectedJob.id}`, {
+      const response = await fetch(`/api/career/${selectedJob.id}`, {
         method: 'DELETE',
       });
       

@@ -23,16 +23,17 @@ import {
   FiRotateCw,
   FiUpload,
   FiCheck,
-  FiCheckCircle
+  FiCheckCircle,
+  FiInfo,
+  FiAlertTriangle,
+  FiAlertCircle
 } from 'react-icons/fi';
 import { 
   IoPeopleCircle,
   IoRocketOutline,
   IoSchoolOutline
 } from 'react-icons/io5';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { Modal, Box, Typography, CircularProgress } from '@mui/material';
+import { Modal, Box, Typography, CircularProgress, Alert, Snackbar } from '@mui/material';
 
 // Import your local avatar images
 import male from "../../../images/avata/male.png";
@@ -74,6 +75,237 @@ function ModernLoadingSpinner({ message = "Loading...", size = "medium" }) {
                    style={{ animationDelay: `${i * 0.2}s` }}></div>
             ))}
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Delete Confirmation Modal
+function DeleteConfirmationModal({ 
+  open, 
+  onClose, 
+  onConfirm, 
+  type = 'single',
+  count = 1,
+  staffName = '',
+  loading = false 
+}) {
+  return (
+    <Modal open={open} onClose={loading ? undefined : onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '90%',
+        maxWidth: '500px',
+        bgcolor: 'background.paper',
+        borderRadius: 3, boxShadow: 24, overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #fef3f7 100%)'
+      }}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-red-600 to-orange-600 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
+                <FiAlertTriangle className="text-xl" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Confirm Deletion</h2>
+                <p className="text-red-100 opacity-90 mt-1">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            {!loading && (
+              <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-xl cursor-pointer">
+                <FiX className="text-xl" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+              <FiAlertTriangle className="text-2xl" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {type === 'bulk' 
+                  ? `Delete ${count} staff ${count === 1 ? 'member' : 'members'}?`
+                  : `Delete "${staffName}"?`
+                }
+              </h3>
+              <p className="text-gray-600">
+                {type === 'bulk'
+                  ? `You are about to delete ${count} staff ${count === 1 ? 'member' : 'members'}. All associated data will be permanently removed.`
+                  : 'This staff member will be permanently deleted. All associated data will be removed.'
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+            <div className="flex items-start gap-2">
+              <FiAlertCircle className="text-red-600 mt-0.5 flex-shrink-0" />
+              <p className="text-red-700 text-sm">
+                <span className="font-bold">Warning:</span> This action cannot be undone. Please make sure you want to proceed.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <button 
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            
+            <button 
+              type="button"
+              onClick={onConfirm}
+              disabled={loading}
+              className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={16} className="text-white" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <FiTrash2 />
+                  {type === 'bulk' ? `Delete ${count} Staff` : 'Delete Staff Member'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  )
+}
+
+// Notification Component
+function Notification({ 
+  open, 
+  onClose, 
+  type = 'success', 
+  title, 
+  message, 
+  duration = 5000 
+}) {
+  const [progress, setProgress] = useState(100);
+
+  useEffect(() => {
+    if (open) {
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
+        setProgress(remaining);
+        
+        if (elapsed >= duration) {
+          clearInterval(interval);
+          onClose();
+        }
+      }, 50);
+
+      return () => clearInterval(interval);
+    }
+  }, [open, duration, onClose]);
+
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'success':
+        return {
+          bg: 'from-green-50 to-emerald-50',
+          border: 'border-green-200',
+          icon: 'text-green-600',
+          iconBg: 'bg-green-100',
+          progress: 'bg-green-500',
+          title: 'text-green-800'
+        };
+      case 'error':
+        return {
+          bg: 'from-red-50 to-orange-50',
+          border: 'border-red-200',
+          icon: 'text-red-600',
+          iconBg: 'bg-red-100',
+          progress: 'bg-red-500',
+          title: 'text-red-800'
+        };
+      case 'warning':
+        return {
+          bg: 'from-yellow-50 to-orange-50',
+          border: 'border-yellow-200',
+          icon: 'text-yellow-600',
+          iconBg: 'bg-yellow-100',
+          progress: 'bg-yellow-500',
+          title: 'text-yellow-800'
+        };
+      case 'info':
+        return {
+          bg: 'from-blue-50 to-cyan-50',
+          border: 'border-blue-200',
+          icon: 'text-blue-600',
+          iconBg: 'bg-blue-100',
+          progress: 'bg-blue-500',
+          title: 'text-blue-800'
+        };
+      default:
+        return {
+          bg: 'from-gray-50 to-gray-100',
+          border: 'border-gray-200',
+          icon: 'text-gray-600',
+          iconBg: 'bg-gray-100',
+          progress: 'bg-gray-500',
+          title: 'text-gray-800'
+        };
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <FiCheckCircle className="text-xl" />;
+      case 'error': return <FiAlertCircle className="text-xl" />;
+      case 'warning': return <FiAlertTriangle className="text-xl" />;
+      case 'info': return <FiInfo className="text-xl" />;
+      default: return <FiInfo className="text-xl" />;
+    }
+  };
+
+  const styles = getTypeStyles();
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 w-full max-w-md animate-slide-in">
+      <div className={`bg-gradient-to-r ${styles.bg} border-2 ${styles.border} rounded-2xl shadow-xl overflow-hidden`}>
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <div className={`p-2 ${styles.iconBg} rounded-xl ${styles.icon}`}>
+              {getIcon()}
+            </div>
+            <div className="flex-1">
+              <h4 className={`font-bold ${styles.title} mb-1`}>{title}</h4>
+              <p className="text-gray-700 text-sm">{message}</p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-1 hover:bg-gray-200 hover:bg-opacity-50 rounded-lg cursor-pointer text-gray-500"
+            >
+              <FiX className="text-lg" />
+            </button>
+          </div>
+        </div>
+        <div className="h-1 bg-gray-200">
+          <div 
+            className={`h-full ${styles.progress} transition-all duration-100 ease-linear`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </div>
     </div>
@@ -559,7 +791,7 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
                           }`}
                         >
                           <img
-                            src={male}
+                            src="/male.png"
                             alt="Male Avatar"
                             className="w-16 h-16 rounded-xl object-cover"
                           />
@@ -580,7 +812,7 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
                           }`}
                         >
                           <img
-                            src={female}
+                            src="/female.png"
                             alt="Female Avatar"
                             className="w-16 h-16 rounded-xl object-cover"
                           />
@@ -886,6 +1118,18 @@ export default function StaffManager() {
   const [saving, setSaving] = useState(false);
   const [selectedPosts, setSelectedPosts] = useState(new Set());
   const [stats, setStats] = useState(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  
+  // New states for delete confirmation and notification
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteType, setDeleteType] = useState('single'); // 'single' or 'bulk'
+  const [staffToDelete, setStaffToDelete] = useState(null);
+  const [notification, setNotification] = useState({
+    open: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
   const roles = ['Principal', 'Deputy Principal', 'Teacher', 'BOM Member', 'Support Staff', 'Librarian', 'Counselor'];
   const departments = ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Administration', 'Sports', 'Guidance'];
@@ -904,13 +1148,13 @@ export default function StaffManager() {
         console.error('Failed to fetch staff:', data.error);
         setStaff([]);
         setFilteredStaff([]);
-        toast.error('Failed to fetch staff data');
+        showNotification('error', 'Fetch Failed', 'Failed to fetch staff data');
       }
     } catch (error) {
       console.error('Error fetching staff:', error);
       setStaff([]);
       setFilteredStaff([]);
-      toast.error('Error fetching staff data');
+      showNotification('error', 'Error', 'Error fetching staff data');
     } finally {
       setLoading(false);
     }
@@ -919,10 +1163,6 @@ export default function StaffManager() {
   useEffect(() => {
     fetchStaff();
   }, []);
-
-  // Check if principal exists
-  const principalExists = staff.some(s => s.role === 'Principal');
-  const deputyPrincipalsCount = staff.filter(s => s.role === 'Deputy Principal').length;
 
   // Filtering and pagination
   useEffect(() => {
@@ -955,6 +1195,16 @@ export default function StaffManager() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+  // Notification handler
+  const showNotification = (type, title, message) => {
+    setNotification({
+      open: true,
+      type,
+      title,
+      message
+    });
+  };
+
   // CRUD Operations
   const handleCreate = () => {
     setEditingStaff(null);
@@ -971,10 +1221,29 @@ export default function StaffManager() {
     setShowDetailModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this staff member?')) {
-      try {
-        const response = await fetch(`/api/staff/${id}`, {
+  // Single delete handler
+  const handleDelete = (staffMember) => {
+    setStaffToDelete(staffMember);
+    setDeleteType('single');
+    setShowDeleteModal(true);
+  };
+
+  // Bulk delete handler
+  const handleBulkDelete = () => {
+    if (selectedPosts.size === 0) {
+      showNotification('warning', 'No Selection', 'No staff members selected for deletion');
+      return;
+    }
+    setDeleteType('bulk');
+    setShowDeleteModal(true);
+  };
+
+  // Confirm delete (for both single and bulk)
+  const confirmDelete = async () => {
+    try {
+      if (deleteType === 'single' && staffToDelete) {
+        setBulkDeleting(true);
+        const response = await fetch(`/api/staff/${staffToDelete.id}`, {
           method: 'DELETE',
         });
         
@@ -982,14 +1251,58 @@ export default function StaffManager() {
         
         if (result.success) {
           await fetchStaff();
-          toast.success('Staff member deleted successfully!');
+          showNotification('success', 'Deleted', `Staff member "${staffToDelete.name}" deleted successfully!`);
         } else {
-          toast.error(result.error || 'Failed to delete staff member');
+          showNotification('error', 'Delete Failed', result.error || 'Failed to delete staff member');
         }
-      } catch (error) {
-        console.error('Error deleting staff member:', error);
-        toast.error('Error deleting staff member');
+      } else if (deleteType === 'bulk') {
+        setBulkDeleting(true);
+        const deletedIds = [];
+        const failedIds = [];
+        
+        // Delete each selected staff member
+        for (const staffId of selectedPosts) {
+          try {
+            const response = await fetch(`/api/staff/${staffId}`, {
+              method: 'DELETE',
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              deletedIds.push(staffId);
+            } else {
+              console.error(`Failed to delete staff member ${staffId}:`, result.error);
+              failedIds.push(staffId);
+            }
+          } catch (error) {
+            console.error(`Error deleting staff member ${staffId}:`, error);
+            failedIds.push(staffId);
+          }
+        }
+        
+        // Refresh the staff list
+        await fetchStaff();
+        
+        // Clear selection
+        setSelectedPosts(new Set());
+        
+        // Show appropriate notification
+        if (deletedIds.length > 0 && failedIds.length === 0) {
+          showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} staff member(s)`);
+        } else if (deletedIds.length > 0 && failedIds.length > 0) {
+          showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} staff member(s), failed to delete ${failedIds.length}`);
+        } else {
+          showNotification('error', 'Delete Failed', 'Failed to delete selected staff members');
+        }
       }
+    } catch (error) {
+      console.error('Error during deletion:', error);
+      showNotification('error', 'Error', 'Error during deletion');
+    } finally {
+      setBulkDeleting(false);
+      setShowDeleteModal(false);
+      setStaffToDelete(null);
     }
   };
 
@@ -1041,13 +1354,13 @@ export default function StaffManager() {
       if (result.success) {
         await fetchStaff();
         setShowModal(false);
-        toast.success(`Staff member ${id ? 'updated' : 'created'} successfully!`);
+        showNotification('success', id ? 'Updated' : 'Created', `Staff member ${id ? 'updated' : 'created'} successfully!`);
       } else {
-        toast.error(result.error || `Failed to ${id ? 'update' : 'create'} staff member`);
+        showNotification('error', 'Save Failed', result.error || `Failed to ${id ? 'update' : 'create'} staff member`);
       }
     } catch (error) {
       console.error('Error saving staff member:', error);
-      toast.error('Error saving staff member');
+      showNotification('error', 'Error', 'Error saving staff member');
     } finally {
       setSaving(false);
     }
@@ -1119,7 +1432,25 @@ export default function StaffManager() {
 
   return (
     <div className="space-y-6 p-4 min-h-screen bg-gradient-to-br from-gray-50 via-orange-50 to-red-50">
-      <ToastContainer position="top-right" autoClose={5000} />
+      {/* Custom Notification */}
+      <Notification
+        open={notification.open}
+        onClose={() => setNotification({ ...notification, open: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        open={showDeleteModal}
+        onClose={() => !bulkDeleting && setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        type={deleteType}
+        count={deleteType === 'bulk' ? selectedPosts.size : 1}
+        staffName={deleteType === 'single' ? staffToDelete?.name : ''}
+        loading={bulkDeleting}
+      />
 
       {/* Header Section */}
       <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl shadow-lg border border-orange-200 p-6">
@@ -1254,6 +1585,52 @@ export default function StaffManager() {
         </div>
       </div>
 
+      {/* Bulk Actions - Only shows when items are selected */}
+      {selectedPosts.size > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-4 shadow-lg">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                <FiTrash2 className="text-lg" />
+              </div>
+              <div>
+                <h3 className="font-bold text-red-900 text-lg">
+                  {selectedPosts.size} staff {selectedPosts.size === 1 ? 'member' : 'members'} selected
+                </h3>
+                <p className="text-red-700 text-sm">
+                  You can perform bulk actions on selected items
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setSelectedPosts(new Set())}
+                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm"
+              >
+                Clear Selection
+              </button>
+              <button 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2 text-sm"
+              >
+                {bulkDeleting ? (
+                  <>
+                    <CircularProgress size={16} className="text-white" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <FiTrash2 />
+                    Delete Selected ({selectedPosts.size})
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Staff Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {currentStaff.map((staffMember) => (
@@ -1261,7 +1638,7 @@ export default function StaffManager() {
             key={staffMember.id} 
             staff={staffMember} 
             onEdit={handleEdit} 
-            onDelete={handleDelete} 
+            onDelete={() => handleDelete(staffMember)} 
             onView={handleViewDetails} 
             selected={selectedPosts.has(staffMember.id)} 
             onSelect={handlePostSelect} 

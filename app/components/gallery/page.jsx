@@ -7,10 +7,9 @@ import {
   FiTag, FiFolder, FiInfo, FiUsers, FiAlertCircle, FiExternalLink,
   FiChevronUp, FiChevronDown, FiShare2, FiCopy, FiMaximize2, FiMinimize2,
   FiEdit2, FiSave, FiXCircle, FiEyeOff, FiLock, FiUnlock, FiLink,
-  FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace, FiEyeOn
+  FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace
 } from 'react-icons/fi';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster, toast } from 'sonner';
 
 // Categories from your backend API
 const CATEGORIES = [
@@ -71,8 +70,10 @@ export default function ModernGalleryManager() {
   const [selectedFilePreviews, setSelectedFilePreviews] = useState({});
   const [filesToRemove, setFilesToRemove] = useState([]); // Track files to remove during edit
   const [showExistingFiles, setShowExistingFiles] = useState(true); // Toggle existing files view
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const fileInputRef = useRef(null);
+  const dropdownRef = useRef(null);
   const itemsPerPage = 12;
 
   // Form Data
@@ -82,6 +83,17 @@ export default function ModernGalleryManager() {
     category: 'GENERAL',
     files: []
   });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Fetch gallery items from API
   const fetchGalleryItems = async () => {
@@ -271,7 +283,8 @@ export default function ModernGalleryManager() {
     }
 
     setIsUploading(true);
-    const uploadToast = toast.loading('Uploading gallery...');
+    
+    toast.loading('Uploading gallery...');
     
     try {
       const submitData = new FormData();
@@ -291,12 +304,8 @@ export default function ModernGalleryManager() {
       const result = await response.json();
       
       if (result.success) {
-        toast.update(uploadToast, {
-          render: 'Gallery created successfully!',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000
-        });
+        toast.dismiss();
+        toast.success('Gallery created successfully!');
         setShowCreateModal(false);
         resetForm();
         fetchGalleryItems();
@@ -304,12 +313,8 @@ export default function ModernGalleryManager() {
         throw new Error(result.error || 'Failed to create gallery');
       }
     } catch (error) {
-      toast.update(uploadToast, {
-        render: `Error: ${error.message}`,
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000
-      });
+      toast.dismiss();
+      toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -335,7 +340,8 @@ export default function ModernGalleryManager() {
     }
 
     setIsUploading(true);
-    const updateToast = toast.loading('Updating gallery...');
+    
+    toast.loading('Updating gallery...');
     
     try {
       const submitData = new FormData();
@@ -363,12 +369,8 @@ export default function ModernGalleryManager() {
       const result = await response.json();
       
       if (result.success) {
-        toast.update(updateToast, {
-          render: 'Gallery updated successfully!',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000
-        });
+        toast.dismiss();
+        toast.success('Gallery updated successfully!');
         setShowEditModal(false);
         setEditingItem(null);
         setFilesToRemove([]);
@@ -378,12 +380,8 @@ export default function ModernGalleryManager() {
         throw new Error(result.error || 'Failed to update gallery');
       }
     } catch (error) {
-      toast.update(updateToast, {
-        render: `Error: ${error.message}`,
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000
-      });
+      toast.dismiss();
+      toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
       setUploadProgress({});
@@ -398,7 +396,7 @@ export default function ModernGalleryManager() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
-    const deleteToast = toast.loading('Deleting gallery...');
+    toast.loading('Deleting gallery...');
     
     try {
       const response = await fetch(`/api/gallery/${itemToDelete.id}`, {
@@ -415,22 +413,14 @@ export default function ModernGalleryManager() {
           return newSet;
         });
         
-        toast.update(deleteToast, {
-          render: 'Gallery deleted successfully!',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000
-        });
+        toast.dismiss();
+        toast.success('Gallery deleted successfully!');
       } else {
         throw new Error(result.error || 'Failed to delete gallery');
       }
     } catch (error) {
-      toast.update(deleteToast, {
-        render: `Error: ${error.message}`,
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000
-      });
+      toast.dismiss();
+      toast.error(`Error: ${error.message}`);
     } finally {
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -444,7 +434,7 @@ export default function ModernGalleryManager() {
       return;
     }
 
-    const deleteToast = toast.loading(`Deleting ${selectedItems.size} galleries...`);
+    toast.loading(`Deleting ${selectedItems.size} galleries...`);
     const deletePromises = Array.from(selectedItems).map(id => 
       fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => res.json())
     );
@@ -457,22 +447,14 @@ export default function ModernGalleryManager() {
         setGalleryItems(prev => prev.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         
-        toast.update(deleteToast, {
-          render: `${successful} galleries deleted successfully!`,
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000
-        });
+        toast.dismiss();
+        toast.success(`${successful} galleries deleted successfully!`);
       } else {
         throw new Error('Failed to delete galleries');
       }
     } catch (error) {
-      toast.update(deleteToast, {
-        render: `Error: ${error.message}`,
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000
-      });
+      toast.dismiss();
+      toast.error(`Error: ${error.message}`);
     }
   };
 
@@ -552,7 +534,7 @@ export default function ModernGalleryManager() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4 lg:p-6 space-y-6">
-      <ToastContainer position="top-right" autoClose={4000} />
+      <Toaster position="top-right" expand={false} richColors />
 
       {/* Modern Header with Refresh Button */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
@@ -572,17 +554,18 @@ export default function ModernGalleryManager() {
         <div className="flex gap-3">
           <button
             onClick={fetchGalleryItems}
-            className="px-4 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-medium flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full font-medium flex items-center gap-2 shadow-lg"
           >
-            <FiRefreshCw className="text-lg" />
-            Refresh
+            <FiRefreshCw className="text-sm sm:text-lg" />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-semibold flex items-center gap-2 shadow-lg"
           >
-            <FiUpload className="text-lg" />
-            Upload Gallery
+            <FiUpload className="text-sm sm:text-lg" />
+            <span className="hidden sm:inline">Upload Gallery</span>
+            <span className="sm:hidden">Upload</span>
           </button>
         </div>
       </div>
@@ -597,7 +580,7 @@ export default function ModernGalleryManager() {
         ].map((stat, index) => (
           <div
             key={stat.label}
-            className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200/50 backdrop-blur-sm"
+            className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 backdrop-blur-sm"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -622,7 +605,7 @@ export default function ModernGalleryManager() {
               placeholder="Search galleries..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
@@ -652,20 +635,20 @@ export default function ModernGalleryManager() {
             <div className="flex bg-gray-100 rounded-xl p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600 hover:text-gray-800'}`}
+                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600'}`}
               >
                 <FiGrid className="text-lg" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600 hover:text-gray-800'}`}
+                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600'}`}
               >
                 <FiList className="text-lg" />
               </button>
             </div>
             <button 
               onClick={selectAll}
-              className="text-blue-600 text-sm font-semibold whitespace-nowrap hover:text-blue-700"
+              className="text-blue-600 text-sm font-semibold whitespace-nowrap"
             >
               {selectedItems.size === currentItems.length ? 'Deselect All' : 'Select All'}
             </button>
@@ -675,7 +658,7 @@ export default function ModernGalleryManager() {
 
       {/* Bulk Actions */}
       {selectedItems.size > 0 && (
-        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-2xl p-4 shadow-lg animate-fadeIn">
+        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-2xl p-4 shadow-lg">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white/20 rounded-lg">
@@ -688,17 +671,19 @@ export default function ModernGalleryManager() {
             <div className="flex gap-2">
               <button
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-500/80 backdrop-blur-sm rounded-xl font-semibold flex items-center gap-2 hover:bg-red-600 transition-colors"
+                className="px-4 sm:px-6 py-2 bg-red-500/80 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base"
               >
                 <FiTrash2 />
-                Delete Selected
+                <span className="hidden sm:inline">Delete Selected</span>
+                <span className="sm:hidden">Delete</span>
               </button>
               <button
                 onClick={() => setSelectedItems(new Set())}
-                className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-xl font-semibold flex items-center gap-2 hover:bg-white/30 transition-colors"
+                className="px-4 sm:px-6 py-2 bg-white/20 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base"
               >
                 <FiX />
-                Clear Selection
+                <span className="hidden sm:inline">Clear Selection</span>
+                <span className="sm:hidden">Clear</span>
               </button>
             </div>
           </div>
@@ -722,7 +707,7 @@ export default function ModernGalleryManager() {
               setSelectedCategory('all');
               setShowCreateModal(true);
             }}
-            className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-semibold shadow-lg text-sm sm:text-base"
           >
             <FiUpload className="inline mr-2" />
             Upload Gallery
@@ -758,7 +743,7 @@ export default function ModernGalleryManager() {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiChevronLeft className="text-lg" />
               </button>
@@ -769,10 +754,10 @@ export default function ModernGalleryManager() {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-semibold transition-all ${
+                    className={`w-10 h-10 rounded-xl font-semibold ${
                       currentPage === page
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg'
+                        : 'bg-white text-gray-600 border border-gray-300'
                     }`}
                   >
                     {page}
@@ -783,7 +768,7 @@ export default function ModernGalleryManager() {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiChevronRight className="text-lg" />
               </button>
@@ -803,6 +788,9 @@ export default function ModernGalleryManager() {
           dragActive={dragActive}
           categories={CATEGORIES}
           selectedFilePreviews={selectedFilePreviews}
+          dropdownOpen={dropdownOpen}
+          setDropdownOpen={setDropdownOpen}
+          dropdownRef={dropdownRef}
           onClose={() => {
             setShowCreateModal(false);
             resetForm();
@@ -831,6 +819,9 @@ export default function ModernGalleryManager() {
           selectedFilePreviews={selectedFilePreviews}
           filesToRemove={filesToRemove}
           setFilesToRemove={setFilesToRemove}
+          dropdownOpen={dropdownOpen}
+          setDropdownOpen={setDropdownOpen}
+          dropdownRef={dropdownRef}
           onClose={() => {
             setShowEditModal(false);
             setEditingItem(null);
@@ -850,7 +841,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Preview Modal with Edit/Delete buttons */}
+      {/* Preview Modal with Edit/Delete buttons - UPDATED STYLING */}
       {showPreviewModal && previewItem && (
         <PreviewModal
           item={previewItem}
@@ -881,7 +872,7 @@ export default function ModernGalleryManager() {
   );
 }
 
-// Modern Gallery Item Component with Text Buttons
+// Modern Gallery Item Component with Updated Design
 const ModernGalleryItem = ({ 
   item, viewMode, isSelected, hasError, 
   onSelect, onEdit, onDelete, onPreview,
@@ -895,23 +886,23 @@ const ModernGalleryItem = ({
   if (viewMode === 'list') {
     return (
       <div
-        className={`bg-white rounded-2xl p-4 flex items-center gap-4 border border-gray-200/50 hover:border-blue-300 transition-all ${
+        className={`bg-white rounded-2xl p-4 flex items-center gap-4 border border-gray-200/50 ${
           isSelected ? 'border-blue-500 bg-blue-50/30' : ''
         }`}
       >
         <button 
           onClick={onSelect}
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
             isSelected 
               ? 'bg-blue-500 border-blue-500 text-white' 
-              : 'bg-white border-gray-300 hover:border-blue-400'
+              : 'bg-white border-gray-300'
           }`}
         >
           {isSelected && <FiCheck className="text-xs" />}
         </button>
 
         {/* Thumbnail */}
-        <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative group cursor-pointer" onClick={onPreview}>
+        <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={onPreview}>
           {hasError ? (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <FiImage className="text-gray-400 text-xl" />
@@ -921,7 +912,7 @@ const ModernGalleryItem = ({
               <img
                 src={item.files[0]}
                 alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                className="w-full h-full object-cover"
                 onError={onImageError}
               />
               {item.files.length > 1 && (
@@ -959,31 +950,34 @@ const ModernGalleryItem = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onPreview}
-            className="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-medium transition-colors"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-xs sm:text-sm font-medium"
           >
-            View
+            <span className="hidden sm:inline">View</span>
+            <FiEye className="sm:hidden" />
           </button>
           <button
             onClick={onEdit}
-            className="px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-medium transition-colors"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs sm:text-sm font-medium"
           >
-            Edit
+            <span className="hidden sm:inline">Edit</span>
+            <FiEdit className="sm:hidden" />
           </button>
           <button
             onClick={onDelete}
-            className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-medium transition-colors"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-xs sm:text-sm font-medium"
           >
-            Delete
+            <span className="hidden sm:inline">Delete</span>
+            <FiTrash2 className="sm:hidden" />
           </button>
         </div>
       </div>
     );
   }
 
-  // Grid View
+  // Grid View - UPDATED DESIGN
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden border border-gray-200/50 hover:border-blue-300 transition-all duration-300 hover:shadow-xl group ${
+      className={`bg-white rounded-2xl overflow-hidden border border-gray-200/50 group ${
         isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
       }`}
     >
@@ -991,10 +985,10 @@ const ModernGalleryItem = ({
         {/* Selection Checkbox */}
         <button
           onClick={onSelect}
-          className={`absolute top-3 left-3 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 transition-all ${
+          className={`absolute top-3 left-3 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${
             isSelected 
               ? 'bg-blue-500 border-blue-500 text-white' 
-              : 'bg-white/90 border-gray-300 text-transparent group-hover:text-gray-400 hover:border-blue-400'
+              : 'bg-white/90 border-gray-300'
           }`}
         >
           <FiCheck className="text-xs" />
@@ -1005,17 +999,6 @@ const ModernGalleryItem = ({
           <span className="px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm bg-blue-100 text-blue-800">
             {formatCategory(item.category)}
           </span>
-        </div>
-
-        {/* Preview Button Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-          <button
-            onClick={onPreview}
-            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-white transition-all"
-          >
-            <FiEye className="text-lg" />
-            View Gallery
-          </button>
         </div>
 
         {/* Media Preview */}
@@ -1032,7 +1015,7 @@ const ModernGalleryItem = ({
               <img
                 src={item.files[0]}
                 alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover"
                 onError={onImageError}
               />
               {/* Multiple Images Indicator */}
@@ -1063,25 +1046,28 @@ const ModernGalleryItem = ({
           {item.description || 'No description provided'}
         </p>
         
-        {/* Action Buttons - Text only, visible always */}
+        {/* Action Buttons */}
         <div className="flex gap-2 mb-3">
           <button
             onClick={onPreview}
-            className="flex-1 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-colors"
+            className="flex-1 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-xs font-medium"
           >
-            View
+            <span className="hidden sm:inline">View</span>
+            <FiEye className="sm:hidden mx-auto" />
           </button>
           <button
             onClick={onEdit}
-            className="flex-1 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-colors"
+            className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-medium"
           >
-            Edit
+            <span className="hidden sm:inline">Edit</span>
+            <FiEdit className="sm:hidden mx-auto" />
           </button>
           <button
             onClick={onDelete}
-            className="flex-1 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-medium transition-colors"
+            className="flex-1 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-xs font-medium"
           >
-            Delete
+            <span className="hidden sm:inline">Delete</span>
+            <FiTrash2 className="sm:hidden mx-auto" />
           </button>
         </div>
 
@@ -1101,12 +1087,13 @@ const ModernGalleryItem = ({
   );
 };
 
-// Create/Edit Modal Component with existing files management
+// Create/Edit Modal Component with Modern Dropdown
 const CreateEditModal = ({
   mode, formData, setFormData, editingItem, uploadProgress, isUploading, dragActive,
   categories, selectedFilePreviews, filesToRemove, setFilesToRemove, onClose, onSubmit, 
   onFileSelect, onDrag, onDrop, removeFile, removeExistingFile, previewExistingFile,
-  fileInputRef, onRefresh, showExistingFiles, setShowExistingFiles
+  fileInputRef, onRefresh, showExistingFiles, setShowExistingFiles,
+  dropdownOpen, setDropdownOpen, dropdownRef
 }) => {
   const [localEditMode, setLocalEditMode] = useState(false);
 
@@ -1125,20 +1112,25 @@ const CreateEditModal = ({
     previewExistingFile(fileUrl);
   };
 
+  const handleCategorySelect = (category) => {
+    setFormData({ ...formData, category });
+    setDropdownOpen(false);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
         {/* Header with Refresh button */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl ${mode === 'create' ? 'bg-gradient-to-br from-blue-500 to-cyan-500' : 'bg-gradient-to-br from-green-500 to-emerald-500'}`}>
+            <div className={`p-2 rounded-xl ${mode === 'create' ? 'bg-gradient-to-br from-indigo-600 to-violet-600' : 'bg-gradient-to-br from-green-500 to-emerald-500'}`}>
               {mode === 'create' ? <FiUpload className="text-white text-xl" /> : <FiEdit2 className="text-white text-xl" />}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">
                 {mode === 'create' ? 'Create New Gallery' : 'Edit Gallery'}
               </h2>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 {mode === 'create' ? 'Upload and organize your media' : 'Update gallery details and media'}
               </p>
             </div>
@@ -1146,14 +1138,14 @@ const CreateEditModal = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onRefresh}
-              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-gray-200 transition-colors"
+              className="p-2 sm:px-4 sm:py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center gap-1 sm:gap-2"
             >
               <FiRefreshCw className="text-sm" />
-              Refresh
+              <span className="hidden sm:inline">Refresh</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="p-2 rounded-xl border border-gray-200"
               disabled={isUploading}
             >
               <FiX className="text-xl text-gray-600" />
@@ -1162,29 +1154,29 @@ const CreateEditModal = ({
         </div>
 
         <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-6">
             {/* Existing Files Section (Edit Mode Only) */}
             {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
-              <div className="rounded-2xl p-5 border border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+              <div className="rounded-2xl p-4 sm:p-5 border border-gray-200 bg-gradient-to-br from-gray-50 to-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowExistingFiles(!showExistingFiles)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2 hover:bg-gray-100 rounded-lg"
                     >
                       {showExistingFiles ? <FiChevronUp className="text-gray-600" /> : <FiChevronDown className="text-gray-600" />}
                     </button>
-                    <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <h3 className="font-semibold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
                       <FiImage className="text-purple-500" />
                       <span>Existing Files ({editingItem.files.length})</span>
                     </h3>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hidden sm:inline">
                       Click to view • Click X to remove
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {filesToRemove.length} file{filesToRemove.length !== 1 ? 's' : ''} marked for removal
+                    <span className="text-xs sm:text-sm text-gray-600">
+                      {filesToRemove.length} file{filesToRemove.length !== 1 ? 's' : ''} marked
                     </span>
                   </div>
                 </div>
@@ -1198,10 +1190,10 @@ const CreateEditModal = ({
                       return (
                         <div 
                           key={index} 
-                          className={`relative bg-white rounded-xl border overflow-hidden transition-all ${
+                          className={`relative bg-white rounded-xl border overflow-hidden ${
                             isMarkedForRemoval 
                               ? 'border-red-300 bg-red-50/50' 
-                              : 'border-gray-200 hover:border-blue-300'
+                              : 'border-gray-200'
                           }`}
                         >
                           {/* File Preview */}
@@ -1230,10 +1222,10 @@ const CreateEditModal = ({
                             )}
                             
                             {/* Action Buttons */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handlePreviewExisting(fileUrl)}
-                                className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-800 hover:bg-white transition-colors"
+                                className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-gray-800"
                                 title="Preview"
                               >
                                 <FiEye className="text-sm" />
@@ -1241,7 +1233,7 @@ const CreateEditModal = ({
                               {!isMarkedForRemoval && (
                                 <button
                                   onClick={() => handleRemoveExisting(fileUrl)}
-                                  className="p-2 bg-red-500/90 backdrop-blur-sm rounded-lg text-white hover:bg-red-600 transition-colors"
+                                  className="p-2 bg-red-500/90 backdrop-blur-sm rounded-lg text-white"
                                   title="Remove file"
                                 >
                                   <FiX className="text-sm" />
@@ -1253,7 +1245,7 @@ const CreateEditModal = ({
                             {isMarkedForRemoval && (
                               <button
                                 onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))}
-                                className="absolute top-2 right-2 p-1.5 bg-green-500 text-white rounded-full shadow-lg"
+                                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg"
                                 title="Keep this file"
                               >
                                 <FiCheck className="text-xs" />
@@ -1283,25 +1275,25 @@ const CreateEditModal = ({
             )}
 
             {/* File Upload Section */}
-            <div className="rounded-2xl p-5 border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
+            <div className="rounded-2xl p-4 sm:p-5 border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2 text-sm sm:text-base">
                   <FiUpload className="text-blue-500" />
                   <span>
                     {mode === 'edit' ? 'Add New Files (Optional)' : 'Upload Files *'}
                   </span>
                 </h3>
                 <span className="text-xs text-gray-500">
-                  Max 10MB per file • Supports images & videos
+                  Max 10MB per file
                 </span>
               </div>
               
               {/* Drag & Drop Zone */}
               <div
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer ${
                   dragActive 
-                    ? 'border-blue-500 bg-blue-100/30 scale-[1.01]' 
-                    : 'border-blue-300 hover:border-blue-400'
+                    ? 'border-blue-500 bg-blue-100/30' 
+                    : 'border-blue-300'
                 } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
                 onDragEnter={onDrag}
                 onDragLeave={onDrag}
@@ -1311,12 +1303,12 @@ const CreateEditModal = ({
               >
                 <div className="max-w-sm mx-auto">
                   <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl inline-block mb-4">
-                    <FiUploadCloud className="text-4xl text-blue-500" />
+                    <FiUploadCloud className="text-3xl sm:text-4xl text-blue-500" />
                   </div>
-                  <p className="text-gray-700 mb-2 font-medium text-lg">
+                  <p className="text-gray-700 mb-2 font-medium text-base sm:text-lg">
                     {isUploading ? 'Uploading...' : 'Drag & drop files here'}
                   </p>
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-gray-500 mb-6 text-sm sm:text-base">
                     or click to browse files from your computer
                   </p>
                   <input
@@ -1331,7 +1323,7 @@ const CreateEditModal = ({
                   {!isUploading && (
                     <button
                       onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-semibold text-sm sm:text-base"
                     >
                       Browse Files
                     </button>
@@ -1342,7 +1334,7 @@ const CreateEditModal = ({
               {/* Selected Files Preview - ACTUAL IMAGES */}
               {formData.files.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2">
+                  <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <FiCheckCircle className="text-green-500" />
                     <span>New Files to Add ({formData.files.length})</span>
                   </h4>
@@ -1374,7 +1366,7 @@ const CreateEditModal = ({
                             {uploadProgress[file.name] !== undefined && (
                               <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-200/80">
                                 <div 
-                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-300"
+                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
                                   style={{ width: `${uploadProgress[file.name]}%` }}
                                 />
                               </div>
@@ -1383,7 +1375,7 @@ const CreateEditModal = ({
                             {/* Remove button */}
                             <button
                               onClick={() => removeFile(file.name)}
-                              className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg"
                               title="Remove file"
                             >
                               <FiX className="text-xs" />
@@ -1418,29 +1410,55 @@ const CreateEditModal = ({
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Enter a descriptive title"
                   disabled={isUploading}
                   required
                 />
               </div>
 
-              <div className="md:col-span-2">
+              {/* Modern Dropdown for Category Selection */}
+              <div className="md:col-span-2" ref={dropdownRef}>
                 <label className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <FiFolder className="text-purple-500" />
                   <span>Category *</span>
                 </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                  disabled={isUploading}
-                  required
-                >
-                  {categories.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-left flex items-center justify-between focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-sm sm:text-base"
+                    disabled={isUploading}
+                  >
+                    <span>{categories.find(cat => cat.value === formData.category)?.label || 'Select Category'}</span>
+                    <FiChevronDown className={`text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {dropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                      <div className="p-2">
+                        {categories.map(cat => (
+                          <button
+                            key={cat.value}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat.value)}
+                            className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 text-sm sm:text-base ${
+                              formData.category === cat.value
+                                ? 'bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 font-medium'
+                                : 'text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            <div className={`w-3 h-3 rounded-full bg-${cat.color}-500`} />
+                            <span>{cat.label}</span>
+                            {formData.category === cat.value && (
+                              <FiCheck className="ml-auto text-indigo-600" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="md:col-span-2">
@@ -1452,7 +1470,7 @@ const CreateEditModal = ({
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="Describe what this gallery contains..."
                   disabled={isUploading}
                 />
@@ -1462,11 +1480,11 @@ const CreateEditModal = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-4 p-6 border-t border-gray-200 bg-gray-50/50">
-          <div className="text-sm text-gray-600">
+        <div className="flex items-center justify-between gap-4 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50">
+          <div className="text-xs sm:text-sm text-gray-600">
             {mode === 'edit' ? (
               <>
-                {editingItem?.files.length || 0} existing files • 
+                {editingItem?.files.length || 0} existing • 
                 {filesToRemove.length} to remove • 
                 {formData.files.length} to add
               </>
@@ -1479,7 +1497,7 @@ const CreateEditModal = ({
           <div className="flex items-center gap-4">
             <button
               onClick={onClose}
-              className="px-6 py-3 text-gray-600 font-semibold border border-gray-300 rounded-xl min-w-24 hover:bg-gray-50 transition-colors"
+              className="px-4 sm:px-6 py-2 sm:py-3 text-gray-600 font-semibold border border-gray-300 rounded-full min-w-20 sm:min-w-24 text-sm sm:text-base"
               disabled={isUploading}
             >
               Cancel
@@ -1487,10 +1505,10 @@ const CreateEditModal = ({
             <button
               onClick={onSubmit}
               disabled={isUploading || (mode === 'create' && formData.files.length === 0) || !formData.title.trim()}
-              className={`px-6 py-3 rounded-xl font-semibold disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-32 justify-center transition-all ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-24 sm:min-w-32 justify-center text-sm sm:text-base ${
                 mode === 'create' 
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg' 
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg'
+                  ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white' 
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
               }`}
             >
               {isUploading ? (
@@ -1501,12 +1519,14 @@ const CreateEditModal = ({
               ) : mode === 'edit' ? (
                 <>
                   <FiSave />
-                  Save Changes
+                  <span className="hidden sm:inline">Save Changes</span>
+                  <span className="sm:hidden">Save</span>
                 </>
               ) : (
                 <>
                   <FiUpload />
-                  Create Gallery
+                  <span className="hidden sm:inline">Create Gallery</span>
+                  <span className="sm:hidden">Create</span>
                 </>
               )}
             </button>
@@ -1517,7 +1537,7 @@ const CreateEditModal = ({
   );
 };
 
-// Preview Modal Component with Edit/Delete buttons
+// Preview Modal Component - MOBILE RESPONSIVE AND CENTERED
 const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1533,10 +1553,15 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
     setCurrentIndex((prev) => (prev - 1 + item.files.length) % item.files.length);
   };
 
-  const copyUrl = () => {
-    navigator.clipboard.writeText(currentFile);
-    toast.success('URL copied to clipboard!');
-  };
+const copyUrl = () => {
+  // window.location.origin gives you "http://localhost:3000"
+  const targetPath = "/pages/gallery";
+  const fullUrl = `${window.location.origin}${targetPath}`;
+
+  navigator.clipboard.writeText(fullUrl);
+  
+  toast.success('Gallery link copied to clipboard!');
+};
 
   const downloadFile = () => {
     const link = document.createElement('a');
@@ -1548,190 +1573,233 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   };
 
   return (
-    <div className={`fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100] ${isFullscreen ? 'p-0' : 'p-4'}`}>
-      <div className={`relative ${isFullscreen ? 'w-full h-full' : 'w-full max-w-6xl max-h-[90vh]'}`}>
-        {/* Header with Edit/Delete buttons */}
-        <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onClose}
-                className="p-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors"
-              >
-                <FiX className="text-xl" />
-              </button>
-              <div>
-                <h2 className="text-xl font-semibold text-white">{item.title}</h2>
-                <p className="text-gray-300 text-sm">
-                  {currentIndex + 1} of {item.files.length} • {item.category.replace(/_/g, ' ')}
-                </p>
-              </div>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600">
+              <FiEye className="text-white text-xl" />
             </div>
-            <div className="flex items-center gap-2">
-              {/* Edit/Delete buttons */}
-              <button
-                onClick={onEdit}
-                className="px-3 py-2 bg-green-500/80 backdrop-blur-sm text-white rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-green-600 transition-colors"
-              >
-                <FiEdit2 />
-                Edit
-              </button>
-              <button
-                onClick={onDelete}
-                className="px-3 py-2 bg-red-500/80 backdrop-blur-sm text-white rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-red-600 transition-colors"
-              >
-                <FiTrash2 />
-                Delete
-              </button>
-              <button
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors"
-              >
-                {isFullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
-              </button>
-              <button
-                onClick={copyUrl}
-                className="p-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors"
-                title="Copy URL"
-              >
-                <FiLink />
-              </button>
-              <button
-                onClick={downloadFile}
-                className="p-2 bg-white/10 backdrop-blur-sm rounded-lg text-white hover:bg-white/20 transition-colors"
-                title="Download"
-              >
-                <FiDownload />
-              </button>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">
+                {item.title}
+              </h2>
+              <p className="text-gray-600 text-xs sm:text-sm truncate">
+                {currentIndex + 1} of {item.files.length} • {item.category.replace(/_/g, ' ')}
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 rounded-xl border border-gray-200 hidden sm:flex"
+            >
+              {isFullscreen ? <FiMinimize2 className="text-gray-600" /> : <FiMaximize2 className="text-gray-600" />}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl border border-gray-200"
+            >
+              <FiX className="text-xl text-gray-600" />
+            </button>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="w-full h-full flex items-center justify-center p-4">
-          {/* Navigation Buttons */}
-          {item.files.length > 1 && (
-            <>
-              <button
-                onClick={prevFile}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                <FiChevronLeft className="text-2xl" />
-              </button>
-              
-              <button
-                onClick={nextFile}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                <FiChevronRight className="text-2xl" />
-              </button>
-            </>
-          )}
+        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="p-4 sm:p-6">
+            <div className="relative">
+              {/* Navigation Buttons */}
+              {item.files.length > 1 && (
+                <>
+                  <button
+                    onClick={prevFile}
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600"
+                  >
+                    <FiChevronLeft className="text-xl" />
+                  </button>
+                  
+                  <button
+                    onClick={nextFile}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full text-gray-600"
+                  >
+                    <FiChevronRight className="text-xl" />
+                  </button>
+                </>
+              )}
 
-          {/* Media Display */}
-          <div className="w-full h-full flex items-center justify-center">
-            {isImage ? (
-              <img
-                src={currentFile}
-                alt={`${item.title} - ${currentIndex + 1}`}
-                className="max-w-full max-h-full object-contain rounded-lg"
-              />
-            ) : (
-              <video
-                src={currentFile}
-                controls
-                autoPlay
-                className="max-w-full max-h-full rounded-lg"
-              />
+              {/* Media Display */}
+              <div className="flex items-center justify-center p-2 sm:p-4">
+                {isImage ? (
+                  <img
+                    src={currentFile}
+                    alt={`${item.title} - ${currentIndex + 1}`}
+                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
+                  />
+                ) : (
+                  <video
+                    src={currentFile}
+                    controls
+                    autoPlay
+                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] rounded-lg"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Gallery Info */}
+            <div className="mt-4 sm:mt-6 p-4 border border-gray-200 rounded-xl">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-800 text-base sm:text-lg mb-2">{item.title}</h3>
+                  <p className="text-gray-600 text-sm sm:text-base mb-3">{item.description}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
+                      {item.category.replace(/_/g, ' ')}
+                    </span>
+                    <span>{item.files.length} files</span>
+                    <span>•</span>
+                    <span>Uploaded {new Date(item.uploadDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 sm:flex-col">
+                  <button
+                    onClick={downloadFile}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
+                    title="Download"
+                  >
+                    <FiDownload className="text-sm" />
+                    <span className="hidden sm:inline">Download</span>
+                  </button>
+                  <button
+                    onClick={copyUrl}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
+                    title="Copy URL"
+                  >
+                    <FiCopy className="text-sm" />
+                    <span className="hidden sm:inline">Copy URL</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Thumbnail Strip */}
+            {item.files.length > 1 && (
+              <div className="mt-4 sm:mt-6">
+                <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">All Files ({item.files.length})</h4>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {item.files.map((file, index) => {
+                    const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        className={`w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 ${
+                          index === currentIndex 
+                            ? 'border-indigo-500' 
+                            : 'border-transparent'
+                        }`}
+                      >
+                        {isVideo ? (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <FiVideo className="text-gray-400 text-lg sm:text-2xl" />
+                          </div>
+                        ) : (
+                          <img
+                            src={file}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Thumbnail Strip */}
-        {item.files.length > 1 && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <div className="flex gap-2 overflow-x-auto">
-              {item.files.map((file, index) => {
-                const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      index === currentIndex 
-                        ? 'border-white scale-105' 
-                        : 'border-transparent opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    {isVideo ? (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-700 to-pink-700 flex items-center justify-center">
-                        <FiVideo className="text-white text-xl" />
-                      </div>
-                    ) : (
-                      <img
-                        src={file}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Footer Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50">
+          <div className="text-xs sm:text-sm text-gray-600">
+            {item.fileType === 'image' ? 'Image Gallery' : 'Video Gallery'} • File {currentIndex + 1} of {item.files.length}
           </div>
-        )}
-
-        {/* Gallery Info Overlay */}
-        {!isFullscreen && (
-          <div className="absolute bottom-20 left-4 bg-black/60 backdrop-blur-sm rounded-lg p-4 max-w-md">
-            <h3 className="font-semibold text-white mb-2">{item.title}</h3>
-            <p className="text-gray-300 text-sm mb-2">{item.description}</p>
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-              <span>{item.files.length} files</span>
-              <span>•</span>
-              <span>Uploaded {new Date(item.uploadDate).toLocaleDateString()}</span>
-              <span>•</span>
-              <span>{isImage ? 'Images' : 'Videos'}</span>
-            </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={onEdit}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <FiEdit2 />
+              <span className="hidden sm:inline">Edit Gallery</span>
+              <span className="sm:hidden">Edit</span>
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <FiTrash2 />
+              <span className="hidden sm:inline">Delete Gallery</span>
+              <span className="sm:hidden">Delete</span>
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-// Delete Confirmation Modal Component
+// NEW: Mobile-Responsive Delete Confirmation Modal
 const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-gradient-to-br from-red-100 to-red-200 rounded-xl">
-            <FiAlertCircle className="text-red-600 text-2xl" />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-6 border-b border-gray-200">
+          <div className="p-3 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl">
+            <FiAlertCircle className="text-white text-2xl" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">Delete Gallery</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Delete Gallery</h3>
             <p className="text-gray-600 text-sm">This action cannot be undone</p>
           </div>
         </div>
         
-        <div className="mb-6">
-          <p className="text-gray-600 mb-4">
+        {/* Content */}
+        <div className="p-6">
+          <p className="text-gray-600 mb-4 text-sm sm:text-base">
             Are you sure you want to delete the gallery 
             <span className="font-semibold text-gray-800"> "{item.title}"</span>?
           </p>
           
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <div className="flex items-center gap-2 text-red-700 text-sm">
-              <FiAlertCircle className="flex-shrink-0" />
-              <span>This will permanently delete {item.files.length} file{item.files.length > 1 ? 's' : ''}.</span>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3 text-red-700">
+              <FiAlertCircle className="flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm sm:text-base">This will permanently delete:</p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <span>{item.files.length} file{item.files.length > 1 ? 's' : ''}</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <span>Gallery title and description</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <span>All associated metadata</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           
           {/* Gallery Preview */}
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-            <div className="w-12 h-12 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
+          <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
               {item.files[0] && (
                 <img
                   src={item.files[0]}
@@ -1741,22 +1809,30 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">{item.title}</p>
-              <p className="text-xs text-gray-600">{item.files.length} files • {item.category.replace(/_/g, ' ')}</p>
+              <p className="text-sm sm:text-base font-medium text-gray-800 truncate">{item.title}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                  {item.category.replace(/_/g, ' ')}
+                </span>
+                <span className="text-xs text-gray-600">
+                  {item.files.length} file{item.files.length > 1 ? 's' : ''}
+                </span>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="flex gap-3">
+        {/* Footer Actions */}
+        <div className="flex gap-3 p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="flex-1 bg-gray-100 text-gray-700 px-4 py-3 rounded-xl font-medium text-sm hover:bg-gray-200 transition-colors"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full font-medium text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 rounded-xl font-medium text-sm hover:from-red-600 hover:to-red-700 transition-all"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-medium text-sm sm:text-base"
           >
             Delete Gallery
           </button>

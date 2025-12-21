@@ -42,6 +42,7 @@ import GuidanceCounselingTab from '../components/guidance/page';
 import SchoolInfoTab from '../components/schoolinfo/page';
 import ApplicationsManager from '../components/applications/page';
 import Resources from '../components/resources/page';
+import Careers from "../components/career/page";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -60,7 +61,9 @@ export default function AdminDashboard() {
     guidanceSessions: 0,
     totalApplications: 0,
     pendingApplications: 0,
-    Resources: 0
+    Resources: 0,
+    Careers: 0
+
   });
 
   // Modern Loading Screen with Enhanced Design
@@ -153,7 +156,8 @@ export default function AdminDashboard() {
         galleryRes,
         guidanceRes,
         admissionsRes,
-        resourcesRes
+        resourcesRes,
+        careersRes
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -165,7 +169,8 @@ export default function AdminDashboard() {
         fetch('/api/gallery'),
         fetch('/api/guidance'),
         fetch('/api/applyadmission'),
-        fetch('/api/resources')
+        fetch('/api/resources'),
+        fetch('/api/career')
       ]);
 
       // Process responses and get actual counts
@@ -180,6 +185,7 @@ export default function AdminDashboard() {
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
+      const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
 
       // Calculate real counts
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
@@ -205,6 +211,7 @@ export default function AdminDashboard() {
         totalApplications: admissionsData.length || 0,
         pendingApplications: pendingApps,
         Resources: resources.resources?.length || 0,
+        Careers: careers.careers?.length || 0
       });
 
     } catch (error) {
@@ -349,10 +356,13 @@ export default function AdminDashboard() {
         return <NewsEventsManager />;
       case 'gallery':
         return <GalleryManager />;
+       case 'careers':
+        return <Careers />; 
       case 'subscribers':
         return <SubscriberManager />;
       case 'email':
         return <EmailManager />;
+
       case 'admins-profile':
         return <AdminsProfileManager user={user} />;
       default:
@@ -415,6 +425,12 @@ export default function AdminDashboard() {
       label: 'Resources',
       icon: FiFileText,
       badge: 'cyan' 
+    },
+    {
+      id: 'careers',
+      label: 'Careers',
+      icon: FiCalendar,
+      badge: 'lime'
     },
     { 
       id: 'newsevents', 
@@ -548,45 +564,23 @@ export default function AdminDashboard() {
 
               {/* User Menu */}
               <div className="flex items-center gap-3">
-                <div className="text-right hidden lg:block">
-                  <p className="font-semibold text-gray-800 text-sm lg:text-base">{user?.name}</p>
-                  <p className="text-xs text-gray-500 capitalize flex items-center gap-1">
-                    <IoSparkles className="text-yellow-500 text-xs" />
-                    {user?.role?.replace('_', ' ')}
-                  </p>
-                </div>
+            <div className="hidden lg:flex flex-col items-end justify-center">
+  {/* Modernized First Name: Bold, darker, and tight tracking */}
+  <span className="text-sm font-bold text-slate-900 tracking-tight leading-none mb-1">
+    {user?.name?.split(' ')[0]}
+  </span>
+
+  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 shadow-sm">
+    <IoSparkles className="text-amber-500 text-[10px] animate-pulse" />
+    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700">
+      {user?.role?.replace('_', ' ')}
+    </span>
+  </div>
+</div>
                 
    <div className="relative group">
-  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer hover:opacity-90 transition-opacity duration-200">
+  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer hover:opacity-90 transition-opacity duration-200">
     {user?.name?.charAt(0) || 'A'}
-  </div>
-
-  {/* Logout dropdown */}
-  <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 
-                  opacity-0 invisible group-hover:opacity-100 group-hover:visible 
-                  transition-all duration-300 z-50 overflow-hidden">
-    
-    <div className="p-4 border-b border-gray-100">
-      <p className="font-semibold text-gray-800 truncate">
-        {user?.name}
-      </p>
-
-      <p
-        className="text-sm text-gray-500 truncate"
-        title={user?.email}
-      >
-        {user?.email}
-      </p>
-    </div>
-
-    <button
-      onClick={handleLogout}
-      className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 
-                 rounded-b-2xl transition-all duration-200 font-semibold"
-    >
-      <FiLogOut className="text-lg" />
-      Sign Out
-    </button>
   </div>
 </div>
 
