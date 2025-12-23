@@ -198,6 +198,8 @@ model Staff {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+
 model EmailCampaign {
   id            String   @id @default(cuid())
   title         String
@@ -212,8 +214,12 @@ model EmailCampaign {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
+  // Add this line for attachments
+  attachments   String?  @db.Text  // Store as JSON string
+  
   @@map("email_campaigns")
 }
+
 model GalleryImage {
   id          Int        @id @default(autoincrement())
   title       String

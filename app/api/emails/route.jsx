@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import nodemailer from "nodemailer";
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
 // CONFIGURATION
@@ -29,23 +32,15 @@ const CONTACT_PHONE = process.env.CONTACT_PHONE || '+254720123456';
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'admissions@nyaribusecondary.sc.ke';
 const SCHOOL_WEBSITE = process.env.SCHOOL_WEBSITE || 'https://nyaribusecondary.sc.ke';
 
-// Social Media Configuration
+// Social Media Configuration (Removed TikTok and Instagram as requested)
 const SOCIAL_MEDIA = {
   facebook: {
     url: process.env.SCHOOL_FACEBOOK || 'https://facebook.com/nyaribusecondary',
     color: '#1877F2',
   },
-  instagram: {
-    url: process.env.SCHOOL_INSTAGRAM || 'https://instagram.com/nyaribusecondary',
-    color: '#E4405F',
-  },
   youtube: {
     url: process.env.SCHOOL_YOUTUBE || 'https://youtube.com/c/nyaribusecondary',
     color: '#FF0000',
-  },
-  tiktok: {
-    url: process.env.SCHOOL_TIKTOK || 'https://tiktok.com/@nyaribusecondary',
-    color: '#000000',
   },
   linkedin: {
     url: process.env.SCHOOL_LINKEDIN || 'https://linkedin.com/school/nyaribu-secondary',
@@ -56,6 +51,14 @@ const SOCIAL_MEDIA = {
     color: '#1DA1F2',
   }
 };
+
+// Path for attachments storage
+const ATTACHMENTS_DIR = path.join(process.cwd(), 'public', 'emailattachments');
+
+// Ensure attachments directory exists
+if (!fs.existsSync(ATTACHMENTS_DIR)) {
+  fs.mkdirSync(ATTACHMENTS_DIR, { recursive: true });
+}
 
 // ====================================================================
 // HELPER FUNCTIONS
@@ -75,16 +78,26 @@ function getRecipientTypeLabel(type) {
 }
 
 function sanitizeContent(content) {
-  const safeContent = content
+  // Reduce font-size styles
+  let safeContent = content
+    .replace(/font-size\s*:\s*[^;]+;/gi, '')
+    .replace(/<font[^>]*>/gi, '')
+    .replace(/<\/font>/gi, '')
+    .replace(/size\s*=\s*["'][^"']*["']/gi, '')
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/on\w+="[^"]*"/g, '')
     .replace(/on\w+='[^']*'/g, '')
     .replace(/javascript:/gi, '')
     .replace(/data:/gi, '');
   
-  return safeContent.replace(/\n/g, '<br>');
-}
+  // Convert newlines to <br> tags
+  safeContent = safeContent.replace(/\n/g, '<br>');
+  
+  // Remove extra font styles
+  safeContent = safeContent.replace(/style\s*=\s*["'][^"']*font[^"']*["']/gi, '');
 
+  return safeContent;
+}
 function getModernEmailTemplate({ 
   subject = '', 
   content = '',
@@ -231,6 +244,50 @@ function getModernEmailTemplate({
           margin-bottom: 0;
         }
         
+        /* ATTACHMENTS SECTION */
+        .attachments-section {
+          background: #f8fafc;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          border: 1px solid #e5e7eb;
+        }
+        
+        .attachments-title {
+          font-size: 16px !important;
+          color: #1e3c72;
+          font-weight: 600;
+          margin-bottom: 15px;
+        }
+        
+        .attachments-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        
+        .attachment-item {
+          display: flex;
+          align-items: center;
+          padding: 10px;
+          margin-bottom: 8px;
+          background: white;
+          border-radius: 6px;
+          border: 1px solid #e5e7eb;
+        }
+        
+        .attachment-icon {
+          margin-right: 12px;
+          font-size: 18px;
+          color: #1e3c72;
+        }
+        
+        .attachment-name {
+          flex: 1;
+          font-size: 14px !important;
+          color: #374151;
+        }
+        
         /* CONTACT INFO - STACK ON MOBILE */
         .contact-info {
           background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -335,71 +392,74 @@ function getModernEmailTemplate({
           font-weight: 400;
         }
         
-        /* SOCIAL ICONS - FIXED SIZE & VISIBILITY */
-        .social-icons {
+        /* SOCIAL MEDIA LINKS - TEXT-ONLY VERSION */
+        .social-links {
           display: flex;
           justify-content: center;
-          gap: 10px;
-          margin: 25px 0;
           flex-wrap: wrap;
+          gap: 15px;
+          margin: 25px 0;
+          padding: 0;
+          list-style: none;
         }
         
-        .social-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px !important;
-          height: 40px !important;
-          border-radius: 50%;
+        .social-link {
+          display: inline-block;
+        }
+        
+        .social-link a {
+          display: inline-block;
+          padding: 8px 16px;
+          background-color: #2d3748;
+          color: #ffffff !important;
           text-decoration: none;
-          transition: transform 0.2s ease;
-          box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+          border-radius: 4px;
+          font-size: 14px !important;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          border: 1px solid #4a5568;
         }
         
-        .social-icon:hover {
-          transform: translateY(-2px);
+        .social-link a:hover {
+          background-color: #4a5568;
+          transform: translateY(-1px);
         }
         
-        .social-icon svg {
-          width: 20px !important;
-          height: 20px !important;
-          fill: currentColor;
+        /* Social media specific colors */
+        .social-facebook a {
+          background-color: #1877F2;
+          border-color: #1877F2;
         }
         
-        /* FACEBOOK */
-        .social-facebook {
-          background: #1877F2 !important;
-          color: white !important;
+        .social-facebook a:hover {
+          background-color: #0d65d9;
         }
         
-        /* INSTAGRAM */
-        .social-instagram {
-          background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D) !important;
-          color: white !important;
+        .social-youtube a {
+          background-color: #FF0000;
+          border-color: #FF0000;
         }
         
-        /* YOUTUBE */
-        .social-youtube {
-          background: #FF0000 !important;
-          color: white !important;
+        .social-youtube a:hover {
+          background-color: #cc0000;
         }
         
-        /* TIKTOK */
-        .social-tiktok {
-          background: #000000 !important;
-          color: white !important;
+        .social-linkedin a {
+          background-color: #0A66C2;
+          border-color: #0A66C2;
         }
         
-        /* LINKEDIN */
-        .social-linkedin {
-          background: #0A66C2 !important;
-          color: white !important;
+        .social-linkedin a:hover {
+          background-color: #0959a6;
         }
         
-        /* TWITTER */
-        .social-twitter {
-          background: #1DA1F2 !important;
-          color: white !important;
+        .social-twitter a {
+          background-color: #1DA1F2;
+          border-color: #1DA1F2;
+        }
+        
+        .social-twitter a:hover {
+          background-color: #0c8bd9;
         }
         
         /* COPYRIGHT */
@@ -446,12 +506,12 @@ function getModernEmailTemplate({
           
           .message-card {
             padding: 25px 20px !important;
-            font-size: 15px !important;
+            font-size: 14px !important;
             line-height: 1.6;
           }
           
           .message-card p {
-            font-size: 15px !important;
+            font-size: 14px !important;
             line-height: 1.6;
           }
           
@@ -467,14 +527,16 @@ function getModernEmailTemplate({
             font-size: 14px !important;
           }
           
-          .social-icon {
-            width: 36px !important;
-            height: 36px !important;
+          .social-link a {
+            padding: 4.2px 8.4px !important;
+            font-size: 9.1px !important;
+            transform: scale(0.7);
+            transform-origin: center;
+            margin: -3px;
           }
           
-          .social-icon svg {
-            width: 18px !important;
-            height: 18px !important;
+          .social-links {
+            gap: 7px !important;
           }
           
           .footer {
@@ -495,6 +557,18 @@ function getModernEmailTemplate({
         }
         
         @media only screen and (min-width: 481px) and (max-width: 600px) {
+          .social-link a {
+            padding: 5.6px 11.2px !important;
+            font-size: 9.8px !important;
+            transform: scale(0.7);
+            transform-origin: center;
+            margin: -3px;
+          }
+          
+          .social-links {
+            gap: 10.5px !important;
+          }
+          
           .contact-grid {
             flex-direction: row;
             flex-wrap: wrap;
@@ -507,6 +581,15 @@ function getModernEmailTemplate({
         }
         
         @media only screen and (min-width: 601px) {
+          .social-link a {
+            padding: 5.6px 11.2px !important;
+            font-size: 9.8px !important;
+          }
+          
+          .social-links {
+            gap: 14px !important;
+          }
+          
           .contact-grid {
             flex-direction: row;
             justify-content: center;
@@ -527,7 +610,7 @@ function getModernEmailTemplate({
             max-width: 100% !important;
           }
           
-          .social-icons {
+          .social-links {
             display: none !important;
           }
         }
@@ -585,8 +668,6 @@ function getModernEmailTemplate({
             ${safeContent}
           </div>
           
-          
-          
           <!-- Sender Info -->
           <div class="sender-info">
             <p class="sender-name">Best Regards,</p>
@@ -607,44 +688,32 @@ function getModernEmailTemplate({
           <p class="footer-location">${SCHOOL_LOCATION}</p>
           <p class="footer-motto">"${SCHOOL_MOTTO}"</p>
           
-          <!-- Social Media Icons - FIXED -->
-          <div class="social-icons">
-            <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" class="social-icon social-facebook" title="Follow us on Facebook">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-            </a>
+          <!-- Social Media Links - TEXT ONLY VERSION -->
+          <ul class="social-links">
+            <li class="social-link social-facebook">
+              <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" title="Follow us on Facebook">
+                Facebook
+              </a>
+            </li>
             
-            <a href="${SOCIAL_MEDIA.instagram.url}" target="_blank" class="social-icon social-instagram" title="Follow us on Instagram">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069z"/>
-              </svg>
-            </a>
+            <li class="social-link social-youtube">
+              <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" title="Subscribe on YouTube">
+                YouTube
+              </a>
+            </li>
             
-            <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" class="social-icon social-youtube" title="Subscribe on YouTube">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816z"/>
-              </svg>
-            </a>
+            <li class="social-link social-linkedin">
+              <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" title="Connect on LinkedIn">
+                LinkedIn
+              </a>
+            </li>
             
-            <a href="${SOCIAL_MEDIA.tiktok.url}" target="_blank" class="social-icon social-tiktok" title="Follow us on TikTok">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-              </svg>
-            </a>
-            
-            <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" class="social-icon social-linkedin" title="Connect on LinkedIn">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-              </svg>
-            </a>
-            
-            <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" class="social-icon social-twitter" title="Follow us on Twitter">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.99 0 007.557 2.213c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-              </svg>
-            </a>
-          </div>
+            <li class="social-link social-twitter">
+              <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" title="Follow us on Twitter">
+                X (Twitter)
+              </a>
+            </li>
+          </ul>
           
           <!-- Copyright -->
           <div class="copyright">
@@ -657,6 +726,68 @@ function getModernEmailTemplate({
     </html>
   `;
 }
+function getFileIcon(fileType) {
+  const icons = {
+    'pdf': '📄',
+    'doc': '📝',
+    'docx': '📝',
+    'xls': '📊',
+    'xlsx': '📊',
+    'ppt': '📽️',
+    'pptx': '📽️',
+    'jpg': '🖼️',
+    'jpeg': '🖼️',
+    'png': '🖼️',
+    'gif': '🖼️',
+    'txt': '📃',
+    'zip': '🗜️',
+    'rar': '🗜️',
+    'mp3': '🎵',
+    'mp4': '🎬',
+    'avi': '🎬',
+    'mov': '🎬'
+  };
+  
+  const ext = fileType.toLowerCase();
+  return icons[ext] || '📎';
+}
+
+function generateAttachmentHTML(attachments) {
+  if (!attachments || attachments.length === 0) return '';
+  
+  try {
+    const attachmentsArray = JSON.parse(attachments);
+    if (!Array.isArray(attachmentsArray) || attachmentsArray.length === 0) return '';
+    
+    return `
+      <div class="attachments-section">
+        <h3 class="attachments-title">📎 Attachments</h3>
+        <ul class="attachments-list">
+          ${attachmentsArray.map(attachment => `
+            <li class="attachment-item">
+              <span class="attachment-icon">${getFileIcon(attachment.fileType)}</span>
+              <span class="attachment-name">
+                ${attachment.originalName || attachment.filename}
+                ${attachment.fileSize ? `<br><small>${formatFileSize(attachment.fileSize)}</small>` : ''}
+              </span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  } catch (error) {
+    console.error('Error parsing attachments:', error);
+    return '';
+  }
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 async function sendModernEmails(campaign) {
   const startTime = Date.now();
@@ -667,15 +798,46 @@ async function sendModernEmails(campaign) {
   const sentRecipients = [];
   const failedRecipients = [];
   
+  // Parse attachments
+  let attachmentsArray = [];
+  try {
+    if (campaign.attachments) {
+      attachmentsArray = JSON.parse(campaign.attachments);
+    }
+  } catch (error) {
+    console.error('Error parsing attachments:', error);
+  }
+  
+  // Prepare email attachments for nodemailer
+  const emailAttachments = attachmentsArray.map(attachment => {
+    const filePath = path.join(ATTACHMENTS_DIR, attachment.filename);
+    return {
+      filename: attachment.originalName || attachment.filename,
+      path: filePath,
+      contentType: getContentType(attachment.fileType)
+    };
+  });
+
   // Optimized sequential processing
   for (const recipient of recipients) {
     try {
-      const htmlContent = getModernEmailTemplate({
+      // Generate email content with attachments section
+      let htmlContent = getModernEmailTemplate({
         subject: campaign.subject,
         content: campaign.content,
         senderName: 'School Administration',
         recipientType: recipientType
       });
+
+      // Add attachments section if there are attachments
+      if (campaign.attachments) {
+        const attachmentsSection = generateAttachmentHTML(campaign.attachments);
+        // Insert attachments section before sender info
+        htmlContent = htmlContent.replace(
+          '<!-- Sender Info -->',
+          `${attachmentsSection}\n<!-- Sender Info -->`
+        );
+      }
 
       const mailOptions = {
         from: `"${SCHOOL_NAME} Administration" <${process.env.EMAIL_USER}>`,
@@ -683,6 +845,7 @@ async function sendModernEmails(campaign) {
         subject: `${campaign.subject} • ${SCHOOL_NAME}`,
         html: htmlContent,
         text: campaign.content.replace(/<[^>]*>/g, ''),
+        attachments: emailAttachments,
         headers: {
           'X-Priority': '1',
           'X-MSMail-Priority': 'High',
@@ -748,142 +911,411 @@ async function sendModernEmails(campaign) {
   };
 }
 
+function getContentType(fileType) {
+  const mimeTypes = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'txt': 'text/plain',
+    'zip': 'application/zip',
+    'rar': 'application/x-rar-compressed',
+    'mp3': 'audio/mpeg',
+    'mp4': 'video/mp4'
+  };
+  
+  return mimeTypes[fileType.toLowerCase()] || 'application/octet-stream';
+}
+
+// Helper to validate email addresses
+function validateEmailList(emailList) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validEmails = [];
+  const invalidEmails = [];
+  
+  emailList.forEach(email => {
+    if (emailRegex.test(email.trim())) {
+      validEmails.push(email.trim());
+    } else {
+      invalidEmails.push(email);
+    }
+  });
+  
+  return { validEmails, invalidEmails };
+}
+
+// Helper to save uploaded file
+async function saveUploadedFile(file) {
+  if (!file || file.size === 0) return null;
+  
+  const originalName = file.name;
+  const fileExtension = path.extname(originalName).toLowerCase();
+  const uniqueFilename = `${uuidv4()}${fileExtension}`;
+  const filePath = path.join(ATTACHMENTS_DIR, uniqueFilename);
+  
+  // Convert file to buffer and save
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  fs.writeFileSync(filePath, buffer);
+  
+  return {
+    filename: uniqueFilename,
+    originalName: originalName,
+    fileType: fileExtension.replace('.', ''),
+    fileSize: file.size,
+    uploadedAt: new Date().toISOString()
+  };
+}
+
+// Validate attachment size before saving
+function validateAttachmentSize(attachmentsArray) {
+  const MAX_ATTACHMENTS_SIZE = 50000; // 50KB max for metadata
+  
+  const jsonString = JSON.stringify(attachmentsArray);
+  if (jsonString.length > MAX_ATTACHMENTS_SIZE) {
+    throw new Error(`Attachments metadata is too large (${jsonString.length} bytes). Maximum allowed is ${MAX_ATTACHMENTS_SIZE} bytes.`);
+  }
+  return true;
+}
+
 // ====================================================================
 // API HANDLERS
 // ====================================================================
 
-// 🔹 POST - Create a new email campaign
+// 🔹 POST - Create a new email campaign with FormData
 export async function POST(req) {
   let campaign = null;
   
   try {
-    const { title, subject, content, recipients, status = "draft", recipientType = "all" } = await req.json();
-
-    // Validate required fields
-    if (!title || !subject || !content || !recipients) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "All fields are required: title, subject, content, and recipients" 
-      }, { status: 400 });
-    }
-
-    // Validate content length
-    const MAX_CONTENT_LENGTH = 65535;
-    if (content.length > MAX_CONTENT_LENGTH) {
-      return NextResponse.json({ 
-        success: false, 
-        error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
-        currentLength: content.length
-      }, { status: 400 });
-    }
-
-    // Validate recipients format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
+    // Check if request is FormData (for file uploads)
+    const contentType = req.headers.get('content-type') || '';
     
-    if (emailList.length === 0) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "At least one valid email address is required" 
-      }, { status: 400 });
-    }
-    
-    const invalidEmails = emailList.filter(email => !emailRegex.test(email));
-    
-    if (invalidEmails.length > 0) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid email addresses detected",
-        invalidEmails 
-      }, { status: 400 });
-    }
-
-    // Deduplicate emails
-    const uniqueEmails = [...new Set(emailList)];
-    
-    // Create campaign in database
-    campaign = await prisma.emailCampaign.create({
-      data: { 
-        title, 
-        subject, 
-        content, 
-        recipients: uniqueEmails.join(', '),
-        recipientType,
-        status: status || "draft",
-      },
-    });
-
-    let emailResults = null;
-    
-    // Send emails immediately if published
-    if (status === "published") {
-      try {
-        emailResults = await sendModernEmails(campaign);
-      } catch (emailError) {
-        console.error(`Email sending failed:`, emailError);
-        
-        // Update campaign to reflect failure
-        await prisma.emailCampaign.update({
-          where: { id: campaign.id },
-          data: { 
-            failedCount: uniqueEmails.length,
-            status: 'draft',
-          },
-        });
-        
-        emailResults = {
-          error: emailError.message,
-          sentRecipients: [],
-          failedRecipients: uniqueEmails.map(email => ({ 
-            recipient: email, 
-            error: emailError.message 
-          })),
-          summary: {
-            total: uniqueEmails.length,
-            successful: 0,
-            failed: uniqueEmails.length,
-            successRate: 0
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData with file uploads
+      const formData = await req.formData();
+      
+      // Extract text fields
+      const title = formData.get('title')?.toString() || '';
+      const subject = formData.get('subject')?.toString() || '';
+      const content = formData.get('content')?.toString() || '';
+      const recipients = formData.get('recipients')?.toString() || '';
+      const status = formData.get('status')?.toString() || 'draft';
+      const recipientType = formData.get('recipientType')?.toString() || 'all';
+      const existingAttachmentsJson = formData.get('existingAttachments')?.toString();
+      
+      // Parse existing attachments if provided
+      let existingAttachments = [];
+      if (existingAttachmentsJson) {
+        try {
+          existingAttachments = JSON.parse(existingAttachmentsJson);
+        } catch (error) {
+          console.error('Error parsing existing attachments:', error);
+        }
+      }
+      
+      // Process new file uploads
+      const newAttachments = [];
+      const attachmentFiles = formData.getAll('attachments');
+      
+      for (const file of attachmentFiles) {
+        if (file && file.size > 0) {
+          const savedFile = await saveUploadedFile(file);
+          if (savedFile) {
+            newAttachments.push(savedFile);
           }
-        };
+        }
       }
+      
+      // Combine existing and new attachments
+      const allAttachments = [...existingAttachments, ...newAttachments];
+      
+      // Validate attachment size
+      if (allAttachments.length > 0) {
+        validateAttachmentSize(allAttachments);
+      }
+      
+      // Validate required fields
+      if (!title || !subject || !content || !recipients) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "All fields are required: title, subject, content, and recipients" 
+        }, { status: 400 });
+      }
+      
+      // Validate content length
+      const MAX_CONTENT_LENGTH = 65535;
+      if (content.length > MAX_CONTENT_LENGTH) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
+          currentLength: content.length
+        }, { status: 400 });
+      }
+      
+      // Validate recipients
+      const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
+      if (emailList.length === 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "At least one valid email address is required" 
+        }, { status: 400 });
+      }
+      
+      const { validEmails, invalidEmails } = validateEmailList(emailList);
+      if (invalidEmails.length > 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Invalid email addresses detected",
+          invalidEmails 
+        }, { status: 400 });
+      }
+      
+      // Deduplicate emails
+      const uniqueEmails = [...new Set(validEmails)];
+      
+      // Optimize attachment data to reduce size
+      const optimizedAttachments = allAttachments.map(attachment => ({
+        filename: attachment.filename,
+        originalName: attachment.originalName,
+        fileType: attachment.fileType,
+        fileSize: attachment.fileSize,
+        uploadedAt: attachment.uploadedAt
+      }));
+      
+      // Create campaign in database
+      campaign = await prisma.emailCampaign.create({
+        data: { 
+          title, 
+          subject, 
+          content, 
+          recipients: uniqueEmails.join(', '),
+          recipientType,
+          status,
+          attachments: optimizedAttachments.length > 0 ? JSON.stringify(optimizedAttachments) : null,
+          ...(status === 'published' && { sentAt: new Date() })
+        },
+      });
+      
+      let emailResults = null;
+      
+      // Send emails immediately if published
+      if (status === "published") {
+        try {
+          emailResults = await sendModernEmails(campaign);
+          
+          // Update campaign with email results
+          await prisma.emailCampaign.update({
+            where: { id: campaign.id },
+            data: { 
+              sentCount: emailResults.summary.successful,
+              failedCount: emailResults.summary.failed
+            },
+          });
+        } catch (emailError) {
+          console.error(`Email sending failed:`, emailError);
+          
+          // Update campaign to reflect failure
+          await prisma.emailCampaign.update({
+            where: { id: campaign.id },
+            data: { 
+              failedCount: uniqueEmails.length,
+              status: 'draft',
+            },
+          });
+          
+          emailResults = {
+            error: emailError.message,
+            sentRecipients: [],
+            failedRecipients: uniqueEmails.map(email => ({ 
+              recipient: email, 
+              error: emailError.message 
+            })),
+            summary: {
+              total: uniqueEmails.length,
+              successful: 0,
+              failed: uniqueEmails.length,
+              successRate: 0
+            }
+          };
+        }
+      }
+      
+      // Format response
+      const responseData = {
+        id: campaign.id,
+        title: campaign.title,
+        subject: campaign.subject,
+        content: campaign.content,
+        recipients: campaign.recipients,
+        recipientCount: uniqueEmails.length,
+        recipientType: campaign.recipientType || 'all',
+        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
+        status: campaign.status,
+        sentAt: campaign.sentAt,
+        sentCount: campaign.sentCount,
+        failedCount: campaign.failedCount,
+        attachments: optimizedAttachments,
+        createdAt: campaign.createdAt,
+        updatedAt: campaign.updatedAt,
+      };
+      
+      const response = {
+        success: true, 
+        campaign: responseData,
+        emailResults,
+        message: status === "published" 
+          ? `Campaign created and ${emailResults?.summary?.successful || 0} emails sent successfully` 
+          : `Campaign saved as draft successfully`
+      };
+      
+      return NextResponse.json(response, { 
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
+      
+    } else {
+      // Handle JSON request (for backwards compatibility)
+      const { title, subject, content, recipients, status = "draft", recipientType = "all", attachments = null } = await req.json();
+      
+      // Validate required fields
+      if (!title || !subject || !content || !recipients) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "All fields are required: title, subject, content, and recipients" 
+        }, { status: 400 });
+      }
+      
+      // Validate content length
+      const MAX_CONTENT_LENGTH = 65535;
+      if (content.length > MAX_CONTENT_LENGTH) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
+          currentLength: content.length
+        }, { status: 400 });
+      }
+      
+      // Validate recipients format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
+      
+      if (emailList.length === 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "At least one valid email address is required" 
+        }, { status: 400 });
+      }
+      
+      const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+      
+      if (invalidEmails.length > 0) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Invalid email addresses detected",
+          invalidEmails 
+        }, { status: 400 });
+      }
+      
+      // Deduplicate emails
+      const uniqueEmails = [...new Set(emailList)];
+      
+      // Create campaign in database
+      campaign = await prisma.emailCampaign.create({
+        data: { 
+          title, 
+          subject, 
+          content, 
+          recipients: uniqueEmails.join(', '),
+          recipientType,
+          status: status || "draft",
+          attachments: attachments,
+        },
+      });
+      
+      let emailResults = null;
+      
+      // Send emails immediately if published
+      if (status === "published") {
+        try {
+          emailResults = await sendModernEmails(campaign);
+        } catch (emailError) {
+          console.error(`Email sending failed:`, emailError);
+          
+          // Update campaign to reflect failure
+          await prisma.emailCampaign.update({
+            where: { id: campaign.id },
+            data: { 
+              failedCount: uniqueEmails.length,
+              status: 'draft',
+            },
+          });
+          
+          emailResults = {
+            error: emailError.message,
+            sentRecipients: [],
+            failedRecipients: uniqueEmails.map(email => ({ 
+              recipient: email, 
+              error: emailError.message 
+            })),
+            summary: {
+              total: uniqueEmails.length,
+              successful: 0,
+              failed: uniqueEmails.length,
+              successRate: 0
+            }
+          };
+        }
+      }
+      
+      // Format response
+      const responseData = {
+        id: campaign.id,
+        title: campaign.title,
+        subject: campaign.subject,
+        content: campaign.content.substring(0, 200) + (campaign.content.length > 200 ? '...' : ''),
+        recipients: campaign.recipients,
+        recipientCount: uniqueEmails.length,
+        recipientType: campaign.recipientType || 'all',
+        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
+        status: campaign.status,
+        sentAt: campaign.sentAt,
+        sentCount: campaign.sentCount,
+        failedCount: campaign.failedCount,
+        attachments: campaign.attachments ? JSON.parse(campaign.attachments) : [],
+        createdAt: campaign.createdAt,
+        updatedAt: campaign.updatedAt,
+      };
+      
+      const response = {
+        success: true, 
+        campaign: responseData,
+        emailResults,
+        message: status === "published" 
+          ? `Campaign created and ${emailResults?.summary?.successful || 0} emails sent successfully` 
+          : `Campaign saved as draft successfully`
+      };
+      
+      return NextResponse.json(response, { 
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        }
+      });
     }
-
-    // Format response
-    const responseData = {
-      id: campaign.id,
-      title: campaign.title,
-      subject: campaign.subject,
-      content: campaign.content.substring(0, 200) + (campaign.content.length > 200 ? '...' : ''),
-      recipients: campaign.recipients,
-      recipientCount: uniqueEmails.length,
-      recipientType: campaign.recipientType || 'all',
-      recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-      status: campaign.status,
-      sentAt: campaign.sentAt,
-      sentCount: campaign.sentCount,
-      failedCount: campaign.failedCount,
-      createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt,
-    };
-
-    const response = {
-      success: true, 
-      campaign: responseData,
-      emailResults,
-      message: status === "published" 
-        ? `Campaign created and ${emailResults?.summary?.successful || 0} emails sent successfully` 
-        : `Campaign saved as draft successfully`
-    };
-
-    return NextResponse.json(response, { 
-      status: 201,
-      headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      }
-    });
-
+    
   } catch (error) {
     console.error(`POST Error:`, error);
     
@@ -892,17 +1324,18 @@ export async function POST(req) {
     
     if (error.code === 'P2000') {
       statusCode = 400;
-      errorMessage = "Data too long for database column. Please shorten your content.";
+      errorMessage = "Data too long for database column. Please shorten your content or attachments metadata.";
     } else if (error.code === 'P2002') {
       statusCode = 409;
       errorMessage = "A campaign with similar data already exists";
     } else if (error.code === 'P2021' || error.code === 'P1001') {
       errorMessage = "Database connection error. Please try again later.";
     }
-
+    
     return NextResponse.json({ 
       success: false, 
-      error: errorMessage
+      error: errorMessage,
+      details: error.message
     }, { status: statusCode });
   }
 }
@@ -957,6 +1390,7 @@ export async function GET(req) {
           sentAt: true,
           sentCount: true,
           failedCount: true,
+          attachments: true,
           createdAt: true,
           updatedAt: true,
         }
@@ -967,6 +1401,16 @@ export async function GET(req) {
     const formattedCampaigns = campaigns.map(campaign => {
       const recipientCount = campaign.recipients.split(',').length;
       const recipientType = campaign.recipientType || 'all';
+      
+      // Parse attachments
+      let attachments = [];
+      try {
+        if (campaign.attachments) {
+          attachments = JSON.parse(campaign.attachments);
+        }
+      } catch (error) {
+        console.error('Error parsing attachments:', error);
+      }
       
       return {
         id: campaign.id,
@@ -983,6 +1427,8 @@ export async function GET(req) {
         sentAt: campaign.sentAt,
         sentCount: campaign.sentCount,
         failedCount: campaign.failedCount,
+        attachments,
+        hasAttachments: attachments.length > 0,
         createdAt: campaign.createdAt,
         updatedAt: campaign.updatedAt,
         successRate: campaign.sentCount && recipientCount > 0 
@@ -999,6 +1445,7 @@ export async function GET(req) {
       totalRecipients: formattedCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
       draftCampaigns: formattedCampaigns.filter(c => c.status === 'draft').length,
       publishedCampaigns: formattedCampaigns.filter(c => c.status === 'published').length,
+      campaignsWithAttachments: formattedCampaigns.filter(c => c.hasAttachments).length,
       averageSuccessRate: formattedCampaigns.length > 0
         ? Math.round(formattedCampaigns.reduce((sum, c) => sum + c.successRate, 0) / formattedCampaigns.length)
         : 0
@@ -1024,7 +1471,7 @@ export async function GET(req) {
         'CDN-Cache-Control': 'public, max-age=60',
       }
     });
-
+    
   } catch (error) {
     console.error(`GET Error:`, error);
     
@@ -1032,5 +1479,301 @@ export async function GET(req) {
       success: false, 
       error: error.message || "Failed to retrieve campaigns"
     }, { status: 500 });
+  }
+}
+
+// 🔹 PUT - Update an existing campaign
+export async function PUT(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
+    }
+    
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData update with file uploads
+      const formData = await req.formData();
+      
+      // Extract text fields
+      const title = formData.get('title')?.toString();
+      const subject = formData.get('subject')?.toString();
+      const content = formData.get('content')?.toString();
+      const recipients = formData.get('recipients')?.toString();
+      const status = formData.get('status')?.toString();
+      const recipientType = formData.get('recipientType')?.toString();
+      const existingAttachmentsJson = formData.get('existingAttachments')?.toString();
+      
+      // Parse existing attachments if provided
+      let existingAttachments = [];
+      if (existingAttachmentsJson) {
+        try {
+          existingAttachments = JSON.parse(existingAttachmentsJson);
+        } catch (error) {
+          console.error('Error parsing existing attachments:', error);
+        }
+      }
+      
+      // Process new file uploads
+      const newAttachments = [];
+      const attachmentFiles = formData.getAll('attachments');
+      
+      for (const file of attachmentFiles) {
+        if (file && file.size > 0) {
+          const savedFile = await saveUploadedFile(file);
+          if (savedFile) {
+            newAttachments.push(savedFile);
+          }
+        }
+      }
+      
+      // Combine existing and new attachments
+      const allAttachments = [...existingAttachments, ...newAttachments];
+      
+      // Validate attachment size
+      if (allAttachments.length > 0) {
+        validateAttachmentSize(allAttachments);
+      }
+      
+      // Build update data
+      const updateData = {};
+      
+      if (title !== undefined) updateData.title = title;
+      if (subject !== undefined) updateData.subject = subject;
+      if (content !== undefined) {
+        // Validate content length
+        const MAX_CONTENT_LENGTH = 65535;
+        if (content.length > MAX_CONTENT_LENGTH) {
+          return NextResponse.json({ 
+            success: false, 
+            error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
+            currentLength: content.length
+          }, { status: 400 });
+        }
+        updateData.content = content;
+      }
+      if (recipients !== undefined) {
+        // Validate recipients
+        const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
+        if (emailList.length === 0) {
+          return NextResponse.json({ 
+            success: false, 
+            error: "At least one valid email address is required" 
+          }, { status: 400 });
+        }
+        
+        const { validEmails, invalidEmails } = validateEmailList(emailList);
+        if (invalidEmails.length > 0) {
+          return NextResponse.json({ 
+            success: false, 
+            error: "Invalid email addresses detected",
+            invalidEmails 
+          }, { status: 400 });
+        }
+        
+        const uniqueEmails = [...new Set(validEmails)];
+        updateData.recipients = uniqueEmails.join(', ');
+      }
+      if (recipientType !== undefined) updateData.recipientType = recipientType;
+      if (status !== undefined) updateData.status = status;
+      
+      // Optimize and add attachments
+      if (allAttachments.length > 0) {
+        const optimizedAttachments = allAttachments.map(attachment => ({
+          filename: attachment.filename,
+          originalName: attachment.originalName,
+          fileType: attachment.fileType,
+          fileSize: attachment.fileSize,
+          uploadedAt: attachment.uploadedAt
+        }));
+        updateData.attachments = JSON.stringify(optimizedAttachments);
+      } else {
+        updateData.attachments = null;
+      }
+      
+      // Update campaign in database
+      const updatedCampaign = await prisma.emailCampaign.update({
+        where: { id },
+        data: updateData,
+      });
+      
+      // Send emails if status changed to published
+      let emailResults = null;
+      if (status === 'published' && updateData.recipients) {
+        try {
+          emailResults = await sendModernEmails(updatedCampaign);
+        } catch (emailError) {
+          console.error(`Email sending failed:`, emailError);
+          emailResults = {
+            error: emailError.message,
+            summary: {
+              successful: 0,
+              failed: updatedCampaign.recipients.split(',').length
+            }
+          };
+        }
+      }
+      
+      const response = {
+        success: true,
+        campaign: updatedCampaign,
+        emailResults,
+        message: status === 'published' 
+          ? `Campaign updated and ${emailResults?.summary?.successful || 0} emails sent successfully`
+          : 'Campaign updated successfully'
+      };
+      
+      return NextResponse.json(response);
+      
+    } else {
+      // Handle JSON update
+      const data = await req.json();
+      const { id: bodyId, ...updateData } = data;
+      
+      const campaignId = id || bodyId;
+      
+      if (!campaignId) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Campaign ID is required" 
+        }, { status: 400 });
+      }
+      
+      // Validate content length if provided
+      if (updateData.content && updateData.content.length > 65535) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Content is too long. Maximum 65535 characters allowed." 
+        }, { status: 400 });
+      }
+      
+      // Validate recipients if provided
+      if (updateData.recipients) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailList = updateData.recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
+        
+        if (emailList.length === 0) {
+          return NextResponse.json({ 
+            success: false, 
+            error: "At least one valid email address is required" 
+          }, { status: 400 });
+        }
+        
+        const invalidEmails = emailList.filter(email => !emailRegex.test(email));
+        
+        if (invalidEmails.length > 0) {
+          return NextResponse.json({ 
+            success: false, 
+            error: "Invalid email addresses detected",
+            invalidEmails 
+          }, { status: 400 });
+        }
+        
+        // Deduplicate emails
+        const uniqueEmails = [...new Set(emailList)];
+        updateData.recipients = uniqueEmails.join(', ');
+      }
+      
+      // Update campaign
+      const updatedCampaign = await prisma.emailCampaign.update({
+        where: { id: campaignId },
+        data: updateData,
+      });
+      
+      const response = {
+        success: true,
+        campaign: updatedCampaign,
+        message: 'Campaign updated successfully'
+      };
+      
+      return NextResponse.json(response);
+    }
+    
+  } catch (error) {
+    console.error(`PUT Error:`, error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message || "Failed to update campaign";
+    
+    if (error.code === 'P2000') {
+      statusCode = 400;
+      errorMessage = "Data too long for database column. Please shorten your content.";
+    } else if (error.code === 'P2025') {
+      statusCode = 404;
+      errorMessage = "Campaign not found";
+    }
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: errorMessage
+    }, { status: statusCode });
+  }
+}
+
+// 🔹 DELETE - Delete a campaign
+export async function DELETE(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
+    }
+    
+    // First, get the campaign to check for attachments
+    const campaign = await prisma.emailCampaign.findUnique({
+      where: { id },
+      select: { attachments: true }
+    });
+    
+    // Delete physical attachment files if they exist
+    if (campaign?.attachments) {
+      try {
+        const attachments = JSON.parse(campaign.attachments);
+        for (const attachment of attachments) {
+          const filePath = path.join(ATTACHMENTS_DIR, attachment.filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting attachment files:', error);
+      }
+    }
+    
+    // Delete campaign from database
+    await prisma.emailCampaign.delete({
+      where: { id },
+    });
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Campaign deleted successfully' 
+    });
+    
+  } catch (error) {
+    console.error(`DELETE Error:`, error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message || "Failed to delete campaign";
+    
+    if (error.code === 'P2025') {
+      statusCode = 404;
+      errorMessage = "Campaign not found";
+    }
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: errorMessage
+    }, { status: statusCode });
   }
 }

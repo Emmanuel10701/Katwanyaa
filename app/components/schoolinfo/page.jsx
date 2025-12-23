@@ -2403,7 +2403,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6 border border-indigo-200">
                       <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaGraduationCap className="text-indigo-600" />
-                        Other Exam Results
+                        Other Important  Documents
                       </h3>
                       
                       <div className="space-y-4">

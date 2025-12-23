@@ -108,6 +108,234 @@ const modernScrollbarStyles = `
   }
 `;
 
+// Helper Functions
+const getFileIcon = (fileType) => {
+  const icons = {
+    'pdf': '📄',
+    'doc': '📝',
+    'docx': '📝',
+    'xls': '📊',
+    'xlsx': '📊',
+    'ppt': '📽️',
+    'pptx': '📽️',
+    'jpg': '🖼️',
+    'jpeg': '🖼️',
+    'png': '🖼️',
+    'gif': '🖼️',
+    'txt': '📃',
+    'zip': '🗜️',
+    'rar': '🗜️',
+    'mp3': '🎵',
+    'mp4': '🎬',
+    'avi': '🎬',
+    'mov': '🎬'
+  };
+  
+  const ext = (fileType || '').toLowerCase();
+  return icons[ext] || '📎';
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes) return '';
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Add this helper function at the top of the file, after the other helper functions:
+const parseCampaignAttachments = (attachmentsString) => {
+  if (!attachmentsString) {
+    return [];
+  }
+  
+  if (Array.isArray(attachmentsString)) {
+    return attachmentsString;
+  }
+  
+  if (typeof attachmentsString === 'string') {
+    if (attachmentsString.trim() === '' || attachmentsString === 'null' || attachmentsString === 'undefined') {
+      return [];
+    }
+    
+    try {
+      const parsed = JSON.parse(attachmentsString);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error('Error parsing attachments:', error, 'String:', attachmentsString);
+      return [];
+    }
+  }
+  
+  // For any other type, return empty array
+  return [];
+};
+
+// Upload Attachments Component - REFINED
+const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments = [] }) => {
+  const [files, setFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const validFiles = selectedFiles.filter(file => 
+      file.size <= 10 * 1024 * 1024 // 10MB limit
+    );
+    
+    if (validFiles.length !== selectedFiles.length) {
+      toast.error('Some files exceed 10MB limit');
+    }
+    
+    setFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    // Pass selected files back to parent component
+    onFilesSelected(files);
+    onClose();
+    setFiles([]);
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <FileUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Add Attachments</h2>
+                <p className="text-blue-100/80 text-sm">Files will be uploaded with your campaign</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
+          {/* Upload Area */}
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
+          >
+            <div className="mb-4">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">Drop files here or click to upload</h3>
+            <p className="text-gray-600 mb-4">Maximum file size: 10MB per file</p>
+            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium">
+              Select Files
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
+
+          {/* Existing Attachments Preview */}
+          {existingAttachments.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-bold text-gray-900 mb-3">Current Attachments</h3>
+              <div className="space-y-2">
+                {existingAttachments.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg border border-gray-200/60">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{getFileIcon(file.fileType)}</span>
+                      <div>
+                        <p className="font-medium text-gray-900">{file.originalName || file.filename}</p>
+                        <p className="text-sm text-gray-600">
+                          {file.fileType?.toUpperCase()} • {formatFileSize(file.fileSize)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+                      Already attached
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* New Files to Add */}
+          {files.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-bold text-gray-900 mb-3">Files to Add ({files.length})</h3>
+              <div className="space-y-2">
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50/50 to-cyan-50/50 rounded-lg border border-blue-200/60">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{getFileIcon(file.name.split('.').pop())}</span>
+                      <div>
+                        <p className="font-medium text-gray-900">{file.name}</p>
+                        <p className="text-sm text-gray-600">
+                          {formatFileSize(file.size)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="p-1.5 text-gray-400 hover:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-100">
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                onClose();
+                setFiles([]);
+              }}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={uploading}
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium disabled:opacity-50"
+            >
+              {uploading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </span>
+              ) : (
+                'Add Files'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Confirmation Modal Component
 const ConfirmationModal = ({ 
   open, 
@@ -153,7 +381,7 @@ const ConfirmationModal = ({
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  sending...
+                  Sending...
                 </span>
               ) : confirmText}
             </button>
@@ -164,7 +392,7 @@ const ConfirmationModal = ({
   );
 };
 
-// Modern Modal Component with modern scrollbar
+// Modern Modal Component
 const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
   if (!open) return null;
 
@@ -186,7 +414,7 @@ const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
   );
 };
 
-// Modern Campaign Card Component
+// Update the CampaignCard component:
 const CampaignCard = ({ 
   campaign, 
   isSelected, 
@@ -198,7 +426,9 @@ const CampaignCard = ({
   loadingStates
 }) => {
   const recipientCount = campaign.recipients ? campaign.recipients.split(',').length : 0;
-  
+  const attachments = parseCampaignAttachments(campaign.attachments);
+  const hasAttachments = attachments.length > 0;
+
   const getStatusBadge = (status) => {
     if (status === 'published') {
       return (
@@ -271,155 +501,211 @@ const CampaignCard = ({
               )}
             </button>
           </div>
-{/* Campaign Content */}
-<div className="flex-1 min-w-0">
-  <div className="flex items-start justify-between mb-3">
-    <div className="min-w-0">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
-          <Mail className="text-white w-4 h-4" />
+
+          {/* Campaign Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between mb-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Mail className="text-white w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 truncate text-base bg-gradient-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent">
+                    {campaign.title || 'Untitled Campaign'}
+                  </h4>
+                </div>
+                <p className="text-base text-gray-700 mb-3 truncate">
+                  Subject: <span className="font-medium text-gray-900">{campaign.subject || 'No subject'}</span>
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                {getStatusBadge(campaign.status)}
+              </div>
+            </div>
+
+            {/* Stats and Info */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 font-medium">Recipients:</span>
+                <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-full text-sm font-bold border border-blue-100">
+                  {recipientCount}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 font-medium">Group:</span>
+                {getRecipientGroupBadge(campaign.recipientType)}
+              </div>
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-gray-500" />
+                <span className="text-sm text-gray-700 font-medium">
+                  {formatDate(campaign.sentAt || campaign.createdAt)}
+                </span>
+              </div>
+            </div>
+
+            {/* Attachment Indicator */}
+            {hasAttachments && (
+              <div className="mb-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-50/80 to-cyan-50/80 backdrop-blur-sm rounded-lg border border-blue-200/50">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800">
+                    {attachments.length} attachment(s)
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Content Preview */}
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                {campaign.content?.substring(0, 150)}...
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => onView(campaign)}
+                  className="
+                    inline-flex items-center gap-2
+                    px-4 py-2 text-sm
+                    text-blue-700
+                    bg-blue-50
+                    border border-blue-200
+                    rounded-xl
+                    shadow-sm
+                    hover:bg-blue-100
+                    hover:border-blue-300
+                    hover:text-blue-800
+                    transition-all duration-200
+                    active:scale-98
+                    font-medium
+                  "
+                >
+                  <Eye className="w-4 h-4" />
+                  View Details
+                </button>
+
+                {campaign.status === 'draft' && (
+                  <button
+                    onClick={() => onEdit(campaign)}
+                    className="
+                      inline-flex items-center gap-2
+                      px-4 py-2 text-sm
+                      text-purple-700
+                      bg-purple-50
+                      border border-purple-200
+                      rounded-xl
+                      shadow-sm
+                      hover:bg-purple-100
+                      hover:border-purple-300
+                      hover:text-purple-800
+                      transition-all duration-200
+                      active:scale-98
+                      font-medium
+                    "
+                  >
+                    <Edit className="w-4 h-4" />
+                    Edit Campaign
+                  </button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {campaign.status === 'draft' && (
+                  <button
+                    onClick={() => onSend(campaign)}
+                    disabled={loadingStates.send}
+                    className="
+                      inline-flex items-center gap-2
+                      px-4 py-2 text-sm
+                      text-emerald-700
+                      bg-emerald-50
+                      border border-emerald-200
+                      rounded-xl
+                      shadow-sm
+                      hover:bg-emerald-100
+                      hover:border-emerald-300
+                      hover:text-emerald-800
+                      transition-all duration-200
+                      active:scale-98
+                      disabled:opacity-50 
+                      disabled:cursor-not-allowed
+                      font-medium
+                    "
+                  >
+                    <Send className="w-4 h-4" />
+                    Send Now
+                  </button>
+                )}
+                <button
+                  onClick={() => onDelete(campaign)}
+                  className="
+                    inline-flex items-center gap-2
+                    px-4 py-2 text-sm
+                    text-rose-700
+                    bg-rose-50
+                    border border-rose-200
+                    rounded-xl
+                    shadow-sm
+                    hover:bg-rose-100
+                    hover:border-rose-300
+                    hover:text-rose-800
+                    transition-all duration-200
+                    active:scale-98
+                    font-medium
+                  "
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <h4 className="font-bold text-gray-900 truncate text-base bg-gradient-to-r from-gray-900 to-gray-800 bg-clip-text text-transparent">
-          {campaign.title || 'Untitled Campaign'}
-        </h4>
       </div>
-      <p className="text-base text-gray-700 mb-3 truncate">
-        Subject: <span className="font-medium text-gray-900">{campaign.subject || 'No subject'}</span>
-      </p>
     </div>
-    <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-      {getStatusBadge(campaign.status)}
-    </div>
-  </div>
+  );
+};
 
-  {/* Stats and Info */}
-  <div className="grid grid-cols-3 gap-4 mb-4">
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600 font-medium">Recipients:</span>
-      <span className="inline-flex items-center justify-center w-7 h-7 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-700 rounded-full text-sm font-bold border border-blue-100">
-        {recipientCount}
-      </span>
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600 font-medium">Group:</span>
-      {getRecipientGroupBadge(campaign.recipientType)}
-    </div>
-    <div className="flex items-center gap-2">
-      <CalendarDays className="w-4 h-4 text-gray-500" />
-      <span className="text-sm text-gray-700 font-medium">
-        {formatDate(campaign.sentAt || campaign.createdAt)}
-      </span>
-    </div>
-  </div>
-
-  {/* Content Preview */}
-  <div className="mb-4">
-    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
-      {campaign.content?.substring(0, 150)}...
-    </p>
-  </div>
-
-  {/* Modernized Action Buttons - 20% larger, no hover scale */}
-  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-    <div className="flex items-center gap-3">
-      <button
-        onClick={() => onView(campaign)}
-        className="
-          inline-flex items-center gap-2
-          px-4 py-2 text-sm
-          text-blue-700
-          bg-blue-50
-          border border-blue-200
-          rounded-xl
-          shadow-sm
-          hover:bg-blue-100
-          hover:border-blue-300
-          hover:text-blue-800
-          transition-all duration-200
-          active:scale-98
-          font-medium
-        "
-      >
-        <Eye className="w-4 h-4" />
-        View Details
-      </button>
-
-      {campaign.status === 'draft' && (
-        <button
-          onClick={() => onEdit(campaign)}
-          className="
-            inline-flex items-center gap-2
-            px-4 py-2 text-sm
-            text-purple-700
-            bg-purple-50
-            border border-purple-200
-            rounded-xl
-            shadow-sm
-            hover:bg-purple-100
-            hover:border-purple-300
-            hover:text-purple-800
-            transition-all duration-200
-            active:scale-98
-            font-medium
-          "
-        >
-          <Edit className="w-4 h-4" />
-          Edit Campaign
-        </button>
-      )}
-    </div>
-    
-    <div className="flex items-center gap-3">
-      {campaign.status === 'draft' && (
-        <button
-          onClick={() => onSend(campaign)}
-          disabled={loadingStates.send}
-          className="
-            inline-flex items-center gap-2
-            px-4 py-2 text-sm
-            text-emerald-700
-            bg-emerald-50
-            border border-emerald-200
-            rounded-xl
-            shadow-sm
-            hover:bg-emerald-100
-            hover:border-emerald-300
-            hover:text-emerald-800
-            transition-all duration-200
-            active:scale-98
-            disabled:opacity-50 
-            disabled:cursor-not-allowed
-            font-medium
-          "
-        >
-          <Send className="w-4 h-4" />
-          Send Now
-        </button>
-      )}
-      <button
-        onClick={() => onDelete(campaign)}
-        className="
-          inline-flex items-center gap-2
-          px-4 py-2 text-sm
-          text-rose-700
-          bg-rose-50
-          border border-rose-200
-          rounded-xl
-          shadow-sm
-          hover:bg-rose-100
-          hover:border-rose-300
-          hover:text-rose-800
-          transition-all duration-200
-          active:scale-98
-          font-medium
-        "
-      >
-        <Trash2 className="w-4 h-4" />
-        Delete
-      </button>
-    </div>
-  </div>
-</div>
+// Create a reusable component instead
+const CampaignAttachmentsDisplay = ({ campaign }) => {
+  if (!campaign) return null;
+  
+  // Use the helper function to parse attachments
+  const attachments = parseCampaignAttachments(campaign.attachments);
+  if (attachments.length === 0) return null;
+  
+  return (
+    <div>
+      <h3 className="font-bold text-gray-900 mb-2">
+        Attachments ({attachments.length})
+      </h3>
+      <div className="bg-gray-50/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/60">
+        <div className="space-y-2">
+          {attachments.map((attachment, index) => (
+            <div key={index} className="flex items-center gap-3 p-3 bg-white/50 rounded-lg border border-gray-200/60">
+              <span className="text-2xl">
+                {getFileIcon(attachment.fileType)}
+              </span>
+              <div className="flex-1">
+                <p className="font-medium text-gray-900">{attachment.originalName || attachment.filename}</p>
+                <p className="text-sm text-gray-600">
+                  {attachment.fileType?.toUpperCase()} • {formatFileSize(attachment.fileSize)}
+                </p>
+              </div>
+              <a
+                href={`/emailattachments/${attachment.filename}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-blue-600 hover:text-blue-800"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </a>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -562,6 +848,7 @@ export default function ModernEmailCampaignsManager() {
   const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   
   // Modal States
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -591,6 +878,10 @@ export default function ModernEmailCampaignsManager() {
     recipients: []
   });
   
+  // Attachments State - UPDATED
+  const [campaignAttachments, setCampaignAttachments] = useState([]); // Existing attachments (from DB)
+  const [newAttachmentFiles, setNewAttachmentFiles] = useState([]); // New files to upload
+  
   // Loading States
   const [loadingStates, setLoadingStates] = useState({
     create: false,
@@ -609,18 +900,6 @@ export default function ModernEmailCampaignsManager() {
     successRate: 0,
     openedRate: 0
   });
-  
-  // Color palette for different card elements
-  const cardColors = useMemo(() => ({
-    title: 'from-blue-900 to-indigo-900',
-    subject: 'from-gray-700 to-gray-600',
-    recipients: 'from-emerald-700 to-teal-600',
-    date: 'from-purple-700 to-violet-600',
-    status: {
-      draft: 'from-amber-600 to-orange-500',
-      published: 'from-emerald-600 to-green-500'
-    }
-  }), []);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -957,24 +1236,32 @@ export default function ModernEmailCampaignsManager() {
       status: 'draft',
       recipients: []
     });
+    setCampaignAttachments([]);
+    setNewAttachmentFiles([]);
     setSelectedCampaign(null);
     setShowCreateModal(true);
   };
   
-  const openEditModal = (campaign) => {
-    if (!campaign) return;
-    
-    setCampaignForm({
-      title: campaign.title || '',
-      subject: campaign.subject || '',
-      content: campaign.content || '',
-      recipientType: campaign.recipientType || 'all',
-      status: campaign.status || 'draft',
-      recipients: []
-    });
-    setSelectedCampaign(campaign);
-    setShowCreateModal(true);
-  };
+ const openEditModal = (campaign) => {
+  if (!campaign) return;
+  
+  setCampaignForm({
+    title: campaign.title || '',
+    subject: campaign.subject || '',
+    content: campaign.content || '',
+    recipientType: campaign.recipientType || 'all',
+    status: campaign.status || 'draft',
+    recipients: []
+  });
+  
+  // Use the helper function to parse attachments
+  const existingAttachments = parseCampaignAttachments(campaign.attachments);
+  
+  setCampaignAttachments(existingAttachments);
+  setNewAttachmentFiles([]); // Reset new files
+  setSelectedCampaign(campaign);
+  setShowCreateModal(true);
+};
   
   const openDetailModal = (campaign) => {
     if (!campaign) return;
@@ -1002,82 +1289,105 @@ export default function ModernEmailCampaignsManager() {
     setShowBulkDeleteModal(true);
   };
   
-  const handleCreateOrUpdateCampaign = async () => {
-    if (!campaignForm.title || !campaignForm.subject || !campaignForm.content) {
-      showNotification('error', 'Please fill all required fields');
+  // REFINED: Handle files selected from attachment modal
+  const handleFilesSelected = (files) => {
+    setNewAttachmentFiles(files);
+  };
+  
+// In the handleCreateOrUpdateCampaign function, update the FormData creation:
+
+const handleCreateOrUpdateCampaign = async () => {
+  if (!campaignForm.title || !campaignForm.subject || !campaignForm.content) {
+    showNotification('error', 'Please fill all required fields');
+    return;
+  }
+  
+  try {
+    setLoadingStates(prev => ({ ...prev, create: true }));
+    
+    const recipientEmails = getRecipientEmails(campaignForm.recipientType);
+    
+    if (recipientEmails.length === 0) {
+      showNotification('error', 'No recipients found for the selected group');
+      setLoadingStates(prev => ({ ...prev, create: false }));
       return;
     }
     
-    try {
-      setLoadingStates(prev => ({ ...prev, create: true }));
-      
-      const recipientEmails = getRecipientEmails(campaignForm.recipientType);
-      
-      if (recipientEmails.length === 0) {
-        showNotification('error', 'No recipients found for the selected group');
-        setLoadingStates(prev => ({ ...prev, create: false }));
-        return;
+    // Create FormData
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('title', campaignForm.title.trim());
+    formData.append('subject', campaignForm.subject.trim());
+    formData.append('content', campaignForm.content);
+    formData.append('recipients', recipientEmails.join(', '));
+    formData.append('status', campaignForm.status);
+    formData.append('recipientType', campaignForm.recipientType);
+    
+    // Add existing attachments as JSON string
+    if (campaignAttachments.length > 0) {
+      formData.append('existingAttachments', JSON.stringify(campaignAttachments));
+    }
+    
+    // Add new files
+    if (newAttachmentFiles.length > 0) {
+      newAttachmentFiles.forEach((file) => {
+        formData.append('attachments', file);
+      });
+    }
+    
+    const url = selectedCampaign 
+      ? `/api/emails/${selectedCampaign.id}`
+      : '/api/emails';
+    
+    const method = selectedCampaign ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      body: formData,
+      // Do NOT set Content-Type header - browser will set it with boundary
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      if (selectedCampaign) {
+        setCampaigns(prev => prev.map(c => 
+          c.id === selectedCampaign.id ? result.campaign : c
+        ));
+      } else {
+        setCampaigns(prev => [result.campaign, ...prev]);
       }
       
-      const campaignData = {
-        title: campaignForm.title.trim(),
-        subject: campaignForm.subject.trim(),
-        content: campaignForm.content,
-        recipients: recipientEmails.join(', '),
-        status: campaignForm.status,
-        recipientType: campaignForm.recipientType
-      };
+      setShowCreateModal(false);
+      setSelectedCampaign(null);
+      setCampaignAttachments([]);
+      setNewAttachmentFiles([]);
       
-      const url = selectedCampaign 
-        ? `/api/emails/${selectedCampaign.id}`
-        : '/api/emails';
-      
-      const method = selectedCampaign ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(campaignData),
+      setCampaignForm({
+        title: '',
+        subject: '',
+        content: '',
+        recipientType: 'all',
+        status: 'draft',
+        recipients: []
       });
       
-      const result = await response.json();
-      
-      if (result.success) {
-        if (selectedCampaign) {
-          setCampaigns(prev => prev.map(c => 
-            c.id === selectedCampaign.id ? result.campaign : c
-          ));
-        } else {
-          setCampaigns(prev => [result.campaign, ...prev]);
-        }
-        
-        setShowCreateModal(false);
-        setSelectedCampaign(null);
-        
-        setCampaignForm({
-          title: '',
-          subject: '',
-          content: '',
-          recipientType: 'all',
-          status: 'draft',
-          recipients: []
-        });
-        
-        if (campaignForm.status === 'published' && result.emailResults?.summary?.successful > 0) {
-          showNotification('success', `Campaign created and ${result.emailResults.summary.successful} emails sent successfully!`);
-        } else {
-          showNotification('success', `Campaign ${selectedCampaign ? 'updated' : 'created'} successfully!`);
-        }
+      if (campaignForm.status === 'published' && result.emailResults?.summary?.successful > 0) {
+        showNotification('success', `Campaign created and ${result.emailResults.summary.successful} emails sent successfully!`);
       } else {
-        showNotification('error', result.error || `Failed to ${selectedCampaign ? 'update' : 'create'} campaign`);
+        showNotification('success', `Campaign ${selectedCampaign ? 'updated' : 'created'} successfully!`);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      showNotification('error', 'Network error. Please try again.');
-    } finally {
-      setLoadingStates(prev => ({ ...prev, create: false }));
+    } else {
+      showNotification('error', result.error || `Failed to ${selectedCampaign ? 'update' : 'create'} campaign`);
     }
-  };
+  } catch (error) {
+    console.error('Error:', error);
+    showNotification('error', 'Network error. Please try again.');
+  } finally {
+    setLoadingStates(prev => ({ ...prev, create: false }));
+  }
+};
   
   const handleSendCampaign = async () => {
     if (!campaignToSend) return;
@@ -1175,7 +1485,6 @@ export default function ModernEmailCampaignsManager() {
     }
   };
   
-  // Modern Reset Filters button
   const resetFilters = () => {
     setSearchTerm('');
     setFilterStatus('all');
@@ -1199,7 +1508,7 @@ export default function ModernEmailCampaignsManager() {
         />
       )}
       
-      {/* Modernized Header with transparent buttons */}
+      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
         <div className="mb-4 lg:mb-0">
           <div className="flex items-center gap-3 mb-2">
@@ -1214,53 +1523,52 @@ export default function ModernEmailCampaignsManager() {
             </div>
           </div>
         </div>
-<div className="flex gap-4 flex-wrap">
-  {/* Refresh */}
-  <button
-    onClick={fetchData}
-    disabled={refreshing || loadingStates.fetching}
-    className="
-      inline-flex items-center gap-2.5
-      px-4 py-2.5
-      rounded-2xl
-      font-medium text-base
-      text-gray-700
-      bg-transparent
-      border border-gray-300/60
-      shadow-[0_1px_0_rgba(0,0,0,0.05)]
-      transition-colors
-      disabled:opacity-50 disabled:cursor-not-allowed
-    "
-  >
-    <RefreshCw
-      className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`}
-    />
-    {refreshing ? 'Refreshing…' : 'Refresh'}
-  </button>
+        <div className="flex gap-4 flex-wrap">
+          {/* Refresh */}
+          <button
+            onClick={fetchData}
+            disabled={refreshing || loadingStates.fetching}
+            className="
+              inline-flex items-center gap-2.5
+              px-4 py-2.5
+              rounded-2xl
+              font-medium text-base
+              text-gray-700
+              bg-transparent
+              border border-gray-300/60
+              shadow-[0_1px_0_rgba(0,0,0,0.05)]
+              transition-colors
+              disabled:opacity-50 disabled:cursor-not-allowed
+            "
+          >
+            <RefreshCw
+              className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`}
+            />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
 
-  {/* New Campaign */}
-  <button
-    onClick={openCreateModal}
-    className="
-      inline-flex items-center gap-2.5
-      px-4 py-2.5
-      rounded-2xl
-      font-semibold text-base
-      text-emerald-600
-      bg-transparent
-      border border-emerald-300/60
-      shadow-[0_1px_0_rgba(0,0,0,0.05)]
-      transition-colors
-    "
-  >
-    <Plus className="w-5 h-5" />
-    New Campaign
-  </button>
-</div>
-
+          {/* New Campaign */}
+          <button
+            onClick={openCreateModal}
+            className="
+              inline-flex items-center gap-2.5
+              px-4 py-2.5
+              rounded-2xl
+              font-semibold text-base
+              text-emerald-600
+              bg-transparent
+              border border-emerald-300/60
+              shadow-[0_1px_0_rgba(0,0,0,0.05)]
+              transition-colors
+            "
+          >
+            <Plus className="w-5 h-5" />
+            New Campaign
+          </button>
+        </div>
       </div>
 
-      {/* Modern View Toggle */}
+      {/* View Toggle */}
       <div className="flex flex-wrap gap-2 mb-6">
         {[
           { view: 'all', label: 'All', count: stats.total, icon: Mail, color: 'from-gray-800 to-gray-700' },
@@ -1347,7 +1655,7 @@ export default function ModernEmailCampaignsManager() {
         </div>
       )}
 
-      {/* Filters Section with Modern Reset Button */}
+      {/* Filters Section */}
       <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 p-4 mb-6">
         <div className="flex flex-col lg:flex-row lg:items-center gap-3 md:gap-4">
           <div className="flex-1 relative">
@@ -1467,7 +1775,7 @@ export default function ModernEmailCampaignsManager() {
               <option value="recipients-low">Fewest Recipients</option>
             </select>
             
-            {/* Modern Reset Button */}
+            {/* Reset Button */}
             <button
               onClick={resetFilters}
               className="
@@ -1494,7 +1802,7 @@ export default function ModernEmailCampaignsManager() {
         </div>
       </div>
 
-      {/* Campaigns List with modern scrollbar */}
+      {/* Campaigns List */}
       <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 overflow-hidden">
         {loading ? (
           <ModernEmailSkeleton />
@@ -1553,7 +1861,7 @@ export default function ModernEmailCampaignsManager() {
               </div>
             </div>
 
-            {/* Campaign Cards with modern scrollbar */}
+            {/* Campaign Cards */}
             <div className="p-4 space-y-4 modern-scrollbar max-h-[600px] overflow-y-auto">
               {filteredCampaigns.map((campaign) => (
                 <CampaignCard
@@ -1646,7 +1954,7 @@ export default function ModernEmailCampaignsManager() {
         loading={loadingStates.bulk}
       />
 
-      {/* Campaign Detail Modal with modern scrollbar */}
+      {/* Campaign Detail Modal */}
       <ModernModal open={showDetailModal} onClose={() => setShowDetailModal(false)} maxWidth="800px">
         {selectedCampaign && (
           <>
@@ -1670,7 +1978,7 @@ export default function ModernEmailCampaignsManager() {
               </div>
             </div>
 
-            {/* Content with modern scrollbar */}
+            {/* Content */}
             <div className="max-h-[calc(85vh-150px)] overflow-y-auto p-6 modern-scrollbar">
               <div className="space-y-6">
                 {/* Campaign Info */}
@@ -1766,6 +2074,10 @@ export default function ModernEmailCampaignsManager() {
                   </div>
                 </div>
                 
+                {selectedCampaign && parseCampaignAttachments(selectedCampaign.attachments).length > 0 && (
+                  <CampaignAttachmentsDisplay campaign={selectedCampaign} />
+                )}
+                
                 {/* Content */}
                 <div>
                   <h3 className="font-bold text-gray-900 mb-2">Content</h3>
@@ -1778,7 +2090,7 @@ export default function ModernEmailCampaignsManager() {
               </div>
             </div>
 
-            {/* Footer with modern buttons */}
+            {/* Footer */}
             <div className="p-4 border-t border-gray-100/50">
               <div className="flex gap-2">
                 <button
@@ -1846,122 +2158,150 @@ export default function ModernEmailCampaignsManager() {
             </button>
           </div>
         </div>
-{/* Content with modern scrollbar */}
-<div className="max-h-[calc(85vh-150px)] overflow-y-auto p-6 modern-scrollbar">
-  <div className="space-y-4">
-    {/* Title */}
-    <div>
-      <label className="block text-sm font-bold text-gray-800 mb-1">Campaign Title *</label>
-      <input
-        type="text"
-        value={campaignForm.title}
-        onChange={(e) => setCampaignForm({...campaignForm, title: e.target.value})}
-        placeholder="Enter campaign title"
-        className="
-          w-full px-3 py-2.5
-          bg-gray-50/80 backdrop-blur-sm
-          border border-gray-200/60
-          rounded-lg focus:outline-none
-          focus:ring-2 focus:ring-emerald-500/50
-          focus:border-transparent text-sm
-          modern-scrollbar
-        "
-      />
-    </div>
-    
-    {/* Subject */}
-    <div>
-      <label className="block text-sm font-bold text-gray-800 mb-1">Email Subject *</label>
-      <input
-        type="text"
-        value={campaignForm.subject}
-        onChange={(e) => setCampaignForm({...campaignForm, subject: e.target.value})}
-        placeholder="Enter email subject"
-        className="
-          w-full px-3 py-2.5
-          bg-gray-50/80 backdrop-blur-sm
-          border border-gray-200/60
-          rounded-lg focus:outline-none
-          focus:ring-2 focus:ring-emerald-500/50
-          focus:border-transparent text-sm
-          modern-scrollbar
-        "
-      />
-    </div>
-    
-    {/* Recipient Group */}
-    <div>
-      <label className="block text-sm font-bold text-gray-800 mb-1">Recipient Group *</label>
-      <select 
-        value={campaignForm.recipientType}
-        onChange={(e) => setCampaignForm({...campaignForm, recipientType: e.target.value})}
-        className="
-          w-full px-3 py-2.5
-          bg-gray-50/80 backdrop-blur-sm
-          border border-gray-200/60
-          rounded-lg focus:outline-none
-          focus:ring-2 focus:ring-emerald-500/50
-          focus:border-transparent text-sm
-          modern-scrollbar
-        "
-      >
-        {recipientGroups.map(group => (
-          <option key={group.value} value={group.value}>
-            {group.label} ({group.count} recipients)
-          </option>
-        ))}
-      </select>
-    </div>
-    
-    {/* Content with modern scrollbar - 4x height */}
-    <div>
-      <label className="block text-sm font-bold text-gray-800 mb-1">Email Content *</label>
-      <textarea
-        value={campaignForm.content}
-        onChange={(e) => setCampaignForm({...campaignForm, content: e.target.value})}
-        placeholder="Write your email content here..."
-        className="
-          w-full px-3 py-3
-          bg-gray-50/80 backdrop-blur-sm
-          border border-gray-200/60
-          rounded-lg focus:outline-none
-          focus:ring-2 focus:ring-emerald-500/50
-          focus:border-transparent text-sm
-          resize-y
-          modern-scrollbar
-          min-h-[200px]
-        "
-        rows={30}
-        style={{
-          height: 'calc( 1.5rem * 20)', /* 4 times the original height */
-        }}
-      />
-      <div className="text-right text-xs text-gray-500 mt-1">
-        {campaignForm.content.length} characters
-      </div>
-    </div>
-    
-    {/* Status */}
-    <div className="flex items-center gap-3">
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={campaignForm.status === 'draft'}
-          onChange={(e) => setCampaignForm({...campaignForm, status: e.target.checked ? 'draft' : 'published'})}
-          className="w-4 h-4 text-emerald-600 border-gray-300/60 rounded focus:ring-emerald-500/50"
-        />
-        <span className="text-sm font-medium text-gray-700">
-          Save as Draft
-        </span>
-      </label>
-      <div className="text-xs text-gray-500">
-        {campaignForm.status === 'draft' 
-          ? 'Campaign will be saved as draft' 
-          : 'Campaign will be sent immediately'}
-      </div>
-    </div>
-  </div>
-</div>
+
+        {/* Content */}
+        <div className="max-h-[calc(85vh-150px)] overflow-y-auto p-6 modern-scrollbar">
+          <div className="space-y-4">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-1">Campaign Title *</label>
+              <input
+                type="text"
+                value={campaignForm.title}
+                onChange={(e) => setCampaignForm({...campaignForm, title: e.target.value})}
+                placeholder="Enter campaign title"
+                className="
+                  w-full px-3 py-2.5
+                  bg-gray-50/80 backdrop-blur-sm
+                  border border-gray-200/60
+                  rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-emerald-500/50
+                  focus:border-transparent text-sm
+                  modern-scrollbar
+                "
+              />
+            </div>
+            
+            {/* Subject */}
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-1">Email Subject *</label>
+              <input
+                type="text"
+                value={campaignForm.subject}
+                onChange={(e) => setCampaignForm({...campaignForm, subject: e.target.value})}
+                placeholder="Enter email subject"
+                className="
+                  w-full px-3 py-2.5
+                  bg-gray-50/80 backdrop-blur-sm
+                  border border-gray-200/60
+                  rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-emerald-500/50
+                  focus:border-transparent text-sm
+                  modern-scrollbar
+                "
+              />
+            </div>
+            
+            {/* Recipient Group */}
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-1">Recipient Group *</label>
+              <select 
+                value={campaignForm.recipientType}
+                onChange={(e) => setCampaignForm({...campaignForm, recipientType: e.target.value})}
+                className="
+                  w-full px-3 py-2.5
+                  bg-gray-50/80 backdrop-blur-sm
+                  border border-gray-200/60
+                  rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-emerald-500/50
+                  focus:border-transparent text-sm
+                  modern-scrollbar
+                "
+              >
+                {recipientGroups.map(group => (
+                  <option key={group.value} value={group.value}>
+                    {group.label} ({group.count} recipients)
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Content */}
+            <div>
+              <label className="block text-sm font-bold text-gray-800 mb-1">Email Content *</label>
+              <textarea
+                value={campaignForm.content}
+                onChange={(e) => setCampaignForm({...campaignForm, content: e.target.value})}
+                placeholder="Write your email content here..."
+                className="
+                  w-full px-3 py-3
+                  bg-gray-50/80 backdrop-blur-sm
+                  border border-gray-200/60
+                  rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-emerald-500/50
+                  focus:border-transparent text-sm
+                  resize-y
+                  modern-scrollbar
+                  min-h-[200px]
+                "
+                rows={20}
+              />
+              <div className="text-right text-xs text-gray-500 mt-1">
+                {campaignForm.content.length} characters
+              </div>
+            </div>
+            
+            {/* Attachments Section - REFINED */}
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="block text-sm font-bold text-gray-800 mb-1">Attachments</label>
+                <p className="text-xs text-gray-600">
+                  Add files to include with your email (max 10MB each)
+                </p>
+                {(campaignAttachments.length > 0 || newAttachmentFiles.length > 0) && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    {campaignAttachments.length} existing file(s)
+                    {newAttachmentFiles.length > 0 && `, ${newAttachmentFiles.length} new file(s)`}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAttachmentModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                <FileUp className="w-4 h-4" />
+                {campaignAttachments.length > 0 || newAttachmentFiles.length > 0 ? (
+                  <span>
+                    {campaignAttachments.length + newAttachmentFiles.length} file(s)
+                  </span>
+                ) : (
+                  <span>Add Files</span>
+                )}
+              </button>
+            </div>
+            
+            {/* Status */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={campaignForm.status === 'draft'}
+                  onChange={(e) => setCampaignForm({...campaignForm, status: e.target.checked ? 'draft' : 'published'})}
+                  className="w-4 h-4 text-emerald-600 border-gray-300/60 rounded focus:ring-emerald-500/50"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Save as Draft
+                </span>
+              </label>
+              <div className="text-xs text-gray-500">
+                {campaignForm.status === 'draft' 
+                  ? 'Campaign will be saved as draft' 
+                  : 'Campaign will be sent immediately'}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-100/50">
@@ -2013,6 +2353,14 @@ export default function ModernEmailCampaignsManager() {
           </div>
         </div>
       </ModernModal>
+
+      {/* Attachment Upload Modal - REFINED */}
+      <UploadAttachments
+        open={showAttachmentModal}
+        onClose={() => setShowAttachmentModal(false)}
+        onFilesSelected={handleFilesSelected}
+        existingAttachments={campaignAttachments}
+      />
     </div>
   );
 }

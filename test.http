@@ -1,5 +1,5 @@
 ### Update School Info with YouTube Video Tour
-PUT http://localhost:3001/api/school
+GET http://localhost:3001/api/emails
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
