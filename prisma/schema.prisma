@@ -687,3 +687,61 @@ model CareerJob {
   @@index([applicationDeadline])
   @@index([createdAt])
 }
+
+model StudentBulkUpload {
+  id            String    @id @default(cuid())
+  fileName      String
+  fileType      String
+  status        String    @default("pending")
+  uploadedBy    String
+  uploadDate    DateTime  @default(now())
+  processedDate DateTime?
+  totalRows     Int       @default(0)
+  validRows     Int       @default(0)
+  skippedRows   Int       @default(0)
+  errorRows     Int       @default(0)
+  errorLog      Json?
+  students      databaseStudent[]
+  
+  @@map("student_bulk_uploads")
+}
+
+model databaseStudent {
+  id              String           @id @default(cuid())
+  admissionNumber String           @unique @db.VarChar(50)
+  firstName       String           @db.VarChar(100)
+  middleName      String?          @db.VarChar(100)
+  lastName        String           @db.VarChar(100)
+  form            String           @db.VarChar(20)
+  status          String           @default("active")
+  
+  // Optional fields
+  stream          String?          @db.VarChar(50)
+  dateOfBirth     DateTime?
+  gender          String?          @db.VarChar(20)
+  parentPhone     String?          @db.VarChar(20)
+  email           String?          @db.VarChar(100)
+  
+  uploadBatchId   String?
+  uploadBatch     StudentBulkUpload? @relation(fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  @@map("students")
+  @@index([admissionNumber])
+  @@index([form])
+  @@index([uploadBatchId])
+}
+
+model StudentStats {
+  id            String   @id @default("global_stats")
+  totalStudents Int      @default(0)
+  form1         Int      @default(0)
+  form2         Int      @default(0)
+  form3         Int      @default(0)
+  form4         Int      @default(0)
+  updatedAt     DateTime @updatedAt
+  
+  @@map("student_stats")
+}

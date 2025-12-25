@@ -7,7 +7,7 @@ import {
   FaEye, FaCalendar, FaUsers, FaChalkboardTeacher, FaDollarSign,
   FaBook, FaGraduationCap, FaFilePdf, FaVideo, FaMapMarkerAlt,
   FaPhone, FaEnvelope, FaGlobe, FaClock, FaChevronRight, FaChevronLeft,
-  FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaChartBar,
+  FaExclamationTriangle, FaCheckCircle, FaTimesCircle, FaChartBar,FaCheckDouble, 
   FaUpload, FaTimes, FaCog, FaSave,
   FaExternalLinkAlt, FaRocket, FaShieldAlt,
   FaHashtag, FaPalette, FaMagic, FaBolt,
@@ -15,7 +15,7 @@ import {
   FaTh, FaList, FaUserGraduate, FaBuilding,
   FaAward, FaCalendarAlt, FaFileInvoice, FaFileDownload, FaFileImport,
   FaPercentage, FaTasks, FaClipboardList,
-  FaUserCheck, FaMoneyBillWave, FaReceipt, FaCalculator,FaArrowDown, 
+  FaUserCheck, FaMoneyBillWave, FaReceipt, FaCalculator, FaArrowDown, FaBookOpen, FaUsersCog,
   FaChartLine, FaChartPie, FaChartArea,
   FaShareAlt, FaDownload, FaPaperclip, FaCheckSquare,
   FaListUl, FaQuoteLeft, FaQuoteRight, FaStarHalfAlt,
@@ -23,8 +23,12 @@ import {
   FaYoutube, FaFileVideo, FaFileAlt, FaFileExport,
   FaFileUpload, FaFileCode, FaFileAudio, FaFile, FaCheck,
   FaUser, FaTag, FaCogs, FaUniversity, FaBlackTie,
-  FaPlay, FaPlayCircle, FaCamera, FaImage, FaInfoCircle,FiTrash2,FiEdit2 
+  FaPlay, FaPlayCircle, FaCamera, FaImage, FaInfoCircle,
+  FaArrowRight, FaHourglassHalf // Added from your second import block
 } from 'react-icons/fa';
+
+import { FiTrash2, FiEdit2 } from 'react-icons/fi';
+
 import { CircularProgress, Modal, Box, TextField, TextareaAutosize } from '@mui/material';
 
 // Modern Loading Spinner Component
@@ -1582,64 +1586,89 @@ function AdditionalResultsUpload({
 function ModernAdmissionCurriculumView({ curriculumPDF, curriculumPdfName }) {
   if (!curriculumPDF) return null;
 
-  return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-            <FaBook className="text-white text-lg" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-gray-900">School Curriculum</h3>
-            <p className="text-sm text-gray-500 mt-0.5">Official academic curriculum document</p>
-          </div>
+return (
+  <div className="group bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-2xl shadow-slate-200/40 relative overflow-hidden transition-all duration-500 hover:shadow-blue-100/50">
+    {/* Decorative Mesh Gradient Background */}
+    <div className="absolute -top-10 -right-10 w-48 h-48 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
+
+    {/* Header Section */}
+    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+      <div className="flex items-start gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50 transition-transform group-hover:scale-110">
+          <FaBook className="text-white text-2xl" />
         </div>
-        <div className="text-sm text-blue-600 font-medium bg-blue-50 px-3 py-1.5 rounded-full">
-          Curriculum PDF
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">
+            School Curriculum
+          </h3>
+          <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+            Download the official academic roadmap and learning standards for the current session.
+          </p>
         </div>
       </div>
-      
-      <div className="bg-gradient-to-r from-blue-50 to-white rounded-xl p-4 border border-blue-200/70">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
-              <FaFilePdf className="text-red-400 text-xl" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-gray-900 truncate max-w-xs">
-                {curriculumPdfName || 'Curriculum Document'}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-gray-500">Academic curriculum</span>
-                <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                <span className="text-xs text-gray-400">PDF</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex gap-2">
-            <a
-              href={curriculumPDF}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
-            >
-              <FaExternalLinkAlt className="text-xs" />
-              Open
-            </a>
-            <a
-              href={curriculumPDF}
-              download={curriculumPdfName || 'curriculum.pdf'}
-              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:shadow-lg hover:shadow-blue-500/20 transition-all"
-            >
-              <FaArrowDown className="text-xs" />
-              Download
-            </a>
-          </div>
+
+      <div className="hidden lg:flex flex-col items-end">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Format</span>
+        <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black tracking-tighter">
+          <FaFilePdf className="text-red-400" />
+          ADOBE PDF DOCUMENT
         </div>
       </div>
     </div>
-  );
+
+    {/* The Interactive Asset Card */}
+    <div className="relative z-10 bg-slate-50/50 rounded-[2rem] border border-slate-200 p-6 transition-all group-hover:bg-white group-hover:shadow-lg group-hover:shadow-slate-100">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8">
+        
+        {/* File Info */}
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-slate-100 shrink-0">
+              <FaFilePdf size={32} className="text-red-500" />
+            </div>
+            {/* Tiny Check Badge */}
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-4 border-white flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            </div>
+          </div>
+          
+          <div className="min-w-0">
+            <p className="text-base font-black text-slate-900 mb-1 truncate">
+              {curriculumPdfName || 'Academic_Curriculum_Standard.pdf'}
+            </p>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">Certified Document</span>
+              <div className="w-1 h-1 rounded-full bg-slate-300" />
+              <span className="text-[11px] font-bold text-blue-600">v2025.1.0</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons: Vertical on Mobile, Row on XL */}
+        <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full xl:w-auto">
+          <a
+            href={curriculumPDF}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 xl:flex-none inline-flex items-center justify-center gap-3 bg-white hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 px-8 py-4 rounded-2xl text-xs font-black transition-all duration-300 shadow-sm"
+          >
+            <FaEye className="text-blue-500" />
+            Preview Standard
+          </a>
+          <a
+            href={curriculumPDF}
+            download={curriculumPdfName || 'curriculum.pdf'}
+            className="flex-1 xl:flex-none inline-flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl text-xs font-black shadow-xl shadow-blue-200 transition-all duration-300 group/btn"
+          >
+            <FaDownload />
+            Get Curriculum
+            <FaArrowRight className="hidden sm:block text-[10px] opacity-50 group-hover/btn:translate-x-1 transition-transform" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 }
 
 // Modern Admission Requirements Layout
@@ -1655,130 +1684,144 @@ function ModernAdmissionRequirementsView({
   
   if (!hasRequirements) return null;
 
-  return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg ring-1 ring-emerald-200/60">
-              <FaUserCheck className="text-white text-xl" />
-            </div>
-            <div className="leading-tight">
-              <h3 className="text-[15px] font-semibold text-gray-900 tracking-tight">
-                Admission Requirements
-              </h3>
-              <p className="text-sm text-gray-500 mt-1 max-w-[280px] leading-relaxed">
-                Eligibility criteria, documentation, and one-time admission fee details.
-              </p>
-            </div>
+return (
+  <div className="space-y-8">
+    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-2xl shadow-slate-200/40 relative overflow-hidden transition-all duration-500 hover:shadow-emerald-100/50 group">
+      {/* Decorative Background Element */}
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
+
+      {/* Header & Primary Fee Badge */}
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between pb-8 mb-8 border-b border-slate-100 gap-6">
+        <div className="flex items-start gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-400 flex items-center justify-center shadow-xl shadow-emerald-200 ring-4 ring-emerald-50 transition-transform group-hover:-rotate-2">
+            <FaUserCheck className="text-white text-2xl" />
           </div>
-          {admissionFee && (
-            <div className="flex flex-col items-end">
-              <span className="text-[11px] uppercase tracking-wide text-gray-400">
-                Admission Fee
-              </span>
-              <div className="mt-1 text-lg font-semibold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-xl shadow-sm">
-                KES {admissionFee.toLocaleString()}
-              </div>
-            </div>
-          )}
+          <div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">
+              Admission Requirements
+            </h3>
+            <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+              Eligibility criteria, mandatory documentation, and one-time enrollment fee distribution.
+            </p>
+          </div>
         </div>
-        
-        {admissionRequirements && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h4 className="text-sm font-bold text-gray-700 mb-2">General Requirements</h4>
-            <p className="text-gray-700 text-sm leading-relaxed">{admissionRequirements}</p>
-          </div>
-        )}
-        
-        {admissionFeeDistribution && Object.keys(admissionFeeDistribution).length > 0 && (
-          <div className="mb-6">
-            <h4 className="text-sm font-bold text-gray-700 mb-3">Fee Breakdown</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {Object.entries(admissionFeeDistribution).map(([key, value]) => (
-                <div key={key} className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border border-green-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                    <span className="text-sm font-bold text-gray-900">KES {parseFloat(value).toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {admissionDocumentsRequired.length > 0 && (
-          <div className="mb-6">
-            <h4 className="text-sm font-bold text-gray-700 mb-3">Required Documents</h4>
-            <div className="flex flex-wrap gap-2">
-              {admissionDocumentsRequired.map((doc, index) => (
-                <span 
-                  key={index} 
-                  className="bg-white text-gray-700 border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium"
-                >
-                  {doc}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {admissionFeePdf && (
-          <div className="pt-5 border-t border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center">
-                  <FaFilePdf className="text-white text-xs" />
-                </div>
-                <h4 className="text-sm font-bold text-gray-900">Detailed Requirements Document</h4>
-              </div>
-              <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-full">Available</span>
-            </div>
-            
-            <div className="bg-gradient-to-r from-white to-gray-50/50 rounded-xl p-4 border border-gray-200/70">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
-                    <FaFilePdf className="text-red-400 text-xl" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {admissionFeePdfName || 'Admission Requirements Document'}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500">Complete admission guidelines</span>
-                      <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                      <span className="text-xs text-gray-400">PDF</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <a
-                    href={admissionFeePdf}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
-                  >
-                    <FaExternalLinkAlt className="text-xs" />
-                    Open
-                  </a>
-                  <a
-                    href={admissionFeePdf}
-                    download={admissionFeePdfName || 'admission-requirements.pdf'}
-                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:shadow-lg hover:shadow-green-500/20 transition-all"
-                  >
-                    <FaArrowDown className="text-xs" />
-                    Download
-                  </a>
-                </div>
-              </div>
+
+        {admissionFee && (
+          <div className="flex flex-col items-start lg:items-end">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 ml-1 lg:ml-0">Registration Fee</span>
+            <div className="inline-flex items-baseline gap-1.5 bg-emerald-900 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-emerald-900/20">
+              <span className="text-xs font-bold text-emerald-400 uppercase">KES</span>
+              <span className="text-2xl font-black tabular-nums tracking-tighter">
+                {admissionFee.toLocaleString()}
+              </span>
             </div>
           </div>
         )}
       </div>
+
+      {/* General Requirements Info Box */}
+      {admissionRequirements && (
+        <div className="relative z-10 mb-8 p-5 bg-slate-50 rounded-3xl border border-slate-100 flex gap-4 items-start">
+          <div className="mt-1 p-2 bg-white rounded-lg shadow-sm">
+            <FaInfoCircle className="text-emerald-500 text-sm" />
+          </div>
+          <div>
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">General Eligibility</h4>
+            <p className="text-sm font-medium text-slate-700 leading-relaxed italic">"{admissionRequirements}"</p>
+          </div>
+        </div>
+      )}
+
+      {/* Breakdown and Documents Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10 relative z-10">
+        
+        {/* Fee Distribution */}
+        {admissionFeeDistribution && Object.keys(admissionFeeDistribution).length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-5">
+              <FaReceipt className="text-emerald-400 text-xs" />
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Fee Allocation</h4>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {Object.entries(admissionFeeDistribution).map(([key, value]) => (
+                <div key={key} className="p-4 rounded-2xl bg-white border border-slate-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all group/item">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                  <p className="text-sm font-black text-slate-800">
+                    <span className="text-[10px] text-emerald-600 mr-1">KES</span>
+                    {parseFloat(value).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Required Documents */}
+        {admissionDocumentsRequired.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-5">
+              <FaClipboardList className="text-emerald-400 text-xs" />
+              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Documentation Checklist</h4>
+              <div className="h-px flex-1 bg-slate-100" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {admissionDocumentsRequired.map((doc, index) => (
+                <div key={index} className="flex items-center gap-2 px-4 py-2 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+                  <FaCheckDouble size={10} className="text-emerald-600" />
+                  <span className="text-xs font-bold text-slate-700">{doc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* PDF Control Section */}
+      {admissionFeePdf && (
+        <div className="relative group/pdf">
+          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-[2rem] blur opacity-10 group-hover/pdf:opacity-20 transition duration-500" />
+          <div className="relative bg-slate-900 rounded-[2rem] p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 shrink-0">
+                <FaFilePdf size={28} className="text-red-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-white mb-1 truncate">
+                  {admissionFeePdfName || 'Entry_Requirements_V1.pdf'}
+                </p>
+                <div className="flex gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-bold text-slate-400 uppercase">Verified Guide</span>
+                  <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase">Archive Ready</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <a
+                href={admissionFeePdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-3.5 rounded-xl text-xs font-black transition-all"
+              >
+                <FaEye className="text-emerald-400" />
+                Preview
+              </a>
+              <a
+                href={admissionFeePdf}
+                download={admissionFeePdfName || 'admission-requirements.pdf'}
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3.5 rounded-xl text-xs font-black shadow-xl shadow-emerald-900/40 transition-all"
+              >
+                <FaDownload />
+                Get PDF
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
 
 // Modern Day School Fee Component
@@ -1790,141 +1833,133 @@ function ModernDaySchoolFeeView({
 }) {
   if (!feesDay && !feesDayDistributionPdf) return null;
 
-  return (
-    <div className="bg-white rounded-lg p-4 border border-gray-200">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-gray-100 gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 tracking-tight">
-              Day School Fees
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 leading-relaxed">
-              Overview of the annual fee structure and cost breakdown for day scholars.
-            </p>
-          </div>
+
+return (
+  <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-2xl shadow-slate-200/40 relative overflow-hidden transition-all duration-500 hover:shadow-blue-100/50">
+    {/* Decorative Soft-UI Accent */}
+    <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl opacity-60" />
+
+    {/* Header & Total Summary Section */}
+    <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between pb-8 mb-8 border-b border-slate-100/80 gap-6">
+      <div className="flex items-start gap-5">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50">
+          <FaMoneyBillWave className="text-white text-2xl" />
         </div>
-        
-        {feesDay && (
-          <div className="text-lg font-bold text-blue-700 bg-blue-50 px-4 py-2 rounded-lg">
-            KES {feesDay.toLocaleString()}
-          </div>
-        )}
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">
+            Day School Fees
+          </h3>
+          <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+            Annual cost breakdown for day scholars, structured by institutional service requirements.
+          </p>
+        </div>
       </div>
-
-      {feesDayDistribution && Object.keys(feesDayDistribution).length > 0 && (
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="text-sm font-medium text-gray-800">Fee Breakdown</h4>
-            <span className="text-xs text-gray-500">
-              {Object.keys(feesDayDistribution).length} items
+      
+      {feesDay && (
+        <div className="flex flex-col items-start lg:items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 ml-1 lg:ml-0">Aggregate Annual Total</span>
+          <div className="inline-flex items-baseline gap-1.5 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-blue-900/20">
+            <span className="text-xs font-bold text-blue-400 uppercase">KES</span>
+            <span className="text-2xl font-black tabular-nums tracking-tighter">
+              {feesDay.toLocaleString()}
             </span>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-            {Object.entries(feesDayDistribution).map(([key, value]) => (
-              <div 
-                key={key} 
-                className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-start gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-blue-100 flex items-center justify-center mt-0.5">
-                      <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <span className="text-xs font-medium text-gray-700 capitalize block">
-                        {key.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
-                      <span className="text-xs text-gray-500 block mt-0.5">
-                        {Math.round((parseFloat(value) / feesDay) * 100)}% of total
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-sm font-bold text-gray-900">
-                    KES {parseFloat(value).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {feesDayDistributionPdf && (
-        <div className="bg-gray-50 rounded-lg border border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border-b border-gray-200 bg-white rounded-t-lg gap-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-md bg-red-50 flex items-center justify-center">
-                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h4 className="text-sm font-medium text-gray-800">Detailed Fee Structure</h4>
-            </div>
-            <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded">
-              Available
-            </span>
-          </div>
-          
-          <div className="p-3">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 mb-1">
-                    {feesDayPdfName || 'Day School Fee Structure Document'}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                      Complete breakdown
-                    </span>
-                    <span className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded">
-                      PDF
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <a
-                  href={feesDayDistributionPdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded text-xs font-medium min-w-[80px] justify-center"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  Open
-                </a>
-                <a
-                  href={feesDayDistributionPdf}
-                  download={feesDayPdfName || 'day-school-fees.pdf'}
-                  className="inline-flex items-center gap-1.5 bg-blue-600 text-white px-3 py-2 rounded text-xs font-medium min-w-[90px] justify-center"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  Download
-                </a>
-              </div>
-            </div>
           </div>
         </div>
       )}
     </div>
-  );
+
+    {/* High-Visibility Fee Distribution Grid */}
+    {feesDayDistribution && Object.keys(feesDayDistribution).length > 0 && (
+      <div className="mb-10 relative z-10">
+        <div className="flex items-center gap-3 mb-6">
+          <FaChartPie className="text-slate-400 text-sm" />
+          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Expense Distribution</h4>
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(feesDayDistribution).map(([key, value]) => {
+            const percentage = Math.round((parseFloat(value) / feesDay) * 100);
+            return (
+              <div 
+                key={key} 
+                className="group bg-white hover:bg-slate-50 rounded-2xl p-4 border border-slate-100 hover:border-blue-300 hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <FaCheckCircle className="text-blue-100 group-hover:text-blue-500 transition-colors text-sm" />
+                    <span className="text-sm font-bold text-slate-700 capitalize">
+                      {key.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                    {percentage}%
+                  </span>
+                </div>
+                
+                <div className="flex items-end justify-between">
+                  <div className="w-full max-w-[120px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full transition-all duration-1000" 
+                      style={{ width: `${percentage}%` }} 
+                    />
+                  </div>
+                  <span className="text-base font-black text-slate-900">
+                    <span className="text-[10px] font-bold text-slate-400 mr-1 font-sans">KES</span>
+                    {parseFloat(value).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    {/* Premium PDF Control Section */}
+    {feesDayDistributionPdf && (
+      <div className="relative group/pdf">
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-[2rem] blur opacity-10 group-hover/pdf:opacity-20 transition duration-500" />
+        <div className="relative bg-slate-50 rounded-[1.75rem] border border-slate-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-slate-100 shrink-0">
+              <FaFilePdf className="text-red-500 text-3xl" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-900 mb-1">
+                {feesDayPdfName || 'Day School Fee Ledger.pdf'}
+              </p>
+              <div className="flex gap-2">
+                <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-500">Official Release</span>
+                <span className="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Verified Assets</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <a
+              href={feesDayDistributionPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl text-xs font-black transition-all duration-300 shadow-sm"
+            >
+              <FaEye className="text-blue-500 group-hover:text-white" />
+              Preview Document
+            </a>
+            <a
+              href={feesDayDistributionPdf}
+              download={feesDayPdfName || 'day-school-fees.pdf'}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-xs font-black shadow-xl shadow-blue-200 transition-all duration-300"
+            >
+              <FaDownload />
+              Get PDF
+            </a>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 }
 
 // Modern Exam Mapping Section
@@ -2049,204 +2084,243 @@ function ModernExamMappingView({
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
-              <FaAward className="text-white text-lg" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-gray-900">Exam Results Mapping</h3>
-              <p className="text-sm text-gray-500 mt-0.5">Academic performance records</p>
-            </div>
+        {/* Header Section */}
+<div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+  <div className="flex items-center gap-4">
+    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-purple-200 ring-4 ring-purple-50">
+      <FaAward className="text-white text-xl" />
+    </div>
+    <div>
+      <h3 className="text-xl font-black tracking-tight text-slate-900">Exam Results Mapping</h3>
+      <div className="flex items-center gap-2 mt-0.5">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <p className="text-sm font-medium text-slate-500">Verified Academic performance records</p>
+      </div>
+    </div>
+  </div>
+  
+  {!isEditing && (
+    <div className="hidden md:block px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Global Status: Synchronized</p>
+    </div>
+  )}
+</div>
+
+{/* Results Grid Mapping */}
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+  {Object.entries(examResults).map(([key, result]) => {
+    const displayName = key.replace(/([A-Z])/g, ' $1').trim();
+    
+    return (
+      <div
+        key={key}
+        className="group relative bg-white rounded-3xl p-6 border border-slate-200 hover:border-purple-300 shadow-sm hover:shadow-2xl hover:shadow-purple-100 transition-all duration-500 flex flex-col gap-5 overflow-hidden"
+      >
+        {/* Subtle Background Accent */}
+        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-500" />
+
+        <div className="relative flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <h4 className="text-base font-bold text-slate-900 truncate group-hover:text-purple-700 transition-colors">
+              {displayName}
+            </h4>
+            <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">
+              Official Transcript
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:rotate-6 transition-all duration-300">
+            <FaFilePdf className="text-purple-500 group-hover:text-white text-xl" />
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          {Object.entries(examResults).map(([key, result]) => {
-            const displayName = key.replace(/([A-Z])/g, ' $1').trim();
-            
-            return (
-              <div
-                key={key}
-                className="bg-white rounded-2xl p-5 border border-gray-100 transition-shadow duration-300 flex flex-col gap-4"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 truncate">{displayName}</h4>
-                    <p className="text-xs sm:text-sm text-gray-500 truncate">Results Document</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
-                    <FaFilePdf className="text-purple-500 text-xl" />
-                  </div>
-                </div>
 
-                <div>
-                  {isEditing ? (
-                    <div className="space-y-1">
-                      <label className="block text-xs sm:text-sm font-medium text-gray-600">Year</label>
-                      <input
-                        type="number"
-                        min="2000"
-                        max="2100"
-                        value={editedYears[key] || ''}
-                        onChange={(e) => handleYearChange(key, e.target.value)}
-                        placeholder="Enter year"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm sm:text-base">
-                      <span className="text-xs sm:text-sm text-gray-500">Year:</span>
-                      <span className="font-semibold text-gray-900">{result.year || 'Not specified'}</span>
-                    </div>
-                  )}
-                </div>
-
-                {result.pdf && (
-                  <div className="space-y-3">
-                    <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-3 border border-gray-100 shadow-sm">
-                      <FaFilePdf className="text-red-500 text-2xl" />
-                      <span className="text-sm sm:text-base font-medium text-gray-900 truncate">
-                        {result.name || `${displayName} Results.pdf`}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <a
-                        href={result.pdf}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 text-center py-2 text-sm font-medium rounded-xl border border-blue-200 text-blue-600 bg-white hover:bg-blue-50 hover:border-blue-300 shadow-sm hover:shadow-md transition-all duration-200"
-                      >
-                        <FaEye className="inline mr-2 text-sm" /> View
-                      </a>
-                      <a
-                        href={result.pdf}
-                        download
-                        className="flex-1 text-center py-2 text-sm font-medium rounded-xl text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-sm hover:shadow-lg transition-all duration-200"
-                      >
-                        <FaDownload className="inline mr-2 text-sm" /> Save
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        <div className="pt-5 border-t border-gray-100">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full mt-0.5" />
-              <div>
-                <h4 className="text-sm sm:text-base font-semibold text-gray-900">
-                  Additional Results Files
-                </h4>
-                <p className="text-xs text-gray-500 mt-0.5 max-w-md">
-                  Upload and manage supplementary examination result documents.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
-                {localAdditionalFiles.length} {localAdditionalFiles.length === 1 ? 'file' : 'files'}
-              </span>
-            </div>
-          </div>
-          
+        <div className="relative">
           {isEditing ? (
-            <AdditionalResultsUpload
-              files={localAdditionalFiles.filter(f => f.isNew)}
-              onFilesChange={(newFiles) => {
-                const existingFiles = localAdditionalFiles.filter(f => f.isExisting);
-                setLocalAdditionalFiles([...existingFiles, ...newFiles]);
-              }}
-              label="Upload Additional Results"
-              existingFiles={localAdditionalFiles.filter(f => f.isExisting)}
-              onCancelExisting={handleCancelExistingFile}
-              onRemoveExisting={handleRemoveExistingFile}
-            />
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase ml-1">Examination Year</label>
+              <input
+                type="number"
+                min="2000"
+                max="2100"
+                value={editedYears[key] || ''}
+                onChange={(e) => handleYearChange(key, e.target.value)}
+                placeholder="YYYY"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 text-sm font-semibold transition-all outline-none"
+              />
+            </div>
           ) : (
-            <div className="space-y-3">
-              {localAdditionalFiles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {localAdditionalFiles.map((file, index) => (
-                    <div key={index} className="bg-white rounded-lg p-3 border border-gray-200 hover:border-gray-300 transition-all duration-300">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-lg ${file.filetype === 'pdf' ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-600'} flex items-center justify-center flex-shrink-0`}>
-                          <FaFilePdf className="text-red-500" />
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h5 className="text-sm font-bold text-gray-900 truncate">
-                              {file.filename || file.name || `Document ${index + 1}`}
-                            </h5>
-                            {file.year && (
-                              <span className="text-xs font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">
-                                {file.year}
-                              </span>
-                            )}
-                          </div>
-                          
-                          {file.description && (
-                            <p className="text-xs text-gray-600 mb-1 line-clamp-1">
-                              {file.description}
-                            </p>
-                          )}
-                          
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span className="capitalize">{file.filetype || 'Document'}</span>
-                            {file.filesize && (
-                              <>
-                                <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                                <span>{(file.filesize / 1024).toFixed(0)} KB</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {file.filepath && (
-                        <div className="mt-4 pt-3 border-t border-gray-100 flex justify-center">
-                          <div className="grid grid-cols-2 gap-3 w-1/2">
-                            <a
-                              href={file.filepath}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="group relative overflow-hidden inline-flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl bg-white text-blue-600 border border-gray-200 shadow-sm hover:border-blue-300 hover:shadow-md transition-all duration-200"
-                            >
-                              <span className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition" />
-                              <FaExternalLinkAlt className="relative text-[11px]" />
-                              <span className="relative">View</span>
-                            </a>
-
-                            <a
-                              href={file.filepath}
-                              download={file.filename || 'document.pdf'}
-                              className="group relative overflow-hidden inline-flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-sm hover:from-amber-600 hover:to-amber-700 hover:shadow-md transition-all duration-200"
-                            >
-                              <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition" />
-                              <FaDownload className="relative text-[11px]" />
-                              <span className="relative">Save</span>
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                  <FaFile className="text-gray-400 text-xl mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No additional results files</p>
-                  <p className="text-xs text-gray-400 mt-1">Add supplementary documents in edit mode</p>
-                </div>
-              )}
+            <div className="flex items-center justify-between bg-slate-50/50 rounded-2xl px-4 py-3 border border-slate-100">
+              <span className="text-xs font-bold text-slate-400">Year of Completion</span>
+              <span className="text-sm font-black text-slate-900 bg-white px-3 py-1 rounded-lg shadow-sm border border-slate-100">
+                {result.year || '----'}
+              </span>
             </div>
           )}
         </div>
+
+        {result.pdf && (
+          <div className="relative space-y-4">
+            <div className="flex items-center gap-3 py-2">
+               <div className="w-1 h-8 rounded-full bg-purple-200" />
+               <p className="text-xs font-medium text-slate-600 truncate">
+                 {result.name || `${displayName}_Results.pdf`}
+               </p>
+            </div>
+
+            <div className="flex gap-3">
+              <a
+                href={result.pdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-purple-200 transition-all shadow-sm"
+              >
+                <FaEye className="text-purple-500" /> View
+              </a>
+              <a
+                href={result.pdf}
+                download
+                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-purple-600 shadow-lg shadow-slate-200 hover:shadow-purple-200 transition-all"
+              >
+                <FaDownload /> Save
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  })}
+</div>
+        
+ <div className="pt-8 border-t border-slate-100/80">
+  {/* Modern Header & Description Section */}
+  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        <div className="h-6 w-1 rounded-full bg-gradient-to-t from-amber-600 to-amber-300" />
+        <h4 className="text-lg font-bold tracking-tight text-slate-900">
+          Additional Results Files
+        </h4>
+      </div>
+      <p className="text-sm leading-relaxed text-slate-500 max-w-2xl">
+        Manage your academic portfolio by organizing supplementary transcripts and examination records. 
+        All files are stored securely and can be previewed or downloaded instantly.
+      </p>
+    </div>
+    
+    <div className="flex items-center gap-2 self-start lg:self-center">
+      <div className="flex -space-x-2">
+         {/* Decorative file stack effect */}
+         {[...Array(Math.min(localAdditionalFiles.length, 3))].map((_, i) => (
+           <div key={i} className="w-8 h-8 rounded-lg border-2 border-white bg-slate-100 flex items-center justify-center shadow-sm">
+             <FaFile className="text-[10px] text-slate-400" />
+           </div>
+         ))}
+      </div>
+      <span className="ml-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+        {localAdditionalFiles.length} {localAdditionalFiles.length === 1 ? 'Resource' : 'Resources'}
+      </span>
+    </div>
+  </div>
+
+  {isEditing ? (
+    <div className="bg-slate-50/50 p-6 rounded-3xl border-2 border-dashed border-slate-200 transition-all">
+      <AdditionalResultsUpload
+        files={localAdditionalFiles.filter(f => f.isNew)}
+        onFilesChange={(newFiles) => {
+          const existingFiles = localAdditionalFiles.filter(f => f.isExisting);
+          setLocalAdditionalFiles([...existingFiles, ...newFiles]);
+        }}
+        label="Drop new documents here"
+        existingFiles={localAdditionalFiles.filter(f => f.isExisting)}
+        onCancelExisting={handleCancelExistingFile}
+        onRemoveExisting={handleRemoveExistingFile}
+      />
+    </div>
+  ) : (
+    <div className="space-y-4">
+      {localAdditionalFiles.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {localAdditionalFiles.map((file, index) => (
+            <div 
+              key={index} 
+              className="group bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-amber-200 transition-all duration-300 flex flex-col justify-between"
+            >
+              <div className="flex items-start gap-4">
+                {/* Modern File Branding */}
+                <div className={`relative w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-transform group-hover:scale-110 duration-300 ${
+                  file.filetype === 'pdf' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-600'
+                }`}>
+                  <FaFilePdf className="text-xl" />
+                  <span className="absolute -bottom-1 text-[8px] font-black uppercase px-1 rounded bg-white border shadow-sm">
+                    {file.filetype || 'FILE'}
+                  </span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h5 className="text-sm font-bold text-slate-800 truncate max-w-[140px]">
+                      {file.filename || file.name || `Document ${index + 1}`}
+                    </h5>
+                    {file.year && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-900 text-white">
+                        {file.year}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {file.description && (
+                    <p className="text-[11px] text-slate-500 line-clamp-2 mb-2 leading-snug">
+                      {file.description}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {(file.filesize / 1024).toFixed(0)} KB
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {file.filepath && (
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <a
+                    href={file.filepath}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 py-2 text-[11px] font-bold rounded-lg bg-slate-50 text-slate-700 border border-slate-100 hover:bg-slate-100 transition-colors"
+                  >
+                    <FaExternalLinkAlt className="text-[10px]" />
+                    Preview
+                  </a>
+
+                  <a
+                    href={file.filepath}
+                    download={file.filename || 'document.pdf'}
+                    className="flex items-center justify-center gap-2 py-2 text-[11px] font-bold rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-200 hover:brightness-110 transition-all"
+                  >
+                    <FaDownload className="text-[10px]" />
+                    Get File
+                  </a>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="text-center py-16 px-4 bg-slate-50/50 rounded-[2rem] border-2 border-dashed border-slate-200">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-inner mb-4">
+            <FaFile className="text-slate-200 text-3xl" />
+          </div>
+          <h5 className="text-slate-900 font-bold">No documents attached</h5>
+          <p className="text-slate-400 text-xs mt-2 max-w-xs mx-auto leading-relaxed">
+            Your supplementary result files will appear here once uploaded in the editor.
+          </p>
+        </div>
+      )}
+    </div>
+  )}
+</div>
         
         {isEditing && (
           <div className="flex justify-end gap-3 pt-5 border-t border-gray-100 mt-6">
@@ -3343,7 +3417,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     <Modal open={true} onClose={onClose}>
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '90%',
+        width: '95vw',
         maxWidth: '1080px',
         maxHeight: '95vh',
         bgcolor: 'background.paper',
@@ -3359,7 +3433,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                 <FaSchool className="text-lg" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">{school ? 'Update School Information' : 'Create School Information'}</h2>
+                <h2 className="text-lg md:text-xl font-bold">{school ? 'Update School Information' : 'Create School Information'}</h2>
                 <p className="text-blue-100 opacity-90 text-xs mt-0.5">
                   Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
                 </p>
@@ -3372,7 +3446,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         </div>
 
         <div className="bg-white border-b border-gray-200 p-3">
-          <div className="flex justify-center items-center space-x-3">
+          <div className="flex flex-wrap justify-center items-center gap-2 md:space-x-3">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
@@ -3389,7 +3463,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                   <span className="font-bold">{step.label}</span>
                 </button>
                 {index < steps.length - 1 && (
-                  <div className={`w-6 h-0.5 mx-1.5 ${
+                  <div className={`w-4 h-0.5 mx-1.5 md:w-6 ${
                     index < currentStep ? 'bg-green-500' : 'bg-gray-300'
                   }`} />
                 )}
@@ -3398,8 +3472,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom">
-          <form onSubmit={handleFormSubmit} className="p-4 space-y-4">
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom p-2 md:p-4">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
             {currentStep === 0 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -3646,10 +3720,10 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
 
             {currentStep === 2 && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 md:p-6 border border-green-200">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaDollarSign className="text-green-600" />
                         Day School Fee Structure
                       </h3>
@@ -3661,7 +3735,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                           </label>
                           <TextField 
                             fullWidth 
-                            size="medium"
+                            size="small"
                             type="number"
                             min="0"
                             value={formData.feesDay} 
@@ -3671,7 +3745,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               '& .MuiOutlinedInput-root': {
                                 borderRadius: '10px',
                                 backgroundColor: 'white',
-                                fontSize: '1rem',
+                                fontSize: '0.875rem',
                                 fontWeight: 'bold'
                               }
                             }}
@@ -3701,17 +3775,17 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6 border border-purple-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 md:p-6 border border-purple-200">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaAward className="text-purple-600" />
                         Form 1 & 2 Results
                       </h3>
                       
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <label className="text-sm font-bold text-gray-700">Form 1 Results</label>
-                            <div className="w-28">
+                            <div className="w-full sm:w-28">
                               <TextField 
                                 fullWidth 
                                 size="small"
@@ -3743,9 +3817,9 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                         </div>
 
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <label className="text-sm font-bold text-gray-700">Form 2 Results</label>
-                            <div className="w-28">
+                            <div className="w-full sm:w-28">
                               <TextField 
                                 fullWidth 
                                 size="small"
@@ -3794,8 +3868,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6 border border-blue-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 md:p-6 border border-blue-200">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaUniversity className="text-blue-600" />
                         Boarding Fee Structure
                       </h3>
@@ -3807,7 +3881,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                           </label>
                           <TextField 
                             fullWidth 
-                            size="medium"
+                            size="small"
                             type="number"
                             min="0"
                             value={formData.feesBoarding} 
@@ -3817,7 +3891,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               '& .MuiOutlinedInput-root': {
                                 borderRadius: '10px',
                                 backgroundColor: 'white',
-                                fontSize: '1rem',
+                                fontSize: '0.875rem',
                                 fontWeight: 'bold'
                               }
                             }}
@@ -3847,8 +3921,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6 border border-orange-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 md:p-6 border border-orange-200">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaUserCheck className="text-orange-600" />
                         Admission Information
                       </h3>
@@ -3902,7 +3976,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                           </label>
                           <TextField 
                             fullWidth 
-                            size="medium"
+                            size="small"
                             type="number"
                             inputProps={{ min: 0, step: 1 }} 
                             value={formData.admissionFee} 
@@ -3915,7 +3989,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               '& .MuiOutlinedInput-root': {
                                 borderRadius: '10px',
                                 backgroundColor: 'white',
-                                fontSize: '1rem',
+                                fontSize: '0.875rem',
                                 fontWeight: 'bold'
                               }
                             }}
@@ -3949,7 +4023,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                           </label>
                           <TextField 
                             fullWidth 
-                            size="medium"
+                            size="small"
                             type="number"
                             min="1"
                             value={formData.admissionCapacity} 
@@ -3959,7 +4033,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               '& .MuiOutlinedInput-root': {
                                 borderRadius: '10px',
                                 backgroundColor: 'white',
-                                fontSize: '1rem'
+                                fontSize: '0.875rem'
                               }
                             }}
                           />
@@ -3967,8 +4041,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6 border border-indigo-200">
-                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 md:p-6 border border-indigo-200">
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaGraduationCap className="text-indigo-600" />
                         Other Important Documents
                       </h3>
@@ -3981,9 +4055,9 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                           { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', examKey: 'kcse' }
                         ].map((exam) => (
                           <div key={exam.key} className="space-y-2">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                               <label className="text-sm font-bold text-gray-700">{exam.label}</label>
-                              <div className="w-28">
+                              <div className="w-full sm:w-28">
                                 <TextField 
                                   fullWidth 
                                   size="small"
@@ -4021,7 +4095,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
@@ -4034,12 +4108,12 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 {currentStep > 0 && (
                   <button 
                     type="button"
                     onClick={handlePrevStep}
-                    className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer text-sm"
+                    className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer text-sm w-full sm:w-auto"
                   >
                     ← Previous
                   </button>
@@ -4050,7 +4124,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                     type="button"
                     onClick={handleNextStep}
                     disabled={!isStepValid()}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center gap-2 text-sm"
+                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
                   >
                     Continue →
                   </button>
@@ -4058,7 +4132,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                   <button 
                     type="submit"
                     disabled={loading || !isStepValid()}
-                    className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center gap-2 text-sm"
+                    className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
                   >
                     {loading ? (
                       <>
@@ -4200,69 +4274,87 @@ export default function ModernSchoolInformation() {
         />
       )}
 
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-2xl shadow-lg p-5 md:p-8 mb-8 border border-blue-500/30">
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm ring-1 ring-white/30">
-                <FaMapMarkerAlt className="text-white text-2xl" />
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                Nyaribu Secondary School
-              </h1>
-            </div>
-            <p className="text-blue-100 text-sm md:text-base font-medium max-w-2xl">
-              Manage and synchronize school profile details, fee structures, and admission data.
-            </p>
-          </div>
 
-          <div className="sticky bottom-4 left-0 right-0 sm:static flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto sm:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-4 sm:p-0 rounded-xl sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none z-50">
-            
-            <button 
-              onClick={loadSchoolInfo} 
-              disabled={loading}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
-            >
-              {loading ? (
-                <CircularProgress size={16} color="inherit" thickness={6} />
-              ) : (
-                <FaChartBar className="text-sm" /> 
-              )}
-              <span className="whitespace-nowrap">
-                {loading ? 'Syncing...' : 'Refresh Info'}
-              </span>
-            </button>
-            
-            {schoolInfo && (
-              <button 
-                onClick={() => setShowDeleteModal(true)} 
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-semibold text-sm active:scale-[0.98]"
-              >
-                <FaTrash className="text-sm" /> 
-                <span className="whitespace-nowrap">Delete</span>
-              </button>
-            )}
-            
-            <button 
-              onClick={() => setShowModal(true)} 
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98]"
-            >
-              {schoolInfo ? (
-                <>
-                  <FaEdit className="text-sm" />
-                  <span className="whitespace-nowrap">Update Profile</span>
-                </>
-              ) : (
-                <>
-                  <FaPlus className="text-sm" />
-                  <span className="whitespace-nowrap">Initialize</span>
-                </>
-              )}
-            </button>
+<div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
+  {/* Modern Decorative Elements */}
+  <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+  
+  <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+    
+    {/* Left Side: Identity & Meta */}
+    <div className="flex-1 min-w-0">
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
+          <FaMapMarkerAlt className="text-white text-3xl group-hover:scale-110 transition-transform" />
+        </div>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
+              Verified Institution
+            </span>
+            <FaShieldAlt className="text-blue-300 text-[10px]" />
           </div>
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
+            Nyaribu Secondary School
+          </h1>
         </div>
       </div>
+      
+      <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+        Orchestrate institutional assets, monitor fee structures, and synchronize 
+        <span className="text-white font-bold"> admission intelligence </span> 
+        through this unified administrative gateway.
+      </p>
+    </div>
+
+    {/* Right Side: Your exact button collection preserved */}
+    <div className="-z-100 bottom-4 left-0 right-0 sm:static flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto sm:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-4 sm:p-0 rounded-[2rem] sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none z-50">
+      
+      <button 
+        onClick={loadSchoolInfo} 
+        disabled={loading}
+        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
+      >
+        {loading ? (
+          <CircularProgress size={16} color="inherit" thickness={6} />
+        ) : (
+          <FaChartBar className="text-sm" /> 
+        )}
+        <span className="whitespace-nowrap">
+          {loading ? 'Syncing...' : 'Refresh Info'}
+        </span>
+      </button>
+      
+      {schoolInfo && (
+        <button 
+          onClick={() => setShowDeleteModal(true)} 
+          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-semibold text-sm active:scale-[0.98]"
+        >
+          <FaTrash className="text-sm" /> 
+          <span className="whitespace-nowrap">Delete</span>
+        </button>
+      )}
+      
+      <button 
+        onClick={() => setShowModal(true)} 
+        className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98]"
+      >
+        {schoolInfo ? (
+          <>
+            <FaEdit className="text-sm" />
+            <span className="whitespace-nowrap">Update Profile</span>
+          </>
+        ) : (
+          <>
+            <FaPlus className="text-sm" />
+            <span className="whitespace-nowrap">Initialize</span>
+          </>
+        )}
+      </button>
+    </div>
+  </div>
+</div>
 
       {schoolInfo ? (
         <div className="space-y-6">
@@ -4440,244 +4532,361 @@ export default function ModernSchoolInformation() {
               </div>
             )}
 
-            {schoolInfo.feesBoarding && (
-              <div className="mb-6">
-                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
-                        <FaUniversity className="text-white text-lg" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-bold text-gray-900">Boarding Fee Structure</h3>
-                        <p className="text-sm text-gray-500 mt-0.5">Annual boarding fee details</p>
-                      </div>
+{schoolInfo.feesBoarding && (
+  <div className="mb-8">
+    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-2xl shadow-slate-200/40 relative overflow-hidden transition-all duration-500 hover:shadow-purple-100/50 group">
+      {/* Decorative Soft-UI Accent for Boarding */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
+
+      {/* Header & Total Summary Section */}
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between pb-8 mb-8 border-b border-slate-100/80 gap-6">
+        <div className="flex items-start gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-purple-200 ring-4 ring-purple-50 transition-transform group-hover:rotate-3">
+            <FaUniversity className="text-white text-2xl" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">
+              Boarding Fee Structure
+            </h3>
+            <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+              Complete residential fee breakdown including tuition, accommodation, and full-term care.
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-start lg:items-end">
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 ml-1 lg:ml-0">Total Residential Liability</span>
+          <div className="inline-flex items-baseline gap-1.5 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl shadow-purple-900/20">
+            <span className="text-xs font-bold text-purple-400 uppercase">KES</span>
+            <span className="text-2xl font-black tabular-nums tracking-tighter">
+              {schoolInfo.feesBoarding.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Boarding-Specific Fee Distribution Grid */}
+      {schoolInfo.feesBoardingDistribution && Object.keys(schoolInfo.feesBoardingDistribution).length > 0 && (
+        <div className="mb-10 relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <FaChartPie className="text-purple-300 text-sm" />
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Residency Cost Allocation</h4>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(schoolInfo.feesBoardingDistribution).map(([key, value]) => {
+              const percentage = Math.round((parseFloat(value) / schoolInfo.feesBoarding) * 100);
+              return (
+                <div 
+                  key={key} 
+                  className="group/item bg-white hover:bg-purple-50/50 rounded-2xl p-4 border border-slate-100 hover:border-purple-200 transition-all duration-300"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <FaCheckCircle className="text-purple-200 group-hover/item:text-purple-500 transition-colors text-sm" />
+                      <span className="text-sm font-bold text-slate-700 capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
                     </div>
-                    <div className="text-lg font-bold text-purple-600 bg-purple-50 px-3 py-1.5 rounded-full">
-                      KES {schoolInfo.feesBoarding.toLocaleString()}
-                    </div>
+                    <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-2 py-1 rounded-md">
+                      {percentage}%
+                    </span>
                   </div>
                   
-                  {schoolInfo.feesBoardingDistribution && Object.keys(schoolInfo.feesBoardingDistribution).length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-sm font-bold text-gray-700 mb-3">Fee Breakdown</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {Object.entries(schoolInfo.feesBoardingDistribution).map(([key, value]) => (
-                          <div key={key} className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3 border border-purple-200">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                              <span className="text-sm font-bold text-gray-900">KES {parseFloat(value).toLocaleString()}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="flex items-end justify-between">
+                    <div className="w-full max-w-[100px] h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-purple-400 to-indigo-600 h-full rounded-full transition-all duration-1000" 
+                        style={{ width: `${percentage}%` }} 
+                      />
                     </div>
-                  )}
-                  
-                  {schoolInfo.feesBoardingDistributionPdf && (
-                    <div className="pt-5 border-t border-gray-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-md bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center">
-                            <FaFilePdf className="text-white text-xs" />
-                          </div>
-                          <h4 className="text-sm font-bold text-gray-900">Detailed Fee Structure</h4>
-                        </div>
-                        <span className="text-xs text-purple-600 font-medium bg-purple-50 px-2 py-1 rounded-full">Available</span>
-                      </div>
-                      
-                      <div className="bg-gradient-to-r from-white to-gray-50/50 rounded-xl p-4 border border-gray-200/70">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
-                              <FaFilePdf className="text-red-400 text-xl" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">
-                                {schoolInfo.feesBoardingPdfName || 'Boarding Fee Structure Document'}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs text-gray-500">Complete fee breakdown</span>
-                                <div className="w-1 h-1 rounded-full bg-gray-300"></div>
-                                <span className="text-xs text-gray-400">PDF</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <a
-                              href={schoolInfo.feesBoardingDistributionPdf}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded-lg text-xs font-medium hover:bg-gray-50 hover:border-gray-400 transition-all"
-                            >
-                              <FaExternalLinkAlt className="text-xs" />
-                              Open
-                            </a>
-                            <a
-                              href={schoolInfo.feesBoardingDistributionPdf}
-                              download={schoolInfo.feesBoardingPdfName || 'boarding-fees.pdf'}
-                              className="inline-flex items-center gap-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:shadow-lg hover:shadow-purple-500/20 transition-all"
-                            >
-                              <FaArrowDown className="text-xs" />
-                              Download
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                    <span className="text-base font-black text-slate-900">
+                      <span className="text-[10px] font-bold text-slate-400 mr-1 font-sans">KES</span>
+                      {parseFloat(value).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile-Responsive PDF Control Section */}
+      {schoolInfo.feesBoardingDistributionPdf && (
+        <div className="relative group/pdf">
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-indigo-500 rounded-[2rem] blur opacity-10 group-hover/pdf:opacity-20 transition duration-500" />
+          <div className="relative bg-slate-50 rounded-[1.75rem] border border-slate-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-slate-100 shrink-0">
+                <FaFilePdf className="text-red-500 text-3xl" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black text-slate-900 mb-1 truncate">
+                  {schoolInfo.feesBoardingPdfName || 'Boarding Fee Structure.pdf'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-500 whitespace-nowrap">Official Doc</span>
+                  <span className="px-2 py-0.5 rounded-md bg-purple-50 border border-purple-100 text-[10px] font-bold text-purple-600 uppercase tracking-tighter">Verified</span>
                 </div>
               </div>
-            )}
+            </div>
+            
+            {/* Buttons: Stack on mobile, side-by-side on desktop */}
+            <div className="flex flex-col xs:flex-row items-stretch md:items-center gap-3 w-full md:w-auto">
+              <a
+                href={schoolInfo.feesBoardingDistributionPdf}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 px-6 py-3.5 md:py-3 rounded-xl text-xs font-black transition-all duration-300 shadow-sm"
+              >
+                <FaEye className="text-purple-500 group-hover:text-white" />
+                Preview
+              </a>
+              <a
+                href={schoolInfo.feesBoardingDistributionPdf}
+                download={schoolInfo.feesBoardingPdfName || 'boarding-fees.pdf'}
+                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3.5 md:py-3 rounded-xl text-xs font-black shadow-xl shadow-purple-200 transition-all duration-300"
+              >
+                <FaDownload />
+                Get PDF
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
-            <div className="mb-6">
-              <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                <FaGraduationCap className="text-purple-600" />
-                Academic Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                  <h4 className="text-sm font-bold text-gray-900 mb-3">Academic Calendar</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Opening Date:</span>
-                      <span className="text-sm font-bold text-gray-900">
-                        {new Date(schoolInfo.openDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Closing Date:</span>
-                      <span className="text-sm font-bold text-gray-900">
-                        {new Date(schoolInfo.closeDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+<div className="mb-10 space-y-6">
+  <div className="flex items-center gap-4 mb-8">
+    <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100 shadow-sm transition-transform hover:scale-110">
+      <FaGraduationCap className="text-purple-600 text-xl" />
+    </div>
+    <div>
+      <h3 className="text-xl font-black text-slate-900 tracking-tight">Academic Information</h3>
+      <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Institutional Milestones & Curriculum</p>
+    </div>
+  </div>
 
-                {Array.isArray(schoolInfo.subjects) && schoolInfo.subjects.length > 0 && (
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                    <h4 className="text-sm font-bold text-gray-900 mb-3">Subjects</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {schoolInfo.subjects.map((subject, index) => (
-                        <span 
-                          key={index} 
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded text-xs font-bold"
-                        >
-                          {subject}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-300 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50/50 rounded-bl-[60px] -z-0 group-hover:bg-blue-100/60 transition-colors" />
+      
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-5">
+          <FaCalendarAlt className="text-blue-500" />
+          <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Academic Calendar</h4>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-2">
+              <FaClock className="text-[10px] text-emerald-500" />
+              <span className="text-[11px] font-black text-slate-400 uppercase">Opening</span>
+            </div>
+            <span className="text-sm font-black text-slate-900">
+              {new Date(schoolInfo.openDate).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+              })}
+            </span>
+          </div>
 
-                {Array.isArray(schoolInfo.departments) && schoolInfo.departments.length > 0 && (
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
-                    <h4 className="text-sm font-bold text-gray-900 mb-3">Departments</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {schoolInfo.departments.map((dept, index) => (
-                        <span 
-                          key={index} 
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2 py-1 rounded text-xs font-bold"
-                        >
-                          {dept}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+          <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
+            <div className="flex items-center gap-2">
+              <FaClock className="text-[10px] text-rose-500" />
+              <span className="text-[11px] font-black text-slate-400 uppercase">Closing</span>
+            </div>
+            <span className="text-sm font-black text-slate-900">
+              {new Date(schoolInfo.closeDate).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+              })}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* 2. Subjects Card */}
+    {Array.isArray(schoolInfo.subjects) && schoolInfo.subjects.length > 0 && (
+      <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-purple-100/50 transition-all duration-300 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-20 h-20 bg-purple-50/50 rounded-bl-[60px] -z-0 group-hover:bg-purple-100/60 transition-colors" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-5">
+            <FaBookOpen className="text-purple-500" />
+            <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Subjects Offered</h4>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {schoolInfo.subjects.map((subject, index) => (
+              <span 
+                key={index} 
+                className="bg-white hover:bg-purple-600 hover:text-white border border-purple-100 text-purple-700 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-default shadow-sm"
+              >
+                {subject}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* 3. Departments Card */}
+    {Array.isArray(schoolInfo.departments) && schoolInfo.departments.length > 0 && (
+      <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-orange-100/50 transition-all duration-300 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-20 h-20 bg-orange-50/50 rounded-bl-[60px] -z-0 group-hover:bg-orange-100/60 transition-colors" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-5">
+            <FaUsersCog className="text-orange-500" />
+            <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Departments</h4>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {schoolInfo.departments.map((dept, index) => (
+              <span 
+                key={index} 
+                className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-orange-500 transition-colors shadow-lg shadow-slate-200"
+              >
+                {dept}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+{(schoolInfo.admissionOpenDate || schoolInfo.admissionContactEmail) && (
+  <div className="mb-10 relative">
+    {/* Section Header with Status Badge */}
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-200">
+          <FaUserCheck className="text-white text-xl" />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">Admission Details</h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Enrolment & Direct Inquiry</p>
+        </div>
+      </div>
+      
+      {/* Dynamic Status Indicator */}
+      {schoolInfo.admissionCloseDate && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">Admissions Active</span>
+        </div>
+      )}
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Timeline Card - Spans 2 cols */}
+      <div className="lg:col-span-2 group bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
+        <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+          <FaCalendarAlt size={120} className="text-white" />
+        </div>
+        
+        <div className="relative z-10">
+          <h4 className="text-xs font-black text-orange-400 uppercase tracking-[0.2em] mb-6">Timeline</h4>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
+                <FaArrowRight className="text-white text-xs rotate-[-45deg]" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Registration Opens</p>
+                <p className="text-lg font-black text-white">
+                  {new Date(schoolInfo.admissionOpenDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </p>
               </div>
             </div>
 
-            {(schoolInfo.admissionOpenDate || schoolInfo.admissionContactEmail) && (
-              <div className="mb-6">
-                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <FaUserCheck className="text-orange-600" />
-                  Admission Details
-                </h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    {(schoolInfo.admissionOpenDate || schoolInfo.admissionCloseDate) && (
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
-                        <h4 className="text-sm font-bold text-gray-900 mb-3">Admission Timeline</h4>
-                        <div className="space-y-2">
-                          {schoolInfo.admissionOpenDate && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-600">Opens:</span>
-                              <span className="text-sm font-bold text-gray-900">
-                                {new Date(schoolInfo.admissionOpenDate).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
-                          {schoolInfo.admissionCloseDate && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-600">Closes:</span>
-                              <span className="text-sm font-bold text-gray-900">
-                                {new Date(schoolInfo.admissionCloseDate).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
+                <FaHourglassHalf className="text-orange-400 text-xs" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Closing Deadline</p>
+                <p className="text-lg font-black text-white">
+                  {new Date(schoolInfo.admissionCloseDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                  <div className="space-y-4">
-                    {(schoolInfo.admissionCapacity || schoolInfo.admissionContactEmail) && (
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                        <h4 className="text-sm font-bold text-gray-900 mb-3">Contact Information</h4>
-                        <div className="space-y-3">
-                          {schoolInfo.admissionCapacity && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-600">Capacity:</span>
-                              <span className="text-sm font-bold text-gray-900">{schoolInfo.admissionCapacity?.toLocaleString()} Students</span>
-                            </div>
-                          )}
-                          {schoolInfo.admissionContactEmail && (
-                            <div className="flex items-center gap-2">
-                              <FaEnvelope className="text-gray-400 text-xs" />
-                              <span className="text-xs text-gray-600 truncate">{schoolInfo.admissionContactEmail}</span>
-                            </div>
-                          )}
-                          {schoolInfo.admissionContactPhone && (
-                            <div className="flex items-center gap-2">
-                              <FaPhone className="text-gray-400 text-xs" />
-                              <span className="text-xs text-gray-600">{schoolInfo.admissionContactPhone}</span>
-                            </div>
-                          )}
-                          {schoolInfo.admissionWebsite && (
-                            <div className="flex items-center gap-2">
-                              <FaGlobe className="text-gray-400 text-xs" />
-                              <a href={schoolInfo.admissionWebsite} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline truncate">
-                                {schoolInfo.admissionWebsite}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* Inquiry & Capacity Card - Spans 3 cols */}
+      <div className="lg:col-span-3 bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Inquiry Suite</h4>
+            {schoolInfo.admissionCapacity && (
+              <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+                <FaUsers className="text-slate-400 text-xs" />
+                <span className="text-[11px] font-black text-slate-700">{schoolInfo.admissionCapacity.toLocaleString()} Slots</span>
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Actionable Contact Tiles */}
+            {schoolInfo.admissionContactEmail && (
+              <a href={`mailto:${schoolInfo.admissionContactEmail}`} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:text-blue-600 transition-colors">
+                  <FaEnvelope size={12} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Email Registry</p>
+                  <p className="text-xs font-bold text-slate-700 truncate">{schoolInfo.admissionContactEmail}</p>
+                </div>
+              </a>
+            )}
+
+            {schoolInfo.admissionContactPhone && (
+              <a href={`tel:${schoolInfo.admissionContactPhone}`} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:text-emerald-600 transition-colors">
+                  <FaPhone size={12} />
+                </div>
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase">Direct Line</p>
+                  <p className="text-xs font-bold text-slate-700">{schoolInfo.admissionContactPhone}</p>
+                </div>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Website Action Button */}
+        {schoolInfo.admissionWebsite && (
+          <div className="mt-6">
+            <a 
+              href={schoolInfo.admissionWebsite} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-between bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-2xl transition-all group shadow-lg shadow-slate-200"
+            >
+              <div className="flex items-center gap-3">
+                <FaGlobe className="text-blue-400" />
+                <span className="text-xs font-black uppercase tracking-widest">Portal Access</span>
+              </div>
+              <FaArrowRight className="text-slate-500 group-hover:translate-x-1 transition-transform" />
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
           </div>
         </div>
       ) : (

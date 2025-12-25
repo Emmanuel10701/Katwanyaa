@@ -48,8 +48,110 @@ import {
   IoDocumentText
 } from 'react-icons/io5';
 import { Modal, Box, CircularProgress } from '@mui/material';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+
+// Decode JWT token
+const decodeToken = () => {
+  if (typeof window === 'undefined') return null;
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+  
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
+function ModernLoadingSpinner({ message = "Loading sessions from the database…", size = "medium" }) {
+  const sizes = {
+    small: { outer: 48, inner: 24 },
+    medium: { outer: 64, inner: 32 },
+    large: { outer: 80, inner: 40 }
+  }
+
+  const { outer, inner } = sizes[size] || sizes.medium;
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50">
+      <div className="text-center">
+        <div className="relative inline-block">
+          {/* Main spinner */}
+          <div className="relative">
+            <CircularProgress 
+              size={outer} 
+              thickness={5}
+              className="text-indigo-600"
+            />
+            {/* Pulsing inner circle */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full animate-ping opacity-25"
+                   style={{ width: inner, height: inner }}></div>
+            </div>
+          </div>
+          {/* Outer glow effect */}
+          <div className="absolute -inset-6 bg-gradient-to-r from-indigo-100 to-violet-100 rounded-full blur-xl opacity-30 animate-pulse"></div>
+        </div>
+        
+        {/* Text content */}
+        <div className="mt-6 space-y-3">
+          <span className="block text-lg font-semibold text-gray-800">
+            {message}
+          </span>
+          
+          {/* Bouncing dots */}
+          <div className="flex justify-center space-x-1.5">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" 
+                   style={{ animationDelay: `${i * 0.15}s` }}></div>
+            ))}
+          </div>
+          
+          {/* Optional subtitle */}
+          <p className="text-gray-500 text-sm mt-2">
+            Please wait while we fetch school public data
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Chart component for percentage-based displays
+const PercentageChart = ({ data, colors = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'] }) => {
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="value"
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value) => [`${value}%`, 'Percentage']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+};
 
 export default function DashboardOverview() {
+  const [user, setUser] = useState({ name: 'Admin', role: 'admin' });
   const [stats, setStats] = useState({
     // School Management Stats
     totalStudents: 0,
@@ -100,11 +202,36 @@ export default function DashboardOverview() {
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [showQuickTour, setShowQuickTour] = useState(false);
   const [schoolVideo, setSchoolVideo] = useState(null);
-  const [studentGrowthData, setStudentGrowthData] = useState({
-    monthlyGrowth: 0,
-    formDistribution: {},
-    activeVsInactive: { active: 0, inactive: 0 }
-  });
+  
+  // New state for dynamic data
+  const [staffDistribution, setStaffDistribution] = useState([]);
+  const [assignmentsDistribution, setAssignmentsDistribution] = useState([]);
+  const [resourcesDistribution, setResourcesDistribution] = useState([]);
+  const [careers, setCareers] = useState([]);
+  const [emailCampaigns, setEmailCampaigns] = useState([]);
+  
+  // Get user from token on component mount
+  useEffect(() => {
+    const userData = decodeToken();
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
+  
+  // Calculate percentages for charts
+  const calculatePercentages = (data, key) => {
+    const counts = {};
+    data.forEach(item => {
+      const value = item[key] || 'Unknown';
+      counts[value] = (counts[value] || 0) + 1;
+    });
+    
+    const total = data.length;
+    return Object.entries(counts).map(([name, count]) => ({
+      name,
+      value: Math.round((count / total) * 100)
+    }));
+  };
 
   // Fetch all data from APIs including admissions
   useEffect(() => {
@@ -125,7 +252,10 @@ export default function DashboardOverview() {
           newsRes,
           schoolInfoRes,
           adminsRes,
-          admissionsRes  // Admissions API
+          admissionsRes,
+          resourcesRes,
+          careersRes,
+          emailCampaignsRes
         ] = await Promise.allSettled([
           fetch('/api/student'),
           fetch('/api/staff'),
@@ -138,7 +268,10 @@ export default function DashboardOverview() {
           fetch('/api/news'),
           fetch('/api/school'),
           fetch('/api/register'),
-          fetch('/api/applyadmission')  // Admissions endpoint
+          fetch('/api/applyadmission'),
+          fetch('/api/resources'),
+          fetch('/api/career'),
+          fetch('/api/emails')
         ]);
 
         // Process responses
@@ -154,6 +287,9 @@ export default function DashboardOverview() {
         const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
         const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
         const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
+        const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
+        const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
+        const emailCampaignsData = emailCampaignsRes.status === 'fulfilled' ? await emailCampaignsRes.value.json() : { campaigns: [] };
 
         // Store school video for quick tour
         if (schoolInfo.school?.videoTour) {
@@ -161,6 +297,34 @@ export default function DashboardOverview() {
             url: schoolInfo.school.videoTour,
             type: schoolInfo.school.videoType // 'youtube' or 'file'
           });
+        }
+
+        // Calculate staff distribution percentages
+        if (staff.staff && staff.staff.length > 0) {
+          const staffDist = calculatePercentages(staff.staff, 'department');
+          setStaffDistribution(staffDist);
+        }
+
+        // Calculate assignments distribution
+        if (assignments.assignments && assignments.assignments.length > 0) {
+          const assignDist = calculatePercentages(assignments.assignments, 'status');
+          setAssignmentsDistribution(assignDist);
+        }
+
+        // Calculate resources distribution
+        if (resources.resources && resources.resources.length > 0) {
+          const resourcesDist = calculatePercentages(resources.resources, 'category');
+          setResourcesDistribution(resourcesDist);
+        }
+
+        // Set careers data
+        if (careersData.jobs && careersData.jobs.length > 0) {
+          setCareers(careersData.jobs.slice(0, 3)); // Show only 3 latest careers
+        }
+
+        // Set email campaigns
+        if (emailCampaignsData.campaigns && emailCampaignsData.campaigns.length > 0) {
+          setEmailCampaigns(emailCampaignsData.campaigns.slice(0, 2)); // Show only 2 active campaigns
         }
 
         // Calculate school management stats
@@ -308,16 +472,6 @@ export default function DashboardOverview() {
           formDistribution[form] = (formDistribution[form] || 0) + 1;
         });
 
-        setStudentGrowthData({
-          monthlyGrowth: 8.5,
-          formDistribution,
-          activeVsInactive: {
-            active: activeStudents,
-            inactive: inactiveStudents
-          },
-          councilParticipation: Math.round((activeCouncil / (students.students?.length || 1)) * 100)
-        });
-
         // Growth metrics
         setGrowthMetrics({
           studentGrowth: 8.5,
@@ -342,7 +496,7 @@ export default function DashboardOverview() {
             Math.round((30 / avgProcessingTime) * 100) : 100 // Efficiency percentage
         });
 
-        // Generate recent activity including admissions
+        // Generate recent activity including all dynamic sources
         const generateRecentActivity = () => {
           const activities = [];
           
@@ -411,17 +565,56 @@ export default function DashboardOverview() {
             });
           });
 
+          // Recent resources
+          const recentResources = resources.resources?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 2);
+          recentResources?.forEach(resource => {
+            activities.push({
+              id: `resource-${resource.id}`,
+              action: 'Resource uploaded',
+              target: `${resource.title} - ${resource.category}`,
+              time: new Date(resource.createdAt).toLocaleDateString(),
+              type: 'resource',
+              icon: FiFileText,
+              color: 'purple',
+              timestamp: new Date(resource.createdAt)
+            });
+          });
+
+          // Recent careers
+          const recentCareers = careersData.jobs?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 2);
+          recentCareers?.forEach(job => {
+            activities.push({
+              id: `career-${job.id}`,
+              action: 'Career opportunity posted',
+              target: `${job.jobTitle} - ${job.department}`,
+              time: new Date(job.createdAt).toLocaleDateString(),
+              type: 'career',
+              icon: IoDocumentText,
+              color: 'orange',
+              timestamp: new Date(job.createdAt)
+            });
+          });
+
           return activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 8);
         };
 
         setRecentActivity(generateRecentActivity());
 
-        // Performance metrics including admissions
+        // Performance metrics including admissions and calculated percentages
         const calculatePerformanceMetrics = () => {
           const totalStudents = students.students?.length || 1;
           const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
           const assignmentCompletionRate = Math.round((completedAssignments / totalAssignments) * 100);
           const councilEngagement = Math.round((activeCouncil / totalStudents) * 100);
+          
+          // Calculate staff distribution efficiency (based on department distribution)
+          const staffDistEfficiency = staffDistribution.length > 0 ? 
+            Math.min(100, Math.round((staffDistribution.length / 5) * 100)) : 0;
+          
+          // Calculate resource utilization
+          const totalResources = resources.resources?.length || 1;
+          const downloadedResources = resources.resources?.filter(r => r.downloads > 0).length || 0;
+          const resourceUtilization = Math.round((downloadedResources / totalResources) * 100);
 
           return [
             { 
@@ -453,22 +646,22 @@ export default function DashboardOverview() {
               description: 'Student participation in council'
             },
             { 
-              label: 'Admission Processing', 
-              value: avgProcessingTime > 0 ? Math.min(100, Math.round((30 / avgProcessingTime) * 100)) : 100,
+              label: 'Resource Utilization', 
+              value: resourceUtilization,
               change: 6.3,
               color: 'orange',
-              description: 'Processing efficiency'
+              description: 'Resource downloads rate'
             }
           ];
         };
 
         setPerformanceData(calculatePerformanceMetrics());
 
-        // Quick stats
+        // Quick stats - dynamically calculated
         const quickStatsData = [
           { 
             label: 'Academic Excellence', 
-            value: '94%', 
+            value: `${Math.round((stats.completedAssignments / stats.totalAssignments) * 100) || 0}%`, 
             change: 2.3, 
             icon: FiTrendingUp, 
             color: 'green',
@@ -476,15 +669,15 @@ export default function DashboardOverview() {
           },
           { 
             label: 'Admission Growth', 
-            value: `${monthlyApplications}`, 
-            change: monthlyApplications > 10 ? 15.7 : 5.2, 
-            icon: monthlyApplications > 10 ? FiTrendingUp : FiTrendingDown, 
-            color: monthlyApplications > 10 ? 'purple' : 'red',
+            value: `${stats.monthlyApplications}`, 
+            change: stats.monthlyApplications > 10 ? 15.7 : 5.2, 
+            icon: stats.monthlyApplications > 10 ? FiTrendingUp : FiTrendingDown, 
+            color: stats.monthlyApplications > 10 ? 'purple' : 'red',
             calculation: 'Monthly applications'
           },
           { 
             label: 'Student Engagement', 
-            value: `${studentGrowthData.councilParticipation}%`, 
+            value: `${Math.round((stats.studentCouncil / stats.totalStudents) * 100) || 0}%`, 
             change: 4.7, 
             icon: FiActivity, 
             color: 'blue',
@@ -501,8 +694,8 @@ export default function DashboardOverview() {
             value: applications.length, 
             icon: IoDocumentText, 
             color: 'purple',
-            trend: monthlyApplications > 0 ? 'up' : 'down',
-            subtitle: `${dailyApplications} today`
+            trend: stats.monthlyApplications > 0 ? 'up' : 'down',
+            subtitle: `${stats.dailyApplications} today`
           },
           { 
             label: 'Pending Review', 
@@ -854,17 +1047,14 @@ export default function DashboardOverview() {
       </div>
     </div>
   );
-
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <CircularProgress className="text-blue-500" size={40} />
-          <p className="text-gray-600 mt-4">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
+if (loading) {
+  return (
+    <ModernLoadingSpinner 
+      message="Loading dashboard data..." 
+      size="medium" 
+    />
+  );
+}
 
   return (
     <>
@@ -879,7 +1069,7 @@ export default function DashboardOverview() {
               <div className="p-2 bg-white/20 rounded-xl">
                 <IoSparkles className="text-2xl text-yellow-300" />
               </div>
-              <h1 className="text-3xl font-bold">Welcome back, Admin!</h1>
+              <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
             </div>
             <p className="text-blue-100 text-lg max-w-2xl">
               Managing <strong>{stats.totalStudents} students</strong>, <strong>{stats.totalStaff} staff members</strong>, and <strong>{stats.totalSubscribers} subscribers</strong>. You have <span className="text-yellow-300 font-semibold">{stats.activeAssignments} active assignments</span> and <span className="text-green-300 font-semibold">{stats.upcomingEvents} upcoming events</span>.
@@ -952,43 +1142,167 @@ export default function DashboardOverview() {
         </div>
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard 
-            icon={FiUserPlus} 
-            label="Total Students" 
-            value={stats.totalStudents} 
-            change={parseFloat(growthMetrics.studentGrowth)} 
-            trend={parseFloat(growthMetrics.studentGrowth) >= 0 ? "up" : "down"}
-            color="blue" 
-            subtitle={`${stats.activeStudents} active`} 
-          />
-          <StatCard 
-            icon={FiUsers} 
-            label="Staff Members" 
-            value={stats.totalStaff} 
-            change={parseFloat(growthMetrics.staffGrowth)} 
-            trend={parseFloat(growthMetrics.staffGrowth) >= 0 ? "up" : "down"}
-            color="green" 
-            subtitle="Teaching & administrative" 
-          />
-          <StatCard 
-            icon={FiMail} 
-            label="Subscribers" 
-            value={stats.totalSubscribers} 
-            change={parseFloat(growthMetrics.subscriberGrowth)} 
-            trend={parseFloat(growthMetrics.subscriberGrowth) >= 0 ? "up" : "down"}
-            color="purple" 
-            subtitle="Newsletter list" 
-          />
-          <StatCard 
-            icon={FiBook} 
-            label="Active Assignments" 
-            value={stats.activeAssignments} 
-            change={parseFloat(growthMetrics.assignmentGrowth)} 
-            trend={parseFloat(growthMetrics.assignmentGrowth) >= 0 ? "up" : "down"}
-            color="orange" 
-            subtitle="Currently assigned" 
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Admission Growth Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Admission Growth</h3>
+              <FiUserPlus className="text-2xl text-purple-600" />
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-gray-900 mb-2">{stats.totalApplications}</p>
+              <p className="text-sm text-gray-600">Total Applications</p>
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-gray-600">Monthly Growth</span>
+                  <span className="text-sm font-semibold text-green-600">{stats.monthlyApplications}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Daily Applications</span>
+                  <span className="text-sm font-semibold text-blue-600">{stats.dailyApplications}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Staff Distribution Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Staff Distribution</h3>
+              <FiUsers className="text-2xl text-blue-600" />
+            </div>
+            {staffDistribution.length > 0 ? (
+              <PercentageChart data={staffDistribution} />
+            ) : (
+              <div className="h-48 flex items-center justify-center">
+                <p className="text-gray-500">No staff data available</p>
+              </div>
+            )}
+          </div>
+
+          {/* Assignments & Resources Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Assignments & Resources</h3>
+              <FiBook className="text-2xl text-orange-600" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Assignments</h4>
+                {assignmentsDistribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {assignmentsDistribution.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">{item.name}</span>
+                        <span className="text-xs font-semibold">{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No assignment data</p>
+                )}
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Resources</h4>
+                {resourcesDistribution.length > 0 ? (
+                  <div className="space-y-2">
+                    {resourcesDistribution.slice(0, 3).map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">{item.name}</span>
+                        <span className="text-xs font-semibold">{item.value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No resource data</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Careers Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Career Opportunities</h3>
+              <IoDocumentText className="text-2xl text-green-600" />
+            </div>
+            {careers.length > 0 ? (
+              <div className="space-y-3">
+                {careers.map((career) => (
+                  <div key={career.id} className="p-3 bg-gray-50 rounded-lg">
+                    <p className="font-medium text-sm text-gray-800">{career.jobTitle}</p>
+                    <p className="text-xs text-gray-600">{career.department}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-32 flex items-center justify-center">
+                <p className="text-gray-500">No career opportunities</p>
+              </div>
+            )}
+          </div>
+
+          {/* Email Campaigns Card */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200 col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Email Campaigns</h3>
+              <FiMail className="text-2xl text-red-600" />
+            </div>
+            {emailCampaigns.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {emailCampaigns.map((campaign) => {
+                  const recipients = campaign.recipients ? campaign.recipients.split(',').length : 0;
+                  return (
+                    <div key={campaign.id} className="p-4 bg-gray-50 rounded-lg">
+                      <p className="font-medium text-sm text-gray-800">{campaign.title}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-gray-600">Recipients</span>
+                        <span className="text-xs font-semibold">{recipients}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Status</span>
+                        <span className={`text-xs font-semibold ${
+                          campaign.status === 'published' ? 'text-green-600' : 'text-yellow-600'
+                        }`}>
+                          {campaign.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="h-32 flex items-center justify-center">
+                <p className="text-gray-500">No active email campaigns</p>
+              </div>
+            )}
+          </div>
+
+          {/* Academic Performance Card - Empty */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Academic Performance</h3>
+              <FiAward className="text-2xl text-indigo-600" />
+            </div>
+            <div className="h-32 flex items-center justify-center">
+              <p className="text-gray-500">Performance metrics calculated dynamically</p>
+            </div>
+          </div>
+
+          {/* Student Engagement Card - Empty */}
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Student Engagement</h3>
+              <FiActivity className="text-2xl text-teal-600" />
+            </div>
+            <div className="h-32 flex items-center justify-center">
+              <p className="text-gray-500">Engagement metrics calculated dynamically</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Stat Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             icon={FiCalendar} 
             label="Upcoming Events" 
@@ -1005,7 +1319,7 @@ export default function DashboardOverview() {
             change={parseFloat(growthMetrics.councilGrowth)} 
             trend={parseFloat(growthMetrics.councilGrowth) >= 0 ? "up" : "down"}
             color="indigo" 
-            subtitle={`${studentGrowthData.councilParticipation}% participation`} 
+            subtitle="Active members" 
           />
           <StatCard 
             icon={FiImage} 
@@ -1015,15 +1329,6 @@ export default function DashboardOverview() {
             trend={parseFloat(growthMetrics.galleryGrowth) >= 0 ? "up" : "down"}
             color="pink" 
             subtitle="Media content" 
-          />
-          <StatCard 
-            icon={FiMessageCircle} 
-            label="Guidance Sessions" 
-            value={stats.guidanceSessions} 
-            change={parseFloat(growthMetrics.guidanceGrowth)} 
-            trend={parseFloat(growthMetrics.guidanceGrowth) >= 0 ? "up" : "down"}
-            color="teal" 
-            subtitle="Counseling events" 
           />
           <StatCard 
             icon={IoNewspaper} 
@@ -1107,7 +1412,9 @@ export default function DashboardOverview() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Student Engagement</span>
-                <span className="font-semibold text-blue-600">{studentGrowthData.councilParticipation}%</span>
+                <span className="font-semibold text-blue-600">
+                  {Math.round((stats.studentCouncil / stats.totalStudents) * 100) || 0}%
+                </span>
               </div>
             </div>
           </div>
