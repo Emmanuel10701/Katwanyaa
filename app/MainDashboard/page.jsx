@@ -43,7 +43,7 @@ import SchoolInfoTab from '../components/schoolinfo/page';
 import ApplicationsManager from '../components/applications/page';
 import Resources from '../components/resources/page';
 import Careers from "../components/career/page";
-
+import Student from "../components/student/page";
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -62,8 +62,8 @@ export default function AdminDashboard() {
     totalApplications: 0,
     pendingApplications: 0,
     Resources: 0,
-    Careers: 0
-
+    Careers: 0,
+    totalStudent: 0
   });
 
   // Modern Loading Screen with Enhanced Design
@@ -157,7 +157,8 @@ export default function AdminDashboard() {
         guidanceRes,
         admissionsRes,
         resourcesRes,
-        careersRes
+        careersRes,
+        studentRes
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -170,7 +171,8 @@ export default function AdminDashboard() {
         fetch('/api/guidance'),
         fetch('/api/applyadmission'),
         fetch('/api/resources'),
-        fetch('/api/career')
+        fetch('/api/career'),
+        fetch('/api/student')
       ]);
 
       // Process responses and get actual counts
@@ -186,6 +188,7 @@ export default function AdminDashboard() {
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
       const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
+      const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
 
       // Calculate real counts
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
@@ -211,7 +214,8 @@ export default function AdminDashboard() {
         totalApplications: admissionsData.length || 0,
         pendingApplications: pendingApps,
         Resources: resources.resources?.length || 0,
-        Careers: careers.careers?.length || 0
+        Careers: careers.careers?.length || 0,
+        totalStudent: student.students?.length || 0
       });
 
     } catch (error) {
@@ -363,6 +367,9 @@ export default function AdminDashboard() {
       case 'email':
         return <EmailManager />;
 
+      case 'student':
+        return <Student />;  
+
       case 'admins-profile':
         return <AdminsProfileManager user={user} />;
       default:
@@ -425,6 +432,13 @@ export default function AdminDashboard() {
       label: 'Resources',
       icon: FiFileText,
       badge: 'cyan' 
+    },
+
+    {
+      id: 'student',
+      label: 'Student Records',
+      icon: FiInfo,
+      badge: 'cyan'
     },
     {
       id: 'careers',

@@ -462,40 +462,47 @@ export async function GET(request) {
       });
     }
 
-    if (action === 'stats') {
-      const [totalStudents, formStats, uploadStats] = await Promise.all([
-        prisma.databaseStudent.count(),
-        prisma.databaseStudent.groupBy({
-          by: ['form'],
-          _count: { id: true }
-        }),
-        prisma.studentStats.findUnique({
-          where: { id: 'global_stats' }
-        })
-      ]);
 
-      const stats = uploadStats || {
-        id: 'global_stats',
-        totalStudents: 0,
-        form1: 0,
-        form2: 0,
-        form3: 0,
-        form4: 0
-      };
+if (action === 'stats') {
+  const [totalStudents, formStats, uploadStats] = await Promise.all([
+    prisma.databaseStudent.count(),
+    prisma.databaseStudent.groupBy({
+      by: ['form'],
+      _count: { id: true }
+    }),
+    prisma.studentStats.findUnique({
+      where: { id: 'global_stats' }
+    })
+  ]);
 
-      const formStatsObj = formStats.reduce((acc, stat) => ({
-        ...acc,
-        [stat.form]: stat._count.id
-      }), {});
+  const stats = uploadStats || {
+    id: 'global_stats',
+    totalStudents: 0,
+    form1: 0,
+    form2: 0,
+    form3: 0,
+    form4: 0
+  };
 
-      return NextResponse.json({
-        success: true,
-        stats,
-        totalStudents,
-        formStats: formStatsObj
-      });
-    }
+  const formStatsObj = formStats.reduce((acc, stat) => ({
+    ...acc,
+    [stat.form]: stat._count.id
+  }), {});
 
+  return NextResponse.json({
+    success: true,
+    stats: {
+      ...stats,
+      totalStudents: stats.totalStudents, // Make sure totalStudents is included
+      form1: stats.form1 || 0,
+      form2: stats.form2 || 0,
+      form3: stats.form3 || 0,
+      form4: stats.form4 || 0
+    },
+    totalStudents,
+    formStats: formStatsObj
+  });
+}
     // Get students with optional form filter
     const where = {};
     if (form) {

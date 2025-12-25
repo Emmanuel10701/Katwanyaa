@@ -74,6 +74,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     rejectedApplications: 0,
     totalResources: 0,
     recentResources: 0,
+    totalStudent: 0,
     activeResources: 0,
     totalCareers: 0,
     resourcesByType: {
@@ -190,7 +191,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         guidanceRes,
         admissionsRes,
         resourcesRes,
-        careersRes
+        careersRes,
+        studentRes
       ] = await Promise.allSettled([
         fetch('/api/student'),
         fetch('/api/staff'),
@@ -203,7 +205,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         fetch('/api/guidance'),
         fetch('/api/applyadmission'),
         fetch('/api/resources?accessLevel=admin&limit=100'),
-        fetch('/api/career')
+        fetch('/api/career'),
+        fetch('/api/student')
       ]);
 
       // Process responses and get actual counts
@@ -220,7 +223,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
       const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
 
-      // Calculate real counts for existing data
+      const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
+
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
       const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
       const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
@@ -448,6 +452,13 @@ id: 'careers',
       icon: FiFolder,
       badge: 'emerald',
     },
+{
+      id: 'student',
+      label: 'Student Records',
+      icon: FiInfo,
+      badge: 'cyan'
+}
+,
     { 
       id: 'admissions', 
       label: 'Admission Applications', 
