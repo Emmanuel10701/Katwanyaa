@@ -3,15 +3,126 @@ import { NextResponse } from 'next/server';
 import { parse } from 'papaparse';
 import * as XLSX from 'xlsx';
 
-// Import Prisma client - adjust path as needed
-import { prisma } from '@/libs/prisma';
+// Import Prisma client
+import { prisma } from "../../../libs/prisma";
 
-// CSV PARSING - Only accept the 5 required fields
+// Helper function to clean and parse dates
+const parseDate = (dateStr) => {
+  if (!dateStr) return null;
+  
+  // Convert to string and trim
+  const str = String(dateStr).trim();
+  
+  // Reject extended year formats
+  if (str.match(/^[+-]\d{6}/)) {
+    console.warn(`Extended year format rejected: ${str}`);
+    return null;
+  }
+  
+  // Remove any timezone, GMT, UTC, etc.
+  let cleaned = str
+    .replace(/GMT[+-]\d{4}|UTC|\([^)]+\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Try to parse Excel serial number
+  if (!isNaN(cleaned) && Number(cleaned) > 0) {
+    // Excel date serial number (days since 1899-12-30, with 1900 incorrectly treated as leap year)
+    const excelDate = Number(cleaned);
+    const date = new Date((excelDate - 25569) * 86400 * 1000);
+    if (!isNaN(date.getTime())) {
+      // Validate reasonable date range
+      const year = date.getFullYear();
+      if (year >= 1900 && year <= new Date().getFullYear()) {
+        return date;
+      }
+    }
+  }
+  
+  // Try to parse as ISO string
+  let date = new Date(cleaned);
+  if (!isNaN(date.getTime())) {
+    const year = date.getFullYear();
+    // Validate reasonable date range
+    if (year >= 1900 && year <= new Date().getFullYear() + 1) {
+      return date;
+    }
+  }
+  
+  // Try common date formats
+  const formats = [
+    // YYYY-MM-DD
+    /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/,
+    // DD/MM/YYYY
+    /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/,
+    // MM/DD/YYYY
+    /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/, // Same regex, we'll handle differently
+  ];
+  
+  for (const format of formats) {
+    const match = cleaned.match(format);
+    if (match) {
+      let year, month, day;
+      
+      if (match[0].includes('/')) {
+        // For DD/MM/YYYY or MM/DD/YYYY
+        const parts = cleaned.split(/[/-]/);
+        if (parts.length === 3) {
+          // Try to determine format
+          const part1 = parseInt(parts[0]);
+          const part2 = parseInt(parts[1]);
+          const part3 = parseInt(parts[2]);
+          
+          if (part3 > 31 && part1 <= 12) {
+            // Looks like MM/DD/YYYY
+            month = part1 - 1;
+            day = part2;
+            year = part3;
+          } else if (part1 > 12 && part2 <= 12) {
+            // Looks like DD/MM/YYYY
+            day = part1;
+            month = part2 - 1;
+            year = part3;
+          } else if (part3 > 1900) {
+            // Assume YYYY/MM/DD
+            year = part3;
+            month = part2 - 1;
+            day = part1;
+          }
+        }
+      } else {
+        // Handle YYYY-MM-DD
+        year = parseInt(match[1]);
+        month = parseInt(match[2]) - 1;
+        day = parseInt(match[3]);
+      }
+      
+      if (year && month >= 0 && day) {
+        // If year is 2 digits, assume 2000+
+        if (year < 100) {
+          year = 2000 + year;
+        }
+        
+        date = new Date(year, month, day);
+        if (!isNaN(date.getTime())) {
+          const finalYear = date.getFullYear();
+          if (finalYear >= 1900 && finalYear <= new Date().getFullYear() + 1) {
+            return date;
+          }
+        }
+      }
+    }
+  }
+  
+  return null;
+};
+
+// CSV PARSING
 const parseCSV = async (file) => {
   try {
     const text = await file.text();
     
-    // Try different delimiters (tab, comma, semicolon)
+    // Try different delimiters
     const delimiters = ['\t', ',', ';'];
     
     for (const delimiter of delimiters) {
@@ -24,7 +135,7 @@ const parseCSV = async (file) => {
             transformHeader: (header) => {
               const normalized = header.trim().toLowerCase();
               
-              // ONLY map the 5 required fields
+              // Map all fields
               if (normalized.includes('admission')) return 'admissionNumber';
               if (normalized.includes('first')) return 'firstName';
               if (normalized.includes('middle')) return 'middleName';
@@ -32,26 +143,53 @@ const parseCSV = async (file) => {
               if (normalized.includes('form') || normalized.includes('class') || normalized.includes('grade')) {
                 return 'form';
               }
+              if (normalized.includes('stream')) return 'stream';
+              if (normalized.includes('date') && normalized.includes('birth')) return 'dateOfBirth';
+              if (normalized.includes('gender')) return 'gender';
+              if (normalized.includes('parent') && normalized.includes('phone')) return 'parentPhone';
+              if (normalized.includes('email')) return 'email';
+              if (normalized.includes('address')) return 'address';
+              
               return normalized;
             },
             complete: (results) => {
-              // Filter and map ONLY the 5 required fields
               const data = results.data
                 .map((row, index) => {
-                  // Extract ONLY the 5 required fields
+                  // Extract all fields
                   const admissionNumber = String(row.admissionNumber || '').trim();
                   const firstName = String(row.firstName || '').trim();
                   const middleName = row.middleName ? String(row.middleName).trim() : undefined;
                   const lastName = String(row.lastName || '').trim();
                   const form = String(row.form || '').trim();
+                  const stream = row.stream ? String(row.stream).trim() : undefined;
                   
-                  // Return ONLY if we have the required fields
+                  // Parse date of birth using helper
+                  const dateOfBirth = parseDate(row.dateOfBirth);
+                  
+                  const gender = row.gender ? String(row.gender).trim() : undefined;
+                  const parentPhone = row.parentPhone ? String(row.parentPhone).trim() : undefined;
+                  const email = row.email ? String(row.email).trim() : undefined;
+                  const address = row.address ? String(row.address).trim() : undefined;
+                  
+                  // Return if we have the required fields
                   if (admissionNumber && firstName && lastName && form) {
-                    return { admissionNumber, firstName, middleName, lastName, form };
+                    return { 
+                      admissionNumber, 
+                      firstName, 
+                      middleName, 
+                      lastName, 
+                      form,
+                      stream,
+                      dateOfBirth,
+                      gender,
+                      parentPhone,
+                      email,
+                      address
+                    };
                   }
                   return null;
                 })
-                .filter(item => item !== null); // Remove null items
+                .filter(item => item !== null);
               
               if (data.length > 0) {
                 console.log(`Parsed ${data.length} students with ${delimiter === '\t' ? 'TAB' : delimiter} delimiter`);
@@ -64,12 +202,11 @@ const parseCSV = async (file) => {
           });
         });
       } catch (delimiterError) {
-        // Try next delimiter
         continue;
       }
     }
     
-    throw new Error('Could not parse CSV. Please check that your file contains: AdmissionNumber, FirstName, LastName, and Form columns.');
+    throw new Error('Could not parse CSV. Please check that your file contains required columns.');
     
   } catch (error) {
     console.error('CSV parsing error:', error);
@@ -77,7 +214,7 @@ const parseCSV = async (file) => {
   }
 };
 
-// EXCEL PARSING - Only accept the 5 required fields
+// EXCEL PARSING
 const parseExcel = async (file) => {
   try {
     const buffer = await file.arrayBuffer();
@@ -88,7 +225,6 @@ const parseExcel = async (file) => {
     
     console.log(`Excel raw data count: ${jsonData.length}`);
     
-    // Process ONLY the 5 required fields
     const data = jsonData
       .map((row, index) => {
         try {
@@ -112,21 +248,36 @@ const parseExcel = async (file) => {
             return '';
           };
           
-          // Extract ONLY the 5 required fields
+          // Extract all fields
           const admissionNumber = findValue(['admissionNumber', 'AdmissionNumber', 'Admission Number', 'ADMISSION_NUMBER', 'admno', 'AdmNo']);
           const firstName = findValue(['firstName', 'FirstName', 'First Name', 'FIRST_NAME', 'fname']);
           const middleName = findValue(['middleName', 'MiddleName', 'Middle Name', 'MIDDLE_NAME', 'mname']);
           const lastName = findValue(['lastName', 'LastName', 'Last Name', 'LAST_NAME', 'lname']);
           const form = findValue(['form', 'Form', 'FORM', 'class', 'Class', 'grade', 'Grade']);
+          const stream = findValue(['stream', 'Stream', 'STREAM']);
+          const dateOfBirthRaw = findValue(['dateOfBirth', 'DateOfBirth', 'Date of Birth', 'DOB', 'dob', 'birthdate']);
+          const gender = findValue(['gender', 'Gender', 'GENDER', 'sex', 'Sex']);
+          const parentPhone = findValue(['parentPhone', 'ParentPhone', 'Parent Phone', 'parentTel', 'ParentTel']);
+          const email = findValue(['email', 'Email', 'EMAIL']);
+          const address = findValue(['address', 'Address', 'ADDRESS']);
           
-          // Return ONLY if we have the required fields
+          // Parse date of birth using helper
+          const dateOfBirth = parseDate(dateOfBirthRaw);
+          
+          // Return if we have the required fields
           if (admissionNumber && firstName && lastName && form) {
             return {
               admissionNumber,
               firstName,
               middleName: middleName || undefined,
               lastName,
-              form
+              form,
+              stream: stream || undefined,
+              dateOfBirth,
+              gender: gender || undefined,
+              parentPhone: parentPhone || undefined,
+              email: email || undefined,
+              address: address || undefined
             };
           }
           return null;
@@ -146,7 +297,7 @@ const parseExcel = async (file) => {
   }
 };
 
-// VALIDATION - Only validate the 5 required fields
+// VALIDATION
 const validateStudent = (student, index) => {
   const errors = [];
   
@@ -194,15 +345,77 @@ const validateStudent = (student, index) => {
   // Update student with normalized form
   student.form = normalizedForm;
   
-  // Validate middle name if present
+  // Validate date of birth
+  if (student.dateOfBirth) {
+    const dob = new Date(student.dateOfBirth);
+    if (isNaN(dob.getTime())) {
+      errors.push(`Row ${index + 2}: Invalid date of birth format`);
+    } else {
+      const year = dob.getFullYear();
+      const currentYear = new Date().getFullYear();
+      
+      // Check if date is in the future
+      if (dob > new Date()) {
+        errors.push(`Row ${index + 2}: Date of birth cannot be in the future`);
+      }
+      
+      // Check if year is reasonable
+      if (year < 1900) {
+        errors.push(`Row ${index + 2}: Date of birth year must be after 1900`);
+      }
+      
+      // Check if student is too young (under 4 years old) for school
+      const age = currentYear - year;
+      if (age < 4) {
+        errors.push(`Row ${index + 2}: Student appears to be too young (${age} years old)`);
+      }
+      
+      // Check if student is unreasonably old
+      if (age > 30) {
+        errors.push(`Row ${index + 2}: Student appears to be too old (${age} years old)`);
+      }
+    }
+  }
+  
+  // Validate optional fields
   if (student.middleName && student.middleName.length > 100) {
     errors.push(`Row ${index + 2}: Middle name too long (max 100 chars)`);
+  }
+  
+  if (student.stream && student.stream.length > 50) {
+    errors.push(`Row ${index + 2}: Stream too long (max 50 chars)`);
+  }
+  
+  if (student.gender && student.gender.length > 20) {
+    errors.push(`Row ${index + 2}: Gender too long (max 20 chars)`);
+  }
+  
+  if (student.parentPhone) {
+    const phoneRegex = /^[+]?[0-9\s\-()]{10,20}$/;
+    if (!phoneRegex.test(student.parentPhone)) {
+      errors.push(`Row ${index + 2}: Parent phone number is invalid`);
+    } else if (student.parentPhone.length > 20) {
+      errors.push(`Row ${index + 2}: Parent phone too long (max 20 chars)`);
+    }
+  }
+  
+  if (student.email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(student.email)) {
+      errors.push(`Row ${index + 2}: Email is invalid`);
+    } else if (student.email.length > 100) {
+      errors.push(`Row ${index + 2}: Email too long (max 100 chars)`);
+    }
+  }
+  
+  if (student.address && student.address.length > 255) {
+    errors.push(`Row ${index + 2}: Address too long (max 255 chars)`);
   }
   
   return { isValid: errors.length === 0, errors };
 };
 
-// POST - Bulk upload (ONLY 5 fields)
+// POST - Bulk upload
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -218,7 +431,6 @@ export async function POST(request) {
     const fileName = file.name.toLowerCase();
     const fileExtension = fileName.split('.').pop();
     
-    // Only allow CSV and Excel
     const validExtensions = ['csv', 'xlsx', 'xls'];
     if (!validExtensions.includes(fileExtension)) {
       return NextResponse.json(
@@ -260,9 +472,9 @@ export async function POST(request) {
       if (rawData.length === 0) {
         throw new Error(`No valid student data found. Please ensure your file contains:
         1. Required columns: AdmissionNumber, FirstName, LastName, Form
-        2. MiddleName is optional
+        2. Optional columns: MiddleName, Stream, DateOfBirth, Gender, ParentPhone, Email, Address
         3. Form must be: Form 1, Form 2, Form 3, or Form 4
-        4. Admission numbers must be 4-10 digits`);
+        4. Admission numbers must be 4-10 digits and unique`);
       }
 
       // Process data
@@ -312,13 +524,19 @@ export async function POST(request) {
           continue;
         }
 
-        // Add to create list - ONLY the 5 required fields
+        // Add to create list - ensure dateOfBirth is properly formatted
         studentsToCreate.push({
           admissionNumber,
           firstName: student.firstName,
-          middleName: student.middleName || null, // Optional
+          middleName: student.middleName || null,
           lastName: student.lastName,
-          form: student.form, // Already normalized
+          form: student.form,
+          stream: student.stream || null,
+          dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth) : null, // Ensure it's a Date object
+          gender: student.gender || null,
+          parentPhone: student.parentPhone || null,
+          email: student.email || null,
+          address: student.address || null,
           uploadBatchId: batchId,
           status: 'active'
         });
@@ -393,6 +611,11 @@ export async function POST(request) {
     } catch (error) {
       console.error('Processing error:', error);
       
+      // Log problematic data for debugging
+      if (error.message.includes('Invalid date') || error.message.includes('DateTime')) {
+        console.error('Date parsing issue. Sample data:', rawData?.slice(0, 3));
+      }
+      
       // Update batch as failed
       await prisma.studentBulkUpload.update({
         where: { id: batchId },
@@ -425,6 +648,12 @@ export async function GET(request) {
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
     const form = url.searchParams.get('form');
+    const stream = url.searchParams.get('stream');
+    const gender = url.searchParams.get('gender');
+    const status = url.searchParams.get('status');
+    const search = url.searchParams.get('search');
+    const sortBy = url.searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
 
@@ -462,57 +691,85 @@ export async function GET(request) {
       });
     }
 
+    if (action === 'stats') {
+      const [totalStudents, formStats, uploadStats] = await Promise.all([
+        prisma.databaseStudent.count(),
+        prisma.databaseStudent.groupBy({
+          by: ['form'],
+          _count: { id: true }
+        }),
+        prisma.studentStats.findUnique({
+          where: { id: 'global_stats' }
+        })
+      ]);
 
-if (action === 'stats') {
-  const [totalStudents, formStats, uploadStats] = await Promise.all([
-    prisma.databaseStudent.count(),
-    prisma.databaseStudent.groupBy({
-      by: ['form'],
-      _count: { id: true }
-    }),
-    prisma.studentStats.findUnique({
-      where: { id: 'global_stats' }
-    })
-  ]);
+      const stats = uploadStats || {
+        id: 'global_stats',
+        totalStudents: 0,
+        form1: 0,
+        form2: 0,
+        form3: 0,
+        form4: 0
+      };
 
-  const stats = uploadStats || {
-    id: 'global_stats',
-    totalStudents: 0,
-    form1: 0,
-    form2: 0,
-    form3: 0,
-    form4: 0
-  };
+      const formStatsObj = formStats.reduce((acc, stat) => ({
+        ...acc,
+        [stat.form]: stat._count.id
+      }), {});
 
-  const formStatsObj = formStats.reduce((acc, stat) => ({
-    ...acc,
-    [stat.form]: stat._count.id
-  }), {});
+      return NextResponse.json({
+        success: true,
+        stats: {
+          ...stats,
+          totalStudents: stats.totalStudents,
+          form1: stats.form1 || 0,
+          form2: stats.form2 || 0,
+          form3: stats.form3 || 0,
+          form4: stats.form4 || 0
+        },
+        totalStudents,
+        formStats: formStatsObj
+      });
+    }
 
-  return NextResponse.json({
-    success: true,
-    stats: {
-      ...stats,
-      totalStudents: stats.totalStudents, // Make sure totalStudents is included
-      form1: stats.form1 || 0,
-      form2: stats.form2 || 0,
-      form3: stats.form3 || 0,
-      form4: stats.form4 || 0
-    },
-    totalStudents,
-    formStats: formStatsObj
-  });
-}
-    // Get students with optional form filter
+    // Get students with filters
     const where = {};
+    
     if (form) {
       where.form = form;
     }
     
+    if (stream) {
+      where.stream = stream;
+    }
+    
+    if (gender) {
+      where.gender = gender;
+    }
+    
+    if (status) {
+      where.status = status;
+    }
+    
+    if (search) {
+  where.OR = [
+    { admissionNumber: { contains: search } },
+    { firstName: { contains: search } },
+    { middleName: { contains: search } },
+    { lastName: { contains: search } },
+    { email: { contains: search } },
+    { parentPhone: { contains: search } }
+  ];
+}
+
+    // Build orderBy
+    const orderBy = {};
+    orderBy[sortBy] = sortOrder;
+
     const [students, total] = await Promise.all([
       prisma.databaseStudent.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
         select: {
@@ -522,9 +779,22 @@ if (action === 'stats') {
           middleName: true,
           lastName: true,
           form: true,
+          stream: true,
+          dateOfBirth: true,
+          gender: true,
+          parentPhone: true,
+          email: true,
+          address: true,
           status: true,
           createdAt: true,
-          uploadBatchId: true
+          updatedAt: true,
+          uploadBatchId: true,
+          uploadBatch: {
+            select: {
+              fileName: true,
+              uploadDate: true
+            }
+          }
         }
       }),
       prisma.databaseStudent.count({ where })
@@ -547,6 +817,110 @@ if (action === 'stats') {
       { 
         success: false, 
         error: error.message || 'Failed to fetch data'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT - Update student
+export async function PUT(request) {
+  try {
+    const body = await request.json();
+    const { id, ...updateData } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Student ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Parse dateOfBirth if provided
+    if (updateData.dateOfBirth) {
+      try {
+        updateData.dateOfBirth = new Date(updateData.dateOfBirth);
+        if (isNaN(updateData.dateOfBirth.getTime())) {
+          return NextResponse.json(
+            { success: false, error: 'Invalid date format' },
+            { status: 400 }
+          );
+        }
+      } catch (dateError) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid date format' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check if admission number is being updated and if it's unique
+    if (updateData.admissionNumber) {
+      const existingStudent = await prisma.databaseStudent.findFirst({
+        where: {
+          admissionNumber: updateData.admissionNumber,
+          NOT: { id: id }
+        }
+      });
+
+      if (existingStudent) {
+        return NextResponse.json(
+          { success: false, error: 'Admission number already exists' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const updatedStudent = await prisma.databaseStudent.update({
+      where: { id },
+      data: {
+        ...updateData,
+        updatedAt: new Date()
+      }
+    });
+
+    // Update stats if form changed
+    if (updateData.form) {
+      const student = await prisma.databaseStudent.findUnique({
+        where: { id },
+        select: { form: true }
+      });
+
+      if (student && student.form !== updateData.form) {
+        await prisma.studentStats.update({
+          where: { id: 'global_stats' },
+          data: {
+            ...(student.form === 'Form 1' && { form1: { decrement: 1 } }),
+            ...(student.form === 'Form 2' && { form2: { decrement: 1 } }),
+            ...(student.form === 'Form 3' && { form3: { decrement: 1 } }),
+            ...(student.form === 'Form 4' && { form4: { decrement: 1 } }),
+            ...(updateData.form === 'Form 1' && { form1: { increment: 1 } }),
+            ...(updateData.form === 'Form 2' && { form2: { increment: 1 } }),
+            ...(updateData.form === 'Form 3' && { form3: { increment: 1 } }),
+            ...(updateData.form === 'Form 4' && { form4: { increment: 1 } })
+          }
+        });
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Student updated successfully',
+      student: updatedStudent
+    });
+
+  } catch (error) {
+    console.error('PUT error:', error);
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, error: 'Student not found' },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message || 'Update failed'
       },
       { status: 500 }
     );

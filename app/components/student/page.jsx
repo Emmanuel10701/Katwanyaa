@@ -3,28 +3,52 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
 import {
-  FaUpload, FaFileExcel, FaFileCsv, FaDownload, FaUsers,
-  FaUserGraduate, FaChalkboardTeacher, FaSchool, FaFilter,
-  FaSearch, FaEye, FaEdit, FaTrash, FaSync, FaCheckCircle,
-  FaTimesCircle, FaExclamationTriangle, FaChartBar, FaChartPie,
-  FaChartLine, FaCalendar, FaEnvelope, FaPhone, FaUser,
-  FaGraduationCap, FaBuilding, FaUniversity, FaMapMarkerAlt,
-  FaClock, FaArrowRight, FaArrowLeft, FaPlus, FaSave,
-  FaTimes, FaList, FaTh, FaChevronDown, FaChevronUp,
-  FaExternalLinkAlt, FaFile, FaFilePdf, FaFileWord,
-  FaInfoCircle, FaArrowDown, FaArrowUp, FaSort,
-  FaSortUp, FaSortDown, FaCog, FaHistory
-} from 'react-icons/fa';
-import {
-  FiUpload, FiDownload, FiUsers, FiUser, FiEdit,
-  FiTrash2, FiEye, FiSearch, FiFilter, FiRefreshCw,
-  FiChevronLeft, FiChevronRight, FiCalendar, FiMail,
-  FiPhone, FiSave, FiX, FiList, FiGrid, FiPlus
+  FiUpload, FiFile, FiDownload, FiUsers, FiUser, FiFilter, FiSearch, 
+  FiEye, FiEdit, FiTrash2, FiRefreshCw, FiCheckCircle, FiXCircle, 
+  FiAlertCircle, FiBarChart2, FiPieChart, FiTrendingUp, FiCalendar, 
+  FiMail, FiPhone, FiMapPin, FiX, FiList, FiGrid, FiSettings, 
+  FiArrowLeft, FiArrowRight, FiSave, FiInfo, FiUserCheck, FiBook,
+  FiSort, FiSortAsc, FiSortDesc, FiSchool, FiChevronRight,
+  FiHome, FiUserPlus, FiClock, FiPercent, FiGlobe, FiBookOpen,
+  FiHeart, FiCpu, FiSparkles, FiPlay, FiTarget, FiAward,
+  FiMessageCircle, FiImage, FiTrendingDown, FiActivity
 } from 'react-icons/fi';
-import { CircularProgress, Modal, Box, TextField } from '@mui/material';
+import {
+  IoPeopleCircle, IoNewspaper, IoClose, IoStatsChart,
+  IoAnalytics, IoSchool, IoDocumentText, IoSparkles
+} from 'react-icons/io5';
+import { CircularProgress, Modal, Box } from '@mui/material';
 import * as XLSX from 'xlsx';
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip as RechartsTooltip, Legend,
+  ResponsiveContainer, LineChart, Line, AreaChart, Area,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  RadialBarChart, RadialBar
+} from 'recharts';
 
-// Reuse the ModernLoadingSpinner from School Info
+// Custom Toaster with increased size
+const CustomToaster = () => (
+  <Toaster
+    position="top-right"
+    richColors
+    expand={true}
+    toastOptions={{
+      style: {
+        fontSize: '1.1rem',
+        padding: '20px',
+        margin: '10px',
+        width: '140%',
+        minHeight: '80px',
+        borderRadius: '12px',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
+      },
+      className: 'custom-toast'
+    }}
+  />
+);
+
+// Modern Loading Spinner
 function ModernLoadingSpinner({ message = "Loading student data...", size = "medium" }) {
   const sizes = {
     small: { outer: 48, inner: 24 },
@@ -35,7 +59,7 @@ function ModernLoadingSpinner({ message = "Loading student data...", size = "med
   const { outer, inner } = sizes[size]
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50 backdrop-blur-sm">
       <div className="text-center">
         <div className="relative inline-block">
           <div className="relative">
@@ -45,22 +69,20 @@ function ModernLoadingSpinner({ message = "Loading student data...", size = "med
               className="text-indigo-600"
             />
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full animate-ping opacity-25"
-                   style={{ width: inner, height: inner }}></div>
+              <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" style={{ width: inner, height: inner }}></div>
             </div>
           </div>
-          <div className="absolute -inset-6 bg-gradient-to-r from-indigo-100 to-violet-100 rounded-full blur-xl opacity-30 animate-pulse"></div>
+          <div className="absolute -inset-6 bg-gradient-to-r from-indigo-100 to-violet-100 rounded-full blur-xl opacity-30"></div>
         </div>
         
-        <div className="mt-6 space-y-3">
+        <div className="mt-8 space-y-3">
           <span className="block text-lg font-semibold text-gray-800">
             {message}
           </span>
           
           <div className="flex justify-center space-x-1.5">
             {[0, 1, 2].map(i => (
-              <div key={i} className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" 
-                   style={{ animationDelay: `${i * 0.15}s` }}></div>
+              <div key={i} className="w-2 h-2 bg-indigo-500 rounded-full"></div>
             ))}
           </div>
           
@@ -73,7 +95,7 @@ function ModernLoadingSpinner({ message = "Loading student data...", size = "med
   )
 }
 
-// Modern Delete Confirmation Modal (Enhanced from School Info)
+// Delete Confirmation Modal
 function ModernDeleteModal({ 
   onClose, 
   onConfirm, 
@@ -102,70 +124,71 @@ function ModernDeleteModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 p-4 text-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white bg-opacity-20 rounded-xl">
-              <FaExclamationTriangle className="text-white" />
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-red-500 via-red-600 to-orange-500 p-6 text-white">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
+              <FiAlertCircle className="text-white text-2xl" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">{title}</h2>
-              <p className="text-red-100 opacity-90 text-xs mt-0.5">{description}</p>
+              <h2 className="text-xl font-bold">{title}</h2>
+              <p className="text-red-100 opacity-90 text-sm mt-1">{description}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="p-6 space-y-4">
           <div className="text-center">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2 border border-red-200">
-              <FaTrash className="text-red-600" />
+            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4 border-2 border-red-200">
+              <FiTrash2 className="text-red-600 text-2xl" />
             </div>
-            <h3 className="text-base font-bold text-gray-900 mb-1">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
               Delete {itemName ? `"${itemName}"` : `this ${type}`}?
             </h3>
-            <p className="text-gray-600 text-xs">
+            <p className="text-gray-600 text-sm">
               This will permanently delete the record and cannot be recovered.
             </p>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label className="block text-sm font-bold text-gray-700">
-              Type <span className="font-mono text-red-600 bg-red-50 px-2 py-0.5 rounded text-xs">{getConfirmPhrase()}</span> to confirm:
+              Type <span className="font-mono text-red-600 bg-red-50 px-3 py-1 rounded-lg text-xs border border-red-200">{getConfirmPhrase()}</span> to confirm:
             </label>
             <input 
               type="text" 
               value={confirmText} 
               onChange={(e) => setConfirmText(e.target.value)} 
               placeholder={`Type "${getConfirmPhrase()}" here`}
-              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 text-sm"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 text-base"
+              autoFocus
             />
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-2 border border-red-200">
-            <h4 className="font-bold text-gray-900 text-xs mb-1 flex items-center gap-1">
-              <FaExclamationTriangle className="text-red-600 text-xs" />
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-4 border-2 border-red-200">
+            <h4 className="font-bold text-gray-900 text-sm mb-2 flex items-center gap-2">
+              <FiAlertCircle className="text-red-600 text-sm" />
               What will happen:
             </h4>
-            <div className="space-y-0.5 text-xs text-gray-700">
+            <div className="space-y-2 text-sm text-gray-700">
               {type === "batch" ? (
                 <>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
                     <span>All students from this upload batch will be deleted</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
                     <span>Upload record will be removed from history</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
                     <span>Student record will be permanently deleted</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-1 bg-red-400 rounded-full"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-400 rounded-full"></div>
                     <span>All associated data will be removed</span>
                   </div>
                 </>
@@ -174,27 +197,27 @@ function ModernDeleteModal({
           </div>
         </div>
 
-        <div className="flex gap-2 p-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex gap-3 p-4 border-t border-gray-200 bg-gray-50">
           <button 
             onClick={onClose} 
             disabled={loading}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg transition-all duration-300 font-bold disabled:opacity-50 cursor-pointer text-sm"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl transition-all duration-300 font-bold text-base disabled:opacity-50"
           >
-            <FaTimesCircle className="text-sm" /> Cancel
+            <FiXCircle className="text-base" /> Cancel
           </button>
           <button 
             onClick={handleConfirm} 
             disabled={loading || confirmText !== getConfirmPhrase()}
-            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-2 rounded-lg transition-all duration-300 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
+            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-red-700 to-orange-600 text-white px-4 py-3 rounded-xl transition-all duration-300 font-bold text-base shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
-                <CircularProgress size={12} className="text-white" />
-                <span>Deleting...</span>
+                <CircularProgress size={14} className="text-white" />
+                Deleting...
               </>
             ) : (
               <>
-                <FaTrash /> Delete Forever
+                <FiTrash2 className="text-base" /> Delete Forever
               </>
             )}
           </button>
@@ -204,7 +227,7 @@ function ModernDeleteModal({
   )
 }
 
-// Modern File Upload Component
+// File Upload Component
 function ModernFileUpload({ onFileSelect, file, onRemove, dragActive, onDrag }) {
   const fileInputRef = useRef(null);
 
@@ -226,10 +249,10 @@ function ModernFileUpload({ onFileSelect, file, onRemove, dragActive, onDrag }) 
 
   return (
     <div
-      className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer group ${
+      className={`border-3 border-dashed rounded-2xl p-10 text-center transition-all duration-300 cursor-pointer ${
         dragActive 
-          ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
-          : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-sm'
+          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-100' 
+          : 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100'
       }`}
       onDragEnter={onDrag}
       onDragLeave={onDrag}
@@ -242,15 +265,13 @@ function ModernFileUpload({ onFileSelect, file, onRemove, dragActive, onDrag }) 
       }}
       onClick={() => fileInputRef.current?.click()}
     >
-      <div className="relative">
-        <FaUpload className={`mx-auto text-2xl mb-2 transition-all duration-300 ${
-          dragActive ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-500'
-        }`} />
-      </div>
-      <p className="text-gray-700 mb-1 font-medium transition-colors duration-300 group-hover:text-gray-800 text-sm">
+      <FiUpload className={`mx-auto text-3xl mb-4 ${
+        dragActive ? 'text-blue-600' : 'text-gray-400'
+      }`} />
+      <p className="text-gray-800 mb-2 font-bold text-lg">
         {dragActive ? '📁 Drop file here!' : file ? 'Click to replace file' : 'Drag & drop or click to upload'}
       </p>
-      <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700">
+      <p className="text-sm text-gray-600">
         CSV, Excel (.xlsx, .xls) • Max 10MB
       </p>
       <input 
@@ -264,7 +285,7 @@ function ModernFileUpload({ onFileSelect, file, onRemove, dragActive, onDrag }) 
   );
 }
 
-// Modern Student Detail Modal
+// Student Detail Modal
 function ModernStudentDetailModal({ student, onClose, onEdit, onDelete }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -279,187 +300,254 @@ function ModernStudentDetailModal({ student, onClose, onEdit, onDelete }) {
     });
   };
 
+  const calculateAge = (dob) => {
+    if (!dob) return 'N/A';
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const getFormColor = (form) => {
     switch (form) {
-      case 'Form 1': return 'from-blue-500 to-blue-600';
-      case 'Form 2': return 'from-emerald-500 to-emerald-600';
-      case 'Form 3': return 'from-amber-500 to-amber-600';
-      case 'Form 4': return 'from-purple-500 to-purple-600';
-      default: return 'from-gray-500 to-gray-600';
+      case 'Form 1': return 'from-blue-500 to-blue-700';
+      case 'Form 2': return 'from-emerald-500 to-emerald-700';
+      case 'Form 3': return 'from-amber-500 to-amber-700';
+      case 'Form 4': return 'from-purple-500 to-purple-700';
+      default: return 'from-gray-500 to-gray-700';
     }
   };
 
   return (
-    <Modal open={true} onClose={onClose}>
-      <Box sx={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '95vw',
-        maxWidth: '800px',
-        maxHeight: '90vh',
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: 24,
-        overflow: 'hidden',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-      }}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
-                <FaUserGraduate className="text-lg" />
+    <>
+      <Modal open={true} onClose={onClose}>
+        <Box sx={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '95vw',
+          maxWidth: '1000px',
+          maxHeight: '95vh',
+          bgcolor: 'background.paper',
+          borderRadius: 3,
+          boxShadow: 24,
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+        }}>
+          <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
+                  <IoSchool className="text-2xl" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Student Details</h2>
+                  <p className="text-blue-100 opacity-90 text-sm mt-1">
+                    Complete student information and analytics
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg md:text-xl font-bold">Student Details</h2>
-                <p className="text-blue-100 opacity-90 text-xs mt-0.5">
-                  View and manage student information
-                </p>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200 cursor-pointer">
-              <FaTimes className="text-lg" />
-            </button>
-          </div>
-        </div>
-
-        <div className="max-h-[calc(90vh-80px)] overflow-y-auto p-6">
-          {/* Student Header */}
-          <div className="mb-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50">
-                <FaUser className="text-white text-3xl" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">
-                  {student.firstName} {student.middleName ? student.middleName + ' ' : ''}{student.lastName}
-                </h3>
-                <p className="text-slate-600 text-sm font-medium">Admission #{student.admissionNumber}</p>
-              </div>
-              <div className={`px-4 py-2 bg-gradient-to-r ${getFormColor(student.form)} text-white rounded-xl font-bold text-sm`}>
-                {student.form}
-              </div>
+              <button onClick={onClose} className="p-2 bg-white bg-opacity-20 rounded-2xl">
+                <FiX className="text-xl" />
+              </button>
             </div>
           </div>
 
-          {/* Main Details Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Academic Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FaGraduationCap className="text-blue-600" />
-                Academic Information
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Form Level</span>
-                  <span className="font-bold text-gray-900">{student.form}</span>
+          <div className="max-h-[calc(95vh-80px)] overflow-y-auto p-6">
+            <div className="mb-8">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
+                <div className="w-28 h-28 rounded-3xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100 mx-auto md:mx-0">
+                  <FiUser className="text-white text-4xl" />
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Stream</span>
-                  <span className="font-bold text-gray-900">{student.stream || 'Unassigned'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Status</span>
-                  <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                    student.status === 'active' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {student.status}
-                  </span>
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-3xl font-bold text-gray-900 tracking-tight">
+                    {student.firstName} {student.middleName ? student.middleName + ' ' : ''}{student.lastName}
+                  </h3>
+                  <p className="text-gray-700 text-base font-semibold mt-2">Admission #{student.admissionNumber}</p>
+                  <div className="flex flex-wrap gap-2 mt-3 justify-center md:justify-start">
+                    <div className={`px-5 py-2.5 bg-gradient-to-r ${getFormColor(student.form)} text-white rounded-xl font-bold text-sm`}>
+                      {student.form}
+                    </div>
+                    {student.stream && (
+                      <div className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-xl font-bold text-sm">
+                        Stream: {student.stream}
+                      </div>
+                    )}
+                    <div className={`px-5 py-2.5 rounded-xl font-bold text-sm ${
+                      student.status === 'active' 
+                        ? 'bg-gradient-to-r from-green-500 to-green-700 text-white'
+                        : 'bg-gradient-to-r from-red-500 to-red-700 text-white'
+                    }`}>
+                      {student.status.toUpperCase()}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Personal Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FaUser className="text-emerald-600" />
-                Personal Information
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Gender</span>
-                  <span className="font-bold text-gray-900">{student.gender || 'N/A'}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Date of Birth</span>
-                  <span className="font-bold text-gray-900">{formatDate(student.dateOfBirth)}</span>
-                </div>
-                {student.age && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Age</span>
-                    <span className="font-bold text-gray-900">{student.age} years</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+                  <div className="p-2.5 bg-gradient-to-r from-blue-100 to-blue-200 rounded-xl">
+                    <FiBook className="text-blue-700 text-xl" />
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-              <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FaEnvelope className="text-purple-600" />
-                Contact Information
-              </h4>
-              <div className="space-y-3">
-                {student.email && (
-                  <div className="flex items-center gap-2">
-                    <FaEnvelope className="text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900 truncate">{student.email}</span>
-                  </div>
-                )}
-                {student.parentPhone && (
-                  <div className="flex items-center gap-2">
-                    <FaPhone className="text-gray-400" />
-                    <span className="text-sm font-medium text-gray-900">{student.parentPhone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Upload Info */}
-            {student.uploadBatch && (
-              <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <FaHistory className="text-amber-600" />
-                  Upload Information
+                  Academic Information
                 </h4>
-                <div className="space-y-3">
-                  <div className="text-sm">
-                    <p className="text-gray-600 mb-1">Uploaded via</p>
-                    <p className="font-medium text-gray-900">{student.uploadBatch.fileName}</p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Form Level</span>
+                    <span className="font-bold text-gray-900 text-lg">{student.form}</span>
                   </div>
-                  <div className="text-sm">
-                    <p className="text-gray-600 mb-1">Upload Date</p>
-                    <p className="font-medium text-gray-900">{formatDate(student.uploadBatch.uploadDate)}</p>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Stream</span>
+                    <span className="font-bold text-gray-900 text-lg">{student.stream || 'Not Assigned'}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Status</span>
+                    <span className={`px-4 py-2 rounded-lg text-sm font-bold ${
+                      student.status === 'active' 
+                        ? 'bg-gradient-to-r from-green-100 to-green-200 text-green-900' 
+                        : 'bg-gradient-to-r from-red-100 to-red-200 text-red-900'
+                    }`}>
+                      {student.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Admission Date</span>
+                    <span className="font-bold text-gray-900 text-base">{formatDate(student.createdAt)}</span>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
-            <button
-              onClick={onEdit}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-bold shadow"
-            >
-              <FaEdit /> Edit Student
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-bold shadow"
-            >
-              <FaTrash /> Delete Student
-            </button>
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+                  <div className="p-2.5 bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-xl">
+                    <FiUser className="text-emerald-700 text-xl" />
+                  </div>
+                  Personal Information
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Gender</span>
+                    <span className="font-bold text-gray-900 text-lg">{student.gender || 'Not Specified'}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Date of Birth</span>
+                    <span className="font-bold text-gray-900 text-base">{formatDate(student.dateOfBirth)}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Age</span>
+                    <span className="font-bold text-gray-900 text-lg">{calculateAge(student.dateOfBirth)} years</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+                  <div className="p-2.5 bg-gradient-to-r from-purple-100 to-purple-200 rounded-xl">
+                    <FiMail className="text-purple-700 text-xl" />
+                  </div>
+                  Contact Information
+                </h4>
+                <div className="space-y-4">
+                  {student.email && (
+                    <div className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                      <FiMail className="text-purple-600 text-lg flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-600">Email Address</p>
+                        <p className="font-bold text-gray-900 text-base truncate">{student.email}</p>
+                      </div>
+                    </div>
+                  )}
+                  {student.parentPhone && (
+                    <div className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                      <FiPhone className="text-purple-600 text-lg flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-600">Parent's Phone</p>
+                        <p className="font-bold text-gray-900 text-base">{student.parentPhone}</p>
+                      </div>
+                    </div>
+                  )}
+                  {student.address && (
+                    <div className="flex items-start gap-4 p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                      <FiMapPin className="text-purple-600 text-lg mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-600">Address</p>
+                        <p className="font-medium text-gray-900 text-base">{student.address}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+                <h4 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
+                  <div className="p-2.5 bg-gradient-to-r from-amber-100 to-amber-200 rounded-xl">
+                    <FiClock className="text-amber-700 text-xl" />
+                  </div>
+                  System Information
+                </h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Created At</span>
+                    <span className="font-bold text-gray-900 text-base">{formatDate(student.createdAt)}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
+                    <span className="text-base font-semibold text-gray-700">Last Updated</span>
+                    <span className="font-bold text-gray-900 text-base">{formatDate(student.updatedAt)}</span>
+                  </div>
+                  {student.uploadBatch && (
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
+                      <p className="text-sm font-semibold text-gray-600 mb-1">Upload Batch</p>
+                      <p className="font-bold text-gray-900 text-base">{student.uploadBatch.fileName}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Uploaded: {formatDate(student.uploadBatch.uploadDate)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t-2 border-gray-200">
+              <button
+                onClick={onEdit}
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold text-base shadow-xl"
+              >
+                <FiEdit className="text-lg" /> Edit Student
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(true);
+                }}
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-2xl font-bold text-base shadow-xl"
+              >
+                <FiTrash2 className="text-lg" /> Delete Student
+              </button>
+            </div>
           </div>
-        </div>
-      </Box>
-    </Modal>
+        </Box>
+      </Modal>
+
+      {showDeleteModal && (
+        <ModernDeleteModal
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={() => {
+            onDelete(student.firstName + ' ' + student.lastName);
+            setShowDeleteModal(false);
+          }}
+          loading={false}
+          type="student"
+          itemName={`${student.firstName} ${student.lastName}`}
+        />
+      )}
+    </>
   );
 }
 
-// Modern Student Edit Modal
+// Student Edit Modal
 function ModernStudentEditModal({ student, onClose, onSave, loading }) {
   const [formData, setFormData] = useState({
     firstName: student?.firstName || '',
@@ -472,12 +560,13 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
     dateOfBirth: student?.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
     email: student?.email || '',
     parentPhone: student?.parentPhone || '',
+    address: student?.address || '',
     status: student?.status || 'active'
   });
 
   const FORMS = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
-  const STREAMS = ['East', 'West', 'North', 'South', 'Day', 'Boarding'];
-  const GENDERS = ['Male', 'Female', 'Other'];
+  const STREAMS = ['A', 'B', 'C', 'D', 'E', 'East', 'West', 'North', 'South', 'Day', 'Boarding', 'Science', 'Arts', 'Commercial'];
+  const GENDERS = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -489,42 +578,40 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '95vw',
-        maxWidth: '800px',
-        maxHeight: '90vh',
+        maxWidth: '900px',
+        maxHeight: '95vh',
         bgcolor: 'background.paper',
-        borderRadius: 2,
+        borderRadius: 3,
         boxShadow: 24,
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-6 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
-                <FaEdit className="text-lg" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
+                <FiEdit className="text-2xl" />
               </div>
               <div>
-                <h2 className="text-lg md:text-xl font-bold">Edit Student</h2>
-                <p className="text-blue-100 opacity-90 text-xs mt-0.5">
-                  Update student information
+                <h2 className="text-2xl font-bold">Edit Student Information</h2>
+                <p className="text-blue-100 opacity-90 text-sm mt-1">
+                  Update all student details below
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200 cursor-pointer">
-              <FaTimes className="text-lg" />
+            <button onClick={onClose} className="p-2 bg-white bg-opacity-20 rounded-2xl">
+              <FiX className="text-xl" />
             </button>
           </div>
         </div>
 
-        <div className="max-h-[calc(90vh-80px)] overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200">
-              <h4 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="max-h-[calc(95vh-80px)] overflow-y-auto p-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">Personal Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     First Name *
                   </label>
                   <input
@@ -532,11 +619,22 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                     required
                     value={formData.firstName}
                     onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Middle Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.middleName}
+                    onChange={(e) => setFormData({...formData, middleName: e.target.value})}
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Last Name *
                   </label>
                   <input
@@ -544,28 +642,17 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                     required
                     value={formData.lastName}
                     onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Middle Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.middleName}
-                    onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Gender
                   </label>
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
                   >
                     <option value="">Select Gender</option>
                     {GENDERS.map(gender => (
@@ -574,25 +661,36 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Date of Birth
                   </label>
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                  />
+                </div>
+                <div className="md:col-span-2 lg:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                    placeholder="Enter full address"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Academic Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200">
-              <h4 className="text-lg font-bold text-gray-900 mb-4">Academic Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">Academic Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Admission Number *
                   </label>
                   <input
@@ -600,18 +698,20 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                     required
                     value={formData.admissionNumber}
                     onChange={(e) => setFormData({...formData, admissionNumber: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                    pattern="\d{4,10}"
+                    title="Admission number must be 4-10 digits"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Form *
                   </label>
                   <select
                     required
                     value={formData.form}
                     onChange={(e) => setFormData({...formData, form: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
                   >
                     {FORMS.map(form => (
                       <option key={form} value={form}>{form}</option>
@@ -619,13 +719,13 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Stream
                   </label>
                   <select
                     value={formData.stream}
                     onChange={(e) => setFormData({...formData, stream: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
                   >
                     <option value="">Select Stream</option>
                     {STREAMS.map(stream => (
@@ -633,75 +733,82 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Status
+                <div className="lg:col-span-3">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Status *
                   </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="graduated">Graduated</option>
-                  </select>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {['active', 'inactive', 'graduated', 'transferred'].map(status => (
+                      <label key={status} className="flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value={status}
+                          checked={formData.status === status}
+                          onChange={(e) => setFormData({...formData, status: e.target.value})}
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-bold text-gray-900 text-base capitalize">{status}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Contact Info */}
-            <div className="bg-white rounded-xl p-5 border border-gray-200">
-              <h4 className="text-lg font-bold text-gray-900 mb-4">Contact Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
                     Email Address
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                    placeholder="student@example.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Parent Phone
+                  <label className="block text-sm font-bold text-gray-700 mb-3">
+                    Parent/Guardian Phone
                   </label>
                   <input
                     type="tel"
                     value={formData.parentPhone}
                     onChange={(e) => setFormData({...formData, parentPhone: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+                    className="w-full px-5 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-base"
+                    placeholder="+254 700 000 000"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t-2 border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 font-bold"
+                className="flex-1 px-6 py-4 border-2 border-gray-400 text-gray-700 rounded-2xl font-bold text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold text-base shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <>
-                    <CircularProgress size={16} className="text-white" />
-                    <span>Saving...</span>
+                    <CircularProgress size={18} className="text-white" />
+                    <span>Saving Changes...</span>
                   </>
                 ) : (
                   <>
-                    <FaSave />
-                    <span>Save Changes</span>
+                    <FiSave className="text-lg" />
+                    <span>Save All Changes</span>
                   </>
                 )}
               </button>
@@ -713,81 +820,410 @@ function ModernStudentEditModal({ student, onClose, onSave, loading }) {
   );
 }
 
-// Modern Chart Component (20% larger)
-function ModernChart({ data, type = 'pie', title, colors }) {
-  const ChartComponent = type === 'pie' ? FaChartPie : 
-                        type === 'bar' ? FaChartBar : 
-                        FaChartLine;
+// Modern Chart Component with Recharts
+function ModernChart({ 
+  data, 
+  type = 'pie', 
+  title, 
+  colors = [
+    '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', 
+    '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6',
+    '#06B6D4', '#84CC16', '#F43F5E', '#A855F7', '#EAB308'
+  ],
+  height = 400
+}) {
+  const chartColors = colors.slice(0, data.length);
+
+  const renderChart = () => {
+    switch (type) {
+      case 'pie':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                ))}
+              </Pie>
+              <RechartsTooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+      
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="name" stroke="#6B7280" />
+              <YAxis stroke="#6B7280" />
+              <RechartsTooltip />
+              <Legend />
+              <Bar dataKey="value" name="Students" radius={[8, 8, 0, 0]}>
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      
+      case 'radial':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <RadialBarChart 
+              innerRadius="10%" 
+              outerRadius="80%" 
+              data={data} 
+              startAngle={180} 
+              endAngle={0}
+            >
+              <RadialBar 
+                minAngle={15} 
+                label={{ fill: '#fff', position: 'insideStart' }} 
+                background 
+                clockWise 
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                ))}
+              </RadialBar>
+              <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
+              <RechartsTooltip />
+            </RadialBarChart>
+          </ResponsiveContainer>
+        );
+      
+      case 'radar':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <RadarChart data={data}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="name" />
+              <PolarRadiusAxis />
+              <Radar name="Students" dataKey="value" stroke={chartColors[0]} fill={chartColors[0]} fillOpacity={0.6} />
+              <RechartsTooltip />
+            </RadarChart>
+          </ResponsiveContainer>
+        );
+      
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, value }) => `${name}: ${value}`}
+                outerRadius={120}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                ))}
+              </Pie>
+              <RechartsTooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+    }
+  };
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 relative overflow-hidden">
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-3xl opacity-60" />
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-2xl relative overflow-hidden">
+      <div className="absolute -top-10 -right-10 w-60 h-60 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-3xl opacity-60" />
       
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50">
-              <ChartComponent className="text-white text-xl" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
+              {type === 'pie' && <FiPieChart className="text-white text-xl" />}
+              {type === 'bar' && <FiBarChart2 className="text-white text-xl" />}
+              {type === 'radial' && <FiTrendingUp className="text-white text-xl" />}
+              {type === 'radar' && <FiTarget className="text-white text-xl" />}
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">{title}</h3>
-              <p className="text-sm text-slate-500">Visual distribution analysis</p>
+              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h3>
+              <p className="text-gray-600 text-sm">Visual distribution analysis</p>
             </div>
           </div>
         </div>
 
-        <div className="h-72"> {/* 20% larger than standard */}
-          {data.length > 0 ? (
-            <div className="flex items-center justify-center h-full">
-              {/* Simulated chart - replace with actual chart library */}
-              <div className="relative w-64 h-64">
-                <div className="absolute inset-0 rounded-full border-4 border-blue-100"></div>
-                {data.map((item, index) => {
-                  const percentage = (item.value / data.reduce((sum, d) => sum + d.value, 0)) * 100;
-                  const rotation = data.slice(0, index).reduce((sum, d) => 
-                    sum + (d.value / data.reduce((total, d2) => total + d2.value, 0)) * 360, 0);
-                  
-                  return (
-                    <div
-                      key={index}
-                      className="absolute top-0 left-0 w-full h-full"
-                      style={{
-                        clipPath: `conic-gradient(from ${rotation}deg, ${item.color} ${percentage}%, transparent ${percentage}%)`
-                      }}
-                    />
-                  );
-                })}
-                <div className="absolute inset-8 rounded-full bg-white flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-2xl font-black text-slate-900">
-                      {data.reduce((sum, d) => sum + d.value, 0)}
-                    </div>
-                    <div className="text-xs text-slate-500 font-medium">Total</div>
-                  </div>
-                </div>
-              </div>
-              <div className="ml-8 space-y-3">
-                {data.map((item, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: item.color }}></div>
-                    <div className="text-sm font-medium text-slate-700">{item.name}</div>
-                    <div className="text-sm font-bold text-slate-900">{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="h-96">
+          {data && data.length > 0 ? (
+            renderChart()
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-slate-500">No data available</p>
+              <p className="text-gray-500 text-lg">No data available</p>
             </div>
           )}
         </div>
+
+        {data && data.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                <div className="text-2xl font-bold text-blue-700">
+                  {data.reduce((sum, d) => sum + d.value, 0)}
+                </div>
+                <div className="text-sm font-semibold text-blue-900">Total</div>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                <div className="text-2xl font-bold text-emerald-700">
+                  {Math.max(...data.map(d => d.value))}
+                </div>
+                <div className="text-sm font-semibold text-emerald-900">Highest</div>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
+                <div className="text-2xl font-bold text-amber-700">
+                  {Math.min(...data.map(d => d.value))}
+                </div>
+                <div className="text-sm font-semibold text-amber-900">Lowest</div>
+              </div>
+              <div className="text-center p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                <div className="text-2xl font-bold text-purple-700">
+                  {data.length}
+                </div>
+                <div className="text-sm font-semibold text-purple-900">Categories</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Main Modernized Component
+// Demographic Summary Card
+function DemographicSummaryCard({ title, value, icon: Icon, color, trend = 0 }) {
+  return (
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+      <div className="flex items-center justify-between mb-4">
+        <div className={`p-3 rounded-xl bg-gradient-to-r ${color}`}>
+          <Icon className="text-white text-2xl" />
+        </div>
+        <div className={`text-sm font-bold px-3 py-1 rounded-lg ${
+          trend > 0 
+            ? 'bg-green-100 text-green-800' 
+            : trend < 0 
+            ? 'bg-red-100 text-red-800' 
+            : 'bg-gray-100 text-gray-800'
+        }`}>
+          {trend > 0 ? '↑' : trend < 0 ? '↓' : '↔'}
+        </div>
+      </div>
+      <h4 className="text-3xl font-bold text-gray-900 mb-2">{value}</h4>
+      <p className="text-gray-600 text-sm font-semibold">{title}</p>
+    </div>
+  );
+}
+
+// Enhanced Filter Component
+function EnhancedFilterPanel({ 
+  filters, 
+  onFilterChange, 
+  onClearFilters,
+  showAdvanced = false,
+  onToggleAdvanced 
+}) {
+  const [localFilters, setLocalFilters] = useState(filters);
+
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
+  const handleFilterChange = (key, value) => {
+    setLocalFilters({ ...localFilters, [key]: value });
+    onFilterChange(key, value);
+  };
+
+  const clearAllFilters = () => {
+    const clearedFilters = {
+      search: '',
+      form: '',
+      stream: '',
+      gender: '',
+      status: '',
+      minAge: '',
+      maxAge: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    };
+    setLocalFilters(clearedFilters);
+    onClearFilters();
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl mb-6 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
+        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+          <FiFilter className="text-blue-600" />
+          Advanced Filters
+        </h3>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onToggleAdvanced}
+            className="px-4 py-2 text-sm font-bold text-gray-700"
+          >
+            {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
+          </button>
+          <button
+            onClick={clearAllFilters}
+            className="px-4 py-2 text-sm font-bold text-red-600"
+          >
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Search Students
+          </label>
+          <div className="relative">
+            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+            <input
+              type="text"
+              value={localFilters.search}
+              onChange={(e) => handleFilterChange('search', e.target.value)}
+              placeholder="Name, admission, email..."
+              className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Form Level
+          </label>
+          <select
+            value={localFilters.form}
+            onChange={(e) => handleFilterChange('form', e.target.value)}
+            className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+          >
+            <option value="">All Forms</option>
+            {['Form 1', 'Form 2', 'Form 3', 'Form 4'].map(form => (
+              <option key={form} value={form}>{form}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Stream
+          </label>
+          <select
+            value={localFilters.stream}
+            onChange={(e) => handleFilterChange('stream', e.target.value)}
+            className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+          >
+            <option value="">All Streams</option>
+            {['A', 'B', 'C', 'D', 'E', 'East', 'West', 'North', 'South', 'Science', 'Arts', 'Commercial'].map(stream => (
+              <option key={stream} value={stream}>{stream}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">
+            Status
+          </label>
+          <select
+            value={localFilters.status}
+            onChange={(e) => handleFilterChange('status', e.target.value)}
+            className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+          >
+            <option value="">All Status</option>
+            {['active', 'inactive', 'graduated', 'transferred'].map(status => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {showAdvanced && (
+        <div className="mt-8 pt-8 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Gender
+            </label>
+            <select
+              value={localFilters.gender}
+              onChange={(e) => handleFilterChange('gender', e.target.value)}
+              className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+            >
+              <option value="">All Genders</option>
+              {['Male', 'Female', 'Other'].map(gender => (
+                <option key={gender} value={gender}>{gender}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Age Range
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="number"
+                min="10"
+                max="25"
+                value={localFilters.minAge}
+                onChange={(e) => handleFilterChange('minAge', e.target.value)}
+                placeholder="Min"
+                className="flex-1 px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+              />
+              <input
+                type="number"
+                min="10"
+                max="25"
+                value={localFilters.maxAge}
+                onChange={(e) => handleFilterChange('maxAge', e.target.value)}
+                placeholder="Max"
+                className="flex-1 px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Sort By
+            </label>
+            <select
+              value={localFilters.sortBy}
+              onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+              className="w-full px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-base"
+            >
+              <option value="createdAt">Date Created</option>
+              <option value="admissionNumber">Admission Number</option>
+              <option value="firstName">First Name</option>
+              <option value="lastName">Last Name</option>
+              <option value="form">Form Level</option>
+            </select>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Main Component
 export default function ModernStudentBulkUpload() {
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
@@ -797,108 +1233,198 @@ export default function ModernStudentBulkUpload() {
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [uploadHistory, setUploadHistory] = useState([]);
-  const [formFilter, setFormFilter] = useState('');
-  const [streamFilter, setStreamFilter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-const [stats, setStats] = useState({
-  totalStudents: 0,
-  formStats: {},
-  globalStats: { totalStudents: 0, form1: 0, form2: 0, form3: 0, form4: 0 },
-  demographics: { gender: {}, age: {} }
-});
+  const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [displayMode, setDisplayMode] = useState('grid');
+  const [replaceOption, setReplaceOption] = useState('skip');
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState({ type: '', id: '', name: '' });
+  
+  const [filters, setFilters] = useState({
+    search: '',
+    form: '',
+    stream: '',
+    gender: '',
+    status: '',
+    minAge: '',
+    maxAge: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  });
+
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    formStats: {},
+    streamStats: {},
+    genderStats: {},
+    ageDistribution: [],
+    globalStats: { totalStudents: 0, form1: 0, form2: 0, form3: 0, form4: 0 },
+    demographics: { 
+      gender: {}, 
+      age: {},
+      stream: {},
+      status: {}
+    }
+  });
+
+  const [demographics, setDemographics] = useState({
+    gender: [],
+    ageGroups: [],
+    formDistribution: [],
+    streamDistribution: [],
+    statusDistribution: []
+  });
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
     total: 0,
     pages: 1
   });
-  const [loading, setLoading] = useState(false);
-  const [displayMode, setDisplayMode] = useState('grid');
-  const [replaceOption, setReplaceOption] = useState('skip');
-  const [editMode, setEditMode] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState({ type: '', id: '', name: '' });
-  const [demographics, setDemographics] = useState({
-    gender: [],
-    ageGroups: [],
-    formDistribution: []
-  });
 
   const fileInputRef = useRef(null);
   const FORMS = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
 
-  // Load initial data
   useEffect(() => {
     loadStats();
     loadStudents();
     loadUploadHistory();
   }, []);
 
-const loadStats = async () => {
-  try {
-    const res = await fetch('/api/studentupload?action=stats');
-    const data = await res.json();
-    if (data.success) {
-      // Update this section - the API returns stats directly, not under globalStats
-      const apiStats = data.stats || {
-        totalStudents: 0,
-        form1: 0,
-        form2: 0,
-        form3: 0,
-        form4: 0
-      };
+  const loadStats = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/studentupload?action=stats');
+      const data = await res.json();
       
-      setStats({
-        totalStudents: data.totalStudents || 0,
-        formStats: data.formStats || {},
-        globalStats: apiStats, // This is where we map the API stats
-        demographics: { gender: {}, age: {} }
-      });
-      
-      // Process demographics data
-      const genderData = Object.entries(data.stats?.demographics?.gender || {}).map(([name, value]) => ({
-        name,
-        value,
-        color: name === 'Male' ? '#3B82F6' : name === 'Female' ? '#EC4899' : '#8B5CF6'
-      }));
-      
-      const formData = Object.entries(data.formStats || {}).map(([name, value]) => ({
-        name,
-        value,
-        color: 
-          name === 'Form 1' ? '#3B82F6' :
-          name === 'Form 2' ? '#10B981' :
-          name === 'Form 3' ? '#F59E0B' :
-          '#8B5CF6'
-      }));
+      if (data.success) {
+        const apiStats = data.stats || {
+          totalStudents: data.totalStudents || 0,
+          form1: 0,
+          form2: 0,
+          form3: 0,
+          form4: 0
+        };
+        
+        const demographicsRes = await fetch('/api/studentupload?limit=1000');
+        const demographicsData = await demographicsRes.json();
+        
+        if (demographicsData.success) {
+          const allStudents = demographicsData.students || [];
+          const totalStudents = demographicsData.pagination?.total || allStudents.length;
+          
+          const streamDistribution = {};
+          allStudents.forEach(student => {
+            const stream = student.stream || 'Unassigned';
+            streamDistribution[stream] = (streamDistribution[stream] || 0) + 1;
+          });
 
-      setDemographics({
-        gender: genderData,
-        formDistribution: formData,
-        ageGroups: [
-          { name: '13-15', value: 25, color: '#3B82F6' },
-          { name: '16-17', value: 45, color: '#10B981' },
-          { name: '18+', value: 30, color: '#F59E0B' }
-        ]
-      });
-    } else {
+          const genderDistribution = {};
+          allStudents.forEach(student => {
+            const gender = student.gender || 'Not Specified';
+            genderDistribution[gender] = (genderDistribution[gender] || 0) + 1;
+          });
+
+          const ageDistribution = {
+            '13-15': 0,
+            '16-17': 0,
+            '18-20': 0,
+            '21+': 0
+          };
+
+          allStudents.forEach(student => {
+            if (student.dateOfBirth) {
+              const dob = new Date(student.dateOfBirth);
+              const age = new Date().getFullYear() - dob.getFullYear();
+              if (age >= 13 && age <= 15) ageDistribution['13-15']++;
+              else if (age >= 16 && age <= 17) ageDistribution['16-17']++;
+              else if (age >= 18 && age <= 20) ageDistribution['18-20']++;
+              else if (age > 20) ageDistribution['21+']++;
+            }
+          });
+
+          const formDistribution = {};
+          allStudents.forEach(student => {
+            const form = student.form || 'Unknown';
+            formDistribution[form] = (formDistribution[form] || 0) + 1;
+          });
+
+          setStats({
+            totalStudents: totalStudents,
+            formStats: formDistribution,
+            streamStats: streamDistribution,
+            genderStats: genderDistribution,
+            ageDistribution: Object.entries(ageDistribution).map(([age, count]) => ({ age, count })),
+            globalStats: apiStats,
+            demographics: {
+              gender: genderDistribution,
+              age: ageDistribution,
+              stream: streamDistribution,
+              status: data.formStats || {}
+            }
+          });
+
+          setDemographics({
+            gender: Object.entries(genderDistribution).map(([name, value]) => ({
+              name,
+              value,
+              color: name === 'Male' ? '#3B82F6' : name === 'Female' ? '#EC4899' : '#8B5CF6'
+            })),
+            formDistribution: Object.entries(formDistribution).map(([name, value]) => ({
+              name,
+              value,
+              color: 
+                name === 'Form 1' ? '#3B82F6' :
+                name === 'Form 2' ? '#10B981' :
+                name === 'Form 3' ? '#F59E0B' :
+                '#8B5CF6'
+            })),
+            streamDistribution: Object.entries(streamDistribution).map(([name, value], index) => ({
+              name,
+              value,
+              color: [
+                '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444',
+                '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'
+              ][index % 10]
+            })),
+            ageGroups: Object.entries(ageDistribution).map(([name, value], index) => ({
+              name,
+              value,
+              color: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'][index % 4]
+            })),
+            statusDistribution: [
+              { name: 'Active', value: allStudents.filter(s => s.status === 'active').length, color: '#10B981' },
+              { name: 'Inactive', value: allStudents.filter(s => s.status === 'inactive').length, color: '#EF4444' },
+              { name: 'Graduated', value: allStudents.filter(s => s.status === 'graduated').length, color: '#8B5CF6' },
+              { name: 'Transferred', value: allStudents.filter(s => s.status === 'transferred').length, color: '#F59E0B' }
+            ]
+          });
+        }
+      } else {
+        toast.error('Failed to load statistics');
+      }
+    } catch (error) {
+      console.error('Failed to load stats:', error);
       toast.error('Failed to load statistics');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Failed to load stats:', error);
-    toast.error('Failed to load statistics');
-  }
-};
+  };
 
   const loadStudents = async (page = 1) => {
     setLoading(true);
     try {
       let url = `/api/studentupload?page=${page}&limit=${pagination.limit}`;
-      if (formFilter) url += `&form=${encodeURIComponent(formFilter)}`;
-      if (streamFilter) url += `&stream=${encodeURIComponent(streamFilter)}`;
-      if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+      
+      if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
+      if (filters.form) url += `&form=${encodeURIComponent(filters.form)}`;
+      if (filters.stream) url += `&stream=${encodeURIComponent(filters.stream)}`;
+      if (filters.gender) url += `&gender=${encodeURIComponent(filters.gender)}`;
+      if (filters.status) url += `&status=${encodeURIComponent(filters.status)}`;
+      if (filters.sortBy) url += `&sortBy=${encodeURIComponent(filters.sortBy)}`;
+      if (filters.sortOrder) url += `&sortOrder=${encodeURIComponent(filters.sortOrder)}`;
       
       const res = await fetch(url);
       const data = await res.json();
@@ -910,8 +1436,8 @@ const loadStats = async () => {
         setPagination(data.pagination || {
           page: page,
           limit: pagination.limit,
-          total: data.stats?.total || 0,
-          pages: Math.ceil((data.stats?.total || 0) / pagination.limit)
+          total: data.pagination?.total || data.students?.length || 0,
+          pages: Math.ceil((data.pagination?.total || data.students?.length || 0) / pagination.limit)
         });
       } else {
         toast.error(data.message || 'Failed to load students');
@@ -925,6 +1451,7 @@ const loadStats = async () => {
   };
 
   const loadUploadHistory = async (page = 1) => {
+    setHistoryLoading(true);
     try {
       const res = await fetch(`/api/studentupload?action=uploads&page=${page}&limit=5`);
       const data = await res.json();
@@ -936,7 +1463,38 @@ const loadStats = async () => {
     } catch (error) {
       console.error('Failed to load history:', error);
       toast.error('Failed to load upload history');
+    } finally {
+      setHistoryLoading(false);
     }
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      form: '',
+      stream: '',
+      gender: '',
+      status: '',
+      minAge: '',
+      maxAge: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    });
+    loadStudents(1);
+  };
+
+  const handleSort = (field) => {
+    const newSortOrder = filters.sortBy === field && filters.sortOrder === 'desc' ? 'asc' : 'desc';
+    setFilters(prev => ({
+      ...prev,
+      sortBy: field,
+      sortOrder: newSortOrder
+    }));
+    loadStudents(pagination.page);
   };
 
   const handleDrag = useCallback((e) => {
@@ -976,11 +1534,7 @@ const loadStats = async () => {
       setResult(data);
       
       if (data.success) {
-        let message = `✅ Upload successful! ${data.stats.validRows} students processed.`;
-        if (data.summary) {
-          message = `✅ Upload complete: ${data.summary.new} new, ${data.summary.updated} updated, ${data.summary.skipped} skipped`;
-        }
-        toast.success(message);
+        toast.success(`✅ Upload successful! ${data.stats.validRows} students processed.`);
         
         if (data.stats.errors && data.stats.errors.length > 0) {
           data.stats.errors.slice(0, 3).forEach(error => {
@@ -1020,10 +1574,11 @@ const loadStats = async () => {
   const confirmDelete = async () => {
     try {
       let url;
+      
       if (deleteTarget.type === 'batch') {
         url = `/api/studentupload?batchId=${deleteTarget.id}`;
       } else {
-        url = `/api/studentupload?studentId=${deleteTarget.id}`;
+        url = `/api/studentupload/${deleteTarget.id}`;
       }
 
       const res = await fetch(url, { method: 'DELETE' });
@@ -1047,25 +1602,8 @@ const loadStats = async () => {
     }
   };
 
-  const loadStudentDetails = async (studentId) => {
-    try {
-      const res = await fetch(`/api/studentupload?studentId=${studentId}`);
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.message || 'Failed to load student details');
-      
-      if (data.success) {
-        setSelectedStudent(data.student);
-      } else {
-        toast.error(data.message || 'Failed to load student details');
-      }
-    } catch (error) {
-      console.error('Failed to load student details:', error);
-      toast.error(error.message || 'Failed to load student details');
-    }
-  };
-
   const updateStudent = async (studentId, studentData) => {
+    setLoading(true);
     try {
       const res = await fetch(`/api/studentupload/${studentId}`, {
         method: 'PUT',
@@ -1086,15 +1624,17 @@ const loadStats = async () => {
     } catch (error) {
       console.error('Update failed:', error);
       toast.error('Failed to update student');
+    } finally {
+      setLoading(false);
     }
   };
 
   const downloadCSVTemplate = () => {
-    const template = `admissionNumber,firstName,middleName,lastName,form,stream,dateOfBirth,gender,parentPhone,email
-3407,John,Michael,Doe,Form 1,East,2008-05-15,Male,+254712345678,john.doe@example.com
-3408,Jane,,Smith,Form 2,West,2007-08-22,Female,+254723456789,jane.smith@example.com
-3409,Robert,James,Wilson,Form 3,North,2006-11-30,Male,+254734567890,robert.wilson@example.com
-3410,Sarah,Anne,Johnson,Form 4,South,2005-03-10,Female,+254745678901,sarah.johnson@example.com`;
+    const template = `admissionNumber,firstName,middleName,lastName,form,stream,dateOfBirth,gender,parentPhone,email,address,status
+3407,John,Michael,Doe,Form 1,A,2008-05-15,Male,+254712345678,john.doe@example.com,123 Main St,active
+3408,Jane,,Smith,Form 2,B,2007-08-22,Female,+254723456789,jane.smith@example.com,456 Oak Ave,active
+3409,Robert,James,Wilson,Form 3,C,2006-11-30,Male,+254734567890,robert.wilson@example.com,789 Pine Rd,active
+3410,Sarah,Anne,Johnson,Form 4,D,2005-03-10,Female,+254745678901,sarah.johnson@example.com,321 Elm St,active`;
 
     const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1111,9 +1651,9 @@ const loadStats = async () => {
   const downloadExcelTemplate = () => {
     try {
       const sampleData = [
-        ['admissionNumber', 'firstName', 'middleName', 'lastName', 'form', 'stream', 'dateOfBirth', 'gender', 'parentPhone', 'email'],
-        ['3407', 'John', 'Michael', 'Doe', 'Form 1', 'East', '2008-05-15', 'Male', '+254712345678', 'john.doe@example.com'],
-        ['3408', 'Jane', '', 'Smith', 'Form 2', 'West', '2007-08-22', 'Female', '+254723456789', 'jane.smith@example.com']
+        ['admissionNumber', 'firstName', 'middleName', 'lastName', 'form', 'stream', 'dateOfBirth', 'gender', 'parentPhone', 'email', 'address', 'status'],
+        ['3407', 'John', 'Michael', 'Doe', 'Form 1', 'A', '2008-05-15', 'Male', '+254712345678', 'john.doe@example.com', '123 Main St', 'active'],
+        ['3408', 'Jane', '', 'Smith', 'Form 2', 'B', '2007-08-22', 'Female', '+254723456789', 'jane.smith@example.com', '456 Oak Ave', 'active']
       ];
 
       const ws = XLSX.utils.aoa_to_sheet(sampleData);
@@ -1133,7 +1673,7 @@ const loadStats = async () => {
       return;
     }
 
-    const headers = ['Admission Number', 'First Name', 'Middle Name', 'Last Name', 'Form', 'Stream', 'Gender', 'Status', 'Email', 'Parent Phone'];
+    const headers = ['Admission Number', 'First Name', 'Middle Name', 'Last Name', 'Form', 'Stream', 'Gender', 'Date of Birth', 'Age', 'Status', 'Email', 'Parent Phone', 'Address'];
     const data = students.map(student => [
       student.admissionNumber,
       student.firstName,
@@ -1142,9 +1682,12 @@ const loadStats = async () => {
       student.form,
       student.stream || '',
       student.gender || '',
+      student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : '',
+      student.dateOfBirth ? new Date().getFullYear() - new Date(student.dateOfBirth).getFullYear() : '',
       student.status,
       student.email || '',
-      student.parentPhone || ''
+      student.parentPhone || '',
+      student.address || ''
     ]);
 
     const csvContent = [
@@ -1165,14 +1708,6 @@ const loadStats = async () => {
     toast.success(`Exported ${students.length} students to CSV`);
   };
 
-  const clearFilters = () => {
-    setFormFilter('');
-    setStreamFilter('');
-    setSearchTerm('');
-    loadStudents(1);
-    toast.success('Filters cleared');
-  };
-
   const handleSearch = (e) => {
     if (e.key === 'Enter' || e.type === 'click') {
       loadStudents(1);
@@ -1185,84 +1720,71 @@ const loadStats = async () => {
     }
   };
 
-  if (loading && students.length === 0 && view !== 'upload') {
-    return <ModernLoadingSpinner message="Loading student records..." size="medium" />;
+  if (loading && students.length === 0 && view !== 'upload' && view !== 'demographics') {
+    return <ModernLoadingSpinner message="Loading student records..." size="large" />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
-      <Toaster position="top-right" richColors />
+    <div className="p-6 space-y-6">
+      <CustomToaster />
 
-      {/* Main Header */}
-      <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
-        
-        <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-                <FaUserGraduate className="text-white text-3xl group-hover:scale-110 transition-transform" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-                    Student Management
-                  </span>
-                  <FaCheckCircle className="text-blue-300 text-[10px]" />
-                </div>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
-                  Student Bulk Upload
-                </h1>
-              </div>
+      {/* Welcome Section */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 rounded-2xl p-8 text-white overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-white/20 rounded-2xl">
+              <IoSparkles className="text-2xl text-yellow-300" />
             </div>
-            
-            <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
-              Manage student records efficiently with bulk upload, real-time filtering, 
-              and comprehensive analytics for all forms.
-            </p>
+            <div>
+              <h1 className="text-3xl font-bold">Student Bulk Upload & Analytics</h1>
+              <p className="text-blue-100 text-lg mt-2 max-w-2xl">
+                Comprehensive student management with bulk upload, real-time filtering, 
+                demographic analytics, and distribution charts for all academic forms and streams.
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto bg-white/10 backdrop-blur-lg p-4 rounded-[2rem] border border-white/20">
-            <button 
-              onClick={loadStats}
+          <div className="flex items-center gap-4 mt-6">
+            <button
+              onClick={() => {
+                setLoading(true);
+                loadStats();
+              }}
               disabled={loading}
-              className="flex-1 xl:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-5 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
+              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold text-base flex items-center gap-2 shadow-lg disabled:opacity-60"
             >
               {loading ? (
                 <CircularProgress size={16} color="inherit" thickness={6} />
               ) : (
-                <FaSync className="text-sm" /> 
+                <FiRefreshCw className="text-base" />
               )}
-              <span className="whitespace-nowrap">
-                {loading ? 'Syncing...' : 'Refresh Stats'}
-              </span>
+              {loading ? 'Syncing...' : 'Refresh Stats'}
             </button>
-            
-            <button 
+
+            <button
               onClick={exportStudentsToCSV}
-              disabled={students.length === 0}
-              className="flex-1 xl:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-5 py-3 rounded-xl hover:bg-white/20 transition-all duration-200 font-semibold text-sm active:scale-[0.98] disabled:opacity-50"
+              disabled={students.length === 0 || loading}
+              className="text-white/80 hover:text-white px-6 py-3 rounded-xl font-bold text-base border border-white/20 flex items-center gap-2 disabled:opacity-50"
             >
-              <FaDownload className="text-sm" /> 
-              <span className="whitespace-nowrap">Export Data</span>
+              <FiDownload className="text-base" />
+              Export Data
             </button>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="bg-white rounded-[2.5rem] p-2 mb-8 border border-slate-200 shadow-xl shadow-slate-200/40">
-        <div className="flex flex-wrap items-center gap-1 p-2">
+      <div className="bg-white rounded-2xl p-3 border-2 border-gray-200 shadow-2xl">
+        <div className="flex flex-wrap items-center gap-2 p-2">
           <button
             onClick={() => setView('upload')}
-            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2.5 transition-all duration-200 ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
               view === 'upload'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
+                : 'text-gray-700'
             }`}
           >
-            <FaUpload />
+            <FiUpload className="text-sm" />
             Bulk Upload
           </button>
           <button
@@ -1270,13 +1792,13 @@ const loadStats = async () => {
               setView('students');
               loadStudents(1);
             }}
-            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2.5 transition-all duration-200 ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
               view === 'students'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
+                : 'text-gray-700'
             }`}
           >
-            <FaUsers />
+            <FiUsers className="text-sm" />
             Students ({stats.totalStudents || 0})
           </button>
           <button
@@ -1284,13 +1806,13 @@ const loadStats = async () => {
               setView('demographics');
               loadStats();
             }}
-            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2.5 transition-all duration-200 ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
               view === 'demographics'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
+                : 'text-gray-700'
             }`}
           >
-            <FaChartPie />
+            <FiPieChart className="text-sm" />
             Demographics
           </button>
           <button
@@ -1298,112 +1820,104 @@ const loadStats = async () => {
               setView('history');
               loadUploadHistory(1);
             }}
-            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2.5 transition-all duration-200 ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
               view === 'history'
-                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
+                : 'text-gray-700'
             }`}
           >
-            <FaHistory />
+            <FiClock className="text-sm" />
             Upload History
           </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="space-y-8">
-        {/* Upload View */}
+      <div className="space-y-6">
         {view === 'upload' && (
-          <div className="space-y-8">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 hover:shadow-blue-100/50 transition-all duration-500">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Total Students</p>
-                    <p className="text-3xl font-black text-slate-900">{stats.totalStudents || 0}</p>
-                  </div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200">
-                    <FaUsers className="text-white text-xl" />
-                  </div>
-                </div>
-              </div>
-              
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <DemographicSummaryCard
+                title="Total Students"
+                value={stats.totalStudents}
+                icon={FiUsers}
+                color="from-blue-500 to-blue-700"
+                trend={12}
+              />
+
               {FORMS.map(form => {
-                const count = stats.globalStats[form.toLowerCase().replace(' ', '')] || 0;
+                const count = stats.formStats[form] || 0;
                 const colors = {
-                  'Form 1': 'from-blue-500 to-blue-600',
-                  'Form 2': 'from-emerald-500 to-emerald-600',
-                  'Form 3': 'from-amber-500 to-amber-600',
-                  'Form 4': 'from-purple-500 to-purple-600'
+                  'Form 1': 'from-blue-500 to-blue-700',
+                  'Form 2': 'from-emerald-500 to-emerald-700',
+                  'Form 3': 'from-amber-500 to-amber-700',
+                  'Form 4': 'from-purple-500 to-purple-700'
                 };
-                
+
                 return (
-                  <div key={form} className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 hover:shadow-blue-100/50 transition-all duration-500">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">{form}</p>
-                        <p className="text-3xl font-black text-slate-900">{count}</p>
-                      </div>
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${colors[form]} flex items-center justify-center shadow-xl`}>
-                        <FaGraduationCap className="text-white text-xl" />
-                      </div>
-                    </div>
-                  </div>
+                  <DemographicSummaryCard
+                    key={form}
+                    title={form}
+                    value={count}
+                    icon={IoSchool}
+                    color={colors[form]}
+                    trend={Math.floor(Math.random() * 20) - 5}
+                  />
                 );
               })}
             </div>
 
-            {/* Main Upload Area */}
             <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                {/* Duplicate Handling */}
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-                  <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2.5">
-                    <FaInfoCircle className="text-blue-600 text-xl" />
-                    Duplicate Handling Strategy
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-300">
+                  <h3 className="text-xl font-bold text-blue-900 mb-6 flex items-center gap-3">
+                    <FiInfo className="text-blue-700 text-2xl" />
+                    Duplicate Prevention Strategy
                   </h3>
-                  <div className="flex flex-col sm:flex-row gap-4 mb-3">
+                  <div className="flex flex-col sm:flex-row gap-6 mb-4">
                     <div className="flex-1">
-                      <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 ${
                         replaceOption === 'skip' 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-blue-600 bg-blue-50 shadow-lg' 
+                          : 'border-gray-300'
                       }`}>
                         <input
                           type="radio"
                           checked={replaceOption === 'skip'}
                           onChange={() => setReplaceOption('skip')}
-                          className="text-blue-600 focus:ring-blue-500"
+                          className="text-blue-600 focus:ring-blue-500 h-5 w-5"
                         />
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">Skip Duplicates</div>
-                          <div className="text-sm text-gray-600 mt-1">Preserve existing records</div>
+                          <div className="font-bold text-gray-900 text-lg">Skip Duplicates</div>
+                          <div className="text-gray-600 text-sm mt-2">Preserve existing records with unique admission numbers</div>
                         </div>
                       </label>
                     </div>
                     <div className="flex-1">
-                      <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 ${
                         replaceOption === 'replace' 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-blue-600 bg-blue-50 shadow-lg' 
+                          : 'border-gray-300'
                       }`}>
                         <input
                           type="radio"
                           checked={replaceOption === 'replace'}
                           onChange={() => setReplaceOption('replace')}
-                          className="text-blue-600 focus:ring-blue-500"
+                          className="text-blue-600 focus:ring-blue-500 h-5 w-5"
                         />
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">Replace Records</div>
-                          <div className="text-sm text-gray-600 mt-1">Update with new data</div>
+                          <div className="font-bold text-gray-900 text-lg">Replace Records</div>
+                          <div className="text-gray-600 text-sm mt-2">Update existing records with new data</div>
                         </div>
                       </label>
                     </div>
                   </div>
+                  <div className="bg-white/80 rounded-xl p-4 border border-blue-200">
+                    <p className="text-sm text-blue-800 font-semibold">
+                      ⚠️ Admission numbers must be unique. Names can be duplicated but admission numbers cannot.
+                    </p>
+                  </div>
                 </div>
 
-                {/* File Upload */}
                 <ModernFileUpload
                   onFileSelect={handleFileSelect}
                   file={file}
@@ -1412,51 +1926,50 @@ const loadStats = async () => {
                   onDrag={(active) => setDragActive(active)}
                 />
 
-                {/* Selected File */}
                 {file && (
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 rounded-xl">
+                  <div className="bg-white rounded-2xl p-6 border-2 border-gray-300 shadow-2xl">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex items-center gap-6">
+                        <div className="p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl">
                           {file.name.endsWith('.csv') ? (
-                            <FaFileCsv className="text-blue-600 text-2xl" />
+                            <FiFile className="text-blue-700 text-3xl" />
                           ) : (
-                            <FaFileExcel className="text-green-600 text-2xl" />
+                            <IoDocumentText className="text-green-700 text-3xl" />
                           )}
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900">{file.name}</p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-sm text-gray-600">
+                          <p className="font-bold text-gray-900 text-lg truncate max-w-[200px] md:max-w-none">{file.name}</p>
+                          <div className="flex flex-col md:flex-row md:items-center gap-6 mt-2">
+                            <span className="text-gray-600 font-semibold text-base">
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </span>
-                            <span className="text-sm px-2 py-1 bg-gray-100 rounded-lg">
+                            <span className="px-3 py-1.5 bg-gray-100 rounded-lg font-bold text-gray-700 text-sm">
                               {file.name.split('.').pop().toUpperCase()}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <button
                           onClick={() => setFile(null)}
-                          className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors"
+                          className="p-3 rounded-xl text-gray-600"
                         >
-                          <FaTimes className="text-lg" />
+                          <FiX className="text-xl" />
                         </button>
                         <button
                           onClick={handleUpload}
                           disabled={uploading}
-                          className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 hover:shadow-lg transition-all duration-200"
+                          className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl disabled:opacity-50"
                         >
                           {uploading ? (
                             <>
-                              <FaSync className="animate-spin" />
-                              Processing...
+                              <CircularProgress size={18} className="text-white" />
+                              <span>Processing...</span>
                             </>
                           ) : (
                             <>
-                              <FaUpload />
-                              Upload Now
+                              <FiUpload className="text-base" />
+                              <span>Upload Now</span>
                             </>
                           )}
                         </button>
@@ -1466,302 +1979,177 @@ const loadStats = async () => {
                 )}
               </div>
 
-              {/* Side Panel */}
-              <div className="space-y-6">
-                {/* Template Downloads */}
-                <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Download Templates</h3>
-                  <div className="space-y-3">
+              <div className="space-y-8">
+                <div className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Download Templates</h3>
+                  <div className="space-y-4">
                     <button
                       onClick={downloadCSVTemplate}
-                      className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl"
                     >
-                      <FaFileCsv className="text-blue-600 text-xl" />
-                      <span className="font-medium text-gray-900">CSV Template</span>
+                      <FiFile className="text-blue-600 text-2xl" />
+                      <span className="font-bold text-gray-900 text-base">CSV Template</span>
                     </button>
                     <button
                       onClick={downloadExcelTemplate}
-                      className="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl"
                     >
-                      <FaFileExcel className="text-green-600 text-xl" />
-                      <span className="font-medium text-gray-900">Excel Template</span>
+                      <IoDocumentText className="text-green-600 text-2xl" />
+                      <span className="font-bold text-gray-900 text-base">Excel Template</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Help Card */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200 p-6">
-                  <h3 className="text-lg font-bold text-blue-900 mb-3">Upload Guidelines</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-2.5">
-                      <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-bold text-sm">1</span>
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-300 p-6 shadow-xl">
+                  <h3 className="text-xl font-bold text-blue-900 mb-6">Upload Guidelines</h3>
+                  <ul className="space-y-4">
+                    <li className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-bold text-base">1</span>
                       </div>
-                      <span className="text-sm text-blue-800">Use provided templates</span>
+                      <span className="text-blue-800 font-semibold text-base">Use provided templates for correct format</span>
                     </li>
-                    <li className="flex items-start gap-2.5">
-                      <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-bold text-sm">2</span>
+                    <li className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-bold text-base">2</span>
                       </div>
-                      <span className="text-sm text-blue-800">Ensure admission numbers are unique</span>
+                      <span className="text-blue-800 font-semibold text-base">Admission numbers must be unique (4-10 digits)</span>
                     </li>
-                    <li className="flex items-start gap-2.5">
-                      <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 font-bold text-sm">3</span>
+                    <li className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-bold text-base">3</span>
                       </div>
-                      <span className="text-sm text-blue-800">Keep file size under 10MB</span>
+                      <span className="text-blue-800 font-semibold text-base">Keep file size under 10MB for optimal performance</span>
+                    </li>
+                    <li className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-bold text-base">4</span>
+                      </div>
+                      <span className="text-blue-800 font-semibold text-base">All required fields must be filled (marked with *)</span>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
-
-            {/* Upload Results */}
-            {result && (
-              <div className={`rounded-2xl p-8 border-2 transition-all duration-300 ${
-                result.success
-                  ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-white'
-                  : 'border-red-200 bg-gradient-to-br from-red-50 to-white'
-              }`}>
-                <div className="flex items-start gap-5 mb-8">
-                  <div className={`p-4 rounded-2xl ${
-                    result.success ? 'bg-emerald-100' : 'bg-red-100'
-                  }`}>
-                    {result.success ? (
-                      <FaCheckCircle className="text-4xl text-emerald-600" />
-                    ) : (
-                      <FaTimesCircle className="text-4xl text-red-600" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      {result.success ? 'Upload Completed Successfully!' : 'Upload Failed'}
-                    </h3>
-                    <p className="text-gray-600 mt-1.5">{result.message}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-white rounded-xl p-5 border text-center hover:shadow-md transition-shadow">
-                    <p className="text-sm text-gray-600 mb-1">Total Rows</p>
-                    <p className="text-3xl font-bold text-gray-900">{result.stats.totalRows}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 border text-center hover:shadow-md transition-shadow">
-                    <p className="text-sm text-gray-600 mb-1">Valid Rows</p>
-                    <p className="text-3xl font-bold text-emerald-600">{result.stats.validRows}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 border text-center hover:shadow-md transition-shadow">
-                    <p className="text-sm text-gray-600 mb-1">Skipped</p>
-                    <p className="text-3xl font-bold text-amber-600">{result.stats.skippedRows}</p>
-                  </div>
-                  <div className="bg-white rounded-xl p-5 border text-center hover:shadow-md transition-shadow">
-                    <p className="text-sm text-gray-600 mb-1">Errors</p>
-                    <p className="text-3xl font-bold text-red-600">{result.stats.errorRows}</p>
-                  </div>
-                </div>
-
-                {result.summary && (
-                  <div className="mb-8">
-                    <h4 className="font-bold text-gray-800 mb-4 text-lg">Summary:</h4>
-                    <div className="flex flex-wrap gap-3">
-                      <span className="px-4 py-2.5 bg-emerald-100 text-emerald-800 rounded-xl font-medium">
-                        New: {result.summary.new}
-                      </span>
-                      <span className="px-4 py-2.5 bg-blue-100 text-blue-800 rounded-xl font-medium">
-                        Updated: {result.summary.updated}
-                      </span>
-                      <span className="px-4 py-2.5 bg-amber-100 text-amber-800 rounded-xl font-medium">
-                        Skipped: {result.summary.skipped}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {result.stats.errors && result.stats.errors.length > 0 && (
-                  <div className="border-t pt-6">
-                    <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2.5">
-                      <FaExclamationTriangle className="text-amber-600 text-xl" />
-                      Errors ({result.stats.errors.length})
-                    </h4>
-                    <div className="max-h-48 overflow-y-auto space-y-2 pr-2">
-                      {result.stats.errors.slice(0, 8).map((error, index) => (
-                        <div key={index} className="text-sm text-red-600 bg-red-50 p-3.5 rounded-xl border border-red-100">
-                          <div className="font-medium">Error {index + 1}</div>
-                          <div className="mt-1">{error}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         )}
 
-        {/* Students View */}
         {view === 'students' && (
-          <div className="space-y-6">
-            {/* Search and Filter Bar */}
-            <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40">
-              <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="space-y-8">
+            {showFilters && (
+              <EnhancedFilterPanel
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onClearFilters={handleClearFilters}
+                showAdvanced={showFilters}
+                onToggleAdvanced={() => setShowFilters(!showFilters)}
+              />
+            )}
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-300 shadow-2xl">
+              <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
                 <div className="flex-1 w-full lg:w-auto">
-                  <div className="relative max-w-md">
-                    <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                  <div className="relative max-w-full lg:max-w-lg">
+                    <FiSearch className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
                     <input
                       type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      value={filters.search}
+                      onChange={(e) => handleFilterChange('search', e.target.value)}
                       onKeyDown={handleSearch}
-                      placeholder="Search students by name, admission, or email"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm"
+                      placeholder="Search students by name, admission number, email, or address"
+                      className="w-full pl-14 pr-4 py-4 bg-white border-2 border-gray-400 rounded-2xl focus:ring-4 focus:ring-blue-500 focus:border-blue-600 transition-all duration-300 text-base"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="px-4 py-3.5 bg-white border-2 border-gray-200 rounded-xl text-gray-700 font-bold flex items-center gap-2 hover:border-blue-300 transition-all duration-300"
+                    className="flex-1 lg:flex-none px-6 py-4 bg-white border-2 border-gray-400 rounded-2xl text-gray-700 font-bold flex items-center justify-center gap-3 text-base"
                   >
-                    <FaFilter />
-                    Filters
-                    {showFilters ? <FaChevronUp /> : <FaChevronDown />}
+                    <FiFilter />
+                    {showFilters ? 'Hide Filters' : 'Show Filters'}
                   </button>
-                  
-                  <div className="flex items-center gap-2 bg-gray-100 p-1.5 rounded-xl">
+
+                  <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-2xl">
                     <button
                       onClick={() => setDisplayMode('grid')}
-                      className={`p-2.5 rounded-lg transition-all duration-300 ${displayMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}
+                      className={`p-3 rounded-xl ${displayMode === 'grid' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600'}`}
                     >
-                      <FaTh size={18} />
+                      <FiGrid size={18} />
                     </button>
                     <button
                       onClick={() => setDisplayMode('list')}
-                      className={`p-2.5 rounded-lg transition-all duration-300 ${displayMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}
+                      className={`p-3 rounded-xl ${displayMode === 'list' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600'}`}
                     >
-                      <FaList size={18} />
+                      <FiList size={18} />
                     </button>
                   </div>
-                  
+
                   <button
                     onClick={() => handleSearch({ type: 'click' })}
-                    className="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all duration-200"
+                    disabled={loading}
+                    className="flex-1 lg:flex-none px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50"
                   >
-                    <FaSearch />
-                    Search
+                    {loading ? (
+                      <>
+                        <CircularProgress size={18} className="text-white" />
+                        <span>Searching...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FiSearch />
+                        <span>Search</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
-
-              {/* Expanded Filters */}
-              {showFilters && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Filter by Form
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {FORMS.map(form => (
-                          <button
-                            key={form}
-                            onClick={() => {
-                              setFormFilter(formFilter === form ? '' : form);
-                              loadStudents(1);
-                            }}
-                            className={`px-3.5 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-                              formFilter === form
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                          >
-                            {form}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
-                        Filter by Stream
-                      </label>
-                      <select
-                        value={streamFilter}
-                        onChange={(e) => {
-                          setStreamFilter(e.target.value);
-                          loadStudents(1);
-                        }}
-                        className="w-full px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm"
-                      >
-                        <option value="">All Streams</option>
-                        {['East', 'West', 'North', 'South', 'Day', 'Boarding'].map(stream => (
-                          <option key={stream} value={stream}>{stream}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex items-end">
-                      <button
-                        onClick={clearFilters}
-                        disabled={!formFilter && !streamFilter && !searchTerm}
-                        className="w-full px-4 py-2.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-200"
-                      >
-                        Clear All Filters
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Loading State */}
-            {loading && students.length === 0 ? (
-              <div className="text-center py-16">
-                <ModernLoadingSpinner message="Loading student records..." size="medium" />
+            {loading ? (
+              <div className="text-center py-20">
+                <ModernLoadingSpinner message="Loading student records..." size="large" />
               </div>
             ) : (
               <>
-                {/* Student Grid View */}
                 {displayMode === 'grid' && students.length > 0 && (
                   <>
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-black text-slate-900">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3">
+                      <h3 className="text-2xl font-bold text-gray-900">
                         Student Records ({pagination.total})
                       </h3>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-gray-600 font-bold text-base">
                         Page {pagination.page} of {pagination.pages}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                       {students.map(student => (
-                        <div 
-                          key={student.id} 
-                          className="group bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-300"
-                        >
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200">
-                                <FaUser className="text-white text-xl" />
+                        <div key={student.id} className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl">
+                          <div className="flex items-start justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
+                                <FiUser className="text-white text-2xl" />
                               </div>
                               <div>
-                                <h4 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                                <h4 className="font-bold text-gray-900 text-base">
                                   {student.firstName} {student.lastName}
                                 </h4>
-                                <p className="text-sm text-slate-600 mt-0.5">#{student.admissionNumber}</p>
+                                <p className="text-gray-600 font-semibold text-base mt-1">#{student.admissionNumber}</p>
                               </div>
                             </div>
                             <div className="relative">
-                              <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors">
-                                <FaCog />
+                              <button className="p-2 rounded-lg text-gray-600">
+                                <FiSettings className="text-base" />
                               </button>
                             </div>
                           </div>
-                          
-                          <div className="space-y-3">
+
+                          <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-slate-600">Form</span>
-                              <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                              <span className="text-gray-600 font-semibold text-base">Form</span>
+                              <span className={`px-4 py-2 rounded-lg font-bold text-sm ${
                                 student.form === 'Form 1' ? 'bg-blue-100 text-blue-800' :
                                 student.form === 'Form 2' ? 'bg-emerald-100 text-emerald-800' :
                                 student.form === 'Form 3' ? 'bg-amber-100 text-amber-800' :
@@ -1770,45 +2158,45 @@ const loadStats = async () => {
                                 {student.form}
                               </span>
                             </div>
-                            
+
                             {student.stream && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">Stream</span>
-                                <span className="text-sm font-bold text-slate-900">{student.stream}</span>
+                                <span className="text-gray-600 font-semibold text-base">Stream</span>
+                                <span className="font-bold text-gray-900 text-base">{student.stream}</span>
                               </div>
                             )}
-                            
+
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-slate-600">Status</span>
-                              <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-                                student.status === 'active' 
+                              <span className="text-gray-600 font-semibold text-base">Status</span>
+                              <span className={`px-4 py-2 rounded-lg font-bold text-sm ${
+                                student.status === 'active'
                                   ? 'bg-green-100 text-green-800'
                                   : 'bg-red-100 text-red-800'
                               }`}>
-                                {student.status}
+                                {student.status.toUpperCase()}
                               </span>
                             </div>
-                            
+
                             {student.email && (
-                              <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                                <FaEnvelope className="text-slate-400 text-sm" />
-                                <span className="text-sm truncate flex-1">{student.email}</span>
+                              <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                                <FiMail className="text-gray-400 text-base" />
+                                <span className="text-gray-700 truncate flex-1 font-semibold text-base">{student.email}</span>
                               </div>
                             )}
                           </div>
 
-                          <div className="flex gap-2 mt-5 pt-5 border-t border-slate-100">
+                          <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
                             <button
-                              onClick={() => loadStudentDetails(student.id)}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all duration-200"
+                              onClick={() => setSelectedStudent(student)}
+                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold shadow-xl"
                             >
-                              <FaEye /> View
+                              <FiEye className="text-sm" /> View
                             </button>
                             <button
                               onClick={() => setEditingStudent(student)}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all duration-200"
+                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl text-base font-bold shadow-xl"
                             >
-                              <FaEdit /> Edit
+                              <FiEdit className="text-sm" /> Edit
                             </button>
                           </div>
                         </div>
@@ -1817,70 +2205,97 @@ const loadStats = async () => {
                   </>
                 )}
 
-                {/* Student List View */}
                 {displayMode === 'list' && students.length > 0 && (
-                  <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                    <div className="px-6 py-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-slate-800">Student Records</h3>
-                        <div className="flex items-center gap-3">
-                          <div className="text-sm text-slate-600 bg-white px-3 py-1.5 rounded-lg border">
+                  <div className="bg-white rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
+                    <div className="px-8 py-6 border-b-2 border-gray-300 bg-gradient-to-r from-gray-50 to-white">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h3 className="text-2xl font-bold text-gray-900">Student Records</h3>
+                        <div className="flex items-center gap-4">
+                          <div className="text-gray-600 font-bold bg-white px-4 py-2 rounded-xl border-2 text-base">
                             {pagination.total} total students
                           </div>
                           <button
                             onClick={() => loadStudents(pagination.page)}
                             disabled={loading}
-                            className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold flex items-center gap-2 hover:shadow-lg transition-all duration-200"
+                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl"
                           >
-                            <FaSync className={loading ? 'animate-spin' : ''} />
-                            Refresh
+                            {loading ? (
+                              <CircularProgress size={18} className="text-white" />
+                            ) : (
+                              <FiRefreshCw />
+                            )}
+                            {loading ? 'Refreshing...' : 'Refresh'}
                           </button>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-slate-50">
+                      <table className="w-full min-w-[768px]">
+                        <thead className="bg-gray-100">
                           <tr>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Student
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                                onClick={() => handleSort('firstName')}>
+                              <div className="flex items-center gap-2">
+                                Student
+                                {filters.sortBy === 'firstName' && (
+                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                )}
+                              </div>
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Form
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                                onClick={() => handleSort('form')}>
+                              <div className="flex items-center gap-2">
+                                Form
+                                {filters.sortBy === 'form' && (
+                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                )}
+                              </div>
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Stream
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                                onClick={() => handleSort('stream')}>
+                              <div className="flex items-center gap-2">
+                                Stream
+                                {filters.sortBy === 'stream' && (
+                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                )}
+                              </div>
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                              Status
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                                onClick={() => handleSort('status')}>
+                              <div className="flex items-center gap-2">
+                                Status
+                                {filters.sortBy === 'status' && (
+                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                )}
+                              </div>
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
                               Actions
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y-2 divide-gray-200">
                           {students.map(student => (
-                            <tr key={student.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center">
-                                    <FaUser className="text-white text-sm" />
+                            <tr key={student.id} className="bg-white">
+                              <td className="px-8 py-5">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                                    <FiUser className="text-white text-base" />
                                   </div>
                                   <div>
-                                    <div className="font-medium text-slate-900">
+                                    <div className="font-bold text-gray-900 text-base">
                                       {student.firstName} {student.middleName ? `${student.middleName} ` : ''}{student.lastName}
                                     </div>
-                                    <div className="text-sm text-slate-500">#{student.admissionNumber}</div>
+                                    <div className="text-gray-600 font-semibold text-sm">#{student.admissionNumber}</div>
                                     {student.email && (
-                                      <div className="text-sm text-slate-500">{student.email}</div>
+                                      <div className="text-gray-600 text-sm truncate max-w-[200px]">{student.email}</div>
                                     )}
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-6 py-4">
-                                <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
+                              <td className="px-8 py-5">
+                                <span className={`px-4 py-2 rounded-xl text-sm font-bold ${
                                   student.form === 'Form 1' ? 'bg-blue-100 text-blue-800' :
                                   student.form === 'Form 2' ? 'bg-emerald-100 text-emerald-800' :
                                   student.form === 'Form 3' ? 'bg-amber-100 text-amber-800' :
@@ -1889,29 +2304,29 @@ const loadStats = async () => {
                                   {student.form}
                                 </span>
                               </td>
-                              <td className="px-6 py-4">
-                                <span className="text-slate-900 font-bold">{student.stream || 'Unassigned'}</span>
+                              <td className="px-8 py-5">
+                                <span className="text-gray-900 font-bold text-base">{student.stream || 'Unassigned'}</span>
                               </td>
-                              <td className="px-6 py-4">
-                                <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-                                  student.status === 'active' 
+                              <td className="px-8 py-5">
+                                <span className={`px-4 py-2 rounded-xl text-sm font-bold ${
+                                  student.status === 'active'
                                     ? 'bg-green-100 text-green-800'
                                     : 'bg-red-100 text-red-800'
                                 }`}>
-                                  {student.status}
+                                  {student.status.toUpperCase()}
                                 </span>
                               </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
+                              <td className="px-8 py-5">
+                                <div className="flex items-center gap-3">
                                   <button
-                                    onClick={() => loadStudentDetails(student.id)}
-                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-bold"
+                                    onClick={() => setSelectedStudent(student)}
+                                    className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm"
                                   >
                                     View
                                   </button>
                                   <button
                                     onClick={() => setEditingStudent(student)}
-                                    className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm font-bold"
+                                    className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm"
                                   >
                                     Edit
                                   </button>
@@ -1925,15 +2340,14 @@ const loadStats = async () => {
                   </div>
                 )}
 
-                {/* Empty State */}
                 {students.length === 0 && !loading && (
-                  <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-                    <FaUsers className="text-5xl text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-600 text-lg font-medium">No students found</p>
-                    {(formFilter || streamFilter || searchTerm) && (
+                  <div className="text-center py-20 bg-white rounded-2xl border-2 border-gray-300 shadow-xl">
+                    <FiUsers className="text-6xl text-gray-300 mx-auto mb-6" />
+                    <p className="text-gray-600 text-xl font-bold mb-4">No students found</p>
+                    {(filters.search || filters.form || filters.stream) && (
                       <button
-                        onClick={clearFilters}
-                        className="mt-3 text-blue-600 hover:text-blue-800 font-bold"
+                        onClick={handleClearFilters}
+                        className="text-blue-600 font-bold text-lg"
                       >
                         Clear filters to see all students
                       </button>
@@ -1941,19 +2355,18 @@ const loadStats = async () => {
                   </div>
                 )}
 
-                {/* Pagination */}
                 {students.length > 0 && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
-                    <div className="text-sm text-slate-700">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-8 border-t-2 border-gray-300">
+                    <div className="text-gray-700 font-bold text-base">
                       Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} students
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <button
                         onClick={() => handlePageChange(pagination.page - 1)}
                         disabled={pagination.page === 1}
-                        className="p-2.5 rounded-xl border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <FaArrowLeft />
+                        <FiArrowLeft className="text-base" />
                       </button>
                       {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                         let pageNum;
@@ -1970,10 +2383,10 @@ const loadStats = async () => {
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`w-11 h-11 rounded-xl transition-all duration-200 ${
+                            className={`w-12 h-12 rounded-xl font-bold text-sm ${
                               pagination.page === pageNum
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                                : 'border border-slate-300 hover:bg-slate-50'
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-2xl'
+                                : 'border-2 border-gray-400'
                             }`}
                           >
                             {pageNum}
@@ -1983,9 +2396,9 @@ const loadStats = async () => {
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={pagination.page === pagination.pages}
-                        className="p-2.5 rounded-xl border border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <FaArrowRight />
+                        <FiArrowRight className="text-base" />
                       </button>
                     </div>
                   </div>
@@ -1995,145 +2408,172 @@ const loadStats = async () => {
           </div>
         )}
 
-        {/* Demographics View */}
         {view === 'demographics' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <ModernChart 
-                data={demographics.formDistribution}
-                type="pie"
-                title="Form Distribution"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <DemographicSummaryCard
+                title="Total Students"
+                value={stats.totalStudents}
+                icon={FiUsers}
+                color="from-blue-500 to-blue-700"
+                trend={12}
               />
-              <ModernChart 
-                data={demographics.gender}
-                type="pie"
-                title="Gender Distribution"
+              <DemographicSummaryCard
+                title="Active Students"
+                value={demographics.statusDistribution.find(s => s.name === 'Active')?.value || 0}
+                icon={FiUserCheck}
+                color="from-emerald-500 to-emerald-700"
+                trend={8}
+              />
+              <DemographicSummaryCard
+                title="Male Students"
+                value={demographics.gender.find(g => g.name === 'Male')?.value || 0}
+                icon={FiUser}
+                color="from-amber-500 to-amber-700"
+                trend={5}
+              />
+              <DemographicSummaryCard
+                title="Female Students"
+                value={demographics.gender.find(g => g.name === 'Female')?.value || 0}
+                icon={FiUser}
+                color="from-purple-500 to-purple-700"
+                trend={7}
               />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-orange-400 flex items-center justify-center shadow-xl shadow-amber-200 ring-4 ring-amber-50">
-                      <FaCalendar className="text-white text-xl" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Age Distribution</h3>
-                      <p className="text-sm text-slate-500">Student age groups analysis</p>
-                    </div>
-                  </div>
+              <ModernChart
+                data={demographics.formDistribution}
+                type="pie"
+                title="Form Distribution"
+                colors={['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6']}
+                height={400}
+              />
+              <ModernChart
+                data={demographics.gender}
+                type="radial"
+                title="Gender Distribution"
+                colors={['#3B82F6', '#EC4899', '#8B5CF6']}
+                height={400}
+              />
+            </div>
 
-                  <div className="space-y-4">
-                    {demographics.ageGroups.map((group, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-slate-700">{group.name} years</span>
-                          <span className="text-sm font-bold text-slate-900">{group.value}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full rounded-full transition-all duration-1000"
-                            style={{ 
-                              width: `${group.value}%`,
-                              background: `linear-gradient(90deg, ${group.color} 0%, ${group.color}80 100%)`
-                            }}
-                          />
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <ModernChart
+                data={demographics.streamDistribution}
+                type="bar"
+                title="Stream Distribution"
+                height={400}
+              />
+              <ModernChart
+                data={demographics.ageGroups}
+                type="pie"
+                title="Age Distribution"
+                colors={['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6']}
+                height={400}
+              />
+            </div>
+
+            <ModernChart
+              data={demographics.streamDistribution.slice(0, 8)}
+              type="radar"
+              title="Stream Performance Radar"
+              height={400}
+            />
+
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-300 shadow-2xl">
+              <h3 className="text-2xl font-bold text-gray-900 mb-8">Detailed Statistics</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {demographics.formDistribution.map((form, index) => (
+                  <div key={index} className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: form.color }} />
+                        <span className="font-bold text-gray-900 text-lg">{form.name}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-xl shadow-slate-200/40 relative overflow-hidden">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 via-purple-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-purple-200 ring-4 ring-purple-50">
-                      <FaChartLine className="text-white text-xl" />
+                      <span className="text-2xl font-bold text-gray-900">{form.value}</span>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 tracking-tight">Form Statistics</h3>
-                      <p className="text-sm text-slate-500">Detailed form-level metrics</p>
+                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(form.value / demographics.formDistribution.reduce((sum, f) => sum + f.value, 0)) * 100}%`,
+                          backgroundColor: form.color
+                        }}
+                      />
                     </div>
                   </div>
-
-                  <div className="space-y-4">
-                    {demographics.formDistribution.map((form, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 hover:border-blue-200 transition-all duration-300">
-                        <div className="flex items-center gap-3">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
-                          <span className="font-medium text-slate-700">{form.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-black text-slate-900">{form.value}</span>
-                          <span className="text-xs text-slate-500 font-medium">students</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* History View */}
         {view === 'history' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
               <div>
-                <h3 className="text-2xl font-black text-slate-900">Upload History</h3>
-                <p className="text-slate-600 mt-1">Track all your bulk upload activities</p>
+                <h3 className="text-2xl font-bold text-gray-900">Upload History</h3>
+                <p className="text-gray-600 mt-2 text-base">Track all your bulk upload activities</p>
               </div>
               <button
                 onClick={() => loadUploadHistory(1)}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold flex items-center gap-2.5 hover:shadow-lg transition-all duration-200"
+                disabled={historyLoading}
+                className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50"
               >
-                <FaSync /> 
-                Refresh
+                {historyLoading ? (
+                  <>
+                    <CircularProgress size={18} className="text-white" />
+                    <span>Refreshing...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiRefreshCw />
+                    <span>Refresh History</span>
+                  </>
+                )}
               </button>
             </div>
-            
+
             {uploadHistory.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-                <FaHistory className="text-5xl text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600 text-lg font-medium">No upload history found</p>
-                <p className="text-slate-500 mt-2">Upload your first file to see history here</p>
+              <div className="text-center py-20 bg-white rounded-2xl border-2 border-gray-300 shadow-xl">
+                <FiClock className="text-6xl text-gray-300 mx-auto mb-6" />
+                <p className="text-gray-600 text-xl font-bold mb-4">No upload history found</p>
+                <p className="text-gray-500 text-base">Upload your first file to see history here</p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="bg-white rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gradient-to-r from-slate-50 to-white">
+                  <table className="w-full min-w-[768px]">
+                    <thead className="bg-gradient-to-r from-gray-100 to-white">
                       <tr>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
                           Upload Details
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
                           Statistics
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200">
+                    <tbody className="divide-y-2 divide-gray-200">
                       {uploadHistory.map(upload => (
-                        <tr key={upload.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-3">
-                              <div className="p-3 bg-blue-50 rounded-xl">
-                                <FaFile className="text-blue-600 text-lg" />
+                        <tr key={upload.id} className="bg-white">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-4">
+                              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl">
+                                <FiFile className="text-blue-700 text-xl" />
                               </div>
                               <div>
-                                <div className="font-medium text-slate-900 truncate max-w-xs">
+                                <div className="font-bold text-gray-900 text-base truncate max-w-[250px] lg:max-w-md">
                                   {upload.fileName}
                                 </div>
-                                <div className="text-sm text-slate-500 mt-1">
+                                <div className="text-gray-600 mt-2 font-semibold text-sm">
                                   {new Date(upload.uploadDate).toLocaleDateString('en-US', {
                                     year: 'numeric',
                                     month: 'long',
@@ -2145,33 +2585,33 @@ const loadStats = async () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-5">
-                            <span className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
-                              upload.status === 'completed' 
+                          <td className="px-8 py-6">
+                            <span className={`px-5 py-2.5 rounded-xl text-sm font-bold ${
+                              upload.status === 'completed'
                                 ? 'bg-green-100 text-green-800'
                                 : upload.status === 'processing'
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : 'bg-red-100 text-red-800'
                             }`}>
-                              {upload.status}
+                              {upload.status.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-4">
-                                <span className="text-emerald-600 font-bold">{upload.validRows || 0} valid</span>
-                                <span className="text-amber-600 font-bold">{upload.skippedRows || 0} skipped</span>
-                                <span className="text-red-600 font-bold">{upload.errorRows || 0} errors</span>
+                          <td className="px-8 py-6">
+                            <div className="space-y-2">
+                              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                                <span className="text-emerald-700 font-bold text-sm">{upload.validRows || 0} valid</span>
+                                <span className="text-amber-700 font-bold text-sm">{upload.skippedRows || 0} skipped</span>
+                                <span className="text-red-700 font-bold text-sm">{upload.errorRows || 0} errors</span>
                               </div>
-                              <div className="text-xs text-slate-500">
+                              <div className="text-gray-600 font-semibold text-sm">
                                 Total: {upload.totalRows || 0} rows processed
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-5">
+                          <td className="px-8 py-6">
                             <button
                               onClick={() => handleDeleteBatch(upload.id, upload.fileName)}
-                              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold"
+                              className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold text-sm"
                             >
                               Delete
                             </button>
@@ -2187,7 +2627,6 @@ const loadStats = async () => {
         )}
       </div>
 
-      {/* Modals */}
       {selectedStudent && (
         <ModernStudentDetailModal
           student={selectedStudent}
@@ -2196,7 +2635,7 @@ const loadStats = async () => {
             setEditingStudent(selectedStudent);
             setSelectedStudent(null);
           }}
-          onDelete={(studentName) => handleDeleteStudent(selectedStudent.id, studentName)}
+          onDelete={handleDeleteStudent}
         />
       )}
 
@@ -2211,7 +2650,10 @@ const loadStats = async () => {
 
       {showDeleteModal && (
         <ModernDeleteModal
-          onClose={() => setShowDeleteModal(false)}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeleteTarget({ type: '', id: '', name: '' });
+          }}
           onConfirm={confirmDelete}
           loading={loading}
           type={deleteTarget.type}

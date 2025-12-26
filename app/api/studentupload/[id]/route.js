@@ -1,7 +1,8 @@
+// app/api/studentupload/[id]/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '@/libs/prisma';
 
-// GET single student
+// GET single student by ID
 export async function GET(request, { params }) {
   try {
     const { id } = params;
@@ -91,6 +92,7 @@ export async function PUT(request, { params }) {
         gender: data.gender || null,
         parentPhone: data.parentPhone || null,
         email: data.email || null,
+        address: data.address || null,
         status: data.status || 'active'
       }
     });
@@ -102,6 +104,15 @@ export async function PUT(request, { params }) {
     });
   } catch (error) {
     console.error('Update student error:', error);
+    
+    // Handle Prisma not found error
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, message: 'Student not found' },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, message: 'Failed to update student' },
       { status: 500 }
@@ -136,6 +147,15 @@ export async function DELETE(request, { params }) {
     });
   } catch (error) {
     console.error('Delete student error:', error);
+    
+    // Handle Prisma not found error
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, message: 'Student not found' },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, message: 'Failed to delete student' },
       { status: 500 }
