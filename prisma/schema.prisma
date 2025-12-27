@@ -586,3 +586,18 @@ enum CouncilDepartment {
   Technology
   General
 }
+model StudentSession {
+  id              String   @id @default(cuid())
+  studentId       String
+  admissionNumber String
+  name            String
+  token           String
+  expiresAt       DateTime
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  
+  @@index([studentId])
+  @@index([token])
+  @@index([expiresAt])
+}

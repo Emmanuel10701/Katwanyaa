@@ -4,71 +4,23 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
 import { 
-  FiSearch, 
-  FiFilter, 
-  FiDownload, 
-  FiCalendar,
-  FiBook,
-  FiUser,
-  FiClock,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiArrowRight,
-  FiEye,
-  FiUpload,
-  FiBarChart2,
-  FiAward,
-  FiX,
-  FiTarget,
-  FiFileText,
-  FiMessageSquare,
-  FiChevronLeft,
-  FiChevronRight,
-  FiHome,
-  FiStar,
-  FiBookOpen,
-  FiUsers,
-  FiBookmark,
-  FiFile,
-  FiFolder,
-  FiVideo,
-  FiImage,
-  FiMusic,
-  FiExternalLink,
-  FiGrid,
-  FiList,
-  FiRefreshCw,
-  FiPlayCircle,
-  FiTrendingUp,
-  FiShield,
-  FiActivity,
-  FiFilePlus,
-  FiPlay,
-  FiMic,
-  FiCamera,
-  FiPackage,
-  FiFlag,
-  FiZap,
-  FiAlertTriangle,
-  FiCalendar as FiCalendarIcon,
-  FiClipboard,
-  FiArchive,
-  FiThumbsUp,
-  FiSend,
-  FiBook as FiBookIcon,
-  FiBell,
-  FiGlobe,
-  FiHelpCircle
+  FiSearch, FiFilter, FiDownload, FiCalendar, FiBook, FiUser, FiClock,
+  FiCheckCircle, FiAlertCircle, FiArrowRight, FiEye, FiUpload, FiBarChart2,
+  FiAward, FiX, FiTarget, FiFileText, FiMessageSquare, FiChevronLeft,
+  FiChevronRight, FiHome, FiStar, FiBookOpen, FiUsers, FiBookmark, FiFile,
+  FiFolder, FiVideo, FiImage, FiMusic, FiExternalLink, FiGrid, FiList,
+  FiRefreshCw, FiPlayCircle, FiTrendingUp, FiShield, FiActivity, FiFilePlus,
+  FiPlay, FiMic, FiCamera, FiPackage, FiFlag, FiZap, FiAlertTriangle,
+  FiCalendar as FiCalendarIcon, FiClipboard, FiArchive, FiThumbsUp, FiSend,
+  FiBook as FiBookIcon, FiBell, FiGlobe, FiHelpCircle, FiLogOut, FiLock,FiLogIn 
 } from 'react-icons/fi';
+import StudentLoginModal from '../../components/studentloginmodel/page';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 const ASSIGNMENTS_API = `${API_BASE_URL}/api/assignment`;
 const RESOURCES_API = `${API_BASE_URL}/api/resources`;
 
-// ==========================================
-// 1. ENHANCED CONFIGURATION
-// ==========================================
-
+// Configuration
 const RESOURCE_TYPES = [
   { id: 'all', label: 'All Types', color: 'slate', icon: <FiFilePlus className="text-gray-600" /> },
   { id: 'document', label: 'Documents', color: 'blue', icon: <FiFileText className="text-blue-500" /> },
@@ -88,22 +40,12 @@ const ASSIGNMENT_STATUS = [
   { id: 'extended', label: 'Extended', color: 'orange', icon: <FiClock className="text-orange-500" /> }
 ];
 
-const PRIORITY_LEVELS = [
-  { id: 'urgent', label: 'Urgent', color: 'red', icon: <FiAlertTriangle className="text-red-500" /> },
-  { id: 'high', label: 'High', color: 'orange', icon: <FiZap className="text-orange-500" /> },
-  { id: 'medium', label: 'Medium', color: 'yellow', icon: <FiActivity className="text-yellow-500" /> },
-  { id: 'low', label: 'Low', color: 'blue', icon: <FiTrendingUp className="text-blue-500" /> }
-];
-
 const ITEMS_PER_PAGE = {
   assignments: 6,
   resources: 8
 };
 
-// ==========================================
-// 2. UTILITY FUNCTIONS
-// ==========================================
-
+// Helper functions
 const getBadgeColorStyles = (colorName) => {
   const map = {
     blue: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -198,272 +140,8 @@ const getStatusIcon = (status) => {
   }
 };
 
-const getPriorityColor = (priority) => {
-  switch (priority?.toLowerCase()) {
-    case 'urgent': return 'bg-red-100 text-red-700 border-red-200';
-    case 'high': return 'bg-orange-100 text-orange-700 border-orange-200';
-    case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-    case 'low': return 'bg-blue-100 text-blue-700 border-blue-200';
-    default: return 'bg-gray-100 text-gray-700 border-gray-200';
-  }
-};
-
-// ==========================================
-// 3. SUB-COMPONENTS
-// ==========================================
-
-const Badge = ({ children, color = 'slate', className = '', icon }) => (
-  <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border ${getBadgeColorStyles(color)} ${className}`}>
-    {icon}
-    {children}
-  </span>
-);
-
-const StatsPill = ({ icon, value, label, color = 'blue' }) => (
-  <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300 group">
-    <div className="p-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg group-hover:scale-110 transition-transform">
-      {icon}
-    </div>
-    <div className="text-center">
-      <div className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
-    </div>
-  </div>
-);
-
-const Checkbox = ({ label, count, checked, onChange, color, icon }) => (
-  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-      checked 
-        ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-600 shadow-sm' 
-        : 'bg-white border-gray-300 group-hover:border-gray-400'
-    }`}>
-      {checked && <FiCheckCircle className="text-white text-xs" />}
-    </div>
-    <input 
-      type="checkbox" 
-      className="hidden" 
-      checked={checked} 
-      onChange={onChange} 
-    />
-    <div className="flex-1 flex items-center gap-3">
-      <div className="text-gray-500 group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
-      <span className={`text-sm font-medium ${checked ? 'text-gray-900' : 'text-gray-600'}`}>
-        {label}
-      </span>
-    </div>
-    {count !== undefined && (
-      <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full min-w-[2rem] text-center group-hover:bg-gray-200 transition-colors">
-        {count}
-      </span>
-    )}
-  </label>
-);
-
-const AssignmentCard = ({ assignment, onClick, onDownload }) => {
-  const fileCount = useMemo(() => {
-    const files = [
-      ...(assignment.assignmentFiles || []),
-      ...(assignment.attachments || [])
-    ];
-    return files.filter(Boolean).length;
-  }, [assignment]);
-
-  return (
-    <div 
-      className="bg-white rounded-2xl border border-gray-200/50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 group cursor-pointer"
-      onClick={() => onClick(assignment)}
-    >
-      {/* Card Header */}
-      <div className="p-6 border-b border-gray-200/50">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold text-white ${getStatusColor(assignment.status)}`}>
-            {getStatusIcon(assignment.status)}
-            <span className="capitalize">{assignment.status}</span>
-          </div>
-          {assignment.priority && (
-            <span className={`px-3 py-1 text-xs font-semibold rounded-lg ${getPriorityColor(assignment.priority)}`}>
-              {assignment.priority}
-            </span>
-          )}
-        </div>
-
-        <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {assignment.title}
-        </h3>
-        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-          {assignment.description || 'No description provided'}
-        </p>
-      </div>
-
-      {/* Card Body */}
-      <div className="p-6 space-y-4 flex-1">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FiBook className="text-blue-500" />
-            <span className="font-medium">{assignment.subject}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FiUser className="text-purple-500" />
-            <span className="font-medium">{assignment.teacher}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FiCalendar className="text-orange-500" />
-            <span className="font-medium">Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <FiFileText className="text-emerald-500" />
-            <span className="font-medium">{fileCount} files</span>
-          </div>
-        </div>
-
-        {assignment.learningObjectives && assignment.learningObjectives.length > 0 && (
-          <div className="pt-4 border-t border-gray-200/50">
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-2">
-              <FiTarget className="text-blue-500" />
-              Learning Objectives
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {assignment.learningObjectives.slice(0, 2).map((obj, idx) => (
-                <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-lg">
-                  {obj}
-                </span>
-              ))}
-              {assignment.learningObjectives.length > 2 && (
-                <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-lg">
-                  +{assignment.learningObjectives.length - 2} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Card Footer */}
-      <div className="p-6 pt-0 border-t border-gray-200/50">
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick(assignment);
-            }}
-            className="flex items-center justify-center gap-2 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs sm:text-sm font-semibold hover:shadow-md transition-all min-h-[44px]"
-          >
-            <FiEye className="text-sm sm:text-base" /> 
-            <span className="whitespace-nowrap">View Details</span>
-          </button>
-          {fileCount > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDownload(assignment);
-              }}
-              className="flex items-center justify-center gap-2 py-2 sm:py-3 rounded-xl border border-gray-300 text-gray-700 text-xs sm:text-sm font-semibold hover:bg-gray-50 transition-colors min-h-[44px]"
-            >
-              <FiDownload className="text-sm sm:text-base" /> 
-              <span className="whitespace-nowrap">Download</span>
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ResourceCard = ({ resource, onClick, onDownload }) => {
-  return (
-    <div 
-      className="bg-white rounded-2xl border border-gray-200/50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-all duration-300 group cursor-pointer"
-      onClick={() => onClick(resource)}
-    >
-      {/* Card Header */}
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-            {getResourceTypeIcon(resource.type)}
-          </div>
-          <Badge color="blue" icon={<FiFolder className="text-blue-500" />}>
-            {resource.type || 'document'}
-          </Badge>
-        </div>
-
-        <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {resource.title}
-        </h3>
-        <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-          {resource.description || 'No description available'}
-        </p>
-      </div>
-
-      {/* Card Body */}
-      <div className="px-6 pb-6 space-y-4 flex-1">
-        <div className="space-y-3">
-          {resource.subject && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FiBook className="text-blue-500" />
-              <span className="font-medium">{resource.subject}</span>
-            </div>
-          )}
-          {resource.fileSize && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FiFile className="text-purple-500" />
-              <span className="font-medium">{resource.fileSize}</span>
-            </div>
-          )}
-          {resource.downloads !== undefined && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FiDownload className="text-emerald-500" />
-              <span className="font-medium">{resource.downloads} downloads</span>
-            </div>
-          )}
-        </div>
-
-        {resource.uploadedBy && (
-          <div className="pt-4 border-t border-gray-200/50">
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <FiUser className="text-gray-400" />
-              Uploaded by: {resource.uploadedBy}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Card Footer */}
-      <div className="p-6 pt-0 border-t border-gray-200/50">
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick(resource);
-            }}
-            className="flex items-center justify-center gap-2 py-2 sm:py-3 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs sm:text-sm font-semibold hover:shadow-md transition-all min-h-[44px]"
-          >
-            <FiEye className="text-sm sm:text-base" /> 
-            <span className="whitespace-nowrap">View Details</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(resource);
-            }}
-            className="flex items-center justify-center gap-2 py-2 sm:py-3 rounded-xl border border-gray-300 text-gray-700 text-xs sm:text-sm font-semibold hover:bg-gray-50 transition-colors min-h-[44px]"
-          >
-            <FiDownload className="text-sm sm:text-base" /> 
-            <span className="whitespace-nowrap">Download</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ==========================================
-// 4. MAIN COMPONENT
-// ==========================================
-
-export default function StudentAssignmentPortal() {
+// Main Component
+export default function StudentPortalPage() {
   const router = useRouter();
   
   // State
@@ -486,76 +164,204 @@ export default function StudentAssignmentPortal() {
   const [resourcesView, setResourcesView] = useState('grid');
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
   const [downloading, setDownloading] = useState({});
+  
+  // Student Auth State
+  const [student, setStudent] = useState(null);
+  const [token, setToken] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [requiresContact, setRequiresContact] = useState(false);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const savedToken = localStorage.getItem('student_token');
+        if (!savedToken) {
+          setShowLoginModal(true);
+          return;
+        }
+
+        const response = await fetch('/api/studentlogin', {
+          headers: { 'Authorization': `Bearer ${savedToken}` }
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.authenticated) {
+          setStudent(data.student);
+          setToken(savedToken);
+          setShowLoginModal(false);
+          
+          // Set auto-logout timer (15 minutes)
+          const logoutTimer = setTimeout(() => {
+            toast.info('Your session has expired. Please log in again.');
+            handleLogout();
+          }, 15 * 60 * 1000); // 15 minutes
+
+          return () => clearTimeout(logoutTimer);
+        } else {
+          handleLogout();
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        handleLogout();
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Handle student login
+  const handleStudentLogin = async (fullName, admissionNumber) => {
+    setLoginLoading(true);
+    setLoginError(null);
+    setRequiresContact(false);
+
+    try {
+      const response = await fetch('/api/studentlogin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, admissionNumber })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Save token and student data
+        localStorage.setItem('student_token', data.token);
+        setStudent(data.student);
+        setToken(data.token);
+        setShowLoginModal(false);
+        
+        toast.success('Login successful!', {
+          description: `Welcome ${data.student.fullName}`
+        });
+
+        // Load data after successful login
+        fetchAllAssignments();
+        fetchAllResources();
+      } else {
+        setLoginError(data.error);
+        setRequiresContact(data.requiresContact || false);
+        
+        if (data.requiresContact) {
+          toast.error('Student record not found', {
+            description: 'Please contact your class teacher or school administrator'
+          });
+        } else {
+          toast.error(data.error || 'Login failed');
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoginError('Network error. Please try again.');
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/studentlogin', { method: 'DELETE' });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('student_token');
+      setStudent(null);
+      setToken(null);
+      setShowLoginModal(true);
+      setAllAssignments([]);
+      setAllResources([]);
+      
+      toast.info('You have been logged out');
+    }
+  };
 
   // API Integration
   const fetchAllAssignments = useCallback(async () => {
+    if (!token) return;
+
     try {
       setLoading(true);
       setError(null);
       
       const response = await fetch(`${ASSIGNMENTS_API}?limit=100`, {
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
         }
       });
       
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expired. Please log in again.');
+          handleLogout();
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       
       if (data.success && Array.isArray(data.assignments)) {
         setAllAssignments(data.assignments);
-        toast.success('Assignments loaded', {
-          description: `${data.assignments.length} assignments found`
-        });
       } else {
         throw new Error(data.error || 'Invalid data format');
       }
     } catch (err) {
       console.error('Error fetching assignments:', err);
       setError(err.message);
-      toast.error('Failed to load assignments');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   const fetchAllResources = useCallback(async () => {
+    if (!token) return;
+
     try {
       setResourcesLoading(true);
       
-      const response = await fetch(`${RESOURCES_API}?limit=100&accessLevel=student`, {
+      const response = await fetch(`${RESOURCES_API}?limit=100`, {
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
         }
       });
       
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleLogout();
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       
       if (data.success && Array.isArray(data.resources)) {
         setAllResources(data.resources);
-        toast.success('Resources loaded', {
-          description: `${data.resources.length} resources available`
-        });
       } else {
         throw new Error('Invalid resources data format');
       }
     } catch (err) {
       console.error('Error fetching resources:', err);
-      toast.error('Resources loading failed');
     } finally {
       setResourcesLoading(false);
     }
-  }, []);
+  }, [token]);
 
+  // Load data when authenticated
   useEffect(() => {
-    fetchAllAssignments();
-    fetchAllResources();
-  }, [fetchAllAssignments, fetchAllResources]);
+    if (student && token) {
+      fetchAllAssignments();
+      fetchAllResources();
+    }
+  }, [student, token, fetchAllAssignments, fetchAllResources]);
 
   // Filtering Logic
   const filteredAssignments = useMemo(() => {
@@ -601,40 +407,11 @@ export default function StudentAssignmentPortal() {
     return filteredResources.slice(start, start + ITEMS_PER_PAGE.resources);
   }, [filteredResources, currentResourcePage]);
 
-  // Stats
-  const stats = useMemo(() => [
-    { 
-      icon: <FiClipboard className="text-blue-600 text-xl" />, 
-      value: allAssignments.length, 
-      label: 'Total Assignments',
-      color: 'blue'
-    },
-    { 
-      icon: <FiFlag className="text-emerald-600 text-xl" />, 
-      value: allAssignments.filter(a => a.status === 'assigned').length, 
-      label: 'Active',
-      color: 'emerald'
-    },
-    { 
-      icon: <FiCheckCircle className="text-purple-600 text-xl" />, 
-      value: allAssignments.filter(a => a.status === 'reviewed').length, 
-      label: 'Reviewed',
-      color: 'purple'
-    },
-    { 
-      icon: <FiFilePlus className="text-orange-600 text-xl" />, 
-      value: allResources.length, 
-      label: 'Resources',
-      color: 'orange'
-    }
-  ], [allAssignments, allResources]);
-
   // Download Functions
   const downloadFile = async (url, filename) => {
     const downloadId = `${url}-${Date.now()}`;
     
     try {
-      // Only show loading toast for new downloads
       if (!downloading[url]) {
         const toastId = toast.loading('Downloading file...');
         setDownloading(prev => ({ ...prev, [url]: true }));
@@ -652,7 +429,6 @@ export default function StudentAssignmentPortal() {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
         
-        // Dismiss loading toast after short delay
         setTimeout(() => {
           toast.dismiss(toastId);
           toast.success('Download started');
@@ -684,26 +460,16 @@ export default function StudentAssignmentPortal() {
       return;
     }
     
-    // Check if already downloading
-    const isAlreadyDownloading = files.some(file => downloading[file]);
-    if (isAlreadyDownloading) {
-      toast.info('Download already in progress');
-      return;
-    }
-    
     const toastId = toast.loading(`Preparing ${files.length} files for download...`);
     
-    // Set downloading state for all files
     const downloadStates = {};
     files.forEach(file => {
       downloadStates[file] = true;
     });
     setDownloading(prev => ({ ...prev, ...downloadStates }));
     
-    // Process downloads with delay
     setTimeout(async () => {
       let successCount = 0;
-      let errorCount = 0;
       
       for (const file of files) {
         try {
@@ -711,11 +477,9 @@ export default function StudentAssignmentPortal() {
           successCount++;
         } catch (err) {
           console.error('Error downloading file:', file, err);
-          errorCount++;
         }
       }
       
-      // Clean up states
       files.forEach(file => {
         setDownloading(prev => {
           const newState = { ...prev };
@@ -729,14 +493,10 @@ export default function StudentAssignmentPortal() {
       if (successCount > 0) {
         toast.success(`Successfully downloaded ${successCount} files`);
       }
-      if (errorCount > 0) {
-        toast.error(`Failed to download ${errorCount} files`);
-      }
     }, 500);
   };
 
   const downloadResource = (resource) => {
-    // Check if already downloading
     if (downloading[resource.fileUrl]) {
       toast.info('Download already in progress');
       return;
@@ -757,6 +517,11 @@ export default function StudentAssignmentPortal() {
   };
 
   const handleRefresh = () => {
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     if (viewMode === 'assignments') {
       fetchAllAssignments();
     } else {
@@ -764,26 +529,102 @@ export default function StudentAssignmentPortal() {
     }
   };
 
-  // Extract unique values for filters
-  const classes = ['all', ...new Set(allAssignments.map(a => a.className).filter(Boolean))];
-  const subjects = ['all', ...new Set(allAssignments.map(a => a.subject).filter(Boolean))];
-
-  if (loading && resourcesLoading) {
+  // Show login modal if not authenticated
+  if (!student || !token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600/30 border-t-blue-600 rounded-full animate-spin mx-auto mb-6"></div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Loading Student Portal</h2>
-          <p className="text-gray-600">Fetching your assignments and resources...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-sans">
+        <Toaster position="top-right" expand={true} richColors theme="light" />
+        
+        {/* Welcome Header */}
+        <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 text-white p-8">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Nyaribu Secondary School</h1>
+                <p className="text-blue-200 mt-2">Student Portal - Learning Resources & Assignments</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/10 rounded-2xl">
+                  <FiLock className="text-xl" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 border-2 border-blue-200">
+              <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-blue-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FiLock className="text-white text-4xl" />
+              </div>
+              
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Student Portal Login Required</h2>
+              <p className="text-gray-600 text-lg mb-8">
+                Please log in with your full name and admission number to access learning resources and assignments.
+              </p>
+              
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-2xl transition-all duration-300"
+              >
+                <FiLogIn className="text-xl" />
+                Click to Login
+              </button>
+              
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">How to Login:</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                    <div className="text-3xl font-bold text-blue-600 mb-2">1</div>
+                    <p className="font-medium text-gray-700">Enter your full name exactly as in school records</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                    <div className="text-3xl font-bold text-emerald-600 mb-2">2</div>
+                    <p className="font-medium text-gray-700">Enter your admission number</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">3</div>
+                    <p className="font-medium text-gray-700">Click Login to access resources</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Login Modal */}
+        <StudentLoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onLogin={handleStudentLogin}
+          isLoading={loginLoading}
+          error={loginError}
+          requiresContact={requiresContact}
+        />
       </div>
     );
   }
+
+  // Extract unique values for filters
+  const classes = ['all', ...new Set(allAssignments.map(a => a.className).filter(Boolean))];
+  const subjects = ['all', ...new Set(allAssignments.map(a => a.subject).filter(Boolean))];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-sans">
       <Toaster position="top-right" expand={true} richColors theme="light" />
       
+      {/* Login Modal */}
+      <StudentLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleStudentLogin}
+        isLoading={loginLoading}
+        error={loginError}
+        requiresContact={requiresContact}
+      />
+
       {/* Mobile Filter Overlay */}
       {isFilterSidebarOpen && (
         <div 
@@ -805,22 +646,23 @@ export default function StudentAssignmentPortal() {
               <FiFilter size={20} />
             </button>
             
-            <Link href="/" className="flex items-center gap-2 sm:gap-3">
-              <div className="hidden sm:flex">
-                <img 
-                  src="/llil.png" 
-                  alt="Logo"
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover shadow-lg"
-                />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center">
+                <FiUser className="text-white text-lg" />
               </div>
-
-              <div className="hidden sm:block">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                  Student Portal
-                </span>
-                <p className="text-xs text-gray-500 mt-0.5">Assignments & Resources</p>
+              <div>
+                <p className="font-bold text-gray-900 text-sm">{student.fullName}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Form {student.form}</span>
+                  {student.stream && (
+                    <>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-xs text-gray-600">{student.stream}</span>
+                    </>
+                  )}
+                </div>
               </div>
-            </Link>
+            </div>
           </div>
 
           {/* Search Bar */}
@@ -859,10 +701,18 @@ export default function StudentAssignmentPortal() {
               <span>Refresh</span>
             </button>
 
-            {/* View Toggle Buttons — now visible on all screens */}
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="px-3 py-2 text-xs sm:text-sm text-red-600 
+                         bg-red-50 hover:bg-red-100 rounded-lg transition-all flex items-center gap-1"
+            >
+              <FiLogOut />
+              <span>Logout</span>
+            </button>
+
+            {/* View Toggle */}
             <div className="flex bg-transparent p-1 rounded-xl border border-gray-300/40 gap-1">
-              
-              {/* Assignments Button */}
               <button
                 onClick={() => setViewMode("assignments")}
                 className={`px-2 py-1 sm:px-3 sm:py-2 text-xs rounded-lg transition-all flex items-center gap-1
@@ -875,8 +725,6 @@ export default function StudentAssignmentPortal() {
                 <FiClipboard size={14} />
                 <span>Assignments</span>
               </button>
-
-              {/* Resources Button */}
               <button
                 onClick={() => setViewMode("resources")}
                 className={`px-2 py-1 sm:px-3 sm:py-2 text-xs rounded-lg transition-all flex items-center gap-1
@@ -891,7 +739,6 @@ export default function StudentAssignmentPortal() {
               </button>
             </div>
           </div>
-
         </div>
       </header>
 
@@ -944,13 +791,18 @@ export default function StudentAssignmentPortal() {
                     </div>
                     <div className="p-3 sm:p-4 space-y-2">
                       {classes.map(cls => (
-                        <Checkbox
-                          key={cls}
-                          label={cls === 'all' ? 'All Classes' : cls}
-                          checked={selectedClass === cls}
-                          onChange={() => setSelectedClass(cls)}
-                          icon={<FiUser className="text-gray-500" />}
-                        />
+                        <label key={cls} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                          <input
+                            type="radio"
+                            name="class"
+                            checked={selectedClass === cls}
+                            onChange={() => setSelectedClass(cls)}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {cls === 'all' ? 'All Classes' : cls}
+                          </span>
+                        </label>
                       ))}
                     </div>
                   </div>
@@ -964,13 +816,18 @@ export default function StudentAssignmentPortal() {
                     </div>
                     <div className="p-3 sm:p-4 space-y-2">
                       {subjects.map(subject => (
-                        <Checkbox
-                          key={subject}
-                          label={subject === 'all' ? 'All Subjects' : subject}
-                          checked={selectedSubject === subject}
-                          onChange={() => setSelectedSubject(subject)}
-                          icon={<FiBook className="text-gray-500" />}
-                        />
+                        <label key={subject} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                          <input
+                            type="radio"
+                            name="subject"
+                            checked={selectedSubject === subject}
+                            onChange={() => setSelectedSubject(subject)}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {subject === 'all' ? 'All Subjects' : subject}
+                          </span>
+                        </label>
                       ))}
                     </div>
                   </div>
@@ -984,14 +841,19 @@ export default function StudentAssignmentPortal() {
                     </div>
                     <div className="p-3 sm:p-4 space-y-2">
                       {ASSIGNMENT_STATUS.map(status => (
-                        <Checkbox
-                          key={status.id}
-                          label={status.label}
-                          count={status.id === 'all' ? allAssignments.length : allAssignments.filter(a => a.status === status.id).length}
-                          checked={selectedStatus === status.id}
-                          onChange={() => setSelectedStatus(status.id)}
-                          icon={status.icon}
-                        />
+                        <label key={status.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                          <input
+                            type="radio"
+                            name="status"
+                            checked={selectedStatus === status.id}
+                            onChange={() => setSelectedStatus(status.id)}
+                            className="text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex items-center gap-2 text-gray-700">
+                            {status.icon}
+                            <span className="text-sm font-medium">{status.label}</span>
+                          </div>
+                        </label>
                       ))}
                     </div>
                   </div>
@@ -1006,14 +868,19 @@ export default function StudentAssignmentPortal() {
                   </div>
                   <div className="p-3 sm:p-4 space-y-2">
                     {RESOURCE_TYPES.map(type => (
-                      <Checkbox
-                        key={type.id}
-                        label={type.label}
-                        count={type.id === 'all' ? allResources.length : allResources.filter(r => r.type === type.id).length}
-                        checked={selectedResourceType === type.id}
-                        onChange={() => setSelectedResourceType(type.id)}
-                        icon={type.icon}
-                      />
+                      <label key={type.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                        <input
+                          type="radio"
+                          name="resourceType"
+                          checked={selectedResourceType === type.id}
+                          onChange={() => setSelectedResourceType(type.id)}
+                          className="text-blue-600 focus:ring-blue-500"
+                        />
+                        <div className="flex items-center gap-2 text-gray-700">
+                          {type.icon}
+                          <span className="text-sm font-medium">{type.label}</span>
+                        </div>
+                      </label>
                     ))}
                   </div>
                 </div>
@@ -1058,15 +925,42 @@ export default function StudentAssignmentPortal() {
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-              {stats.map((stat, index) => (
-                <StatsPill
-                  key={index}
-                  icon={stat.icon}
-                  value={stat.value}
-                  label={stat.label}
-                  color={stat.color}
-                />
-              ))}
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700">
+                    <FiClipboard className="text-white text-2xl" />
+                  </div>
+                </div>
+                <h4 className="text-3xl font-bold text-gray-900 mb-2">{allAssignments.length}</h4>
+                <p className="text-gray-600 text-sm font-semibold">Total Assignments</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-700">
+                    <FiFlag className="text-white text-2xl" />
+                  </div>
+                </div>
+                <h4 className="text-3xl font-bold text-gray-900 mb-2">{allAssignments.filter(a => a.status === 'assigned').length}</h4>
+                <p className="text-gray-600 text-sm font-semibold">Active</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-700">
+                    <FiCheckCircle className="text-white text-2xl" />
+                  </div>
+                </div>
+                <h4 className="text-3xl font-bold text-gray-900 mb-2">{allAssignments.filter(a => a.status === 'reviewed').length}</h4>
+                <p className="text-gray-600 text-sm font-semibold">Reviewed</p>
+              </div>
+              <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-orange-700">
+                    <FiFilePlus className="text-white text-2xl" />
+                  </div>
+                </div>
+                <h4 className="text-3xl font-bold text-gray-900 mb-2">{allResources.length}</h4>
+                <p className="text-gray-600 text-sm font-semibold">Resources</p>
+              </div>
             </div>
 
             {/* Error State */}
@@ -1114,12 +1008,62 @@ export default function StudentAssignmentPortal() {
                 ) : assignmentsView === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {paginatedAssignments.map((assignment) => (
-                      <AssignmentCard
-                        key={assignment.id}
-                        assignment={assignment}
-                        onClick={setSelectedAssignment}
-                        onDownload={downloadAllAssignmentFiles}
-                      />
+                      <div key={assignment.id} className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
+                              <FiUser className="text-white text-2xl" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-base">
+                                {assignment.title}
+                              </h4>
+                              <p className="text-gray-600 font-semibold text-base mt-1">Subject: {assignment.subject}</p>
+                            </div>
+                          </div>
+                          <div className={`px-4 py-2 rounded-lg font-bold text-sm ${
+                            assignment.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
+                            assignment.status === 'reviewed' ? 'bg-green-100 text-green-800' :
+                            assignment.status === 'completed' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {assignment.status}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold text-base">Teacher</span>
+                            <span className="font-bold text-gray-900 text-base">{assignment.teacher}</span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold text-base">Due Date</span>
+                            <span className="font-bold text-gray-900 text-base">
+                              {new Date(assignment.dueDate).toLocaleDateString()}
+                            </span>
+                          </div>
+
+                          <p className="text-gray-600 text-sm mt-4 line-clamp-2">
+                            {assignment.description || 'No description provided'}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+                          <button
+                            onClick={() => setSelectedAssignment(assignment)}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
+                          >
+                            <FiEye className="text-sm" /> View
+                          </button>
+                          <button
+                            onClick={() => downloadAllAssignmentFiles(assignment)}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
+                          >
+                            <FiDownload className="text-sm" /> Download
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -1136,12 +1080,12 @@ export default function StudentAssignmentPortal() {
                                 {getStatusIcon(assignment.status)}
                                 <span className="capitalize">{assignment.status}</span>
                               </div>
-                              <Badge color="blue" icon={<FiUser className="text-blue-500" />}>
+                              <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold">
                                 {assignment.className}
-                              </Badge>
-                              <Badge color="purple" icon={<FiBook className="text-purple-500" />}>
+                              </span>
+                              <span className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-xs font-bold">
                                 {assignment.subject}
-                              </Badge>
+                              </span>
                             </div>
                             
                             <h3 className="text-lg font-bold text-gray-900 mb-2">{assignment.title}</h3>
@@ -1165,6 +1109,12 @@ export default function StudentAssignmentPortal() {
                               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
                             >
                               <FiEye /> View Details
+                            </button>
+                            <button
+                              onClick={() => downloadAllAssignmentFiles(assignment)}
+                              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
+                            >
+                              <FiDownload /> Download
                             </button>
                           </div>
                         </div>
@@ -1245,12 +1195,56 @@ export default function StudentAssignmentPortal() {
                 ) : resourcesView === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {paginatedResources.map((resource) => (
-                      <ResourceCard
-                        key={resource.id}
-                        resource={resource}
-                        onClick={setSelectedResource}
-                        onDownload={downloadResource}
-                      />
+                      <div key={resource.id} className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
+                              {getResourceTypeIcon(resource.type)}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-base">
+                                {resource.title}
+                              </h4>
+                              <p className="text-gray-600 font-semibold text-base mt-1">{resource.type}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <p className="text-gray-600 text-sm line-clamp-2">
+                            {resource.description || 'No description available'}
+                          </p>
+
+                          {resource.subject && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 font-semibold text-base">Subject</span>
+                              <span className="font-bold text-gray-900 text-base">{resource.subject}</span>
+                            </div>
+                          )}
+
+                          {resource.fileSize && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-600 font-semibold text-base">Size</span>
+                              <span className="font-bold text-gray-900 text-base">{resource.fileSize}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+                          <button
+                            onClick={() => setSelectedResource(resource)}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
+                          >
+                            <FiEye className="text-sm" /> View
+                          </button>
+                          <button
+                            onClick={() => downloadResource(resource)}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
+                          >
+                            <FiDownload className="text-sm" /> Download
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 ) : (
@@ -1289,6 +1283,12 @@ export default function StudentAssignmentPortal() {
                               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
                             >
                               <FiEye /> View Details
+                            </button>
+                            <button
+                              onClick={() => downloadResource(resource)}
+                              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-semibold text-sm hover:shadow-md transition-all flex items-center gap-2"
+                            >
+                              <FiDownload /> Download
                             </button>
                           </div>
                         </div>
@@ -1422,23 +1422,6 @@ export default function StudentAssignmentPortal() {
                 </div>
               </div>
 
-              {/* Learning Objectives */}
-              {selectedAssignment.learningObjectives && selectedAssignment.learningObjectives.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <FiTarget className="text-blue-600" /> Learning Objectives
-                  </h4>
-                  <div className="space-y-3">
-                    {selectedAssignment.learningObjectives.map((obj, idx) => (
-                      <div key={idx} className="flex items-start gap-3 p-4 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl border border-blue-200">
-                        <FiCheckCircle className="text-emerald-500 mt-1" />
-                        <span className="text-gray-700">{obj}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6 border-t border-gray-200">
                 <button
@@ -1556,19 +1539,3 @@ export default function StudentAssignmentPortal() {
     </div>
   );
 }
-
-// Link component for navigation
-const Link = ({ href, children, className = '' }) => {
-  const router = useRouter();
-  
-  const handleClick = (e) => {
-    e.preventDefault();
-    router.push(href);
-  };
-  
-  return (
-    <a href={href} onClick={handleClick} className={className}>
-      {children}
-    </a>
-  );
-};

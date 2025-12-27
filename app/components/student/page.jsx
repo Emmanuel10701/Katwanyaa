@@ -8,7 +8,7 @@ import {
   FiAlertCircle, FiBarChart2, FiPieChart, FiTrendingUp, FiCalendar, 
   FiMail, FiPhone, FiMapPin, FiX, FiList, FiGrid, FiSettings, 
   FiArrowLeft, FiArrowRight, FiSave, FiInfo, FiUserCheck, FiBook,
-  FiSort, FiSortAsc, FiSortDesc, FiSchool, FiChevronRight,
+  FiSort, FiSortAsc, FiSchool, FiChevronRight, FiChevronUp, FiChevronDown,
   FiHome, FiUserPlus, FiClock, FiPercent, FiGlobe, FiBookOpen,
   FiHeart, FiCpu, FiSparkles, FiPlay, FiTarget, FiAward,
   FiMessageCircle, FiImage, FiTrendingDown, FiActivity
@@ -854,7 +854,10 @@ function ModernChart({
                   <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                 ))}
               </Pie>
-              <RechartsTooltip />
+              <RechartsTooltip 
+                formatter={(value) => [value, 'Students']}
+                labelFormatter={(label) => `Category: ${label}`}
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -867,7 +870,10 @@ function ModernChart({
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="name" stroke="#6B7280" />
               <YAxis stroke="#6B7280" />
-              <RechartsTooltip />
+              <RechartsTooltip 
+                formatter={(value) => [value, 'Students']}
+                labelFormatter={(label) => `Category: ${label}`}
+              />
               <Legend />
               <Bar dataKey="value" name="Students" radius={[8, 8, 0, 0]}>
                 {data.map((entry, index) => (
@@ -900,7 +906,9 @@ function ModernChart({
                 ))}
               </RadialBar>
               <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" />
-              <RechartsTooltip />
+              <RechartsTooltip 
+                formatter={(value) => [value, 'Students']}
+              />
             </RadialBarChart>
           </ResponsiveContainer>
         );
@@ -913,7 +921,9 @@ function ModernChart({
               <PolarAngleAxis dataKey="name" />
               <PolarRadiusAxis />
               <Radar name="Students" dataKey="value" stroke={chartColors[0]} fill={chartColors[0]} fillOpacity={0.6} />
-              <RechartsTooltip />
+              <RechartsTooltip 
+                formatter={(value) => [value, 'Students']}
+              />
             </RadarChart>
           </ResponsiveContainer>
         );
@@ -936,7 +946,9 @@ function ModernChart({
                   <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                 ))}
               </Pie>
-              <RechartsTooltip />
+              <RechartsTooltip 
+                formatter={(value) => [value, 'Students']}
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -969,7 +981,10 @@ function ModernChart({
             renderChart()
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500 text-lg">No data available</p>
+              <div className="text-center">
+                <FiBarChart2 className="text-gray-300 text-6xl mx-auto mb-4" />
+                <p className="text-gray-500 text-lg">No data available for chart</p>
+              </div>
             </div>
           )}
         </div>
@@ -979,19 +994,19 @@ function ModernChart({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
                 <div className="text-2xl font-bold text-blue-700">
-                  {data.reduce((sum, d) => sum + d.value, 0)}
+                  {data.reduce((sum, d) => sum + d.value, 0).toLocaleString()}
                 </div>
-                <div className="text-sm font-semibold text-blue-900">Total</div>
+                <div className="text-sm font-semibold text-blue-900">Total Students</div>
               </div>
               <div className="text-center p-3 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
                 <div className="text-2xl font-bold text-emerald-700">
-                  {Math.max(...data.map(d => d.value))}
+                  {Math.max(...data.map(d => d.value)).toLocaleString()}
                 </div>
                 <div className="text-sm font-semibold text-emerald-900">Highest</div>
               </div>
               <div className="text-center p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl">
                 <div className="text-2xl font-bold text-amber-700">
-                  {Math.min(...data.map(d => d.value))}
+                  {Math.min(...data.map(d => d.value)).toLocaleString()}
                 </div>
                 <div className="text-sm font-semibold text-amber-900">Lowest</div>
               </div>
@@ -1012,7 +1027,7 @@ function ModernChart({
 // Demographic Summary Card
 function DemographicSummaryCard({ title, value, icon: Icon, color, trend = 0 }) {
   return (
-    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl hover:shadow-2xl transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-xl bg-gradient-to-r ${color}`}>
           <Icon className="text-white text-2xl" />
@@ -1027,8 +1042,157 @@ function DemographicSummaryCard({ title, value, icon: Icon, color, trend = 0 }) 
           {trend > 0 ? '↑' : trend < 0 ? '↓' : '↔'}
         </div>
       </div>
-      <h4 className="text-3xl font-bold text-gray-900 mb-2">{value}</h4>
+      <h4 className="text-3xl font-bold text-gray-900 mb-2">{value.toLocaleString()}</h4>
       <p className="text-gray-600 text-sm font-semibold">{title}</p>
+    </div>
+  );
+}
+
+// Statistics Summary Card Component
+function StatisticsSummaryCard({ stats, demographics, onRefresh }) {
+  const [timeAgo, setTimeAgo] = useState('');
+  
+  useEffect(() => {
+    if (stats.globalStats?.updatedAt) {
+      const updateTime = new Date(stats.globalStats.updatedAt);
+      const now = new Date();
+      const diffMs = now - updateTime;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) {
+        setTimeAgo('Just now');
+      } else if (diffMins < 60) {
+        setTimeAgo(`${diffMins} minutes ago`);
+      } else if (diffMins < 1440) {
+        const hours = Math.floor(diffMins / 60);
+        setTimeAgo(`${hours} hours ago`);
+      } else {
+        const days = Math.floor(diffMins / 1440);
+        setTimeAgo(`${days} days ago`);
+      }
+    }
+  }, [stats.globalStats?.updatedAt]);
+  
+  const calculatePercentage = (value, total) => {
+    if (total === 0) return '0%';
+    return `${((value / total) * 100).toFixed(1)}%`;
+  };
+  
+  const formDistribution = demographics.formDistribution || [];
+  const totalStudents = stats.totalStudents || 0;
+  
+  return (
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-300 shadow-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl">
+            <FiBarChart2 className="text-blue-700 text-2xl" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">Statistics Overview</h3>
+            <p className="text-gray-600 text-sm">
+              Real-time student analytics {timeAgo && `• Updated ${timeAgo}`}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onRefresh}
+          className="px-5 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold flex items-center gap-3 text-sm hover:shadow-xl transition-all duration-300"
+        >
+          <FiRefreshCw className="text-sm" />
+          Refresh Stats
+        </button>
+      </div>
+      
+      {/* Total Students Card */}
+      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-blue-700 font-bold text-sm mb-2">TOTAL STUDENTS</p>
+            <h4 className="text-4xl font-bold text-gray-900">
+              {totalStudents.toLocaleString()}
+            </h4>
+          </div>
+          <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-lg">
+            <FiUsers className="text-blue-600 text-3xl" />
+          </div>
+        </div>
+      </div>
+      
+      {/* Form Distribution Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {formDistribution.map((form, index) => (
+          <div key={index} className="bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-blue-300 transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-bold text-gray-900">{form.name}</span>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
+            </div>
+            <div className="text-2xl font-bold text-gray-900 mb-2">
+              {form.value.toLocaleString()}
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full rounded-full transition-all duration-500"
+                style={{ 
+                  width: totalStudents > 0 ? `${(form.value / totalStudents) * 100}%` : '0%',
+                  backgroundColor: form.color
+                }}
+              />
+            </div>
+            <div className="text-right text-sm text-gray-600 mt-1">
+              {calculatePercentage(form.value, totalStudents)}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="text-center p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl hover:shadow-lg transition-all duration-300">
+          <div className="text-2xl font-bold text-emerald-700">
+            {(demographics.gender?.find(g => g.name === 'Male')?.value || 0).toLocaleString()}
+          </div>
+          <div className="text-sm font-semibold text-emerald-900">Male Students</div>
+        </div>
+        <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl hover:shadow-lg transition-all duration-300">
+          <div className="text-2xl font-bold text-purple-700">
+            {(demographics.gender?.find(g => g.name === 'Female')?.value || 0).toLocaleString()}
+          </div>
+          <div className="text-sm font-semibold text-purple-900">Female Students</div>
+        </div>
+        <div className="text-center p-4 bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl hover:shadow-lg transition-all duration-300">
+          <div className="text-2xl font-bold text-amber-700">
+            {(demographics.statusDistribution?.find(s => s.name === 'Active')?.value || 0).toLocaleString()}
+          </div>
+          <div className="text-sm font-semibold text-amber-900">Active Students</div>
+        </div>
+        <div className="text-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-lg transition-all duration-300">
+          <div className="text-2xl font-bold text-gray-700">
+            {Object.keys(stats.streamStats || {}).length}
+          </div>
+          <div className="text-sm font-semibold text-gray-900">Streams</div>
+        </div>
+      </div>
+      
+      {/* Validation Status */}
+      {stats.globalStats && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700 font-bold">Data Consistency Check</span>
+            <span className={`px-3 py-1 rounded-lg font-bold text-sm ${
+              stats.totalStudents === (stats.globalStats.form1 + stats.globalStats.form2 + 
+                stats.globalStats.form3 + stats.globalStats.form4)
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              {stats.totalStudents === (stats.globalStats.form1 + stats.globalStats.form2 + 
+                stats.globalStats.form3 + stats.globalStats.form4)
+                ? '✓ Consistent'
+                : '⚠ Inconsistent'}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1078,13 +1242,13 @@ function EnhancedFilterPanel({
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleAdvanced}
-            className="px-4 py-2 text-sm font-bold text-gray-700"
+            className="px-4 py-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors"
           >
             {showAdvanced ? 'Hide Advanced' : 'Show Advanced'}
           </button>
           <button
             onClick={clearAllFilters}
-            className="px-4 py-2 text-sm font-bold text-red-600"
+            className="px-4 py-2 text-sm font-bold text-red-600 hover:text-red-800 transition-colors"
           >
             Clear All
           </button>
@@ -1259,14 +1423,9 @@ export default function ModernStudentBulkUpload() {
     formStats: {},
     streamStats: {},
     genderStats: {},
-    ageDistribution: [],
+    ageStats: {},
     globalStats: { totalStudents: 0, form1: 0, form2: 0, form3: 0, form4: 0 },
-    demographics: { 
-      gender: {}, 
-      age: {},
-      stream: {},
-      status: {}
-    }
+    validation: { isValid: true }
   });
 
   const [demographics, setDemographics] = useState({
@@ -1287,120 +1446,164 @@ export default function ModernStudentBulkUpload() {
   const fileInputRef = useRef(null);
   const FORMS = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
 
-  useEffect(() => {
-    loadStats();
-    loadStudents();
-    loadUploadHistory();
-  }, []);
+  // Helper function to process API responses
+  const processApiResponse = (data) => {
+    if (data.data && data.data.stats) {
+      return data.data.stats;
+    } else if (data.stats) {
+      return data.stats;
+    } else if (data.data) {
+      return data.data;
+    } else {
+      return data;
+    }
+  };
 
+  // Enhanced loadStats function
   const loadStats = async () => {
     setLoading(true);
     try {
+      // Call the stats endpoint
       const res = await fetch('/api/studentupload?action=stats');
-      const data = await res.json();
+      const result = await res.json();
       
-      if (data.success) {
-        const apiStats = data.stats || {
-          totalStudents: data.totalStudents || 0,
+      if (result.success) {
+        // Extract stats from the response structure
+        const apiStats = processApiResponse(result) || {
+          totalStudents: 0,
           form1: 0,
           form2: 0,
           form3: 0,
-          form4: 0
+          form4: 0,
+          updatedAt: new Date()
         };
         
-        const demographicsRes = await fetch('/api/studentupload?limit=1000');
-        const demographicsData = await demographicsRes.json();
+        // Get student data for demographic calculations
+        const studentsRes = await fetch('/api/studentupload?limit=1000');
+        const studentsData = await studentsRes.json();
         
-        if (demographicsData.success) {
-          const allStudents = demographicsData.students || [];
-          const totalStudents = demographicsData.pagination?.total || allStudents.length;
+        if (studentsData.success) {
+          const allStudents = studentsData.data?.students || studentsData.students || [];
+          const totalStudents = apiStats.totalStudents || allStudents.length;
           
+          // Calculate demographics
           const streamDistribution = {};
+          const genderDistribution = {};
+          const statusDistribution = {};
+          
           allStudents.forEach(student => {
+            // Stream distribution
             const stream = student.stream || 'Unassigned';
             streamDistribution[stream] = (streamDistribution[stream] || 0) + 1;
-          });
-
-          const genderDistribution = {};
-          allStudents.forEach(student => {
+            
+            // Gender distribution
             const gender = student.gender || 'Not Specified';
             genderDistribution[gender] = (genderDistribution[gender] || 0) + 1;
+            
+            // Status distribution
+            const status = student.status || 'active';
+            statusDistribution[status] = (statusDistribution[status] || 0) + 1;
           });
-
+          
+          // Calculate age distribution
           const ageDistribution = {
+            'Under 13': 0,
             '13-15': 0,
             '16-17': 0,
             '18-20': 0,
             '21+': 0
           };
-
+          
           allStudents.forEach(student => {
             if (student.dateOfBirth) {
               const dob = new Date(student.dateOfBirth);
               const age = new Date().getFullYear() - dob.getFullYear();
-              if (age >= 13 && age <= 15) ageDistribution['13-15']++;
+              
+              if (age < 13) ageDistribution['Under 13']++;
+              else if (age >= 13 && age <= 15) ageDistribution['13-15']++;
               else if (age >= 16 && age <= 17) ageDistribution['16-17']++;
               else if (age >= 18 && age <= 20) ageDistribution['18-20']++;
               else if (age > 20) ageDistribution['21+']++;
             }
           });
-
-          const formDistribution = {};
-          allStudents.forEach(student => {
-            const form = student.form || 'Unknown';
-            formDistribution[form] = (formDistribution[form] || 0) + 1;
-          });
-
-          setStats({
-            totalStudents: totalStudents,
-            formStats: formDistribution,
-            streamStats: streamDistribution,
-            genderStats: genderDistribution,
-            ageDistribution: Object.entries(ageDistribution).map(([age, count]) => ({ age, count })),
-            globalStats: apiStats,
-            demographics: {
-              gender: genderDistribution,
-              age: ageDistribution,
-              stream: streamDistribution,
-              status: data.formStats || {}
-            }
-          });
-
-          setDemographics({
-            gender: Object.entries(genderDistribution).map(([name, value]) => ({
-              name,
-              value,
-              color: name === 'Male' ? '#3B82F6' : name === 'Female' ? '#EC4899' : '#8B5CF6'
-            })),
-            formDistribution: Object.entries(formDistribution).map(([name, value]) => ({
-              name,
-              value,
-              color: 
-                name === 'Form 1' ? '#3B82F6' :
-                name === 'Form 2' ? '#10B981' :
-                name === 'Form 3' ? '#F59E0B' :
-                '#8B5CF6'
-            })),
-            streamDistribution: Object.entries(streamDistribution).map(([name, value], index) => ({
-              name,
+          
+          // Calculate form distribution from API stats
+          const formDistribution = {
+            'Form 1': apiStats.form1 || 0,
+            'Form 2': apiStats.form2 || 0,
+            'Form 3': apiStats.form3 || 0,
+            'Form 4': apiStats.form4 || 0
+          };
+          
+          // Prepare chart data
+          const genderChartData = Object.entries(genderDistribution).map(([name, value]) => ({
+            name,
+            value,
+            color: name === 'Male' ? '#3B82F6' : name === 'Female' ? '#EC4899' : '#8B5CF6'
+          }));
+          
+          const formChartData = Object.entries(formDistribution).map(([name, value]) => ({
+            name,
+            value,
+            color: 
+              name === 'Form 1' ? '#3B82F6' :
+              name === 'Form 2' ? '#10B981' :
+              name === 'Form 3' ? '#F59E0B' :
+              '#8B5CF6'
+          }));
+          
+          const streamChartData = Object.entries(streamDistribution)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([name, value], index) => ({
+              name: name.length > 10 ? name.substring(0, 10) + '...' : name,
+              fullName: name,
               value,
               color: [
                 '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444',
                 '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'
               ][index % 10]
-            })),
-            ageGroups: Object.entries(ageDistribution).map(([name, value], index) => ({
+            }));
+          
+          const ageChartData = Object.entries(ageDistribution)
+            .filter(([_, value]) => value > 0)
+            .map(([name, value], index) => ({
               name,
               value,
-              color: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6'][index % 4]
-            })),
-            statusDistribution: [
-              { name: 'Active', value: allStudents.filter(s => s.status === 'active').length, color: '#10B981' },
-              { name: 'Inactive', value: allStudents.filter(s => s.status === 'inactive').length, color: '#EF4444' },
-              { name: 'Graduated', value: allStudents.filter(s => s.status === 'graduated').length, color: '#8B5CF6' },
-              { name: 'Transferred', value: allStudents.filter(s => s.status === 'transferred').length, color: '#F59E0B' }
-            ]
+              color: ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'][index % 5]
+            }));
+          
+          const statusChartData = [
+            { name: 'Active', value: statusDistribution.active || 0, color: '#10B981' },
+            { name: 'Inactive', value: statusDistribution.inactive || 0, color: '#EF4444' },
+            { name: 'Graduated', value: statusDistribution.graduated || 0, color: '#8B5CF6' },
+            { name: 'Transferred', value: statusDistribution.transferred || 0, color: '#F59E0B' }
+          ];
+          
+          // Update state with all statistics
+          setStats({
+            totalStudents: totalStudents,
+            globalStats: apiStats,
+            formStats: formDistribution,
+            streamStats: streamDistribution,
+            genderStats: genderDistribution,
+            statusStats: statusDistribution,
+            ageStats: ageDistribution,
+            validation: {
+              isValid: totalStudents === (apiStats.form1 + apiStats.form2 + apiStats.form3 + apiStats.form4)
+            }
           });
+          
+          setDemographics({
+            gender: genderChartData,
+            formDistribution: formChartData,
+            streamDistribution: streamChartData,
+            ageGroups: ageChartData,
+            statusDistribution: statusChartData
+          });
+          
+        } else {
+          toast.error('Failed to load student data for demographics');
         }
       } else {
         toast.error('Failed to load statistics');
@@ -1413,10 +1616,48 @@ export default function ModernStudentBulkUpload() {
     }
   };
 
+  // Statistics refresh function
+  const refreshStatistics = async () => {
+    try {
+      const res = await fetch('/api/studentupload?action=stats');
+      const result = await res.json();
+      
+      if (result.success) {
+        const apiStats = processApiResponse(result);
+        
+        if (apiStats) {
+          setStats(prev => ({
+            ...prev,
+            globalStats: apiStats,
+            totalStudents: apiStats.totalStudents || prev.totalStudents
+          }));
+          
+          // Update form chart data
+          const formChartData = [
+            { name: 'Form 1', value: apiStats.form1 || 0, color: '#3B82F6' },
+            { name: 'Form 2', value: apiStats.form2 || 0, color: '#10B981' },
+            { name: 'Form 3', value: apiStats.form3 || 0, color: '#F59E0B' },
+            { name: 'Form 4', value: apiStats.form4 || 0, color: '#8B5CF6' }
+          ];
+          
+          setDemographics(prev => ({
+            ...prev,
+            formDistribution: formChartData
+          }));
+          
+          toast.success('Statistics updated successfully!');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to refresh statistics:', error);
+      toast.error('Failed to refresh statistics');
+    }
+  };
+
   const loadStudents = async (page = 1) => {
     setLoading(true);
     try {
-      let url = `/api/studentupload?page=${page}&limit=${pagination.limit}`;
+      let url = `/api/studentupload?page=${page}&limit=${pagination.limit}&includeStats=false`;
       
       if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`;
       if (filters.form) url += `&form=${encodeURIComponent(filters.form)}`;
@@ -1432,12 +1673,12 @@ export default function ModernStudentBulkUpload() {
       if (!res.ok) throw new Error(data.message || 'Failed to load students');
       
       if (data.success) {
-        setStudents(data.students || []);
-        setPagination(data.pagination || {
+        setStudents(data.data?.students || data.students || []);
+        setPagination(data.data?.pagination || data.pagination || {
           page: page,
           limit: pagination.limit,
-          total: data.pagination?.total || data.students?.length || 0,
-          pages: Math.ceil((data.pagination?.total || data.students?.length || 0) / pagination.limit)
+          total: 0,
+          pages: 1
         });
       } else {
         toast.error(data.message || 'Failed to load students');
@@ -1467,6 +1708,31 @@ export default function ModernStudentBulkUpload() {
       setHistoryLoading(false);
     }
   };
+
+  // Auto-refresh for demographics view
+  useEffect(() => {
+    let intervalId;
+    
+    if (view === 'demographics') {
+      // Refresh stats every 30 seconds when on demographics view
+      intervalId = setInterval(() => {
+        refreshStatistics();
+      }, 30000);
+    }
+    
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [view]);
+
+  // Initial load
+  useEffect(() => {
+    loadStats();
+    loadStudents();
+    loadUploadHistory();
+  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -1534,14 +1800,14 @@ export default function ModernStudentBulkUpload() {
       setResult(data);
       
       if (data.success) {
-        toast.success(`✅ Upload successful! ${data.stats.validRows} students processed.`);
+        toast.success(`✅ Upload successful! ${data.validRows || 0} students processed.`);
         
-        if (data.stats.errors && data.stats.errors.length > 0) {
-          data.stats.errors.slice(0, 3).forEach(error => {
+        if (data.errors && data.errors.length > 0) {
+          data.errors.slice(0, 3).forEach(error => {
             toast.error(error, { duration: 5000 });
           });
-          if (data.stats.errors.length > 3) {
-            toast.error(`... and ${data.stats.errors.length - 3} more errors`, { duration: 5000 });
+          if (data.errors.length > 3) {
+            toast.error(`... and ${data.errors.length - 3} more errors`, { duration: 5000 });
           }
         }
         
@@ -1578,7 +1844,7 @@ export default function ModernStudentBulkUpload() {
       if (deleteTarget.type === 'batch') {
         url = `/api/studentupload?batchId=${deleteTarget.id}`;
       } else {
-        url = `/api/studentupload/${deleteTarget.id}`;
+        url = `/api/studentupload?studentId=${deleteTarget.id}`;
       }
 
       const res = await fetch(url, { method: 'DELETE' });
@@ -1605,10 +1871,10 @@ export default function ModernStudentBulkUpload() {
   const updateStudent = async (studentId, studentData) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/studentupload/${studentId}`, {
+      const res = await fetch(`/api/studentupload`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(studentData)
+        body: JSON.stringify({ id: studentId, ...studentData })
       });
       
       const data = await res.json();
@@ -1617,7 +1883,7 @@ export default function ModernStudentBulkUpload() {
         toast.success('Student updated successfully');
         await loadStudents(pagination.page);
         setEditingStudent(null);
-        setSelectedStudent(data.student);
+        setSelectedStudent(data.data?.student || data.student);
       } else {
         toast.error(data.message || 'Failed to update student');
       }
@@ -1674,21 +1940,26 @@ export default function ModernStudentBulkUpload() {
     }
 
     const headers = ['Admission Number', 'First Name', 'Middle Name', 'Last Name', 'Form', 'Stream', 'Gender', 'Date of Birth', 'Age', 'Status', 'Email', 'Parent Phone', 'Address'];
-    const data = students.map(student => [
-      student.admissionNumber,
-      student.firstName,
-      student.middleName || '',
-      student.lastName,
-      student.form,
-      student.stream || '',
-      student.gender || '',
-      student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString() : '',
-      student.dateOfBirth ? new Date().getFullYear() - new Date(student.dateOfBirth).getFullYear() : '',
-      student.status,
-      student.email || '',
-      student.parentPhone || '',
-      student.address || ''
-    ]);
+    const data = students.map(student => {
+      const dob = student.dateOfBirth ? new Date(student.dateOfBirth) : null;
+      const age = dob ? new Date().getFullYear() - dob.getFullYear() : '';
+      
+      return [
+        student.admissionNumber,
+        student.firstName,
+        student.middleName || '',
+        student.lastName,
+        student.form,
+        student.stream || '',
+        student.gender || '',
+        dob ? dob.toLocaleDateString() : '',
+        age,
+        student.status,
+        student.email || '',
+        student.parentPhone || '',
+        student.address || ''
+      ];
+    });
 
     const csvContent = [
       headers.join(','),
@@ -1751,7 +2022,7 @@ export default function ModernStudentBulkUpload() {
                 loadStats();
               }}
               disabled={loading}
-              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold text-base flex items-center gap-2 shadow-lg disabled:opacity-60"
+              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-bold text-base flex items-center gap-2 shadow-lg disabled:opacity-60 hover:shadow-xl transition-all duration-300"
             >
               {loading ? (
                 <CircularProgress size={16} color="inherit" thickness={6} />
@@ -1764,7 +2035,7 @@ export default function ModernStudentBulkUpload() {
             <button
               onClick={exportStudentsToCSV}
               disabled={students.length === 0 || loading}
-              className="text-white/80 hover:text-white px-6 py-3 rounded-xl font-bold text-base border border-white/20 flex items-center gap-2 disabled:opacity-50"
+              className="text-white/80 hover:text-white px-6 py-3 rounded-xl font-bold text-base border border-white/20 flex items-center gap-2 disabled:opacity-50 hover:bg-white/10 transition-all duration-300"
             >
               <FiDownload className="text-base" />
               Export Data
@@ -1778,10 +2049,10 @@ export default function ModernStudentBulkUpload() {
         <div className="flex flex-wrap items-center gap-2 p-2">
           <button
             onClick={() => setView('upload')}
-            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base transition-all duration-300 ${
               view === 'upload'
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
-                : 'text-gray-700'
+                : 'text-gray-700 hover:text-blue-600'
             }`}
           >
             <FiUpload className="text-sm" />
@@ -1792,10 +2063,10 @@ export default function ModernStudentBulkUpload() {
               setView('students');
               loadStudents(1);
             }}
-            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base transition-all duration-300 ${
               view === 'students'
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
-                : 'text-gray-700'
+                : 'text-gray-700 hover:text-blue-600'
             }`}
           >
             <FiUsers className="text-sm" />
@@ -1806,10 +2077,10 @@ export default function ModernStudentBulkUpload() {
               setView('demographics');
               loadStats();
             }}
-            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base transition-all duration-300 ${
               view === 'demographics'
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
-                : 'text-gray-700'
+                : 'text-gray-700 hover:text-blue-600'
             }`}
           >
             <FiPieChart className="text-sm" />
@@ -1820,10 +2091,10 @@ export default function ModernStudentBulkUpload() {
               setView('history');
               loadUploadHistory(1);
             }}
-            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base ${
+            className={`px-6 py-3 rounded-xl font-bold flex items-center gap-3 text-base transition-all duration-300 ${
               view === 'history'
                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-xl'
-                : 'text-gray-700'
+                : 'text-gray-700 hover:text-blue-600'
             }`}
           >
             <FiClock className="text-sm" />
@@ -1875,10 +2146,10 @@ export default function ModernStudentBulkUpload() {
                   </h3>
                   <div className="flex flex-col sm:flex-row gap-6 mb-4">
                     <div className="flex-1">
-                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 ${
+                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 cursor-pointer transition-all duration-300 ${
                         replaceOption === 'skip' 
                           ? 'border-blue-600 bg-blue-50 shadow-lg' 
-                          : 'border-gray-300'
+                          : 'border-gray-300 hover:border-blue-400'
                       }`}>
                         <input
                           type="radio"
@@ -1893,10 +2164,10 @@ export default function ModernStudentBulkUpload() {
                       </label>
                     </div>
                     <div className="flex-1">
-                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 ${
+                      <label className={`flex items-center gap-4 p-5 rounded-2xl border-3 cursor-pointer transition-all duration-300 ${
                         replaceOption === 'replace' 
                           ? 'border-blue-600 bg-blue-50 shadow-lg' 
-                          : 'border-gray-300'
+                          : 'border-gray-300 hover:border-blue-400'
                       }`}>
                         <input
                           type="radio"
@@ -1952,14 +2223,14 @@ export default function ModernStudentBulkUpload() {
                       <div className="flex items-center gap-4">
                         <button
                           onClick={() => setFile(null)}
-                          className="p-3 rounded-xl text-gray-600"
+                          className="p-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
                         >
                           <FiX className="text-xl" />
                         </button>
                         <button
                           onClick={handleUpload}
                           disabled={uploading}
-                          className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl disabled:opacity-50"
+                          className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
                         >
                           {uploading ? (
                             <>
@@ -1985,14 +2256,14 @@ export default function ModernStudentBulkUpload() {
                   <div className="space-y-4">
                     <button
                       onClick={downloadCSVTemplate}
-                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl"
+                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-lg transition-all duration-300"
                     >
                       <FiFile className="text-blue-600 text-2xl" />
                       <span className="font-bold text-gray-900 text-base">CSV Template</span>
                     </button>
                     <button
                       onClick={downloadExcelTemplate}
-                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl"
+                      className="w-full flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-lg transition-all duration-300"
                     >
                       <IoDocumentText className="text-green-600 text-2xl" />
                       <span className="font-bold text-gray-900 text-base">Excel Template</span>
@@ -2065,7 +2336,7 @@ export default function ModernStudentBulkUpload() {
                 <div className="flex items-center gap-4 w-full lg:w-auto mt-4 lg:mt-0">
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className="flex-1 lg:flex-none px-6 py-4 bg-white border-2 border-gray-400 rounded-2xl text-gray-700 font-bold flex items-center justify-center gap-3 text-base"
+                    className="flex-1 lg:flex-none px-6 py-4 bg-white border-2 border-gray-400 rounded-2xl text-gray-700 font-bold flex items-center justify-center gap-3 text-base hover:border-blue-500 hover:text-blue-600 transition-all duration-300"
                   >
                     <FiFilter />
                     {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -2074,13 +2345,13 @@ export default function ModernStudentBulkUpload() {
                   <div className="flex items-center gap-2 bg-gray-100 p-2 rounded-2xl">
                     <button
                       onClick={() => setDisplayMode('grid')}
-                      className={`p-3 rounded-xl ${displayMode === 'grid' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600'}`}
+                      className={`p-3 rounded-xl transition-all duration-300 ${displayMode === 'grid' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600 hover:text-blue-600'}`}
                     >
                       <FiGrid size={18} />
                     </button>
                     <button
                       onClick={() => setDisplayMode('list')}
-                      className={`p-3 rounded-xl ${displayMode === 'list' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600'}`}
+                      className={`p-3 rounded-xl transition-all duration-300 ${displayMode === 'list' ? 'bg-white text-blue-700 shadow-lg' : 'text-gray-600 hover:text-blue-600'}`}
                     >
                       <FiList size={18} />
                     </button>
@@ -2089,7 +2360,7 @@ export default function ModernStudentBulkUpload() {
                   <button
                     onClick={() => handleSearch({ type: 'click' })}
                     disabled={loading}
-                    className="flex-1 lg:flex-none px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50"
+                    className="flex-1 lg:flex-none px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
                   >
                     {loading ? (
                       <>
@@ -2126,7 +2397,7 @@ export default function ModernStudentBulkUpload() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                       {students.map(student => (
-                        <div key={student.id} className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl">
+                        <div key={student.id} className="bg-white rounded-2xl border-2 border-gray-300 p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                           <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-4">
                               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
@@ -2140,7 +2411,7 @@ export default function ModernStudentBulkUpload() {
                               </div>
                             </div>
                             <div className="relative">
-                              <button className="p-2 rounded-lg text-gray-600">
+                              <button className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
                                 <FiSettings className="text-base" />
                               </button>
                             </div>
@@ -2188,13 +2459,13 @@ export default function ModernStudentBulkUpload() {
                           <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
                             <button
                               onClick={() => setSelectedStudent(student)}
-                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold shadow-xl"
+                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
                             >
                               <FiEye className="text-sm" /> View
                             </button>
                             <button
                               onClick={() => setEditingStudent(student)}
-                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl text-base font-bold shadow-xl"
+                              className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl text-base font-bold shadow-xl hover:shadow-2xl transition-all duration-300"
                             >
                               <FiEdit className="text-sm" /> Edit
                             </button>
@@ -2217,7 +2488,7 @@ export default function ModernStudentBulkUpload() {
                           <button
                             onClick={() => loadStudents(pagination.page)}
                             disabled={loading}
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl"
+                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl hover:shadow-2xl transition-all duration-300"
                           >
                             {loading ? (
                               <CircularProgress size={18} className="text-white" />
@@ -2234,39 +2505,39 @@ export default function ModernStudentBulkUpload() {
                       <table className="w-full min-w-[768px]">
                         <thead className="bg-gray-100">
                           <tr>
-                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors"
                                 onClick={() => handleSort('firstName')}>
                               <div className="flex items-center gap-2">
                                 Student
                                 {filters.sortBy === 'firstName' && (
-                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                  filters.sortOrder === 'asc' ? <FiChevronUp /> : <FiChevronDown />
                                 )}
                               </div>
                             </th>
-                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors"
                                 onClick={() => handleSort('form')}>
                               <div className="flex items-center gap-2">
                                 Form
                                 {filters.sortBy === 'form' && (
-                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                  filters.sortOrder === 'asc' ? <FiChevronUp /> : <FiChevronDown />
                                 )}
                               </div>
                             </th>
-                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors"
                                 onClick={() => handleSort('stream')}>
                               <div className="flex items-center gap-2">
                                 Stream
                                 {filters.sortBy === 'stream' && (
-                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                  filters.sortOrder === 'asc' ? <FiChevronUp /> : <FiChevronDown />
                                 )}
                               </div>
                             </th>
-                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer"
+                            <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:text-blue-600 transition-colors"
                                 onClick={() => handleSort('status')}>
                               <div className="flex items-center gap-2">
                                 Status
                                 {filters.sortBy === 'status' && (
-                                  filters.sortOrder === 'asc' ? <FiSortAsc /> : <FiSortDesc />
+                                  filters.sortOrder === 'asc' ? <FiChevronUp /> : <FiChevronDown />
                                 )}
                               </div>
                             </th>
@@ -2277,7 +2548,7 @@ export default function ModernStudentBulkUpload() {
                         </thead>
                         <tbody className="divide-y-2 divide-gray-200">
                           {students.map(student => (
-                            <tr key={student.id} className="bg-white">
+                            <tr key={student.id} className="bg-white hover:bg-gray-50 transition-colors">
                               <td className="px-8 py-5">
                                 <div className="flex items-center gap-4">
                                   <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center flex-shrink-0">
@@ -2320,13 +2591,13 @@ export default function ModernStudentBulkUpload() {
                                 <div className="flex items-center gap-3">
                                   <button
                                     onClick={() => setSelectedStudent(student)}
-                                    className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm"
+                                    className="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors"
                                   >
                                     View
                                   </button>
                                   <button
                                     onClick={() => setEditingStudent(student)}
-                                    className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm"
+                                    className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-100 transition-colors"
                                   >
                                     Edit
                                   </button>
@@ -2347,7 +2618,7 @@ export default function ModernStudentBulkUpload() {
                     {(filters.search || filters.form || filters.stream) && (
                       <button
                         onClick={handleClearFilters}
-                        className="text-blue-600 font-bold text-lg"
+                        className="text-blue-600 font-bold text-lg hover:text-blue-800 transition-colors"
                       >
                         Clear filters to see all students
                       </button>
@@ -2364,7 +2635,7 @@ export default function ModernStudentBulkUpload() {
                       <button
                         onClick={() => handlePageChange(pagination.page - 1)}
                         disabled={pagination.page === 1}
-                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:border-blue-500 hover:text-blue-600 transition-colors"
                       >
                         <FiArrowLeft className="text-base" />
                       </button>
@@ -2383,10 +2654,10 @@ export default function ModernStudentBulkUpload() {
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`w-12 h-12 rounded-xl font-bold text-sm ${
+                            className={`w-12 h-12 rounded-xl font-bold text-sm transition-all duration-300 ${
                               pagination.page === pageNum
                                 ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-2xl'
-                                : 'border-2 border-gray-400'
+                                : 'border-2 border-gray-400 hover:border-blue-500 hover:text-blue-600'
                             }`}
                           >
                             {pageNum}
@@ -2396,7 +2667,7 @@ export default function ModernStudentBulkUpload() {
                       <button
                         onClick={() => handlePageChange(pagination.page + 1)}
                         disabled={pagination.page === pagination.pages}
-                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-3 rounded-xl border-2 border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:border-blue-500 hover:text-blue-600 transition-colors"
                       >
                         <FiArrowRight className="text-base" />
                       </button>
@@ -2410,37 +2681,14 @@ export default function ModernStudentBulkUpload() {
 
         {view === 'demographics' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <DemographicSummaryCard
-                title="Total Students"
-                value={stats.totalStudents}
-                icon={FiUsers}
-                color="from-blue-500 to-blue-700"
-                trend={12}
-              />
-              <DemographicSummaryCard
-                title="Active Students"
-                value={demographics.statusDistribution.find(s => s.name === 'Active')?.value || 0}
-                icon={FiUserCheck}
-                color="from-emerald-500 to-emerald-700"
-                trend={8}
-              />
-              <DemographicSummaryCard
-                title="Male Students"
-                value={demographics.gender.find(g => g.name === 'Male')?.value || 0}
-                icon={FiUser}
-                color="from-amber-500 to-amber-700"
-                trend={5}
-              />
-              <DemographicSummaryCard
-                title="Female Students"
-                value={demographics.gender.find(g => g.name === 'Female')?.value || 0}
-                icon={FiUser}
-                color="from-purple-500 to-purple-700"
-                trend={7}
-              />
-            </div>
-
+            {/* Statistics Summary Card */}
+            <StatisticsSummaryCard 
+              stats={stats}
+              demographics={demographics}
+              onRefresh={refreshStatistics}
+            />
+            
+            {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <ModernChart
                 data={demographics.formDistribution}
@@ -2457,7 +2705,7 @@ export default function ModernStudentBulkUpload() {
                 height={400}
               />
             </div>
-
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <ModernChart
                 data={demographics.streamDistribution}
@@ -2473,37 +2721,56 @@ export default function ModernStudentBulkUpload() {
                 height={400}
               />
             </div>
-
-            <ModernChart
-              data={demographics.streamDistribution.slice(0, 8)}
-              type="radar"
-              title="Stream Performance Radar"
-              height={400}
-            />
-
+            
+            {demographics.streamDistribution.length > 3 && (
+              <ModernChart
+                data={demographics.streamDistribution.slice(0, 8)}
+                type="radar"
+                title="Stream Performance Radar"
+                height={400}
+              />
+            )}
+            
+            {/* Detailed Statistics Table */}
             <div className="bg-white rounded-2xl p-6 border-2 border-gray-300 shadow-2xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-8">Detailed Statistics</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {demographics.formDistribution.map((form, index) => (
-                  <div key={index} className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl border-2 border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: form.color }} />
-                        <span className="font-bold text-gray-900 text-lg">{form.name}</span>
-                      </div>
-                      <span className="text-2xl font-bold text-gray-900">{form.value}</span>
-                    </div>
-                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${(form.value / demographics.formDistribution.reduce((sum, f) => sum + f.value, 0)) * 100}%`,
-                          backgroundColor: form.color
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">Detailed Statistics Breakdown</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Category</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Count</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Percentage</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Trend</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {demographics.formDistribution.map((form, index) => (
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
+                            <span className="font-bold text-gray-900">{form.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-gray-900">{form.value.toLocaleString()}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-gray-700">
+                            {stats.totalStudents > 0 ? `${((form.value / stats.totalStudents) * 100).toFixed(1)}%` : '0%'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <FiTrendingUp className="text-green-500" />
+                            <span className="text-green-600 font-bold">+2.5%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -2519,7 +2786,7 @@ export default function ModernStudentBulkUpload() {
               <button
                 onClick={() => loadUploadHistory(1)}
                 disabled={historyLoading}
-                className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50"
+                className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
               >
                 {historyLoading ? (
                   <>
@@ -2563,7 +2830,7 @@ export default function ModernStudentBulkUpload() {
                     </thead>
                     <tbody className="divide-y-2 divide-gray-200">
                       {uploadHistory.map(upload => (
-                        <tr key={upload.id} className="bg-white">
+                        <tr key={upload.id} className="bg-white hover:bg-gray-50 transition-colors">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
                               <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl">
@@ -2611,7 +2878,7 @@ export default function ModernStudentBulkUpload() {
                           <td className="px-8 py-6">
                             <button
                               onClick={() => handleDeleteBatch(upload.id, upload.fileName)}
-                              className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold text-sm"
+                              className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
                             >
                               Delete
                             </button>
@@ -2635,7 +2902,7 @@ export default function ModernStudentBulkUpload() {
             setEditingStudent(selectedStudent);
             setSelectedStudent(null);
           }}
-          onDelete={handleDeleteStudent}
+          onDelete={() => handleDeleteStudent(selectedStudent.id, `${selectedStudent.firstName} ${selectedStudent.lastName}`)}
         />
       )}
 
