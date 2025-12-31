@@ -281,7 +281,7 @@ const StaffCard = ({ staff }) => {
           src={getImageSrc(staff)}
           alt={staff.name}
           fill
-          className="object-cover"
+            className="w-full h-full object-cover object-top cursor-pointer"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onError={(e) => {
             e.target.src = '/images/default-staff.jpg';
