@@ -96,6 +96,9 @@ import { IoDocumentText } from 'react-icons/io5';
 import { IoPeopleCircle, IoNewspaper, IoClose, IoStatsChart } from 'react-icons/io5';
 
 // Helper function for form colors
+// Add these functions right after the existing getFormColor function:
+
+// Helper function for form colors
 function getFormColor(form) {
   switch (form) {
     case 'Form 1': return 'from-blue-500 to-blue-700';
@@ -103,6 +106,28 @@ function getFormColor(form) {
     case 'Form 3': return 'from-amber-500 to-amber-700';
     case 'Form 4': return 'from-purple-500 to-purple-700';
     default: return 'from-gray-400 to-gray-600';
+  }
+}
+
+// Helper function for form badge colors (NEW - ADD THIS)
+function getFormBadgeColor(form) {
+  switch (form) {
+    case 'Form 1': return 'bg-gradient-to-r from-blue-500 to-blue-700 text-white';
+    case 'Form 2': return 'bg-gradient-to-r from-emerald-500 to-emerald-700 text-white';
+    case 'Form 3': return 'bg-gradient-to-r from-amber-500 to-amber-700 text-white';
+    case 'Form 4': return 'bg-gradient-to-r from-purple-500 to-purple-700 text-white';
+    default: return 'bg-gradient-to-r from-gray-400 to-gray-600 text-white';
+  }
+}
+
+// Helper function for form text colors (NEW - ADD THIS)
+function getFormTextColor(form) {
+  switch (form) {
+    case 'Form 1': return 'text-blue-700';
+    case 'Form 2': return 'text-emerald-700';
+    case 'Form 3': return 'text-amber-700';
+    case 'Form 4': return 'text-purple-700';
+    default: return 'text-gray-700';
   }
 }
 
@@ -138,57 +163,32 @@ const CustomToaster = () => (
 );
 
 // Modern Loading Spinner
-const Spinner = ({ size = 40, color = 'inherit', thickness = 3.6, variant = 'indeterminate', value = 0 }) => {
+
+const Spinner = ({
+  size = 20,
+  color = "primary",
+  variant = "indeterminate",
+  value = 0,
+}) => {
   return (
-    <div className="inline-flex items-center justify-center">
-      <svg 
-        className={`animate-spin ${variant === 'indeterminate' ? '' : ''}`} 
-        width={size} 
-        height={size} 
-        viewBox="0 0 44 44"
-      >
-        {variant === 'determinate' ? (
-          <>
-            <circle 
-              className="text-gray-200" 
-              stroke="currentColor" 
-              strokeWidth={thickness} 
-              fill="none" 
-              cx="22" 
-              cy="22" 
-              r="20"
-            />
-            <circle 
-              className="text-blue-600" 
-              stroke="currentColor" 
-              strokeWidth={thickness} 
-              strokeLinecap="round" 
-              fill="none" 
-              cx="22" 
-              cy="22" 
-              r="20" 
-              strokeDasharray="125.6" 
-              strokeDashoffset={125.6 - (125.6 * value) / 100}
-              transform="rotate(-90 22 22)"
-            />
-          </>
-        ) : (
-          <circle 
-            className="text-blue-600" 
-            stroke="currentColor" 
-            strokeWidth={thickness} 
-            strokeLinecap="round" 
-            fill="none" 
-            cx="22" 
-            cy="22" 
-            r="20" 
-            strokeDasharray="30 100"
-          />
-        )}
-      </svg>
-    </div>
+    <Box
+      sx={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress
+        size={size}
+        color={color}
+        variant={variant}
+        value={variant === "determinate" ? value : undefined}
+        thickness={4}
+      />
+    </Box>
   );
 };
+
 
 // Delete Confirmation Modal
 function ModernDeleteModal({ 

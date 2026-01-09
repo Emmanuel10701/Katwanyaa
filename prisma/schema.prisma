@@ -614,35 +614,11 @@ model StudentSession {
   @@index([expiresAt])
 }
 
-model FeeBalanceUpload {
-  id            String       @id @default(cuid())
-  fileName      String
-  fileType      String
-  status        String       @default("pending")
-  uploadedBy    String
-  uploadDate    DateTime     @default(now())
-  processedDate DateTime?
-  totalRows     Int          @default(0)
-  validRows     Int          @default(0)
-  skippedRows   Int          @default(0)
-  errorRows     Int          @default(0)
-  errorLog      Json?
-  uploadType    String?       // Add this field: "new" or "update"
-
- term          String?      // Make this nullable
-  academicYear  String?      // Make this nullable
-  targetForm    String       // This should remain required      // Add this field
-  metadata      Json?
-  feeBalances   FeeBalance[] @relation("UploadToFeeBalances")
-
-  @@map("fee_balance_uploads")
-}
-
 model FeeBalance {
   id              String          @id @default(cuid())
   admissionNumber String
   student         databaseStudent @relation("StudentFeeBalances", fields: [admissionNumber], references: [admissionNumber], onDelete: Cascade)
-  form            String          // Make sure this field exists
+  form            String
   term            String
   academicYear    String
   amount          Float     @default(0)
@@ -650,14 +626,48 @@ model FeeBalance {
   balance         Float     @default(0)
   paymentStatus   String    @default("pending")
   dueDate         DateTime?
+  
+  // Audit fields
+  isActive        Boolean   @default(true)  // <-- ADD THIS instead of status
+  uploadBatchId   String?
+  
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  uploadBatchId   String?
+  
   uploadBatch     FeeBalanceUpload? @relation("UploadToFeeBalances", fields: [uploadBatchId], references: [id], onDelete: Cascade)
+  
+  @@unique([admissionNumber, form, term, academicYear])
+  @@index([admissionNumber])
+  @@index([form, term, academicYear])
+  @@index([isActive])
+}
 
-  @@unique([admissionNumber, term, academicYear])
-  @@index([form])  // Add index for form
-  @@map("fee_balances")
+model FeeBalanceUpload {
+  id             String   @id @default(cuid())
+  fileName       String
+  fileType       String
+  uploadedBy     String
+  uploadDate     DateTime @default(now())
+  status         String   // processing, completed, failed
+  processedDate  DateTime?
+  
+  // Upload parameters
+  targetForm     String
+  term           String?
+  academicYear   String?
+  uploadType     String   // new, update
+  
+  // Statistics
+  totalRows      Int
+  validRows      Int
+  skippedRows    Int
+  errorRows      Int
+  errorLog       String?
+  metadata       Json?
+  
+  feeBalances    FeeBalance[] @relation("UploadToFeeBalances")
+  
+  @@map("fee_balance_uploads")
 }
 
 model ResultUpload {

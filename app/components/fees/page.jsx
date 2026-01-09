@@ -3,13 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CircularProgress, Modal, Box, Chip, Alert as MuiAlert, Snackbar } from '@mui/material';
 import * as XLSX from 'xlsx';
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip as RechartsTooltip, Legend,
-  ResponsiveContainer, LineChart, Line, AreaChart, Area,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  RadialBarChart, RadialBar, ComposedChart, Scatter, LabelList
-} from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, LineChart, Line, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, RadialBarChart, RadialBar, ComposedChart, Scatter, LabelList } from "recharts";
 import {
   FiUpload, FiFile, FiDownload, FiUsers, FiUser, FiFilter, FiSearch,
   FiEye, FiEdit, FiTrash2, FiRefreshCw, FiCheckCircle, FiXCircle,
@@ -34,6 +28,7 @@ import {
   IoStatsChart as IoStatsChartIcon, IoFilter as IoFilterIcon
 } from 'react-icons/io5';
 import { Toaster, toast as sonnerToast } from 'sonner';
+
 
 // ========== COMPONENTS ==========
 
@@ -757,8 +752,9 @@ function ModernFeeEditModal({ fee, student, onClose, onSave, loading }) {
   );
 }
 
-// Statistics Card Component
-function StatisticsCard({ title, value, icon: Icon, color, trend = 0, prefix = '', suffix = '' }) {
+// Modern Statistics Card - Mobile & Zoom Responsive
+// Replace your StatisticsCard component with this improved version:
+function StatisticsCard({ title, value, icon: Icon, color, trend = 0, prefix = '', suffix = '', description = '' }) {
   const formatValue = (val) => {
     if (typeof val === 'number') {
       return prefix + val.toLocaleString() + suffix;
@@ -766,77 +762,136 @@ function StatisticsCard({ title, value, icon: Icon, color, trend = 0, prefix = '
     return prefix + val + suffix;
   };
 
+  const trendColor = trend > 0 ? 'from-emerald-400 to-green-500' : 
+                     trend < 0 ? 'from-rose-400 to-red-500' : 
+                     'from-gray-400 to-slate-500';
+
+  const trendIcon = trend > 0 ? '↑' : trend < 0 ? '↓' : '→';
+
   return (
-    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-xl">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-r ${color}`}>
-          <Icon className="text-white text-2xl" />
+    <div className="group relative w-full max-w-full overflow-hidden rounded-2xl bg-white p-0.5 transition-all duration-500 hover:scale-[1.01] hover:shadow-lg border border-gray-100 h-full">
+      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
+      
+      <div className="relative h-full flex flex-col rounded-[14px] bg-white p-4 md:p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="relative shrink-0">
+            <div className={`h-10 w-10 md:h-12 md:w-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg shadow-current/10`}>
+              <Icon className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r ${trendColor} text-white font-bold text-[10px] md:text-xs shadow-sm whitespace-nowrap`}>
+            {trendIcon}
+            <span>{trend > 0 ? `+${trend}%` : trend < 0 ? `${trend}%` : '0%'}</span>
+          </div>
         </div>
-        <div className={`text-sm font-bold px-3 py-1 rounded-lg ${
-          trend > 0 
-            ? 'bg-green-100 text-green-800' 
-            : trend < 0 
-            ? 'bg-red-100 text-red-800' 
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {trend > 0 ? `+${trend}%` : trend < 0 ? `${trend}%` : '0%'}
+
+        <div className="flex-grow space-y-1">
+          <p className="text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest truncate">
+            {title}
+          </p>
+          <h3 className="font-bold text-slate-800 tracking-tight leading-tight" 
+              style={{ fontSize: 'clamp(1.25rem, 5vw, 1.875rem)' }}>
+            {formatValue(value)}
+          </h3>
+          {description && (
+            <p className="text-xs text-gray-500 mt-1">{description}</p>
+          )}
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[10px] text-gray-400 font-medium">
+              <span>Growth</span>
+              <span>{Math.abs(trend)}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full bg-gradient-to-r ${trendColor} transition-all duration-700`}
+                style={{ width: `${Math.min(100, Math.abs(trend) * 2)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+            <span className="text-[9px] md:text-[10px] text-gray-400 font-medium">
+              Updated Today
+            </span>
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+          </div>
         </div>
       </div>
-      <h4 className="text-3xl font-bold text-gray-900 mb-2">{formatValue(value)}</h4>
-      <p className="text-gray-600 text-sm font-semibold">{title}</p>
     </div>
   );
 }
 
-// Fee Chart Component
+
+
 function ModernFeeChart({ 
   data, 
   type = 'bar', 
   title, 
   colors = [
     '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444', 
-    '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'
+    '#6366F1', '#EC4899', '#14B8A6', '#F97316'
   ],
-  height = 400
+  height = 350 // Reduced default height for better fit
 }) {
-  const chartColors = colors.slice(0, data.length);
+  const chartColors = colors.slice(0, data?.length);
 
   const renderChart = () => {
+    // Dynamic height adjustment to handle browser zoom gracefully
+    const containerHeight = "100%";
+    
     switch (type) {
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={height}>
+          <ResponsiveContainer width="100%" height={containerHeight}>
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
-                outerRadius={120}
-                fill="#8884d8"
+                innerRadius="60%" // Donut style is more modern
+                outerRadius="85%"
+                paddingAngle={5}
                 dataKey="value"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} stroke="none" />
                 ))}
               </Pie>
-              <RechartsTooltip formatter={(value) => [value, 'Count']} />
-              <Legend />
+              <RechartsTooltip 
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                formatter={(value) => [value, 'Count']} 
+              />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
             </PieChart>
           </ResponsiveContainer>
         );
       
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="name" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <RechartsTooltip formatter={(value) => [`KES ${value.toLocaleString()}`, 'Amount']} />
-              <Legend />
-              <Bar dataKey="value" name="Amount (KES)" radius={[8, 8, 0, 0]}>
+          <ResponsiveContainer width="100%" height={containerHeight}>
+            <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#9CA3AF', fontSize: 11 }} 
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#9CA3AF', fontSize: 11 }} 
+              />
+              <RechartsTooltip 
+                cursor={{ fill: '#F9FAFB' }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                formatter={(value) => [`KES ${value.toLocaleString()}`, 'Amount']} 
+              />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={40}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                 ))}
@@ -847,74 +902,51 @@ function ModernFeeChart({
       
       case 'composed':
         return (
-          <ResponsiveContainer width="100%" height={height}>
-            <ComposedChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="name" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <RechartsTooltip formatter={(value, name) => {
-                if (name === 'amount') return [`KES ${value.toLocaleString()}`, 'Total Amount'];
-                if (name === 'paid') return [`KES ${value.toLocaleString()}`, 'Amount Paid'];
-                if (name === 'balance') return [`KES ${value.toLocaleString()}`, 'Balance'];
-                return [value, name];
-              }} />
-              <Legend />
-              <Bar dataKey="balance" name="Balance" fill="#EF4444" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="paid" name="Amount Paid" fill="#10B981" radius={[4, 4, 0, 0]} />
-              <Line type="monotone" dataKey="amount" name="Total Amount" stroke="#3B82F6" strokeWidth={3} />
+          <ResponsiveContainer width="100%" height={containerHeight}>
+            <ComposedChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+              <RechartsTooltip 
+                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+              />
+              <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+              <Bar dataKey="paid" name="Paid" fill="#10B981" radius={[4, 4, 0, 0]} barSize={30} />
+              <Line type="monotone" dataKey="amount" name="Total" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} />
             </ComposedChart>
           </ResponsiveContainer>
         );
       
-      default:
-        return (
-          <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="name" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <RechartsTooltip />
-              <Legend />
-              <Bar dataKey="value" name="Amount" radius={[8, 8, 0, 0]}>
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        );
+      default: return null;
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-2xl relative overflow-hidden">
-      <div className="absolute -top-8 -right-8 w-40 h-40 md:w-60 md:h-60 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full blur-3xl opacity-60" />
+    <div className="bg-white rounded-2xl p-4 md:p-6 border border-gray-100 shadow-sm relative overflow-hidden h-full min-h-[400px]">
+      {/* Subtle Background Glow */}
+      <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-50/50 rounded-full blur-3xl -z-0" />
       
-      <div className="relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl ring-4 ring-blue-100">
-              {type === 'pie' && <FiPieChart className="text-white text-xl" />}
-              {type === 'bar' && <FiBarChart2 className="text-white text-xl" />}
-              {type === 'composed' && <IoStatsChart className="text-white text-xl" />}
-              {type === 'radial' && <FiTrendingUp className="text-white text-xl" />}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Header: Reduced text and spacing */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className={`shrink-0 w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-md`}>
+              <span className="text-white text-lg">📊</span>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h3>
-              <p className="text-gray-600 text-sm">Visual fee analysis</p>
+              <h3 className="text-lg md:text-xl font-bold text-slate-800 leading-tight">{title}</h3>
+              <p className="text-gray-400 text-[11px] uppercase tracking-wider font-semibold">Insights</p>
             </div>
           </div>
         </div>
 
-        <div className="h-72 md:h-96">
+        {/* Chart Area: Responsive Height */}
+        <div className="flex-grow min-h-0 w-full">
           {data && data.length > 0 ? (
             renderChart()
           ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <FiBarChart2 className="text-gray-300 text-6xl mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">No data available for chart</p>
-              </div>
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm italic">
+              No data available
             </div>
           )}
         </div>
@@ -1063,28 +1095,12 @@ function EnhancedFilterPanel({
   );
 }
 
-// Upload Strategy Modal
 function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
-
-
-  const getFormColor = (form) => {
-    switch (form) {
-      case 'Form 1': return 'from-blue-500 to-blue-700';
-      case 'Form 2': return 'from-emerald-500 to-emerald-700';
-      case 'Form 3': return 'from-amber-500 to-amber-700';
-      case 'Form 4': return 'from-purple-500 to-purple-700';
-      default: return 'from-gray-500 to-gray-700';
-    }
-  };
   const [uploadType, setUploadType] = useState('new');
   const [selectedForm, setSelectedForm] = useState('');
   const [term, setTerm] = useState('');
   const [academicYear, setAcademicYear] = useState('');
 
-
-
-
-  
   const handleConfirm = () => {
     if (!selectedForm) {
       sonnerToast.error('Please select a form');
@@ -1104,7 +1120,7 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
     });
   };
 
-  // Get current term/year for defaults
+  // Get current term/year for UPDATE uploads only
   useEffect(() => {
     if (uploadType === 'update' && open) {
       const month = new Date().getMonth();
@@ -1114,6 +1130,10 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
       
       const currentYear = new Date().getFullYear();
       setAcademicYear(`${currentYear}/${currentYear + 1}`);
+    } else if (uploadType === 'new') {
+      // Clear term/year for new uploads
+      setTerm('');
+      setAcademicYear('');
     }
   }, [uploadType, open]);
 
@@ -1124,17 +1144,9 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: {
-          xs: '98vw',
-          sm: '95vw',
-          md: '650px',
-          lg: '650px'
-        },
+        width: { xs: '98vw', sm: '95vw', md: '650px', lg: '650px' },
         maxWidth: '650px',
-        maxHeight: {
-          xs: '85vh',
-          sm: '90vh',
-        },
+        maxHeight: { xs: '85vh', sm: '90vh' },
         bgcolor: 'background.paper',
         borderRadius: 3,
         boxShadow: 24,
@@ -1150,9 +1162,11 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                 <FiUpload className="text-lg sm:text-xl" />
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">School Fees Upload Strategy</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">Fees Upload Strategy</h2>
                 <p className="text-blue-100 opacity-90 text-sm sm:text-base">
-                  Choose how you want to upload school fees
+                  {uploadType === 'new' 
+                    ? 'Add new fees (term/year extracted from file)'
+                    : 'Update existing fees (specify term/year)'}
                 </p>
               </div>
             </div>
@@ -1162,16 +1176,18 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
           </div>
         </div>
 
-        {/* Scrollable Content */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Upload Type Selection */}
+            {/* Upload Type */}
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Select Upload Type</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">
+                Upload Type
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div
                   onClick={() => setUploadType('new')}
-                  className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                  className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                     uploadType === 'new'
                       ? 'border-blue-500 bg-blue-50 shadow-lg'
                       : 'border-gray-300 hover:border-blue-300'
@@ -1183,19 +1199,21 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900 text-sm sm:text-base">New Upload</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">Add new fees to selected form</p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        Add new fees for selected form
+                      </p>
                     </div>
                   </div>
                   {uploadType === 'new' && (
                     <div className="mt-2 text-xs sm:text-sm text-blue-700">
                       <FiCheckCircle className="inline mr-1" />
-                      Term and academic year extracted from file
+                      Term and year extracted from file
                     </div>
                   )}
                 </div>
                 <div
                   onClick={() => setUploadType('update')}
-                  className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                  className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                     uploadType === 'update'
                       ? 'border-blue-500 bg-blue-50 shadow-lg'
                       : 'border-gray-300 hover:border-blue-300'
@@ -1207,13 +1225,15 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                     </div>
                     <div>
                       <h4 className="font-bold text-gray-900 text-sm sm:text-base">Update Upload</h4>
-                      <p className="text-xs sm:text-sm text-gray-600">Replace existing form with new data</p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        Replace existing fees for form
+                      </p>
                     </div>
                   </div>
                   {uploadType === 'update' && (
                     <div className="mt-2 text-xs sm:text-sm text-blue-700">
                       <FiAlertCircle className="inline mr-1" />
-                      <strong>Term and academic year required</strong>
+                      Term and year required
                     </div>
                   )}
                 </div>
@@ -1222,41 +1242,45 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
 
             {/* Form Selection */}
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Select Form</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">
+                Select Form
+              </h3>
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {['Form 1', 'Form 2', 'Form 3', 'Form 4'].map((form) => (
                   <div
                     key={form}
                     onClick={() => setSelectedForm(form)}
-                    className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                    className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       selectedForm === form
-                        ? `border-blue-500 bg-gradient-to-r ${getFormColor(form)} text-white shadow-lg`
+                        ? 'border-blue-500 bg-blue-50 shadow-lg'
                         : 'border-gray-300 hover:border-blue-300'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <div className={`p-1.5 sm:p-2 rounded-lg ${selectedForm === form ? 'bg-white/20' : 'bg-gray-100'}`}>
-                          <IoSchool className={`text-sm sm:text-base ${selectedForm === form ? 'text-white' : 'text-gray-500'}`} />
+                        <div className={`p-1.5 sm:p-2 rounded-lg ${selectedForm === form ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                          <IoSchool className={`text-sm sm:text-base ${selectedForm === form ? 'text-blue-600' : 'text-gray-500'}`} />
                         </div>
                         <div>
                           <h4 className="font-bold text-sm sm:text-base">{form}</h4>
-                          <p className={`text-xs sm:text-sm ${selectedForm === form ? 'text-blue-100' : 'text-gray-500'}`}>
-                            {uploadType === 'new' ? 'Add new fees' : 'Update existing fees'}
+                          <p className={`text-xs sm:text-sm ${selectedForm === form ? 'text-blue-600' : 'text-gray-500'}`}>
+                            {uploadType === 'new' ? 'Add new fees' : 'Update fees'}
                           </p>
                         </div>
                       </div>
-                      {selectedForm === form && <FiCheckCircle className="text-white text-sm sm:text-base" />}
+                      {selectedForm === form && <FiCheckCircle className="text-blue-600 text-sm sm:text-base" />}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Term/Year Selection for Update Uploads */}
+            {/* Term/Year for UPDATE uploads */}
             {uploadType === 'update' && (
               <div className="space-y-4">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">Specify Update Details</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                  Specify Update Details
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -1266,6 +1290,7 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                       value={term}
                       onChange={(e) => setTerm(e.target.value)}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                      required
                     >
                       <option value="">Select Term</option>
                       <option value="Term 1">Term 1</option>
@@ -1273,41 +1298,77 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                       <option value="Term 3">Term 3</option>
                     </select>
                   </div>
-              <div>
-  <label className="block text-sm font-bold text-gray-700 mb-2">
-    Academic Year *
-  </label>
-  <select
-    value={academicYear}
-    onChange={(e) => setAcademicYear(e.target.value)}
-    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
-  >
-    <option value="">Select Year</option>
-    {/* Generates range: 3 years ago to 3 years in the future */}
-    {Array.from({ length: 7 }, (_, i) => {
-      const startYear = new Date().getFullYear() - 3 + i;
-      const displayFormat = `${startYear}`;
-      return (
-        <option key={displayFormat} value={displayFormat}>
-          {displayFormat}
-        </option>
-      );
-    })}
-  </select>
-</div>
-
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                      Academic Year *
+                    </label>
+                    <select
+                      value={academicYear}
+                      onChange={(e) => setAcademicYear(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                      required
+                    >
+                      <option value="">Select Year</option>
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const startYear = new Date().getFullYear() - 2 + i;
+                        const displayFormat = `${startYear}/${startYear + 1}`;
+                        return (
+                          <option key={displayFormat} value={displayFormat}>
+                            {displayFormat}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 </div>
                 <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
                   <p className="text-xs sm:text-sm text-amber-800">
-                    <strong>Note:</strong> This will update/replace all fees for {selectedForm || 'selected form'} - {term || 'Term'} {academicYear || 'Year'}
+                    <strong>Note:</strong> This will replace ALL fees for {selectedForm || 'selected form'} - {term || 'Term'} {academicYear || 'Year'}
                   </p>
                 </div>
               </div>
             )}
+
+            {/* Strategy Summary */}
+            <div className="bg-blue-50 rounded-xl p-3 sm:p-4 border border-blue-200">
+              <h4 className="font-bold text-blue-900 text-sm sm:text-base mb-2">
+                Strategy Summary
+              </h4>
+              <ul className="text-xs sm:text-sm text-blue-800 space-y-1">
+                <li className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                  <span>
+                    <strong>Type:</strong> {uploadType === 'new' ? 'New Upload' : 'Update Upload'}
+                  </span>
+                </li>
+                <li className="flex items-center gap-1.5 sm:gap-2">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                  <span>
+                    <strong>Form:</strong> {selectedForm || 'Not selected'}
+                  </span>
+                </li>
+                {uploadType === 'update' && (
+                  <>
+                    <li className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                      <span>
+                        <strong>Term:</strong> {term || 'Not specified'}
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
+                      <span>
+                        <strong>Academic Year:</strong> {academicYear || 'Not specified'}
+                      </span>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
 
-        {/* Fixed Bottom Buttons */}
+        {/* Action Buttons */}
         <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-6">
             <button
@@ -1330,7 +1391,7 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
                 <>
                   <FiCheckCircle className="text-sm sm:text-base" />
                   <span className="text-sm sm:text-base">
-                    {uploadType === 'new' ? 'Continue to Upload' : `Update ${selectedForm}`}
+                    {uploadType === 'new' ? `Upload to ${selectedForm}` : `Update ${selectedForm}`}
                   </span>
                 </>
               )}
@@ -1342,7 +1403,6 @@ function UploadStrategyModal({ open, onClose, onConfirm, loading }) {
   );
 }
 
-// Duplicate Validation Modal
 function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loading, uploadType, selectedForm, term, academicYear }) {
   const [action, setAction] = useState('skip');
 
@@ -1355,17 +1415,9 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: {
-          xs: '98vw',
-          sm: '95vw',
-          md: '850px',
-          lg: '850px'
-        },
+        width: { xs: '98vw', sm: '95vw', md: '850px', lg: '850px' },
         maxWidth: '850px',
-        maxHeight: {
-          xs: '85vh',
-          sm: '90vh',
-        },
+        maxHeight: { xs: '85vh', sm: '90vh' },
         bgcolor: 'background.paper',
         borderRadius: 3,
         boxShadow: 24,
@@ -1374,16 +1426,29 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
         flexDirection: 'column'
       }}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-500 to-orange-600 p-4 sm:p-6 text-white">
+        <div className={`p-4 sm:p-6 text-white ${
+          uploadType === 'update' 
+            ? 'bg-gradient-to-r from-amber-500 to-orange-600' 
+            : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-2 bg-white/20 rounded-xl">
-                <FiAlertCircle className="text-lg sm:text-xl" />
+                {uploadType === 'update' ? (
+                  <FiAlertCircle className="text-lg sm:text-xl" />
+                ) : (
+                  <FiUsers className="text-lg sm:text-xl" />
+                )}
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">Duplicate Detection</h2>
-                <p className="text-amber-100 opacity-90 text-sm sm:text-base">
-                  Found {duplicates.length} existing students in {selectedForm}
+                <h2 className="text-xl sm:text-2xl font-bold">
+                  {uploadType === 'update' ? 'Update Confirmation' : 'Duplicate Detection'}
+                </h2>
+                <p className="opacity-90 text-sm sm:text-base">
+                  {uploadType === 'update'
+                    ? `Will update ${duplicates.length} existing fees`
+                    : `Found ${duplicates.length} existing students in ${selectedForm}`
+                  }
                 </p>
               </div>
             </div>
@@ -1393,75 +1458,109 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
           </div>
         </div>
 
-        {/* Scrollable Content Area */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6">
+            {/* Summary */}
             <div className="mb-4 sm:mb-6">
-              <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                <div className="w-2 h-2 sm:w-3 sm:h-3 bg-amber-500 rounded-full"></div>
-                <h3 className="text-base sm:text-lg font-bold text-gray-900">
-                  {uploadType === 'update' 
-                    ? `Updating ${selectedForm} (${term} ${academicYear}): ${duplicates.length} existing fees will be updated`
-                    : `${duplicates.length} students already exist in ${selectedForm}`
+              <div className={`rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 ${
+                uploadType === 'update' 
+                  ? 'bg-amber-50 border border-amber-200' 
+                  : 'bg-blue-50 border border-blue-200'
+              }`}>
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">
+                  {uploadType === 'update'
+                    ? `Updating ${selectedForm} (${term} ${academicYear})`
+                    : `Processing fees for ${selectedForm}`
                   }
                 </h3>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-                <p className="text-amber-800 text-xs sm:text-sm">
-                  <strong>Note:</strong> School fees are linked to student admission numbers. Students must exist in the selected form.
+                <p className="text-sm">
+                  {uploadType === 'update'
+                    ? 'Existing fees will be marked as replaced and new fees will be created.'
+                    : 'Only new fees will be added. Existing fees will be skipped.'
+                  }
                 </p>
               </div>
             </div>
 
             {/* Duplicate List */}
             <div className="mb-4 sm:mb-6">
-              <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Existing Students in {selectedForm}:</h4>
+              <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                {uploadType === 'update' ? 'Fees to Update:' : 'Existing Students:'}
+              </h4>
               <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto max-h-60">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">Row #</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">Admission Number</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">Form</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">Term</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">Academic Year</th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Row #
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Admission Number
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Form
+                        </th>
+                        {uploadType === 'update' && (
+                          <>
+                            <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                              Term
+                            </th>
+                            <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                              Academic Year
+                            </th>
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {duplicates.slice(0, 50).map((dup, index) => (
+                      {duplicates.slice(0, 20).map((dup, index) => (
                         <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600">{dup.row}</td>
+                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600">
+                            {dup.row}
+                          </td>
                           <td className="px-3 sm:px-4 py-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-800">
                               {dup.admissionNumber}
                             </span>
                           </td>
-                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">{dup.form}</td>
-                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">{dup.term}</td>
-                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">{dup.academicYear}</td>
+                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {dup.form}
+                          </td>
+                          {uploadType === 'update' && (
+                            <>
+                              <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                                {dup.term}
+                              </td>
+                              <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                                {dup.academicYear}
+                              </td>
+                            </>
+                          )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                {duplicates.length > 50 && (
+                {duplicates.length > 20 && (
                   <div className="px-4 py-2 text-xs sm:text-sm text-gray-500 text-center border-t border-gray-200 bg-gray-50">
-                    ... and {duplicates.length - 50} more students
+                    ... and {duplicates.length - 20} more
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Action Selection for New Upload */}
+            {/* Action for NEW uploads only */}
             {uploadType === 'new' && (
               <div className="mb-4 sm:mb-6">
-                <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">How should we handle existing fees?</h4>
+                <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                  How should we handle existing fees?
+                </h4>
                 <div className="space-y-2 sm:space-y-3">
                   <div
                     onClick={() => setAction('skip')}
-                    className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 ${
+                    className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       action === 'skip'
                         ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-300 hover:border-blue-300'
@@ -1474,7 +1573,7 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
                       <div>
                         <h4 className="font-bold text-gray-900 text-sm sm:text-base">Skip Existing</h4>
                         <p className="text-xs sm:text-sm text-gray-600">
-                          Keep existing fee records, skip duplicates in upload file
+                          Keep existing fees, only add new ones
                         </p>
                       </div>
                     </div>
@@ -1482,52 +1581,10 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
                 </div>
               </div>
             )}
-
-            {/* Summary */}
-            <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-              <h4 className="font-bold text-gray-900 mb-1.5 sm:mb-2 text-sm sm:text-base">Summary:</h4>
-              <ul className="text-xs sm:text-sm text-gray-700 space-y-0.5 sm:space-y-1">
-                {uploadType === 'new' ? (
-                  <>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
-                      <span>Processing fees for form: {selectedForm}</span>
-                    </li>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-500 rounded-full"></div>
-                      <span>Existing students in form: {duplicates.length}</span>
-                    </li>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
-                      <span>New fees will be added for existing students</span>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
-                      <span>Updating form: {selectedForm}</span>
-                    </li>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full"></div>
-                      <span>Term: {term}, Year: {academicYear}</span>
-                    </li>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-500 rounded-full"></div>
-                      <span>Fees to update: {duplicates.length}</span>
-                    </li>
-                    <li className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full"></div>
-                      <span>Existing fees not in file will be removed</span>
-                    </li>
-                  </>
-                )}
-              </ul>
-            </div>
           </div>
         </div>
 
-        {/* Fixed Bottom Buttons */}
+        {/* Action Buttons */}
         <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-6">
             <button
@@ -1540,7 +1597,11 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
             <button
               onClick={() => onProceed(action)}
               disabled={loading}
-              className="flex-1 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50 text-sm sm:text-base"
+              className={`flex-1 py-2 sm:py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50 text-sm sm:text-base ${
+                uploadType === 'update'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+              }`}
             >
               {loading ? (
                 <>
@@ -1549,13 +1610,13 @@ function DuplicateValidationModal({ open, onClose, duplicates, onProceed, loadin
                 </>
               ) : uploadType === 'update' ? (
                 <>
-                  <FiCheckCircle className="text-sm sm:text-base" />
-                  <span className="text-sm sm:text-base">Update Form</span>
+                  <FiDatabase className="text-sm sm:text-base" />
+                  <span className="text-sm sm:text-base">Update Fees</span>
                 </>
               ) : (
                 <>
                   <FiCheckCircle className="text-sm sm:text-base" />
-                  <span className="text-sm sm:text-base">{action === 'skip' ? 'Skip Existing' : 'Replace Existing'}</span>
+                  <span className="text-sm sm:text-base">Continue with Upload</span>
                 </>
               )}
             </button>
@@ -1589,6 +1650,7 @@ export default function ModernSchoolFeesManagement() {
   const [uploadStrategy, setUploadStrategy] = useState(null);
   const [duplicates, setDuplicates] = useState([]);
   const [validationLoading, setValidationLoading] = useState(false);
+  
   
   const [filters, setFilters] = useState({
     search: '',
@@ -1628,6 +1690,41 @@ export default function ModernSchoolFeesManagement() {
 
   const fileInputRef = useRef(null);
 
+
+  // Add this function to your component (or import it if it exists elsewhere)
+const getFormBadgeColor = (form) => {
+  const formColors = {
+    '1': 'bg-blue-100 text-blue-800',
+    '2': 'bg-indigo-100 text-indigo-800',
+    '3': 'bg-purple-100 text-purple-800',
+    '4': 'bg-pink-100 text-pink-800',
+    '5': 'bg-rose-100 text-rose-800',
+    '6': 'bg-orange-100 text-orange-800',
+  };
+  
+  // If form is a string like "Form 1", extract just the number
+  const formNumber = form?.toString().match(/\d+/)?.[0] || form?.toString();
+  
+  return formColors[formNumber] || 'bg-gray-100 text-gray-800';
+};
+
+// Also add this for mobile text colors if needed
+const getFormTextColor = (form) => {
+  const formTextColors = {
+    '1': 'text-blue-700',
+    '2': 'text-indigo-700',
+    '3': 'text-purple-700',
+    '4': 'text-pink-700',
+    '5': 'text-rose-700',
+    '6': 'text-orange-700',
+  };
+  
+  const formNumber = form?.toString().match(/\d+/)?.[0] || form?.toString();
+  
+  return formTextColors[formNumber] || 'text-gray-700';
+};
+
+
   // Helper functions
   const showNotification = useCallback((message, severity = 'info') => {
     if (severity === 'success') {
@@ -1658,6 +1755,249 @@ export default function ModernSchoolFeesManagement() {
       default: return 'from-gray-500 to-gray-700';
     }
   }, []);
+
+
+// Add this component to your fee balances frontend file (same pattern as results)
+function FeeDuplicateValidationModal({ 
+  open, 
+  onClose, 
+  duplicates, 
+  onProceed, 
+  loading, 
+  uploadType,
+  selectedForm,
+  term,
+  academicYear,
+  showNotification
+}) {
+  const [action, setAction] = useState('skip');
+
+  if (!open) return null;
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: { xs: '98vw', sm: '95vw', md: '850px', lg: '850px' },
+        maxWidth: '850px',
+        maxHeight: { xs: '85vh', sm: '90vh' },
+        bgcolor: 'background.paper',
+        borderRadius: 3,
+        boxShadow: 24,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Header */}
+        <div className={`p-4 sm:p-6 text-white ${
+          uploadType === 'update' 
+            ? 'bg-gradient-to-r from-amber-500 to-orange-600' 
+            : 'bg-gradient-to-r from-blue-600 to-indigo-600'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 bg-white/20 rounded-xl">
+                {uploadType === 'update' ? (
+                  <FiAlertCircle className="text-lg sm:text-xl" />
+                ) : (
+                  <FiUsers className="text-lg sm:text-xl" />
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold">
+                  {uploadType === 'update' ? 'Fee Update Confirmation' : 'Duplicate Fee Detection'}
+                </h2>
+                <p className="opacity-90 text-sm sm:text-base">
+                  {uploadType === 'update'
+                    ? `Will replace ${duplicates.length} existing fees`
+                    : `Found ${duplicates.length} existing student fees in ${selectedForm}`
+                  }
+                </p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
+              <FiX className="text-lg sm:text-xl" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6">
+            {/* Summary */}
+            <div className="mb-4 sm:mb-6">
+              <div className={`rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 ${
+                uploadType === 'update' 
+                  ? 'bg-amber-50 border border-amber-200' 
+                  : 'bg-blue-50 border border-blue-200'
+              }`}>
+                <h3 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">
+                  {uploadType === 'update'
+                    ? `Updating ${selectedForm} (${term} ${academicYear})`
+                    : `Processing fees for ${selectedForm}`
+                  }
+                </h3>
+                <p className="text-sm">
+                  {uploadType === 'update'
+                    ? 'Existing fees will be completely removed and replaced with new fees from your file.'
+                    : 'Only new fees will be added. Existing fees will be skipped.'
+                  }
+                </p>
+           {uploadType === 'update' && (
+  <p className="text-sm text-amber-700 font-semibold mt-2">
+    ⚠️ This is a true overwrite operation. All existing fees for this form/term/year will be deleted before new ones are inserted.
+  </p>
+)}
+              </div>
+            </div>
+
+            {/* Duplicate List */}
+            <div className="mb-4 sm:mb-6">
+              <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                {uploadType === 'update' ? 'Fees to Replace:' : 'Existing Students:'}
+              </h4>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto max-h-60">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Row #
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Admission Number
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                          Form
+                        </th>
+                        {uploadType === 'update' && (
+                          <>
+                            <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                              Term
+                            </th>
+                            <th className="px-3 sm:px-4 py-2 text-left text-xs sm:text-sm font-bold text-gray-700">
+                              Academic Year
+                            </th>
+                          </>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {duplicates.slice(0, 20).map((dup, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600">
+                            {dup.row}
+                          </td>
+                          <td className="px-3 sm:px-4 py-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-800">
+                              {dup.admissionNumber}
+                            </span>
+                          </td>
+                          <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                            {dup.form}
+                          </td>
+                          {uploadType === 'update' && (
+                            <>
+                              <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                                {dup.term}
+                              </td>
+                              <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-900">
+                                {dup.academicYear}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {duplicates.length > 20 && (
+                  <div className="px-4 py-2 text-xs sm:text-sm text-gray-500 text-center border-t border-gray-200 bg-gray-50">
+                    ... and {duplicates.length - 20} more
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action for NEW uploads only */}
+            {uploadType === 'new' && (
+              <div className="mb-4 sm:mb-6">
+                <h4 className="font-bold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                  How should we handle existing fees?
+                </h4>
+                <div className="space-y-2 sm:space-y-3">
+                  <div
+                    onClick={() => setAction('skip')}
+                    className={`p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      action === 'skip'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className={`p-1.5 sm:p-2 rounded-lg ${action === 'skip' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                        <FiCheckCircle className={`text-sm sm:text-base ${action === 'skip' ? 'text-blue-600' : 'text-gray-500'}`} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm sm:text-base">Skip Existing</h4>
+                        <p className="text-xs sm:text-sm text-gray-600">
+                          Keep existing fees, only add new ones
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-6">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-2 sm:py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all disabled:opacity-50 text-sm sm:text-base"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onProceed(action)}
+              disabled={loading}
+              className={`flex-1 py-2 sm:py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50 text-sm sm:text-base ${
+                uploadType === 'update'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+              }`}
+            >
+              {loading ? (
+                <>
+                  <CircularProgress size={16} className="text-white" />
+                  <span className="text-sm sm:text-base">Processing...</span>
+                </>
+              ) : uploadType === 'update' ? (
+                <>
+                  <FiDatabase className="text-sm sm:text-base" />
+                  <span className="text-sm sm:text-base">Replace & Upload</span>
+                </>
+              ) : (
+                <>
+                  <FiCheckCircle className="text-sm sm:text-base" />
+                  <span className="text-sm sm:text-base">Skip & Upload</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
 
   // Load school fees
   const loadSchoolFees = async (page = 1) => {
@@ -1696,77 +2036,118 @@ export default function ModernSchoolFeesManagement() {
       setLoading(false);
     }
   };
-
-  // Load statistics
-  const loadStatistics = async () => {
-    try {
-      const res = await fetch('/api/feebalances?action=stats');
-      const data = await res.json();
+// Update your loadStatistics function:
+const loadStatistics = async () => {
+  try {
+    const res = await fetch('/api/feebalances?action=stats');
+    const data = await res.json();
+    
+    if (data.success) {
+      const statsData = data.stats || data.data?.stats || {
+        totalAmount: 0,
+        totalPaid: 0,
+        totalBalance: 0,
+        totalRecords: 0
+      };
       
-      if (data.success) {
-        setStats(data.stats || data.data?.stats || {
-          totalAmount: 0,
-          totalPaid: 0,
-          totalBalance: 0,
-          totalRecords: 0
+      // Ensure we have proper numbers
+      const totalRecords = statsData.totalRecords || 0;
+      const totalAmount = statsData.totalAmount || 0;
+      const totalPaid = statsData.totalPaid || 0;
+      const totalBalance = statsData.totalBalance || 0;
+      
+      // Calculate previous values (you might want to store these in state or localStorage)
+      const previousStats = JSON.parse(localStorage.getItem('previousFeeStats')) || {
+        totalRecords: totalRecords,
+        totalAmount: totalAmount,
+        totalPaid: totalPaid,
+        totalBalance: totalBalance,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Calculate trends
+      const calculateTrend = (current, previous) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return ((current - previous) / previous * 100).toFixed(1);
+      };
+      
+      const trends = {
+        totalAmount: calculateTrend(totalAmount, previousStats.totalAmount),
+        totalPaid: calculateTrend(totalPaid, previousStats.totalPaid),
+        totalBalance: calculateTrend(totalBalance, previousStats.totalBalance),
+        totalRecords: calculateTrend(totalRecords, previousStats.totalRecords)
+      };
+      
+      setStats({
+        ...statsData,
+        trends // Add trends to stats
+      });
+      
+      // Store current stats for next comparison
+      localStorage.setItem('previousFeeStats', JSON.stringify({
+        totalRecords,
+        totalAmount,
+        totalPaid,
+        totalBalance,
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Load additional data for charts
+      const feesRes = await fetch('/api/feebalances?limit=1000&includeStudent=true');
+      const feesData = await feesRes.json();
+      
+      if (feesData.success) {
+        const fees = feesData.data?.schoolFees || feesData.data?.feeBalances || [];
+        
+        // Calculate distributions
+        const formDistribution = {};
+        const statusDistribution = {};
+        const termDistribution = {};
+        const yearDistribution = {};
+        
+        fees.forEach(fee => {
+          formDistribution[fee.form] = (formDistribution[fee.form] || 0) + 1;
+          statusDistribution[fee.paymentStatus] = (statusDistribution[fee.paymentStatus] || 0) + 1;
+          termDistribution[fee.term] = (termDistribution[fee.term] || 0) + 1;
+          yearDistribution[fee.academicYear] = (yearDistribution[fee.academicYear] || 0) + 1;
         });
         
-        // Load additional data for charts
-        const feesRes = await fetch('/api/feebalances?limit=1000&includeStudent=true');
-        const feesData = await feesRes.json();
+        // Prepare chart data
+        const formChartData = Object.entries(formDistribution).map(([form, count]) => ({
+          name: form,
+          value: count,
+          color: getFormColor(form).split(' ')[1]
+        }));
         
-        if (feesData.success) {
-          const fees = feesData.data?.schoolFees || feesData.data?.feeBalances || [];
-          
-          // Calculate distributions
-          const formDistribution = {};
-          const statusDistribution = {};
-          const termDistribution = {};
-          const yearDistribution = {};
-          
-          fees.forEach(fee => {
-            formDistribution[fee.form] = (formDistribution[fee.form] || 0) + 1;
-            statusDistribution[fee.paymentStatus] = (statusDistribution[fee.paymentStatus] || 0) + 1;
-            termDistribution[fee.term] = (termDistribution[fee.term] || 0) + 1;
-            yearDistribution[fee.academicYear] = (yearDistribution[fee.academicYear] || 0) + 1;
-          });
-          
-          // Prepare chart data
-          const formChartData = Object.entries(formDistribution).map(([form, count]) => ({
-            name: form,
+        const statusChartData = Object.entries(statusDistribution).map(([status, count]) => ({
+          name: status,
+          value: count,
+          color: status === 'paid' ? '#10B981' : status === 'partial' ? '#F59E0B' : '#EF4444'
+        }));
+        
+        const termChartData = Object.entries(termDistribution).map(([term, count]) => ({
+          name: term,
+          value: count,
+          color: term === 'Term 1' ? '#3B82F6' : term === 'Term 2' ? '#10B981' : '#8B5CF6'
+        }));
+        
+        setChartData({
+          formDistribution: formChartData,
+          statusDistribution: statusChartData,
+          termDistribution: termChartData,
+          yearDistribution: Object.entries(yearDistribution).map(([year, count]) => ({
+            name: year,
             value: count,
-            color: getFormColor(form).split(' ')[1]
-          }));
-          
-          const statusChartData = Object.entries(statusDistribution).map(([status, count]) => ({
-            name: status,
-            value: count,
-            color: status === 'paid' ? '#10B981' : status === 'partial' ? '#F59E0B' : '#EF4444'
-          }));
-          
-          const termChartData = Object.entries(termDistribution).map(([term, count]) => ({
-            name: term,
-            value: count,
-            color: term === 'Term 1' ? '#3B82F6' : term === 'Term 2' ? '#10B981' : '#8B5CF6'
-          }));
-          
-          setChartData({
-            formDistribution: formChartData,
-            statusDistribution: statusChartData,
-            termDistribution: termChartData,
-            yearDistribution: Object.entries(yearDistribution).map(([year, count]) => ({
-              name: year,
-              value: count,
-              color: '#6366F1'
-            }))
-          });
-        }
+            color: '#6366F1'
+          }))
+        });
       }
-    } catch (error) {
-      console.error('Failed to load statistics:', error);
-      showNotification('Failed to load statistics', 'error');
     }
-  };
+  } catch (error) {
+    console.error('Failed to load statistics:', error);
+    showNotification('Failed to load statistics', 'error');
+  }
+};
 
   // Load upload history
   const loadUploadHistory = async (page = 1) => {
@@ -1827,126 +2208,162 @@ export default function ModernSchoolFeesManagement() {
     loadSchoolFees(1);
   };
 
-  // Upload handling functions
-  const handleUploadWithStrategy = async () => {
-    if (!uploadStrategy) {
-      setShowStrategyModal(true);
-      return;
-    }
-    
-    if (!file) {
-      showNotification('Please select a file first', 'warning');
-      return;
-    }
-    
-    // Always check duplicates first for both new and update uploads
-    await checkDuplicates();
-  };
+// Replace handleUploadWithStrategy:
+const handleUploadWithStrategy = async () => {
+  if (!uploadStrategy) {
+    setShowStrategyModal(true);
+    return;
+  }
+  
+  if (!file) {
+    showNotification('Please select a file first', 'warning');
+    return;
+  }
+  
+  // Always check duplicates first
+  await checkDuplicates();
+};
 
-  const checkDuplicates = async () => {
-    if (!file || !uploadStrategy) return;
+// In ModernSchoolFeesManagement component, REPLACE these functions:
+
+// Check duplicates (SAME as student uploads)
+const checkDuplicates = async () => {
+  if (!file || !uploadStrategy) return;
+  
+  setValidationLoading(true);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('checkDuplicates', 'true');
+    formData.append('uploadType', uploadStrategy.uploadType);
+    formData.append('selectedForm', uploadStrategy.selectedForm);
     
-    setValidationLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('checkDuplicates', 'true');
-      formData.append('uploadType', uploadStrategy.uploadType);
-      formData.append('selectedForm', uploadStrategy.selectedForm);
-      
-      // For update uploads, send term and academic year
-      if (uploadStrategy.uploadType === 'update') {
-        if (!uploadStrategy.term || !uploadStrategy.academicYear) {
-          showNotification('For update uploads, please specify term and academic year', 'error');
-          setValidationLoading(false);
-          setShowStrategyModal(true); // Reopen strategy modal to get missing info
-          return;
-        }
-        formData.append('term', uploadStrategy.term);
-        formData.append('academicYear', uploadStrategy.academicYear);
+    // For update uploads, send term and academic year
+    if (uploadStrategy.uploadType === 'update') {
+      if (!uploadStrategy.term || !uploadStrategy.academicYear) {
+        showNotification('For update uploads, please specify term and academic year', 'error');
+        setValidationLoading(false);
+        setShowStrategyModal(true);
+        return;
       }
+      formData.append('term', uploadStrategy.term);
+      formData.append('academicYear', uploadStrategy.academicYear);
+    }
 
-      const response = await fetch('/api/feebalances', {
-        method: 'POST',
-        body: formData
-      });
+    const response = await fetch('/api/feebalances', {
+      method: 'POST',
+      body: formData
+    });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        if (data.duplicates && data.duplicates.length > 0) {
-          setDuplicates(data.duplicates);
-          setShowValidationModal(true);
-        } else {
-          // No duplicates, proceed directly to upload
-          proceedWithUpload();
-        }
+    const data = await response.json();
+    
+    if (data.success) {
+      if (data.hasDuplicates && data.duplicates && data.duplicates.length > 0) {
+        setDuplicates(data.duplicates);
+        setShowValidationModal(true);
       } else {
-        showNotification(data.error || 'Check failed', 'error');
+        // No duplicates, proceed directly to upload
+        proceedWithUpload();
       }
-    } catch (error) {
-      showNotification('Check failed', 'error');
-    } finally {
-      setValidationLoading(false);
+    } else {
+      showNotification(data.error || 'Duplicate check failed', 'error');
     }
-  };
+  } catch (error) {
+    console.error('Duplicate check error:', error);
+    showNotification('Failed to check for duplicates', 'error');
+  } finally {
+    setValidationLoading(false);
+  }
+};
 
-  const proceedWithUpload = async (duplicateAction = 'skip') => {
-    if (!file || !uploadStrategy) return;
+// In your proceedWithUpload function, after successful upload:
+const proceedWithUpload = async (duplicateAction = 'skip') => {
+  if (!file || !uploadStrategy) return;
+  
+  setUploading(true);
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('uploadType', uploadStrategy.uploadType);
+    formData.append('selectedForm', uploadStrategy.selectedForm);
     
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploadType', uploadStrategy.uploadType);
-      formData.append('selectedForm', uploadStrategy.selectedForm);
-      
-      // For update uploads, send term and academic year
-      if (uploadStrategy.uploadType === 'update') {
-        if (!uploadStrategy.term || !uploadStrategy.academicYear) {
-          showNotification('Term and academic year are required for update uploads', 'error');
-          setUploading(false);
-          return;
-        }
-        formData.append('term', uploadStrategy.term);
-        formData.append('academicYear', uploadStrategy.academicYear);
+    // For update uploads, send term and academic year
+    if (uploadStrategy.uploadType === 'update') {
+      if (!uploadStrategy.term || !uploadStrategy.academicYear) {
+        showNotification('Term and academic year are required for update uploads', 'error');
+        setUploading(false);
+        return;
       }
-      // For new uploads, don't send term/year - let backend extract from file
-      
-      const response = await fetch('/api/feebalances', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showNotification(data.message, 'success');
-        // Refresh data
-        loadSchoolFees();
-        loadStatistics();
-        loadUploadHistory();
-        setFile(null);
-        // Clear upload strategy after successful upload
-        setUploadStrategy(null);
-      } else {
-        showNotification(data.error || 'Upload failed', 'error');
-      }
-    } catch (error) {
-      showNotification('Upload failed', 'error');
-    } finally {
-      setUploading(false);
-      setShowValidationModal(false);
+      formData.append('term', uploadStrategy.term);
+      formData.append('academicYear', uploadStrategy.academicYear);
     }
-  };
+    
+    const response = await fetch('/api/feebalances', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showNotification(
+        data.message || `Successfully ${uploadStrategy.uploadType === 'new' ? 'uploaded' : 'updated'} fees`,
+        'success'
+      );
+      
+      // IMPORTANT: Clear cached stats to force fresh calculation
+      localStorage.removeItem('previousFeeStats');
+      
+      // Refresh all data with a small delay
+      setTimeout(async () => {
+        await Promise.all([
+          loadSchoolFees(),
+          loadStatistics(), // This will calculate fresh trends
+          loadUploadHistory()
+        ]);
+      }, 500);
+      
+      // Clear state
+      setFile(null);
+      setUploadStrategy(null);
+      setResult(data);
+    } else {
+      showNotification(data.error || 'Upload failed', 'error');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    showNotification('Upload failed: ' + error.message, 'error');
+  } finally {
+    setUploading(false);
+    setShowValidationModal(false);
+  }
+};;
 
-  const handleStrategyConfirm = (strategy) => {
-    setUploadStrategy(strategy);
-    setShowStrategyModal(false);
-    showNotification(`Strategy set: ${strategy.uploadType === 'new' 
-      ? 'New Upload' 
-      : 'Update Upload'} for ${strategy.selectedForm}`, 'success');
-  };
+// Handle strategy confirm (SAME as student uploads)
+const handleStrategyConfirm = (strategy) => {
+  // Validate strategy
+  if (!strategy.selectedForm) {
+    showNotification('Please select a form', 'error');
+    return;
+  }
+  
+  if (strategy.uploadType === 'update' && (!strategy.term || !strategy.academicYear)) {
+    showNotification('For update uploads, please specify term and academic year', 'error');
+    return;
+  }
+  
+  setUploadStrategy(strategy);
+  setShowStrategyModal(false);
+  
+  showNotification(
+    strategy.uploadType === 'new' 
+      ? `New upload strategy set for ${strategy.selectedForm}`
+      : `Update upload strategy set for ${strategy.selectedForm} - ${strategy.term} ${strategy.academicYear}`,
+    'success'
+  );
+};
+
+
 
   // Handle delete
   const handleDelete = async (type, id, name) => {
@@ -2030,44 +2447,44 @@ export default function ModernSchoolFeesManagement() {
     setEditingFee(fee);
   };
 
-  // Download templates
-  const downloadCSVTemplate = () => {
-    const template = `admissionNumber,amount,amountPaid,term,academicYear,dueDate,paymentStatus
-3407,50000,25000,Term 1,2024/2025,2024-03-31,partial
-3408,45000,45000,Term 1,2024/2025,2024-03-31,paid
-3409,50000,30000,Term 1,2024/2025,2024-03-31,partial
-3410,45000,0,Term 1,2024/2025,2024-03-31,pending`;
+const downloadCSVTemplate = () => {
+  const template = `admissionNumber,amount,amountPaid,term,academicYear,dueDate
+3407,50000,25000,Term 1,2024/2025,2024-03-31
+3408,45000,45000,Term 1,2024/2025,2024-03-31
+3409,50000,30000,Term 1,2024/2025,2024-03-31
+3410,45000,0,Term 1,2024/2025,2024-03-31`;
 
-    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'school_fees_template.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showNotification('CSV template downloaded', 'success');
-  };
+  const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'school_fees_template.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNotification('CSV template downloaded', 'success');
+};
 
-  const downloadExcelTemplate = () => {
-    try {
-      const sampleData = [
-        ['admissionNumber', 'amount', 'amountPaid', 'term', 'academicYear', 'dueDate', 'paymentStatus'],
-        ['3407', '50000', '25000', 'Term 1', '2024/2025', '2024-03-31', 'partial'],
-        ['3408', '45000', '45000', 'Term 1', '2024/2025', '2024-03-31', 'paid']
-      ];
+const downloadExcelTemplate = () => {
+  try {
+    const sampleData = [
+      ['admissionNumber', 'amount', 'amountPaid', 'term', 'academicYear', 'dueDate'],
+      ['3407', '50000', '25000', 'Term 1', '2024/2025', '2024-03-31'],
+      ['3408', '45000', '45000', 'Term 1', '2024/2025', '2024-03-31'],
+      ['3409', '50000', '30000', 'Term 1', '2024/2025', '2024-03-31']
+    ];
 
-      const ws = XLSX.utils.aoa_to_sheet(sampleData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "School Fees");
-      XLSX.writeFile(wb, 'school_fees_template.xlsx');
-      showNotification('Excel template downloaded', 'success');
-    } catch (error) {
-      console.error('Error downloading Excel template:', error);
-      showNotification('Failed to download template', 'error');
-    }
-  };
+    const ws = XLSX.utils.aoa_to_sheet(sampleData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "School Fees");
+    XLSX.writeFile(wb, 'school_fees_template.xlsx');
+    showNotification('Excel template downloaded', 'success');
+  } catch (error) {
+    console.error('Error downloading Excel template:', error);
+    showNotification('Failed to download template', 'error');
+  }
+};
 
   // Export data
   const exportFeesToCSV = () => {
@@ -2116,9 +2533,44 @@ export default function ModernSchoolFeesManagement() {
     }
   };
 
-  if (loading && view === 'fees' && schoolFees.length === 0) {
-    return <ModernLoadingSpinner message="Loading school fees..." size="large" />;
-  }
+
+if (loading && view === 'fees' && schoolFees.length === 0) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '40px' }}>
+      <div style={{ position: 'relative', display: 'inline-flex' }}>
+        {/* Layer 1: The "Track" (Light background ring for depth) */}
+        <CircularProgress
+          variant="determinate"
+          value={100}
+          size={50}
+          thickness={5}
+          sx={{ color: (theme) => theme.palette.grey[200] }}
+        />
+        {/* Layer 2: The Modern Spinner */}
+        <CircularProgress
+          variant="indeterminate"
+          disableShrink
+          size={50}
+          thickness={5}
+          sx={{
+            position: 'absolute',
+            left: 0,
+            color: 'primary.main',
+            animationDuration: '800ms',
+            // Modern Rounded Ends
+            '& .MuiCircularProgress-circle': {
+              strokeLinecap: 'round',
+            },
+          }}
+        />
+      </div>
+      <p style={{ fontFamily: 'sans-serif', color: '#666', fontWeight: 500 }}>
+        Loading school fees...
+      </p>
+    </div>
+  );
+}
+
 
   return (
     <div className="p-6 space-y-6">
@@ -2231,73 +2683,235 @@ export default function ModernSchoolFeesManagement() {
 
       <div className="space-y-6">
         {/* Dashboard View */}
-        {view === 'dashboard' && (
-          <div className="space-y-8">
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatisticsCard title="Total Fees Amount" value={stats.totalAmount} icon={IoCash} color="from-blue-500 to-blue-700" trend={5.2} prefix="KES " />
-              <StatisticsCard title="Total Amount Paid" value={stats.totalPaid} icon={FiCheckCircle} color="from-emerald-500 to-emerald-700" trend={8.7} prefix="KES " />
-              <StatisticsCard title="Total Balance" value={stats.totalBalance} icon={FiAlertCircle} color="from-red-500 to-red-700" trend={-3.1} prefix="KES " />
-              <StatisticsCard title="Total Records" value={stats.totalRecords} icon={FiUsers} color="from-purple-500 to-purple-700" trend={12.5} />
-            </div>
+  {view === 'dashboard' && (
+  <div className="space-y-8">
+    {/* Statistics Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <StatisticsCard 
+        title="Total Fees Amount" 
+        value={stats.totalAmount} 
+        icon={IoCash} 
+        color="from-blue-500 to-blue-700" 
+        trend={stats.trends?.totalAmount || 0} 
+        prefix="KES " 
+        description="Total fee amount across all forms"
+      />
+      <StatisticsCard 
+        title="Total Amount Paid" 
+        value={stats.totalPaid} 
+        icon={FiCheckCircle} 
+        color="from-emerald-500 to-emerald-700" 
+        trend={stats.trends?.totalPaid || 0} 
+        prefix="KES " 
+        description="Total collected amount"
+      />
+      <StatisticsCard 
+        title="Total Balance" 
+        value={stats.totalBalance} 
+        icon={FiAlertCircle} 
+        color="from-red-500 to-red-700" 
+        trend={stats.trends?.totalBalance || 0} 
+        prefix="KES " 
+        description="Outstanding balances"
+      />
+      <StatisticsCard 
+        title="Total Records" 
+        value={stats.totalRecords} 
+        icon={FiUsers} 
+        color="from-purple-500 to-purple-700" 
+        trend={stats.trends?.totalRecords || 0} 
+        description="Number of fee records"
+      />
+    </div>
 
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <ModernFeeChart data={chartData.formDistribution} type="pie" title="Form Distribution" height={400} />
-              <ModernFeeChart data={chartData.statusDistribution} type="bar" title="Payment Status Distribution" colors={['#10B981', '#F59E0B', '#EF4444']} height={400} />
-            </div>
+    {/* Additional Stats Row */}
+    {stats.activeRecords !== undefined && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatisticsCard 
+          title="Active Records" 
+          value={stats.activeRecords || 0} 
+          icon={FiCheckCircle} 
+          color="from-green-500 to-green-700" 
+          trend={0} 
+          description="Currently active fee records"
+        />
+        <StatisticsCard 
+          title="Inactive Records" 
+          value={stats.inactiveRecords || 0} 
+          icon={FiAlertCircle} 
+          color="from-gray-500 to-gray-700" 
+          trend={0} 
+          description="Archived fee records"
+        />
+        <StatisticsCard 
+          title="Collection Rate" 
+          value={stats.collectionRate ? `${stats.collectionRate.toFixed(1)}%` : '0%'} 
+          icon={FiPercent} 
+          color="from-indigo-500 to-indigo-700" 
+          trend={0} 
+          description="Percentage of fees collected"
+        />
+        <StatisticsCard 
+          title="Avg Fee Amount" 
+          value={stats.averageFeeAmount || 0} 
+          icon={IoCash} 
+          color="from-amber-500 to-amber-700" 
+          trend={0} 
+          prefix="KES " 
+          description="Average fee per student"
+        />
+      </div>
+    )}
 
-            {/* Recent School Fees */}
-            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-2xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">Recent School Fees</h3>
-                <button onClick={() => setView('fees')} className="px-4 py-2 text-blue-600 font-bold text-base flex items-center gap-2">View All <FiChevronRight /></button>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Student</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Form/Term</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Total</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Paid</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Balance</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {schoolFees.slice(0, 5).map(fee => (
-                      <tr key={fee.id}>
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-gray-900">#{fee.admissionNumber}</div>
-                          {fee.student && <div className="text-gray-600 text-sm">{fee.student.firstName} {fee.student.lastName}</div>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-gray-700">{fee.form}</div>
-                          <div className="text-gray-500 text-sm">{fee.term} {fee.academicYear}</div>
-                        </td>
-                        <td className="px-6 py-4"><div className="font-bold text-gray-900">{formatCurrency(fee.amount)}</div></td>
-                        <td className="px-6 py-4"><div className="font-bold text-emerald-700">{formatCurrency(fee.amountPaid)}</div></td>
-                        <td className="px-6 py-4"><div className={`font-bold ${fee.balance > 0 ? 'text-red-700' : 'text-green-700'}`}>{formatCurrency(fee.balance)}</div></td>
-                        <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                            fee.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 
-                            fee.paymentStatus === 'partial' ? 'bg-amber-100 text-amber-800' : 
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {fee.paymentStatus.toUpperCase()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+    {/* Charts */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <ModernFeeChart 
+        data={chartData.formDistribution} 
+        type="pie" 
+        title="Form Distribution" 
+        height={400} 
+      />
+      <ModernFeeChart 
+        data={chartData.statusDistribution} 
+        type="bar" 
+        title="Payment Status Distribution" 
+        colors={['#10B981', '#F59E0B', '#EF4444']} 
+        height={400} 
+      />
+    </div>
+
+    {/* Term Distribution Chart */}
+    {chartData.termDistribution && chartData.termDistribution.length > 0 && (
+      <ModernFeeChart 
+        data={chartData.termDistribution} 
+        type="composed" 
+        title="Term-wise Distribution" 
+        height={400} 
+      />
+    )}
+
+    {/* Recent School Fees */}
+    <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-2xl">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-2xl font-bold text-gray-900">Recent School Fees</h3>
+          <p className="text-gray-600 mt-1 text-sm">Latest 5 fee records updated</p>
+        </div>
+        <button 
+          onClick={() => {
+            setView('fees');
+            loadSchoolFees(1);
+          }} 
+          className="px-4 py-2 text-blue-600 font-bold text-base flex items-center gap-2 hover:text-blue-800 transition-colors"
+        >
+          View All <FiChevronRight />
+        </button>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Student</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Form/Term</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Total</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Paid</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Balance</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Status</th>
+              <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Last Updated</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {schoolFees.slice(0, 5).map(fee => (
+              <tr key={fee.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="font-bold text-gray-900">#{fee.admissionNumber}</div>
+                  {fee.student && (
+                    <div className="text-gray-600 text-sm">
+                      {fee.student.firstName} {fee.student.lastName}
+                    </div>
+                  )}
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-800">{fee.form}</span>
+                    <span className="text-gray-500 text-sm">
+                      {fee.term} • {fee.academicYear}
+                    </span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="font-bold text-gray-900">{formatCurrency(fee.amount)}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="font-bold text-emerald-700">{formatCurrency(fee.amountPaid)}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className={`font-bold ${fee.balance > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                    {formatCurrency(fee.balance)}
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                    fee.paymentStatus === 'paid' 
+                      ? 'bg-green-100 text-green-800' 
+                      : fee.paymentStatus === 'partial' 
+                      ? 'bg-amber-100 text-amber-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {fee.paymentStatus.toUpperCase()}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-500">
+                    {fee.updatedAt ? new Date(fee.updatedAt).toLocaleDateString() : 'N/A'}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        {schoolFees.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No fee records found. Upload fees to get started.</p>
           </div>
         )}
+      </div>
+    </div>
 
+    {/* Quick Actions */}
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+      <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
+      <div className="flex flex-wrap gap-4">
+        <button
+          onClick={() => setView('upload')}
+          className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all"
+        >
+          <FiUpload /> Upload New Fees
+        </button>
+        <button
+          onClick={exportFeesToCSV}
+          disabled={schoolFees.length === 0}
+          className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+        >
+          <FiDownload /> Export Data
+        </button>
+        <button
+          onClick={() => {
+            setLoading(true);
+            Promise.all([loadSchoolFees(), loadStatistics()]);
+          }}
+          disabled={loading}
+          className="px-4 py-3 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl font-bold flex items-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+        >
+          {loading ? <CircularProgress size={16} /> : <FiRefreshCw />}
+          {loading ? 'Refreshing...' : 'Refresh Data'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
         {/* Upload View */}
         {view === 'upload' && (
           <div className="space-y-8">
@@ -2662,13 +3276,42 @@ export default function ModernSchoolFeesManagement() {
                 </div>
               </div>
             </div>
-
-            {loading ? (
-              <div className="text-center py-20">
-                <ModernLoadingSpinner message="Loading school fees..." size="large" />
-              </div>
-            ) : (
-              <>
+{loading ? (
+  <div className="text-center py-20 flex flex-col items-center gap-4">
+    <div className="relative inline-flex">
+      {/* Track: Subtle background ring for 3D depth */}
+      <CircularProgress
+        variant="determinate"
+        value={100}
+        size={70}
+        thickness={5}
+        sx={{ color: (theme) => theme.palette.grey[200] }}
+      />
+      {/* Modern Spinner: Glowing, rounded, and snappy */}
+      <CircularProgress
+        variant="indeterminate"
+        disableShrink
+        size={70}
+        thickness={5}
+        sx={{
+          position: 'absolute',
+          left: 0,
+          color: 'primary.main',
+          animationDuration: '750ms', // Faster 2026 performance feel
+          '& .MuiCircularProgress-circle': {
+            strokeLinecap: 'round', // Modern rounded edges
+          },
+          filter: 'drop-shadow(0 0 4px rgba(25, 118, 210, 0.3))', // Subtle glow
+        }}
+      />
+    </div>
+    <p className="text-gray-500 font-medium tracking-wide animate-pulse">
+      Loading school fees...
+    </p>
+  </div>
+) 
+ : (
+           <>
                 {schoolFees.length > 0 ? (
                   <>
                     <div className="bg-white rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
@@ -2682,133 +3325,283 @@ export default function ModernSchoolFeesManagement() {
                           </div>
                         </div>
                       </div>
+<div className="overflow-x-auto rounded-3xl border border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-300">
+  <table className="w-full min-w-[800px]">
+    <thead className="bg-gradient-to-r from-slate-50 to-gray-50">
+      <tr>
+        <th className="sticky top-0 z-10 px-6 py-5 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <FiUser className="w-3.5 h-3.5 opacity-70" />
+            Student
+          </div>
+        </th>
+        <th className="sticky top-0 z-10 px-6 py-5 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <FiBookOpen className="w-3.5 h-3.5 opacity-70" />
+            Form/Term
+          </div>
+        </th>
+        <th className="sticky top-0 z-10 px-6 py-5 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <FiDollarSign className="w-3.5 h-3.5 opacity-70" />
+            Amount Details
+          </div>
+        </th>
+        <th className="sticky top-0 z-10 px-6 py-5 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <FiCheckCircle className="w-3.5 h-3.5 opacity-70" />
+            Status
+          </div>
+        </th>
+        <th className="sticky top-0 z-10 px-6 py-5 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    
+    <tbody className="divide-y divide-gray-100">
+      {schoolFees.map(fee => (
+        <tr 
+          key={fee.id} 
+          className="group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-emerald-50/30 transition-all duration-300"
+        >
+          {/* Student */}
+          <td className="px-6 py-5">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <FiUser className="w-5 h-5 text-white" />
+                </div>
+                <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                  fee.paymentStatus === 'paid' ? 'bg-emerald-500' : 
+                  fee.paymentStatus === 'partial' ? 'bg-amber-500' : 'bg-rose-500'
+                }`} />
+              </div>
+              
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {fee.student?.firstName || 'Unknown'} {fee.student?.lastName || 'Student'}
+                  </h4>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-full">
+                    #{fee.admissionNumber}
+                  </span>
+                </div>
+                {fee.student?.email && (
+                  <div className="text-sm text-gray-500 truncate max-w-[240px] mt-1 flex items-center gap-1">
+                    <FiMail className="w-3 h-3" />
+                    {fee.student.email}
+                  </div>
+                )}
+              </div>
+            </div>
+          </td>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full min-w-[768px]">
-                          <thead className="bg-gray-100">
-                            <tr>
-                              <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Student
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Form/Term
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Amount Details
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th className="px-8 py-5 text-left text-sm font-bold text-gray-700 uppercase tracking-wider">
-                                Actions
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {schoolFees.map(fee => (
-                              <tr key={fee.id} className="hover:bg-gray-50 transition">
-                                {/* Student */}
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
-                                      <FiUser className="text-sm" />
-                                    </div>
-                                    <div>
-                                      <div className="text-sm font-medium text-gray-900">
-                                        #{fee.admissionNumber}
-                                      </div>
-                                      {fee.student && (
-                                        <div className="text-xs text-gray-500">
-                                          {fee.student.firstName} {fee.student.lastName}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </td>
+          {/* Form/Term */}
+          <td className="px-6 py-5">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold ${getFormBadgeColor(fee.form)}`}>
+                  {fee.form}
+                </span>
+                <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {fee.term}
+                </span>
+              </div>
+              <div className="text-sm text-gray-600 flex items-center gap-1.5">
+                <FiCalendar className="w-3.5 h-3.5" />
+                {fee.academicYear}
+              </div>
+            </div>
+          </td>
 
-                                {/* Form/Term */}
-                                <td className="px-6 py-4">
-                                  <div className="space-y-0.5">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {fee.form}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {fee.term} • {fee.academicYear}
-                                    </div>
-                                  </div>
-                                </td>
+          {/* Amounts */}
+          <td className="px-6 py-5">
+            <div className="space-y-3">
+              {/* Total Amount */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-slate-50 to-gray-50">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-slate-200">
+                    <FiDollarSign className="w-3 h-3 text-slate-700" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">Total</span>
+                </div>
+                <span className="text-base font-bold text-gray-900">{formatCurrency(fee.amount)}</span>
+              </div>
 
-                                {/* Amounts */}
-                                <td className="px-6 py-4">
-                                  <div className="space-y-0.5 text-sm">
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">Total</span>
-                                      <span className="font-medium text-gray-900">
-                                        {formatCurrency(fee.amount)}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">Paid</span>
-                                      <span className="font-medium text-emerald-600">
-                                        {formatCurrency(fee.amountPaid)}
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                      <span className="text-gray-500">Balance</span>
-                                      <span className={`font-medium ${fee.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                        {formatCurrency(fee.balance)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </td>
+              {/* Paid Amount */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-50/50 to-green-50/50">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-emerald-100">
+                    <FiCheckCircle className="w-3 h-3 text-emerald-700" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">Paid</span>
+                </div>
+                <span className="text-base font-bold text-emerald-700">{formatCurrency(fee.amountPaid)}</span>
+              </div>
 
-                                {/* Status */}
-                                <td className="px-6 py-4">
-                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
-                                    fee.paymentStatus === 'paid'
-                                      ? 'bg-green-50 text-green-700'
-                                      : fee.paymentStatus === 'partial'
-                                      ? 'bg-amber-50 text-amber-700'
-                                      : 'bg-red-50 text-red-700'
-                                  }`}>
-                                    {fee.paymentStatus.toUpperCase()}
-                                  </span>
+              {/* Balance */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-rose-50/50 to-red-50/50">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-rose-100">
+                    <FiAlertCircle className="w-3 h-3 text-rose-700" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">Balance</span>
+                </div>
+                <span className={`text-base font-bold ${fee.balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                  {formatCurrency(fee.balance)}
+                </span>
+              </div>
+            </div>
+          </td>
 
-                                  {fee.dueDate && (
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      Due {new Date(fee.dueDate).toLocaleDateString()}
-                                    </div>
-                                  )}
-                                </td>
+          {/* Status */}
+          <td className="px-6 py-5">
+            <div className="space-y-3">
+              <div>
+                <span className={`inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm ${
+                  fee.paymentStatus === 'paid'
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
+                    : fee.paymentStatus === 'partial'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                    : 'bg-gradient-to-r from-rose-500 to-red-600 text-white'
+                }`}>
+                  {fee.paymentStatus.toUpperCase()}
+                </span>
+              </div>
+              
+              {fee.dueDate && (
+                <div className="text-xs text-gray-600 bg-gray-100 p-2.5 rounded-lg">
+                  <div className="flex items-center gap-1.5">
+                    <FiClock className="w-3.5 h-3.5" />
+                    <span className="font-medium">Due:</span>
+                    <span>{new Date(fee.dueDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </td>
 
-                                {/* Actions */}
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-1.5">
-                                    <button
-                                      onClick={() => viewFeeDetails(fee)}
-                                      className="px-2.5 py-1.5 text-xs rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
-                                    >
-                                      View
-                                    </button>
-                                    <button
-                                      onClick={() => editFee(fee)}
-                                      className="px-2.5 py-1.5 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete('fee', fee.id, `Fee for ${fee.admissionNumber}`)}
-                                      className="px-2.5 py-1.5 text-xs rounded-md bg-red-50 text-red-700 hover:bg-red-100 transition"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+          {/* Actions */}
+          <td className="px-6 py-5">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => viewFeeDetails(fee)}
+                className="group/btn flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 hover:text-blue-800 font-semibold text-sm transition-all duration-300 shadow-sm hover:shadow"
+              >
+                <FiEye className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                View
+              </button>
+              <button
+                onClick={() => editFee(fee)}
+                className="group/btn flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 text-emerald-700 hover:text-emerald-800 font-semibold text-sm transition-all duration-300 shadow-sm hover:shadow"
+              >
+                <FiEdit className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete('fee', fee.id, `Fee for ${fee.admissionNumber}`)}
+                className="group/btn flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-50 to-red-100 hover:from-rose-100 hover:to-red-200 text-rose-700 hover:text-rose-800 font-semibold text-sm transition-all duration-300 shadow-sm hover:shadow"
+              >
+                <FiTrash2 className="w-3.5 h-3.5 group-hover/btn:scale-110 transition-transform" />
+                Delete
+              </button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  {/* Mobile Responsive View */}
+  <div className="lg:hidden p-6 space-y-4">
+    {schoolFees.map(fee => (
+      <div key={fee.id} className="bg-gradient-to-r from-slate-50 to-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <FiUser className="w-5 h-5 text-white" />
+              </div>
+              <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                fee.paymentStatus === 'paid' ? 'bg-emerald-500' : 
+                fee.paymentStatus === 'partial' ? 'bg-amber-500' : 'bg-rose-500'
+              }`} />
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900">
+                {fee.student?.firstName || 'Unknown'} {fee.student?.lastName || 'Student'}
+              </h4>
+              <p className="text-xs text-gray-500">#{fee.admissionNumber}</p>
+            </div>
+          </div>
+          <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold ${
+            fee.paymentStatus === 'paid' ? 'bg-emerald-500 text-white' :
+            fee.paymentStatus === 'partial' ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
+          }`}>
+            {fee.paymentStatus.toUpperCase()}
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="p-3 rounded-xl bg-slate-50">
+            <p className="text-xs text-gray-500 mb-1">Form/Term</p>
+            <div className="space-y-1">
+              <span className={`text-sm font-bold ${getFormTextColor(fee.form)}`}>
+                {fee.form} • {fee.term}
+              </span>
+              <div className="text-xs text-gray-600">{fee.academicYear}</div>
+            </div>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50">
+            <p className="text-xs text-gray-500 mb-1">Due Date</p>
+            <div className="text-sm font-bold text-gray-800">
+              {fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : 'No due date'}
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-3 mb-4">
+          <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-slate-50 to-gray-50">
+            <span className="text-sm font-medium text-gray-600">Total</span>
+            <span className="text-lg font-bold text-gray-900">{formatCurrency(fee.amount)}</span>
+          </div>
+          <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-emerald-50/50 to-green-50/50">
+            <span className="text-sm font-medium text-gray-600">Paid</span>
+            <span className="text-lg font-bold text-emerald-700">{formatCurrency(fee.amountPaid)}</span>
+          </div>
+          <div className="flex justify-between items-center p-3 rounded-xl bg-gradient-to-r from-rose-50/50 to-red-50/50">
+            <span className="text-sm font-medium text-gray-600">Balance</span>
+            <span className={`text-lg font-bold ${fee.balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+              {formatCurrency(fee.balance)}
+            </span>
+          </div>
+        </div>
+        
+        <div className="flex gap-2">
+          <button
+            onClick={() => viewFeeDetails(fee)}
+            className="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold text-sm"
+          >
+            View Details
+          </button>
+          <button
+            onClick={() => editFee(fee)}
+            className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-semibold text-sm"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete('fee', fee.id, `Fee for ${fee.admissionNumber}`)}
+            className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-red-700 text-white rounded-xl font-semibold text-sm"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
                     </div>
 
                     {/* Pagination */}
@@ -3052,6 +3845,18 @@ export default function ModernSchoolFeesManagement() {
         onConfirm={handleStrategyConfirm}
         loading={loading}
       />
+<FeeDuplicateValidationModal
+  open={showValidationModal}
+  onClose={() => setShowValidationModal(false)}
+  duplicates={duplicates}
+  onProceed={proceedWithUpload}
+  loading={uploading}
+  uploadType={uploadStrategy?.uploadType}
+  selectedForm={uploadStrategy?.selectedForm}
+  term={uploadStrategy?.term}
+  academicYear={uploadStrategy?.academicYear}
+  showNotification={showNotification}
+/>
 
       <DuplicateValidationModal
         open={showValidationModal}

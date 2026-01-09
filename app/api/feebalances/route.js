@@ -5,170 +5,203 @@ import { prisma } from '../../../libs/prisma';
 
 // ========== HELPER FUNCTIONS ==========
 
-// Helper to parse dates consistently
+// Enhanced date parsing
 const parseDate = (dateStr) => {
   if (!dateStr) return null;
-  
   const str = String(dateStr).trim();
   
-  // Reject extended year formats
-  if (str.match(/^[+-]\d{6}/)) return null;
-  
-  // Try Excel serial number (dates are stored as numbers in Excel)
+  // Try Excel serial number
   if (!isNaN(str) && Number(str) > 0) {
     const excelDate = Number(str);
-    // Check if it's a reasonable Excel date (between 1900 and 2100)
     if (excelDate > 0 && excelDate < 50000) {
       const date = new Date((excelDate - 25569) * 86400 * 1000);
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear();
-        if (year >= 1900 && year <= 2100) {
-          return date;
-        }
+        if (year >= 1900 && year <= 2100) return date;
       }
     }
   }
   
-  // Try common date formats
-  const dateFormats = [
-    // ISO format
-    () => {
-      const date = new Date(str);
-      return !isNaN(date.getTime()) && str.includes('-') ? date : null;
-    },
-    
-    // DD/MM/YYYY or DD-MM-YYYY
-    () => {
-      const match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-      if (match) {
-        const day = parseInt(match[1]);
-        const month = parseInt(match[2]) - 1;
-        const year = parseInt(match[3]);
-        const date = new Date(year, month, day);
-        return !isNaN(date.getTime()) ? date : null;
-      }
-      return null;
-    },
-    
-    // MM/DD/YYYY or MM-DD-YYYY
-    () => {
-      const match = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-      if (match) {
-        const month = parseInt(match[1]) - 1;
-        const day = parseInt(match[2]);
-        const year = parseInt(match[3]);
-        const date = new Date(year, month, day);
-        return !isNaN(date.getTime()) ? date : null;
-      }
-      return null;
-    },
-    
-    // YYYY/MM/DD or YYYY-MM-DD
-    () => {
-      const match = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-      if (match) {
-        const year = parseInt(match[1]);
-        const month = parseInt(match[2]) - 1;
-        const day = parseInt(match[3]);
-        const date = new Date(year, month, day);
-        return !isNaN(date.getTime()) ? date : null;
-      }
-      return null;
-    },
-    
-    // Text dates like "15 Jan 2024"
-    () => {
-      const date = new Date(str);
-      return !isNaN(date.getTime()) ? date : null;
-    }
-  ];
-  
-  for (const format of dateFormats) {
-    const date = format();
-    if (date) {
-      const year = date.getFullYear();
-      if (year >= 1900 && year <= 2100) {
-        return date;
-      }
-    }
-  }
+  // Try ISO format
+  const date = new Date(str);
+  if (!isNaN(date.getTime())) return date;
   
   return null;
 };
 
-// Normalize form values
+// Enhanced form normalization with better logging
 const normalizeForm = (formValue) => {
-  if (!formValue) return null;
+  if (!formValue) {
+    console.warn('⚠️ No form value provided to normalizeForm');
+    return null;
+  }
   
-  const str = String(formValue).toLowerCase().trim();
+  const str = String(formValue).trim();
+  const original = str; // Keep for debugging
   
   // Handle numeric forms
   if (/^\d+$/.test(str)) {
     const num = parseInt(str);
     if (num >= 1 && num <= 4) {
+      console.log(`✅ Numeric form ${num} normalized to Form ${num}`);
+      return `Form ${num}`;
+    }
+  }
+  
+  // Handle "Form X" variations
+  const formMatch = str.match(/form[\s_-]?(\d+)/i);
+  if (formMatch) {
+    const num = parseInt(formMatch[1]);
+    if (num >= 1 && num <= 4) {
+      console.log(`✅ Form pattern matched: ${original} -> Form ${num}`);
       return `Form ${num}`;
     }
   }
   
   const formMap = {
+    // Form 1 variations
     'form1': 'Form 1',
     'form 1': 'Form 1',
     '1': 'Form 1',
+    'one': 'Form 1',
+    'f1': 'Form 1',
+    'class 1': 'Form 1',
+    'grade 1': 'Form 1',
+    'std 1': 'Form 1',
+    'standard 1': 'Form 1',
+    
+    // Form 2 variations
     'form2': 'Form 2',
     'form 2': 'Form 2',
     '2': 'Form 2',
+    'two': 'Form 2',
+    'f2': 'Form 2',
+    'class 2': 'Form 2',
+    'grade 2': 'Form 2',
+    'std 2': 'Form 2',
+    'standard 2': 'Form 2',
+    
+    // Form 3 variations
     'form3': 'Form 3',
     'form 3': 'Form 3',
     '3': 'Form 3',
+    'three': 'Form 3',
+    'f3': 'Form 3',
+    'class 3': 'Form 3',
+    'grade 3': 'Form 3',
+    'std 3': 'Form 3',
+    'standard 3': 'Form 3',
+    
+    // Form 4 variations
     'form4': 'Form 4',
     'form 4': 'Form 4',
     '4': 'Form 4',
-    'f1': 'Form 1',
-    'f2': 'Form 2',
-    'f3': 'Form 3',
-    'f4': 'Form 4'
+    'four': 'Form 4',
+    'f4': 'Form 4',
+    'class 4': 'Form 4',
+    'grade 4': 'Form 4',
+    'std 4': 'Form 4',
+    'standard 4': 'Form 4'
   };
   
-  return formMap[str] || formValue.charAt(0).toUpperCase() + formValue.slice(1).toLowerCase();
+  const normalized = formMap[str.toLowerCase()];
+  if (normalized) {
+    console.log(`✅ Form mapped: ${original} -> ${normalized}`);
+  } else {
+    console.warn(`❌ Form not recognized: ${original}`);
+  }
+  
+  return normalized || null;
 };
 
 // Normalize term values
 const normalizeTerm = (termValue) => {
-  if (!termValue) return null;
-  const str = String(termValue).trim();
+  if (!termValue) {
+    console.warn('⚠️ No term value provided');
+    return null;
+  }
+  
+  const str = String(termValue).trim().toLowerCase();
+  console.log(`🔍 Term normalization input: "${termValue}" -> "${str}"`);
+  
   const termMap = {
     'term1': 'Term 1',
     'term 1': 'Term 1',
     '1': 'Term 1',
     'first term': 'Term 1',
+    'first': 'Term 1',
     'term2': 'Term 2',
     'term 2': 'Term 2',
     '2': 'Term 2',
     'second term': 'Term 2',
+    'second': 'Term 2',
     'term3': 'Term 3',
     'term 3': 'Term 3',
     '3': 'Term 3',
-    'third term': 'Term 3'
+    'third term': 'Term 3',
+    'third': 'Term 3'
   };
-  return termMap[str.toLowerCase()] || str;
+  
+  const normalized = termMap[str] || str;
+  console.log(`✅ Term normalized: "${termValue}" -> "${normalized}"`);
+  return normalized;
 };
 
-// Normalize academic year
+// Normalize academic year with validation
+// Normalize academic year with validation
 const normalizeAcademicYear = (yearValue) => {
-  if (!yearValue) return null;
+  if (!yearValue) {
+    console.warn('⚠️ No academic year provided');
+    return null;
+  }
+  
   const str = String(yearValue).trim();
+  console.log(`🔍 Academic year input: "${str}"`);
   
   // Check if already in format 2024/2025
   if (/^\d{4}\/\d{4}$/.test(str)) {
-    return str;
+    const [year1, year2] = str.split('/').map(Number);
+    if (year2 === year1 + 1) {
+      console.log(`✅ Academic year already in correct format: ${str}`);
+      return str;
+    }
   }
   
-  // Check if single year like 2024
+  // Check if single year like 2024 or 2026
   if (/^\d{4}$/.test(str)) {
     const year = parseInt(str);
-    return `${year}/${year + 1}`;
+    if (year >= 1900 && year <= 2100) {
+      const result = `${year}/${year + 1}`;
+      console.log(`✅ Single year converted: ${str} -> ${result}`);
+      return result;
+    }
   }
   
+  // Try to extract years from other formats (e.g., "2026/2027")
+  const yearMatch = str.match(/(\d{4})[\/\-](\d{4})/);
+  if (yearMatch) {
+    const year1 = parseInt(yearMatch[1]);
+    const year2 = parseInt(yearMatch[2]);
+    if (year1 >= 1900 && year1 <= 2100 && year2 >= 1900 && year2 <= 2100) {
+      const result = `${year1}/${year2}`;
+      console.log(`✅ Extracted years: ${str} -> ${result}`);
+      return result;
+    }
+  }
+  
+  // Try to fix malformed years like "2026/2027" (should already match above)
+  const malformedMatch = str.match(/(\d{4})\s*\/\s*(\d{4})/);
+  if (malformedMatch) {
+    const year1 = parseInt(malformedMatch[1]);
+    const year2 = parseInt(malformedMatch[2]);
+    if (year1 >= 1900 && year1 <= 2100 && year2 >= 1900 && year2 <= 2100) {
+      const result = `${year1}/${year2}`;
+      console.log(`✅ Fixed malformed year: ${str} -> ${result}`);
+      return result;
+    }
+  }
+  
+  console.warn(`❌ Could not normalize academic year: ${str}`);
   return str;
 };
 
@@ -178,7 +211,6 @@ const parseAmount = (value) => {
     return 0;
   }
   
-  // If it's already a number
   if (typeof value === 'number') {
     return Math.round(value * 100) / 100;
   }
@@ -187,13 +219,12 @@ const parseAmount = (value) => {
   
   // Handle currency symbols and formatting
   const cleaned = str
-    .replace(/[^\d.-]/g, '')  // Remove all non-numeric except dots and minus
-    .replace(/(\..*)\./g, '$1'); // Remove multiple dots
+    .replace(/[^\d.-]/g, '')
+    .replace(/(\..*)\./g, '$1');
   
   const parsed = parseFloat(cleaned);
   
   if (isNaN(parsed)) {
-    // Try to extract numbers from strings like "KSH 1,500.00"
     const numberMatch = str.match(/(\d[\d,]*\.?\d*)/);
     if (numberMatch) {
       const numberStr = numberMatch[0].replace(/,/g, '');
@@ -206,11 +237,13 @@ const parseAmount = (value) => {
   return Math.round(parsed * 100) / 100;
 };
 
-// Calculate balance automatically
+// Calculate balance
 const calculateBalance = (amount, amountPaid) => {
   const total = parseAmount(amount);
   const paid = parseAmount(amountPaid);
-  return Math.max(0, total - paid);
+  const balance = Math.max(0, total - paid);
+  console.log(`💰 Balance calculation: ${total} - ${paid} = ${balance}`);
+  return balance;
 };
 
 // Determine payment status
@@ -225,548 +258,158 @@ const determinePaymentStatus = (amount, amountPaid) => {
 
 // ========== VALIDATION FUNCTIONS ==========
 
-// Validate and normalize form selection
-const validateFormSelection = (forms) => {
-  if (!forms || forms.length === 0) {
-    throw new Error('Please select at least one form to upload');
-  }
-  
-  const validForms = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
-  const normalizedForms = [];
-  
-  forms.forEach(form => {
-    const normalized = normalizeForm(form);
-    if (validForms.includes(normalized)) {
-      normalizedForms.push(normalized);
-    }
-  });
-  
-  if (normalizedForms.length === 0) {
-    throw new Error('Please select valid forms (Form 1, Form 2, Form 3, Form 4)');
-  }
-  
-  return normalizedForms;
-};
-
-// Validate fee balance data
+// Enhanced validation with detailed logging
 const validateFeeBalance = (feeBalance, index) => {
   const errors = [];
+  const warnings = [];
+  
+  console.log(`\n🔍 Validating row ${index + 2}:`, feeBalance);
   
   // Admission number
   if (!feeBalance.admissionNumber) {
     errors.push(`Row ${index + 2}: Admission number is required`);
-  } else if (!/^\d{4,10}$/.test(feeBalance.admissionNumber)) {
-    errors.push(`Row ${index + 2}: Admission number must be 4-10 digits (got: ${feeBalance.admissionNumber})`);
+    console.error(`❌ Row ${index + 2}: Missing admission number`);
+  } else {
+    const admissionStr = String(feeBalance.admissionNumber).trim();
+    if (!/^\d{4,10}$/.test(admissionStr)) {
+      errors.push(`Row ${index + 2}: Admission number must be 4-10 digits (got: ${admissionStr})`);
+      console.error(`❌ Row ${index + 2}: Invalid admission number format: ${admissionStr}`);
+    } else {
+      feeBalance.admissionNumber = admissionStr;
+      console.log(`✅ Row ${index + 2}: Valid admission number: ${admissionStr}`);
+    }
   }
   
-  // Form validation
+  // Form validation with enhanced logging
+  const originalForm = feeBalance.form;
   const normalizedForm = normalizeForm(feeBalance.form);
   const validForms = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
   
-  if (!validForms.includes(normalizedForm)) {
-    errors.push(`Row ${index + 2}: Form must be one of: ${validForms.join(', ')} (got: ${feeBalance.form})`);
+  if (!normalizedForm) {
+    errors.push(`Row ${index + 2}: Form is required (got: ${originalForm || 'empty'})`);
+    console.error(`❌ Row ${index + 2}: Form normalization failed: ${originalForm} -> null`);
+  } else if (!validForms.includes(normalizedForm)) {
+    errors.push(`Row ${index + 2}: Form must be one of: ${validForms.join(', ')} (got: ${originalForm}, normalized: ${normalizedForm})`);
+    console.error(`❌ Row ${index + 2}: Invalid form: ${originalForm} -> ${normalizedForm}`);
+  } else {
+    feeBalance.form = normalizedForm;
+    console.log(`✅ Row ${index + 2}: Form validated: ${originalForm} -> ${normalizedForm}`);
   }
   
-  // Update with normalized form
-  feeBalance.form = normalizedForm;
-  
   // Term validation
+  const originalTerm = feeBalance.term;
   const normalizedTerm = normalizeTerm(feeBalance.term);
   const validTerms = ['Term 1', 'Term 2', 'Term 3'];
   
-  if (!validTerms.includes(normalizedTerm)) {
-    errors.push(`Row ${index + 2}: Term must be one of: ${validTerms.join(', ')} (got: ${feeBalance.term})`);
+  if (!normalizedTerm) {
+    errors.push(`Row ${index + 2}: Term is required (got: ${originalTerm || 'empty'})`);
+    console.error(`❌ Row ${index + 2}: Term normalization failed: ${originalTerm} -> null`);
+  } else if (!validTerms.includes(normalizedTerm)) {
+    warnings.push(`Row ${index + 2}: Term might be invalid: ${normalizedTerm} (expected: ${validTerms.join(', ')})`);
+    console.warn(`⚠️ Row ${index + 2}: Unusual term: ${originalTerm} -> ${normalizedTerm}`);
   }
   
   feeBalance.term = normalizedTerm;
   
   // Academic year validation
-  if (!feeBalance.academicYear) {
-    errors.push(`Row ${index + 2}: Academic year is required`);
+  const originalYear = feeBalance.academicYear;
+  const normalizedYear = normalizeAcademicYear(feeBalance.academicYear);
+  
+  if (!normalizedYear) {
+    errors.push(`Row ${index + 2}: Academic year is required (got: ${originalYear || 'empty'})`);
+    console.error(`❌ Row ${index + 2}: Academic year normalization failed: ${originalYear} -> null`);
   } else {
-    feeBalance.academicYear = normalizeAcademicYear(feeBalance.academicYear);
+    feeBalance.academicYear = normalizedYear;
+    console.log(`✅ Row ${index + 2}: Academic year: ${originalYear} -> ${normalizedYear}`);
   }
   
   // Amount validation
   const amount = parseAmount(feeBalance.amount);
   if (amount < 0) {
-    errors.push(`Row ${index + 2}: Amount cannot be negative`);
+    errors.push(`Row ${index + 2}: Amount cannot be negative (got: ${feeBalance.amount})`);
+    console.error(`❌ Row ${index + 2}: Negative amount: ${feeBalance.amount}`);
   }
   
   const amountPaid = parseAmount(feeBalance.amountPaid);
   if (amountPaid < 0) {
-    errors.push(`Row ${index + 2}: Amount paid cannot be negative`);
+    errors.push(`Row ${index + 2}: Amount paid cannot be negative (got: ${feeBalance.amountPaid})`);
+    console.error(`❌ Row ${index + 2}: Negative amount paid: ${feeBalance.amountPaid}`);
   }
   
   if (amountPaid > amount) {
-    errors.push(`Row ${index + 2}: Amount paid (${amountPaid}) cannot be greater than total amount (${amount})`);
-  }
-  
-  // Due date validation
-  if (feeBalance.dueDate) {
-    const dueDate = new Date(feeBalance.dueDate);
-    if (isNaN(dueDate.getTime())) {
-      errors.push(`Row ${index + 2}: Invalid due date format`);
-    }
+    warnings.push(`Row ${index + 2}: Amount paid (${amountPaid}) is greater than total amount (${amount})`);
+    console.warn(`⚠️ Row ${index + 2}: Amount paid > total: ${amountPaid} > ${amount}`);
   }
   
   // Auto-calculate balance and status
+  feeBalance.amount = amount;
+  feeBalance.amountPaid = amountPaid;
   feeBalance.balance = calculateBalance(amount, amountPaid);
   feeBalance.paymentStatus = determinePaymentStatus(amount, amountPaid);
   
-  return { isValid: errors.length === 0, errors };
+  console.log(`✅ Row ${index + 2} validated:`, {
+    admission: feeBalance.admissionNumber,
+    form: feeBalance.form,
+    term: feeBalance.term,
+    year: feeBalance.academicYear,
+    amount: feeBalance.amount,
+    paid: feeBalance.amountPaid,
+    balance: feeBalance.balance,
+    status: feeBalance.paymentStatus
+  });
+  
+  return { 
+    isValid: errors.length === 0, 
+    errors: [...errors, ...warnings],
+    hasErrors: errors.length > 0,
+    hasWarnings: warnings.length > 0
+  };
 };
 
-// Check for duplicate fee balances
+// Check for duplicate fee balances (for validation)
 const checkDuplicateFeeBalances = async (feeBalances, targetForm = null, term = null, academicYear = null) => {
+  console.log(`\n🔍 Checking duplicates for overwrite:`, {
+    targetForm,
+    term,
+    academicYear,
+    feeCount: feeBalances.length
+  });
+  
   const admissionNumbers = feeBalances.map(f => f.admissionNumber);
   
   const whereClause = {
-    admissionNumber: { in: admissionNumbers }
-  };
-  
-  if (targetForm) whereClause.form = targetForm;
-  if (term) whereClause.term = term;
-  if (academicYear) whereClause.academicYear = academicYear;
-  
-  const existingFees = await prisma.feeBalance.findMany({
-    where: whereClause,
-    select: {
-      admissionNumber: true,
-      form: true,
-      term: true,
-      academicYear: true
-    }
-  });
-  
-  const duplicates = feeBalances
-    .map((fee, index) => {
-      const existing = existingFees.find(f => 
-        f.admissionNumber === fee.admissionNumber &&
-        f.form === (targetForm || fee.form) &&
-        f.term === (term || fee.term) &&
-        f.academicYear === (academicYear || fee.academicYear)
-      );
-      if (existing) {
-        return {
-          row: index + 2,
-          admissionNumber: fee.admissionNumber,
-          form: existing.form,
-          term: existing.term,
-          academicYear: existing.academicYear
-        };
-      }
-      return null;
-    })
-    .filter(dup => dup !== null);
-  
-  return duplicates;
-};
-
-// Check if students exist in database
-const checkStudentsExist = async (admissionNumbers, targetForm = null) => {
-  const whereClause = {
     admissionNumber: { in: admissionNumbers },
-    status: 'active'
+    isActive: true
   };
   
   if (targetForm) {
-    whereClause.form = targetForm;
-  }
-  
-  const existingStudents = await prisma.databaseStudent.findMany({
-    where: whereClause,
-    select: {
-      admissionNumber: true,
-      firstName: true,
-      lastName: true,
-      form: true
+    const normalizedTargetForm = normalizeForm(targetForm);
+    if (normalizedTargetForm) {
+      whereClause.form = normalizedTargetForm;
+      console.log(`🔍 Filtering by form: ${normalizedTargetForm}`);
     }
-  });
-  
-  const missingStudents = admissionNumbers.filter(num => 
-    !existingStudents.find(s => s.admissionNumber === num)
-  );
-  
-  return {
-    existingStudents,
-    missingStudents,
-    existingStudentMap: new Map(existingStudents.map(s => [s.admissionNumber, s]))
-  };
-};
-
-// ========== FILE PARSING FUNCTIONS ==========
-
-// Parse CSV files - handles files without form column by extracting from filename
-const parseFeeCSV = async (file, fileName = '') => {
-  try {
-    const text = await file.text();
-    
-    return await new Promise((resolve, reject) => {
-      parse(text, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          console.log('CSV Parsing - Raw headers:', Object.keys(results.data[0] || {}));
-          
-          // Try to extract form from filename
-          let extractedForm = null;
-          if (fileName.toLowerCase().includes('form_1') || fileName.toLowerCase().includes('form1')) {
-            extractedForm = 'Form 1';
-          } else if (fileName.toLowerCase().includes('form_2') || fileName.toLowerCase().includes('form2')) {
-            extractedForm = 'Form 2';
-          } else if (fileName.toLowerCase().includes('form_3') || fileName.toLowerCase().includes('form3')) {
-            extractedForm = 'Form 3';
-          } else if (fileName.toLowerCase().includes('form_4') || fileName.toLowerCase().includes('form4')) {
-            extractedForm = 'Form 4';
-          }
-          
-          const data = results.data
-            .map((row, index) => {
-              try {
-                // Function to find value with multiple possible keys
-                const findValue = (possibleKeys) => {
-                  for (const key of possibleKeys) {
-                    const value = row[key];
-                    if (value !== undefined && value !== null && value !== '') {
-                      return String(value).trim();
-                    }
-                  }
-                  return '';
-                };
-                
-                const admissionNumber = findValue([
-                  'admissionNumber', 'AdmissionNumber', 'Admission Number',
-                  'admission', 'Admission', 'ADMISSION',
-                  'admno', 'AdmNo', 'ADMNO',
-                  'StudentID', 'Student ID', 'studentid',
-                  'ID', 'Id', 'id'
-                ]);
-                
-                // Try to find form in row, otherwise use extracted form
-                let form = findValue([
-                  'form', 'Form', 'FORM', 
-                  'class', 'Class', 'CLASS', 
-                  'grade', 'Grade'
-                ]);
-                
-                // If form not found in row, use extracted form from filename
-                if (!form && extractedForm) {
-                  form = extractedForm;
-                }
-                
-                const term = findValue([
-                  'term', 'Term', 'TERM', 
-                  'semester', 'Semester', 
-                  'trimester'
-                ]);
-                
-                const academicYear = findValue([
-                  'academicYear', 'AcademicYear', 'Academic Year',
-                  'year', 'Year', 'YEAR',
-                  'session', 'Session',
-                  'academic_session', 'Academic Session'
-                ]);
-                
-                // Get amount and amountPaid directly
-                let amount = parseAmount(row['amount'] || row['Amount'] || 0);
-                let amountPaid = parseAmount(row['amountPaid'] || row['AmountPaid'] || 
-                                           row['paid'] || row['Paid'] || 0);
-                
-                // If not found with standard keys, check all columns
-                if (amount === 0) {
-                  for (const [key, value] of Object.entries(row)) {
-                    const keyLower = key.toLowerCase();
-                    if (keyLower.includes('amount') && !keyLower.includes('paid') && 
-                        !keyLower.includes('balance')) {
-                      amount = parseAmount(value);
-                      break;
-                    }
-                  }
-                }
-                
-                if (amountPaid === 0) {
-                  for (const [key, value] of Object.entries(row)) {
-                    const keyLower = key.toLowerCase();
-                    if (keyLower.includes('paid') || keyLower.includes('amountpaid')) {
-                      amountPaid = parseAmount(value);
-                      break;
-                    }
-                  }
-                }
-                
-                const dueDate = findValue([
-                  'dueDate', 'DueDate', 'Due Date',
-                  'duedate', 'Duedate',
-                  'deadline', 'Deadline'
-                ]);
-                
-                // Validate required fields
-                if (!admissionNumber) {
-                  console.warn(`Row ${index + 2} skipped - missing admission number`);
-                  return null;
-                }
-                
-                if (!form) {
-                  console.warn(`Row ${index + 2} skipped - missing form`);
-                  return null;
-                }
-                
-                if (!term) {
-                  console.warn(`Row ${index + 2} skipped - missing term`);
-                  return null;
-                }
-                
-                if (!academicYear) {
-                  console.warn(`Row ${index + 2} skipped - missing academic year`);
-                  return null;
-                }
-                
-                return {
-                  admissionNumber,
-                  form: normalizeForm(form),
-                  term,
-                  academicYear: normalizeAcademicYear(academicYear),
-                  amount,
-                  amountPaid,
-                  dueDate: parseDate(dueDate)
-                };
-              } catch (error) {
-                console.error(`Error parsing CSV row ${index}:`, error, row);
-                return null;
-              }
-            })
-            .filter(item => item !== null);
-          
-          console.log(`CSV Parsing - Found ${data.length} valid rows out of ${results.data.length}`);
-          
-          if (data.length === 0) {
-            reject(new Error(`No valid fee balance data found in CSV file. 
-Required columns: admission number, term, academic year, amount, amount paid.
-Optional: form (can be extracted from filename like form_1_fees.csv).
-Your file headers: ${Object.keys(results.data[0] || {}).join(', ')}`));
-            return;
-          }
-          
-          resolve(data);
-        },
-        error: reject
-      });
-    });
-    
-  } catch (error) {
-    console.error('CSV parsing error:', error);
-    throw new Error(`CSV parsing failed: ${error.message}`);
   }
-};
-
-// Parse Excel files - handles files without form column by extracting from filename
-const parseFeeExcel = async (file, fileName = '') => {
-  try {
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
-    
-    console.log('Excel Parsing - Columns:', Object.keys(jsonData[0] || {}));
-    
-    // Try to extract form from filename
-    let extractedForm = null;
-    if (fileName.toLowerCase().includes('form_1') || fileName.toLowerCase().includes('form1')) {
-      extractedForm = 'Form 1';
-    } else if (fileName.toLowerCase().includes('form_2') || fileName.toLowerCase().includes('form2')) {
-      extractedForm = 'Form 2';
-    } else if (fileName.toLowerCase().includes('form_3') || fileName.toLowerCase().includes('form3')) {
-      extractedForm = 'Form 3';
-    } else if (fileName.toLowerCase().includes('form_4') || fileName.toLowerCase().includes('form4')) {
-      extractedForm = 'Form 4';
+  
+  if (term) {
+    const normalizedTerm = normalizeTerm(term);
+    if (normalizedTerm) {
+      whereClause.term = normalizedTerm;
+      console.log(`🔍 Filtering by term: ${normalizedTerm}`);
     }
-    
-    const data = jsonData
-      .map((row, index) => {
-        try {
-          // Function to find value with multiple possible keys
-          const findValue = (possibleKeys) => {
-            for (const key of possibleKeys) {
-              // Direct key match
-              if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
-                return String(row[key]).trim();
-              }
-              
-              // Case-insensitive match
-              const lowerKey = key.toLowerCase();
-              for (const rowKey in row) {
-                if (rowKey.toLowerCase() === lowerKey) {
-                  const value = row[rowKey];
-                  if (value !== undefined && value !== null && value !== '') {
-                    return String(value).trim();
-                  }
-                }
-              }
-            }
-            return '';
-          };
-          
-          // Look for admission number
-          const admissionNumber = findValue([
-            'admissionNumber', 'AdmissionNumber', 'Admission Number',
-            'admission', 'Admission', 'ADMISSION',
-            'admno', 'AdmNo', 'ADMNO',
-            'StudentID', 'Student ID', 'studentid',
-            'ID', 'Id', 'id'
-          ]);
-          
-          // Look for form in row, otherwise use extracted form
-          let form = findValue([
-            'form', 'Form', 'FORM',
-            'class', 'Class', 'CLASS',
-            'grade', 'Grade', 'GRADE',
-            'level', 'Level', 'LEVEL'
-          ]);
-          
-          // If form not found in row, use extracted form from filename
-          if (!form && extractedForm) {
-            form = extractedForm;
-          }
-          
-          // Look for term
-          const term = findValue([
-            'term', 'Term', 'TERM',
-            'semester', 'Semester', 'SEMESTER',
-            'trimester', 'Trimester'
-          ]);
-          
-          // Look for academic year
-          const academicYear = findValue([
-            'academicYear', 'AcademicYear', 'Academic Year',
-            'year', 'Year', 'YEAR',
-            'session', 'Session', 'SESSION',
-            'academic_session', 'Academic Session',
-            'academic year', 'Academic Year'
-          ]);
-          
-          // Get amount and amountPaid directly
-          let amount = parseAmount(row['amount'] || row['Amount'] || 0);
-          let amountPaid = parseAmount(row['amountPaid'] || row['AmountPaid'] || 
-                                      row['paid'] || row['Paid'] || 0);
-          
-          // If not found with standard keys, check all columns
-          if (amount === 0) {
-            for (const [key, value] of Object.entries(row)) {
-              const keyLower = key.toLowerCase();
-              if (keyLower.includes('amount') && !keyLower.includes('paid') && 
-                  !keyLower.includes('balance')) {
-                amount = parseAmount(value);
-                break;
-              }
-            }
-          }
-          
-          if (amountPaid === 0) {
-            for (const [key, value] of Object.entries(row)) {
-              const keyLower = key.toLowerCase();
-              if (keyLower.includes('paid') || keyLower.includes('amountpaid')) {
-                amountPaid = parseAmount(value);
-                break;
-              }
-            }
-          }
-          
-          // Look for due date
-          const dueDate = findValue([
-            'dueDate', 'DueDate', 'Due Date',
-            'due_date', 'duedate', 'Duedate',
-            'deadline', 'Deadline'
-          ]);
-          
-          // Validate required fields
-          if (!admissionNumber) {
-            console.warn(`Row ${index + 2} skipped - missing admission number`);
-            return null;
-          }
-          
-          if (!form) {
-            console.warn(`Row ${index + 2} skipped - missing form`);
-            return null;
-          }
-          
-          if (!term) {
-            console.warn(`Row ${index + 2} skipped - missing term`);
-            return null;
-          }
-          
-          if (!academicYear) {
-            console.warn(`Row ${index + 2} skipped - missing academic year`);
-            return null;
-          }
-          
-          return {
-            admissionNumber,
-            form: normalizeForm(form),
-            term,
-            academicYear: normalizeAcademicYear(academicYear),
-            amount,
-            amountPaid,
-            dueDate: parseDate(dueDate)
-          };
-        } catch (error) {
-          console.error(`Error parsing Excel row ${index}:`, error, row);
-          return null;
-        }
-      })
-      .filter(item => item !== null);
-    
-    console.log(`Excel Parsing - Found ${data.length} valid rows out of ${jsonData.length}`);
-    
-    if (data.length === 0) {
-      throw new Error(`No valid fee balance data found in Excel file. 
-Required columns: admission number, term, academic year, amount, amount paid.
-Optional: form (can be extracted from filename like form_1_fees.xlsx).
-Your file headers: ${Object.keys(jsonData[0] || {}).join(', ')}`);
+  }
+  
+  if (academicYear) {
+    const normalizedYear = normalizeAcademicYear(academicYear);
+    if (normalizedYear) {
+      whereClause.academicYear = normalizedYear;
+      console.log(`🔍 Filtering by year: ${normalizedYear}`);
     }
-    
-    return data;
-    
-  } catch (error) {
-    console.error('Excel parsing error:', error);
-    throw new Error(`Excel parsing failed: ${error.message}`);
-  }
-};
-
-// ========== PROCESSING FUNCTIONS ==========
-
-// Process New Upload
-const processNewFeeUpload = async (fees, uploadBatchId, selectedForms, duplicateAction = 'skip') => {
-  const stats = {
-    totalRows: fees.length,
-    validRows: 0,
-    skippedRows: 0,
-    errorRows: 0,
-    errors: [],
-    createdFees: [],
-    updatedFees: []
-  };
-  
-  // Filter fees to only include selected forms
-  const filteredFees = fees.filter(fee => {
-    fee.form = normalizeForm(fee.form);
-    return selectedForms.includes(fee.form);
-  });
-  
-  if (filteredFees.length === 0) {
-    throw new Error(`No fees found for selected forms: ${selectedForms.join(', ')}`);
   }
   
-  // Check if students exist
-  const admissionNumbers = filteredFees.map(f => f.admissionNumber);
-  const studentCheck = await checkStudentsExist(admissionNumbers);
+  console.log('🔍 Query where clause:', whereClause);
   
-  // Check for existing fees
   const existingFees = await prisma.feeBalance.findMany({
-    where: {
-      admissionNumber: { in: admissionNumbers }
-    },
+    where: whereClause,
     select: {
       admissionNumber: true,
       form: true,
@@ -776,591 +419,688 @@ const processNewFeeUpload = async (fees, uploadBatchId, selectedForms, duplicate
     }
   });
   
+  console.log(`📊 Found ${existingFees.length} existing fees that will be overwritten`);
+  
+  // Map for quick lookup
   const existingFeeMap = new Map();
   existingFees.forEach(fee => {
     const key = `${fee.admissionNumber}_${fee.form}_${fee.term}_${fee.academicYear}`;
     existingFeeMap.set(key, fee);
   });
   
-  const seenFeeKeys = new Set();
-  const feesToCreate = [];
-  const feesToUpdate = [];
-  
-  for (const [index, fee] of filteredFees.entries()) {
-    const validation = validateFeeBalance(fee, index);
-    
-    if (!validation.isValid) {
-      stats.errorRows++;
-      stats.errors.push(...validation.errors);
-      continue;
-    }
-    
-    const admissionNumber = fee.admissionNumber;
-    
-    // Check if student exists
-    const student = studentCheck.existingStudentMap.get(admissionNumber);
-    if (!student) {
-      stats.errorRows++;
-      stats.errors.push(`Row ${index + 2}: Student ${admissionNumber} not found in database`);
-      continue;
-    }
-    
-    // Check if student form matches fee form
-    if (student.form !== fee.form) {
-      stats.skippedRows++;
-      stats.errors.push(`Row ${index + 2}: Student ${student.firstName} ${student.lastName} (${admissionNumber}) is in ${student.form}, not ${fee.form}. Skipped.`);
-      continue;
-    }
-    
-    const feeKey = `${admissionNumber}_${fee.form}_${fee.term}_${fee.academicYear}`;
-    
-    // Check duplicates within the file
-    if (seenFeeKeys.has(feeKey)) {
-      stats.skippedRows++;
-      stats.errors.push(`Row ${index + 2}: Duplicate fee entry in file: ${admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`);
-      continue;
-    }
-    seenFeeKeys.add(feeKey);
-    
-    // Check if fee already exists
-    const existingFee = existingFeeMap.get(feeKey);
-    
-    if (existingFee) {
-      if (duplicateAction === 'skip') {
-        stats.skippedRows++;
-        stats.errors.push(`Row ${index + 2}: Skipped - fee already exists for ${admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`);
-        continue;
-      } else if (duplicateAction === 'replace') {
-        feesToUpdate.push({
-          id: existingFee.id,
-          data: {
-            amount: fee.amount,
-            amountPaid: fee.amountPaid,
-            balance: fee.balance,
-            paymentStatus: fee.paymentStatus,
-            dueDate: fee.dueDate,
-            updatedAt: new Date(),
-            uploadBatchId: uploadBatchId
-          }
-        });
-        stats.updatedFees.push(fee);
+  const duplicates = feeBalances
+    .map((fee, index) => {
+      const feeTerm = term || normalizeTerm(fee.term);
+      const feeYear = academicYear || normalizeAcademicYear(fee.academicYear);
+      const feeForm = targetForm || normalizeForm(fee.form);
+      
+      const key = `${fee.admissionNumber}_${feeForm}_${feeTerm}_${feeYear}`;
+      
+      if (existingFeeMap.has(key)) {
+        const existing = existingFeeMap.get(key);
+        return {
+          row: index + 2,
+          admissionNumber: fee.admissionNumber,
+          form: existing.form,
+          term: existing.term,
+          academicYear: existing.academicYear,
+          feeId: existing.id
+        };
       }
-    } else {
-      feesToCreate.push({
-        admissionNumber: fee.admissionNumber,
-        form: fee.form,
-        term: fee.term,
-        academicYear: fee.academicYear,
-        amount: fee.amount,
-        amountPaid: fee.amountPaid,
-        balance: fee.balance,
-        paymentStatus: fee.paymentStatus,
-        dueDate: fee.dueDate,
-        uploadBatchId: uploadBatchId
-      });
-      stats.createdFees.push(fee);
-    }
-    
-    stats.validRows++;
-  }
+      return null;
+    })
+    .filter(dup => dup !== null);
   
-  // Execute database operations
-  if (feesToCreate.length > 0) {
-    try {
-      await prisma.feeBalance.createMany({
-        data: feesToCreate
-      });
-    } catch (error) {
-      console.error('Error creating fees:', error);
-      stats.errorRows += feesToCreate.length;
-      stats.errors.push(`Failed to create ${feesToCreate.length} fees: ${error.message}`);
-    }
-  }
-  
-  if (feesToUpdate.length > 0) {
-    for (const update of feesToUpdate) {
-      try {
-        await prisma.feeBalance.update({
-          where: { id: update.id },
-          data: update.data
-        });
-      } catch (error) {
-        console.error('Error updating fee:', error);
-        stats.errorRows++;
-        stats.errors.push(`Failed to update fee: ${error.message}`);
-      }
-    }
-  }
-  
-  return stats;
+  console.log(`🔍 Found ${duplicates.length} duplicates that will be replaced`);
+  return duplicates;
 };
 
-// Process Update Upload
-const processUpdateFeeUpload = async (fees, uploadBatchId, targetForm, term, academicYear) => {
+// Check if students exist in database with form validation
+const checkStudentsExist = async (admissionNumbers, targetForm = null, tx = prisma) => {
+  console.log(`\n🔍 Checking students exist:`, {
+    admissionCount: admissionNumbers.length,
+    targetForm
+  });
+  
+  const whereClause = {
+    admissionNumber: { in: admissionNumbers },
+    status: 'active'
+  };
+  
+  if (targetForm) {
+    const normalizedForm = normalizeForm(targetForm);
+    if (normalizedForm) {
+      whereClause.form = normalizedForm;
+    }
+  }
+  
+  const existingStudents = await tx.databaseStudent.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      admissionNumber: true,
+      firstName: true,
+      lastName: true,
+      form: true,
+      email: true
+    }
+  });
+  
+  console.log(`📊 Found ${existingStudents.length} existing students`);
+  
+  // Check for form mismatches
+  const missingStudents = [];
+  const formMismatchStudents = [];
+  
+  admissionNumbers.forEach(num => {
+    const student = existingStudents.find(s => s.admissionNumber === num);
+    if (!student) {
+      missingStudents.push(num);
+    } else if (targetForm && student.form !== targetForm) {
+      formMismatchStudents.push({
+        admissionNumber: num,
+        currentForm: student.form,
+        expectedForm: targetForm
+      });
+    }
+  });
+  
+  return {
+    existingStudents,
+    missingStudents,
+    formMismatchStudents,
+    existingStudentMap: new Map(existingStudents.map(s => [s.admissionNumber, s]))
+  };
+};
+
+// ========== FILE PARSING FUNCTIONS ==========
+
+// ========== UNIFIED PARSING STRATEGY ==========
+
+const parseFeeFile = async (file, uploadStrategy = null) => {
+  const fileName = file.name.toLowerCase();
+  const fileExtension = fileName.split('.').pop();
+  
+  if (fileExtension === 'csv') {
+    return await parseFeeCSV(file, uploadStrategy);
+  } else {
+    return await parseFeeExcel(file, uploadStrategy);
+  }
+};
+
+const parseFeeCSV = async (file, uploadStrategy) => {
+  try {
+    const text = await file.text();
+    
+    return await new Promise((resolve, reject) => {
+      parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => {
+          // SAME header normalization as student uploads
+          const headerMap = {
+            'admission no': 'admissionNumber',
+            'admission number': 'admissionNumber',
+            'adm no': 'admissionNumber',
+            'adm': 'admissionNumber',
+            'total amount': 'amount',
+            'amount': 'amount',
+            'fee amount': 'amount',
+            'paid amount': 'amountPaid',
+            'amount paid': 'amountPaid',
+            'paid': 'amountPaid',
+            'balance': 'balance',
+            'due date': 'dueDate',
+            'due': 'dueDate',
+            'term': 'term',
+            'academic year': 'academicYear',
+            'academic': 'academicYear',
+            'year': 'academicYear',
+            'form': 'form',
+            'class': 'form',
+            'grade': 'form'
+          };
+          return headerMap[header.toLowerCase()] || header;
+        },
+        complete: (results) => {
+          console.log('\n📄 CSV Parsing Results:');
+          console.log('Headers:', results.meta.fields);
+          console.log('Total rows:', results.data.length);
+          
+          if (uploadStrategy) {
+            console.log('Using upload strategy:', {
+              uploadType: uploadStrategy.uploadType,
+              selectedForm: uploadStrategy.selectedForm,
+              term: uploadStrategy.term,
+              academicYear: uploadStrategy.academicYear
+            });
+          }
+          
+          const data = results.data
+            .map((row, index) => {
+              try {
+                // CRITICAL: Use same validation as student uploads
+                const admissionNumber = String(
+                  row.admissionNumber || 
+                  row.admission || 
+                  row['Admission No'] || 
+                  row['Admission Number'] || 
+                  ''
+                ).trim();
+                
+                if (!admissionNumber) {
+                  console.warn(`Row ${index + 2}: Skipped - no admission number`);
+                  return null;
+                }
+                
+                // CRITICAL FIX: Always use strategy values, NOT file values
+                const parsedData = {
+                  admissionNumber,
+                  // ALWAYS use selectedForm from strategy
+                  form: uploadStrategy ? uploadStrategy.selectedForm : normalizeForm(row.form || 'Form 1'),
+                  
+                  // For NEW uploads: Extract from file (first row)
+                  // For UPDATE uploads: Use from strategy
+                  term: uploadStrategy?.uploadType === 'update' 
+                    ? (uploadStrategy.term || normalizeTerm(row.term || 'Term 1'))
+                    : normalizeTerm(row.term || 'Term 1'),
+                  
+                  academicYear: uploadStrategy?.uploadType === 'update'
+                    ? (uploadStrategy.academicYear || normalizeAcademicYear(row.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`))
+                    : normalizeAcademicYear(row.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`),
+                  
+                  amount: parseAmount(row.amount || 0),
+                  amountPaid: parseAmount(row.amountPaid || 0),
+                  dueDate: parseDate(row.dueDate)
+                };
+                
+                // Auto-calculate (SAME as student system)
+                parsedData.balance = calculateBalance(parsedData.amount, parsedData.amountPaid);
+                parsedData.paymentStatus = determinePaymentStatus(parsedData.amount, parsedData.amountPaid);
+                
+                console.log(`✅ Row ${index + 2} parsed:`, {
+                  admission: parsedData.admissionNumber,
+                  form: parsedData.form,
+                  term: parsedData.term,
+                  year: parsedData.academicYear,
+                  amount: parsedData.amount,
+                  paid: parsedData.amountPaid,
+                  balance: parsedData.balance,
+                  status: parsedData.paymentStatus
+                });
+                
+                return parsedData;
+              } catch (error) {
+                console.error(`❌ Error parsing CSV row ${index}:`, error, row);
+                return null;
+              }
+            })
+            .filter(item => item !== null);
+          
+          console.log(`\n✅ CSV Parsing Complete: ${data.length} valid rows`);
+          resolve(data);
+        },
+        error: reject
+      });
+    });
+  } catch (error) {
+    console.error('CSV parsing error:', error);
+    throw new Error(`CSV parsing failed: ${error.message}`);
+  }
+};
+
+const parseFeeExcel = async (file, uploadStrategy) => {
+  try {
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '', raw: false });
+    
+    console.log('\n📄 Excel Parsing Results:');
+    console.log('Total rows:', jsonData.length);
+    
+    if (uploadStrategy) {
+      console.log('Using upload strategy:', uploadStrategy);
+    }
+    
+    // SAME header normalization as CSV
+    const normalizeHeaders = (obj) => {
+      const newObj = {};
+      for (const key in obj) {
+        const keyLower = String(key).toLowerCase().trim();
+        if (keyLower.includes('admission')) {
+          newObj.admissionNumber = String(obj[key]).trim();
+        } else if (keyLower.includes('amount') && keyLower.includes('paid')) {
+          newObj.amountPaid = obj[key];
+        } else if (keyLower.includes('due')) {
+          newObj.dueDate = obj[key];
+        } else if (keyLower.includes('academic') || keyLower.includes('year')) {
+          newObj.academicYear = String(obj[key]).trim();
+        } else if (keyLower.includes('form') || keyLower.includes('class') || keyLower.includes('grade')) {
+          newObj.form = String(obj[key]).trim();
+        } else if (keyLower.includes('term')) {
+          newObj.term = String(obj[key]).trim();
+        } else if (keyLower.includes('amount') && !keyLower.includes('paid')) {
+          newObj.amount = obj[key];
+        } else if (keyLower.includes('balance')) {
+          newObj.balance = obj[key];
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+      return newObj;
+    };
+    
+    const data = jsonData
+      .map((row, index) => {
+        try {
+          const normalizedRow = normalizeHeaders(row);
+          
+          const admissionNumber = normalizedRow.admissionNumber || '';
+          if (!admissionNumber) {
+            console.warn(`Row ${index + 2}: Skipped - no admission number`);
+            return null;
+          }
+          
+          // CRITICAL: Same logic as CSV parsing
+          const parsedData = {
+            admissionNumber,
+            // ALWAYS use selectedForm from strategy
+            form: uploadStrategy ? uploadStrategy.selectedForm : normalizeForm(normalizedRow.form || 'Form 1'),
+            
+            term: uploadStrategy?.uploadType === 'update'
+              ? (uploadStrategy.term || normalizeTerm(normalizedRow.term || 'Term 1'))
+              : normalizeTerm(normalizedRow.term || 'Term 1'),
+            
+            academicYear: uploadStrategy?.uploadType === 'update'
+              ? (uploadStrategy.academicYear || normalizeAcademicYear(normalizedRow.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`))
+              : normalizeAcademicYear(normalizedRow.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`),
+            
+            amount: parseAmount(normalizedRow.amount || 0),
+            amountPaid: parseAmount(normalizedRow.amountPaid || 0),
+            dueDate: parseDate(normalizedRow.dueDate)
+          };
+          
+          // Auto-calculate (SAME as student system)
+          parsedData.balance = calculateBalance(parsedData.amount, parsedData.amountPaid);
+          parsedData.paymentStatus = determinePaymentStatus(parsedData.amount, parsedData.amountPaid);
+          
+          console.log(`✅ Row ${index + 2} parsed:`, {
+            admission: parsedData.admissionNumber,
+            form: parsedData.form,
+            term: parsedData.term,
+            year: parsedData.academicYear
+          });
+          
+          return parsedData;
+        } catch (error) {
+          console.error(`❌ Error parsing Excel row ${index}:`, error, row);
+          return null;
+        }
+      })
+      .filter(item => item !== null);
+    
+    console.log(`\n✅ Excel Parsing Complete: ${data.length} valid rows`);
+    return data;
+  } catch (error) {
+    console.error('Excel parsing error:', error);
+    throw new Error(`Excel parsing failed: ${error.message}`);
+  }
+};
+// ========== TRUE OVERWRITE UPDATE STRATEGY ==========
+
+const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy) => {
+  console.log(`\n🔄 Processing UPDATE UPLOAD (True Overwrite Strategy):`);
+  console.log('Strategy:', uploadStrategy);
+  
+  const normalizedForm = normalizeForm(uploadStrategy.selectedForm);
+  const normalizedTerm = normalizeTerm(uploadStrategy.term);
+  const normalizedYear = normalizeAcademicYear(uploadStrategy.academicYear);
+  
+  console.log(`🔍 Target for overwrite: ${normalizedForm} - ${normalizedTerm} ${normalizedYear}`);
+  
   const stats = {
     totalRows: fees.length,
     validRows: 0,
     skippedRows: 0,
     errorRows: 0,
     errors: [],
-    createdFees: [],
-    updatedFees: [],
-    deactivatedFees: 0
+    created: 0,
+    updated: 0,
+    deleted: 0,
+    metadata: {}
   };
   
-  // Normalize target parameters
-  const normalizedTargetForm = normalizeForm(targetForm);
-  const normalizedTerm = normalizeTerm(term);
-  const normalizedYear = normalizeAcademicYear(academicYear);
-  
-  // Filter fees for target form
-  const filteredFees = fees.filter(fee => {
-    fee.form = normalizeForm(fee.form);
-    fee.term = normalizeTerm(fee.term);
-    fee.academicYear = normalizeAcademicYear(fee.academicYear);
-    return fee.form === normalizedTargetForm;
-  });
-  
-  if (filteredFees.length === 0) {
-    throw new Error(`No fees found for form ${normalizedTargetForm}. Make sure the form column matches the selected form.`);
-  }
-  
-  // Check if students exist in the target form
-  const admissionNumbers = filteredFees.map(f => f.admissionNumber);
-  const studentCheck = await checkStudentsExist(admissionNumbers, normalizedTargetForm);
-  
-  // Get existing fees for this form/term/year
-  const existingFees = await prisma.feeBalance.findMany({
-    where: {
-      form: normalizedTargetForm,
-      term: normalizedTerm,
-      academicYear: normalizedYear
-    },
-    select: {
-      admissionNumber: true,
-      id: true
-    }
-  });
-  
-  const existingFeeMap = new Map();
-  existingFees.forEach(fee => {
-    existingFeeMap.set(fee.admissionNumber, fee);
-  });
-  
-  const seenAdmissionNumbers = new Set();
-  const admissionNumbersInNewUpload = new Set();
-  const feesToCreate = [];
-  const feesToUpdate = [];
-  
-  for (const [index, fee] of filteredFees.entries()) {
-    const validation = validateFeeBalance(fee, index);
-    
-    if (!validation.isValid) {
-      stats.errorRows++;
-      stats.errors.push(...validation.errors);
-      continue;
-    }
-    
-    const admissionNumber = fee.admissionNumber;
-    
-    // Check duplicates within the file
-    if (seenAdmissionNumbers.has(admissionNumber)) {
-      stats.errorRows++;
-      stats.errors.push(`Row ${index + 2}: Duplicate admission number in file: ${admissionNumber}`);
-      continue;
-    }
-    seenAdmissionNumbers.add(admissionNumber);
-    admissionNumbersInNewUpload.add(admissionNumber);
-    
-    // Check if student exists in target form
-    const student = studentCheck.existingStudentMap.get(admissionNumber);
-    if (!student) {
-      stats.skippedRows++;
-      stats.errors.push(`Row ${index + 2}: Student ${admissionNumber} not found in ${normalizedTargetForm}`);
-      continue;
-    }
-    
-    // Check if fee already exists
-    const existingFee = existingFeeMap.get(admissionNumber);
-    
-    if (existingFee) {
-      // Update existing fee
-      feesToUpdate.push({
-        id: existingFee.id,
+  try {
+    // Start a transaction for atomic overwrite
+    await prisma.$transaction(async (tx) => {
+      // STEP 1: Count existing active fees for this form/term/year BEFORE deletion
+      const existingCount = await tx.feeBalance.count({
+        where: {
+          form: normalizedForm,
+          term: normalizedTerm,
+          academicYear: normalizedYear,
+          isActive: true
+        }
+      });
+      
+      // STEP 2: COMPLETELY DEACTIVATE all existing fees for this form/term/year
+      const deactivateResult = await tx.feeBalance.updateMany({
+        where: {
+          form: normalizedForm,
+          term: normalizedTerm,
+          academicYear: normalizedYear,
+          isActive: true
+        },
         data: {
+          isActive: false,
+          updatedAt: new Date()
+        }
+      });
+      
+      stats.deleted = deactivateResult.count;
+      console.log(`🗑️ DEACTIVATED ${deactivateResult.count} existing fees (true overwrite)`);
+      
+      // STEP 3: Check students exist for the new data
+      const admissionNumbers = fees.map(f => f.admissionNumber);
+      const studentCheck = await checkStudentsExist(admissionNumbers, normalizedForm, tx);
+      
+      const seenAdmissionNumbers = new Set();
+      const feeCreations = [];
+      
+      // STEP 4: Process and validate each new fee
+      for (const [index, fee] of fees.entries()) {
+        const rowNum = index + 2;
+        
+        // Skip duplicates within the same file
+        if (seenAdmissionNumbers.has(fee.admissionNumber)) {
+          stats.skippedRows++;
+          stats.errors.push(`Row ${rowNum}: Duplicate admission number in file: ${fee.admissionNumber}`);
+          continue;
+        }
+        seenAdmissionNumbers.add(fee.admissionNumber);
+        
+        // Validate the fee
+        const validation = validateFeeBalance(fee, index);
+        if (!validation.isValid) {
+          stats.errorRows++;
+          stats.errors.push(...validation.errors);
+          continue;
+        }
+        
+        // Check if student exists
+        const student = studentCheck.existingStudentMap.get(fee.admissionNumber);
+        if (!student) {
+          stats.skippedRows++;
+          stats.errors.push(`Row ${rowNum}: Student ${fee.admissionNumber} not found in ${normalizedForm}`);
+          continue;
+        }
+        
+        // Check for existing inactive fee for same student/form/term/year
+        const existingInactiveFee = await tx.feeBalance.findFirst({
+          where: {
+            admissionNumber: fee.admissionNumber,
+            form: normalizedForm,
+            term: normalizedTerm,
+            academicYear: normalizedYear,
+            isActive: false
+          }
+        });
+        
+        if (existingInactiveFee) {
+          // Reactivate and update the existing fee
+          try {
+            await tx.feeBalance.update({
+              where: { id: existingInactiveFee.id },
+              data: {
+                amount: fee.amount,
+                amountPaid: fee.amountPaid,
+                balance: fee.balance,
+                paymentStatus: fee.paymentStatus,
+                dueDate: fee.dueDate,
+                uploadBatchId: uploadBatchId,
+                isActive: true,
+                updatedAt: new Date()
+              }
+            });
+            
+            stats.validRows++;
+            stats.updated++;
+            console.log(`✅ Row ${rowNum}: Reactivated and updated fee for ${fee.admissionNumber}`);
+            continue;
+          } catch (updateError) {
+            console.error(`Failed to update inactive fee: ${updateError.message}`);
+          }
+        }
+        
+        // Prepare new fee data for insertion
+        feeCreations.push({
+          admissionNumber: fee.admissionNumber,
+          form: normalizedForm,
+          term: normalizedTerm,
+          academicYear: normalizedYear,
           amount: fee.amount,
           amountPaid: fee.amountPaid,
           balance: fee.balance,
           paymentStatus: fee.paymentStatus,
           dueDate: fee.dueDate,
-          updatedAt: new Date(),
-          uploadBatchId: uploadBatchId
-        }
-      });
-      stats.updatedFees.push(fee);
-    } else {
-      // Create new fee
-      feesToCreate.push({
-        admissionNumber: fee.admissionNumber,
-        form: normalizedTargetForm,
-        term: normalizedTerm,
-        academicYear: normalizedYear,
-        amount: fee.amount,
-        amountPaid: fee.amountPaid,
-        balance: fee.balance,
-        paymentStatus: fee.paymentStatus,
-        dueDate: fee.dueDate,
-        uploadBatchId: uploadBatchId
-      });
-      stats.createdFees.push(fee);
-    }
-    
-    stats.validRows++;
-  }
-  
-  // Execute database operations
-  if (feesToCreate.length > 0) {
-    try {
-      await prisma.feeBalance.createMany({
-        data: feesToCreate
-      });
-    } catch (error) {
-      console.error('Error creating fees:', error);
-      stats.errorRows += feesToCreate.length;
-      stats.errors.push(`Failed to create ${feesToCreate.length} fees: ${error.message}`);
-    }
-  }
-  
-  if (feesToUpdate.length > 0) {
-    for (const update of feesToUpdate) {
-      try {
-        await prisma.feeBalance.update({
-          where: { id: update.id },
-          data: update.data
-        });
-      } catch (error) {
-        console.error('Error updating fee:', error);
-        stats.errorRows++;
-        stats.errors.push(`Failed to update fee: ${error.message}`);
-      }
-    }
-  }
-  
-  // Deactivate fees not in the new upload (soft delete)
-  const feesToDeactivate = existingFees.filter(fee => 
-    !admissionNumbersInNewUpload.has(fee.admissionNumber)
-  );
-  
-  if (feesToDeactivate.length > 0) {
-    await prisma.feeBalance.deleteMany({
-      where: {
-        id: { in: feesToDeactivate.map(f => f.id) }
-      }
-    });
-    
-    stats.deactivatedFees = feesToDeactivate.length;
-  }
-  
-  return stats;
-};
-
-// ========== STATISTICS FUNCTIONS ==========
-
-// Calculate fee statistics
-const calculateFeeStatistics = async (whereClause = {}) => {
-  try {
-    // Get all fees for calculations
-    const allFees = await prisma.feeBalance.findMany({
-      where: whereClause,
-      select: {
-        amount: true,
-        amountPaid: true,
-        balance: true,
-        form: true,
-        term: true,
-        academicYear: true,
-        paymentStatus: true
-      }
-    });
-    
-    if (allFees.length === 0) {
-      return {
-        stats: {
-          totalAmount: 0,
-          totalPaid: 0,
-          totalBalance: 0,
-          totalRecords: 0,
-          formDistribution: {},
-          termDistribution: {},
-          yearDistribution: {},
-          statusDistribution: {},
+          uploadBatchId: uploadBatchId,
+          isActive: true,
+          createdAt: new Date(),
           updatedAt: new Date()
-        },
-        validation: {
-          isValid: true,
-          totalRecords: 0,
-          calculatedTotals: { amount: 0, paid: 0, balance: 0 }
-        }
-      };
-    }
-    
-    let totalAmount = 0;
-    let totalPaid = 0;
-    let totalBalance = 0;
-    
-    const formDistribution = {};
-    const termDistribution = {};
-    const yearDistribution = {};
-    const statusDistribution = {};
-    
-    // Process each fee
-    allFees.forEach(fee => {
-      totalAmount += fee.amount;
-      totalPaid += fee.amountPaid;
-      totalBalance += fee.balance;
+        });
+        
+        stats.validRows++;
+        stats.created++;
+        console.log(`✅ Row ${rowNum}: Prepared new fee for ${fee.admissionNumber}`);
+      }
       
-      // Form distribution
-      formDistribution[fee.form] = (formDistribution[fee.form] || 0) + 1;
-      
-      // Term distribution
-      termDistribution[fee.term] = (termDistribution[fee.term] || 0) + 1;
-      
-      // Year distribution
-      yearDistribution[fee.academicYear] = (yearDistribution[fee.academicYear] || 0) + 1;
-      
-      // Status distribution
-      statusDistribution[fee.paymentStatus] = (statusDistribution[fee.paymentStatus] || 0) + 1;
+      // STEP 5: Insert ALL new fees in bulk
+      if (feeCreations.length > 0) {
+        const createdFees = await tx.feeBalance.createMany({
+          data: feeCreations,
+          skipDuplicates: true
+        });
+        
+        stats.created = createdFees.count;
+        console.log(`✅ INSERTED ${createdFees.count} new fees (replacing old data)`);
+      }
+    }, {
+      maxWait: 10000,
+      timeout: 30000
     });
     
-    const stats = {
-      totalAmount: parseFloat(totalAmount.toFixed(2)),
-      totalPaid: parseFloat(totalPaid.toFixed(2)),
-      totalBalance: parseFloat(totalBalance.toFixed(2)),
-      totalRecords: allFees.length,
-      formDistribution,
-      termDistribution,
-      yearDistribution,
-      statusDistribution,
-      updatedAt: new Date()
+    // Update metadata - CRITICAL: For update uploads, we count only NEWLY CREATED fees
+    stats.metadata = {
+      oldDeactivated: stats.deleted,
+      newInserted: stats.created,
+      updatedExisting: stats.updated,
+      totalProcessed: stats.validRows,
+      fileDuplicates: stats.skippedRows,
+      validationErrors: stats.errorRows,
+      // This is important for statistics calculation:
+      netChangeInRecords: stats.created - stats.deleted, // Negative means fewer records
+      isUpdateUpload: true
     };
     
-    return {
-      stats,
-      validation: {
-        isValid: true,
-        totalRecords: allFees.length,
-        calculatedTotals: {
-          amount: stats.totalAmount,
-          paid: stats.totalPaid,
-          balance: stats.totalBalance
-        }
-      }
-    };
+    console.log('\n📊 TRUE OVERWRITE STATISTICS:', {
+      oldDeactivated: stats.deleted,
+      newInserted: stats.created,
+      updatedExisting: stats.updated,
+      valid: stats.validRows,
+      skipped: stats.skippedRows,
+      errors: stats.errorRows,
+      netChange: stats.created - stats.deleted
+    });
+    
+    return stats;
     
   } catch (error) {
-    console.error('Error calculating fee statistics:', error);
-    return {
-      stats: {
-        totalAmount: 0,
-        totalPaid: 0,
-        totalBalance: 0,
-        totalRecords: 0,
-        formDistribution: {},
-        termDistribution: {},
-        yearDistribution: {},
-        statusDistribution: {},
-        updatedAt: new Date()
-      },
-      validation: {
-        isValid: false,
-        error: error.message
-      }
-    };
+    console.error('❌ Transaction error:', error);
+    
+    if (error.code === 'P2002') {
+      throw new Error('Duplicate fee entries detected. Each student can only have one fee record per form/term/academic year.');
+    }
+    
+    throw error;
   }
 };
 
+
 // ========== API ENDPOINTS ==========
-// POST - ULTRA SIMPLE fee balances upload
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
     const file = formData.get('file');
     const uploadType = formData.get('uploadType'); // 'new' or 'update'
-    const selectedForm = formData.get('selectedForm'); // Accept this for both
-    const targetForm = formData.get('targetForm'); // Also accept this
+    const selectedForm = formData.get('selectedForm');
     const checkDuplicates = formData.get('checkDuplicates') === 'true';
-    const termParam = formData.get('term'); // Get term from form data (OPTIONAL)
-    const academicYearParam = formData.get('academicYear'); // Get academic year from form data (OPTIONAL)
+    const term = formData.get('term');
+    const academicYear = formData.get('academicYear');
     
-    console.log('🔍 Upload Parameters:', {
-      uploadType,
-      selectedForm,
-      targetForm,
-      checkDuplicates,
-      termParam: termParam || 'NOT PROVIDED',
-      academicYearParam: academicYearParam || 'NOT PROVIDED'
-    });
+    console.log('\n📤 FEE UPLOAD REQUEST:');
+    console.log('File:', file?.name);
+    console.log('Upload Type:', uploadType);
+    console.log('Selected Form:', selectedForm);
+    console.log('Term:', term);
+    console.log('Academic Year:', academicYear);
+    console.log('Check Duplicates:', checkDuplicates);
     
+    // Validate required fields
     if (!file) {
-      return NextResponse.json({ success: false, error: 'No file provided' }, { status: 400 });
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No file provided' 
+      }, { status: 400 });
     }
     
-    if (!uploadType) {
-      return NextResponse.json({ success: false, error: 'Upload type is required' }, { status: 400 });
+    if (!uploadType || !selectedForm) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Upload type and form selection are required' 
+      }, { status: 400 });
     }
     
-    // Get the form to use
-    const formToUse = targetForm || selectedForm;
-    if (!formToUse) {
-      return NextResponse.json({ success: false, error: 'Form is required' }, { status: 400 });
+    // Validate form
+    const normalizedForm = normalizeForm(selectedForm);
+    if (!normalizedForm) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Invalid form: ${selectedForm}. Must be one of: Form 1, Form 2, Form 3, Form 4`
+      }, { status: 400 });
     }
     
-    // Validate file type
+    // For UPDATE uploads, term and academicYear are REQUIRED
+    if (uploadType === 'update' && (!term || !academicYear)) {
+      return NextResponse.json({
+        success: false, 
+        error: 'For update uploads, term and academic year are required'
+      }, { status: 400 });
+    }
+    
+    // Create upload strategy object
+    const uploadStrategy = {
+      uploadType,
+      selectedForm: normalizedForm,
+      term: uploadType === 'update' ? term : undefined,
+      academicYear: uploadType === 'update' ? academicYear : undefined
+    };
+    
+    console.log('📋 Upload Strategy:', uploadStrategy);
+    
+    // Parse file with strategy
     const fileName = file.name.toLowerCase();
     const fileExtension = fileName.split('.').pop();
-    if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
-      return NextResponse.json({ success: false, error: 'Invalid file type' }, { status: 400 });
-    }
     
-    // Parse file
-    let rawData = [];
+    let parsedData;
     if (fileExtension === 'csv') {
-      rawData = await parseFeeCSV(file, file.name);
+      parsedData = await parseFeeCSV(file, uploadStrategy);
     } else {
-      rawData = await parseFeeExcel(file, file.name);
+      parsedData = await parseFeeExcel(file, uploadStrategy);
     }
     
-    if (rawData.length === 0) {
-      throw new Error('No valid fee data found in file.');
+    if (!parsedData || parsedData.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No valid fee data found in file'
+      }, { status: 400 });
     }
     
-    console.log(`📊 Parsed ${rawData.length} rows from file`);
+    console.log(`✅ Parsed ${parsedData.length} rows`);
     
-    // Extract term and academic year from FIRST ROW of file
-    let extractedTerm = '';
-    let extractedAcademicYear = '';
-    
-    if (rawData.length > 0) {
-      const firstRow = rawData[0];
-      extractedTerm = firstRow.term || '';
-      extractedAcademicYear = firstRow.academicYear || '';
-      
-      console.log('📋 EXTRACTED from first row of file:', {
-        term: extractedTerm || 'NOT FOUND IN FILE',
-        academicYear: extractedAcademicYear || 'NOT FOUND IN FILE'
-      });
-    }
-    
-    // Determine final term and academic year
-    let finalTerm = '';
-    let finalAcademicYear = '';
-    
-    // Strategy for BOTH new and update uploads:
-    // 1. First try to get from the file (most reliable)
-    // 2. Then try from parameters (optional)
-    // 3. Use reasonable defaults if not found
-    
-    // For NEW uploads: Use file values, fallback to params, then defaults
+    // For NEW uploads, ensure all rows have same term/year (from first row)
     if (uploadType === 'new') {
-      finalTerm = extractedTerm || termParam || 'Term 1';
-      finalAcademicYear = extractedAcademicYear || academicYearParam || '2024/2025';
-      console.log('✅ NEW upload - Using term/year:', { finalTerm, finalAcademicYear });
-    }
-    // For UPDATE uploads: Same logic - file > params > defaults
-    else if (uploadType === 'update') {
-      finalTerm = extractedTerm || termParam || 'Term 1';
-      finalAcademicYear = extractedAcademicYear || academicYearParam || '2024/2025';
-      console.log('✅ UPDATE upload - Using term/year:', { finalTerm, finalAcademicYear });
+      const firstRow = parsedData[0];
+      const commonTerm = normalizeTerm(firstRow.term);
+      const commonYear = normalizeAcademicYear(firstRow.academicYear);
       
-      // Just log what we're using, but don't require them
-      console.log('ℹ️ Update upload using:', {
-        source: extractedTerm ? 'file' : (termParam ? 'params' : 'default'),
-        term: finalTerm,
-        academicYear: finalAcademicYear
-      });
+      parsedData = parsedData.map(row => ({
+        ...row,
+        term: commonTerm,
+        academicYear: commonYear,
+        form: normalizedForm // Ensure all rows have correct form
+      }));
+      
+      console.log(`📝 Normalized NEW upload: Term=${commonTerm}, Year=${commonYear}`);
     }
-    
-    // Normalize the values
-    finalTerm = normalizeTerm(finalTerm);
-    finalAcademicYear = normalizeAcademicYear(finalAcademicYear);
-    
-    console.log('✅ FINAL values to use:', {
-      form: formToUse,
-      term: finalTerm,
-      academicYear: finalAcademicYear,
-      uploadType,
-      source: extractedTerm ? 'file' : (termParam ? 'params' : 'default')
-    });
     
     // If just checking duplicates
     if (checkDuplicates) {
-      // For duplicate check, use the term/year we determined
       const duplicates = await checkDuplicateFeeBalances(
-        rawData, 
-        formToUse, 
-        finalTerm, // Use final term
-        finalAcademicYear  // Use final academic year
+        parsedData, 
+        normalizedForm,
+        uploadType === 'update' ? term : parsedData[0]?.term,
+        uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
       );
       
       return NextResponse.json({
         success: true,
         hasDuplicates: duplicates.length > 0,
         duplicates: duplicates,
-        totalRows: rawData.length,
-        form: formToUse,
-        term: finalTerm,
-        academicYear: finalAcademicYear,
-        message: `Checking duplicates for ${formToUse} - ${finalTerm} ${finalAcademicYear}`
+        totalRows: parsedData.length,
+        form: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+        uploadType: uploadType,
+        message: duplicates.length > 0 
+          ? `Found ${duplicates.length} existing fees` 
+          : 'No duplicates found'
       });
     }
     
     // Create batch record
-    const batchId = `FEE_BATCH_${Date.now()}`;
+    const batchId = `FEE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    try {
-      await prisma.feeBalanceUpload.create({
-        data: {
-          id: batchId,
-          fileName: file.name,
-          fileType: fileExtension,
-          uploadedBy: 'System Upload',
-          status: 'processing',
-          targetForm: formToUse,
-          term: finalTerm,
-          academicYear: finalAcademicYear,
-          totalRows: rawData.length,
-          validRows: 0,
-          skippedRows: 0,
-          errorRows: 0,
-          uploadType: uploadType
-        }
-      });
-    } catch (prismaError) {
-      console.error('Prisma create error:', prismaError);
-      // Try without optional fields
-      await prisma.feeBalanceUpload.create({
-        data: {
-          id: batchId,
-          fileName: file.name,
-          fileType: fileExtension,
-          uploadedBy: 'System Upload',
-          status: 'processing',
-          targetForm: formToUse,
-          uploadType: uploadType
-        }
-      });
-    }
+    await prisma.feeBalanceUpload.create({
+      data: {
+        id: batchId,
+        fileName: file.name,
+        fileType: fileExtension,
+        uploadedBy: 'System Upload',
+        status: 'processing',
+        targetForm: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+        totalRows: parsedData.length,
+        validRows: 0,
+        skippedRows: 0,
+        errorRows: 0,
+        uploadType: uploadType,
+        uploadDate: new Date()
+      }
+    });
     
-    // Process the upload
+    // Process upload based on type
     let processingStats;
     if (uploadType === 'new') {
-      processingStats = await processNewFeeUpload(rawData, batchId, [formToUse], 'skip');
+      processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy);
     } else {
-      // For update, always use replace strategy with the term/year we determined
-      processingStats = await processUpdateFeeUpload(rawData, batchId, formToUse, finalTerm, finalAcademicYear);
+      processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy);
     }
     
-    // Update batch
+    // Update batch record
     await prisma.feeBalanceUpload.update({
       where: { id: batchId },
       data: {
@@ -1368,21 +1108,49 @@ export async function POST(request) {
         processedDate: new Date(),
         validRows: processingStats.validRows,
         skippedRows: processingStats.skippedRows,
-        errorRows: processingStats.errorRows
+        errorRows: processingStats.errorRows,
+        errorLog: processingStats.errors.length > 0 
+          ? processingStats.errors.join('\n') 
+          : null,
+        metadata: {
+          created: processingStats.created || 0,
+          updated: processingStats.updated || 0,
+          replaced: processingStats.replaced || 0,
+          errors: processingStats.errorRows || 0,
+          warnings: processingStats.errors.filter(e => 
+            e.includes('warning') || e.includes('Warning')).length
+        }
       }
+    });
+    
+    console.log('\n✅ UPLOAD COMPLETE:', {
+      batchId,
+      valid: processingStats.validRows,
+      created: processingStats.created,
+      updated: processingStats.updated,
+      replaced: processingStats.replaced,
+      skipped: processingStats.skippedRows,
+      errors: processingStats.errorRows
     });
     
     return NextResponse.json({
       success: true,
-      message: `Successfully ${uploadType === 'new' ? 'added' : 'updated'} ${processingStats.validRows} fees for ${formToUse}`,
-      details: {
-        form: formToUse,
-        term: finalTerm,
-        academicYear: finalAcademicYear,
-        created: processingStats.createdFees?.length || 0,
-        updated: processingStats.updatedFees?.length || 0,
-        deactivated: processingStats.deactivatedFees || 0
-      }
+      message: uploadType === 'new'
+        ? `Uploaded ${processingStats.created} new fees for ${normalizedForm}`
+        : `Updated ${processingStats.created} fees for ${normalizedForm} ${term} ${academicYear}`,
+      data: {
+        uploadId: batchId,
+        processed: processingStats.validRows,
+        created: processingStats.created,
+        updated: processingStats.updated,
+        replaced: processingStats.replaced,
+        skipped: processingStats.skippedRows,
+        errors: processingStats.errors,
+        form: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
+      },
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
@@ -1391,13 +1159,12 @@ export async function POST(request) {
       { 
         success: false, 
         error: error.message || 'Upload failed',
-        suggestion: 'Make sure your file has: admissionNumber, amount, amountPaid columns. Term and academic year will be extracted from file or use defaults.'
+        suggestion: 'Check that your file has the required columns and data format matches the template.'
       },
       { status: 500 }
     );
   }
 }
-
 // GET - Fetch fee balances, uploads, or statistics
 export async function GET(request) {
   try {
@@ -1415,50 +1182,104 @@ export async function GET(request) {
     const includeStats = url.searchParams.get('includeStats') !== 'false';
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
+    const uploadType = url.searchParams.get('uploadType') || '';
+    const showInactive = url.searchParams.get('showInactive') === 'true';
+    const showAll = url.searchParams.get('showAll') === 'true';
     
-    // Build WHERE clause
-    const where = {};
-    
-    if (admissionNumber) where.admissionNumber = admissionNumber;
-    if (form) where.form = form;
-    if (term) where.term = term;
-    if (academicYear) where.academicYear = academicYear;
-    if (paymentStatus) where.paymentStatus = paymentStatus;
-    
-    if (search && search.trim()) {
-      const searchTerm = search.toLowerCase();
-      where.OR = [
-        { admissionNumber: { contains: searchTerm } }
-      ];
-    }
-    
-    if (action === 'uploads') {
-      // Fetch upload history
-      const uploads = await prisma.feeBalanceUpload.findMany({
-        orderBy: { uploadDate: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-        select: {
-          id: true,
-          fileName: true,
-          fileType: true,
-          status: true,
-          uploadedBy: true,
-          uploadDate: true,
-          processedDate: true,
-          term: true,
-          academicYear: true,
-          targetForm: true,
-          totalRows: true,
-          validRows: true,
-          skippedRows: true,
-          errorRows: true,
-          errorLog: true,
-          uploadType: true
-        }
-      });
+    console.log('🔍 GET request:', { 
+      action, 
+      form, 
+      term, 
+      academicYear, 
+      showInactive,
+      page, 
+      limit 
+    });
+
+    // ========== HELPER FUNCTIONS ==========
+
+    // Build WHERE clause for fee balances with isActive filter
+    const buildFeeWhereClause = (params) => {
+      const { 
+        admissionNumber, 
+        form, 
+        term, 
+        academicYear, 
+        paymentStatus, 
+        search, 
+        showInactive = false,
+        showAll = false
+      } = params;
       
-      const total = await prisma.feeBalanceUpload.count();
+      const where = {};
+      
+      // Handle isActive filter - by default only show active, unless explicitly requested
+      if (!showAll) {
+        where.isActive = showInactive ? false : true;
+      }
+      // If showAll is true, don't filter by isActive at all
+      
+      // Standard filters
+      if (admissionNumber) where.admissionNumber = admissionNumber;
+      if (form) where.form = form;
+      if (term) where.term = term;
+      if (academicYear) where.academicYear = academicYear;
+      if (paymentStatus) where.paymentStatus = paymentStatus;
+      
+      // Search across admission number and student names
+      if (search && search.trim()) {
+        const searchTerm = search.toLowerCase();
+        where.OR = [
+          { admissionNumber: { contains: searchTerm } },
+          { student: { 
+            OR: [
+              { firstName: { contains: searchTerm } },
+              { lastName: { contains: searchTerm } },
+              { middleName: { contains: searchTerm } }
+            ]
+          }}
+        ];
+      }
+      
+      return where;
+    };
+
+    // ========== ACTION HANDLERS ==========
+
+    if (action === 'uploads') {
+      // Fetch upload history with optional filtering
+      const uploadWhere = {};
+      if (form) uploadWhere.targetForm = form;
+      if (uploadType) uploadWhere.uploadType = uploadType;
+      
+      const [uploads, total] = await Promise.all([
+        prisma.feeBalanceUpload.findMany({
+          where: uploadWhere,
+          orderBy: { uploadDate: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            fileName: true,
+            fileType: true,
+            status: true,
+            uploadedBy: true,
+            uploadDate: true,
+            processedDate: true,
+            term: true,
+            academicYear: true,
+            targetForm: true,
+            totalRows: true,
+            validRows: true,
+            skippedRows: true,
+            errorRows: true,
+            errorLog: true,
+            uploadType: true,
+            metadata: true
+          }
+        }),
+        prisma.feeBalanceUpload.count({ where: uploadWhere })
+      ]);
       
       return NextResponse.json({
         success: true,
@@ -1471,27 +1292,219 @@ export async function GET(request) {
         }
       });
     }
-    
+
     if (action === 'stats') {
-      // Calculate fresh statistics
-      const statsResult = await calculateFeeStatistics(where);
+      // Build WHERE clause for stats (only active records)
+      const statsWhere = buildFeeWhereClause({
+        form, term, academicYear, paymentStatus, search,
+        showInactive: false, // Stats only count active records
+        showAll: false
+      });
+      
+      // Calculate statistics by form - ONLY ACTIVE RECORDS
+      const forms = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
+      const statsByForm = {};
+      
+      for (const formName of forms) {
+        const formWhere = {
+          ...statsWhere,
+          form: formName,
+          isActive: true
+        };
+        
+        // Query only active fees for this form
+        const fees = await prisma.feeBalance.findMany({
+          where: formWhere,
+          include: {
+            student: {
+              select: {
+                firstName: true,
+                lastName: true,
+                admissionNumber: true
+              }
+            }
+          }
+        });
+        
+        statsByForm[formName] = {
+          totalRecords: fees.length,
+          totalAmount: fees.reduce((sum, fee) => sum + (fee.amount || 0), 0),
+          totalPaid: fees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0),
+          totalBalance: fees.reduce((sum, fee) => sum + (fee.balance || 0), 0),
+          paidCount: fees.filter(f => f.paymentStatus === 'paid').length,
+          partialCount: fees.filter(f => f.paymentStatus === 'partial').length,
+          pendingCount: fees.filter(f => f.paymentStatus === 'pending').length,
+          // Additional metrics
+          averageAmount: fees.length > 0 ? 
+            fees.reduce((sum, fee) => sum + (fee.amount || 0), 0) / fees.length : 0,
+          completionRate: fees.length > 0 ? 
+            (fees.filter(f => f.paymentStatus === 'paid').length / fees.length) * 100 : 0,
+          collectionRate: fees.reduce((sum, fee) => sum + (fee.amount || 0), 0) > 0 ?
+            (fees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0) / 
+             fees.reduce((sum, fee) => sum + (fee.amount || 0), 0)) * 100 : 0
+        };
+      }
+      
+      // Overall statistics - ONLY ACTIVE
+      const overallWhere = {
+        ...statsWhere,
+        isActive: true
+      };
+      
+      const allFees = await prisma.feeBalance.findMany({
+        where: overallWhere
+      });
+      
+      const overallStats = {
+        totalRecords: allFees.length,
+        totalAmount: allFees.reduce((sum, fee) => sum + (fee.amount || 0), 0),
+        totalPaid: allFees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0),
+        totalBalance: allFees.reduce((sum, fee) => sum + (fee.balance || 0), 0),
+        paidCount: allFees.filter(f => f.paymentStatus === 'paid').length,
+        partialCount: allFees.filter(f => f.paymentStatus === 'partial').length,
+        pendingCount: allFees.filter(f => f.paymentStatus === 'pending').length,
+        forms: statsByForm,
+        // Additional overall metrics
+        averageFeeAmount: allFees.length > 0 ? 
+          allFees.reduce((sum, fee) => sum + (fee.amount || 0), 0) / allFees.length : 0,
+        overallCompletionRate: allFees.length > 0 ? 
+          (allFees.filter(f => f.paymentStatus === 'paid').length / allFees.length) * 100 : 0,
+        totalExpectedRevenue: allFees.reduce((sum, fee) => sum + (fee.amount || 0), 0),
+        totalCollectedRevenue: allFees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0),
+        collectionRate: allFees.reduce((sum, fee) => sum + (fee.amount || 0), 0) > 0 ?
+          (allFees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0) / 
+           allFees.reduce((sum, fee) => sum + (fee.amount || 0), 0)) * 100 : 0,
+        // Active vs Inactive counts
+        activeCount: allFees.length,
+        inactiveCount: await prisma.feeBalance.count({
+          where: { ...statsWhere, isActive: false }
+        })
+      };
       
       return NextResponse.json({
         success: true,
         data: {
-          stats: statsResult.stats,
+          stats: overallStats,
           filters: { form, term, academicYear, paymentStatus, search },
-          validation: statsResult.validation,
           timestamp: new Date().toISOString()
         }
       });
     }
+
+    if (action === 'inactive-fees') {
+      // Special endpoint to view inactive fees (audit trail)
+      const inactiveWhere = buildFeeWhereClause({
+        admissionNumber, form, term, academicYear, paymentStatus, search,
+        showInactive: true,
+        showAll: false
+      });
+      
+      const [inactiveFees, total] = await Promise.all([
+        prisma.feeBalance.findMany({
+          where: inactiveWhere,
+          orderBy: { updatedAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          include: {
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                admissionNumber: true,
+                form: true
+              }
+            },
+            uploadBatch: {
+              select: {
+                fileName: true,
+                uploadDate: true,
+                uploadType: true
+              }
+            }
+          }
+        }),
+        prisma.feeBalance.count({ where: inactiveWhere })
+      ]);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          inactiveFees,
+          pagination: { 
+            page, 
+            limit, 
+            total, 
+            pages: Math.ceil(total / limit) 
+          }
+        }
+      });
+    }
+
+    if (action === 'student-fees') {
+      // Get all fees for a specific student (both active and inactive for history)
+      if (!admissionNumber) {
+        return NextResponse.json(
+          { success: false, error: 'admissionNumber is required for student-fees action' },
+          { status: 400 }
+        );
+      }
+      
+      const studentFees = await prisma.feeBalance.findMany({
+        where: {
+          admissionNumber,
+          ...(form && { form }),
+          ...(term && { term }),
+          ...(academicYear && { academicYear })
+        },
+        orderBy: { 
+          academicYear: 'desc',
+          term: 'desc',
+          updatedAt: 'desc'
+        },
+        include: {
+          student: {
+            select: {
+              firstName: true,
+              lastName: true,
+              form: true,
+              stream: true
+            }
+          }
+        }
+      });
+      
+      // Separate active and inactive fees
+      const activeFees = studentFees.filter(fee => fee.isActive);
+      const inactiveFees = studentFees.filter(fee => !fee.isActive);
+      
+      return NextResponse.json({
+        success: true,
+        data: {
+          activeFees,
+          inactiveFees,
+          totalFees: studentFees.length,
+          activeCount: activeFees.length,
+          inactiveCount: inactiveFees.length
+        }
+      });
+    }
+
+    // ========== DEFAULT: GET FEE BALANCES ==========
     
-    // Get fee balances with pagination
+    // Build WHERE clause for main query
+    const where = buildFeeWhereClause({
+      admissionNumber, form, term, academicYear, paymentStatus, search,
+      showInactive,
+      showAll
+    });
+    
+    // Get orderBy
     const orderBy = {};
     orderBy[sortBy] = sortOrder;
     
-    const [fees, total] = await Promise.all([
+    // Get fee balances with pagination
+    const [feeBalances, total] = await Promise.all([
       prisma.feeBalance.findMany({
         where,
         orderBy,
@@ -1503,10 +1516,12 @@ export async function GET(request) {
               id: true,
               firstName: true,
               lastName: true,
+              middleName: true,
               admissionNumber: true,
               form: true,
               stream: true,
-              email: true
+              email: true,
+              parentPhone: true
             }
           }
         } : undefined
@@ -1514,19 +1529,54 @@ export async function GET(request) {
       prisma.feeBalance.count({ where })
     ]);
     
-    // Calculate statistics if requested
-    let statsResult = null;
-    if (includeStats) {
-      statsResult = await calculateFeeStatistics(where);
-    }
+    // Calculate form distribution for stats (respecting isActive filter)
+    const formDistribution = await prisma.feeBalance.groupBy({
+      by: ['form'],
+      where,
+      _count: true,
+      _sum: {
+        amount: true,
+        amountPaid: true,
+        balance: true
+      }
+    });
     
-    return NextResponse.json({
+    const stats = {
+      totalRecords: total,
+      activeRecords: await prisma.feeBalance.count({ 
+        where: { ...where, isActive: true } 
+      }),
+      inactiveRecords: await prisma.feeBalance.count({ 
+        where: { ...where, isActive: false } 
+      }),
+      totalAmount: formDistribution.reduce((sum, f) => sum + (f._sum.amount || 0), 0),
+      totalPaid: formDistribution.reduce((sum, f) => sum + (f._sum.amountPaid || 0), 0),
+      totalBalance: formDistribution.reduce((sum, f) => sum + (f._sum.balance || 0), 0),
+      formDistribution: formDistribution.reduce((acc, f) => {
+        acc[f.form] = {
+          count: f._count,
+          amount: f._sum.amount || 0,
+          paid: f._sum.amountPaid || 0,
+          balance: f._sum.balance || 0
+        };
+        return acc;
+      }, {})
+    };
+    
+    const response = {
       success: true,
       data: {
-        feeBalances: fees,
-        stats: statsResult?.stats || null,
-        validation: statsResult?.validation || null,
-        filters: { form, term, academicYear, paymentStatus, search },
+        feeBalances,
+        stats: includeStats ? stats : null,
+        filters: { 
+          form, 
+          term, 
+          academicYear, 
+          paymentStatus, 
+          search,
+          showInactive,
+          showAll 
+        },
         pagination: { 
           page, 
           limit, 
@@ -1535,7 +1585,9 @@ export async function GET(request) {
         },
         timestamp: new Date().toISOString()
       }
-    });
+    };
+    
+    return NextResponse.json(response);
     
   } catch (error) {
     console.error('GET error:', error);
@@ -1594,7 +1646,8 @@ export async function PUT(request) {
           select: {
             firstName: true,
             lastName: true,
-            form: true
+            form: true,
+            admissionNumber: true
           }
         }
       }
@@ -1632,6 +1685,9 @@ export async function DELETE(request) {
     const url = new URL(request.url);
     const batchId = url.searchParams.get('batchId');
     const feeId = url.searchParams.get('feeId');
+    const form = url.searchParams.get('form');
+    const term = url.searchParams.get('term');
+    const academicYear = url.searchParams.get('academicYear');
     
     if (batchId) {
       // Delete batch and associated fees
@@ -1674,12 +1730,28 @@ export async function DELETE(request) {
       
       return NextResponse.json({
         success: true,
-        message: `Deleted fee balance for ${fee.admissionNumber} - ${fee.term} ${fee.academicYear}`
+        message: `Deleted fee balance for ${fee.admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`
+      });
+    }
+    
+    if (form && term && academicYear) {
+      // Delete all fees for a specific form/term/year
+      const deleteResult = await prisma.feeBalance.deleteMany({
+        where: {
+          form: form,
+          term: term,
+          academicYear: academicYear
+        }
+      });
+      
+      return NextResponse.json({
+        success: true,
+        message: `Deleted ${deleteResult.count} fee balances for ${form} - ${term} ${academicYear}`
       });
     }
     
     return NextResponse.json(
-      { success: false, error: 'Provide batchId or feeId' },
+      { success: false, error: 'Provide batchId, feeId, or form/term/year combination' },
       { status: 400 }
     );
     
