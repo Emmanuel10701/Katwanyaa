@@ -8,17 +8,20 @@ import ResultsView from '../../components/studentportalcomponents/result/page.js
 import ResourcesAssignmentsView from '../../components/studentportalcomponents/ass/page.jsx';
 import GuidanceEventsView from '../../components/studentportalcomponents/session/page';
 import LoadingScreen from '../../components/studentportalcomponents/loading/page';
+import FeesView from '../../components/studentportalcomponents/feebalance/page'; // ADDED IMPORT
 
 /// Font Awesome 6 - Modern versions
 import { 
    FaBell, FaBars, FaCalendar, FaBook, FaAward, FaDollarSign, 
-  FaClock, FaChartLine, FaCheckCircle, FaChartBar, FaFolder, FaComments,
+  FaClock, FaChartLine, FaChartBar, FaFolder, FaComments,
   FaRocket, FaPalette, FaGem, FaChartPie, FaTrendingUp, FaCrown,
   FaLightbulb, FaBrain, FaHandshake, FaHeart, FaLock, FaGlobe, 
   FaArrowRight, FaFire, FaBolt, FaCalendarCheck, FaUserPlus, 
   FaUserCheck, FaRoute, FaDirections, FaQrcode, FaFingerprint, 
   FaIdCard, FaDesktop, FaWandMagic, FaUser
 } from 'react-icons/fa6';
+
+import Image from 'next/image';
 
 // Font Awesome 5 (Legacy)
 import { 
@@ -35,12 +38,17 @@ import {
 } from 'react-icons/fa';
 import { HiSparkles } from "react-icons/hi2";
 
+import { FaCheckCircle } from "react-icons/fa6";
+
+
+
 // Feather icons
 import { 
   FiMenu, FiX, FiRefreshCw, FiBookOpen,
   FiExternalLink, FiShield, FiExpand, FiCompress,
   FiMapPin, FiSmartphone, FiTablet
 } from 'react-icons/fi';
+
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -174,6 +182,7 @@ function ModernStudentHeader({
       case 'results': return <FaChartBar className="text-green-500" />;
       case 'resources': return <FaFolder className="text-purple-500" />;
       case 'guidance': return <FaComments className="text-amber-500" />;
+      case 'fees': return <FaDollarSign className="text-amber-500" />; // ADDED
       default: return <FaHome className="text-blue-500" />;
     }
   };
@@ -238,6 +247,7 @@ function ModernStudentHeader({
                   {currentView === 'results' && 'Results'}
                   {currentView === 'resources' && 'Resources'}
                   {currentView === 'guidance' && 'Guidance'}
+                  {currentView === 'fees' && 'Fee Balance'} {/* ADDED */}
                 </h1>
                 <p className="text-xs text-gray-500 hidden sm:block">Student Portal</p>
               </div>
@@ -250,7 +260,7 @@ function ModernStudentHeader({
 }
 
 // ==================== MODERN HOME VIEW ====================
-function ModernHomeView({ student, feeBalance, feeLoading }) {
+function ModernHomeView({ student, feeBalance, feeLoading, token }) {
   const [showFeeDetails, setShowFeeDetails] = useState(false);
 
   const stats = [
@@ -353,145 +363,84 @@ function ModernHomeView({ student, feeBalance, feeLoading }) {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className="group relative mobile-full-width">
-            {/* Background Glow Effect */}
-            <div className={`absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-2xl sm:rounded-3xl blur-xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+    {/* Quick Stats - Mobile 2x2 Grid, Desktop 4-column */}
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-5">
+  {stats.map((stat, index) => (
+    <div key={index} className="group relative w-full">
+      {/* Background Glow - Hidden on mobile to save space */}
+      <div 
+        className={`hidden sm:block absolute inset-0 bg-gradient-to-r ${stat.gradient} rounded-lg sm:rounded-xl md:rounded-2xl blur-xl opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+      />
 
-            {/* Main Card */}
-            <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 border border-white shadow-sm sm:shadow-md hover:shadow-md transition-all duration-300 overflow-hidden mobile-compact">
-              {/* Subtle Decorative Pattern */}
-              <div className="absolute -right-3 sm:-right-4 -top-3 sm:-top-4 w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-50 to-transparent rounded-full opacity-50 group-hover:scale-110 transition-transform duration-500" />
+      {/* Main Card - Compact on mobile */}
+      <div className="relative bg-white/95 sm:bg-white/90 md:bg-white/80 backdrop-blur-xs sm:backdrop-blur-sm md:backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl p-2.5 sm:p-3 md:p-4 lg:p-5 xl:p-6 border border-gray-100 sm:border-gray-150 md:border-white shadow-sm sm:shadow-md hover:shadow-md transition-all duration-300 overflow-hidden h-full">
+        
+        {/* Decorative Pattern - Smaller on mobile */}
+        <div className="absolute -right-1.5 -top-1.5 sm:-right-2 sm:-top-2 md:-right-3 md:-top-3 lg:-right-4 lg:-top-4 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-gray-50/30 to-transparent rounded-full opacity-40 md:opacity-50 group-hover:scale-105 transition-transform duration-500" />
 
-              <div className="flex flex-col h-full">
-                {/* Top Row: Icon and Trends */}
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <div className={`p-2.5 sm:p-3 md:p-3.5 bg-gradient-to-br ${stat.gradient} rounded-xl sm:rounded-2xl text-white shadow-md sm:shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-300`}>
-                    {stat.icon}
-                  </div>
-                  
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      {stat.category || 'School Update'}
-                    </span>
-                    <div className="flex items-center text-emerald-500 font-bold text-xs mt-0.5 sm:mt-1">
-                      <span>↑ {stat.trend || 'good progress'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Value and Label */}
-                <div className="mt-1 sm:mt-2">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
-                    {stat.value}
-                  </h3>
-                  <p className="text-xs sm:text-sm font-medium text-gray-500 mt-0.5 sm:mt-1">
-                    {stat.label}
-                  </p>
-                </div>
-
-                {/* School Info Footer */}
-                <div className="mt-3 sm:mt-4 md:mt-5 flex items-center justify-between py-2 sm:py-3 border-t border-gray-100">
-                  <div className="flex -space-x-1.5 sm:-space-x-2">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white bg-gray-200" />
-                    ))}
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[7px] sm:text-[8px] font-bold text-gray-400">
-                      +
-                    </div>
-                  </div>
-                  <span className="text-[10px] sm:text-[11px] font-semibold text-gray-400 italic">
-                    Updated: {new Date().toLocaleDateString()}
-                  </span>
-                </div>
+        <div className="flex flex-col h-full">
+          {/* Top Row: Icon and Trends - Stacked vertically on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1.5 sm:mb-2 md:mb-3 lg:mb-4">
+            {/* Icon Container - Centered on mobile */}
+            <div className={`flex justify-center sm:justify-start p-1.5 sm:p-2 md:p-2.5 lg:p-3 bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl md:rounded-2xl text-white shadow-xs sm:shadow-sm md:shadow-lg group-hover:scale-105 transition-transform duration-300 self-center sm:self-auto mb-1 sm:mb-0`}>
+              <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7">
+                {stat.icon}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Fee Balance Section */}
-      <div className="w-full max-w-5xl mx-auto mobile-full-width">
-        {/* Header & Description */}
-        <div className="px-1 mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Fee Statement
-          </h2>
-          <p className="text-slate-500 text-xs sm:text-sm md:text-base mt-1 leading-relaxed">
-            A real-time summary of your financial standing for the{' '}
-            <span className="text-slate-900 font-semibold">
-              {`${new Date().getFullYear()}/${new Date().getFullYear() + 1} Academic Year`}
-            </span>
-            , giving you a clear overview of your current term balances.
-          </p>
-        </div>
-
-        {/* Main Layout Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-          {/* Primary Balance Card */}
-          <div className="lg:col-span-2 bg-slate-900 rounded-2xl sm:rounded-3xl lg:rounded-[2rem] p-4 sm:p-6 md:p-8 lg:p-10 shadow-lg sm:shadow-xl lg:shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[160px] sm:min-h-[200px] md:min-h-[220px]">
-            <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-blue-500/10 rounded-full -mr-8 sm:-mr-12 -mt-8 sm:-mt-12 blur-2xl sm:blur-3xl" />
             
-            <div className="relative">
-              <div className="flex items-center gap-1.5 sm:gap-2 mb-1 sm:mb-2">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em]">Total Balance</span>
+            {/* Trends - Right aligned, smaller on mobile */}
+            <div className="flex flex-col items-center sm:items-end">
+              <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-tight sm:tracking-wider text-gray-500 md:text-gray-400 text-center sm:text-right">
+                {stat.category || 'Update'}
+              </span>
+              <div className="flex items-center text-emerald-500 font-bold text-[9px] sm:text-[10px] md:text-xs mt-0.5">
+                <span className="text-[8px] sm:text-[10px]">↑</span>
+                <span className="ml-0.5">{stat.trend || 'Good'}</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tighter">
-                <span className="text-slate-500 text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium">KES</span>
-                {feeBalance?.summary?.totalBalance?.toLocaleString() || "0"}
-              </h3>
-            </div>
-
-            <div className="relative pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-800 flex justify-between items-end">
-              <div>
-                <p className="text-slate-400 text-[9px] sm:text-[10px] uppercase font-bold tracking-widest mb-0.5 sm:mb-1">Status</p>
-                <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold ${
-                  (feeBalance?.summary?.totalBalance || 0) > 0 
-                  ? "bg-orange-500/10 text-orange-400 border border-orange-500/20" 
-                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                }`}>
-                  {(feeBalance?.summary?.totalBalance || 0) > 0 ? "PENDING" : "CLEARED"}
-                </span>
-              </div>
-              <FaDollarSign className="text-slate-800 text-3xl sm:text-4xl md:text-5xl absolute bottom-0 right-0 -mb-1 -mr-1 sm:-mb-2 sm:-mr-2" />
             </div>
           </div>
 
-          {/* Secondary Stats Column */}
-          <div className="flex flex-col gap-3 sm:gap-4">
-            {/* Total Billed Box */}
-            <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 flex flex-col justify-between shadow-sm">
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 md:mb-4">Total Billed</p>
-              <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">
-                  KES {feeBalance?.summary?.totalAmount?.toLocaleString() || "0"}
-                </span>
-              </div>
-            </div>
+          {/* Value and Label - Centered on mobile */}
+          <div className="mt-0.5 sm:mt-1 md:mt-2 flex-grow text-center sm:text-left">
+            <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-extrabold text-gray-900 tracking-tight leading-none sm:leading-tight">
+              {stat.value}
+            </h3>
+            <p className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm font-medium text-gray-600 md:text-gray-500 mt-0.5 sm:mt-1 line-clamp-2">
+              {stat.label}
+            </p>
+          </div>
 
-            {/* Total Paid Box */}
-            <div className="bg-emerald-50 border border-emerald-100 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] p-4 sm:p-5 lg:p-6 flex flex-col justify-between shadow-sm">
-              <p className="text-emerald-700 text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3 md:mb-4">Total Paid</p>
-              <div className="flex items-baseline gap-1.5 sm:gap-2">
-                <span className="text-xl sm:text-2xl md:text-3xl font-bold text-emerald-800">
-                  KES {feeBalance?.summary?.totalPaid?.toLocaleString() || "0"}
-                </span>
+          {/* School Info Footer - Simplified on mobile */}
+          <div className="mt-1.5 sm:mt-2 md:mt-3 lg:mt-4 md:pt-2 lg:pt-3 border-t border-gray-100 pt-1.5 sm:pt-2">
+            <div className="flex items-center justify-between">
+              {/* Avatars - Hidden on smallest screens, show from sm */}
+              <div className="hidden xs:flex -space-x-1 sm:-space-x-1.5 md:-space-x-2">
+                {[1, 2, 3].map((i) => (
+                  <div 
+                    key={i} 
+                    className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full border border-white bg-gray-200"
+                  />
+                ))}
+                <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 rounded-full border border-white bg-gray-100 flex items-center justify-center text-[6px] sm:text-[7px] md:text-[8px] font-bold text-gray-500">
+                  +
+                </div>
               </div>
+              
+              {/* Updated Date - Smaller on mobile */}
+              <span className="text-[7px] sm:text-[8px] md:text-[10px] lg:text-[11px] font-medium text-gray-500 md:text-gray-400 italic truncate">
+                {new Date().toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                })}
+              </span>
             </div>
           </div>
         </div>
-
-        {/* Empty State / Loading Handling */}
-        {!feeLoading && !feeBalance && (
-          <div className="mt-3 sm:mt-4 p-6 sm:p-8 bg-slate-50 rounded-xl sm:rounded-2xl lg:rounded-[1.5rem] border border-dashed border-slate-200 text-center">
-            <p className="text-slate-500 text-sm font-medium">No financial records found.</p>
-          </div>
-        )}
       </div>
-
+    </div>
+  ))}
+</div>
+<FeesView student={student} token={token} />   
       {/* Dashboard Overview */}
       <section className="mb-4 sm:mb-6 md:mb-8 lg:mb-10">
         {/* Section Header */}
@@ -505,7 +454,7 @@ function ModernHomeView({ student, feeBalance, feeLoading }) {
         </div>
 
         {/* Quick Actions Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-5 lg:gap-6">
           {quickActions.map((action, index) => (
             <div key={index} className="relative group mobile-full-width">
               {/* Soft Glow (desktop only) */}
@@ -746,7 +695,7 @@ export default function ModernStudentPortalPage() {
     setFeeLoading(true);
     setFeeError(null);
     try {
-      const response = await fetch(`/api/feebalances?admissionNumber=${student.admissionNumber}&action=student-fees`, {
+      const response = await fetch(`/api/feebalances/${student.admissionNumber}`, { // UPDATED ENDPOINT
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache'
@@ -754,16 +703,7 @@ export default function ModernStudentPortalPage() {
       });
       const data = await response.json();
       if (data.success) {
-        setFeeBalance({
-          summary: data.summary || {
-            totalAmount: 0,
-            totalPaid: 0,
-            totalBalance: 0,
-            recordCount: 0
-          },
-          details: data.feeBalances || [],
-          student: data.student
-        });
+        setFeeBalance(data.data); // UPDATED DATA STRUCTURE
       } else {
         throw new Error(data.error || 'Failed to fetch fee balance');
       }
@@ -886,49 +826,215 @@ export default function ModernStudentPortalPage() {
     return <LoadingScreen />;
   }
 
-  // Show login modal if not authenticated
-  if (!student || !token) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-        <Toaster position="top-right" expand={true} richColors theme="light" />
-        
-        <div className="container mx-auto px-4 py-8 sm:py-12">
-          <div className="max-w-md mx-auto text-center">
-            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl bg-white">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-10"></div>
-              <div className="relative p-6 sm:p-8 md:p-10">
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl sm:shadow-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-xl opacity-50"></div>
-                  <span className="text-white text-2xl sm:text-3xl font-bold relative">NS</span>
-                </div>
-                
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Student Portal Login</h2>
-                <p className="text-gray-600 mb-6 sm:mb-8 text-base sm:text-lg">
-                  Access your academic resources and information
-                </p>
-                
+// Show login modal if not authenticated
+if (!student || !token) {
+  // Define features array here since it's only used in the login view
+  const features = [
+    { 
+      icon: <FaBook className="w-5 h-5 text-blue-600" />, 
+      title: "Learning Resources", 
+      desc: "Access digital notes, revision e-books, and past papers." 
+    },
+    { 
+      icon: <FaAward className="w-5 h-5 text-emerald-600" />, 
+      title: "Assignments", 
+      desc: "View and submit your subject tasks and holiday projects." 
+    },
+    { 
+      icon: <FaChartBar className="w-5 h-5 text-indigo-600" />, 
+      title: "Academic Results", 
+      desc: "Personalized performance tracking vs class & KCSE targets." 
+    },
+    { 
+      icon: <FaDollarSign className="w-5 h-5 text-amber-600" />, 
+      title: "Fee Structures", 
+      desc: "Check balance, download statements, and payment slips." 
+    },
+    { 
+      icon: <FaCalendar className="w-5 h-5 text-rose-600" />, 
+      title: "School Events", 
+      desc: "Academic calendar, sports days, and parent-teacher meets." 
+    },
+    { 
+      icon: <FaComments className="w-5 h-5 text-purple-600" />, 
+      title: "School News", 
+      desc: "Latest updates from the administration and student body." 
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 font-sans overflow-x-hidden">
+      {/* Dynamic Background Pattern */}
+      <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]" 
+           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      
+      <Toaster position="top-right" expand={true} richColors theme="light" />
+      
+      <main className="relative z-10 flex flex-col min-h-screen">
+        {/* Navigation Bar */}
+        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 md:px-12">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <div className="flex items-center gap-3">
+
+<div className="flex items-center gap-3">
+  <Image
+    src="/lll.png"
+    alt="Katwanyaa High School Logo"
+    width={48}
+    height={48}
+    className="rounded-md"
+    priority
+  />
+
+  <div>
+    <span className="text-lg font-black tracking-tighter block leading-none">
+      KATWANYAA
+    </span>
+    <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+      High School Portal
+    </span>
+  </div>
+</div>
+
+            </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
+              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider">Secure Login</span>
+              </div>
+              <button className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">Help Desk</button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Hero Section with Login */}
+        <section className="px-6 md:px-12 py-12 lg:py-20 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 text-[10px] font-bold tracking-widest uppercase text-slate-500">
+                <HiSparkles className="w-3 h-3 text-blue-600" />
+                Empowering Excellence Since 1978
+              </div>
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] text-slate-950">
+                EDUCATION  <br />
+                <span className="text-blue-600 italic">IS  LIGHT.</span>
+              </h1>
+              <p className="text-xl text-slate-500 font-medium max-w-md leading-snug">
+                Welcome to the Katwanyaa High School Digital Student Portal. Your unified hub for academics, finance, and communication.
+              </p>
+              
+              {/* Login Button */}
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md">
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:shadow-lg sm:hover:shadow-xl transition-all transform hover:-translate-y-0.5 sm:hover:-translate-y-1 mobile-touch-friendly"
+                  className="flex items-center w-[50%] justify-center gap-3 px-8 py-4 bg-slate-950 text-white rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-2xl shadow-slate-200 group"
                 >
-                  Login to Continue
+                  Access Portal <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+           
+              </div>
+            </div>
+
+            {/* Quick Status / Communication Box */}
+            <div className="relative group">
+              <div className="absolute -inset-4 bg-blue-100/50 rounded-[3rem] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
+              <div className="relative bg-white border border-slate-200 shadow-xl rounded-[2.5rem] p-8 space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <h3 className="font-black text-sm uppercase tracking-widest text-slate-400">Portal Features</h3>
+                  <FaBrain className="w-5 h-5 text-blue-500" />
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-xs font-bold text-blue-600 mb-1">Academic Resources</p>
+                    <p className="text-sm font-semibold text-slate-800">Digital notes, e-books, and past papers available.</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-xs font-bold text-emerald-600 mb-1">Performance Tracking</p>
+                    <p className="text-sm font-semibold text-slate-800">Monitor your progress vs KCSE targets.</p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-xs font-bold text-purple-600 mb-1">Fee Management</p>
+                    <p className="text-sm font-semibold text-slate-800">Check balance and download payment slips.</p>
+                  </div>
+                </div>
+                <button className="w-full py-4 text-center text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">
+                  View All Features
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <StudentLoginModal
-          isOpen={showLoginModal}
-          onClose={() => setShowLoginModal(false)}
-          onLogin={handleStudentLogin}
-          isLoading={loginLoading}
-          error={loginError}
-          requiresContact={requiresContact}
-        />
-      </div>
-    );
-  }
+        {/* Feature Grid: School Features */}
+        <section className="bg-slate-50/50 border-y border-slate-200/60 py-20 px-6 md:px-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-12">
+              <h2 className="text-3xl font-black tracking-tight mb-2">Portal Modules</h2>
+              <p className="text-slate-500 font-medium">Everything you need to navigate your school journey.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {features.map((feature, i) => (
+                <div key={i} className="group p-8 bg-white border border-slate-200/80 rounded-[2rem] hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300">
+                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-950 mb-3">{feature.title}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6">{feature.desc}</p>
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors cursor-pointer">
+                    Login to Access <FaArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="px-6 py-12 md:px-12 bg-white">
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-12">
+            <div className="flex flex-col items-center lg:items-start gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                  <FaBrain className="w-4 h-4 text-slate-400" />
+                </div>
+                <span className="text-sm font-bold tracking-tight">Katwanyaa Technical Lab</span>
+              </div>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">©2024 Katwanyaa High School. All Rights Reserved.</p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-10">
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Academic Hub</p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">KNEC Portal</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Financials</p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">Payment Gateways</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Support</p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">IT Service Desk</p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+
+      {/* Login Modal */}
+      <StudentLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleStudentLogin}
+        isLoading={loginLoading}
+        error={loginError}
+        requiresContact={requiresContact}
+      />
+    </div>
+  );
+}
 
   // Main portal layout
   return (
@@ -999,6 +1105,8 @@ export default function ModernStudentPortalPage() {
                 student={student}
                 feeBalance={feeBalance}
                 feeLoading={feeLoading}
+                    token={token} // ADD THIS LINE
+
               />
             )}
             {currentView === 'results' && (
@@ -1025,6 +1133,14 @@ export default function ModernStudentPortalPage() {
 
             {currentView === 'guidance' && (
               <GuidanceEventsView />
+            )}
+
+            {/* ADDED: Fees View */}
+            {currentView === 'fees' && (
+              <FeesView
+                student={student}
+                token={token}
+              />
             )}
           </main>
 

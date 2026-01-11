@@ -81,23 +81,136 @@ const getFileIcon = (fileType, extension) => {
   return <FiFile className="text-gray-600" />;
 };
 
+// ==================== NEW DOWNLOAD ALL FUNCTIONALITY ====================
+
+const downloadAllFiles = async (items, activeTab) => {
+  try {
+    // Show loading indicator
+    const loadingAlert = document.createElement('div');
+    loadingAlert.className = 'fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-[10000]';
+    loadingAlert.innerHTML = `
+      <div class="flex items-center gap-2">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Preparing download...</span>
+      </div>
+    `;
+    document.body.appendChild(loadingAlert);
+
+    const filesToDownload = [];
+    
+    if (activeTab === 'resources') {
+      // Process resources
+      items.forEach(resource => {
+        if (resource.mainAttachment?.url) {
+          filesToDownload.push({
+            url: resource.mainAttachment.url,
+            fileName: resource.mainAttachment.fileName || `resource_${resource.id || Date.now()}`,
+            folder: `Resources/${resource.className || 'Other'}/${resource.subject || 'General'}`
+          });
+        }
+      });
+    } else {
+      // Process assignments
+      items.forEach(assignment => {
+        // Add assignment files
+        (assignment.assignmentFileAttachments || []).forEach((file, index) => {
+          filesToDownload.push({
+            url: file.url,
+            fileName: file.fileName || `assignment_${assignment.id || Date.now()}_${index}`,
+            folder: `Assignments/${assignment.className || 'Other'}/${assignment.subject || 'General'}`
+          });
+        });
+        
+        // Add additional attachments
+        (assignment.attachmentAttachments || []).forEach((file, index) => {
+          filesToDownload.push({
+            url: file.url,
+            fileName: file.fileName || `attachment_${assignment.id || Date.now()}_${index}`,
+            folder: `Assignments/${assignment.className || 'Other'}/${assignment.subject || 'General'}`
+          });
+        });
+      });
+    }
+
+    if (filesToDownload.length === 0) {
+      document.body.removeChild(loadingAlert);
+      alert('No files available for download');
+      return;
+    }
+
+    // Update loading message
+    loadingAlert.innerHTML = `
+      <div class="flex items-center gap-2">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Downloading ${filesToDownload.length} files...</span>
+      </div>
+    `;
+
+    // Download each file
+    for (let i = 0; i < filesToDownload.length; i++) {
+      const file = filesToDownload[i];
+      try {
+        const response = await fetch(file.url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = file.fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+        
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Failed to download ${file.fileName}:`, error);
+      }
+    }
+
+    // Show completion message
+    loadingAlert.innerHTML = `
+      <div class="flex items-center gap-2">
+        <div class="text-green-300">✓</div>
+        <span>Downloaded ${filesToDownload.length} files!</span>
+      </div>
+    `;
+    
+    setTimeout(() => {
+      document.body.removeChild(loadingAlert);
+    }, 3000);
+
+  } catch (error) {
+    console.error('Error downloading files:', error);
+    const loadingAlert = document.querySelector('.fixed.top-4.right-4');
+    if (loadingAlert) {
+      loadingAlert.innerHTML = `
+        <div class="flex items-center gap-2">
+          <div class="text-red-300">✗</div>
+          <span>Download failed!</span>
+        </div>
+      `;
+      setTimeout(() => {
+        document.body.removeChild(loadingAlert);
+      }, 3000);
+    }
+  }
+};
+
 // ==================== RESPONSIVE UTILITIES ====================
 
-// Custom CSS for hiding scrollbars on small screens
 const scrollbarHideStyles = `
   @media (max-width: 767px) {
-    /* Hide scrollbar for Chrome, Safari and Opera */
     .scrollbar-hide-sm::-webkit-scrollbar {
       display: none;
     }
     
-    /* Hide scrollbar for IE, Edge and Firefox */
     .scrollbar-hide-sm {
-      -ms-overflow-style: none;  /* IE and Edge */
-      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
     
-    /* Ensure scrolling still works */
     .scrollbar-hide-sm {
       overflow: auto;
     }
@@ -106,7 +219,6 @@ const scrollbarHideStyles = `
 
 // ==================== COMPONENTS ====================
 
-// Loading Spinner Component
 function ResourcesLoadingSpinner({ message = "Loading resources...", size = "medium" }) {
   const sizes = {
     small: { outer: 48, inner: 24 },
@@ -151,7 +263,6 @@ function ResourcesLoadingSpinner({ message = "Loading resources...", size = "med
   );
 }
 
-// Resource Type Icons Helper
 const ResourceTypeIcon = ({ type, size = 20 }) => {
   switch (type?.toLowerCase()) {
     case 'pdf':
@@ -176,7 +287,6 @@ const ResourceTypeIcon = ({ type, size = 20 }) => {
   }
 };
 
-// Status Badge Component
 function StatusBadge({ status, size = "sm" }) {
   const getStatusConfig = () => {
     switch (status?.toLowerCase()) {
@@ -240,28 +350,145 @@ function StatusBadge({ status, size = "sm" }) {
   );
 }
 
-// Attachments Section Component
 function AttachmentsSection({ 
   title, 
   attachments, 
-  emptyMessage = "No attachments available" 
+  emptyMessage = "No attachments available",
+  downloadAllLabel = "Download All",
+  showDownloadAllButton = true,
+  sectionType = "default" // "assignment-files", "additional", or "resources"
 }) {
   if (!attachments || attachments.length === 0) {
     return null;
   }
 
+  // Function to download all attachments in this section
+  const handleDownloadAll = async () => {
+    if (attachments.length === 0) {
+      alert('No files available for download');
+      return;
+    }
+
+    const loadingAlert = document.createElement('div');
+    loadingAlert.className = 'fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg z-[10000]';
+    loadingAlert.innerHTML = `
+      <div class="flex items-center gap-2">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Preparing download of ${attachments.length} files...</span>
+      </div>
+    `;
+    document.body.appendChild(loadingAlert);
+
+    try {
+      for (let i = 0; i < attachments.length; i++) {
+        const file = attachments[i];
+        try {
+          const response = await fetch(file.url);
+          const blob = await response.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = file.fileName || `${sectionType}_${i + 1}`;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+          
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.error(`Failed to download ${file.fileName}:`, error);
+        }
+      }
+
+      loadingAlert.innerHTML = `
+        <div class="flex items-center gap-2">
+          <div class="text-green-300">✓</div>
+          <span>Downloaded ${attachments.length} files!</span>
+        </div>
+      `;
+      
+      setTimeout(() => {
+        document.body.removeChild(loadingAlert);
+      }, 3000);
+    } catch (error) {
+      console.error('Error downloading files:', error);
+      loadingAlert.innerHTML = `
+        <div class="flex items-center gap-2">
+          <div class="text-red-300">✗</div>
+          <span>Download failed!</span>
+        </div>
+      `;
+      setTimeout(() => {
+        document.body.removeChild(loadingAlert);
+      }, 3000);
+    }
+  };
+
+  // Get section colors based on type
+  const getSectionColors = () => {
+    switch (sectionType) {
+      case 'assignment-files':
+        return {
+          bg: 'from-blue-50 to-blue-100',
+          border: 'border-blue-300',
+          icon: 'text-blue-500',
+          badge: 'bg-blue-100 text-blue-800',
+          downloadBtn: 'from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900'
+        };
+      case 'additional':
+        return {
+          bg: 'from-emerald-50 to-emerald-100',
+          border: 'border-emerald-300',
+          icon: 'text-emerald-500',
+          badge: 'bg-emerald-100 text-emerald-800',
+          downloadBtn: 'from-emerald-600 to-emerald-800 hover:from-emerald-700 hover:to-emerald-900'
+        };
+      case 'resources':
+        return {
+          bg: 'from-purple-50 to-purple-100',
+          border: 'border-purple-300',
+          icon: 'text-purple-500',
+          badge: 'bg-purple-100 text-purple-800',
+          downloadBtn: 'from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900'
+        };
+      default:
+        return {
+          bg: 'from-gray-50 to-gray-100',
+          border: 'border-gray-300',
+          icon: 'text-blue-500',
+          badge: 'bg-gray-200 text-gray-800',
+          downloadBtn: 'from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900'
+        };
+    }
+  };
+
+  const colors = getSectionColors();
+
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 md:p-6 border-2 border-gray-300">
-      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
-        <IoDocumentAttach className="text-blue-500 flex-shrink-0" />
-        <span className="truncate">{title} ({attachments.length})</span>
-      </h3>
+    <div className={`bg-gradient-to-r ${colors.bg} rounded-xl p-3 sm:p-4 md:p-6 border-2 ${colors.border}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+          <IoDocumentAttach className={`${colors.icon} flex-shrink-0`} />
+          <span className="truncate">{title} ({attachments.length})</span>
+        </h3>
+        
+        {showDownloadAllButton && attachments.length > 1 && (
+          <button
+            onClick={handleDownloadAll}
+            className={`px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r ${colors.downloadBtn} text-white rounded-lg font-bold text-xs sm:text-sm hover:shadow-lg transition-all flex items-center gap-1.5`}
+          >
+            <FiDownload className="text-sm" />
+            <span>{downloadAllLabel} ({attachments.length})</span>
+          </button>
+        )}
+      </div>
       
       <div className="space-y-2 sm:space-y-3">
         {attachments.map((attachment, index) => (
           <div 
             key={index} 
-            className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border border-gray-300 hover:border-blue-400 transition-colors group"
+            className={`flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border ${colors.border} hover:border-blue-400 transition-colors group`}
           >
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <div className="p-1.5 sm:p-2 bg-gray-100 rounded-lg flex-shrink-0">
@@ -272,12 +499,13 @@ function AttachmentsSection({
                   {attachment.fileName}
                 </div>
                 <div className="text-xs text-gray-600 flex flex-wrap items-center gap-1 sm:gap-2 mt-0.5 sm:mt-1">
-                  <span className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">
+                  <span className={`${colors.badge} px-1.5 py-0.5 rounded text-xs`}>
                     {attachment.fileType || attachment.extension?.toUpperCase() || 'File'}
                   </span>
                   {attachment.fileSize && (
                     <span className="text-xs">{attachment.fileSize}</span>
                   )}
+                  <span className="text-xs text-gray-500">File {index + 1}</span>
                 </div>
               </div>
             </div>
@@ -304,11 +532,23 @@ function AttachmentsSection({
           </div>
         ))}
       </div>
+
+      {/* Quick Download All Button for single files too */}
+      {showDownloadAllButton && attachments.length === 1 && (
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-300">
+          <button
+            onClick={handleDownloadAll}
+            className={`w-full px-3 py-2 bg-gradient-to-r ${colors.downloadBtn} text-white rounded-lg font-bold text-sm hover:shadow-lg transition-all flex items-center justify-center gap-2`}
+          >
+            <FiDownload className="text-base" />
+            <span>Download This File</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// Statistics Card Component
 function ResourceStatsCard({ title, value, icon: Icon, color, trend = 0, prefix = '', suffix = '', description }) {
   const formatValue = (val) => {
     if (typeof val === 'number') {
@@ -342,12 +582,10 @@ function ResourceStatsCard({ title, value, icon: Icon, color, trend = 0, prefix 
   );
 }
 
-// Resource/Assignment Card Component
 function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = false, onView, onDownload }) {
   const isResource = type === 'resource';
   const isOverdue = !isResource && new Date(item.dueDate) < new Date() && item.status !== 'completed';
   
-  // Calculate total attachments
   const totalAttachments = isResource 
     ? (item.mainAttachment ? 1 : 0)
     : ((item.assignmentFileAttachments?.length || 0) + (item.attachmentAttachments?.length || 0));
@@ -375,7 +613,6 @@ function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = fals
       )}
 
       <div className="p-3 sm:p-4 md:p-5">
-        {/* Header */}
         <div className="flex items-start justify-between mb-2 sm:mb-3 md:mb-4">
           <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
             <div className={`p-1.5 sm:p-2 md:p-3 rounded-xl flex-shrink-0 ${
@@ -407,7 +644,6 @@ function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = fals
           )}
         </div>
 
-        {/* Details */}
         <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 md:mb-4">
           {!isResource && (
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -420,7 +656,6 @@ function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = fals
             <span className="text-xs truncate">{item.className}</span>
           </div>
           
-          {/* Attachment Indicators */}
           {totalAttachments > 0 && (
             <div className="flex items-center gap-1.5 sm:gap-2">
               <IoDocumentAttach size={12} className="sm:size-4 text-green-500 flex-shrink-0" />
@@ -438,14 +673,12 @@ function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = fals
           )}
         </div>
 
-        {/* Description */}
         {item.description && (
           <p className="text-xs text-gray-700 mb-2 sm:mb-3 md:mb-4 line-clamp-2">
             {item.description}
           </p>
         )}
 
-        {/* Actions */}
         <div className="flex flex-col xs:flex-row gap-2">
           <button
             onClick={() => onView?.(item)}
@@ -469,7 +702,6 @@ function ResourceAssignmentCard({ item, type = 'resource', isStudentClass = fals
   );
 }
 
-// Details Modal Component
 function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) {
   if (!item) return null;
 
@@ -481,7 +713,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
       <style>{scrollbarHideStyles}</style>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4">
         <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border-2 border-gray-300 shadow-2xl">
-          {/* Header */}
           <div className={`p-3 sm:p-4 md:p-6 text-white ${
             isResource 
               ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800' 
@@ -513,7 +744,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
           </div>
 
           <div className="max-h-[calc(90vh-72px)] sm:max-h-[calc(90vh-80px)] overflow-y-auto scrollbar-hide-sm p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
-            {/* Status & Class Badges */}
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {!isResource && <StatusBadge status={item.status} size="sm" className="sm:size-md" />}
               <span className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 rounded-full text-xs sm:text-sm font-semibold">
@@ -531,7 +761,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               )}
             </div>
 
-            {/* Details Grid */}
             <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
               {!isResource && (
                 <>
@@ -559,7 +788,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               )}
             </div>
 
-            {/* Description */}
             {item.description && (
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 md:p-6 border-2 border-gray-300">
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3">Description</h3>
@@ -567,7 +795,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               </div>
             )}
 
-            {/* Instructions for Assignments */}
             {!isResource && item.instructions && (
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-3 sm:p-4 md:p-6 border-2 border-blue-300">
                 <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 flex items-center gap-1.5">
@@ -578,9 +805,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               </div>
             )}
 
-            {/* ATTACHMENTS SECTIONS */}
-            
-            {/* Resource Attachment */}
             {isResource && item.mainAttachment && (
               <AttachmentsSection
                 title="File Attachment"
@@ -588,7 +812,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               />
             )}
 
-            {/* Assignment Files */}
             {!isResource && (
               <>
                 {(item.assignmentFileAttachments?.length || 0) > 0 && (
@@ -607,9 +830,7 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
               </>
             )}
 
-            {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
-              {/* Close Button */}
               <button
                 onClick={onClose}
                 className="
@@ -628,7 +849,6 @@ function ResourceDetailsModal({ item, type = 'resource', onClose, onDownload }) 
                 <span>Close</span>
               </button>
 
-              {/* Download Button */}
               <button
                 onClick={() => onDownload?.(item)}
                 className="
@@ -671,7 +891,6 @@ export default function ModernResourcesAssignmentsView({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   
-  // API states
   const [assignments, setAssignments] = useState([]);
   const [resources, setResources] = useState([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -685,6 +904,12 @@ export default function ModernResourcesAssignmentsView({
     averageCompletion: 0
   });
 
+  // Get student's class format
+  const getStudentClass = useCallback(() => {
+    if (!student || !student.form) return '';
+    return `Form ${student.form} ${student.stream || ''}`.trim();
+  }, [student]);
+
   // Fetch assignments from API
   const fetchAssignments = useCallback(async () => {
     setAssignmentsLoading(true);
@@ -692,15 +917,12 @@ export default function ModernResourcesAssignmentsView({
       const response = await fetch('/api/assignment');
       const data = await response.json();
       if (data.success) {
-        // Process assignments to include attachment metadata
         const processedAssignments = (data.assignments || []).map((assignment) => ({
           ...assignment,
-          // Process assignmentFiles into structured attachments
           assignmentFileAttachments: (assignment.assignmentFiles || []).map((url) => ({
             ...extractFileInfoFromUrl(url),
             url
           })),
-          // Process attachments into structured attachments
           attachmentAttachments: (assignment.attachments || []).map((url) => ({
             ...extractFileInfoFromUrl(url),
             url
@@ -726,10 +948,8 @@ export default function ModernResourcesAssignmentsView({
       const response = await fetch('/api/resources');
       const data = await response.json();
       if (data.success) {
-        // Process resources - they already have file metadata
         const processedResources = (data.resources || []).map((resource) => ({
           ...resource,
-          // Add structured attachment for the main file
           mainAttachment: {
             url: resource.fileUrl,
             fileName: resource.fileName,
@@ -751,7 +971,6 @@ export default function ModernResourcesAssignmentsView({
     }
   }, []);
 
-  // Refresh all data
   const handleRefresh = useCallback(() => {
     if (activeTab === 'assignments') {
       fetchAssignments();
@@ -760,7 +979,6 @@ export default function ModernResourcesAssignmentsView({
     }
   }, [activeTab, fetchAssignments, fetchResources]);
 
-  // Initial data fetch
   useEffect(() => {
     fetchAssignments();
     fetchResources();
@@ -793,19 +1011,28 @@ export default function ModernResourcesAssignmentsView({
     });
   }, [assignments, resources]);
 
-  // Extract unique filter values
+  // Extract unique filter values with student's class first
   const classes = useMemo(() => {
     const items = activeTab === 'assignments' ? assignments : resources;
-    const values = ['all', ...new Set(items.map(item => item.className).filter(Boolean))];
+    const studentClass = getStudentClass();
     
-    const studentClass = student ? 
-      `Form ${student.form} ${student.stream || ''}`.trim() : '';
+    // Get all unique classes
+    const allClasses = [...new Set(items.map(item => item.className).filter(Boolean))];
     
-    if (studentClass && values.includes(studentClass)) {
-      return ['all', studentClass, ...values.filter(v => v !== 'all' && v !== studentClass)];
+    // Remove student's class from the list if it exists
+    const otherClasses = allClasses.filter(cls => cls !== studentClass);
+    
+    // Return with student's class first if it exists in the data
+    const finalClasses = ['all'];
+    if (studentClass && allClasses.includes(studentClass)) {
+      finalClasses.push(studentClass);
     }
-    return values;
-  }, [assignments, resources, activeTab, student]);
+    
+    // Add remaining classes
+    finalClasses.push(...otherClasses);
+    
+    return finalClasses;
+  }, [assignments, resources, activeTab, getStudentClass]);
 
   const subjects = useMemo(() => {
     const items = activeTab === 'assignments' ? assignments : resources;
@@ -824,7 +1051,6 @@ export default function ModernResourcesAssignmentsView({
   }, []);
 
   const resourceTypes = useMemo(() => {
-    // Extract types from resources
     const uniqueTypes = ['all', ...new Set(resources.map(r => r.type).filter(Boolean))];
     
     const typeConfigs = {
@@ -844,10 +1070,9 @@ export default function ModernResourcesAssignmentsView({
     }));
   }, [resources]);
 
-  // Filter assignments
+  // Filter and sort assignments with student's class first
   const filteredAssignments = useMemo(() => {
-    const studentClass = student ? 
-      `Form ${student.form} ${student.stream || ''}`.trim() : '';
+    const studentClass = getStudentClass();
     
     return assignments.filter(assignment => {
       const matchesClass = selectedClass === 'all' || assignment.className === selectedClass;
@@ -865,13 +1090,17 @@ export default function ModernResourcesAssignmentsView({
     }).map(assignment => ({
       ...assignment,
       priority: assignment.className === studentClass ? 1 : 0
-    })).sort((a, b) => b.priority - a.priority);
-  }, [assignments, selectedClass, selectedSubject, selectedStatus, searchTerm, student]);
+    })).sort((a, b) => {
+      // First sort by student's class (priority)
+      if (a.priority !== b.priority) return b.priority - a.priority;
+      // Then by due date
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    });
+  }, [assignments, selectedClass, selectedSubject, selectedStatus, searchTerm, getStudentClass]);
 
-  // Filter resources
+  // Filter and sort resources with student's class first
   const filteredResources = useMemo(() => {
-    const studentClass = student ? 
-      `Form ${student.form} ${student.stream || ''}`.trim() : '';
+    const studentClass = getStudentClass();
     
     return resources.filter(resource => {
       const matchesType = selectedResourceType === 'all' || resource.type === selectedResourceType;
@@ -888,8 +1117,14 @@ export default function ModernResourcesAssignmentsView({
     }).map(resource => ({
       ...resource,
       priority: resource.className === studentClass ? 1 : 0
-    })).sort((a, b) => b.priority - a.priority);
-  }, [resources, selectedResourceType, selectedClass, selectedSubject, searchTerm, student]);
+    })).sort((a, b) => {
+      // First sort by student's class (priority)
+      if (a.priority !== b.priority) return b.priority - a.priority;
+      // Then by date added (if available) or title
+      return (a.dateAdded || '').localeCompare(b.dateAdded || '') || 
+             (a.title || '').localeCompare(b.title || '');
+    });
+  }, [resources, selectedResourceType, selectedClass, selectedSubject, searchTerm, getStudentClass]);
 
   const clearFilters = () => {
     setSelectedClass('all');
@@ -906,7 +1141,6 @@ export default function ModernResourcesAssignmentsView({
 
   const handleDownload = (item) => {
     if (activeTab === 'resources') {
-      // For resources, download the main file
       if (item.mainAttachment?.url) {
         const link = document.createElement('a');
         link.href = item.mainAttachment.url;
@@ -916,7 +1150,6 @@ export default function ModernResourcesAssignmentsView({
         document.body.removeChild(link);
       }
     } else {
-      // For assignments, download the first file if available
       if (item.assignmentFileAttachments?.[0]?.url) {
         const attachment = item.assignmentFileAttachments[0];
         const link = document.createElement('a');
@@ -926,7 +1159,6 @@ export default function ModernResourcesAssignmentsView({
         link.click();
         document.body.removeChild(link);
       } else if (item.attachmentAttachments?.[0]?.url) {
-        // Fallback to first attachment
         const attachment = item.attachmentAttachments[0];
         const link = document.createElement('a');
         link.href = attachment.url;
@@ -935,18 +1167,23 @@ export default function ModernResourcesAssignmentsView({
         link.click();
         document.body.removeChild(link);
       } else {
-        // If no files, show message
         alert('No files available for download');
       }
     }
     
-    // Call the original onDownload prop if provided
     onDownload?.(item);
+  };
+
+  // Download all functionality
+  const handleDownloadAll = () => {
+    const items = activeTab === 'assignments' ? filteredAssignments : filteredResources;
+    downloadAllFiles(items, activeTab);
   };
 
   const currentItems = activeTab === 'assignments' ? filteredAssignments : filteredResources;
   const totalItems = activeTab === 'assignments' ? assignments.length : resources.length;
   const filteredCount = currentItems.length;
+  const studentClass = getStudentClass();
 
   const isLoading = assignmentsLoading || resourcesLoading;
 
@@ -970,22 +1207,39 @@ export default function ModernResourcesAssignmentsView({
                   <h1 className="text-lg sm:text-xl md:text-3xl font-bold truncate">Learning Resources & Assignments</h1>
                   <p className="text-blue-100 text-xs sm:text-sm md:text-lg mt-0.5 truncate">
                     Access study materials and track your academic work
-                    {student?.form && (
+                    {student && (
                       <span className="ml-1 sm:ml-2 text-yellow-300 font-semibold">
-                        (Form {student.form} {student.stream || ''})
+                        ({studentClass})
                       </span>
                     )}
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleRefresh}
-                disabled={isLoading}
-                className="mt-2 sm:mt-0 px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-white/20 text-white rounded-xl font-bold text-xs sm:text-sm md:text-base hover:bg-white/30 disabled:opacity-50 flex items-center gap-1.5 justify-center"
-              >
-                <FiRefreshCw className={`${isLoading ? 'animate-spin' : ''} text-sm sm:text-base`} />
-                {isLoading ? 'Refreshing...' : 'Refresh'}
-              </button>
+              <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                {/* Download All Button */}
+                {filteredCount > 0 && (
+                  <button
+                    onClick={handleDownloadAll}
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm hover:from-green-700 hover:to-emerald-800 disabled:opacity-50 flex items-center gap-1.5"
+                    title={`Download all ${filteredCount} ${activeTab}`}
+                  >
+                    <FiDownload className="text-sm sm:text-base" />
+                    <span className="hidden sm:inline">Download All</span>
+                    <span className="inline sm:hidden">All</span>
+                    <span className="bg-white/30 px-1.5 py-0.5 rounded-md text-xs">
+                      {filteredCount}
+                    </span>
+                  </button>
+                )}
+                <button
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-white/20 text-white rounded-xl font-bold text-xs sm:text-sm md:text-base hover:bg-white/30 disabled:opacity-50 flex items-center gap-1.5 justify-center"
+                >
+                  <FiRefreshCw className={`${isLoading ? 'animate-spin' : ''} text-sm sm:text-base`} />
+                  {isLoading ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1124,6 +1378,7 @@ export default function ModernResourcesAssignmentsView({
                       {classes.map(cls => (
                         <option key={cls} value={cls}>
                           {cls === 'all' ? 'All Classes' : cls}
+                          {cls === studentClass && ' (Your Class)'}
                         </option>
                       ))}
                     </select>
@@ -1199,10 +1454,11 @@ export default function ModernResourcesAssignmentsView({
           {/* Results Summary */}
           <div className="mb-2 sm:mb-3 md:mb-4">
             <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1 truncate">
-              {activeTab === 'assignments' ? 'Your Assignments' : 'Learning Resources'}
+              {studentClass} {activeTab === 'assignments' ? 'Assignments' : 'Learning Resources'}
             </h3>
             <p className="text-gray-600 text-xs sm:text-sm truncate">
-              {filteredCount} of {totalItems} items • {searchTerm && `Search: "${searchTerm}"`}
+              {filteredCount} of {totalItems} items • {studentClass} items shown first
+              {searchTerm && ` • Search: "${searchTerm}"`}
               {isLoading && <span className="ml-1 sm:ml-2 text-blue-600">Loading...</span>}
             </p>
           </div>
@@ -1232,18 +1488,59 @@ export default function ModernResourcesAssignmentsView({
               )}
             </div>
           ) : viewMode === 'grid' ? (
-            // Grid View
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-              {currentItems.map((item, index) => (
-                <ResourceAssignmentCard
-                  key={index}
-                  item={item}
-                  type={activeTab}
-                  isStudentClass={item.priority === 1}
-                  onView={handleViewDetails}
-                  onDownload={handleDownload}
-                />
-              ))}
+            // Grid View with student's class items first
+            <div className="space-y-4 sm:space-y-6">
+              {/* Student's Class Section */}
+              {currentItems.some(item => item.priority === 1) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                    <div className="w-1 h-5 sm:h-6 bg-gradient-to-b from-blue-500 to-blue-700 rounded-full"></div>
+                    <h4 className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      Your Class ({studentClass})
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                    {currentItems
+                      .filter(item => item.priority === 1)
+                      .map((item, index) => (
+                        <ResourceAssignmentCard
+                          key={index}
+                          item={item}
+                          type={activeTab}
+                          isStudentClass={true}
+                          onView={handleViewDetails}
+                          onDownload={handleDownload}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Other Classes Section */}
+              {currentItems.some(item => item.priority === 0) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2 sm:mb-3 mt-4 sm:mt-6">
+                    <div className="w-1 h-5 sm:h-6 bg-gradient-to-b from-gray-500 to-gray-700 rounded-full"></div>
+                    <h4 className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      Other Classes
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                    {currentItems
+                      .filter(item => item.priority === 0)
+                      .map((item, index) => (
+                        <ResourceAssignmentCard
+                          key={index}
+                          item={item}
+                          type={activeTab}
+                          isStudentClass={false}
+                          onView={handleViewDetails}
+                          onDownload={handleDownload}
+                        />
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             // List View
@@ -1252,9 +1549,9 @@ export default function ModernResourcesAssignmentsView({
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-gradient-to-r from-gray-50 to-white border-b-2 border-gray-200">
                     <tr>
+                      <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Class</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Title</th>
                       <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Subject</th>
-                      <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Class</th>
                       {activeTab === 'assignments' ? (
                         <>
                           <th className="px-2 sm:px-3 md:px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Due Date</th>
@@ -1275,7 +1572,19 @@ export default function ModernResourcesAssignmentsView({
                         : item.mainAttachment ? 1 : 0;
                       
                       return (
-                        <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <tr key={index} className={`hover:bg-gray-50 transition-colors ${
+                          item.priority === 1 ? 'bg-gradient-to-r from-blue-50/50 to-blue-50/30' : ''
+                        }`}>
+                          <td className="px-2 sm:px-3 md:px-4 py-2">
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium text-gray-900 text-xs sm:text-sm">
+                                {item.className}
+                              </span>
+                              {item.priority === 1 && (
+                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">Your Class</span>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-2 sm:px-3 md:px-4 py-2">
                             <div className="flex items-center gap-1.5 sm:gap-2">
                               <div className={`p-1 sm:p-1.5 rounded-lg flex-shrink-0 ${
@@ -1295,13 +1604,9 @@ export default function ModernResourcesAssignmentsView({
                                   <div className="text-xs text-gray-500 line-clamp-1 hidden sm:block">{item.description}</div>
                                 )}
                               </div>
-                              {item.priority === 1 && (
-                                <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full flex-shrink-0">Your Class</span>
-                              )}
                             </div>
                           </td>
                           <td className="px-2 sm:px-3 md:px-4 py-2 text-xs sm:text-sm text-gray-900 truncate">{item.subject}</td>
-                          <td className="px-2 sm:px-3 md:px-4 py-2 text-xs sm:text-sm text-gray-600 truncate">{item.className}</td>
                           {activeTab === 'assignments' ? (
                             <>
                               <td className="px-2 sm:px-3 md:px-4 py-2 whitespace-nowrap text-xs sm:text-sm text-gray-600">

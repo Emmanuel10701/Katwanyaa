@@ -1608,54 +1608,209 @@ if (action === 'stats') {
       });
     }
 
-    if (action === 'student-fees') {
-      // Get all fees for a specific student (both active and inactive for history)
-      if (!admissionNumber) {
-        return NextResponse.json(
-          { success: false, error: 'admissionNumber is required for student-fees action' },
-          { status: 400 }
-        );
+if (action === 'student-fees') {
+  // Get all fees for a specific student across ALL terms and years
+  if (!admissionNumber) {
+    return NextResponse.json(
+      { success: false, error: 'admissionNumber is required for student-fees action' },
+      { status: 400 }
+    );
+  }
+  
+  console.log(`📊 Fetching ALL fees for student: ${admissionNumber}`);
+  
+  // Get all fees for this student (active and inactive)
+  const allStudentFees = await prisma.feeBalance.findMany({
+    where: {
+      admissionNumber,
+      ...(form && { form }),
+      ...(term && { term }),
+      ...(academicYear && { academicYear })
+    },
+    orderBy: [
+      { academicYear: 'desc' },  // Newest year first
+      { term: 'desc' },          // Term 3, Term 2, Term 1
+      { updatedAt: 'desc' }
+    ],
+    include: {
+      student: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          admissionNumber: true,
+          form: true,
+          stream: true,
+          email: true,
+          parentPhone: true
+        }
       }
-      
-      const studentFees = await prisma.feeBalance.findMany({
-        where: {
-          admissionNumber,
-          ...(form && { form }),
-          ...(term && { term }),
-          ...(academicYear && { academicYear })
-        },
-        orderBy: { 
-          academicYear: 'desc',
-          term: 'desc',
-          updatedAt: 'desc'
-        },
-        include: {
-          student: {
-            select: {
-              firstName: true,
-              lastName: true,
-              form: true,
-              stream: true
-            }
-          }
-        }
-      });
-      
-      // Separate active and inactive fees
-      const activeFees = studentFees.filter(fee => fee.isActive);
-      const inactiveFees = studentFees.filter(fee => !fee.isActive);
-      
-      return NextResponse.json({
-        success: true,
-        data: {
-          activeFees,
-          inactiveFees,
-          totalFees: studentFees.length,
-          activeCount: activeFees.length,
-          inactiveCount: inactiveFees.length
-        }
-      });
     }
+  });
+  
+  console.log(`✅ Found ${allStudentFees.length} fee records for ${admissionNumber}`);
+  
+  // Separate active and inactive
+  const activeFees = allStudentFees.filter(fee => fee.isActive);
+  const inactiveFees = allStudentFees.filter(fee => !fee.isActive);
+  
+  // ====== COMPREHENSIVE SUMMARY CALCULATION ======
+  
+  // Overall totals (ALL fees)
+  const overallTotal = {
+    totalAmount: allStudentFees.reduce((sum, fee) => sum + (fee.amount || 0), 0),
+    totalPaid: allStudentFees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0),
+    totalBalance: allStudentFees.reduce((sum, fee) => sum + (fee.balance || 0), 0),
+    totalRecords: allStudentFees.length
+  };
+  
+  // Active fees only totals
+  const activeTotal = {
+    totalAmount: activeFees.reduce((sum, fee) => sum + (fee.amount || 0), 0),
+    totalPaid: activeFees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0),
+    totalBalance: activeFees.reduce((sum, fee) => sum + (fee.balance || 0), 0),
+    totalRecords: activeFees.length
+  };
+  
+  // ====== GROUP BY ACADEMIC YEAR ======
+  const feesByYear = {};
+  
+  allStudentFees.forEach(fee => {
+    const year = fee.academicYear || 'Unknown';
+    if (!feesByYear[year]) {
+      feesByYear[year] = {
+        academicYear: year,
+        terms: {},
+        totalAmount: 0,
+        totalPaid: 0,
+        totalBalance: 0,
+        records: []
+      };
+    }
+    
+    // Add to year totals
+    feesByYear[year].totalAmount += fee.amount || 0;
+    feesByYear[year].totalPaid += fee.amountPaid || 0;
+    feesByYear[year].totalBalance += fee.balance || 0;
+    feesByYear[year].records.push(fee);
+    
+    // Group by term within this year
+    const term = fee.term || 'Unknown';
+    if (!feesByYear[year].terms[term]) {
+      feesByYear[year].terms[term] = {
+        term: term,
+        totalAmount: 0,
+        totalPaid: 0,
+        totalBalance: 0,
+        status: fee.paymentStatus,
+        records: []
+      };
+    }
+    
+    feesByYear[year].terms[term].totalAmount += fee.amount || 0;
+    feesByYear[year].terms[term].totalPaid += fee.amountPaid || 0;
+    feesByYear[year].terms[term].totalBalance += fee.balance || 0;
+    feesByYear[year].terms[term].records.push(fee);
+  });
+  
+  // Convert terms object to array for each year
+  Object.keys(feesByYear).forEach(year => {
+    feesByYear[year].terms = Object.values(feesByYear[year].terms);
+    // Sort terms: Term 3, Term 2, Term 1
+    feesByYear[year].terms.sort((a, b) => {
+      const termOrder = { 'Term 3': 3, 'Term 2': 2, 'Term 1': 1 };
+      return (termOrder[b.term] || 0) - (termOrder[a.term] || 0);
+    });
+  });
+  
+  // Convert to sorted array (newest year first)
+  const feesByYearArray = Object.values(feesByYear).sort((a, b) => {
+    // Extract years for comparison (e.g., "2024/2025" -> 2024)
+    const yearA = parseInt(a.academicYear.split('/')[0]) || 0;
+    const yearB = parseInt(b.academicYear.split('/')[0]) || 0;
+    return yearB - yearA; // Descending
+  });
+  
+  // ====== PAYMENT STATUS SUMMARY ======
+  const statusSummary = {
+    paid: activeFees.filter(f => f.paymentStatus === 'paid').length,
+    partial: activeFees.filter(f => f.paymentStatus === 'partial').length,
+    pending: activeFees.filter(f => f.paymentStatus === 'pending').length,
+    totalActive: activeFees.length,
+    totalInactive: inactiveFees.length
+  };
+  
+  // ====== STUDENT INFO ======
+  const studentInfo = allStudentFees.length > 0 
+    ? allStudentFees[0].student 
+    : await prisma.databaseStudent.findUnique({
+        where: { admissionNumber },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          admissionNumber: true,
+          form: true,
+          stream: true,
+          email: true
+        }
+      });
+  
+  console.log(`💰 Fee Summary for ${admissionNumber}:`);
+  console.log(`   Total Amount: KES ${overallTotal.totalAmount.toLocaleString()}`);
+  console.log(`   Total Paid: KES ${overallTotal.totalPaid.toLocaleString()}`);
+  console.log(`   Total Balance: KES ${overallTotal.totalBalance.toLocaleString()}`);
+  console.log(`   Active Records: ${activeFees.length}`);
+  console.log(`   Years with fees: ${feesByYearArray.length}`);
+  
+  // ====== RETURN COMPLETE DATA ======
+  return NextResponse.json({
+    success: true,
+    
+    // Main fee data
+    feeBalances: activeFees,           // Current active fees only
+    allFees: allStudentFees,           // ALL historical fees (active + inactive)
+    inactiveFees: inactiveFees,        // Only inactive/archived fees
+    
+    // Summary data for quick display
+    summary: {
+      // Overall totals (ALL historical)
+      overall: overallTotal,
+      
+      // Current/active totals only
+      current: activeTotal,
+      
+      // Status breakdown
+      status: statusSummary,
+      
+      // Form/Class info
+      currentForm: studentInfo?.form || 'N/A',
+      currentStream: studentInfo?.stream || 'N/A',
+      
+      // Payment status labels
+      isFullyPaid: activeTotal.totalBalance === 0,
+      hasPendingFees: activeTotal.totalBalance > 0,
+      paymentPercentage: activeTotal.totalAmount > 0 
+        ? Math.round((activeTotal.totalPaid / activeTotal.totalAmount) * 100) 
+        : 0
+    },
+    
+    // Organized by academic year (for detailed breakdown)
+    organizedByYear: feesByYearArray,
+    
+    // Student information
+    student: studentInfo,
+    
+    // Metadata
+    metadata: {
+      fetchedAt: new Date().toISOString(),
+      admissionNumber,
+      totalRecords: allStudentFees.length,
+      academicYears: feesByYearArray.map(y => y.academicYear),
+      termsCovered: [...new Set(allStudentFees.map(f => f.term).filter(Boolean))]
+    }
+  });
+}
 
     // ========== DEFAULT: GET FEE BALANCES ==========
     

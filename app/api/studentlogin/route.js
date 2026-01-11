@@ -273,15 +273,15 @@ export async function GET(request) {
       );
     }
 
-    // Check if student still exists and is active
+    // FIXED: Use findUnique with only unique field (id), then check status separately
     const student = await prisma.databaseStudent.findUnique({
       where: { 
-        id: decoded.studentId,
-        status: 'active'
+        id: decoded.studentId  // Only unique field here
       }
     });
 
-    if (!student) {
+    // Check if student exists AND is active
+    if (!student || student.status !== 'active') {
       return NextResponse.json(
         { 
           success: false, 

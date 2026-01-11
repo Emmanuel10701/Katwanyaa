@@ -45,13 +45,93 @@ import {
   FiChevronRight as FiChevronRight2,
   FiGrid,
   FiSliders,
-  FiNewspaper
+  FiNewspaper,
+  FiSortAlphaDown,
+  FiSortAlphaUp
 } from 'react-icons/fi';
+
 // Material-UI Components
 import CircularProgress from '@mui/material/CircularProgress';
 import { Modal, Box, TextField, TextareaAutosize, Chip, Tooltip, Button } from '@mui/material';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+// Filter Chip Component
+const FilterChip = ({ label, value, options, onChange, icon, isOpen, setIsOpen, color = "sky" }) => {
+  const selectedOption = options.find(opt => opt.id === value);
+  const colorClasses = {
+    sky: 'border-sky-200 bg-gradient-to-r from-sky-50 to-sky-100 text-sky-700 hover:border-sky-300',
+    emerald: 'border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 hover:border-emerald-300',
+    amber: 'border-amber-200 bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 hover:border-amber-300',
+    purple: 'border-purple-200 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 hover:border-purple-300',
+    rose: 'border-rose-200 bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 hover:border-rose-300',
+    slate: 'border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 hover:border-slate-300',
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`group flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-sm font-semibold transition-all duration-300 border-2 ${colorClasses[color]} shadow-sm hover:shadow-md active:scale-95`}
+      >
+        <span className="flex items-center gap-2">
+          {icon}
+          <span className="whitespace-nowrap">{label}:</span>
+          <span className="font-bold">{selectedOption?.label || 'All'}</span>
+        </span>
+        <FiChevronDown className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 z-50 w-56 sm:w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="py-2 max-h-64 overflow-y-auto">
+            {options.map((option) => (
+              <button
+                key={option.id}
+                onClick={() => {
+                  onChange(option.id);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors duration-200 ${
+                  value === option.id
+                    ? 'bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 font-semibold'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {option.icon && (
+                  <span className="flex-shrink-0">{option.icon}</span>
+                )}
+                <span className="flex-1 truncate">{option.label}</span>
+                {value === option.id && (
+                  <FiCheck className="text-sky-600 flex-shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Filter Badge Component
+const FilterBadge = ({ label, onRemove }) => (
+  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 rounded-full text-xs font-semibold border border-slate-300">
+    <span>{label}</span>
+    <button
+      onClick={onRemove}
+      className="p-0.5 hover:bg-slate-300 rounded-full transition-colors"
+    >
+      <FiX className="w-3 h-3" />
+    </button>
+  </div>
+);
+
+// Helper function
+const getLabelFromId = (id, options) => {
+  const option = options.find(opt => opt.id === id);
+  return option?.label || id;
+};
 
 // ==========================================
 // 1. ENHANCED CONFIGURATION
@@ -342,6 +422,7 @@ export default function ResourcesManager() {
   const [selectedSubject, setSelectedSubject] = useState('all');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedAccessLevel, setSelectedAccessLevel] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const [showModal, setShowModal] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -371,6 +452,42 @@ export default function ResourcesManager() {
   const [subjectOpen, setSubjectOpen] = useState(false);
   const [classOpen, setClassOpen] = useState(false);
   const [accessOpen, setAccessOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+
+  // Active filter count function
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (selectedType !== 'all') count++;
+    if (selectedCategory !== 'all') count++;
+    if (selectedSubject !== 'all') count++;
+    if (selectedClass !== 'all') count++;
+    if (selectedAccessLevel !== 'all') count++;
+    return count;
+  };
+
+  // Helper function
+  const getLabelFromId = (id, options) => {
+    const option = options.find(opt => opt.id === id);
+    return option?.label || id;
+  };
+
+  // Helper function for color mapping
+  const getColorFromString = (colorString) => {
+    const colorMap = {
+      'blue-500': '#3b82f6',
+      'green-500': '#10b981',
+      'purple-500': '#8b5cf6',
+      'orange-500': '#f97316',
+      'red-500': '#ef4444',
+      'yellow-500': '#eab308',
+      'sky-500': '#0ea5e9',
+      'cyan-500': '#06b6d4',
+      'emerald-500': '#10b981',
+      'indigo-500': '#6366f1',
+    };
+    
+    return colorMap[colorString] || '#6b7280';
+  };
 
   // API Integration
   const fetchResources = async (showRefresh = false) => {
@@ -605,24 +722,6 @@ export default function ResourcesManager() {
     }
   };
 
-  const getColorFromString = (colorString) => {
-  // Convert color string like "blue-500" to actual color value
-  const colorMap = {
-    'blue-500': '#3b82f6',
-    'green-500': '#10b981',
-    'purple-500': '#8b5cf6',
-    'orange-500': '#f97316',
-    'red-500': '#ef4444',
-    'yellow-500': '#eab308',
-    'sky-500': '#0ea5e9',
-    'cyan-500': '#06b6d4',
-    'emerald-500': '#10b981',
-    'indigo-500': '#6366f1',
-  };
-  
-  return colorMap[colorString] || '#6b7280'; // Default gray
-};
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -693,15 +792,6 @@ export default function ResourcesManager() {
       setUploading(false);
     }
   };
-  
-const handleNewResource = () => {
-  // Your logic for creating/uploading a new resource
-  // For example:
-  setShowCreateModal(true);
-  // or
-  setResourceModal({ open: true, mode: 'create', resource: null });
-};
-
 
   const downloadResource = async (resource) => {
     try {
@@ -790,302 +880,346 @@ const handleNewResource = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-sans">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200/50 sticky top-0 z-30">
-        <div className="container mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
-          
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold">
-                NSS
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                  Resources Manager
-                </span>
-                <p className="text-xs text-gray-500 mt-0.5">Manage educational resources</p>
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <main>
+          {/* Modern Header for Learning Resources Manager */}
+          <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-sky-700 via-sky-600 to-cyan-600 p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+              <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-cyan-500/5" />
+            </div>
+            
+            {/* Cyan Glow Effects - Responsive sizes */}
+            <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-cyan-400 to-sky-300 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl lg:blur-3xl" />
+            <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-sky-400 to-teal-300 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl lg:blur-3xl" />
+            
+            <div className="relative z-10">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+                {/* Left Content - Title & Description */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    {/* Icon Container */}
+                    <div className="relative self-start shrink-0">
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-sky-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
+                      <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl">
+                        <FiFolder className="text-white text-lg sm:text-xl lg:text-2xl w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
+                      </div>
+                    </div>
+                    
+                    {/* Text Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Badge - Hidden on smallest screens */}
+                      <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
+                        <FiGlobe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                        <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-wide sm:tracking-widest">Digital Library</span>
+                      </div>
+                      
+                      {/* Title */}
+                      <h1 className="text-2xl xs:text-3xl -z-20 sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight sm:leading-tight">
+                        Learning <span className="block sm:inline">Resources</span>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-sky-200 block">
+                          Manager
+                        </span>
+                      </h1>
+                      
+                      {/* Description - Responsive sizing */}
+                      <p className="text-sky-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+                        {loading ? 'Loading educational resources...' : `Managing ${filteredResources.length} digital resources across all subjects`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Right Content - Stats & Quick Info */}
+                <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
+                  {/* Quick Stats Counter - Mobile */}
+                  <div className="flex items-center gap-2 xs:gap-3 lg:hidden">
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] xs:text-xs font-bold text-sky-200/70 uppercase tracking-wide">Total</span>
+                      <span className="text-xl xs:text-2xl font-black text-white">
+                        {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
+                      </span>
+                    </div>
+                    <div className="h-6 w-px bg-white/20" />
+                  </div>
+                  
+                  {/* Action Buttons - Responsive layout */}
+                  <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
+                    {/* Upload Button - Primary CTA */}
+                    <button
+                      onClick={handleCreate}
+                      className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-white to-cyan-100 text-sky-900 rounded-xl sm:rounded-2xl font-semibold sm:font-bold hover:shadow-lg sm:hover:shadow-xl hover:shadow-sky-500/20 active:scale-95 transition-all duration-300 w-full xs:w-auto"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-sky-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="relative flex items-center justify-center gap-2">
+                        <FiUpload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-xs sm:text-sm font-medium sm:font-bold whitespace-nowrap">
+                          Upload Resource
+                        </span>
+                      </div>
+                    </button>
+                    
+                    {/* Refresh Button */}
+                    <button
+                      onClick={() => fetchResources(true)}
+                      disabled={refreshing}
+                      className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold sm:font-bold hover:bg-white/15 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full xs:w-auto"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                      <div className="relative flex items-center justify-center gap-2">
+                        <FiRotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                        <span className="text-xs sm:text-sm whitespace-nowrap">
+                          {refreshing ? 'Refreshing...' : 'Refresh'}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  {/* Total Resources Counter - Desktop */}
+                  <div className="hidden lg:flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-sky-200/70 uppercase tracking-widest">Total Resources</span>
+                    <span className="text-2xl font-black text-white">
+                      {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-        </div>
-      </header>
-
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        
-        {/* Search and Filters Bar - TOP SECTION */}
-        <div className="mb-6 sm:mb-8 space-y-4">
-          {/* Search Bar */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                  <FiSearch className="text-gray-400 text-base sm:text-lg" />
+          {/* Modern Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="group relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg sm:shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+                {/* Background accent circle */}
+                <div className="absolute -right-6 -top-6 sm:-right-8 sm:-top-8 w-16 h-16 sm:w-20 sm:h-20 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500" 
+                     style={{ backgroundColor: getColorFromString(stat.color) }} />
+                
+                <div className="relative z-10">
+                  <div className="inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 transition-colors duration-300"
+                       style={{ backgroundColor: getColorFromString(stat.color) + '20' }}>
+                    {stat.icon}
+                  </div>
+                  
+                  <div className="flex items-baseline justify-between">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+                      {stat.value || 0}
+                    </h3>
+                    <div className="flex items-center text-emerald-500 text-xs sm:text-sm font-medium">
+                      <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                      <span>+{Math.floor((stat.value || 0) * 0.12)}</span>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                  
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-50 dark:border-slate-800">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+                      {stat.description || `${stat.label.toLowerCase()} resources available`}
+                    </p>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search resources by title, description..."
-                  className="block w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-3.5 border border-gray-200 rounded-xl sm:rounded-2xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base"
+              </div>
+            ))}
+          </div>
+
+          {/* Modern Search & Filters Bar - Premium Design */}
+          <div className="mb-6 sm:mb-8 space-y-4 sm:space-y-6">
+            {/* Premium Search Bar */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 to-cyan-500/5 rounded-2xl sm:rounded-3xl transform group-hover:scale-105 transition-transform duration-300" />
+              <div className="relative">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none z-10">
+                    <FiSearch className="text-sky-500 group-hover:text-sky-600 transition-colors duration-300 text-lg sm:text-xl" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search resources by title, description, subject..."
+                    className="block w-full pl-10 sm:pl-12 pr-12 sm:pr-14 py-3.5 sm:py-4 border-2 border-sky-100 rounded-2xl sm:rounded-3xl leading-5 bg-white/90 backdrop-blur-sm placeholder-sky-300 focus:outline-none focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 text-sm sm:text-base shadow-lg shadow-sky-500/5 transition-all duration-300"
+                  />
+                  {searchTerm && (
+                    <button 
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-sky-400 hover:text-sky-600 transition-colors duration-300"
+                    >
+                      <FiX className="text-lg" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modern Filter Grid */}
+            <div className="space-y-4">
+              {/* Filter Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-gradient-to-br from-sky-100 to-cyan-100 rounded-xl">
+                    <FiFilter className="text-sky-600 text-lg" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                    Filters
+                  </span>
+                  <div className="h-4 w-px bg-slate-200" />
+                  <span className="text-xs text-slate-500">
+                    {getActiveFilterCount()} active
+                  </span>
+                </div>
+                
+                {/* Mobile Create Button */}
+                <button
+                  onClick={handleCreate}
+                  className="sm:hidden inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-xl font-semibold text-sm shadow-lg shadow-sky-500/30 active:scale-95 transition-all"
+                >
+                  <FiPlus className="text-lg" /> 
+                  New
+                </button>
+              </div>
+
+              {/* Filter Chips Grid - Responsive */}
+              <div className="flex flex-wrap gap-2 sm:gap-3">
+                {/* Resource Type Filter Chip */}
+                <FilterChip
+                  label="Type"
+                  value={selectedType}
+                  options={RESOURCE_TYPES}
+                  onChange={setSelectedType}
+                  icon={<FiFolder className="text-sky-600" />}
+                  isOpen={typeOpen}
+                  setIsOpen={setTypeOpen}
+                  color="sky"
                 />
-                {searchTerm && (
-                  <button 
-                    onClick={() => setSearchTerm('')}
-                    className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-400"
+
+                {/* Category Filter Chip */}
+                <FilterChip
+                  label="Category"
+                  value={selectedCategory}
+                  options={[
+                    { id: 'all', label: 'All Categories', icon: <FiBook className="text-slate-500" /> },
+                    ...CATEGORIES.map(cat => ({
+                      id: cat,
+                      label: cat,
+                      icon: <FiBook className="text-sky-600" />
+                    }))
+                  ]}
+                  onChange={setSelectedCategory}
+                  icon={<FiBook className="text-emerald-600" />}
+                  isOpen={categoryOpen}
+                  setIsOpen={setCategoryOpen}
+                  color="emerald"
+                />
+
+                {/* Subject Filter Chip */}
+                <FilterChip
+                  label="Subject"
+                  value={selectedSubject}
+                  options={[
+                    { id: 'all', label: 'All Subjects', icon: <FiBook className="text-slate-500" /> },
+                    ...SUBJECTS.map(sub => ({
+                      id: sub,
+                      label: sub,
+                      icon: <FiBook className="text-amber-600" />
+                    }))
+                  ]}
+                  onChange={setSelectedSubject}
+                  icon={<FiBook className="text-amber-600" />}
+                  isOpen={subjectOpen}
+                  setIsOpen={setSubjectOpen}
+                  color="amber"
+                />
+
+                {/* Class Filter Chip */}
+                <FilterChip
+                  label="Class"
+                  value={selectedClass}
+                  options={[
+                    { id: 'all', label: 'All Classes', icon: <FiUsers className="text-slate-500" /> },
+                    ...CLASSES.map(cls => ({
+                      id: cls,
+                      label: cls,
+                      icon: <FiUsers className="text-purple-600" />
+                    }))
+                  ]}
+                  onChange={setSelectedClass}
+                  icon={<FiUsers className="text-purple-600" />}
+                  isOpen={classOpen}
+                  setIsOpen={setClassOpen}
+                  color="purple"
+                />
+
+                {/* Access Level Filter Chip */}
+                <FilterChip
+                  label="Access"
+                  value={selectedAccessLevel}
+                  options={ACCESS_LEVELS}
+                  onChange={setSelectedAccessLevel}
+                  icon={<FiShield className="text-rose-600" />}
+                  isOpen={accessOpen}
+                  setIsOpen={setAccessOpen}
+                  color="rose"
+                />
+
+                {/* Sort Filter */}
+                <FilterChip
+                  label="Sort"
+                  value={sortBy}
+                  options={[
+                    { id: 'newest', label: 'Newest First', icon: <FiCalendar className="text-slate-600" /> },
+                    { id: 'oldest', label: 'Oldest First', icon: <FiCalendar className="text-slate-600" /> },
+                    { id: 'az', label: 'A → Z', icon: <FiSliders  className="text-slate-600" /> },
+                    { id: 'za', label: 'Z → A', icon: <FiSliders  className="text-slate-600" /> },
+                  ]}
+                  onChange={setSortBy}
+                  icon={<FiFilter className="text-slate-600" />}
+                  isOpen={sortOpen}
+                  setIsOpen={setSortOpen}
+                  color="slate"
+                />
+
+                {/* Clear Filters Button - Modern */}
+                {(selectedType !== 'all' || selectedCategory !== 'all' || selectedSubject !== 'all' || 
+                  selectedClass !== 'all' || selectedAccessLevel !== 'all' || searchTerm) && (
+                  <button
+                    onClick={clearFilters}
+                    className="group flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 rounded-xl sm:rounded-2xl text-sm font-semibold hover:from-rose-100 hover:to-rose-200 active:scale-95 transition-all duration-300 border border-rose-200 hover:border-rose-300 shadow-sm"
                   >
-                    <FiX />
+                    <FiX className="text-rose-600 group-hover:rotate-90 transition-transform duration-300" />
+                    <span className="whitespace-nowrap">Clear All</span>
                   </button>
                 )}
               </div>
-            </div>
-            
-            <button
-              onClick={handleCreate}
-              className="sm:hidden w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
-            >
-              <FiPlus /> New Resource
-            </button>
-          </div>
 
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-wrap items-center gap-3 flex-1">
-              {/* Resource Type Filter */}
-              <FilterDropdown
-                label="Type"
-                value={selectedType}
-                options={RESOURCE_TYPES}
-                onChange={setSelectedType}
-                icon={<FiFolder className="text-blue-500" />}
-                isOpen={typeOpen}
-                setIsOpen={setTypeOpen}
-              />
-
-              {/* Category Filter */}
-              <FilterDropdown
-                label="Category"
-                value={selectedCategory}
-                options={[
-                  { id: 'all', label: 'All Categories', icon: <FiBook className="text-gray-500" /> },
-                  ...CATEGORIES.map(cat => ({
-                    id: cat,
-                    label: cat,
-                    icon: <FiBook className="text-blue-500" />
-                  }))
-                ]}
-                onChange={setSelectedCategory}
-                icon={<FiBook className="text-blue-500" />}
-                isOpen={categoryOpen}
-                setIsOpen={setCategoryOpen}
-              />
-
-              {/* Subject Filter */}
-              <FilterDropdown
-                label="Subject"
-                value={selectedSubject}
-                options={[
-                  { id: 'all', label: 'All Subjects', icon: <FiBook className="text-gray-500" /> },
-                  ...SUBJECTS.map(sub => ({
-                    id: sub,
-                    label: sub,
-                    icon: <FiBook className="text-green-500" />
-                  }))
-                ]}
-                onChange={setSelectedSubject}
-                icon={<FiBook className="text-green-500" />}
-                isOpen={subjectOpen}
-                setIsOpen={setSubjectOpen}
-              />
-
-              {/* Class Filter */}
-              <FilterDropdown
-                label="Class"
-                value={selectedClass}
-                options={[
-                  { id: 'all', label: 'All Classes', icon: <FiFolder className="text-gray-500" /> },
-                  ...CLASSES.map(cls => ({
-                    id: cls,
-                    label: cls,
-                    icon: <FiFolder className="text-purple-500" />
-                  }))
-                ]}
-                onChange={setSelectedClass}
-                icon={<FiFolder className="text-purple-500" />}
-                isOpen={classOpen}
-                setIsOpen={setClassOpen}
-              />
-
-              {/* Access Level Filter */}
-              <FilterDropdown
-                label="Access"
-                value={selectedAccessLevel}
-                options={ACCESS_LEVELS}
-                onChange={setSelectedAccessLevel}
-                icon={<FiShield className="text-blue-500" />}
-                isOpen={accessOpen}
-                setIsOpen={setAccessOpen}
-              />
-            </div>
-
-            {/* Clear Filters Button */}
-            {(selectedType !== 'all' || selectedCategory !== 'all' || selectedSubject !== 'all' || selectedClass !== 'all' || selectedAccessLevel !== 'all' || searchTerm) && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-2 px-4 py-2.5 text-red-600 rounded-xl text-sm font-semibold"
-              >
-                <FiX /> Clear Filters
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <main>
-   {/* Modern Header for Learning Resources Manager */}
-<div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-sky-700 via-sky-600 to-cyan-600 p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl">
-  {/* Background Pattern */}
-  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
-    <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-cyan-500/5" />
-  </div>
-  
-  {/* Cyan Glow Effects - Responsive sizes */}
-  <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-cyan-400 to-sky-300 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl lg:blur-3xl" />
-  <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-sky-400 to-teal-300 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl lg:blur-3xl" />
-  
-  <div className="relative z-10">
-    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-      {/* Left Content - Title & Description */}
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-          {/* Icon Container */}
-          <div className="relative self-start shrink-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-sky-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
-            <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl">
-              <FiFolder className="text-white text-lg sm:text-xl lg:text-2xl w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
+              {/* Active Filters Summary */}
+              {(selectedType !== 'all' || selectedCategory !== 'all' || selectedSubject !== 'all' || 
+                selectedClass !== 'all' || selectedAccessLevel !== 'all') && (
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-slate-500 font-medium">Active filters:</span>
+                    {selectedType !== 'all' && (
+                      <FilterBadge label={`Type: ${getLabelFromId(selectedType, RESOURCE_TYPES)}`} onRemove={() => setSelectedType('all')} />
+                    )}
+                    {selectedCategory !== 'all' && (
+                      <FilterBadge label={`Category: ${selectedCategory}`} onRemove={() => setSelectedCategory('all')} />
+                    )}
+                    {selectedSubject !== 'all' && (
+                      <FilterBadge label={`Subject: ${selectedSubject}`} onRemove={() => setSelectedSubject('all')} />
+                    )}
+                    {selectedClass !== 'all' && (
+                      <FilterBadge label={`Class: ${selectedClass}`} onRemove={() => setSelectedClass('all')} />
+                    )}
+                    {selectedAccessLevel !== 'all' && (
+                      <FilterBadge label={`Access: ${getLabelFromId(selectedAccessLevel, ACCESS_LEVELS)}`} onRemove={() => setSelectedAccessLevel('all')} />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          
-          {/* Text Content */}
-          <div className="flex-1 min-w-0">
-            {/* Badge - Hidden on smallest screens */}
-            <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
-              <FiGlobe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-              <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-wide sm:tracking-widest">Digital Library</span>
-            </div>
-            
-            {/* Title */}
-            <h1 className="text-2xl xs:text-3xl -z-20 sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight sm:leading-tight">
-              Learning <span className="block sm:inline">Resources</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-sky-200 block">
-                Manager
-              </span>
-            </h1>
-            
-            {/* Description - Responsive sizing */}
-            <p className="text-sky-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-              {loading ? 'Loading educational resources...' : `Managing ${filteredResources.length} digital resources across all subjects`}
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Right Content - Stats & Quick Info */}
-      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
-        {/* Quick Stats Counter - Mobile */}
-        <div className="flex items-center gap-2 xs:gap-3 lg:hidden">
-          <div className="flex flex-col items-start">
-            <span className="text-[10px] xs:text-xs font-bold text-sky-200/70 uppercase tracking-wide">Total</span>
-            <span className="text-xl xs:text-2xl font-black text-white">
-              {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
-            </span>
-          </div>
-          <div className="h-6 w-px bg-white/20" />
-        </div>
-        
-        {/* Action Buttons - Responsive layout */}
-        <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
-          {/* Upload Button - Primary CTA */}
-          <button
-              onClick={handleCreate}
-
-            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-white to-cyan-100 text-sky-900 rounded-xl sm:rounded-2xl font-semibold sm:font-bold hover:shadow-lg sm:hover:shadow-xl hover:shadow-sky-500/20 active:scale-95 transition-all duration-300 w-full xs:w-auto"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-sky-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative flex items-center justify-center gap-2">
-              <FiUpload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="text-xs sm:text-sm font-medium sm:font-bold whitespace-nowrap">
-                Upload Resource
-              </span>
-            </div>
-          </button>
-          
-          {/* Refresh Button */}
-          <button
-            onClick={() => fetchResources(true)}
-            disabled={refreshing}
-            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold sm:font-bold hover:bg-white/15 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full xs:w-auto"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-            <div className="relative flex items-center justify-center gap-2">
-              <FiRotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span className="text-xs sm:text-sm whitespace-nowrap">
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </span>
-            </div>
-          </button>
-        </div>
-        
-        {/* Total Resources Counter - Desktop */}
-        <div className="hidden lg:flex flex-col items-end">
-          <span className="text-[10px] font-bold text-sky-200/70 uppercase tracking-widest">Total Resources</span>
-          <span className="text-2xl font-black text-white">
-            {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* Modern Stats Cards */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-  {/* You can use your existing StatsPill component or create modern cards */}
-  {stats.map((stat, index) => (
-    <div key={index} className="group relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg sm:shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
-      {/* Background accent circle */}
-      <div className="absolute -right-6 -top-6 sm:-right-8 sm:-top-8 w-16 h-16 sm:w-20 sm:h-20 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500" 
-           style={{ backgroundColor: getColorFromString(stat.color) }} />
-      
-      <div className="relative z-10">
-        <div className="inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 transition-colors duration-300"
-             style={{ backgroundColor: getColorFromString(stat.color) + '20' }}>
-          {stat.icon}
-        </div>
-        
-        <div className="flex items-baseline justify-between">
-          <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            {stat.value || 0}
-          </h3>
-          <div className="flex items-center text-emerald-500 text-xs sm:text-sm font-medium">
-            <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
-            <span>+{Math.floor((stat.value || 0) * 0.12)}</span>
-          </div>
-        </div>
-        
-        <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
-          {stat.label}
-        </p>
-        
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-50 dark:border-slate-800">
-          <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-            {stat.description || `${stat.label.toLowerCase()} resources available`}
-          </p>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
 
           {/* Content */}
           {loading ? (
@@ -1347,212 +1481,212 @@ const handleNewResource = () => {
         </Modal>
       )}
 
-  {/* Modern Resource View Modal */}
-{showViewModal && viewResource && (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-slate-900/90 backdrop-blur-sm">
-    {/* Modal Container */}
-    <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
-      
-      {/* Close Button - Floating & Premium */}
-      <button 
-        onClick={() => setShowViewModal(false)}
-        className="absolute top-5 right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
-      >
-        <FiX size={24} />
-      </button>
+      {/* Modern Resource View Modal */}
+      {showViewModal && viewResource && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-slate-900/90 backdrop-blur-sm">
+          {/* Modal Container */}
+          <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+            
+            {/* Close Button - Floating & Premium */}
+            <button 
+              onClick={() => setShowViewModal(false)}
+              className="absolute top-5 right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
+            >
+              <FiX size={24} />
+            </button>
 
-      {/* 1. Header with Gradient */}
-      <div className="relative h-[20vh] sm:h-[180px] w-full shrink-0 bg-gradient-to-r from-blue-600 to-emerald-600">
-        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-emerald-500/20" />
-        <div className="relative h-full flex flex-col justify-end p-6 lg:p-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-              {getFileIcon(viewResource.fileName)}
+            {/* 1. Header with Gradient */}
+            <div className="relative h-[20vh] sm:h-[180px] w-full shrink-0 bg-gradient-to-r from-blue-600 to-emerald-600">
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-emerald-500/20" />
+              <div className="relative h-full flex flex-col justify-end p-6 lg:p-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                    {getFileIcon(viewResource.fileName)}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                      Resource Details
+                    </h2>
+                    <p className="text-white/70 text-sm mt-1">
+                      Complete educational resource information
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
-                Resource Details
-              </h2>
-              <p className="text-white/70 text-sm mt-1">
-                Complete educational resource information
-              </p>
+
+            {/* 2. Content Area - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
+              <div className="max-w-2xl mx-auto space-y-8">
+                
+                {/* Resource Header Card */}
+                <section className="p-6 bg-gradient-to-r from-blue-50/80 to-emerald-50/80 rounded-3xl border border-blue-200/50">
+                  <div className="flex items-center gap-5">
+                    <div className="relative">
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl flex items-center justify-center shadow-xl">
+                        {getFileIcon(viewResource.fileName, 'text-white text-3xl')}
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                        <FiCheck className="text-white text-xs" />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/60 backdrop-blur-sm rounded-full mb-2">
+                        <FiBook className="text-blue-600" />
+                        <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Educational Resource</span>
+                      </div>
+                      <h3 className="text-xl font-black text-slate-900 mb-1 truncate">
+                        {viewResource.title}
+                      </h3>
+                      <div className="flex items-center gap-3 text-sm text-slate-600">
+                        <span className="font-medium">{viewResource.subject}</span>
+                        <div className="w-1 h-1 rounded-full bg-slate-300" />
+                        <span>{viewResource.className}</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Details Grid - 2 Columns */}
+                <section className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Resource Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Left Column */}
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiFileText className="text-blue-600" />
+                          <p className="text-[10px] uppercase font-bold text-slate-400">File Name</p>
+                        </div>
+                        <p className="font-bold text-slate-900 truncate">{viewResource.fileName}</p>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiHardDrive className="text-slate-600" />
+                          <p className="text-[10px] uppercase font-bold text-slate-400">File Size</p>
+                        </div>
+                        <p className="font-bold text-slate-900">
+                          {viewResource.fileSize || formatFileSize(viewResource.size)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiUser className="text-purple-600" />
+                          <p className="text-[10px] uppercase font-bold text-slate-400">Uploaded By</p>
+                        </div>
+                        <p className="font-bold text-slate-900">{viewResource.uploadedBy || 'System'}</p>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiCalendar className="text-amber-600" />
+                          <p className="text-[10px] uppercase font-bold text-slate-400">Upload Date</p>
+                        </div>
+                        <p className="font-bold text-slate-900">{formatDate(viewResource.createdAt)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Tags & Stats Grid */}
+                <section className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Type Badge */}
+                    <div className="p-4 bg-blue-50 rounded-3xl border border-blue-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiFile className="text-blue-600" />
+                        <p className="text-[10px] uppercase font-bold text-blue-400">Type</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getFileIcon(viewResource.fileName, 'text-blue-600 text-lg')}
+                        <span className="font-bold text-blue-800">
+                          {viewResource.type || 'document'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Category Badge */}
+                    <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiBook className="text-emerald-600" />
+                        <p className="text-[10px] uppercase font-bold text-emerald-400">Category</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiBook className="text-emerald-600" />
+                        <span className="font-bold text-emerald-800">{viewResource.category}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Access Level Badge */}
+                    <div className="p-4 bg-purple-50 rounded-3xl border border-purple-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FiShield className="text-purple-600" />
+                        <p className="text-[10px] uppercase font-bold text-purple-400">Access Level</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FiShield className="text-purple-600" />
+                        <span className="font-bold text-purple-800 capitalize">{viewResource.accessLevel}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Downloads Counter */}
+                  <div className="p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-3xl border border-slate-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Total Downloads</p>
+                        <p className="text-2xl font-black text-slate-900">{viewResource.downloads || 0}</p>
+                      </div>
+                      <div className="p-3 bg-white rounded-2xl">
+                        <FiTrendingUp className="text-emerald-600 text-2xl" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Description Section */}
+                <section className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Description</h3>
+                  <div className="p-6 bg-gradient-to-br from-slate-50 to-white rounded-3xl border border-slate-100 shadow-sm">
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                      {viewResource.description || 'No description available for this resource.'}
+                    </p>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            {/* 3. Action Footer */}
+            <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
+              <div className="max-w-2xl mx-auto flex gap-3">
+                <button
+                  onClick={() => {
+                    downloadResource(viewResource);
+                    setShowViewModal(false);
+                  }}
+                  className="flex-[2] h-14 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:shadow-xl hover:shadow-blue-500/30"
+                >
+                  <FiDownload size={20} />
+                  Download Resource
+                </button>
+                
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="flex-1 h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  <FiX size={20} />
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 2. Content Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
-        <div className="max-w-2xl mx-auto space-y-8">
-          
-          {/* Resource Header Card */}
-          <section className="p-6 bg-gradient-to-r from-blue-50/80 to-emerald-50/80 rounded-3xl border border-blue-200/50">
-            <div className="flex items-center gap-5">
-              <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl flex items-center justify-center shadow-xl">
-                  {getFileIcon(viewResource.fileName, 'text-white text-3xl')}
-                </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-                  <FiCheck className="text-white text-xs" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/60 backdrop-blur-sm rounded-full mb-2">
-                  <FiBook className="text-blue-600" />
-                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Educational Resource</span>
-                </div>
-                <h3 className="text-xl font-black text-slate-900 mb-1 truncate">
-                  {viewResource.title}
-                </h3>
-                <div className="flex items-center gap-3 text-sm text-slate-600">
-                  <span className="font-medium">{viewResource.subject}</span>
-                  <div className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span>{viewResource.className}</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Details Grid - 2 Columns */}
-          <section className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Resource Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FiFileText className="text-blue-600" />
-                    <p className="text-[10px] uppercase font-bold text-slate-400">File Name</p>
-                  </div>
-                  <p className="font-bold text-slate-900 truncate">{viewResource.fileName}</p>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FiHardDrive className="text-slate-600" />
-                    <p className="text-[10px] uppercase font-bold text-slate-400">File Size</p>
-                  </div>
-                  <p className="font-bold text-slate-900">
-                    {viewResource.fileSize || formatFileSize(viewResource.size)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FiUser className="text-purple-600" />
-                    <p className="text-[10px] uppercase font-bold text-slate-400">Uploaded By</p>
-                  </div>
-                  <p className="font-bold text-slate-900">{viewResource.uploadedBy || 'System'}</p>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FiCalendar className="text-amber-600" />
-                    <p className="text-[10px] uppercase font-bold text-slate-400">Upload Date</p>
-                  </div>
-                  <p className="font-bold text-slate-900">{formatDate(viewResource.createdAt)}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Tags & Stats Grid */}
-          <section className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Type Badge */}
-              <div className="p-4 bg-blue-50 rounded-3xl border border-blue-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiFile className="text-blue-600" />
-                  <p className="text-[10px] uppercase font-bold text-blue-400">Type</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {getFileIcon(viewResource.fileName, 'text-blue-600 text-lg')}
-                  <span className="font-bold text-blue-800">
-                    {viewResource.type || 'document'}
-                  </span>
-                </div>
-              </div>
-              
-              {/* Category Badge */}
-              <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiBook className="text-emerald-600" />
-                  <p className="text-[10px] uppercase font-bold text-emerald-400">Category</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FiBook className="text-emerald-600" />
-                  <span className="font-bold text-emerald-800">{viewResource.category}</span>
-                </div>
-              </div>
-              
-              {/* Access Level Badge */}
-              <div className="p-4 bg-purple-50 rounded-3xl border border-purple-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <FiShield className="text-purple-600" />
-                  <p className="text-[10px] uppercase font-bold text-purple-400">Access Level</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FiShield className="text-purple-600" />
-                  <span className="font-bold text-purple-800 capitalize">{viewResource.accessLevel}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Downloads Counter */}
-            <div className="p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-3xl border border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Total Downloads</p>
-                  <p className="text-2xl font-black text-slate-900">{viewResource.downloads || 0}</p>
-                </div>
-                <div className="p-3 bg-white rounded-2xl">
-                  <FiTrendingUp className="text-emerald-600 text-2xl" />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Description Section */}
-          <section className="space-y-4">
-            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Description</h3>
-            <div className="p-6 bg-gradient-to-br from-slate-50 to-white rounded-3xl border border-slate-100 shadow-sm">
-              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                {viewResource.description || 'No description available for this resource.'}
-              </p>
-            </div>
-          </section>
-        </div>
-      </div>
-
-      {/* 3. Action Footer */}
-      <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-        <div className="max-w-2xl mx-auto flex gap-3">
-          <button
-            onClick={() => {
-              downloadResource(viewResource);
-              setShowViewModal(false);
-            }}
-            className="flex-[2] h-14 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:shadow-xl hover:shadow-blue-500/30"
-          >
-            <FiDownload size={20} />
-            Download Resource
-          </button>
-          
-          <button
-            onClick={() => setShowViewModal(false)}
-            className="flex-1 h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
-          >
-            <FiX size={20} />
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

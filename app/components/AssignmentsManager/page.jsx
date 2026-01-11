@@ -26,7 +26,7 @@ import {
   FiAward,
   FiMessageSquare,
   FiRotateCw,
-  FiCheck,FiUser ,FiCheckCircle,FiArrowLeft 
+  FiCheck,FiUser ,FiCheckCircle,FiArrowLeft,FiChevronDown ,
 } from 'react-icons/fi';
 
 import { useRef } from 'react'; // Add this import
@@ -523,121 +523,374 @@ const clearAllAttachments = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 p-4 lg:p-6 space-y-6">
       {/* Toast container removed - sonner renders its own portal */}
-
-      {/* Header with Refresh Button */}
-      <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-lg border border-gray-200/50">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
-                <FiBook className="text-white text-xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Assignments Manager
-                </h1>
-                <p className="text-gray-600 mt-1">Create, manage, and track student assignments</p>
-              </div>
+{/* Modern Academic Assignments Header with Full Gradient Background */}
+<div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-600 p-6 lg:p-8 shadow-xl sm:shadow-2xl">
+  {/* Background Pattern */}
+  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+    <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-indigo-500/5" />
+  </div>
+  
+  {/* Blue Glow Effects */}
+  <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-blue-400 to-indigo-300 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl lg:blur-3xl" />
+  <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-indigo-400 to-violet-300 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl lg:blur-3xl" />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+      {/* Left Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+          {/* Icon Container */}
+          <div className="relative self-start shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
+            <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl">
+              <FiBook className="text-white text-lg sm:text-xl md:text-2xl w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <button
-              onClick={() => fetchAssignments(true)}
-              disabled={refreshing}
-              className="px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold flex items-center gap-2 disabled:opacity-50"
-            >
-              {refreshing ? (
-                <CircularProgress size={20} sx={{ color: 'gray' }} />
-              ) : (
-                <FiRotateCw className="text-lg" />
-              )}
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-            
-            <button
-              onClick={handleCreate}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-3"
-            >
-              <FiPlus className="text-xl" />
-              Create Assignment
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        {[
-          { label: 'Total Assignments', value: assignments.length, color: 'blue', icon: FiBarChart2 },
-          { label: 'Completed', value: assignments.filter(a => a.status === 'completed').length, color: 'green', icon: FiUsers },
-          { label: 'In Progress', value: assignments.filter(a => a.status === 'in-progress').length, color: 'orange', icon: FiClock },
-          { label: 'Overdue', value: assignments.filter(a => a.status === 'overdue').length, color: 'red', icon: FiAlertCircle }
-        ].map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div key={index} className={`bg-gradient-to-br from-${stat.color}-500 to-${stat.color}-600 rounded-2xl p-4 lg:p-6 text-white`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-${stat.color}-100 text-sm`}>{stat.label}</p>
-                  <p className="text-xl lg:text-3xl font-bold mt-2">{stat.value}</p>
-                </div>
-                <Icon className={`text-xl lg:text-2xl text-${stat.color}-200`} />
-              </div>
+          {/* Text Content */}
+          <div className="flex-1 min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full mb-3">
+              <FiAward className="text-white/90 w-4 h-4" />
+              <span className="text-white/90 text-xs font-bold uppercase tracking-wider">Academic Management</span>
             </div>
-          );
-        })}
-      </div>
+   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-2">
+  Academic
+  <span className="block bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+    Assignments Manager
+  </span>
+</h1>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          <div className="lg:col-span-2 relative">
-            <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
-            <input
-              type="text"
-              placeholder="Search assignments by title, description, or teacher..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50"
-            />
+            
+            <p className="text-white/80 text-sm sm:text-base font-medium max-w-2xl">
+              {loading ? 'Loading academic assignments...' : `Managing ${assignments.length} assignments across ${new Set(assignments.map(a => a.className)).size} classes`}
+            </p>
           </div>
-
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50"
-          >
-            <option value="all">All Classes</option>
-            {classes.map(cls => (
-              <option key={cls} value={cls}>{cls}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50"
-          >
-            <option value="all">All Subjects</option>
-            {subjects.map(subject => (
-              <option key={subject} value={subject}>{subject}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50"
-          >
-            <option value="all">All Status</option>
-            <option value="assigned">Assigned</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="overdue">Overdue</option>
-          </select>
         </div>
       </div>
+      
+      {/* Right Content - Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+        <button
+          onClick={() => fetchAssignments(true)}
+          disabled={refreshing}
+          className="group relative overflow-hidden px-4 sm:px-5 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold hover:bg-white/15 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+          <div className="relative flex items-center justify-center gap-2">
+            <FiRotateCw className={`text-lg ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="text-sm whitespace-nowrap">
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </span>
+          </div>
+        </button>
+        
+        <button
+          onClick={handleCreate}
+          className="group relative overflow-hidden px-5 sm:px-6 py-3 bg-gradient-to-r from-white to-blue-100 text-blue-900 rounded-xl sm:rounded-2xl font-semibold hover:shadow-lg sm:hover:shadow-xl hover:shadow-blue-500/20 active:scale-95 transition-all duration-300"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-200/30 to-indigo-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="relative flex items-center justify-center gap-3">
+            <FiPlus className="text-xl" />
+            <span className="text-sm font-semibold whitespace-nowrap">
+              Create Assignment
+            </span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{/* Stats Overview */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+  {[
+    { 
+      label: 'Total Assignments', 
+      value: assignments.length, 
+      color: 'blue', 
+      icon: FiBarChart2,
+      trend: assignments.length > 10 ? '+12%' : null 
+    },
+    { 
+      label: 'Completed', 
+      value: assignments.filter(a => a.status === 'completed').length, 
+      color: 'green', 
+      icon: FiUsers,
+      trend: assignments.filter(a => a.status === 'completed').length > 5 ? '+24%' : null
+    },
+    { 
+      label: 'In Progress', 
+      value: assignments.filter(a => a.status === 'in-progress').length, 
+      color: 'orange', 
+      icon: FiClock 
+    },
+    { 
+      label: 'Overdue', 
+      value: assignments.filter(a => a.status === 'overdue').length, 
+      color: 'red', 
+      icon: FiAlertCircle,
+      trend: assignments.filter(a => a.status === 'overdue').length > 0 ? '−8%' : null
+    }
+  ].map((stat, index) => {
+    const Icon = stat.icon;
+    const colors = {
+      blue: {
+        bg: 'bg-blue-500',
+        gradient: 'from-blue-500 to-blue-600',
+        light: 'bg-blue-100/20',
+        text: 'text-blue-100',
+        icon: 'text-blue-200',
+        border: 'border-blue-400/20'
+      },
+      green: {
+        bg: 'bg-green-500',
+        gradient: 'from-green-500 to-green-600',
+        light: 'bg-green-100/20',
+        text: 'text-green-100',
+        icon: 'text-green-200',
+        border: 'border-green-400/20'
+      },
+      orange: {
+        bg: 'bg-orange-500',
+        gradient: 'from-orange-500 to-orange-600',
+        light: 'bg-orange-100/20',
+        text: 'text-orange-100',
+        icon: 'text-orange-200',
+        border: 'border-orange-400/20'
+      },
+      red: {
+        bg: 'bg-red-500',
+        gradient: 'from-red-500 to-red-600',
+        light: 'bg-red-100/20',
+        text: 'text-red-100',
+        icon: 'text-red-200',
+        border: 'border-red-400/20'
+      }
+    }[stat.color];
+
+    return (
+      <div 
+        key={index} 
+        className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]"
+      >
+        {/* Glow effect */}
+        <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full ${colors.bg} blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-500`} />
+        
+        <div className={`relative bg-gradient-to-br ${colors.gradient} rounded-2xl p-4 lg:p-6 text-white border ${colors.border} shadow-lg shadow-slate-500/10 dark:shadow-slate-900/30 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-slate-500/20 dark:group-hover:shadow-slate-900/50`}>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-2 lg:p-3 rounded-xl ${colors.light} backdrop-blur-sm border ${colors.border}`}>
+                <Icon className="text-lg lg:text-xl" />
+              </div>
+              
+              {/* Trend indicator */}
+              {stat.trend && (
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${colors.light} backdrop-blur-sm`}>
+                  {stat.trend.startsWith('−') ? (
+                    <span className="text-xs font-bold">↓</span>
+                  ) : stat.trend.startsWith('+') ? (
+                    <span className="text-xs font-bold">↑</span>
+                  ) : null}
+                  <span className="text-xs font-bold">{stat.trend}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-1">
+              <p className={`${colors.text} text-xs lg:text-sm font-semibold opacity-90`}>
+                {stat.label}
+              </p>
+              <p className="text-2xl lg:text-4xl font-black tracking-tight">
+                {stat.value}
+              </p>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+    {/* Modern Filters Section */}
+<div className="relative group">
+  {/* Background effects */}
+  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+  
+  <div className="relative bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl p-6 shadow-2xl shadow-slate-100/50 dark:shadow-slate-900/30 border border-white/50 dark:border-slate-800/50 transition-all duration-500 hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-slate-900">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+      <div>
+        <h3 className="text-lg font-black text-slate-900 dark:text-white">Filter Assignments</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Refine your view by class, subject, or status
+        </p>
+      </div>
+      
+      {/* Active filters count & Clear button */}
+      <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+            Active filters:
+          </span>
+          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold">
+            {[searchTerm, selectedClass, selectedSubject, selectedStatus].filter(v => v !== 'all' && v !== '').length}
+          </span>
+        </div>
+        
+        <button
+          onClick={() => {
+            setSearchTerm('');
+            setSelectedClass('all');
+            setSelectedSubject('all');
+            setSelectedStatus('all');
+          }}
+          disabled={[searchTerm, selectedClass, selectedSubject, selectedStatus].every(v => v === 'all' || v === '')}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 group/clear"
+        >
+          <svg className="w-4 h-4 group-hover/clear:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Clear All
+        </button>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Search Input */}
+      <div className="md:col-span-2 lg:col-span-2 relative group/search">
+        <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg transition-colors group-focus-within/search:text-blue-500" />
+        <input
+          type="text"
+          placeholder="Search assignments..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-12 pr-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 transition-all duration-300 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Class Filter */}
+      <div className="relative group/select">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-focus-within/select:opacity-100 transition-opacity duration-300" />
+        <select
+          value={selectedClass}
+          onChange={(e) => setSelectedClass(e.target.value)}
+          className="relative w-full px-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 appearance-none cursor-pointer transition-all duration-300"
+        >
+          <option value="all">All Classes</option>
+          {classes.map(cls => (
+            <option key={cls} value={cls}>{cls}</option>
+          ))}
+        </select>
+        <FiChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+      </div>
+
+      {/* Subject Filter */}
+      <div className="relative group/select">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl opacity-0 group-focus-within/select:opacity-100 transition-opacity duration-300" />
+        <select
+          value={selectedSubject}
+          onChange={(e) => setSelectedSubject(e.target.value)}
+          className="relative w-full px-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 appearance-none cursor-pointer transition-all duration-300"
+        >
+          <option value="all">All Subjects</option>
+          {subjects.map(subject => (
+            <option key={subject} value={subject}>{subject}</option>
+          ))}
+        </select>
+        <FiChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+      </div>
+
+      {/* Status Filter */}
+      <div className="relative group/select">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 to-rose-500/10 rounded-xl opacity-0 group-focus-within/select:opacity-100 transition-opacity duration-300" />
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="relative w-full px-4 py-3.5 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-2 border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/20 appearance-none cursor-pointer transition-all duration-300"
+        >
+          <option value="all">All Status</option>
+          <option value="assigned" className="text-slate-700 dark:text-slate-300">Assigned</option>
+          <option value="in-progress" className="text-orange-600 dark:text-orange-400">In Progress</option>
+          <option value="completed" className="text-green-600 dark:text-green-400">Completed</option>
+          <option value="overdue" className="text-red-600 dark:text-red-400">Overdue</option>
+        </select>
+        <FiChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
+      </div>
+    </div>
+
+    {/* Active Filters Display */}
+    <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+      {searchTerm && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+          <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Search:</span>
+          <span className="text-xs font-bold text-blue-900 dark:text-blue-100">{searchTerm}</span>
+          <button
+            onClick={() => setSearchTerm('')}
+            className="ml-1 text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {selectedClass !== 'all' && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800">
+          <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Class:</span>
+          <span className="text-xs font-bold text-purple-900 dark:text-purple-100">{selectedClass}</span>
+          <button
+            onClick={() => setSelectedClass('all')}
+            className="ml-1 text-purple-500 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {selectedSubject !== 'all' && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-pink-100 dark:bg-pink-900/30 border border-pink-200 dark:border-pink-800">
+          <span className="text-xs font-medium text-pink-700 dark:text-pink-300">Subject:</span>
+          <span className="text-xs font-bold text-pink-900 dark:text-pink-100">{selectedSubject}</span>
+          <button
+            onClick={() => setSelectedSubject('all')}
+            className="ml-1 text-pink-500 hover:text-pink-700 dark:hover:text-pink-300 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+      
+      {selectedStatus !== 'all' && (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-100 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800">
+          <span className="text-xs font-medium text-rose-700 dark:text-rose-300">Status:</span>
+          <span className="text-xs font-bold text-rose-900 dark:text-rose-100 capitalize">{selectedStatus}</span>
+          <button
+            onClick={() => setSelectedStatus('all')}
+            className="ml-1 text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
       {/* Assignments Grid */}
       <div className="grid gap-4 lg:gap-6">
