@@ -38,9 +38,15 @@ import {
   FiCheck,
   FiArchive,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiHardDrive,
+  FiTrendingUp,
+  FiArrowLeft,
+  FiChevronRight as FiChevronRight2,
+  FiGrid,
+  FiSliders,
+  FiNewspaper
 } from 'react-icons/fi';
-
 // Material-UI Components
 import CircularProgress from '@mui/material/CircularProgress';
 import { Modal, Box, TextField, TextareaAutosize, Chip, Tooltip, Button } from '@mui/material';
@@ -111,39 +117,46 @@ const getBadgeColorStyles = (colorName) => {
   return map[colorName] || map.slate;
 };
 
-const getFileIcon = (fileName) => {
-  if (!fileName) return <FiFile className="text-gray-600" />;
+const getFileIcon = (fileName, className = "") => {
+  if (!fileName) return <FiFile className={`text-gray-600 ${className}`.trim()} />;
   
   const ext = fileName.split('.').pop().toLowerCase();
+  
+  // Combine base className with color-specific className
+  const getIcon = (IconComponent, colorClass) => {
+    const combinedClass = `${colorClass} ${className}`.trim();
+    return <IconComponent className={combinedClass} />;
+  };
+  
   switch (ext) {
     case 'pdf':
-      return <FiFileText className="text-red-500" />;
+      return getIcon(FiFileText, "text-red-500");
     case 'doc':
     case 'docx':
-      return <FiFileText className="text-blue-500" />;
+      return getIcon(FiFileText, "text-blue-500");
     case 'ppt':
     case 'pptx':
-      return <FiBarChart2 className="text-orange-500" />;
+      return getIcon(FiBarChart2, "text-orange-500");
     case 'xls':
     case 'xlsx':
-      return <FiBarChart2 className="text-green-500" />;
+      return getIcon(FiBarChart2, "text-green-500");
     case 'mp4':
     case 'mov':
     case 'avi':
-      return <FiVideo className="text-purple-500" />;
+      return getIcon(FiVideo, "text-purple-500");
     case 'jpg':
     case 'jpeg':
     case 'png':
     case 'gif':
-      return <FiImage className="text-pink-500" />;
+      return getIcon(FiImage, "text-pink-500");
     case 'mp3':
     case 'wav':
-      return <FiMusic className="text-indigo-500" />;
+      return getIcon(FiMusic, "text-indigo-500");
     case 'zip':
     case 'rar':
-      return <FiArchive className="text-gray-500" />;
+      return getIcon(FiArchive, "text-gray-500");
     default:
-      return <FiFile className="text-gray-600" />;
+      return getIcon(FiFile, "text-gray-600");
   }
 };
 
@@ -592,6 +605,24 @@ export default function ResourcesManager() {
     }
   };
 
+  const getColorFromString = (colorString) => {
+  // Convert color string like "blue-500" to actual color value
+  const colorMap = {
+    'blue-500': '#3b82f6',
+    'green-500': '#10b981',
+    'purple-500': '#8b5cf6',
+    'orange-500': '#f97316',
+    'red-500': '#ef4444',
+    'yellow-500': '#eab308',
+    'sky-500': '#0ea5e9',
+    'cyan-500': '#06b6d4',
+    'emerald-500': '#10b981',
+    'indigo-500': '#6366f1',
+  };
+  
+  return colorMap[colorString] || '#6b7280'; // Default gray
+};
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -662,6 +693,15 @@ export default function ResourcesManager() {
       setUploading(false);
     }
   };
+  
+const handleNewResource = () => {
+  // Your logic for creating/uploading a new resource
+  // For example:
+  setShowCreateModal(true);
+  // or
+  setResourceModal({ open: true, mode: 'create', resource: null });
+};
+
 
   const downloadResource = async (resource) => {
     try {
@@ -768,23 +808,6 @@ export default function ResourcesManager() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => fetchResources(true)}
-              disabled={refreshing}
-              className="p-2 sm:p-3 text-gray-600 rounded-xl"
-              title="Refresh"
-            >
-              <FiRotateCw className={`${refreshing ? 'animate-spin' : ''}`} />
-            </button>
-            
-            <button
-              onClick={handleCreate}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold"
-            >
-              <FiPlus /> New Resource
-            </button>
-          </div>
         </div>
       </header>
 
@@ -919,30 +942,150 @@ export default function ResourcesManager() {
 
         {/* Main Content */}
         <main>
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-2 sm:mb-3">
-                Learning Resources Manager
-              </h1>
-              <p className="text-gray-600 text-sm sm:text-lg">
-                {loading ? 'Loading resources...' : `Showing ${filteredResources.length} educational resources`}
-              </p>
+   {/* Modern Header for Learning Resources Manager */}
+<div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] bg-gradient-to-br from-sky-700 via-sky-600 to-cyan-600 p-4 sm:p-6 lg:p-8 shadow-xl sm:shadow-2xl">
+  {/* Background Pattern */}
+  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+    <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/5 to-cyan-500/5" />
+  </div>
+  
+  {/* Cyan Glow Effects - Responsive sizes */}
+  <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-cyan-400 to-sky-300 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl lg:blur-3xl" />
+  <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 lg:w-96 h-48 sm:h-64 lg:h-96 bg-gradient-to-r from-sky-400 to-teal-300 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl lg:blur-3xl" />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+      {/* Left Content - Title & Description */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+          {/* Icon Container */}
+          <div className="relative self-start shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-sky-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
+            <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-sky-500 to-cyan-600 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl">
+              <FiFolder className="text-white text-lg sm:text-xl lg:text-2xl w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
             </div>
           </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-            {stats.map((stat, index) => (
-              <StatsPill
-                key={index}
-                icon={stat.icon}
-                value={stat.value}
-                label={stat.label}
-                color={stat.color}
-              />
-            ))}
+          
+          {/* Text Content */}
+          <div className="flex-1 min-w-0">
+            {/* Badge - Hidden on smallest screens */}
+            <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
+              <FiGlobe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-wide sm:tracking-widest">Digital Library</span>
+            </div>
+            
+            {/* Title */}
+            <h1 className="text-2xl xs:text-3xl -z-20 sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight sm:leading-tight">
+              Learning <span className="block sm:inline">Resources</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-sky-200 block">
+                Manager
+              </span>
+            </h1>
+            
+            {/* Description - Responsive sizing */}
+            <p className="text-sky-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+              {loading ? 'Loading educational resources...' : `Managing ${filteredResources.length} digital resources across all subjects`}
+            </p>
           </div>
+        </div>
+      </div>
+      
+      {/* Right Content - Stats & Quick Info */}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
+        {/* Quick Stats Counter - Mobile */}
+        <div className="flex items-center gap-2 xs:gap-3 lg:hidden">
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] xs:text-xs font-bold text-sky-200/70 uppercase tracking-wide">Total</span>
+            <span className="text-xl xs:text-2xl font-black text-white">
+              {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
+            </span>
+          </div>
+          <div className="h-6 w-px bg-white/20" />
+        </div>
+        
+        {/* Action Buttons - Responsive layout */}
+        <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
+          {/* Upload Button - Primary CTA */}
+          <button
+              onClick={handleCreate}
+
+            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-white to-cyan-100 text-sky-900 rounded-xl sm:rounded-2xl font-semibold sm:font-bold hover:shadow-lg sm:hover:shadow-xl hover:shadow-sky-500/20 active:scale-95 transition-all duration-300 w-full xs:w-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-sky-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex items-center justify-center gap-2">
+              <FiUpload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm font-medium sm:font-bold whitespace-nowrap">
+                Upload Resource
+              </span>
+            </div>
+          </button>
+          
+          {/* Refresh Button */}
+          <button
+            onClick={() => fetchResources(true)}
+            disabled={refreshing}
+            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold sm:font-bold hover:bg-white/15 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full xs:w-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <div className="relative flex items-center justify-center gap-2">
+              <FiRotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="text-xs sm:text-sm whitespace-nowrap">
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </span>
+            </div>
+          </button>
+        </div>
+        
+        {/* Total Resources Counter - Desktop */}
+        <div className="hidden lg:flex flex-col items-end">
+          <span className="text-[10px] font-bold text-sky-200/70 uppercase tracking-widest">Total Resources</span>
+          <span className="text-2xl font-black text-white">
+            {stats.reduce((sum, stat) => sum + (stat.value || 0), 0) || 0}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Modern Stats Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+  {/* You can use your existing StatsPill component or create modern cards */}
+  {stats.map((stat, index) => (
+    <div key={index} className="group relative bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg sm:shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+      {/* Background accent circle */}
+      <div className="absolute -right-6 -top-6 sm:-right-8 sm:-top-8 w-16 h-16 sm:w-20 sm:h-20 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500" 
+           style={{ backgroundColor: getColorFromString(stat.color) }} />
+      
+      <div className="relative z-10">
+        <div className="inline-flex p-2 sm:p-3 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 transition-colors duration-300"
+             style={{ backgroundColor: getColorFromString(stat.color) + '20' }}>
+          {stat.icon}
+        </div>
+        
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+            {stat.value || 0}
+          </h3>
+          <div className="flex items-center text-emerald-500 text-xs sm:text-sm font-medium">
+            <FiTrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+            <span>+{Math.floor((stat.value || 0) * 0.12)}</span>
+          </div>
+        </div>
+        
+        <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+          {stat.label}
+        </p>
+        
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-50 dark:border-slate-800">
+          <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+            {stat.description || `${stat.label.toLowerCase()} resources available`}
+          </p>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
           {/* Content */}
           {loading ? (
@@ -1204,126 +1347,212 @@ export default function ResourcesManager() {
         </Modal>
       )}
 
-      {/* View Resource Modal */}
-      {showViewModal && viewResource && (
-        <Modal open={true} onClose={() => setShowViewModal(false)}>
-          <Box sx={{
-            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: '90%',
-            maxWidth: '800px',
-            maxHeight: '95vh', bgcolor: 'background.paper',
-            borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-          }}>
-            <div className="p-6 border-b border-gray-200/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl">
-                    {getFileIcon(viewResource.fileName)}
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900">Resource Details</h2>
+  {/* Modern Resource View Modal */}
+{showViewModal && viewResource && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-slate-900/90 backdrop-blur-sm">
+    {/* Modal Container */}
+    <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+      
+      {/* Close Button - Floating & Premium */}
+      <button 
+        onClick={() => setShowViewModal(false)}
+        className="absolute top-5 right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
+      >
+        <FiX size={24} />
+      </button>
+
+      {/* 1. Header with Gradient */}
+      <div className="relative h-[20vh] sm:h-[180px] w-full shrink-0 bg-gradient-to-r from-blue-600 to-emerald-600">
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-emerald-500/20" />
+        <div className="relative h-full flex flex-col justify-end p-6 lg:p-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+              {getFileIcon(viewResource.fileName)}
+            </div>
+            <div>
+              <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                Resource Details
+              </h2>
+              <p className="text-white/70 text-sm mt-1">
+                Complete educational resource information
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Content Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
+        <div className="max-w-2xl mx-auto space-y-8">
+          
+          {/* Resource Header Card */}
+          <section className="p-6 bg-gradient-to-r from-blue-50/80 to-emerald-50/80 rounded-3xl border border-blue-200/50">
+            <div className="flex items-center gap-5">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl flex items-center justify-center shadow-xl">
+                  {getFileIcon(viewResource.fileName, 'text-white text-3xl')}
                 </div>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="p-2 text-gray-600"
-                >
-                  <FiX className="text-xl" />
-                </button>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <FiCheck className="text-white text-xs" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/60 backdrop-blur-sm rounded-full mb-2">
+                  <FiBook className="text-blue-600" />
+                  <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">Educational Resource</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900 mb-1 truncate">
+                  {viewResource.title}
+                </h3>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <span className="font-medium">{viewResource.subject}</span>
+                  <div className="w-1 h-1 rounded-full bg-slate-300" />
+                  <span>{viewResource.className}</span>
+                </div>
               </div>
             </div>
+          </section>
 
-            <div className="p-6 space-y-6 max-h-[calc(95vh-150px)] overflow-y-auto">
-              {/* Resource Info */}
-              <div className="flex items-center gap-4 p-6 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-2xl border border-blue-200">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center">
-                  {getFileIcon(viewResource.fileName)}
+          {/* Details Grid - 2 Columns */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Resource Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiFileText className="text-blue-600" />
+                    <p className="text-[10px] uppercase font-bold text-slate-400">File Name</p>
+                  </div>
+                  <p className="font-bold text-slate-900 truncate">{viewResource.fileName}</p>
                 </div>
-                <div>
-                  <div className="text-sm text-blue-600 font-semibold mb-1">EDUCATIONAL RESOURCE</div>
-                  <div className="text-lg font-bold text-gray-900">{viewResource.title}</div>
-                  <div className="text-gray-600">{viewResource.subject} • {viewResource.className}</div>
-                </div>
-              </div>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">File Name</p>
-                    <p className="text-gray-800 font-medium">{viewResource.fileName}</p>
+                
+                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiHardDrive className="text-slate-600" />
+                    <p className="text-[10px] uppercase font-bold text-slate-400">File Size</p>
                   </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">File Size</p>
-                    <p className="text-gray-800 font-medium">{viewResource.fileSize || formatFileSize(viewResource.size)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Type</p>
-                    <Badge color="blue" icon={getFileIcon(viewResource.fileName)}>
-                      {viewResource.type || 'document'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Category</p>
-                    <Badge color="green" icon={<FiBook className="text-green-500" />}>
-                      {viewResource.category}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Uploaded By</p>
-                    <p className="text-gray-800 font-medium">{viewResource.uploadedBy || 'System'}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Upload Date</p>
-                    <p className="text-gray-800 font-medium">{formatDate(viewResource.createdAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Downloads</p>
-                    <p className="text-gray-800 font-medium">{viewResource.downloads || 0}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm font-semibold mb-1">Access Level</p>
-                    <Badge color="purple" icon={<FiShield className="text-purple-500" />}>
-                      {viewResource.accessLevel}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <p className="text-gray-500 text-sm font-semibold mb-1">Description</p>
-                <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                    {viewResource.description || 'No description available'}
+                  <p className="font-bold text-slate-900">
+                    {viewResource.fileSize || formatFileSize(viewResource.size)}
                   </p>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-4 pt-6 border-t border-gray-200/50">
-                <button
-                  onClick={() => {
-                    downloadResource(viewResource);
-                    setShowViewModal(false);
-                  }}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-3"
-                >
-                  <FiDownload className="text-lg" /> Download Resource
-                </button>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3.5 rounded-xl font-semibold"
-                >
-                  Close
-                </button>
+              {/* Right Column */}
+              <div className="space-y-4">
+                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiUser className="text-purple-600" />
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Uploaded By</p>
+                  </div>
+                  <p className="font-bold text-slate-900">{viewResource.uploadedBy || 'System'}</p>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FiCalendar className="text-amber-600" />
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Upload Date</p>
+                  </div>
+                  <p className="font-bold text-slate-900">{formatDate(viewResource.createdAt)}</p>
+                </div>
               </div>
             </div>
-          </Box>
-        </Modal>
-      )}
+          </section>
+
+          {/* Tags & Stats Grid */}
+          <section className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Type Badge */}
+              <div className="p-4 bg-blue-50 rounded-3xl border border-blue-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiFile className="text-blue-600" />
+                  <p className="text-[10px] uppercase font-bold text-blue-400">Type</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {getFileIcon(viewResource.fileName, 'text-blue-600 text-lg')}
+                  <span className="font-bold text-blue-800">
+                    {viewResource.type || 'document'}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Category Badge */}
+              <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiBook className="text-emerald-600" />
+                  <p className="text-[10px] uppercase font-bold text-emerald-400">Category</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FiBook className="text-emerald-600" />
+                  <span className="font-bold text-emerald-800">{viewResource.category}</span>
+                </div>
+              </div>
+              
+              {/* Access Level Badge */}
+              <div className="p-4 bg-purple-50 rounded-3xl border border-purple-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiShield className="text-purple-600" />
+                  <p className="text-[10px] uppercase font-bold text-purple-400">Access Level</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FiShield className="text-purple-600" />
+                  <span className="font-bold text-purple-800 capitalize">{viewResource.accessLevel}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Downloads Counter */}
+            <div className="p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-3xl border border-slate-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Total Downloads</p>
+                  <p className="text-2xl font-black text-slate-900">{viewResource.downloads || 0}</p>
+                </div>
+                <div className="p-3 bg-white rounded-2xl">
+                  <FiTrendingUp className="text-emerald-600 text-2xl" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Description Section */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Description</h3>
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-white rounded-3xl border border-slate-100 shadow-sm">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                {viewResource.description || 'No description available for this resource.'}
+              </p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* 3. Action Footer */}
+      <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
+        <div className="max-w-2xl mx-auto flex gap-3">
+          <button
+            onClick={() => {
+              downloadResource(viewResource);
+              setShowViewModal(false);
+            }}
+            className="flex-[2] h-14 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform hover:shadow-xl hover:shadow-blue-500/30"
+          >
+            <FiDownload size={20} />
+            Download Resource
+          </button>
+          
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="flex-1 h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <FiX size={20} />
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

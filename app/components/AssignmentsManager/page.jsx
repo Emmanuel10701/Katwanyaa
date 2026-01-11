@@ -26,7 +26,7 @@ import {
   FiAward,
   FiMessageSquare,
   FiRotateCw,
-  FiCheck
+  FiCheck,FiUser ,FiCheckCircle,FiArrowLeft 
 } from 'react-icons/fi';
 
 import { useRef } from 'react'; // Add this import
@@ -1199,148 +1199,260 @@ const clearAllAttachments = () => {
   </Modal>
 )}
 
-      {/* View Assignment Modal */}
-      {showViewModal && viewAssignment && (
-        <Modal open={true} onClose={() => setShowViewModal(false)}>
-          <Box sx={{
-            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            width: '90%',
-            maxWidth: '1000px',
-            maxHeight: '95vh', bgcolor: 'background.paper',
-            borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-          }}>
-            <div className="p-6 lg:p-8 border-b border-gray-200/60">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
-                    <FiBook className="text-white text-xl" />
-                  </div>
-                  <h2 className="text-xl lg:text-2xl font-bold text-gray-800">
-                    Assignment Details
-                  </h2>
+   {/* Modern Assignment View Modal */}
+{showViewModal && viewAssignment && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-slate-900/90 backdrop-blur-sm">
+    {/* Modal Container */}
+    <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-4xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+      
+      {/* Close Button - Floating & Premium */}
+      <button 
+        onClick={() => setShowViewModal(false)}
+        className="absolute top-5 right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
+      >
+        <FiX size={24} />
+      </button>
+
+      {/* 1. Header with Gradient */}
+      <div className="relative h-[20vh] sm:h-[180px] w-full shrink-0 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20" />
+        <div className="relative h-full flex flex-col justify-end p-6 lg:p-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+              <FiBook className="text-white text-2xl" />
+            </div>
+            <div>
+              <h2 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                Assignment Details
+              </h2>
+              <p className="text-white/70 text-sm mt-1">
+                Complete assignment information and requirements
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Content Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-white">
+        <div className="max-w-3xl mx-auto space-y-8">
+          
+          {/* Title Section */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Assignment Title</h3>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900 leading-tight tracking-tight">
+              {viewAssignment.title}
+            </h2>
+            
+            {/* Quick Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiBook className="text-blue-600" />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Subject</p>
                 </div>
-                <button
-                  onClick={() => setShowViewModal(false)}
-                  className="p-2 text-gray-600"
-                >
-                  <FiX className="text-xl" />
-                </button>
+                <p className="font-bold text-slate-900">{viewAssignment.subject}</p>
+              </div>
+              
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiUsers className="text-purple-600" />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Class</p>
+                </div>
+                <p className="font-bold text-slate-900">{viewAssignment.className}</p>
+              </div>
+              
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiUser className="text-amber-600" />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Teacher</p>
+                </div>
+                <p className="font-bold text-slate-900">{viewAssignment.teacher}</p>
               </div>
             </div>
+          </section>
 
-            <div className="p-6 lg:p-8 space-y-6 max-h-[calc(95vh-200px)] overflow-y-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Title</p>
-                  <p className="text-gray-800 text-lg font-semibold">{viewAssignment.title}</p>
+          {/* Dates & Priority Section */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Timeline & Status</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-blue-50 rounded-3xl border border-blue-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiCalendar className="text-blue-600" />
+                  <p className="text-[10px] uppercase font-bold text-blue-400">Due Date</p>
                 </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Subject</p>
-                  <p className="text-gray-800">{viewAssignment.subject}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Class</p>
-                  <p className="text-gray-800">{viewAssignment.className}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Teacher</p>
-                  <p className="text-gray-800">{viewAssignment.teacher}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Due Date</p>
-                  <p className="text-gray-800">{formatDate(viewAssignment.dueDate)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Date Assigned</p>
-                  <p className="text-gray-800">{formatDate(viewAssignment.dateAssigned)}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Priority</p>
-                  <p className="text-gray-800 capitalize">{viewAssignment.priority}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Status</p>
-                  <p className="text-gray-800 capitalize">{viewAssignment.status}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Estimated Time</p>
-                  <p className="text-gray-800">{viewAssignment.estimatedTime}</p>
-                </div>
+                <p className="font-bold text-slate-900">{formatDate(viewAssignment.dueDate)}</p>
               </div>
-
-              <div>
-                <p className="text-gray-500 text-sm font-semibold mb-1">Description</p>
-                <p className="text-gray-800 leading-relaxed whitespace-pre-line">{viewAssignment.description}</p>
+              
+              <div className="p-4 bg-emerald-50 rounded-3xl border border-emerald-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiCalendar className="text-emerald-600" />
+                  <p className="text-[10px] uppercase font-bold text-emerald-400">Assigned</p>
+                </div>
+                <p className="font-bold text-slate-900">{formatDate(viewAssignment.dateAssigned)}</p>
               </div>
-
-              <div>
-                <p className="text-gray-500 text-sm font-semibold mb-1">Instructions</p>
-                <p className="text-gray-800 leading-relaxed whitespace-pre-line">{viewAssignment.instructions}</p>
+              
+              <div className="p-4 bg-rose-50 rounded-3xl border border-rose-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiAlertCircle className="text-rose-600" />
+                  <p className="text-[10px] uppercase font-bold text-rose-400">Priority</p>
+                </div>
+                <p className="font-bold text-slate-900 capitalize">{viewAssignment.priority}</p>
               </div>
-
-              {viewAssignment.additionalWork && (
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Additional Work</p>
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">{viewAssignment.additionalWork}</p>
-                </div>
-              )}
-
-              {viewAssignment.teacherRemarks && (
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Teacher Remarks</p>
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-line">{viewAssignment.teacherRemarks}</p>
-                </div>
-              )}
-
-              {viewAssignment.learningObjectives && viewAssignment.learningObjectives.length > 0 && (
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Learning Objectives</p>
-                  <ul className="list-disc list-inside space-y-2">
-                    {viewAssignment.learningObjectives.map((objective, index) => (
-                      <li key={index} className="text-gray-800">
-                        {objective}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {(viewAssignment.assignmentFiles?.length > 0 || viewAssignment.attachments?.length > 0) && (
-                <div>
-                  <p className="text-gray-500 text-sm font-semibold mb-1">Attachments</p>
-                  <div className="grid grid-cols-1 gap-3">
-                    {viewAssignment.assignmentFiles?.map((file, index) => (
-                      <a
-                        key={index}
-                        href={file}
-                        className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <FiFileText className="text-blue-500 text-lg" />
-                        <span className="text-blue-600 font-medium">{file.split('/').pop()}</span>
-                      </a>
-                    ))}
-                    {viewAssignment.attachments?.map((file, index) => (
-                      <a
-                        key={index}
-                        href={file}
-                        className="flex items-center gap-3 p-3 bg-green-50 rounded-xl"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <FiPaperclip className="text-green-500 text-lg" />
-                        <span className="text-green-600 font-medium">{file.split('/').pop()}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-          </Box>
-        </Modal>
-      )}
+            
+            {/* Status & Time Estimate */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiCheckCircle className="text-slate-600" />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Status</p>
+                </div>
+                <p className="font-bold text-slate-900 capitalize">{viewAssignment.status}</p>
+              </div>
+              
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiClock className="text-slate-600" />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Estimated Time</p>
+                </div>
+                <p className="font-bold text-slate-900">{viewAssignment.estimatedTime}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Description Section */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Description</h3>
+            <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                {viewAssignment.description}
+              </p>
+            </div>
+          </section>
+
+          {/* Instructions Section */}
+          <section className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Instructions</h3>
+            <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                {viewAssignment.instructions}
+              </p>
+            </div>
+          </section>
+
+          {/* Additional Work - Conditional */}
+          {viewAssignment.additionalWork && (
+            <section className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Additional Work</h3>
+              <div className="p-6 bg-amber-50/50 rounded-3xl border border-amber-100">
+                <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                  {viewAssignment.additionalWork}
+                </p>
+              </div>
+            </section>
+          )}
+
+          {/* Teacher Remarks - Conditional */}
+          {viewAssignment.teacherRemarks && (
+            <section className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Teacher Remarks</h3>
+              <div className="p-6 bg-purple-50/50 rounded-3xl border border-purple-100">
+                <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                  {viewAssignment.teacherRemarks}
+                </p>
+              </div>
+            </section>
+          )}
+
+          {/* Learning Objectives - Conditional */}
+          {viewAssignment.learningObjectives && viewAssignment.learningObjectives.length > 0 && (
+            <section className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Learning Objectives</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {viewAssignment.learningObjectives.map((objective, index) => (
+                  <div key={index} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <p className="font-bold text-slate-900">Objective {index + 1}</p>
+                    </div>
+                    <p className="text-slate-700 text-sm">{objective}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Attachments Section - Conditional */}
+          {(viewAssignment.assignmentFiles?.length > 0 || viewAssignment.attachments?.length > 0) && (
+            <section className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Attachments</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {viewAssignment.assignmentFiles?.map((file, index) => (
+                  <a
+                    key={index}
+                    href={file}
+                    className="group flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-3xl border border-blue-200 hover:border-blue-300 transition-all"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="p-3 bg-white rounded-2xl">
+                      <FiFileText className="text-blue-600 text-xl" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-blue-800 truncate">
+                        {file.split('/').pop()}
+                      </p>
+                      <p className="text-xs text-blue-600">Assignment File</p>
+                    </div>
+                    <FiChevronRight className="text-blue-400 group-hover:text-blue-600 transition-colors" />
+                  </a>
+                ))}
+                
+                {viewAssignment.attachments?.map((file, index) => (
+                  <a
+                    key={index}
+                    href={file}
+                    className="group flex items-center gap-4 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-3xl border border-emerald-200 hover:border-emerald-300 transition-all"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="p-3 bg-white rounded-2xl">
+                      <FiPaperclip className="text-emerald-600 text-xl" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-emerald-800 truncate">
+                        {file.split('/').pop()}
+                      </p>
+                      <p className="text-xs text-emerald-600">Supporting Document</p>
+                    </div>
+                    <FiChevronRight className="text-emerald-400 group-hover:text-emerald-600 transition-colors" />
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Action Footer */}
+      <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
+        <div className="max-w-3xl mx-auto flex gap-3">
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="flex-[2] h-14 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          >
+            <FiArrowLeft size={20} />
+            Back to Assignments
+          </button>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (

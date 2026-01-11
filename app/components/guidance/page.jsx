@@ -2,8 +2,48 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast, Toaster } from 'sonner';
-import { FiPlus, FiSearch, FiFilter, FiEdit3, FiTrash2, FiBook, FiBarChart2, FiUser, FiUsers, FiAlertTriangle, FiMessageCircle, FiClock, FiCalendar, FiSave, FiX, FiImage, FiUpload, FiRotateCw, FiEye, FiChevronRight, FiCheck, FiChevronDown, FiChevronUp, FiAlertCircle, FiUserPlus, FiUserCheck, FiBriefcase, FiAward, FiMail, FiPhone, FiShield, FiArrowLeft } from 'react-icons/fi';
-import CircularProgress from "@mui/material/CircularProgress";
+import CircularProgress from '@mui/material/CircularProgress';
+import {
+  FiPlus, FiSearch, FiEdit3, FiBook, FiTrendingUp, FiArrowUpRight, FiBarChart2, FiUser, FiUsers,
+  FiAlertTriangle, FiMessageCircle, FiClock, FiCalendar, FiSave, FiX, FiImage, FiUpload, FiRotateCw,
+  FiEye, FiChevronRight, FiChevronDown, FiChevronUp, FiAlertCircle, FiUserPlus, FiUserCheck,
+  FiBriefcase, FiAward, FiMail, FiPhone, FiShield, FiArrowLeft, FiArrowRight, FiZap, FiGlobe,
+  FiLinkedin, FiTwitter, FiStar, FiFilter, FiTrash2, FiCheck, FiTrendingDown, FiTrendingUp as FiTrendingUp2
+} from 'react-icons/fi';
+
+// ============= CATEGORY CONFIG (MOVED BEFORE COMPONENTS) =============
+const CATEGORY_CONFIG = {
+  Drugs: {
+    icon: <FiAlertTriangle className="text-red-500" />,
+    color: 'red',
+    presetImage: '/drugs.png',
+    label: '🚫 Drugs'
+  },
+  Relationships: {
+    icon: <FiUsers className="text-pink-500" />,
+    color: 'pink',
+    presetImage: '/love.jpg',
+    label: '💕 Relationships'
+  },
+  Academics: {
+    icon: <FiBook className="text-blue-500" />,
+    color: 'blue',
+    presetImage: '/academics.jpg',
+    label: '📚 Academics'
+  },
+  Worship: {
+    icon: <FiUser className="text-purple-500" />,
+    color: 'purple',
+    presetImage: '/worship.jpg',
+    label: '🙏 Worship'
+  },
+  Discipline: {
+    icon: <FiBarChart2 className="text-orange-500" />,
+    color: 'orange',
+    presetImage: '/discipline.jpg',
+    label: '⚖️ Discipline'
+  }
+};
 
 // ============= MODERN MODAL COMPONENTS =============
 
@@ -12,234 +52,226 @@ const ModernTeamDetailModal = ({ team, onClose, onEdit }) => {
   if (!team) return null;
 
   // Member card component for the modal
-const MemberCard = ({ member, type, assistant = null }) => {
-  if (!member) return null;
+  const MemberCard = ({ member, type, assistant = null }) => {
+    if (!member) return null;
 
-  const getTypeConfig = (type) => {
-    const configs = {
-      patron: {
-        bgGradient: 'from-purple-50/50 to-white',
-        borderColor: 'border-purple-100/60',
-        textColor: 'text-purple-600',
-        badgeColor: 'bg-purple-100/80 text-purple-700',
-        icon: <FiAward className="w-3 h-3" />,
-        label: 'Patron'
-      },
-      matron: {
-        bgGradient: 'from-pink-50/50 to-white',
-        borderColor: 'border-pink-100/60',
-        textColor: 'text-pink-600',
-        badgeColor: 'bg-pink-100/80 text-pink-700',
-        icon: <FiUserCheck className="w-3 h-3" />,
-        label: 'Matron'
-      },
-      teacher: {
-        bgGradient: 'from-blue-50/50 to-white',
-        borderColor: 'border-blue-100/60',
-        textColor: 'text-blue-600',
-        badgeColor: 'bg-blue-100/80 text-blue-700',
-        icon: <FiBriefcase className="w-3 h-3" />,
-        label: 'Guidance Teacher'
-      }
+    const getTypeConfig = (type) => {
+      const configs = {
+        patron: {
+          bgGradient: 'from-purple-50/50 to-white',
+          borderColor: 'border-purple-100/60',
+          textColor: 'text-purple-600',
+          badgeColor: 'bg-purple-100/80 text-purple-700',
+          icon: <FiAward className="w-3 h-3" />,
+          label: 'Patron'
+        },
+        matron: {
+          bgGradient: 'from-pink-50/50 to-white',
+          borderColor: 'border-pink-100/60',
+          textColor: 'text-pink-600',
+          badgeColor: 'bg-pink-100/80 text-pink-700',
+          icon: <FiUserCheck className="w-3 h-3" />,
+          label: 'Matron'
+        },
+        teacher: {
+          bgGradient: 'from-blue-50/50 to-white',
+          borderColor: 'border-blue-100/60',
+          textColor: 'text-blue-600',
+          badgeColor: 'bg-blue-100/80 text-blue-700',
+          icon: <FiBriefcase className="w-3 h-3" />,
+          label: 'Guidance Teacher'
+        }
+      };
+      return configs[type] || configs.teacher;
     };
-    return configs[type] || configs.teacher;
-  };
 
-  const config = getTypeConfig(type);
+    const config = getTypeConfig(type);
 
-  return (
-    <div className={`relative rounded-[2rem] border ${config.borderColor} bg-gradient-to-br ${config.bgGradient} p-6 transition-all duration-300 hover:shadow-lg`}>
-      <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        
-        {/* Image Section - Scaled Down slightly */}
-        <div className="relative shrink-0">
-          <div className="relative w-28 h-28 rounded-3xl overflow-hidden border-2 border-white shadow-xl">
-            {member.image ? (
-              <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-slate-200">
-                <FiUser className="text-slate-400 w-10 h-10" />
+    return (
+      <div className={`relative rounded-[2rem] border ${config.borderColor} bg-gradient-to-br ${config.bgGradient} p-6 transition-all duration-300 hover:shadow-lg`}>
+        <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          
+          {/* Image Section - Scaled Down slightly */}
+          <div className="relative shrink-0">
+            <div className="relative w-28 h-28 rounded-3xl overflow-hidden border-2 border-white shadow-xl">
+              {member.image ? (
+                <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                  <FiUser className="text-slate-400 w-10 h-10" />
+                </div>
+              )}
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center shadow-md">
+              <FiCheck className="text-white w-3 h-3" />
+            </div>
+          </div>
+
+          {/* Details Section */}
+          <div className="flex-1 text-center sm:text-left min-w-0">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-3">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${config.badgeColor} flex items-center gap-1.5`}>
+                {config.icon} {config.label}
+              </span>
+              {member.title && (
+                <span className="px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-full">
+                  {member.title}
+                </span>
+              )}
+            </div>
+
+            <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1 tracking-tight">
+              {member.name}
+            </h3>
+
+            {/* Bio - Muted and smaller */}
+            {member.bio && (
+              <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
+                {member.bio}
+              </p>
+            )}
+
+            {/* Contact Buttons - Replaced plain icons */}
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              {member.phone && (
+                <a href={`tel:${member.phone}`} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-emerald-200 hover:text-emerald-600 transition-all shadow-sm">
+                  <FiPhone className="w-3 h-3" /> Call
+                </a>
+              )}
+              {member.email && (
+                <a href={`mailto:${member.email}`} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all shadow-sm">
+                  <FiMail className="w-3 h-3" /> Email
+                </a>
+              )}
+            </div>
+
+            {/* Assistant Sub-Card - Compacted */}
+            {assistant && (
+              <div className="mt-5 pt-5 border-t border-slate-100">
+                <div className="flex items-center gap-3 p-3 bg-white/50 rounded-2xl border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-white shadow-sm">
+                    {assistant.image ? (
+                      <img src={assistant.image} alt={assistant.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                        <FiUser className="text-slate-400 w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">{assistant.name}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Assistant Teacher</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-          <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 border-2 border-white rounded-full flex items-center justify-center shadow-md">
-            <FiCheck className="text-white w-3 h-3" />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      {/* Modal Container - Reduced width to 2xl and padding */}
+      <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        {/* Close Button - Smaller & more subtle */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 p-1.5 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30 transition-all active:scale-90 hover:bg-white/40"
+        >
+          <FiX size={18} />
+        </button>
+
+        {/* 1. Header - Reduced height and font sizes */}
+        <div className="relative h-32 sm:h-40 w-full shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600" />
+          <div className="relative h-full flex flex-col justify-end p-6">
+            <div className="flex items-end justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                  Guidance Team
+                </h2>
+                <p className="text-white/70 text-xs">
+                  Official project oversight team
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                <FiShield className="text-white w-3 h-3" />
+                <span className="text-white text-[10px] font-bold uppercase tracking-wider">Official</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Details Section */}
-        <div className="flex-1 text-center sm:text-left min-w-0">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-3">
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${config.badgeColor} flex items-center gap-1.5`}>
-              {config.icon} {config.label}
-            </span>
-            {member.title && (
-              <span className="px-2.5 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                {member.title}
-              </span>
-            )}
-          </div>
-
-          <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1 tracking-tight">
-            {member.name}
-          </h3>
-
-          {/* Bio - Muted and smaller */}
-          {member.bio && (
-            <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-4">
-              {member.bio}
-            </p>
-          )}
-
-          {/* Contact Buttons - Replaced plain icons */}
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            {member.phone && (
-              <a href={`tel:${member.phone}`} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-emerald-200 hover:text-emerald-600 transition-all shadow-sm">
-                <FiPhone className="w-3 h-3" /> Call
-              </a>
-            )}
-            {member.email && (
-              <a href={`mailto:${member.email}`} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all shadow-sm">
-                <FiMail className="w-3 h-3" /> Email
-              </a>
-            )}
-          </div>
-
-          {/* Assistant Sub-Card - Compacted */}
-          {assistant && (
-            <div className="mt-5 pt-5 border-t border-slate-100">
-              <div className="flex items-center gap-3 p-3 bg-white/50 rounded-2xl border border-slate-100">
-                <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-white shadow-sm">
-                  {assistant.image ? (
-                    <img src={assistant.image} alt={assistant.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                      <FiUser className="text-slate-400 w-4 h-4" />
-                    </div>
-                  )}
+        {/* 2. Content Area - Compact padding */}
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
+          <div className="space-y-6">
+            
+            {/* Summary Stats - More compact grid */}
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: 'Patron', color: 'purple', icon: FiAward, val: team.patron },
+                { label: 'Matron', color: 'pink', icon: FiUserCheck, val: team.matron },
+                { label: 'Teacher', color: 'blue', icon: FiBriefcase, val: team.teacher }
+              ].map((item) => (
+                <div key={item.label} className={`p-3 bg-gradient-to-b from-${item.color}-50/50 to-white rounded-2xl border border-${item.color}-100/50 text-center`}>
+                  <item.icon className={`text-${item.color}-500 w-4 h-4 mx-auto mb-1`} />
+                  <p className={`text-[9px] font-bold text-${item.color}-600 uppercase tracking-tighter`}>{item.label}</p>
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    {item.val ? item.val.name.split(' ')[0] : 'None'}
+                  </p>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-bold text-slate-800 truncate">{assistant.name}</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Assistant Teacher</p>
-                </div>
+              ))}
+            </div>
+
+            {/* Team Members List */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-50 pb-2">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Profile Details</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {team.patron && <MemberCard member={team.patron} type="patron" />}
+                {team.matron && <MemberCard member={team.matron} type="matron" />}
+                {team.teacher && <MemberCard member={team.teacher} type="teacher" assistant={team.teacher?.assistant} />}
+                
+                {!team.patron && !team.matron && !team.teacher && (
+                  <div className="p-8 text-center border-2 border-dashed border-slate-100 rounded-[2rem]">
+                    <FiUsers className="text-slate-200 w-10 h-10 mx-auto mb-3" />
+                    <p className="text-sm font-bold text-slate-400">No members assigned</p>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Timestamps - Smaller font */}
+            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-4">
+              <div className="flex items-center gap-1">
+                <FiClock className="w-3 h-3" />
+                <span>Updated {new Date(team.updatedAt).toLocaleDateString()}</span>
+              </div>
+              <span>Created {new Date(team.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Action Footer - Smaller button height */}
+        <div className="shrink-0 p-4 bg-slate-50 border-t border-slate-100">
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-[1.5] h-11 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
+            >
+              <FiArrowLeft size={14} /> Close
+            </button>
+
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
- return (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    {/* Modal Container - Reduced width to 2xl and padding */}
-    <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-      
-      {/* Close Button - Smaller & more subtle */}
-      <button 
-        onClick={onClose}
-        className="absolute top-4 right-4 z-50 p-1.5 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30 transition-all active:scale-90 hover:bg-white/40"
-      >
-        <FiX size={18} />
-      </button>
-
-      {/* 1. Header - Reduced height and font sizes */}
-      <div className="relative h-32 sm:h-40 w-full shrink-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600" />
-        <div className="relative h-full flex flex-col justify-end p-6">
-          <div className="flex items-end justify-between">
-            <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                Guidance Team
-              </h2>
-              <p className="text-white/70 text-xs">
-                Official project oversight team
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-              <FiShield className="text-white w-3 h-3" />
-              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Official</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Content Area - Compact padding */}
-      <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
-        <div className="space-y-6">
-          
-          {/* Summary Stats - More compact grid */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: 'Patron', color: 'purple', icon: FiAward, val: team.patron },
-              { label: 'Matron', color: 'pink', icon: FiUserCheck, val: team.matron },
-              { label: 'Teacher', color: 'blue', icon: FiBriefcase, val: team.teacher }
-            ].map((item) => (
-              <div key={item.label} className={`p-3 bg-gradient-to-b from-${item.color}-50/50 to-white rounded-2xl border border-${item.color}-100/50 text-center`}>
-                <item.icon className={`text-${item.color}-500 w-4 h-4 mx-auto mb-1`} />
-                <p className={`text-[9px] font-bold text-${item.color}-600 uppercase tracking-tighter`}>{item.label}</p>
-                <p className="text-xs font-bold text-slate-900 truncate">
-                  {item.val ? item.val.name.split(' ')[0] : 'None'}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Team Members List */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Profile Details</h3>
-            </div>
-            
-            <div className="space-y-4">
-              {team.patron && <MemberCard member={team.patron} type="patron" />}
-              {team.matron && <MemberCard member={team.matron} type="matron" />}
-              {team.teacher && <MemberCard member={team.teacher} type="teacher" assistant={team.teacher?.assistant} />}
-              
-              {!team.patron && !team.matron && !team.teacher && (
-                <div className="p-8 text-center border-2 border-dashed border-slate-100 rounded-[2rem]">
-                  <FiUsers className="text-slate-200 w-10 h-10 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-slate-400">No members assigned</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Timestamps - Smaller font */}
-          <div className="flex items-center justify-between text-[10px] text-slate-400 pt-4">
-            <div className="flex items-center gap-1">
-              <FiClock className="w-3 h-3" />
-              <span>Updated {new Date(team.updatedAt).toLocaleDateString()}</span>
-            </div>
-            <span>Created {new Date(team.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Action Footer - Smaller button height */}
-      <div className="shrink-0 p-4 bg-slate-50 border-t border-slate-100">
-        <div className="flex gap-2">
-          <button
-            onClick={onClose}
-            className="flex-[1.5] h-11 bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
-          >
-            <FiArrowLeft size={14} /> Close
-          </button>
-          
-          {onEdit && (
-            <button
-              onClick={() => { onClose(); onEdit(); }}
-              className="flex-1 h-11 bg-white border border-slate-200 text-slate-900 rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
-            >
-              <FiEdit3 size={14} /> Edit
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-);
 };
 
 const ModernSessionDetailModal = ({ event, onClose, onEdit }) => {
@@ -480,40 +512,6 @@ const DeleteConfirmationModal = ({
       </div>
     </div>
   );
-};
-
-// Category configuration with preset images
-const CATEGORY_CONFIG = {
-  Drugs: {
-    icon: <FiAlertTriangle className="text-red-500" />,
-    color: 'red',
-    presetImage: '/drugs.png',
-    label: '🚫 Drugs'
-  },
-  Relationships: {
-    icon: <FiUsers className="text-pink-500" />,
-    color: 'pink',
-    presetImage: '/love.jpg',
-    label: '💕 Relationships'
-  },
-  Academics: {
-    icon: <FiBook className="text-blue-500" />,
-    color: 'blue',
-    presetImage: '/academics.jpg',
-    label: '📚 Academics'
-  },
-  Worship: {
-    icon: <FiUser className="text-purple-500" />,
-    color: 'purple',
-    presetImage: '/worship.jpg',
-    label: '🙏 Worship'
-  },
-  Discipline: {
-    icon: <FiBarChart2 className="text-orange-500" />,
-    color: 'orange',
-    presetImage: '/discipline.jpg',
-    label: '⚖️ Discipline'
-  }
 };
 
 // Modern Modal Component with Increased Dimensions
@@ -821,6 +819,11 @@ const GuidanceEditDialog = ({ event, onSave, onCancel }) => {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const fileInputRef = useRef(null);
+  // Add this state near the other states
+const [memberDetailModal, setMemberDetailModal] = useState({
+  open: false,
+  member: null,
+});
   
   // Dropdown state for category
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -1271,41 +1274,40 @@ const GuidanceTeamCard = ({ team, onView, onEdit, onDelete }) => {
           <h3 className="font-bold text-gray-900 text-sm">Guidance Team</h3>
           <p className="text-gray-500 text-xs">Updated recently</p>
         </div>
-<div className="flex items-center gap-1 sm:gap-2">
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onView();
-    }}
-    title="View Team"
-    className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all whitespace-nowrap"
-  >
-    View
-  </button>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onView();
+            }}
+            title="View Team"
+            className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all whitespace-nowrap"
+          >
+            View
+          </button>
 
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onEdit();
-    }}
-    title="Edit Team"
-    className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all whitespace-nowrap"
-  >
-    Edit
-  </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            title="Edit Team"
+            className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-all whitespace-nowrap"
+          >
+            Edit
+          </button>
 
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onDelete();
-    }}
-    title="Delete Team"
-    className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-all whitespace-nowrap"
-  >
-    Delete
-  </button>
-</div>
-
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            title="Delete Team"
+            className="px-2.5 py-1 text-xs sm:text-sm font-medium rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-all whitespace-nowrap"
+          >
+            Delete
+          </button>
+        </div>
       </div>
       
       {/* Team Members Preview - Modern Design with Images */}
@@ -1325,169 +1327,169 @@ const GuidanceTeamCard = ({ team, onView, onEdit, onDelete }) => {
           </div>
         </div>
 
-<div className="flex flex-col gap-6 w-full py-8">
+        <div className="flex flex-col gap-6 w-full py-8">
 
-  {/* --- 1. PATRON SECTION --- */}
-  {team.patron && (
-    <div className="relative w-full max-w-md mx-auto group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-[2rem] blur-xl opacity-50" />
-      <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="relative shrink-0">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
-            {team.patron.image ? (
-              <img src={team.patron.image} alt={team.patron.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-                <FiAward className="text-slate-400 w-7 h-7" />
+          {/* --- 1. PATRON SECTION --- */}
+          {team.patron && (
+            <div className="relative w-full max-w-md mx-auto group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-[2rem] blur-xl opacity-50" />
+              <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
+                    {team.patron.image ? (
+                      <img src={team.patron.image} alt={team.patron.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                        <FiAward className="text-slate-400 w-7 h-7" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-500/80 mb-1">Official Patron</span>
+                    <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.patron.name}</h4>
+                    <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.patron.title || "Project Lead"}</p>
+                    <div className="flex items-center gap-2">
+                      <a href={`tel:${team.patron.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-200 active:scale-95 transition-all">
+                        <FiPhone size={11} /><span className="text-[10px] font-bold">{team.patron.phone}</span>
+                      </a>
+                      <a href={`mailto:${team.patron.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
+                        <FiMail size={11} /><span className="text-[10px] font-bold">{team.patron.email}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 p-2 opacity-10"><FiAward size={40} className="rotate-12 text-indigo-900" /></div>
               </div>
-            )}
-          </div>
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-500/80 mb-1">Official Patron</span>
-            <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.patron.name}</h4>
-            <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.patron.title || "Project Lead"}</p>
-            <div className="flex items-center gap-2">
-              <a href={`tel:${team.patron.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-200 active:scale-95 transition-all">
-                <FiPhone size={11} /><span className="text-[10px] font-bold">{team.patron.phone}</span>
-              </a>
-              <a href={`mailto:${team.patron.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
-                <FiMail size={11} /><span className="text-[10px] font-bold">{team.patron.email}</span>
-              </a>
             </div>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 p-2 opacity-10"><FiAward size={40} className="rotate-12 text-indigo-900" /></div>
-      </div>
-    </div>
-  )}
+          )}
 
-  {/* --- 2. MATRON SECTION --- */}
-  {team.matron && (
-    <div className="relative w-full max-w-md mx-auto group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500/10 to-pink-500/10 rounded-[2rem] blur-xl opacity-50" />
-      <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="relative shrink-0">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
-            {team.matron.image ? (
-              <img src={team.matron.image} alt={team.matron.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-100 to-rose-200">
-                <FiUserCheck className="text-rose-400 w-7 h-7" />
+          {/* --- 2. MATRON SECTION --- */}
+          {team.matron && (
+            <div className="relative w-full max-w-md mx-auto group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500/10 to-pink-500/10 rounded-[2rem] blur-xl opacity-50" />
+              <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
+                    {team.matron.image ? (
+                      <img src={team.matron.image} alt={team.matron.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-100 to-rose-200">
+                        <FiUserCheck className="text-rose-400 w-7 h-7" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500/80 mb-1">Matron</span>
+                    <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.matron.name}</h4>
+                    <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.matron.title || "Department Head"}</p>
+                    <div className="flex items-center gap-2">
+                      <a href={`tel:${team.matron.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-sm shadow-rose-200 active:scale-95 transition-all">
+                        <FiPhone size={11} /><span className="text-[10px] font-bold">{team.matron.phone}</span>
+                      </a>
+                      <a href={`mailto:${team.matron.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
+                        <FiMail size={11} /><span className="text-[10px] font-bold">{team.matron.email}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 p-2 opacity-10"><FiShield size={40} className="rotate-12 text-rose-900" /></div>
               </div>
-            )}
-          </div>
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-500/80 mb-1">Matron</span>
-            <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.matron.name}</h4>
-            <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.matron.title || "Department Head"}</p>
-            <div className="flex items-center gap-2">
-              <a href={`tel:${team.matron.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-sm shadow-rose-200 active:scale-95 transition-all">
-                <FiPhone size={11} /><span className="text-[10px] font-bold">{team.matron.phone}</span>
-              </a>
-              <a href={`mailto:${team.matron.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
-                <FiMail size={11} /><span className="text-[10px] font-bold">{team.matron.email}</span>
-              </a>
             </div>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 p-2 opacity-10"><FiShield size={40} className="rotate-12 text-rose-900" /></div>
-      </div>
-    </div>
-  )}
+          )}
 
-  {/* --- 3. TEACHER SECTION --- */}
-  {team.teacher && (
-    <div className="relative w-full max-w-md mx-auto group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-[2rem] blur-xl opacity-50" />
-      <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="relative shrink-0">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
-            {team.teacher.image ? (
-              <img src={team.teacher.image} alt={team.teacher.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
-                <FiBriefcase className="text-blue-400 w-7 h-7" />
+          {/* --- 3. TEACHER SECTION --- */}
+          {team.teacher && (
+            <div className="relative w-full max-w-md mx-auto group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-[2rem] blur-xl opacity-50" />
+              <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
+                    {team.teacher.image ? (
+                      <img src={team.teacher.image} alt={team.teacher.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
+                        <FiBriefcase className="text-blue-400 w-7 h-7" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-500/80 mb-1">Guidance Teacher</span>
+                    <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.teacher.name}</h4>
+                    <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.teacher.title || "Senior Instructor"}</p>
+                    <div className="flex items-center gap-2">
+                      <a href={`tel:${team.teacher.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-200 active:scale-95 transition-all">
+                        <FiPhone size={11} /><span className="text-[10px] font-bold">{team.teacher.phone}</span>
+                      </a>
+                      <a href={`mailto:${team.teacher.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
+                        <FiMail size={11} /><span className="text-[10px] font-bold">{team.teacher.email}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 p-2 opacity-10"><FiBriefcase size={40} className="rotate-12 text-blue-900" /></div>
               </div>
-            )}
-          </div>
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-500/80 mb-1">Guidance Teacher</span>
-            <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.teacher.name}</h4>
-            <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.teacher.title || "Senior Instructor"}</p>
-            <div className="flex items-center gap-2">
-              <a href={`tel:${team.teacher.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-200 active:scale-95 transition-all">
-                <FiPhone size={11} /><span className="text-[10px] font-bold">{team.teacher.phone}</span>
-              </a>
-              <a href={`mailto:${team.teacher.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
-                <FiMail size={11} /><span className="text-[10px] font-bold">{team.teacher.email}</span>
-              </a>
             </div>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 p-2 opacity-10"><FiBriefcase size={40} className="rotate-12 text-blue-900" /></div>
-      </div>
-    </div>
-  )}
+          )}
 
-  {/* --- 4. ASSISTANT TEACHER SECTION --- */}
-  {team.teacher?.assistant && (
-    <div className="relative w-full max-w-md mx-auto group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-400/10 to-amber-500/10 rounded-[2rem] blur-xl opacity-50" />
-      <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="relative shrink-0">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
-            {team.teacher.assistant.image ? (
-              <img src={team.teacher.assistant.image} alt={team.teacher.assistant.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-                <FiUserPlus className="text-slate-400 w-7 h-7" />
+          {/* --- 4. ASSISTANT TEACHER SECTION --- */}
+          {team.teacher?.assistant && (
+            <div className="relative w-full max-w-md mx-auto group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-400/10 to-amber-500/10 rounded-[2rem] blur-xl opacity-50" />
+              <div className="relative flex items-center gap-5 p-4 bg-white/80 backdrop-blur-xl rounded-[1.75rem] border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-slate-50/50 shadow-inner">
+                    {team.teacher.assistant.image ? (
+                      <img src={team.teacher.assistant.image} alt={team.teacher.assistant.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+                        <FiUserPlus className="text-slate-400 w-7 h-7" />
+                      </div>
+                    )}
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500/80 mb-1">Assistant Teacher</span>
+                    <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.teacher.assistant.name}</h4>
+                    <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.teacher.assistant.title || "Assistant"}</p>
+                    <div className="flex items-center gap-2">
+                      <a href={`tel:${team.teacher.assistant.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white shadow-sm shadow-slate-200 active:scale-95 transition-all">
+                        <FiPhone size={11} /><span className="text-[10px] font-bold">{team.teacher.assistant.phone}</span>
+                      </a>
+                      <a href={`mailto:${team.teacher.assistant.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
+                        <FiMail size={11} /><span className="text-[10px] font-bold">{team.teacher.assistant.email}</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute top-0 right-0 p-2 opacity-10"><FiUserPlus size={40} className="rotate-12 text-slate-900" /></div>
               </div>
-            )}
-          </div>
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white shadow-sm"></span>
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500/80 mb-1">Assistant Teacher</span>
-            <h4 className="text-base font-bold text-slate-900 truncate tracking-tight">{team.teacher.assistant.name}</h4>
-            <p className="text-[11px] font-medium text-slate-400 truncate mb-3">{team.teacher.assistant.title || "Assistant"}</p>
-            <div className="flex items-center gap-2">
-              <a href={`tel:${team.teacher.assistant.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white shadow-sm shadow-slate-200 active:scale-95 transition-all">
-                <FiPhone size={11} /><span className="text-[10px] font-bold">{team.teacher.assistant.phone}</span>
-              </a>
-              <a href={`mailto:${team.teacher.assistant.email}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 active:bg-slate-50 transition-all">
-                <FiMail size={11} /><span className="text-[10px] font-bold">{team.teacher.assistant.email}</span>
-              </a>
             </div>
-          </div>
-        </div>
-        <div className="absolute top-0 right-0 p-2 opacity-10"><FiUserPlus size={40} className="rotate-12 text-slate-900" /></div>
-      </div>
-    </div>
-  )}
+          )}
 
-</div>
+        </div>
         
         {!team.patron && !team.matron && !team.teacher && (
           <div className="relative group max-w-[300px] mx-auto rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50/50 p-10 text-center transition-all duration-500 hover:border-indigo-200 hover:bg-white">
@@ -1519,8 +1521,6 @@ const GuidanceTeamCard = ({ team, onView, onEdit, onDelete }) => {
   );
 };
 
-// Guidance Team Modal Component (Create/Edit)
-// Guidance Team Modal Component - SIMPLIFIED VERSION (No toggles, no dropdowns)
 // Modern Team Member Modal Component
 const ModernMemberModal = ({ 
   open, 
@@ -1540,6 +1540,13 @@ const ModernMemberModal = ({
   });
   
   const [isLoading, setIsLoading] = useState(false);
+  // Add this function with other handlers
+const handleViewMember = (member) => {
+  setMemberDetailModal({
+    open: true,
+    member,
+  });
+};
   
   // Initialize form when editing
   useEffect(() => {
@@ -1634,11 +1641,11 @@ const ModernMemberModal = ({
         submitData.append('removeImage', 'true');
       }
       
-      let url = '/api/team-members';
+      let url = '/api/guidanceteam';
       let method = 'POST';
       
       if (member?.id) {
-        url = `/api/team-members/${member.id}`;
+        url = `/api/guidanceteam/${member.id}`;
         method = 'PUT';
       }
       
@@ -1677,64 +1684,65 @@ const ModernMemberModal = ({
   
   const selectedRole = roleOptions.find(r => r.value === formData.role) || roleOptions[0];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      {/* Modal Container */}
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden">
-        
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full hover:bg-white transition-all"
-          disabled={isLoading}
-        >
-          <FiX className="w-5 h-5" />
-        </button>
-        
-        {/* Header - Modern Gradient */}
-        <div className="relative bg-gradient-to-r from-indigo-600 to-violet-600 p-6 text-white">
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-2xl ${selectedRole.bgColor} ${selectedRole.color}`}>
-              {selectedRole.icon}
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                {isEditMode ? 'Edit Team Member' : 'Add Team Member'}
-              </h2>
-              <p className="text-indigo-100 text-sm opacity-90">
-                {isEditMode ? 'Update member details' : 'Create a new guidance team member'}
-              </p>
-            </div>
+return (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto py-8">
+    {/* Modal Container */}
+    <div className="relative w-full max-w-5xl bg-white rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[90vh] md:max-h-[85vh] flex flex-col">
+      
+      {/* Close Button */}
+      <button 
+        onClick={onClose}
+        className="absolute top-3 right-3 md:top-5 md:right-5 z-10 p-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-full hover:bg-white transition-all shadow-md"
+        disabled={isLoading}
+      >
+        <FiX className="w-5 h-5 md:w-6 md:h-6" />
+      </button>
+      
+      {/* Header - Modern Gradient */}
+      <div className="relative bg-gradient-to-r from-indigo-600 to-violet-600 p-5 md:p-7 text-white">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 md:p-4 rounded-2xl ${selectedRole.bgColor} ${selectedRole.color} shadow-lg`}>
+            {selectedRole.icon}
+          </div>
+          <div>
+            <h2 className="text-xl md:text-3xl font-bold tracking-tight mb-1">
+              {isEditMode ? 'Edit Team Member' : 'Add Team Member'}
+            </h2>
+            <p className="text-indigo-100 text-sm md:text-base opacity-90">
+              {isEditMode ? 'Update member details and information' : 'Create a new guidance team member profile'}
+            </p>
           </div>
         </div>
-        
-        {/* Content */}
-        <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+      </div>
+      
+      {/* Content - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-5 md:p-7">
+          <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
             
-            {/* Image Upload Section - Modern Design */}
-            <div className="flex flex-col items-center">
-              <div className="relative mb-4">
+            {/* Image Upload Section */}
+            <div className="flex flex-col items-center mb-2">
+              <div className="relative mb-4 md:mb-5">
                 {formData.imagePreview ? (
                   <div className="relative">
                     <img
                       src={formData.imagePreview}
                       alt="Preview"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-xl"
+                      className="w-28 h-28 md:w-36 md:h-36 rounded-full object-cover border-4 border-white shadow-2xl"
                     />
                     <button
                       type="button"
                       onClick={removeImage}
-                      className="absolute -top-1 -right-1 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
                       disabled={isLoading}
                     >
-                      <FiX className="w-4 h-4" />
+                      <FiX className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                   </div>
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-white shadow-xl flex flex-col items-center justify-center">
-                    <FiUser className="text-gray-400 w-12 h-12 mb-2" />
-                    <span className="text-xs text-gray-500">No image</span>
+                  <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border-4 border-white shadow-2xl flex flex-col items-center justify-center">
+                    <FiUser className="text-gray-400 w-12 h-12 md:w-16 md:h-16 mb-2" />
+                    <span className="text-sm text-gray-500 font-medium">No image</span>
                   </div>
                 )}
               </div>
@@ -1749,58 +1757,60 @@ const ModernMemberModal = ({
               />
               <label
                 htmlFor="memberImage"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-xl font-medium hover:from-blue-100 hover:to-indigo-100 transition-all cursor-pointer border border-blue-100"
+                className="inline-flex items-center gap-3 px-5 py-3 md:px-6 md:py-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-lg md:rounded-xl font-semibold hover:from-blue-100 hover:to-indigo-100 transition-all cursor-pointer border-2 border-blue-200 hover:border-blue-300 text-base md:text-lg shadow-sm"
               >
-                <FiUpload className="w-4 h-4" />
-                {formData.imagePreview ? 'Change Image' : 'Upload Image'}
+                <FiUpload className="w-5 h-5 md:w-6 md:h-6" />
+                {formData.imagePreview ? 'Change Profile Image' : 'Upload Profile Image'}
               </label>
-              <p className="text-xs text-gray-500 mt-2">Max 5MB • PNG, JPG, JPEG</p>
+              <p className="text-xs md:text-sm text-gray-500 mt-3 font-medium">
+                Maximum 5MB • PNG, JPG, or JPEG format
+              </p>
             </div>
             
             {/* Form Fields Grid */}
-            <div className="space-y-5">
+            <div className="space-y-6 md:space-y-7">
               
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Full Name *
+                <label className="block text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3">
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                  placeholder="Enter member's full name"
+                  className="w-full px-4 py-3.5 md:px-5 md:py-4 text-base md:text-lg border-2 border-gray-300 rounded-xl md:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
+                  placeholder="Enter team member's full name"
                   disabled={isLoading}
                 />
               </div>
               
-              {/* Role Selection - Modern Toggle */}
+              {/* Role Selection */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Role *
+                <label className="block text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">
+                  Member Role <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
                   {roleOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => !isLoading && setFormData(prev => ({ ...prev, role: option.value }))}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                      className={`flex flex-col items-center justify-center p-4 md:p-5 rounded-xl md:rounded-2xl border-2 transition-all min-h-[85px] md:min-h-[100px] shadow-sm hover:shadow-md ${
                         formData.role === option.value
-                          ? `${option.bgColor} border-${option.color.split('-')[1]}-300 shadow-sm`
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? `${option.bgColor} border-${option.color.split('-')[1]}-400 shadow-md`
+                          : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
                       } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       disabled={isLoading}
                     >
-                      <span className={`text-lg mb-1 ${formData.role === option.value ? option.color : 'text-gray-500'}`}>
+                      <span className={`text-xl md:text-2xl mb-2 ${formData.role === option.value ? option.color : 'text-gray-600'}`}>
                         {option.icon}
                       </span>
-                      <span className={`text-xs font-medium ${
-                        formData.role === option.value ? 'text-gray-800' : 'text-gray-600'
+                      <span className={`text-sm md:text-base font-bold text-center px-1 ${
+                        formData.role === option.value ? 'text-gray-900' : 'text-gray-700'
                       }`}>
-                        {option.label.split(' ')[0]}
+                        {option.label}
                       </span>
                     </button>
                   ))}
@@ -1809,55 +1819,57 @@ const ModernMemberModal = ({
               
               {/* Title Field */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3">
                   Title / Position
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                  placeholder="e.g., Head Counselor, Senior Teacher"
+                  className="w-full px-4 py-3.5 md:px-5 md:py-4 text-base md:text-lg border-2 border-gray-300 rounded-xl md:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
+                  placeholder="e.g., Head Counselor, Senior Teacher, Academic Advisor"
                   disabled={isLoading}
                 />
               </div>
               
               {/* Contact Info Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  <label className="block text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3">
                     Phone Number
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <FiPhone className="w-5 h-5" />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      <FiPhone className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                      placeholder="+123 456 7890"
+                      className="w-full pl-12 md:pl-14 pr-4 py-3.5 md:py-4 text-base md:text-lg border-2 border-gray-300 rounded-xl md:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
+                      placeholder="+1 (123) 456-7890"
                       disabled={isLoading}
+                      inputMode="tel"
                     />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  <label className="block text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3">
                     Email Address
                   </label>
                   <div className="relative">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                      <FiMail className="w-5 h-5" />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      <FiMail className="w-5 h-5 md:w-6 md:h-6" />
                     </div>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                      placeholder="member@school.edu"
+                      className="w-full pl-12 md:pl-14 pr-4 py-3.5 md:py-4 text-base md:text-lg border-2 border-gray-300 rounded-xl md:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm"
+                      placeholder="member@university.edu"
                       disabled={isLoading}
+                      inputMode="email"
                     />
                   </div>
                 </div>
@@ -1865,93 +1877,95 @@ const ModernMemberModal = ({
               
               {/* Bio/Description */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-base md:text-lg font-bold text-gray-900 mb-2 md:mb-3">
                   Bio / Description
                 </label>
                 <textarea
                   value={formData.bio}
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   rows="4"
-                  className="w-full px-4 py-3.5 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-                  placeholder="Brief description about the team member's role, experience, or background..."
+                  className="w-full px-4 py-3.5 md:px-5 md:py-4 text-base md:text-lg border-2 border-gray-300 rounded-xl md:rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all resize-none shadow-sm"
+                  placeholder="Describe the team member's background, experience, responsibilities, and expertise. You can include qualifications, years of experience, and specific areas of focus..."
                   disabled={isLoading}
                 />
+                <p className="text-xs md:text-sm text-gray-500 mt-2 font-medium">
+                  Provide detailed information about the team member's role and background
+                </p>
               </div>
             </div>
             
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isLoading}
-                className="flex-1 h-12 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              >
-                <FiX className="w-4 h-4" />
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>{isEditMode ? 'Updating...' : 'Creating...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <FiSave className="w-4 h-4" />
-                    <span>{isEditMode ? 'Update Member' : 'Create Member'}</span>
-                  </>
-                )}
-              </button>
+            <div className="pt-6 md:pt-8 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isLoading}
+                  className="flex-1 h-12 md:h-14 bg-gray-100 text-gray-800 rounded-xl md:rounded-2xl font-bold hover:bg-gray-200 disabled:opacity-50 transition-all flex items-center justify-center gap-3 text-base md:text-lg border-2 border-gray-300 shadow-sm hover:shadow"
+                >
+                  <FiX className="w-5 h-5 md:w-6 md:h-6" />
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 h-12 md:h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl md:rounded-2xl font-bold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 text-base md:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 md:h-6 md:w-6 border-b-2 border-white"></div>
+                      <span>{isEditMode ? 'Updating Member...' : 'Creating Member...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiSave className="w-5 h-5 md:w-6 md:h-6" />
+                      <span>{isEditMode ? 'Save Changes' : 'Create Team Member'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
-// Modern Team Card Component
-const ModernTeamCard = ({ member, onEdit, onDelete }) => {
+
+const ModernTeamCard = ({ member, onEdit, onDelete, onClick }) => {
   const [imageError, setImageError] = useState(false);
   
-  // Role configuration
+  // Role configuration matching modal gradients
   const getRoleConfig = (role) => {
     const configs = {
       teacher: {
         icon: <FiBriefcase className="w-4 h-4" />,
-        color: 'bg-gradient-to-r from-blue-500 to-blue-600',
+        gradient: 'from-blue-600 to-indigo-400',
         textColor: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-100',
-        label: 'Teacher'
+        bgColor: 'bg-gradient-to-br from-blue-600 to-indigo-400',
+        label: 'Guidance Teacher'
       },
       patron: {
         icon: <FiAward className="w-4 h-4" />,
-        color: 'bg-gradient-to-r from-purple-500 to-purple-600',
+        gradient: 'from-purple-600 to-pink-400',
         textColor: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-100',
+        bgColor: 'bg-gradient-to-br from-purple-600 to-pink-400',
         label: 'Patron'
       },
       matron: {
         icon: <FiUserCheck className="w-4 h-4" />,
-        color: 'bg-gradient-to-r from-pink-500 to-pink-600',
-        textColor: 'text-pink-600',
-        bgColor: 'bg-pink-50',
-        borderColor: 'border-pink-100',
+        gradient: 'from-emerald-500 to-teal-400',
+        textColor: 'text-emerald-600',
+        bgColor: 'bg-gradient-to-br from-emerald-500 to-teal-400',
         label: 'Matron'
       },
       assistant: {
         icon: <FiUserPlus className="w-4 h-4" />,
-        color: 'bg-gradient-to-r from-gray-500 to-gray-600',
+        gradient: 'from-gray-600 to-slate-500',
         textColor: 'text-gray-600',
-        bgColor: 'bg-gray-50',
-        borderColor: 'border-gray-100',
+        bgColor: 'bg-gradient-to-br from-gray-600 to-slate-500',
         label: 'Assistant'
       }
     };
@@ -1960,374 +1974,814 @@ const ModernTeamCard = ({ member, onEdit, onDelete }) => {
   
   const roleConfig = getRoleConfig(member.role);
   
-  // Format date
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    } catch {
-      return 'Recent';
-    }
-  };
-
   return (
-    <div className="group relative bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      {/* Background accent */}
-      <div className={`absolute top-0 left-0 right-0 h-1 ${roleConfig.color}`} />
-      
-      <div className="p-5">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+    <div 
+      onClick={() => onClick && onClick(member)} // This triggers the modal
+      className="group relative cursor-pointer"
+    >
+      {/* Compact Card Container */}
+      <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 overflow-hidden h-full">
+        
+        {/* Gradient Header */}
+        <div className={`bg-gradient-to-r ${roleConfig.gradient} p-4`}>
           <div className="flex items-center gap-3">
-            {/* Profile Image */}
+            {/* Profile image */}
             <div className="relative">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-lg">
-                {member.image && !imageError ? (
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${roleConfig.bgColor}`}>
-                    <div className={`p-2 rounded-full ${roleConfig.bgColor}`}>
-                      {roleConfig.icon}
-                    </div>
+              <img 
+                src={member.image || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop"}
+                alt={member.name}
+                className="w-14 h-14 rounded-xl object-cover border-2 border-white/40"
+                onError={() => setImageError(true)}
+              />
+              {(!member.image || imageError) && (
+                <div className={`w-14 h-14 rounded-xl ${roleConfig.bgColor} border-2 border-white/40 flex items-center justify-center`}>
+                  <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                    {roleConfig.icon}
                   </div>
-                )}
-              </div>
-              {/* Online indicator */}
-              <div className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
+                </div>
+              )}
             </div>
             
             {/* Name and Role */}
-            <div className="min-w-0">
-              <h3 className="font-bold text-gray-900 text-lg truncate">{member.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${roleConfig.bgColor} ${roleConfig.textColor} border ${roleConfig.borderColor}`}>
-                  {roleConfig.icon}
-                  {roleConfig.label}
-                </span>
-                {member.title && (
-                  <span className="text-xs text-gray-500 truncate">• {member.title}</span>
-                )}
-              </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold text-white leading-tight">{member.name}</h2>
+              <p className="text-white/80 text-xs font-medium uppercase tracking-wider mt-1">{member.role}</p>
             </div>
-          </div>
-          
-          {/* Action Menu */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
-              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <FiEdit3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              title="Delete"
-            >
-              <FiTrash2 className="w-4 h-4" />
-            </button>
           </div>
         </div>
         
-        {/* Contact Info */}
-        <div className="space-y-3 mb-4">
-          {member.phone && (
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-                <FiPhone className="text-gray-500 w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-gray-400">Phone</span>
-                <p className="font-medium text-gray-800 truncate">{member.phone}</p>
-              </div>
-            </div>
+        {/* Content Area */}
+        <div className="p-4">
+          {/* Title */}
+          {member.title && (
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{member.title}</p>
           )}
           
-          {member.email && (
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-                <FiMail className="text-gray-500 w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-xs text-gray-400">Email</span>
-                <p className="font-medium text-gray-800 truncate">{member.email}</p>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Bio Preview */}
-        {member.bio && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+          {/* Bio Preview */}
+          {member.bio && (
+            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4">
               {member.bio}
             </p>
-          </div>
-        )}
-        
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <FiCalendar className="w-3 h-3" />
-            <span>Added {formatDate(member.createdAt)}</span>
+          )}
+          
+          {/* Contact Info - Compact */}
+          <div className="space-y-2 mb-4">
+            {member.email && (
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <FiMail className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{member.email}</span>
+              </div>
+            )}
+            {member.phone && (
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <FiPhone className="w-3 h-3 flex-shrink-0" />
+                <span>{member.phone}</span>
+              </div>
+            )}
           </div>
           
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2">
-            {member.phone && (
-              <a
-                href={`tel:${member.phone}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-lg hover:bg-blue-100 transition-colors"
+          {/* Footer with Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            {/* Action Buttons */}
+            <div className="flex gap-1">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit && onEdit();
+                }}
+                className="p-2 text-slate-500 hover:text-blue-600 transition-colors"
+                title="Edit"
               >
-                <FiPhone className="w-3 h-3" />
-                Call
-              </a>
-            )}
-            {member.email && (
-              <a
-                href={`mailto:${member.email}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                <FiEdit3 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete && onDelete();
+                }}
+                className="p-2 text-slate-500 hover:text-red-600 transition-colors"
+                title="Delete"
               >
-                <FiMail className="w-3 h-3" />
-                Email
-              </a>
-            )}
+                <FiTrash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            
+            {/* View CTA */}
+            <div className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+              <span>View Details</span>
+              <FiArrowRight className="w-3 h-3" />
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-
-
-// In your main component, add these states and functions:
-
-// State for members
-const [teamMembers, setTeamMembers] = useState([]);
-const [membersLoading, setMembersLoading] = useState(true);
-const [memberModal, setMemberModal] = useState({
-  open: false,
-  member: null,
-});
-const [deleteMemberModal, setDeleteMemberModal] = useState({
-  open: false,
-  memberId: null,
-  memberName: '',
-  loading: false,
-});
-
-// Fetch team members
-const fetchTeamMembers = async () => {
-  setMembersLoading(true);
-  try {
-    const response = await fetch('/api/team-members');
-    const result = await response.json();
-    
-    if (result.success) {
-      setTeamMembers(result.members || []);
-    } else {
-      throw new Error(result.error || 'Failed to fetch team members');
+// Modern Guidance Team Modal Component
+const GuidanceTeamModal = ({ 
+  open, 
+  onClose, 
+  mode = 'view', 
+  team = null,
+  onSave 
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    patron: { 
+      name: '', 
+      title: '', 
+      phone: '', 
+      email: '', 
+      bio: '', 
+      image: '',
+      department: 'Guidance',
+      role: 'patron'
+    },
+    matron: { 
+      name: '', 
+      title: '', 
+      phone: '', 
+      email: '', 
+      bio: '', 
+      image: '',
+      department: 'Guidance',
+      role: 'matron'
+    },
+    teacher: { 
+      name: '', 
+      title: '', 
+      phone: '', 
+      email: '', 
+      bio: '', 
+      image: '',
+      department: 'Guidance',
+      role: 'teacher',
+      assistant: { 
+        name: '', 
+        title: '', 
+        phone: '', 
+        email: '', 
+        bio: '', 
+        image: '',
+        department: 'Guidance',
+        role: 'assistant'
+      }
     }
-  } catch (error) {
-    console.error('Error fetching team members:', error);
-    toast.error('Failed to load team members');
-    setTeamMembers([]);
-  } finally {
-    setMembersLoading(false);
-  }
-};
-
-// Delete member handler
-const handleDeleteMember = (member) => {
-  setDeleteMemberModal({
-    open: true,
-    memberId: member.id,
-    memberName: member.name,
-    loading: false,
   });
-};
 
-const confirmDeleteMember = async () => {
-  setDeleteMemberModal(prev => ({ ...prev, loading: true }));
+  const [activeSection, setActiveSection] = useState('patron');
 
-  try {
-    const response = await fetch(`/api/team-members/${deleteMemberModal.memberId}`, {
-      method: 'DELETE',
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      await fetchTeamMembers();
-      toast.success('Team member deleted successfully!');
-      setDeleteMemberModal({ open: false, memberId: null, memberName: '', loading: false });
-    } else {
-      throw new Error(result.error || 'Error deleting member');
+  useEffect(() => {
+    if (team) {
+      setFormData({
+        patron: team.patron || formData.patron,
+        matron: team.matron || formData.matron,
+        teacher: team.teacher || formData.teacher
+      });
     }
-  } catch (error) {
-    toast.error(error.message || 'Error deleting member');
-    setDeleteMemberModal(prev => ({ ...prev, loading: false }));
-  }
+  }, [team]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const submitData = {
+        patron: formData.patron,
+        matron: formData.matron,
+        teacher: formData.teacher
+      };
+
+      let url = '/api/guidanceteam';
+      let method = 'POST';
+
+      if (mode === 'edit' && team?.id) {
+        url = `/api/guidanceteam/${team.id}`;
+        method = 'PUT';
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(mode === 'edit' ? 'Team updated successfully!' : 'Team created successfully!');
+        onSave();
+        onClose();
+      } else {
+        throw new Error(result.error || 'An error occurred');
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+
+
+  const updateMemberField = (memberType, field, value, isAssistant = false) => {
+    setFormData(prev => {
+      if (isAssistant) {
+        return {
+          ...prev,
+          teacher: {
+            ...prev.teacher,
+            assistant: {
+              ...prev.teacher.assistant,
+              [field]: value
+            }
+          }
+        };
+      }
+      
+      return {
+        ...prev,
+        [memberType]: {
+          ...prev[memberType],
+          [field]: value
+        }
+      };
+    });
+  };
+
+  if (!open) return null;
+
+  // Role section configurations
+  const sections = [
+    {
+      id: 'patron',
+      title: 'Patron',
+      icon: <FiAward className="w-5 h-5" />,
+      gradient: 'from-purple-600 to-pink-500',
+      bgColor: 'bg-purple-500/10',
+      borderColor: 'border-purple-200',
+      data: formData.patron,
+      update: (field, value) => updateMemberField('patron', field, value)
+    },
+    {
+      id: 'matron',
+      title: 'Matron',
+      icon: <FiUserCheck className="w-5 h-5" />,
+      gradient: 'from-pink-600 to-rose-500',
+      bgColor: 'bg-pink-500/10',
+      borderColor: 'border-pink-200',
+      data: formData.matron,
+      update: (field, value) => updateMemberField('matron', field, value)
+    },
+    {
+      id: 'teacher',
+      title: 'Guidance Teacher',
+      icon: <FiBriefcase className="w-5 h-5" />,
+      gradient: 'from-blue-600 to-cyan-500',
+      bgColor: 'bg-blue-500/10',
+      borderColor: 'border-blue-200',
+      data: formData.teacher,
+      update: (field, value) => updateMemberField('teacher', field, value),
+      hasAssistant: true
+    }
+  ];
+
+  const currentSection = sections.find(s => s.id === activeSection);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+      <div className="relative w-full max-w-6xl bg-white dark:bg-slate-900 rounded-[3.5rem] shadow-[0_0_80px_-12px_rgba(0,0,0,0.6)] overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-500 border border-white/20 dark:border-slate-800">
+        
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 p-8 text-white">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%">
+              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="1" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-white/20 backdrop-blur-sm rounded-3xl">
+                <FiUsers className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-black tracking-tighter">
+                  {mode === 'view' ? 'Guidance Team' : mode === 'edit' ? 'Edit Team' : 'Create Team'}
+                </h2>
+                <p className="text-white/70 font-medium text-sm mt-1">
+                  {mode === 'view' ? 'Team details and information' : mode === 'edit' ? 'Update team members' : 'Add new guidance team'}
+                </p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={onClose}
+              className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-2xl transition-all duration-300 hover:scale-110"
+              disabled={isLoading}
+            >
+              <FiX className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Sidebar Navigation */}
+          <div className="w-64 flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 p-6 border-r border-slate-100 dark:border-slate-800">
+            <div className="space-y-2">
+              {sections.map((section) => (
+                <button
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                  className={`w-full text-left p-4 rounded-2xl transition-all duration-300 flex items-center gap-3 ${
+                    activeSection === section.id 
+                      ? 'bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700' 
+                      : 'hover:bg-white/50 dark:hover:bg-slate-800/50'
+                  }`}
+                >
+                  <div className={`p-3 rounded-xl ${activeSection === section.id ? 'bg-gradient-to-br ' + section.gradient : section.bgColor}`}>
+                    {React.cloneElement(section.icon, { 
+                      className: `w-5 h-5 ${activeSection === section.id ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`
+                    })}
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block">
+                      {section.title}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {section.id === 'teacher' ? 'Primary role' : 'Support role'}
+                    </span>
+                  </div>
+                  {activeSection === section.id && (
+                    <FiChevronRight className="w-5 h-5 text-slate-400 ml-auto" />
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            {/* Stats Summary */}
+            <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-800">
+              <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Team Summary</h4>
+              <div className="space-y-3">
+                {sections.map((section) => (
+                  <div key={section.id} className="flex items-center justify-between">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">{section.title}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      section.data.name ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                    }`}>
+                      {section.data.name ? '✓ Assigned' : 'Pending'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Main Form Area */}
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-3xl mx-auto">
+              {/* Section Header */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className={`p-4 rounded-2xl bg-gradient-to-br ${currentSection.gradient}`}>
+                  {React.cloneElement(currentSection.icon, { className: "w-6 h-6 text-white" })}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">
+                    {currentSection.title}
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400 mt-1">
+                    {currentSection.id === 'teacher' 
+                      ? 'Primary guidance counselor and mentor' 
+                      : currentSection.id === 'patron'
+                      ? 'Institutional supporter and benefactor'
+                      : 'Student welfare and support specialist'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Details */}
+                <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800">
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Personal Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Full Name
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={currentSection.data.name}
+                          onChange={(e) => currentSection.update('name', e.target.value)}
+                          className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                          placeholder="Enter full name"
+                          disabled={mode === 'view'}
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                          <FiStar className="w-4 h-4 text-blue-500" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Title / Position
+                      </label>
+                      <input
+                        type="text"
+                        value={currentSection.data.title}
+                        onChange={(e) => currentSection.update('title', e.target.value)}
+                        className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                        placeholder="e.g., School Patron"
+                        disabled={mode === 'view'}
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Phone Number
+                      </label>
+                      <div className="relative">
+                        <FiPhone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                          type="tel"
+                          value={currentSection.data.phone}
+                          onChange={(e) => currentSection.update('phone', e.target.value)}
+                          className="w-full pl-14 pr-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                          placeholder="+1 (555) 123-4567"
+                          disabled={mode === 'view'}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <input
+                          type="email"
+                          value={currentSection.data.email}
+                          onChange={(e) => currentSection.update('email', e.target.value)}
+                          className="w-full pl-14 pr-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                          placeholder="name@example.com"
+                          disabled={mode === 'view'}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Biography */}
+                <div className="bg-slate-50/50 dark:bg-slate-900/30 rounded-3xl p-6 border border-slate-100 dark:border-slate-800">
+                  <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Biography</h4>
+                  <textarea
+                    value={currentSection.data.bio}
+                    onChange={(e) => currentSection.update('bio', e.target.value)}
+                    className="w-full h-40 px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white resize-none"
+                    placeholder="Enter a brief professional biography..."
+                    disabled={mode === 'view'}
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                    This will be displayed on the team member's profile
+                  </p>
+                </div>
+                
+                {/* Assistant Teacher Section (only for teacher role) */}
+                {currentSection.id === 'teacher' && currentSection.hasAssistant && (
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-3xl p-6 border border-blue-100 dark:border-blue-800/50">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="p-3 bg-blue-100 dark:bg-blue-500/20 rounded-xl">
+                        <FiUserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">Assistant Teacher</h4>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm">
+                          Supporting role for the guidance teacher
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          Assistant Name
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.teacher.assistant.name}
+                          onChange={(e) => updateMemberField('teacher', 'name', e.target.value, true)}
+                          className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                          placeholder="Enter assistant's name"
+                          disabled={mode === 'view'}
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          Assistant Title
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.teacher.assistant.title}
+                          onChange={(e) => updateMemberField('teacher', 'title', e.target.value, true)}
+                          className="w-full px-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                          placeholder="e.g., Assistant Teacher"
+                          disabled={mode === 'view'}
+                        />
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <FiPhone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <input
+                            type="tel"
+                            value={formData.teacher.assistant.phone}
+                            onChange={(e) => updateMemberField('teacher', 'phone', e.target.value, true)}
+                            className="w-full pl-14 pr-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                            placeholder="+1 (555) 123-4567"
+                            disabled={mode === 'view'}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                          Email Address
+                        </label>
+                        <div className="relative">
+                          <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                          <input
+                            type="email"
+                            value={formData.teacher.assistant.email}
+                            onChange={(e) => updateMemberField('teacher', 'email', e.target.value, true)}
+                            className="w-full pl-14 pr-5 py-4 text-base border-2 border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all dark:text-white"
+                            placeholder="assistant@example.com"
+                            disabled={mode === 'view'}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Action Buttons */}
+                {mode !== 'view' && (
+                  <div className="flex gap-4 pt-8 border-t border-slate-200 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      disabled={isLoading}
+                      className="flex-1 h-14 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-3"
+                    >
+                      <FiX className="w-5 h-5" />
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1 h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold hover:shadow-xl hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-3"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          <span>{mode === 'edit' ? 'Updating...' : 'Creating...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiSave className="w-5 h-5" />
+                          <span>{mode === 'edit' ? 'Update Team' : 'Create Team'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+  const MemberDetailModal = ({ member, open, onClose }) => {
+  if (!open || !member) return null;
+
+  const getRoleConfig = (role) => {
+    const configs = {
+      teacher: {
+        icon: <FiBriefcase className="w-6 h-6" />,
+        gradient: 'from-blue-600 to-indigo-400',
+        textColor: 'text-blue-600',
+        bgColor: 'bg-gradient-to-br from-blue-600 to-indigo-400',
+        label: 'Guidance Teacher'
+      },
+      patron: {
+        icon: <FiAward className="w-6 h-6" />,
+        gradient: 'from-purple-600 to-pink-400',
+        textColor: 'text-purple-600',
+        bgColor: 'bg-gradient-to-br from-purple-600 to-pink-400',
+        label: 'Patron'
+      },
+      matron: {
+        icon: <FiUserCheck className="w-6 h-6" />,
+        gradient: 'from-emerald-500 to-teal-400',
+        textColor: 'text-emerald-600',
+        bgColor: 'bg-gradient-to-br from-emerald-500 to-teal-400',
+        label: 'Matron'
+      },
+      assistant: {
+        icon: <FiUserPlus className="w-6 h-6" />,
+        gradient: 'from-gray-600 to-slate-500',
+        textColor: 'text-gray-600',
+        bgColor: 'bg-gradient-to-br from-gray-600 to-slate-500',
+        label: 'Assistant'
+      }
+    };
+    return configs[role] || configs.teacher;
+  };
+
+  const roleConfig = getRoleConfig(member.role);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      {/* Modal Container */}
+      <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-50 p-1.5 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30 transition-all active:scale-90 hover:bg-white/40"
+        >
+          <FiX size={18} />
+        </button>
+
+        {/* Header with gradient */}
+        <div className="relative h-32 sm:h-40 w-full shrink-0">
+          <div className={`absolute inset-0 bg-gradient-to-r ${roleConfig.gradient}`} />
+          <div className="relative h-full flex flex-col justify-end p-6">
+            <div className="flex items-end justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
+                  {member.name}
+                </h2>
+                <p className="text-white/70 text-xs">
+                  {roleConfig.label}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+                {roleConfig.icon}
+                <span className="text-white text-[10px] font-bold uppercase tracking-wider">
+                  {member.role}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar bg-white">
+          <div className="space-y-6">
+            
+            {/* Profile Image and Basic Info */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img 
+                  src={member.image || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop"}
+                  alt={member.name}
+                  className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-lg"
+                />
+              </div>
+              <div>
+                {member.title && (
+                  <p className="text-lg font-bold text-gray-900">{member.title}</p>
+                )}
+                {member.department && (
+                  <p className="text-sm text-gray-600">{member.department}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                Contact Information
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {member.email && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <FiMail className="text-gray-500" />
+                    <div>
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="text-sm font-medium">{member.email}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {member.phone && (
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                    <FiPhone className="text-gray-500" />
+                    <div>
+                      <p className="text-xs text-gray-500">Phone</p>
+                      <p className="text-sm font-medium">{member.phone}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Biography */}
+            {member.bio && (
+              <div className="space-y-2">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Biography
+                </h3>
+                <div className="bg-gray-50 rounded-2xl p-4">
+                  <p className="text-gray-600 text-sm leading-relaxed">{member.bio}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Additional Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 bg-gray-50 rounded-2xl">
+                <p className="text-[9px] uppercase font-bold text-gray-400 mb-1">Role</p>
+                <p className="text-sm font-bold text-gray-900">{roleConfig.label}</p>
+              </div>
+              
+              {member.createdAt && (
+                <div className="p-3 bg-gray-50 rounded-2xl">
+                  <p className="text-[9px] uppercase font-bold text-gray-400 mb-1">Member Since</p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {new Date(member.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Footer */}
+        <div className="shrink-0 p-4 bg-gray-50 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="w-full h-11 bg-gray-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all hover:bg-gray-800"
+          >
+            <FiArrowLeft size={14} />
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-// Add to useEffect
-useEffect(() => {
-  fetchEvents();
-  fetchTeamMembers(); // Replace fetchTeams with this
-}, []);
-
-// Replace the team section in your main component with:
-<div className="mb-6">
-  <div className="flex items-center justify-between mb-6">
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900">Guidance Team Members</h2>
-      <p className="text-gray-600 text-sm mt-1">Manage school guidance team members</p>
-    </div>
-    <button
-      onClick={() => setMemberModal({ open: true, member: null })}
-      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-base font-bold tracking-tight shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
-    >
-      <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <FiUserPlus className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
-      <span className="relative">Add Team Member</span>
-    </button>
-  </div>
-  
-  {membersLoading ? (
-    <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-      <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl mb-6">
-        <FiUsers className="text-blue-600 w-7 h-7" />
-      </div>
-      <CircularProgress size={24} className="mb-4" />
-      <h3 className="text-lg font-bold text-gray-900 mb-2">Loading Team Members</h3>
-      <p className="text-gray-600">Please wait while we fetch team members data</p>
-    </div>
-  ) : teamMembers.length === 0 ? (
-    <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
-      <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-50 to-gray-100 rounded-3xl mb-6">
-        <FiUsers className="text-gray-400 w-10 h-10" />
-      </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-3">No Team Members Yet</h3>
-      <p className="text-gray-600 max-w-md mx-auto mb-8">
-        Start building your guidance team by adding patrons, matrons, and guidance teachers.
-      </p>
-      <button
-        onClick={() => setMemberModal({ open: true, member: null })}
-        className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:opacity-90 transition-all"
-      >
-        <FiUserPlus className="w-5 h-5" />
-        Add First Member
-      </button>
-    </div>
-  ) : (
-    <>
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Total Members</p>
-              <p className="text-2xl font-bold text-gray-900">{teamMembers.length}</p>
-            </div>
-            <FiUsers className="text-blue-500 w-8 h-8" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-1">Patrons</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {teamMembers.filter(m => m.role === 'patron').length}
-              </p>
-            </div>
-            <FiAward className="text-purple-500 w-8 h-8" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 border border-pink-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-pink-700 uppercase tracking-wider mb-1">Matrons</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {teamMembers.filter(m => m.role === 'matron').length}
-              </p>
-            </div>
-            <FiUserCheck className="text-pink-500 w-8 h-8" />
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Teachers</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {teamMembers.filter(m => m.role === 'teacher').length}
-              </p>
-            </div>
-            <FiBriefcase className="text-gray-600 w-8 h-8" />
-          </div>
-        </div>
-      </div>
-      
-      {/* Members Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {teamMembers.map((member) => (
-          <ModernTeamCard
-            key={member.id}
-            member={member}
-            onEdit={() => setMemberModal({ open: true, member })}
-            onDelete={() => handleDeleteMember(member)}
-          />
-        ))}
-      </div>
-    </>
-  )}
-</div>
-
-// Add the modals at the bottom of your main component:
-{/* Modern Member Modal */}
-<ModernMemberModal
-  open={memberModal.open}
-  onClose={() => setMemberModal({ open: false, member: null })}
-  member={memberModal.member}
-  onSave={fetchTeamMembers}
-/>
-
-{/* Delete Confirmation Modal for Members */}
-<DeleteConfirmationModal
-  open={deleteMemberModal.open}
-  onClose={() => setDeleteMemberModal({ open: false, memberId: null, memberName: '', loading: false })}
-  onConfirm={confirmDeleteMember}
-  itemName={deleteMemberModal.memberName}
-  loading={deleteMemberModal.loading}
-/>
 // Main Component
 export default function GuidanceCounselingTab() {
   const [events, setEvents] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(true);
   const [teamLoading, setTeamLoading] = useState(true);
+  // Add this state near the other states
+const [memberDetailModal, setMemberDetailModal] = useState({
+  open: false,
+  member: null,
+});
+  const [memberModal, setMemberModal] = useState({
+    open: false,
+    member: null,
+  });
   const [teamModal, setTeamModal] = useState({
     open: false,
     mode: 'view', // 'view', 'create', 'edit'
     team: null,
+  });
+  const [deleteMemberModal, setDeleteMemberModal] = useState({
+    open: false,
+    memberId: null,
+    memberName: '',
+    loading: false,
   });
   const [teamDeleteModal, setTeamDeleteModal] = useState({
     open: false,
@@ -2349,6 +2803,14 @@ export default function GuidanceCounselingTab() {
     eventName: '',
     loading: false
   });
+
+  // Add this function with other handlers
+const handleViewMember = (member) => {
+  setMemberDetailModal({
+    open: true,
+    member,
+  });
+};
 
   // Fetch events from API
   const fetchEvents = async (showRefresh = false) => {
@@ -2401,9 +2863,64 @@ export default function GuidanceCounselingTab() {
     }
   };
 
+  // Fetch team members
+  const fetchTeamMembers = async () => {
+    setMembersLoading(true);
+    try {
+      const response = await fetch('/api/guidanceteam');
+      const result = await response.json();
+      
+      if (result.success) {
+        setTeamMembers(result.members || []);
+      } else {
+        throw new Error(result.error || 'Failed to fetch team members');
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      toast.error('Failed to load team members');
+      setTeamMembers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  };
+
+  // Delete member handler
+  const handleDeleteMember = (member) => {
+    setDeleteMemberModal({
+      open: true,
+      memberId: member.id,
+      memberName: member.name,
+      loading: false,
+    });
+  };
+
+  const confirmDeleteMember = async () => {
+    setDeleteMemberModal(prev => ({ ...prev, loading: true }));
+
+    try {
+      const response = await fetch(`/api/guidanceteam/${deleteMemberModal.memberId}`, {
+        method: 'DELETE',
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        await fetchTeamMembers();
+        toast.success('Team member deleted successfully!');
+        setDeleteMemberModal({ open: false, memberId: null, memberName: '', loading: false });
+      } else {
+        throw new Error(result.error || 'Error deleting member');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error deleting member');
+      setDeleteMemberModal(prev => ({ ...prev, loading: false }));
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
     fetchTeams();
+    fetchTeamMembers();
   }, []);
 
   const handleNewEvent = () => {
@@ -2576,144 +3093,461 @@ export default function GuidanceCounselingTab() {
         itemName="this guidance team"
         loading={teamDeleteModal.loading}
       />
+      {/* Add this near your other modals */}
+<MemberDetailModal
+  member={memberDetailModal.member}
+  open={memberDetailModal.open}
+  onClose={() => setMemberDetailModal({ open: false, member: null })}
+/>
+      
+      <DeleteConfirmationModal
+        open={deleteMemberModal.open}
+        onClose={() => setDeleteMemberModal({ open: false, memberId: null, memberName: '', loading: false })}
+        onConfirm={confirmDeleteMember}
+        itemName={deleteMemberModal.memberName}
+        loading={deleteMemberModal.loading}
+      />
       
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
-          <div className="mb-4 lg:mb-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-xl">
-                <FiMessageCircle className="text-white text-lg w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  Guidance & Counseling
-                </h1>
-                <p className="text-gray-600 mt-1">Manage student counseling sessions and guidance team</p>
-              </div>
+{/* Modern Responsive Header with Bronze Gradient */}
+<div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-amber-700 via-amber-600 to-yellow-700 p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl">
+  {/* Background Pattern - Optimized for performance */}
+  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+    <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-yellow-500/5" />
+  </div>
+  
+  {/* Gold Glow Effect - Responsive sizes */}
+  <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-yellow-400 to-amber-300 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl md:blur-3xl" />
+  <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-amber-400 to-orange-300 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl md:blur-3xl" />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+      {/* Left Content - Title & Description */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+          {/* Icon Container */}
+          <div className="relative self-start shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
+            <div className="relative p-2.5 sm:p-3 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl">
+              <FiMessageCircle className="text-white text-lg sm:text-xl md:text-2xl w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7" />
             </div>
           </div>
-          <div className="flex gap-2 md:gap-3 flex-wrap">
-            <button
-              onClick={() => {
-                fetchEvents(true);
-                fetchTeams();
-              }}
-              disabled={refreshing}
-              className="inline-flex items-center gap-2 bg-white text-gray-700 px-3 md:px-4 py-2 md:py-3 rounded-full border border-gray-300 font-medium disabled:opacity-50 text-sm md:text-base"
-            >
-              <FiRotateCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button
-              onClick={handleNewEvent}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-3 md:px-4 py-2 md:py-3 rounded-full font-medium text-sm md:text-base"
-            >
-              <FiPlus className="w-4 h-4" />
-              Create Session
-            </button>
+          
+          {/* Text Content */}
+          <div className="flex-1 min-w-0">
+            {/* Badge - Hidden on smallest screens */}
+            <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
+              <FiShield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-wide sm:tracking-widest">Secure Portal</span>
+            </div>
+            
+            {/* Title */}
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight sm:leading-tight">
+              Guidance <span className="block sm:inline">& </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-200">
+                Counseling
+              </span>
+            </h1>
+            
+            {/* Description - Responsive sizing and line clamping */}
+            <p className="text-amber-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+              Secure platform for student counseling sessions and guidance team coordination.
+            </p>
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Total Sessions</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-1">{stats.total}</p>
-              </div>
-              <div className="p-2 bg-purple-50 rounded-lg">
-                <FiMessageCircle className="text-purple-600 text-base w-5 h-5" />
-              </div>
-            </div>
+      </div>
+      
+      {/* Right Content - Stats & Buttons */}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
+        {/* Today's Sessions Counter - Responsive positioning */}
+        <div className="flex items-center gap-2 xs:gap-3 lg:hidden">
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] xs:text-xs font-bold text-amber-200/70 uppercase tracking-wide">Today</span>
+            <span className="text-xl xs:text-2xl font-black text-white">{stats.today || 0}</span>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">High Priority</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-1">{stats.high}</p>
-              </div>
-              <div className="p-2 bg-red-50 rounded-lg">
-                <FiAlertTriangle className="text-red-600 text-base w-5 h-5" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Today</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-1">{stats.today}</p>
-              </div>
-              <div className="p-2 bg-emerald-50 rounded-lg">
-                <FiCalendar className="text-emerald-600 text-base w-5 h-5" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">Teams</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-1">{teams.length}</p>
-              </div>
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <FiBarChart2 className="text-gray-600 text-base w-5 h-5" />
-              </div>
-            </div>
-          </div>
+          <div className="h-6 w-px bg-white/20" />
         </div>
+        
+        {/* Buttons Container - Stack on mobile, side-by-side on larger */}
+        <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
+          {/* Refresh Button - Adapts to screen size */}
+          <button
+            onClick={() => {
+              fetchEvents(true);
+              fetchTeams();
+              fetchTeamMembers();
+            }}
+            disabled={refreshing}
+            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold sm:font-bold hover:bg-white/15 active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed w-full xs:w-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+            <div className="relative flex items-center justify-center gap-2">
+              <FiRotateCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="text-xs sm:text-sm whitespace-nowrap">
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </span>
+            </div>
+          </button>
+          
+          {/* Create Session Button - Primary CTA */}
+          <button
+            onClick={handleNewEvent}
+            className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-white to-amber-100 text-amber-900 rounded-xl sm:rounded-2xl font-semibold sm:font-bold hover:shadow-lg sm:hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 transition-all duration-300 w-full xs:w-auto"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-200/30 to-yellow-200/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex items-center justify-center gap-2">
+              <FiPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-xs sm:text-sm font-medium sm:font-bold whitespace-nowrap">
+                Create Session
+              </span>
+            </div>
+          </button>
+        </div>
+        
+        {/* Today's Sessions Counter - Desktop version */}
+        <div className="hidden lg:flex flex-col items-end">
+          <span className="text-[10px] font-bold text-amber-200/70 uppercase tracking-widest">Active Today</span>
+          <span className="text-2xl font-black text-white">{stats.today || 0}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        {/* Guidance Team Section */}
+{/* Modern Stats Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  {/* Total Sessions Card */}
+  <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-purple-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-purple-500/20">
+        <FiMessageCircle className="w-6 h-6 text-purple-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {stats.total || 0}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiArrowUpRight className="w-4 h-4 mr-0.5" />
+          <span>+{Math.floor((stats.total || 0) * 0.08)}</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Total Sessions
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          All counseling sessions conducted this academic year.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* High Priority Card */}
+  <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-red-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-red-500/20">
+        <FiAlertTriangle className="w-6 h-6 text-red-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {stats.high || 0}
+        </h3>
+        <div className="flex items-center text-amber-500 text-sm font-medium">
+          <FiAlertCircle className="w-4 h-4 mr-0.5" />
+          <span className="animate-pulse">Priority</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        High Priority
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Urgent cases requiring immediate attention.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Today's Sessions Card */}
+  <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-emerald-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-emerald-500/20">
+        <FiCalendar className="w-6 h-6 text-emerald-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {stats.today || 0}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiTrendingUp className="w-4 h-4 mr-0.5" />
+          <span>Today</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Today's Sessions
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Scheduled sessions for {new Date().toLocaleDateString('en-US', { weekday: 'long' })}.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Teams Card */}
+  <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-slate-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-slate-500/20">
+        <FiBarChart2 className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {teams.length || 0}
+        </h3>
+        <div className="flex items-center text-blue-500 text-sm font-medium">
+          <FiUsers className="w-4 h-4 mr-0.5" />
+          <span>Active</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Guidance Teams
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Dedicated teams providing student support and counseling.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+        {/* Guidance Team Members Section */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Guidance Team</h2>
-              <p className="text-gray-600 text-sm">Manage school patrons, matrons, and guidance teachers</p>
+              <h2 className="text-2xl font-bold text-gray-900">Guidance Team Members</h2>
+              <p className="text-gray-600 text-sm mt-1">Manage school guidance team members</p>
             </div>
             <button
-              onClick={handleCreateTeam}
-              className="group relative inline-flex items-center justify-center gap-2 min-w-[44px] md:min-w-[140px] px-4 md:px-6 py-3 md:py-3.5 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-white rounded-2xl md:rounded-full text-sm md:text-base font-bold tracking-tight shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_15px_30px_-10px_rgba(16,185,129,0.4)] transition-all duration-300 ease-out active:scale-95 active:shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2"
+              onClick={() => setMemberModal({ open: true, member: null })}
+              className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-base font-bold tracking-tight shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
             >
-              <div className="absolute inset-0 rounded-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
               <FiUserPlus className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
-              <span className="relative whitespace-nowrap">Add Team</span>
+              <span className="relative">Add Team Member</span>
             </button>
           </div>
           
-          {teamLoading ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <CircularProgress size={32} />
-              <p className="text-gray-600 mt-4">Loading guidance teams...</p>
-            </div>
-          ) : teams.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-              <FiUsers className="text-gray-300 w-12 h-12 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-gray-900 mb-2">No Guidance Team</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Create a guidance team to add patrons, matrons, and guidance teachers.
+          {membersLoading ? (
+           <div className="relative bg-white/80 backdrop-blur rounded-3xl border border-gray-200 p-12 text-center shadow-sm">
+  {/* Icon badge */}
+  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-2xl mb-6">
+    <FiUsers className="text-blue-600 w-8 h-8" />
+  </div>
+
+  {/* Spinner */}
+  <div className="flex justify-center mb-5">
+    <CircularProgress
+      size={36}
+      thickness={4}
+      className="text-blue-600"
+    />
+  </div>
+
+  {/* Text */}
+  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+    Loading Team Members
+  </h3>
+  <p className="text-sm text-gray-500">
+    Fetching the latest team data…
+  </p>
+</div>
+
+          ) : teamMembers.length === 0 ? (
+            <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-gray-50 to-gray-100 rounded-3xl mb-6">
+                <FiUsers className="text-gray-400 w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">No Team Members Yet</h3>
+              <p className="text-gray-600 max-w-md mx-auto mb-8">
+                Start building your guidance team by adding patrons, matrons, and guidance teachers.
               </p>
               <button
-                onClick={handleCreateTeam}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 py-2.5 rounded-full font-medium"
+                onClick={() => setMemberModal({ open: true, member: null })}
+                className="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold hover:opacity-90 transition-all"
               >
-                <FiUserPlus className="w-4 h-4" />
-                Create First Team
+                <FiUserPlus className="w-5 h-5" />
+                Add First Member
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {teams.map((team, index) => (
-                <GuidanceTeamCard
-                  key={team?.id || index}
-                  team={team}
-                  onView={() => handleViewTeam(team)}
-                  onEdit={() => handleEditTeam(team)}
-                  onDelete={() => handleDeleteTeam(team)}
-                />
-              ))}
-            </div>
+            <>
+{/* Stats Summary - Modern Version */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  {/* Total Members Card */}
+  <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
+    {/* Background Accent */}
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-blue-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-blue-500/20">
+        <FiUsers className="w-6 h-6 text-blue-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {teamMembers.length}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiArrowUpRight className="w-4 h-4 mr-0.5" />
+          <span>+{Math.floor(teamMembers.length * 0.12)}</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Total Members
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Active members across all roles in the organization.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Patrons Card */}
+  <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-purple-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-purple-500/20">
+        <FiAward className="w-6 h-6 text-purple-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {teamMembers.filter(m => m.role === 'patron').length}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiArrowUpRight className="w-4 h-4 mr-0.5" />
+          <span>+5</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Patrons
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Distinguished supporters and benefactors of the institution.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Matrons Card */}
+  <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-pink-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-pink-500/20">
+        <FiUserCheck className="w-6 h-6 text-pink-500" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {teamMembers.filter(m => m.role === 'matron').length}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiArrowUpRight className="w-4 h-4 mr-0.5" />
+          <span>+3</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Matrons
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Key female supporters providing guidance and sponsorship.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Teachers Card */}
+  <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-gray-500" />
+    
+    <div className="relative z-10">
+      <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-gray-500/20">
+        <FiBriefcase className="w-6 h-6 text-gray-600 dark:text-gray-400" />
+      </div>
+      
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
+          {teamMembers.filter(m => m.role === 'teacher').length}
+        </h3>
+        <div className="flex items-center text-emerald-500 text-sm font-medium">
+          <FiArrowUpRight className="w-4 h-4 mr-0.5" />
+          <span>+8</span>
+        </div>
+      </div>
+      
+      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">
+        Councelling HOD
+      </p>
+      
+      <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800">
+        <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+          Dedicated educators shaping the future through quality instruction.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+              
+              {/* Members Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+             {teamMembers.map((member) => (
+  <ModernTeamCard
+    key={member.id}
+    member={member}
+    onEdit={() => setMemberModal({ open: true, member })}
+    onDelete={() => handleDeleteMember(member)}
+    onClick={() => handleViewMember(member)} // Add this line
+  />
+))}
+              </div>
+            </>
           )}
         </div>
+
+     
 
         {/* Filters */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
@@ -2893,6 +3727,24 @@ export default function GuidanceCounselingTab() {
         />
       )}
 
+
+
+{/* Add this near your other modals */}
+<MemberDetailModal
+  member={memberDetailModal.member}
+  open={memberDetailModal.open}
+  onClose={() => setMemberDetailModal({ open: false, member: null })}
+/>
+
+      {/* Team Member Modal */}
+      <ModernMemberModal
+        open={memberModal.open}
+        onClose={() => setMemberModal({ open: false, member: null })}
+        member={memberModal.member}
+        onSave={fetchTeamMembers}
+      />
+
+      {/* Team Modal */}
       <GuidanceTeamModal
         open={teamModal.open}
         onClose={() => setTeamModal({ open: false, mode: 'view', team: null })}
