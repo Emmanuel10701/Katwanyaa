@@ -381,14 +381,14 @@ model AdmissionApplication {
   kcpeMarks              Int?
   meanGrade              String?
   // Removed preferredStream field
-  medicalCondition       String?
-  allergies              String?
+  medicalCondition       String?  @db.Text
+  allergies              String? @db.Text
   bloodGroup             String?   // Still kept but not in form
-  sportsInterests        String?
-  clubsInterests         String?
-  talents                String?
+  sportsInterests        String? @db.Text
+  clubsInterests         String? @db.Text
+  talents                String? @db.Text
   status                 String?   @default("PENDING")
-  decisionNotes          String?
+  decisionNotes          String? @db.Text
   admissionOfficer       String?
   decisionDate           DateTime?
   admissionDate          DateTime?
@@ -399,12 +399,12 @@ model AdmissionApplication {
   rejectionReason        String?
   alternativeSuggestions String?
   waitlistPosition       Int?
-  waitlistNotes          String?
+  waitlistNotes          String? @db.Text
   interviewDate          DateTime?
   interviewTime          String?
   interviewVenue         String?
-  interviewNotes         String?
-  conditions             String?
+  interviewNotes         String? @db.Text
+  conditions             String? @db.Text
   conditionDeadline      DateTime?
   houseAssigned          String?
   admissionClass         String?

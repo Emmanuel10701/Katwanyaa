@@ -1568,65 +1568,65 @@ const NyaribuAdmission = () => {
                   </div>
                 )}
               </div>
-
-              {/* Form Footer with Navigation - 3 buttons for Preview/Submit */}
-              <div className="bg-gradient-to-r from-gray-50 to-slate-100 px-8 py-6 border-t border-gray-200">
-                <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                  <div className="text-sm text-gray-700 font-semibold">
-                    {step === 4 ? 'Ready to submit?' : `Step ${step} of 4`}
-                  </div>
-                  
-                  <div className="flex space-x-4">
-                    {step > 1 && step < 5 && (
-                      <button
-                        type="button"
-                        onClick={prevStep}
-                        className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
-                      >
-                        <FiArrowRight className="mr-2 rotate-180" /> Back
-                      </button>
-                    )}
-                    
-                    {step < 4 ? (
-                      <button
-                        type="button"
-                        onClick={nextStep}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all hover:shadow-lg flex items-center shadow-md"
-                      >
-                        Continue <FiArrowRight className="ml-2" />
-                      </button>
-                    ) : step === 4 && (
-                      <div className="flex space-x-4">
-                        <button
-                          type="button"
-                          onClick={prevStep}
-                          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
-                        >
-                          <FiEye className="mr-2" /> Preview
-                        </button>
-                        
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="px-10 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all hover:shadow-lg flex items-center disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
-                        >
-                          {loading ? (
-                            <>
-                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                              Submitting Application...
-                            </>
-                          ) : (
-                            <>
-                              <FiCheckCircle className="mr-2 text-lg" /> 
-                              Submit Application
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+{/* Form Footer with Navigation */}
+<div className="bg-gradient-to-r from-gray-50 to-slate-100 px-4 md:px-8 py-4 md:py-6 border-t border-gray-200">
+  <div className="flex flex-row justify-between items-center">
+    {/* Step Indicator - Hidden on very small screens to save space if needed, or kept small */}
+    <div className="text-[10px] xs:text-xs md:text-sm text-gray-700 font-semibold mr-2">
+      {step === 4 ? 'Ready?' : `Step ${step}/4`}
+    </div>
+    
+    <div className="flex flex-nowrap items-center space-x-2 md:space-x-4">
+      {step > 1 && step < 4 && (
+        <button
+          type="button"
+          onClick={prevStep}
+          className="px-3 py-2 md:px-6 md:py-3 border-2 border-gray-300 text-gray-700 rounded-xl text-xs md:text-base font-semibold hover:bg-gray-50 transition-all flex items-center whitespace-nowrap shadow-sm"
+        >
+          <FiArrowRight className="mr-1 md:mr-2 rotate-180" /> Back
+        </button>
+      )}
+      
+      {step < 4 ? (
+        <button
+          type="button"
+          onClick={nextStep}
+          className="px-4 py-2 md:px-8 md:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl text-xs md:text-base font-semibold hover:from-blue-700 hover:to-blue-800 transition-all flex items-center whitespace-nowrap shadow-md"
+        >
+          Continue <FiArrowRight className="ml-1 md:ml-2" />
+        </button>
+      ) : step === 4 && (
+        <div className="flex flex-nowrap space-x-2 md:space-x-4">
+          <button
+            type="button"
+            onClick={prevStep}
+            className="px-3 py-2 md:px-6 md:py-3 border-2 border-gray-300 text-gray-700 rounded-xl text-xs md:text-base font-semibold hover:bg-gray-50 transition-all flex items-center whitespace-nowrap shadow-sm"
+          >
+            <FiEye className="mr-1 md:mr-2" /> Preview
+          </button>
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 md:px-10 md:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl text-xs md:text-base font-semibold hover:from-green-700 hover:to-emerald-700 transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
+          >
+            {loading ? (
+              <>
+                <div className="w-3 h-3 md:w-5 md:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                <span className="hidden xs:inline">Submitting...</span>
+              </>
+            ) : (
+              <>
+                <FiCheckCircle className="mr-1 md:mr-2 text-sm md:text-lg" /> 
+                Submit
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
             </form>
           )}
         </div>

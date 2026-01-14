@@ -167,7 +167,7 @@ const FeesView = ({ student, token }) => {
   // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900 flex items-center justify-center">
+      <div className=" bg-slate-50 p-4 md:p-8 font-sans text-slate-900 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-slate-800 mb-2">Unable to Load Fees</h3>
@@ -186,7 +186,7 @@ const FeesView = ({ student, token }) => {
   // No Data State
   if (!feeData?.feeBalances?.length) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+      <div className=" bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
         <div className="max-w-5xl mx-auto">
           <div className="text-center py-12">
             <CreditCard className="w-16 h-16 text-slate-300 mx-auto mb-4" />

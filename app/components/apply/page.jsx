@@ -1,3 +1,4 @@
+'use client'
 import React from 'react';
 import { 
   Shield, 
@@ -128,7 +129,7 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-1 xs:gap-1.5">
                         <span className="text-xs xs:text-sm font-black text-white tracking-tight truncate">
-                          Join 1,000+ Successful Applicants
+                          Join 1,000+ Successful students
                         </span>
                         <TrendingUp size={12} className="xs:size-4 text-emerald-400 flex-shrink-0" />
                       </div>
