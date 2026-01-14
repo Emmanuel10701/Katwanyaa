@@ -1,90 +1,23 @@
 'use client';
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Toaster, toast } from 'sonner';
+import { FcAdvertising, FcClock, FcOk, FcConferenceCall, FcLineChart } from 'react-icons/fc';
+import { HiOutlineMail, HiOutlineClock, HiOutlineCheckCircle } from 'react-icons/hi';
+import { HiOutlineSearch, HiArrowsUpDown , HiOutlineCalendar, HiOutlineSortAscending, HiOutlineRefresh } from 'react-icons/hi';
 import {
-  Mail,
-  Send,
-  Edit,
-  Trash2,
-  Search,
-  Filter,
-  X,
-  Loader2,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  BarChart3,
-  Users,
-  RefreshCw,
-  Star,
-  GraduationCap,
-  Hash,
-  TrendingUp,
-  TrendingDown,
-  Grid,
-  List,
-  Download,
-  Percent,
-  ShieldCheck,
-  UserCheck,
-  AlertCircle,
-  Info,
-  ChevronDown,
-  ChevronUp,
-  BookOpen,
-  Target,
-  Award,
-  Trophy,
-  Check,
-  MoreVertical,
-  FileUp,
-  CheckSquare,
-  Square,
-  FileText,
-  Upload,
-  FileSpreadsheet,
-  Archive,
-  FileX,
-  AlertTriangle,
-  UserPlus,
-  MailCheck,
-  FileCheck,
-  Columns,
-  Settings,
-  Bell,
-  ExternalLink,
-  Briefcase,
-  School,
-  Home,
-  Globe,
-  Map,
-  Heart,
-  TargetIcon,
-  BookMarked,
-  BookOpenCheck,
-  AwardIcon,
-  Crown,
-  Sparkles,
-  Zap,
-  Rocket,
-  TrendingUp as TrendingUpIcon,
-  ChevronRight,
-  ChevronLeft,
-  FileDown,
-  Printer,
-  Share2,
-  Copy,
-  FilterX,
-  CalendarDays,
-  UserCircle,
-  MailOpen,
-  Smartphone,
-  MessageSquare,
-  FilePlus,
-  CheckCheck,
-  Plus,
-  Eye
+  Mail, Send, Edit, Trash2, Search, Filter, X, Loader2, Clock, CheckCircle2,
+  XCircle, BarChart3, Users, RefreshCw, Star, GraduationCap, Hash, TrendingUp,
+  TrendingDown, Grid, List, Download, Percent, ShieldCheck, UserCheck, AlertCircle,
+  Info, ChevronDown, ChevronUp, BookOpen, Target, Award, Trophy, Check,
+  MoreVertical, FileUp, CheckSquare, Square, FileText, Upload, FileSpreadsheet,
+  Archive, FileX, AlertTriangle, UserPlus, MailCheck, FileCheck, Columns,
+  Settings, Bell, ExternalLink, Briefcase, School, Home, Globe, Map, Heart,
+  TargetIcon, BookMarked, BookOpenCheck, AwardIcon, Crown, Sparkles, Zap, Rocket,
+  TrendingUpIcon, ChevronRight, ChevronLeft, FileDown, Printer, Share2, Copy,
+  FilterX, CalendarDays, UserCircle, MailOpen, Smartphone, MessageSquare,
+  FilePlus, CheckCheck, Plus, Eye, Bold, Image, Link, Save, Calendar, Paperclip, FileText as FileText2, Users as Users2, Send as Send2
 } from 'lucide-react';
+
 import CircularProgress from "@mui/material/CircularProgress";
 
 
@@ -394,7 +327,6 @@ const ConfirmationModal = ({
   );
 };
 
-// Modern Modal Component
 // Modern Modal Component (reduced width)
 const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
   if (!open) return null;
@@ -1509,114 +1441,219 @@ const handleCreateOrUpdateCampaign = async () => {
         />
       )}
       
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8">
-        <div className="mb-4 lg:mb-0">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg">
-              <Mail className="text-white text-lg w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-emerald-900 bg-clip-text text-transparent">
-                Email Campaign Manager
-              </h1>
-              <p className="text-gray-600 mt-1">Create and manage email campaigns for school communication</p>
+   {/* Modern Responsive Header – Email Campaigns */}
+<div className="relative mb-6 sm:mb-8 overflow-hidden
+                rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem]
+                bg-gradient-to-br from-blue-700 via-cyan-700 to-emerald-700
+                p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl">
+
+  {/* Background Overlay */}
+  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+    <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/10 to-emerald-400/10" />
+  </div>
+
+  {/* Glow Effects */}
+  <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24
+                  w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96
+                  bg-gradient-to-r from-cyan-500 to-blue-400
+                  rounded-full opacity-15 sm:opacity-20
+                  blur-xl sm:blur-2xl md:blur-3xl" />
+
+  <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24
+                  w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96
+                  bg-gradient-to-r from-emerald-500 to-teal-400
+                  rounded-full opacity-10 sm:opacity-15
+                  blur-xl sm:blur-2xl md:blur-3xl" />
+
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+
+      {/* Left Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+
+          {/* Icon */}
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500
+                            rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-70" />
+            <div className="relative p-3 sm:p-4 bg-gradient-to-br from-blue-600 to-cyan-600
+                            rounded-xl sm:rounded-2xl shadow-2xl">
+              <Mail className="text-white w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
+
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+
+            {/* Badge */}
+            <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2
+                            px-2 sm:px-3 py-1
+                            bg-white/20 backdrop-blur-sm
+                            rounded-full mb-2 sm:mb-3 max-w-max">
+              <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-widest">
+                Communication
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl
+                           font-black text-white tracking-tight leading-tight">
+              Email Campaign
+              <span className="block sm:inline"> </span>
+              <span className="text-transparent bg-clip-text
+                               bg-gradient-to-r from-cyan-200 to-emerald-200">
+                Manager
+              </span>
+            </h1>
+
+            {/* Description */}
+            <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg
+                          text-cyan-100/90 font-medium
+                          max-w-2xl leading-relaxed
+                          line-clamp-2 sm:line-clamp-none">
+              Create, schedule, and manage email campaigns for effective school communication.
+            </p>
+
+          </div>
         </div>
-        <div className="flex gap-4 flex-wrap">
+      </div>
+
+      {/* Right Content */}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between
+                      lg:flex-col lg:items-end gap-3 sm:gap-4">
+
+        {/* Actions */}
+        <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
+
           {/* Refresh */}
           <button
             onClick={fetchData}
             disabled={refreshing || loadingStates.fetching}
-            className="
-              inline-flex items-center gap-2.5
-              px-4 py-2.5
-              rounded-2xl
-              font-medium text-base
-              text-gray-700
-              bg-transparent
-              border border-gray-300/60
-              shadow-[0_1px_0_rgba(0,0,0,0.05)]
-              transition-colors
-              disabled:opacity-50 disabled:cursor-not-allowed
-            "
+            className="group relative flex items-center justify-center gap-2
+                       px-4 sm:px-5 py-2.5 sm:py-3
+                       bg-white/10 backdrop-blur-sm border border-white/20
+                       rounded-xl sm:rounded-2xl text-white font-semibold
+                       hover:bg-white/15 active:scale-95 transition-all
+                       disabled:opacity-60 w-full xs:w-auto"
           >
-            <RefreshCw
-              className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`}
-            />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="text-xs sm:text-sm">
+              {refreshing ? 'Refreshing…' : 'Refresh'}
+            </span>
           </button>
 
           {/* New Campaign */}
           <button
             onClick={openCreateModal}
-            className="
-              inline-flex items-center gap-2.5
-              px-4 py-2.5
-              rounded-2xl
-              font-semibold text-base
-              text-emerald-600
-              bg-transparent
-              border border-emerald-300/60
-              shadow-[0_1px_0_rgba(0,0,0,0.05)]
-              transition-colors
-            "
+            className="group relative overflow-hidden
+                       px-4 sm:px-5 py-2.5 sm:py-3
+                       bg-gradient-to-r from-cyan-500 to-emerald-500
+                       text-white rounded-xl sm:rounded-2xl font-semibold
+                       hover:shadow-xl hover:shadow-emerald-500/30
+                       active:scale-95 transition-all w-full xs:w-auto"
           >
-            <Plus className="w-5 h-5" />
-            New Campaign
+            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/0
+                            opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="text-xs sm:text-sm whitespace-nowrap">
+                New Campaign
+              </span>
+            </div>
           </button>
+
         </div>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {[
-          { view: 'all', label: 'All', count: stats.total, icon: Mail, color: 'from-gray-800 to-gray-700' },
-          { view: 'draft', label: 'Draft', count: stats.draft, icon: Clock, color: 'from-blue-500 to-cyan-500' },
-          { view: 'published', label: 'Sent', count: stats.published, icon: CheckCircle2, color: 'from-emerald-500 to-green-500' }
-        ].map((item) => (
-          <button
-            key={item.view}
-            onClick={() => setActiveView(item.view)}
-            className={`
-              px-4 py-2.5 rounded-xl font-medium
-              transition-all duration-300 flex items-center gap-2
-              ${activeView === item.view
-                ? `bg-gradient-to-r ${item.color} text-white shadow-lg`
-                : 'bg-white/40 backdrop-blur-md text-gray-700 border border-gray-200/50 hover:border-gray-300/60 hover:shadow-md'
-              }
-              hover:scale-101
-            `}
-          >
-            <item.icon className="w-4 h-4" />
-            {item.label} ({item.count})
-          </button>
-        ))}
-      </div>
+    </div>
+  </div>
+</div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4 mb-6">
-        {[
-          { label: 'Total Campaigns', value: stats.total, icon: Mail, color: 'blue', gradient: 'from-blue-500 to-cyan-500' },
-          { label: 'Draft', value: stats.draft, icon: Clock, color: 'amber', gradient: 'from-amber-500 to-yellow-500' },
-          { label: 'Sent', value: stats.published, icon: CheckCircle2, color: 'emerald', gradient: 'from-emerald-500 to-green-500' },
-          { label: 'Total Recipients', value: stats.totalRecipients, icon: Users, color: 'purple', gradient: 'from-purple-500 to-pink-500' },
-          { label: 'Success Rate', value: `${stats.successRate}%`, icon: BarChart3, color: 'cyan', gradient: 'from-cyan-500 to-blue-500' }
-        ].map((stat, index) => (
-          <div key={stat.label} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 p-4 transition-all duration-300 hover:shadow-md hover:scale-105">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                <p className="text-lg md:text-xl font-bold text-gray-900 mb-1">{stat.value}</p>
-              </div>
-              <div className={`p-2 bg-gradient-to-br ${stat.gradient} rounded-lg shadow-sm`}>
-                <stat.icon className="text-white text-base w-5 h-5" />
-              </div>
+
+<div className="mb-8 space-y-6">
+
+  {/* 1. Modern View Toggle - Floating Glass Tray */}
+  <div className="inline-flex p-1.5 bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto max-w-full no-scrollbar">
+    <div className="flex items-center gap-1.5">
+      {[
+        { view: 'all', label: 'All', count: stats.total, icon: HiOutlineMail, color: 'text-slate-600', activeBg: 'bg-slate-900 text-white' },
+        { view: 'draft', label: 'Draft', count: stats.draft, icon: HiOutlineClock, color: 'text-blue-500', activeBg: 'bg-blue-600 text-white' },
+        { view: 'published', label: 'Sent', count: stats.published, icon: HiOutlineCheckCircle, color: 'text-emerald-500', activeBg: 'bg-emerald-600 text-white' }
+      ].map((item) => (
+        <button
+          key={item.view}
+          onClick={() => setActiveView(item.view)}
+          className={`
+            group flex items-center gap-2.5 
+            px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold 
+            whitespace-nowrap transition-all duration-300
+            ${activeView === item.view 
+              ? `${item.activeBg} shadow-lg shadow-blue-500/20` 
+              : 'text-gray-500 hover:bg-gray-100'
+            }
+          `}
+        >
+          <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${activeView === item.view ? 'text-white' : item.color}`} />
+          <span className="tracking-tight">{item.label}</span>
+          <span className={`
+            ml-1 px-2 py-0.5 rounded-lg text-[10px] font-black transition-colors
+            ${activeView === item.view ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}
+          `}>
+            {item.count}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* 2. Modern Stats Grid - Zoom Responsive */}
+  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    {[
+      { label: 'Campaigns', value: stats.total, icon: <FcAdvertising />, bg: 'hover:border-blue-200' },
+      { label: 'Draft', value: stats.draft, icon: <FcClock />, bg: 'hover:border-amber-200' },
+      { label: 'Sent', value: stats.published, icon: <FcOk />, bg: 'hover:border-emerald-200' },
+      { label: 'Recipients', value: stats.totalRecipients, icon: <FcConferenceCall />, bg: 'hover:border-purple-200' },
+      { label: 'Success', value: `${stats.successRate}%`, icon: <FcLineChart />, bg: 'hover:border-cyan-200' }
+    ].map((stat) => (
+      <div
+        key={stat.label}
+        className={`
+          group relative bg-white rounded-[2rem] border border-gray-100 
+          p-6 transition-all duration-500 
+          hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]
+          ${stat.bg}
+        `}
+      >
+        <div className="flex flex-col items-start gap-4">
+          {/* Icon with Soft Glow */}
+          <div className="relative">
+            <div className="absolute inset-0 bg-current opacity-10 blur-xl rounded-full group-hover:opacity-20 transition-opacity" />
+            <div className="relative text-3xl sm:text-4xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+              {stat.icon}
             </div>
           </div>
-        ))}
+
+          <div className="space-y-1 w-full">
+            <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">
+              {stat.label}
+            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">
+                {stat.value}
+              </p>
+              {/* Subtle Arrow or indicator could go here */}
+            </div>
+          </div>
+        </div>
+
+        {/* Glossy Overlay effect */}
+        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/40 to-transparent rounded-t-[2rem] pointer-events-none" />
       </div>
+    ))}
+  </div>
+
+</div>
+
 
       {/* Selection Actions Bar */}
       {selectedCampaigns.size > 0 && (
@@ -1656,152 +1693,117 @@ const handleCreateOrUpdateCampaign = async () => {
         </div>
       )}
 
-      {/* Filters Section */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 p-4 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3 md:gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search campaigns..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="
-                w-full pl-9 pr-3 py-2.5
-                bg-gray-50/80 backdrop-blur-sm
-                border border-gray-200/60
-                rounded-lg focus:outline-none
-                focus:ring-2 focus:ring-blue-500/50
-                focus:border-transparent
-                transition-all duration-200
-                text-sm modern-scrollbar
-              "
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            <select 
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="
-                px-3 py-2.5
-                bg-gray-50/80 backdrop-blur-sm
-                border border-gray-200/60
-                rounded-lg focus:outline-none
-                focus:ring-2 focus:ring-blue-500/50
-                focus:border-transparent
-                text-sm cursor-pointer
-                modern-scrollbar
-              "
-            >
-              {statusOptions.map(status => (
-                <option key={status.value} value={status.value}>{status.label}</option>
-              ))}
-            </select>
-            
-            <select 
-              value={filterRecipientType}
-              onChange={(e) => setFilterRecipientType(e.target.value)}
-              className="
-                px-3 py-2.5
-                bg-gray-50/80 backdrop-blur-sm
-                border border-gray-200/60
-                rounded-lg focus:outline-none
-                focus:ring-2 focus:ring-blue-500/50
-                focus:border-transparent
-                text-sm cursor-pointer
-                modern-scrollbar
-              "
-            >
-              <option value="all">All Groups</option>
-              {recipientGroups.map(group => (
-                <option key={group.value} value={group.value}>{group.label}</option>
-              ))}
-            </select>
-            
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="
-                  px-3 py-2.5
-                  bg-gray-50/80 backdrop-blur-sm
-                  border border-gray-200/60
-                  rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-blue-500/50
-                  focus:border-transparent
-                  text-sm
-                  modern-scrollbar
-                "
-                placeholder="From"
-              />
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="
-                  px-3 py-2.5
-                  bg-gray-50/80 backdrop-blur-sm
-                  border border-gray-200/60
-                  rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-blue-500/50
-                  focus:border-transparent
-                  text-sm
-                  modern-scrollbar
-                "
-                placeholder="To"
-              />
-            </div>
-            
-            <select 
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="
-                px-3 py-2.5
-                bg-gray-50/80 backdrop-blur-sm
-                border border-gray-200/60
-                rounded-lg focus:outline-none
-                focus:ring-2 focus:ring-blue-500/50
-                focus:border-transparent
-                text-sm cursor-pointer
-                modern-scrollbar
-              "
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="title-asc">Title A-Z</option>
-              <option value="title-desc">Title Z-A</option>
-              <option value="recipients-high">Most Recipients</option>
-              <option value="recipients-low">Fewest Recipients</option>
-            </select>
-            
-            {/* Reset Button */}
-            <button
-              onClick={resetFilters}
-              className="
-                inline-flex items-center gap-2
-                px-3 py-2.5
-                bg-gradient-to-r from-gray-100/80 to-gray-200/80
-                backdrop-blur-md
-                border border-gray-200/60
-                rounded-lg
-                transition-all duration-300
-                text-sm font-medium
-                text-gray-700
-                shadow-sm hover:shadow-md
-                hover:scale-101
-                hover:from-gray-200/80 hover:to-gray-300/80
-                hover:border-gray-300/60
-                hover:text-gray-900
-              "
-            >
-              <RefreshCw className="w-4 h-4" />
-              Reset
-            </button>
-          </div>
-        </div>
+
+{/* Filters Section */}
+<div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-gray-200/50 p-5 mb-8 shadow-xl shadow-gray-200/20">
+  <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-4">
+    
+    {/* 1. Search Bar - Enhanced with inner depth */}
+    <div className="flex-1 relative group">
+      <HiOutlineSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors w-5 h-5" />
+      <input
+        type="text"
+        placeholder="Search campaigns..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="
+          w-full pl-12 pr-4 py-3
+          bg-gray-100/50 border border-transparent
+          rounded-2xl focus:outline-none
+          focus:bg-white focus:ring-4 focus:ring-blue-500/10
+          focus:border-blue-500/50
+          transition-all duration-300
+          text-sm font-medium placeholder:text-gray-400
+        "
+      />
+    </div>
+
+    {/* 2. Filter Controls Group */}
+    <div className="flex flex-wrap items-center gap-3">
+      
+      {/* Status Filter */}
+      <div className="relative flex-1 min-w-[140px] sm:flex-none">
+        <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-4 h-4" />
+        <select 
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="w-full pl-9 pr-8 py-3 bg-gray-100/50 border-none rounded-2xl text-xs font-bold text-gray-600 appearance-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer hover:bg-gray-200/50 transition-colors"
+        >
+          {statusOptions.map(status => (
+            <option key={status.value} value={status.value}>{status.label}</option>
+          ))}
+        </select>
       </div>
+
+      {/* Recipient Group Filter */}
+      <div className="relative flex-1 min-w-[140px] sm:flex-none">
+        <select 
+          value={filterRecipientType}
+          onChange={(e) => setFilterRecipientType(e.target.value)}
+          className="w-full px-4 py-3 bg-gray-100/50 border-none rounded-2xl text-xs font-bold text-gray-600 appearance-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer hover:bg-gray-200/50 transition-colors"
+        >
+          <option value="all">All Groups</option>
+          {recipientGroups.map(group => (
+            <option key={group.value} value={group.value}>{group.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Date Range Group */}
+      <div className="flex items-center gap-2 bg-gray-100/50 p-1 rounded-2xl border border-gray-200/20">
+        <div className="relative">
+          <HiOutlineCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="pl-9 pr-2 py-2 bg-transparent border-none text-xs font-bold text-gray-600 focus:ring-0 cursor-pointer"
+          />
+        </div>
+        <span className="text-gray-300 font-bold text-xs">to</span>
+        <input
+          type="date"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          className="px-2 py-2 bg-transparent border-none text-xs font-bold text-gray-600 focus:ring-0 cursor-pointer"
+        />
+      </div>
+
+      {/* Sort Dropdown */}
+      <div className="relative flex-1 min-w-[150px] sm:flex-none">
+        <HiOutlineSortAscending className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <select 
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="w-full pl-9 pr-8 py-3 bg-gray-900 text-white border-none rounded-2xl text-xs font-bold appearance-none focus:ring-4 focus:ring-blue-500/20 cursor-pointer hover:bg-black transition-colors"
+        >
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="title-asc">Title A-Z</option>
+          <option value="recipients-high">Most Recipients</option>
+        </select>
+      </div>
+
+      {/* Reset Button - Circular and Clean */}
+      <button
+        onClick={resetFilters}
+        title="Reset Filters"
+        className="
+          flex items-center justify-center
+          w-11 h-11
+          bg-white border border-gray-200
+          rounded-2xl text-gray-500
+          transition-all duration-300
+          hover:bg-red-50 hover:text-red-500 hover:border-red-100
+          active:scale-90
+        "
+      >
+        <HiOutlineRefresh className="w-5 h-5" />
+      </button>
+
+    </div>
+  </div>
+</div>
 
       {/* Campaigns List */}
       <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 overflow-hidden">
@@ -2134,54 +2136,69 @@ const handleCreateOrUpdateCampaign = async () => {
       </ModernModal>
 
 
-
 <ModernModal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="550px">
-  {/* Modern Header with gradient */}
-  <div className="bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 p-4 text-white">
-    <div className="flex items-start justify-between">
-      <div className="flex items-start gap-3">
-        <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20">
-          {selectedCampaign ? 
-            <Edit className="w-5 h-5 text-white" /> : 
-            <Plus className="w-5 h-5 text-white" />
-          }
+  {/* Modern Header with enhanced gradient */}
+  <div className="relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600"></div>
+    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
+    <div className="relative p-5 text-white">
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30 shadow-lg">
+            {selectedCampaign ? 
+              <Edit className="w-5 h-5 text-white" /> : 
+              <Plus className="w-5 h-5 text-white" />
+            }
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">
+              {selectedCampaign ? 'Edit Campaign' : 'Create New Campaign'}
+            </h2>
+            <p className="text-white/90 text-sm mt-1">
+              {selectedCampaign ? 'Update your campaign details' : 'Create a new email campaign'}
+            </p>
+          </div>
         </div>
-        <div className="pt-0.5">
-          <h2 className="text-lg font-bold">
-            {selectedCampaign ? 'Edit Campaign' : 'Create New Campaign'}
-          </h2>
-          <p className="text-white/80 text-xs mt-0.5">
-            {selectedCampaign ? 'Update your campaign details' : 'Create a new email campaign'}
-          </p>
-        </div>
+        <button 
+          onClick={() => setShowCreateModal(false)} 
+          className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
-      <button 
-        onClick={() => setShowCreateModal(false)} 
-        className="p-1.5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
-      >
-        <X className="w-5 h-5" />
-      </button>
     </div>
   </div>
 
-  {/* Content - reduced for 550px width */}
-  <div className="max-h-[calc(70vh-140px)] overflow-y-auto p-4 modern-scrollbar">
-    <div className="space-y-4">
-      {/* Title Field */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Campaign Title *</label>
+  {/* Content - modernized for 550px width */}
+<div
+  className="
+    max-h-[calc(80vh-120px)]
+    sm:max-h-[calc(85vh-120px)]
+    lg:max-h-[calc(90vh-120px)]
+    overflow-y-auto
+    p-4 sm:p-5 lg:p-6
+    modern-scrollbar
+  "
+>
+    <div className="space-y-5">
+      {/* Title Field - Enhanced */}
+      <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 border border-emerald-200">
+        <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+          <span className="text-red-500">*</span> Campaign Title
+        </label>
         <input
           type="text"
           value={campaignForm.title}
           onChange={(e) => setCampaignForm({...campaignForm, title: e.target.value})}
           placeholder="Enter campaign title"
           className="
-            w-full px-3 py-2.5
+            w-full px-4 py-3
             bg-white
-            border border-gray-200
-            rounded-lg focus:outline-none
-            focus:ring-2 focus:ring-emerald-500/30
-            focus:border-emerald-400 text-sm
+            border-2 border-emerald-200
+            rounded-xl focus:outline-none
+            focus:ring-2 focus:ring-emerald-500/40
+            focus:border-emerald-400 text-md
+            font-semibold
             shadow-sm
             transition-all duration-200
             placeholder:text-gray-400
@@ -2189,21 +2206,24 @@ const handleCreateOrUpdateCampaign = async () => {
         />
       </div>
       
-      {/* Subject Field */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email Subject *</label>
+      {/* Subject Field - Enhanced */}
+      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-200">
+        <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+          <span className="text-red-500">*</span> Email Subject
+        </label>
         <input
           type="text"
           value={campaignForm.subject}
           onChange={(e) => setCampaignForm({...campaignForm, subject: e.target.value})}
           placeholder="Enter email subject"
           className="
-            w-full px-3 py-2.5
+            w-full px-4 py-3
             bg-white
-            border border-gray-200
-            rounded-lg focus:outline-none
-            focus:ring-2 focus:ring-emerald-500/30
-            focus:border-emerald-400 text-sm
+            border-2 border-blue-200
+            rounded-xl focus:outline-none
+            focus:ring-2 focus:ring-blue-500/40
+            focus:border-blue-400 text-md
+            font-semibold
             shadow-sm
             transition-all duration-200
             placeholder:text-gray-400
@@ -2211,25 +2231,27 @@ const handleCreateOrUpdateCampaign = async () => {
         />
       </div>
       
-      {/* Recipient Group */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Recipient Group *</label>
+      {/* Recipient Group - Enhanced */}
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+        <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+          <span className="text-red-500">*</span> Recipient Group
+        </label>
         <div className="relative">
           <select 
             value={campaignForm.recipientType}
             onChange={(e) => setCampaignForm({...campaignForm, recipientType: e.target.value})}
             className="
-              w-full px-3 py-2.5
+              w-full px-4 py-3 pl-12
               bg-white
-              border border-gray-200
-              rounded-lg focus:outline-none
-              focus:ring-2 focus:ring-emerald-500/30
-              focus:border-emerald-400 text-sm
+              border-2 border-purple-200
+              rounded-xl focus:outline-none
+              focus:ring-2 focus:ring-purple-500/40
+              focus:border-purple-400 text-md
+              font-semibold
               shadow-sm
               appearance-none
               cursor-pointer
               transition-all duration-200
-              hover:border-gray-300
             "
           >
             {recipientGroups.map(group => (
@@ -2238,48 +2260,66 @@ const handleCreateOrUpdateCampaign = async () => {
               </option>
             ))}
           </select>
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <Users className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
             <ChevronDown className="w-4 h-4 text-gray-400" />
           </div>
         </div>
       </div>
       
-      {/* Content Textarea */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email Content *</label>
+      {/* Content Textarea - Enhanced */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+        <div className="flex items-center justify-between mb-2">
+          <label className=" text-md font-bold text-gray-800 flex items-center gap-2">
+            <span className="text-red-500">*</span> Email Content
+          </label>
+          <div className="text-xs font-medium px-2 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700">
+            Rich Text
+          </div>
+        </div>
         <textarea
           value={campaignForm.content}
           onChange={(e) => setCampaignForm({...campaignForm, content: e.target.value})}
           placeholder="Write your email content here..."
           className="
-            w-full px-3 py-2.5
+            w-full px-4 py-3
             bg-white
-            border border-gray-200
-            rounded-lg focus:outline-none
-            focus:ring-2 focus:ring-emerald-500/30
-            focus:border-emerald-400 text-sm
+
+            border-2 border-amber-200
+            rounded-xl focus:outline-none
+            focus:ring-2 focus:ring-amber-500/40
+            focus:border-amber-400 text-md
+            font-semibold
             shadow-sm
             resize-y
+            rows-24
             transition-all duration-200
             placeholder:text-gray-400
-            font-normal
-            min-h-[120px]
-            max-h-[180px]
+            min-h-[140px]
+            max-h-[200px]
           "
-          rows={6}
         />
-        <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-          <span>{campaignForm.content.length} characters</span>
-          <span>Max 2000</span>
+        <div className="flex justify-between items-center text-xs text-gray-500 mt-2 px-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"></div>
+            <span className="font-medium">{campaignForm.content.length}/2000 characters</span>
+          </div>
+          <div className="flex items-center gap-2 text-amber-600">
+            <Image className="w-3.5 h-3.5" />
+            <Link className="w-3.5 h-3.5" />
+            <Bold className="w-3.5 h-3.5" />
+          </div>
         </div>
       </div>
       
-      {/* Attachments Section */}
-      <div className="pt-3 border-t border-gray-100">
-        <div className="flex items-center justify-between">
+      {/* Attachments Section - Enhanced */}
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-1">Attachments</label>
-            <p className="text-xs text-gray-500">
+            <label className="block text-md font-bold text-gray-800 mb-1">Attachments</label>
+            <p className="text-xs text-gray-600">
               Add files (max 10MB each)
             </p>
           </div>
@@ -2288,284 +2328,468 @@ const handleCreateOrUpdateCampaign = async () => {
             onClick={() => setShowAttachmentModal(true)}
             className="
               inline-flex items-center gap-2 
-              px-3 py-2 
-              text-sm
-              text-emerald-700 
-              bg-emerald-50 
-              border border-emerald-100 
-              rounded-lg 
-              hover:bg-emerald-100 
-              transition-colors
+              px-4 py-2.5
+              text-sm font-bold
+              text-white 
+              bg-gradient-to-r from-emerald-500 to-emerald-600
+              border border-emerald-500
+              rounded-xl 
+              hover:shadow-lg 
+              hover:from-emerald-600 hover:to-emerald-700
+              transition-all duration-200
               shadow-sm
             "
           >
             <FileUp className="w-4 h-4" />
             {campaignAttachments.length > 0 || newAttachmentFiles.length > 0 ? (
-              <span className="font-medium">
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">
                 {campaignAttachments.length + newAttachmentFiles.length}
               </span>
             ) : (
-              <span>Add</span>
+              <span>Add Files</span>
             )}
           </button>
         </div>
         
         {/* File summary */}
         {(campaignAttachments.length > 0 || newAttachmentFiles.length > 0) && (
-          <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded-lg p-2">
-            <div className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-500" />
-              <span>
-                {campaignAttachments.length} existing, {newAttachmentFiles.length} new
-              </span>
+          <div className="mt-3 p-3 bg-white rounded-xl border border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-r from-emerald-100 to-green-100 rounded-lg">
+                <FileText className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <span className="text-sm font-bold text-gray-800">
+                  {campaignAttachments.length + newAttachmentFiles.length} files attached
+                </span>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {campaignAttachments.length} existing, {newAttachmentFiles.length} new
+                </p>
+              </div>
+              <div className="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700">
+                Ready
+              </div>
             </div>
           </div>
         )}
       </div>
       
-      {/* Status Toggle */}
-      <div className="pt-3 border-t border-gray-100">
+      {/* Status Toggle - Enhanced */}
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={campaignForm.status === 'draft'}
-                  onChange={(e) => setCampaignForm({...campaignForm, status: e.target.checked ? 'draft' : 'published'})}
-                  className="sr-only peer"
-                />
-                <div className="
-                  w-10 h-5
-                  bg-gray-200
-                  peer-checked:bg-emerald-500
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={campaignForm.status === 'draft'}
+                onChange={(e) => setCampaignForm({...campaignForm, status: e.target.checked ? 'draft' : 'published'})}
+                className="sr-only peer"
+                id="status-toggle"
+              />
+              <label 
+                htmlFor="status-toggle"
+                className="
+                  w-12 h-6
+                  bg-gradient-to-r from-gray-300 to-gray-400
+                  peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-green-600
                   rounded-full
-                  transition-colors
-                  duration-200
+                  transition-all
+                  duration-300
+                  cursor-pointer
+                  shadow-inner
+                  relative
+                  block
                   after:absolute
                   after:top-0.5
                   after:left-0.5
-                  after:w-4
-                  after:h-4
+                  after:w-5
+                  after:h-5
                   after:bg-white
                   after:rounded-full
                   after:transition-all
-                  after:duration-200
-                  peer-checked:after:translate-x-5
-                "></div>
-              </div>
-              <span className="text-sm font-medium text-gray-700">
-                Save as Draft
-              </span>
-            </label>
-          </div>
-          <div className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-            {campaignForm.status === 'draft' ? 'Draft Mode' : 'Publish Mode'}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Footer */}
-  <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-    <div className="flex items-center gap-2 justify-end">
-      <button
-        onClick={() => setShowCreateModal(false)}
-        className="
-          px-4
-          py-2
-          rounded-lg
-          text-sm
-          font-medium
-          border border-gray-300
-          text-gray-700
-          bg-white
-          hover:bg-gray-50
-          transition-colors
-          min-w-[80px]
-        "
-      >
-        Cancel
-      </button>
-
-      <button
-        onClick={handleCreateOrUpdateCampaign}
-        disabled={loadingStates.create}
-        className="
-          px-4
-          py-2
-          rounded-lg
-          font-medium
-          text-sm
-          text-white
-          bg-gradient-to-r from-emerald-500 to-emerald-600
-          hover:from-emerald-600 hover:to-emerald-700
-          disabled:opacity-60
-          disabled:cursor-not-allowed
-          shadow-sm
-          transition-all
-          min-w-[80px]
-        "
-      >
-        {loadingStates.create ? (
-          <span className="flex items-center justify-center gap-1.5">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Processing</span>
-          </span>
-        ) : (
-          <span>
-            {selectedCampaign
-              ? "Update"
-              : campaignForm.status === "draft"
-              ? "Save Draft"
-              : "Send"}
-          </span>
-        )}
-      </button>
-    </div>
-  </div>
-</ModernModal>
-
-<ModernModal open={showDetailModal} onClose={() => setShowDetailModal(false)} maxWidth="700px">
-  {selectedCampaign && (
-    <>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 p-4 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
-              <Mail className="w-5 h-5" />
+                  after:duration-300
+                  after:shadow-md
+                  peer-checked:after:translate-x-6
+                "
+              ></label>
             </div>
             <div>
-              <h2 className="text-lg font-bold">Campaign Details</h2>
-              <p className="text-blue-100 opacity-90 text-xs">
-                {selectedCampaign.title}
+              <span className="text-sm font-bold text-gray-800">
+                Save as Draft
+              </span>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {campaignForm.status === 'draft' ? 'Save for later editing' : 'Publish immediately'}
               </p>
             </div>
           </div>
-          <button onClick={() => setShowDetailModal(false)} className="p-1 rounded-lg cursor-pointer hover:bg-white/10">
-            <X className="w-5 h-5" />
-          </button>
+          <div className={`text-xs font-bold px-3 py-1.5 rounded-full ${
+            campaignForm.status === 'draft' 
+              ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700' 
+              : 'bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-700'
+          }`}>
+            {campaignForm.status === 'draft' ? 'DRAFT MODE' : 'PUBLISH MODE'}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Footer - Enhanced */}
+  <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-100 px-3 py-1.5 rounded-full">
+          <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full"></div>
+          <span className="font-bold">Required fields marked with *</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowCreateModal(false)}
+          className="
+            px-6
+            py-2.5
+            rounded-xl
+            text-sm
+            font-bold
+            border-2 border-gray-300
+            text-gray-700
+            bg-white
+            hover:bg-gray-50
+            hover:border-gray-400
+            transition-all duration-200
+            min-w-[100px]
+            shadow-sm
+          "
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleCreateOrUpdateCampaign}
+          disabled={loadingStates.create}
+          className="
+            px-8
+            py-2.5
+            rounded-xl
+            font-bold
+            text-sm
+            text-white
+            bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600
+            hover:from-emerald-600 hover:via-green-600 hover:to-teal-700
+            disabled:opacity-60
+            disabled:cursor-not-allowed
+            shadow-lg
+            hover:shadow-xl
+            transition-all duration-200
+            min-w-[120px]
+            hover:scale-105
+          "
+        >
+          {loadingStates.create ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              {selectedCampaign ? (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Update Campaign</span>
+                </>
+              ) : campaignForm.status === "draft" ? (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Draft</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  <span>Send Campaign</span>
+                </>
+              )}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+</ModernModal>
+<ModernModal open={showDetailModal} onClose={() => setShowDetailModal(false)} maxWidth="700px">
+  {selectedCampaign && (
+    <>
+      {/* Enhanced Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/20"></div>
+        <div className="relative p-5 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30 shadow-lg">
+                <Mail className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Campaign Details</h2>
+                <p className="text-blue-100 opacity-90 text-sm mt-1">
+                  {selectedCampaign.title}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowDetailModal(false)} 
+              className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-h-[calc(85vh-130px)] overflow-y-auto p-4 modern-scrollbar">
-        <div className="space-y-4">
-          {/* Campaign Info - single column for narrower width */}
-          <div className="space-y-3">
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg p-3 border border-blue-200/50">
-              <h3 className="font-bold text-gray-900 mb-2">Campaign Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                    selectedCampaign.status === 'published' 
-                      ? 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50'
-                      : 'bg-yellow-100/80 backdrop-blur-sm text-yellow-800 border-yellow-200/50'
-                  }`}>
-                    {selectedCampaign.status === 'published' ? 'Sent' : 'Draft'}
-                  </span>
+      {/* Enhanced Content */}
+      <div className="max-h-[calc(85vh-130px)] overflow-y-auto p-5 modern-scrollbar">
+        <div className="space-y-5">
+          {/* Campaign Info Card - Enhanced */}
+          <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50 rounded-xl p-5 border border-blue-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
+                  <Info className="w-4 h-4 text-white" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Recipient Group:</span>
-                  <span className="font-bold text-blue-700">
-                    {selectedCampaign.recipientType || 'All'}
-                  </span>
+                Campaign Information
+              </h3>
+              <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                selectedCampaign.status === 'published' 
+                  ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md'
+                  : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md'
+              }`}>
+                {selectedCampaign.status === 'published' ? 'SENT' : 'DRAFT'}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="p-2 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg">
+                    <Users className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Recipient Group</p>
+                    <p className="text-sm font-bold text-blue-700">
+                      {selectedCampaign.recipientType || 'All'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Recipients:</span>
-                  <span className="font-bold text-emerald-700">
-                    {getRecipientCount(selectedCampaign)}
-                  </span>
+                
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="p-2 bg-gradient-to-r from-emerald-100 to-green-100 rounded-lg">
+                    <UserCheck className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Recipients</p>
+                    <p className="text-sm font-bold text-emerald-700">
+                      {getRecipientCount(selectedCampaign)} people
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-bold text-purple-700">
-                    {new Date(selectedCampaign.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
-                {selectedCampaign.sentAt && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Sent:</span>
-                    <span className="font-bold text-violet-700">
-                      {new Date(selectedCampaign.sentAt).toLocaleDateString('en-US', {
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="p-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Created</p>
+                    <p className="text-sm font-bold text-purple-700">
+                      {new Date(selectedCampaign.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                       })}
-                    </span>
+                    </p>
+                  </div>
+                </div>
+                
+                {selectedCampaign.sentAt && (
+                  <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="p-2 bg-gradient-to-r from-violet-100 to-indigo-100 rounded-lg">
+                      <Send className="w-4 h-4 text-violet-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Sent</p>
+                      <p className="text-sm font-bold text-violet-700">
+                        {new Date(selectedCampaign.sentAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-            
-            {/* Subject */}
-            <div>
-              <h3 className="font-bold text-gray-900 mb-2">Subject</h3>
-              <div className="bg-gray-50/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-                <p className="text-gray-700">
-                  {selectedCampaign.subject}
-                </p>
+          </div>
+          
+          {/* Subject Card - Enhanced */}
+          <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200">
+            <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-r from-gray-500 to-gray-600 rounded-lg">
+                <Mail className="w-4 h-4 text-white" />
               </div>
-            </div>
-            
-            {/* Content */}
-            <div>
-              <h3 className="font-bold text-gray-900 mb-2">Content</h3>
-              <div className="bg-gray-50/80 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60 max-h-48 overflow-y-auto modern-scrollbar">
-                <pre className="text-gray-700 whitespace-pre-wrap font-sans text-sm">
-                  {selectedCampaign.content}
-                </pre>
-              </div>
+              Subject Line
+            </h3>
+            <div className="bg-white rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+              <p className="text-gray-800 font-medium">
+                {selectedCampaign.subject}
+              </p>
             </div>
           </div>
+          
+          {/* Content Card - Enhanced */}
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-5 border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-r from-slate-500 to-slate-600 rounded-lg">
+                  <FileText className="w-4 h-4 text-white" />
+                </div>
+                Email Content
+              </h3>
+              <div className="text-xs font-medium px-3 py-1.5 rounded-full bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700">
+                {selectedCampaign.content.length} characters
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border-2 border-slate-200 shadow-sm max-h-60 overflow-y-auto modern-scrollbar">
+              <div className="text-gray-700 whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                {selectedCampaign.content}
+              </div>
+            </div>
+            {selectedCampaign.attachments && selectedCampaign.attachments.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Paperclip className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-bold text-gray-700">Attachments</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCampaign.attachments.slice(0, 3).map((attachment, index) => (
+                    <div key={index} className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+                      <FileText className="w-3.5 h-3.5 text-blue-500" />
+                      <span className="text-xs font-medium text-blue-700">
+                        {attachment.name}
+                      </span>
+                    </div>
+                  ))}
+                  {selectedCampaign.attachments.length > 3 && (
+                    <div className="px-3 py-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg border border-gray-300">
+                      <span className="text-xs font-bold text-gray-600">
+                        +{selectedCampaign.attachments.length - 3} more
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Performance Stats (if published) */}
+          {selectedCampaign.status === 'published' && selectedCampaign.stats && (
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-5 border border-emerald-200">
+              <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg">
+                  <BarChart3 className="w-4 h-4 text-white" />
+                </div>
+                Campaign Performance
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white rounded-lg p-3 border border-emerald-200 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Open Rate</p>
+                  <p className="text-lg font-bold text-emerald-700">
+                    {selectedCampaign.stats.openRate || 'N/A'}%
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-emerald-200 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Click Rate</p>
+                  <p className="text-lg font-bold text-emerald-700">
+                    {selectedCampaign.stats.clickRate || 'N/A'}%
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-emerald-200 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Delivered</p>
+                  <p className="text-lg font-bold text-emerald-700">
+                    {selectedCampaign.stats.delivered || getRecipientCount(selectedCampaign)}
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-3 border border-emerald-200 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Bounces</p>
+                  <p className="text-lg font-bold text-emerald-700">
+                    {selectedCampaign.stats.bounces || '0'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-gray-100/50">
-        <div className="flex gap-2">
-          {selectedCampaign?.status === 'draft' && (
+      {/* Enhanced Footer */}
+      <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-100 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full"></div>
+              <span className="font-bold">Campaign ID: #{selectedCampaign.id?.slice(0, 8) || 'N/A'}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {selectedCampaign?.status === 'draft' && (
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setTimeout(() => openEditModal(selectedCampaign), 100);
+                }}
+                className="
+                  px-6
+                  py-2.5
+                  rounded-xl
+                  text-sm
+                  font-bold
+                  text-white
+                  bg-gradient-to-r from-blue-500 to-cyan-500
+                  hover:from-blue-600 hover:to-cyan-600
+                  transition-all duration-200
+                  shadow-lg
+                  hover:shadow-xl
+                  flex items-center gap-2
+                "
+              >
+                <Edit className="w-4 h-4" />
+                Edit Campaign
+              </button>
+            )}
             <button
-              onClick={() => {
-                setShowDetailModal(false);
-                openEditModal(selectedCampaign);
-              }}
+              onClick={() => setShowDetailModal(false)}
               className="
-                flex-1
-                bg-gradient-to-r from-blue-500 to-cyan-500
-                text-white py-2 rounded-lg
-                transition-all duration-300
-                font-medium shadow-lg
-                hover:shadow-xl hover:scale-101
-                hover:from-blue-600 hover:to-cyan-600
-                hover:shadow-blue-500/25
+                px-6
+                py-2.5
+                rounded-xl
+                text-sm
+                font-bold
+                border-2 border-gray-300
+                text-gray-700
+                bg-white
+                hover:bg-gray-50
+                hover:border-gray-400
+                transition-all duration-200
+                shadow-sm
+                hover:shadow-md
               "
             >
-              Edit Campaign
+              Close
             </button>
-          )}
-          <button
-            onClick={() => setShowDetailModal(false)}
-            className="
-              flex-1
-              border border-gray-300/60
-              text-gray-700 py-2 rounded-lg
-              transition-all duration-300
-              font-medium
-              hover:bg-gray-50/80
-              hover:border-gray-400/60
-              hover:shadow-sm
-            "
-          >
-            Close
-          </button>
+          </div>
         </div>
       </div>
     </>

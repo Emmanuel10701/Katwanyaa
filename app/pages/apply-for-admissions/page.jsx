@@ -10,6 +10,7 @@ import {
   FiChevronRight
 } from 'react-icons/fi';
 import { toast, Toaster } from 'react-hot-toast';
+import Header from "../../components/apply/page.jsx";
 
 // Kenya administrative data
 import kenyaData from '../../../public/data.json';
@@ -57,13 +58,9 @@ const NyaribuAdmission = () => {
     kcpeMarks: '',
     meanGrade: '',
     
-    // Stream Selection
-    preferredStream: 'SCIENCE',
-    
     // Medical Information
     medicalCondition: '',
     allergies: '',
-    bloodGroup: '',
     
     // Extracurricular
     sportsInterests: '',
@@ -85,6 +82,40 @@ const NyaribuAdmission = () => {
 
   // Update API endpoint
   const API_ENDPOINT = '/api/applyadmission';
+
+  // Modern notification function
+  const showModernNotification = (message, type = 'info') => {
+    const options = {
+      duration: 4000,
+      position: 'top-center',
+      style: {
+        background: type === 'error' ? '#ef4444' : 
+                   type === 'success' ? '#10b981' : 
+                   type === 'warning' ? '#f59e0b' : '#3b82f6',
+        color: '#fff',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '600',
+        padding: '12px 20px',
+        maxWidth: '90vw',
+        width: 'auto',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      },
+      icon: type === 'success' ? '🎉' : 
+            type === 'error' ? '⚠️' : 
+            type === 'warning' ? '📢' : 'ℹ️',
+    };
+
+    if (type === 'success') {
+      toast.success(message, options);
+    } else if (type === 'error') {
+      toast.error(message, options);
+    } else if (type === 'warning') {
+      toast(message, { ...options, icon: options.icon });
+    } else {
+      toast(message, options);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -123,35 +154,34 @@ const NyaribuAdmission = () => {
             !formData.dateOfBirth || 
             !formData.nationality?.trim() || 
             !formData.county) {
-          toast.error('Please fill all required personal information fields');
+          showModernNotification('Please fill all required personal information fields', 'error');
           return false;
         }
         return true;
       case 2:
         if (!formData.email?.trim() || 
-            !formData.phone?.trim() || 
             !formData.postalAddress?.trim()) {
-          toast.error('Please fill all required contact information fields');
+          showModernNotification('Please fill all required contact information fields', 'error');
           return false;
         }
         if (!emailRegex.test(formData.email)) {
-          toast.error('Please enter a valid email address');
+          showModernNotification('Please enter a valid email address', 'error');
           return false;
         }
-        if (!phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-          toast.error('Please enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX)');
+        // Phone is now optional, but if provided, validate format
+        if (formData.phone && !phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
+          showModernNotification('Please enter a valid Kenyan phone number (07XXXXXXXX or 01XXXXXXXX)', 'error');
           return false;
         }
         return true;
       case 3:
         if (!formData.previousSchool?.trim() || 
-            !formData.previousClass?.trim() || 
-            !formData.preferredStream) {
-          toast.error('Please fill all required academic information fields');
+            !formData.previousClass?.trim()) {
+          showModernNotification('Please fill all required academic information fields', 'error');
           return false;
         }
         if (formData.kcpeMarks && (parseInt(formData.kcpeMarks) < 0 || parseInt(formData.kcpeMarks) > 500)) {
-          toast.error('KCPE marks must be between 0 and 500');
+          showModernNotification('KCPE marks must be between 0 and 500', 'error');
           return false;
         }
         return true;
@@ -178,6 +208,9 @@ const NyaribuAdmission = () => {
 
     setLoading(true);
     
+    // Show submission in progress notification
+    showModernNotification('Submitting your application...', 'warning');
+    
     try {
       const response = await fetch(API_ENDPOINT, {
         method: 'POST',
@@ -197,7 +230,9 @@ const NyaribuAdmission = () => {
           submissionDate: new Date().toLocaleDateString(),
           submissionTime: new Date().toLocaleTimeString()
         });
-        toast.success('Application submitted successfully!');
+        
+        // Show success notification
+        showModernNotification('Application submitted successfully! Check your confirmation details below.', 'success');
         
         // Reset form
         setFormData({
@@ -208,8 +243,8 @@ const NyaribuAdmission = () => {
           motherName: '', motherPhone: '', motherEmail: '', motherOccupation: '',
           guardianName: '', guardianPhone: '', guardianEmail: '', guardianOccupation: '',
           previousSchool: '', previousClass: '', kcpeYear: '', kcpeIndex: '',
-          kcpeMarks: '', meanGrade: '', preferredStream: 'SCIENCE',
-          medicalCondition: '', allergies: '', bloodGroup: '',
+          kcpeMarks: '', meanGrade: '',
+          medicalCondition: '', allergies: '',
           sportsInterests: '', clubsInterests: '', talents: ''
         });
         setStep(5);
@@ -218,22 +253,15 @@ const NyaribuAdmission = () => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
       } else {
-        toast.error(data.error || 'Failed to submit application');
+        showModernNotification(data.error || 'Failed to submit application. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      toast.error('An error occurred. Please try again.');
+      showModernNotification('Network error. Please check your connection and try again.', 'error');
     } finally {
       setLoading(false);
     }
   };
-
-  const streams = [
-    { value: 'SCIENCE', label: 'Science', icon: '🔬', color: 'from-blue-500 to-cyan-500' },
-    { value: 'ARTS', label: 'Arts', icon: '🎨', color: 'from-purple-500 to-pink-500' },
-    { value: 'BUSINESS', label: 'Business', icon: '💼', color: 'from-green-500 to-emerald-500' },
-    { value: 'TECHNICAL', label: 'Technical', icon: '⚙️', color: 'from-orange-500 to-red-500' }
-  ];
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const meanGrades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'E'];
@@ -251,7 +279,7 @@ const NyaribuAdmission = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copied to clipboard!');
+    showModernNotification('Copied to clipboard!', 'success');
   };
 
   const printApplication = () => {
@@ -273,8 +301,6 @@ const NyaribuAdmission = () => {
       copyToClipboard(`${window.location.href}?app=${applicationNumber}`);
     }
   };
-
-
 
   // Location modal functions
   const openLocationModal = (type) => {
@@ -328,6 +354,42 @@ const NyaribuAdmission = () => {
     setFilteredLocations(filtered);
   }, [locationSearch, locationType, formData.county, formData.constituency]);
 
+  // Modern Toaster Configuration
+  const toasterConfig = {
+    position: 'top-center',
+    toastOptions: {
+      duration: 4000,
+      style: {
+        background: '#363636',
+        color: '#fff',
+        borderRadius: '12px',
+        fontSize: '14px',
+        fontWeight: '600',
+        padding: '12px 20px',
+        maxWidth: '90vw',
+        width: 'auto',
+      },
+      success: {
+        iconTheme: {
+          primary: '#10b981',
+          secondary: '#fff',
+        },
+        style: {
+          background: '#10b981',
+        },
+      },
+      error: {
+        iconTheme: {
+          primary: '#ef4444',
+          secondary: '#fff',
+        },
+        style: {
+          background: '#ef4444',
+        },
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50/30 to-emerald-50/30 relative overflow-hidden">
       {/* Modern background with student image */}
@@ -348,28 +410,7 @@ const NyaribuAdmission = () => {
         ></div>
       </div>
       
-      <Toaster 
-        position="top-right" 
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
-            },
-          },
-        }}
-      />
+      <Toaster {...toasterConfig} />
 
       {/* Location Selection Modal */}
       {showLocationModal && (
@@ -400,7 +441,7 @@ const NyaribuAdmission = () => {
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
                     placeholder={`Search ${locationType}...`}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
                     autoFocus
                   />
                   {locationSearch && (
@@ -412,7 +453,7 @@ const NyaribuAdmission = () => {
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-600 mt-2 font-medium">
                   {filteredLocations.length} {locationType}(s) found
                 </p>
               </div>
@@ -433,11 +474,11 @@ const NyaribuAdmission = () => {
                           <FiMapPin className="text-blue-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-800 group-hover:text-blue-700">
+                          <div className="font-semibold text-gray-800 group-hover:text-blue-700">
                             {location.name}
                           </div>
                           {location.count && (
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 font-medium">
                               {location.count} {locationType === 'county' ? 'constituencies' : 'wards'}
                             </div>
                           )}
@@ -450,8 +491,8 @@ const NyaribuAdmission = () => {
               ) : (
                 <div className="text-center py-12">
                   <FiSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <div className="text-lg font-medium text-gray-600">No {locationType}s found</div>
-                  <div className="text-gray-500 mt-2">Try a different search term</div>
+                  <div className="text-lg font-semibold text-gray-600">No {locationType}s found</div>
+                  <div className="text-gray-500 mt-2 font-medium">Try a different search term</div>
                 </div>
               )}
             </div>
@@ -460,7 +501,7 @@ const NyaribuAdmission = () => {
             <div className="p-4 border-t">
               <button
                 onClick={() => setShowLocationModal(false)}
-                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
@@ -469,37 +510,9 @@ const NyaribuAdmission = () => {
         </div>
       )}
 
-      {/* Modern Header with Glass Effect */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row items-center justify-between">
-            <div className="text-center lg:text-left mb-4 lg:mb-0">
-              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-emerald-600 to-blue-600 bg-clip-text text-transparent">
-                Nyaribu Secondary Application Portal
-              </h1>
-              <p className="text-gray-600 text-sm mt-1">
-                Soaring in Education for Excellence 1995
-              </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600">
-                  {new Date().getFullYear()} Intake Open
-                </span>
-              </div>
-              
-              <div className="bg-gradient-to-r from-blue-50 to-emerald-50 px-6 py-3 rounded-xl border border-blue-100 shadow-sm">
-                <div className="text-center">
-                  <div className="text-xl font-bold text-gray-800 mb-1">Step {step}/5</div>
-                  <div className="text-xs text-gray-500">Admission Process</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+   <div>
+    <Header />
+   </div>
 
       {/* Progress Bar */}
       <div className="container mx-auto px-4 py-6 relative z-10">
@@ -526,7 +539,7 @@ const NyaribuAdmission = () => {
                     <span className="font-bold">{stepNum}</span>
                   )}
                 </div>
-                <span className={`text-xs font-medium transition-colors ${
+                <span className={`text-xs font-semibold transition-colors ${
                   step >= stepNum ? 'text-gray-800' : 'text-gray-400'
                 }`}>
                   {stepNum === 1 && 'Personal'}
@@ -553,7 +566,7 @@ const NyaribuAdmission = () => {
                 <h2 className="text-3xl font-bold text-center mb-2">
                   🎉 Application Submitted Successfully!
                 </h2>
-                <p className="text-center text-green-100 text-lg">
+                <p className="text-center text-green-100 text-lg font-medium">
                   Your journey to excellence begins here
                 </p>
               </div>
@@ -567,7 +580,7 @@ const NyaribuAdmission = () => {
                     </h3>
                     {applicationNumber && (
                       <div className="mb-6">
-                        <div className="text-sm text-gray-600 mb-2 flex items-center">
+                        <div className="text-sm text-gray-600 mb-2 flex items-center font-medium">
                           <FiCopy className="mr-2" /> Application Number
                         </div>
                         <div className="flex items-center">
@@ -587,19 +600,13 @@ const NyaribuAdmission = () => {
                     {submittedData && (
                       <div className="space-y-4">
                         <div>
-                          <div className="text-sm text-gray-600 mb-1">Applicant Name</div>
+                          <div className="text-sm text-gray-600 mb-1 font-medium">Applicant Name</div>
                           <div className="font-semibold text-gray-800">
                             {submittedData.firstName} {submittedData.lastName}
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-600 mb-1">Preferred Stream</div>
-                          <div className="font-semibold text-gray-800">
-                            {streams.find(s => s.value === submittedData.preferredStream)?.label}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-600 mb-1">Submitted On</div>
+                          <div className="text-sm text-gray-600 mb-1 font-medium">Submitted On</div>
                           <div className="font-semibold text-gray-800">
                             {submittedData.submissionDate} at {submittedData.submissionTime}
                           </div>
@@ -619,9 +626,9 @@ const NyaribuAdmission = () => {
                           1
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-800">Email Confirmation</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Check your email ({formData.email}) for application confirmation and details.
+                          <h4 className="font-semibold text-gray-800">Email Confirmation</h4>
+                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                            Check your email ({formData.email}) for application confirmation.
                           </p>
                         </div>
                       </div>
@@ -631,9 +638,9 @@ const NyaribuAdmission = () => {
                           2
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-800">Interview Schedule</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Interview dates will be sent via SMS to {formData.phone} within 7 working days.
+                          <h4 className="font-semibold text-gray-800">Parent Contact</h4>
+                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                            Further communication will be sent to parent/guardian contacts provided.
                           </p>
                         </div>
                       </div>
@@ -643,19 +650,19 @@ const NyaribuAdmission = () => {
                           3
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-800">Document Verification</h4>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Bring original documents during the interview for verification.
+                          <h4 className="font-semibold text-gray-800">Document Verification</h4>
+                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                            Bring original documents when requested for verification.
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-gray-200">
-                      <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                         📞 Need Help?
                       </h4>
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-sm text-gray-600 space-y-2 font-medium">
                         <p>Admissions Office: <strong>0712 345 678</strong></p>
                         <p>Email: <strong>admissions@nyaribu.ac.ke</strong></p>
                         <p>Office Hours: Mon-Fri, 8:00 AM - 5:00 PM</p>
@@ -665,38 +672,51 @@ const NyaribuAdmission = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-8 flex flex-wrap gap-4 justify-center">
-                  <button
-                    onClick={() => {
-                      setStep(1);
-                      setShowSuccess(false);
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all hover:shadow-lg flex items-center shadow-md"
-                  >
-                    <FiUser className="mr-2" /> Submit Another Application
-                  </button>
-                  
-                  <button
-                    onClick={printApplication}
-                    className="px-6 py-3 bg-white text-gray-700 rounded-xl font-medium border border-gray-300 hover:bg-gray-50 transition-all hover:shadow-lg flex items-center shadow-md"
-                  >
-                    <FiPrinter className="mr-2" /> Print Summary
-                  </button>
-                  
-                  <button
-                    onClick={shareApplication}
-                    className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-xl font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all hover:shadow-lg flex items-center shadow-md"
-                  >
-                    <FiShare2 className="mr-2" /> Share Application
-                  </button>
-                  
-                  <button
-                    onClick={() => window.open('/admission-status', '_blank')}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-medium hover:from-purple-700 hover:to-purple-800 transition-all hover:shadow-lg flex items-center shadow-md"
-                  >
-                    <FiExternalLink className="mr-2" /> Check Status
-                  </button>
-                </div>
+<div className="mt-8 flex flex-nowrap gap-2 sm:gap-4 justify-center">
+  <button
+    onClick={() => {
+      setStep(1);
+      setShowSuccess(false);
+    }}
+    className="
+      px-3 py-2 sm:px-6 sm:py-3
+      bg-gradient-to-r from-blue-600 to-blue-700
+      text-white
+      rounded-lg sm:rounded-xl
+      font-semibold
+      text-xs sm:text-sm
+      hover:from-blue-700 hover:to-blue-800
+      transition-all hover:shadow-lg
+      flex items-center
+      shadow-md
+      whitespace-nowrap
+    "
+  >
+    <FiUser className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+    Submit Another
+  </button>
+
+  <button
+    onClick={shareApplication}
+    className="
+      px-3 py-2 sm:px-6 sm:py-3
+      bg-gradient-to-r from-emerald-600 to-emerald-700
+      text-white
+      rounded-lg sm:rounded-xl
+      font-semibold
+      text-xs sm:text-sm
+      hover:from-emerald-700 hover:to-emerald-800
+      transition-all hover:shadow-lg
+      flex items-center
+      shadow-md
+      whitespace-nowrap
+    "
+  >
+    <FiShare2 className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
+    Share
+  </button>
+</div>
+
               </div>
             </div>
           ) : (
@@ -715,7 +735,7 @@ const NyaribuAdmission = () => {
                       {step === 3 && '🎓 Academic Information'}
                       {step === 4 && '📝 Review & Submit'}
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 font-medium">
                       {step === 1 && 'Tell us about the prospective student'}
                       {step === 2 && 'How can we reach you? Provide contact details'}
                       {step === 3 && 'Educational background and academic preferences'}
@@ -723,7 +743,7 @@ const NyaribuAdmission = () => {
                     </p>
                   </div>
                   <div className="hidden lg:block">
-                    <div className="text-sm font-medium text-gray-500">Progress</div>
+                    <div className="text-sm font-semibold text-gray-500">Progress</div>
                     <div className="text-2xl font-bold text-blue-600">{step}/4</div>
                   </div>
                 </div>
@@ -753,7 +773,7 @@ const NyaribuAdmission = () => {
                                 name={field}
                                 value={formData[field]}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                                 placeholder={
                                   field === 'firstName' ? 'John' :
                                   field === 'middleName' ? 'Kamau' : 'Doe'
@@ -774,7 +794,7 @@ const NyaribuAdmission = () => {
                             name="gender"
                             value={formData.gender}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                             required
                           >
                             <option value="" className="text-gray-400">Select Gender</option>
@@ -794,13 +814,13 @@ const NyaribuAdmission = () => {
                               name="dateOfBirth"
                               value={formData.dateOfBirth}
                               onChange={handleChange}
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               required
                               max={new Date().toISOString().split('T')[0]}
                             />
                           </div>
                           {formData.dateOfBirth && (
-                            <p className="text-sm text-gray-600 mt-1 font-medium">
+                            <p className="text-sm text-gray-600 mt-1 font-semibold">
                               Age: {calculateAge(formData.dateOfBirth)} years
                             </p>
                           )}
@@ -814,7 +834,7 @@ const NyaribuAdmission = () => {
                         <h3 className="text-xl font-semibold text-gray-800 flex items-center">
                           <FiMapPin className="mr-2 text-green-600" /> Location Information
                         </h3>
-                        <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
                           Select from dropdowns ↓
                         </div>
                       </div>
@@ -828,7 +848,7 @@ const NyaribuAdmission = () => {
                             </div>
                             <span className="font-semibold text-blue-800">County</span>
                           </div>
-                          <div className="text-sm text-gray-600">Required field</div>
+                          <div className="text-sm text-gray-600 font-medium">Required field</div>
                         </div>
                         
                         <div className={`bg-gradient-to-br ${formData.county ? 'from-emerald-50 to-emerald-100 border-emerald-200' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-xl p-4 border`}>
@@ -838,7 +858,7 @@ const NyaribuAdmission = () => {
                             </div>
                             <span className={`font-semibold ${formData.county ? 'text-emerald-800' : 'text-gray-400'}`}>Constituency</span>
                           </div>
-                          <div className="text-sm text-gray-500">{formData.county ? 'Now select' : 'Select county first'}</div>
+                          <div className="text-sm text-gray-500 font-medium">{formData.county ? 'Now select' : 'Select county first'}</div>
                         </div>
                         
                         <div className={`bg-gradient-to-br ${formData.constituency ? 'from-purple-50 to-purple-100 border-purple-200' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-xl p-4 border`}>
@@ -848,7 +868,7 @@ const NyaribuAdmission = () => {
                             </div>
                             <span className={`font-semibold ${formData.constituency ? 'text-purple-800' : 'text-gray-400'}`}>Ward</span>
                           </div>
-                          <div className="text-sm text-gray-500">{formData.constituency ? 'Now select' : 'Select constituency first'}</div>
+                          <div className="text-sm text-gray-500 font-medium">{formData.constituency ? 'Now select' : 'Select constituency first'}</div>
                         </div>
                         
                         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
@@ -858,7 +878,7 @@ const NyaribuAdmission = () => {
                             </div>
                             <span className="font-semibold text-gray-400">Village</span>
                           </div>
-                          <div className="text-sm text-gray-500">Optional field</div>
+                          <div className="text-sm text-gray-500 font-medium">Optional field</div>
                         </div>
                       </div>
 
@@ -873,7 +893,7 @@ const NyaribuAdmission = () => {
                             name="nationality"
                             value={formData.nationality}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                             required
                           />
                         </div>
@@ -889,7 +909,7 @@ const NyaribuAdmission = () => {
                               value={formData.county}
                               readOnly
                               onClick={() => openLocationModal('county')}
-                              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base cursor-pointer bg-white"
+                              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium cursor-pointer bg-white"
                               placeholder="Click to select county..."
                               required
                             />
@@ -911,7 +931,7 @@ const NyaribuAdmission = () => {
                               value={formData.constituency}
                               readOnly
                               onClick={() => openLocationModal('constituency')}
-                              className="w-full pl-10 pr-10 py-3 border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 text-base cursor-pointer bg-white"
+                              className="w-full pl-10 pr-10 py-3 border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 text-base font-medium cursor-pointer bg-white"
                               placeholder="Click to select constituency..."
                               required
                             />
@@ -934,7 +954,7 @@ const NyaribuAdmission = () => {
                                 value={formData.ward}
                                 readOnly
                                 onClick={() => openLocationModal('ward')}
-                                className="w-full pl-10 pr-10 py-3 border border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 text-base cursor-pointer bg-white"
+                                className="w-full pl-10 pr-10 py-3 border border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 text-base font-medium cursor-pointer bg-white"
                                 placeholder="Click to select ward..."
                                 required
                               />
@@ -952,7 +972,7 @@ const NyaribuAdmission = () => {
                               name="village"
                               value={formData.village}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="Enter village or estate name"
                             />
                           </div>
@@ -981,7 +1001,7 @@ const NyaribuAdmission = () => {
                               name="email"
                               value={formData.email}
                               onChange={handleChange}
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="student@example.com"
                               required
                             />
@@ -990,7 +1010,7 @@ const NyaribuAdmission = () => {
 
                         <div className="space-y-2">
                           <label className="block text-base font-semibold text-gray-800">
-                            Phone Number *
+                            Phone Number (Optional)
                           </label>
                           <div className="relative">
                             <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -999,12 +1019,11 @@ const NyaribuAdmission = () => {
                               name="phone"
                               value={formData.phone}
                               onChange={handleChange}
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
-                              placeholder="0712 345 678"
-                              required
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
+                              placeholder="Optional - 0712 345 678"
                             />
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">Format: 07XXXXXXXX or 01XXXXXXXX</p>
+                          <p className="text-sm text-gray-600 mt-1 font-medium">Format: 07XXXXXXXX or 01XXXXXXXX (if provided)</p>
                         </div>
                       </div>
 
@@ -1017,7 +1036,7 @@ const NyaribuAdmission = () => {
                           name="alternativePhone"
                           value={formData.alternativePhone}
                           onChange={handleChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                           placeholder="Optional alternative number"
                         />
                       </div>
@@ -1034,7 +1053,7 @@ const NyaribuAdmission = () => {
                               name="postalAddress"
                               value={formData.postalAddress}
                               onChange={handleChange}
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="P.O. Box 123-10100, Nairobi"
                               required
                             />
@@ -1050,7 +1069,7 @@ const NyaribuAdmission = () => {
                             name="postalCode"
                             value={formData.postalCode}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                             placeholder="10100"
                           />
                         </div>
@@ -1077,7 +1096,7 @@ const NyaribuAdmission = () => {
                               name="fatherName"
                               value={formData.fatherName}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="Father's full name"
                             />
                           </div>
@@ -1090,7 +1109,7 @@ const NyaribuAdmission = () => {
                               name="fatherPhone"
                               value={formData.fatherPhone}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="Father's phone"
                             />
                           </div>
@@ -1103,7 +1122,7 @@ const NyaribuAdmission = () => {
                               name="fatherEmail"
                               value={formData.fatherEmail}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="father@example.com"
                             />
                           </div>
@@ -1116,7 +1135,7 @@ const NyaribuAdmission = () => {
                               name="fatherOccupation"
                               value={formData.fatherOccupation}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="Father's occupation"
                             />
                           </div>
@@ -1141,7 +1160,7 @@ const NyaribuAdmission = () => {
                                 name={field}
                                 value={formData[field]}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-gray-800 text-base"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-gray-800 text-base font-medium"
                                 placeholder={
                                   field === 'motherName' ? "Mother's full name" :
                                   field === 'motherPhone' ? "Mother's phone" :
@@ -1172,7 +1191,7 @@ const NyaribuAdmission = () => {
                                 name={field}
                                 value={formData[field]}
                                 onChange={handleChange}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 text-base"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 text-base font-medium"
                                 placeholder="Optional"
                               />
                             </div>
@@ -1202,7 +1221,7 @@ const NyaribuAdmission = () => {
                               name="previousSchool"
                               value={formData.previousSchool}
                               onChange={handleChange}
-                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="Name of previous school"
                               required
                             />
@@ -1218,7 +1237,7 @@ const NyaribuAdmission = () => {
                             name="previousClass"
                             value={formData.previousClass}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium"
                             placeholder="e.g., Class 8, Form 2"
                             required
                           />
@@ -1242,7 +1261,7 @@ const NyaribuAdmission = () => {
                               name="kcpeYear"
                               value={formData.kcpeYear}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="2024"
                               min="2000"
                               max="2025"
@@ -1258,7 +1277,7 @@ const NyaribuAdmission = () => {
                               name="kcpeIndex"
                               value={formData.kcpeIndex}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="12345678901"
                             />
                           </div>
@@ -1272,7 +1291,7 @@ const NyaribuAdmission = () => {
                               name="kcpeMarks"
                               value={formData.kcpeMarks}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base font-medium"
                               placeholder="0-500"
                               min="0"
                               max="500"
@@ -1285,7 +1304,7 @@ const NyaribuAdmission = () => {
                                     style={{ width: `${(formData.kcpeMarks / 500) * 100}%` }}
                                   ></div>
                                 </div>
-                                <p className="text-sm text-gray-600 mt-1 text-right font-medium">
+                                <p className="text-sm text-gray-600 mt-1 text-right font-semibold">
                                   {formData.kcpeMarks}/500 ({((formData.kcpeMarks / 500) * 100).toFixed(1)}%)
                                 </p>
                               </div>
@@ -1302,7 +1321,7 @@ const NyaribuAdmission = () => {
                               name="meanGrade"
                               value={formData.meanGrade}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 text-base font-medium"
                             >
                               <option value="" className="text-gray-400">Select Grade</option>
                               {meanGrades.map(grade => (
@@ -1311,52 +1330,6 @@ const NyaribuAdmission = () => {
                             </select>
                           </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Stream Selection with Visual Cards */}
-                    <div className="space-y-6">
-                      <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                        🎯 Preferred Stream *
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {streams.map(stream => (
-                          <label
-                            key={stream.value}
-                            className={`relative cursor-pointer rounded-xl border-2 p-5 transition-all duration-300 ${
-                              formData.preferredStream === stream.value
-                                ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-white shadow-lg'
-                                : 'border-gray-200'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="preferredStream"
-                              value={stream.value}
-                              checked={formData.preferredStream === stream.value}
-                              onChange={handleChange}
-                              className="sr-only"
-                              required
-                            />
-                            <div className="flex flex-col items-center">
-                              <span className="text-3xl mb-2">{stream.icon}</span>
-                              <div className="font-bold text-gray-800 mb-1 text-lg">{stream.label}</div>
-                              <div className="text-xs text-gray-600 text-center">
-                                {stream.value === 'SCIENCE' && 'Physics, Chemistry, Biology, Math'}
-                                {stream.value === 'ARTS' && 'Languages, Humanities, Arts'}
-                                {stream.value === 'BUSINESS' && 'Commerce, Accounting, Economics'}
-                                {stream.value === 'TECHNICAL' && 'Technical Drawing, Computer, Metalwork'}
-                              </div>
-                            </div>
-                            {formData.preferredStream === stream.value && (
-                              <div className="absolute top-3 right-3">
-                                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-full flex items-center justify-center">
-                                  <FiCheckCircle className="text-white text-sm" />
-                                </div>
-                              </div>
-                            )}
-                          </label>
-                        ))}
                       </div>
                     </div>
 
@@ -1375,41 +1348,22 @@ const NyaribuAdmission = () => {
                             name="medicalCondition"
                             value={formData.medicalCondition}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base min-h-[120px]"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium min-h-[120px]"
                             placeholder="Any medical conditions we should be aware of..."
                           />
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="block text-base font-semibold text-gray-800">
-                              Allergies
-                            </label>
-                            <textarea
-                              name="allergies"
-                              value={formData.allergies}
-                              onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base min-h-[80px]"
-                              placeholder="Food, drug allergies..."
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="block text-base font-semibold text-gray-800">
-                              Blood Group
-                            </label>
-                            <select
-                              name="bloodGroup"
-                              value={formData.bloodGroup}
-                              onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base"
-                            >
-                              <option value="" className="text-gray-400">Select Blood Group</option>
-                              {bloodGroups.map(group => (
-                                <option key={group} value={group} className="text-gray-800">{group}</option>
-                              ))}
-                            </select>
-                          </div>
+                        <div className="space-y-2">
+                          <label className="block text-base font-semibold text-gray-800">
+                            Allergies
+                          </label>
+                          <textarea
+                            name="allergies"
+                            value={formData.allergies}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 text-base font-medium min-h-[80px]"
+                            placeholder="Food, drug allergies..."
+                          />
                         </div>
                       </div>
 
@@ -1427,7 +1381,7 @@ const NyaribuAdmission = () => {
                               name="sportsInterests"
                               value={formData.sportsInterests}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base min-h-[80px]"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base font-medium min-h-[80px]"
                               placeholder="Football, Basketball, Athletics..."
                             />
                           </div>
@@ -1440,7 +1394,7 @@ const NyaribuAdmission = () => {
                               name="clubsInterests"
                               value={formData.clubsInterests}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base min-h-[80px]"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base font-medium min-h-[80px]"
                               placeholder="Debate, Science Club, Drama..."
                             />
                           </div>
@@ -1453,7 +1407,7 @@ const NyaribuAdmission = () => {
                               name="talents"
                               value={formData.talents}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base min-h-[80px]"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 text-base font-medium min-h-[80px]"
                               placeholder="Music, Art, Public Speaking..."
                             />
                           </div>
@@ -1475,7 +1429,7 @@ const NyaribuAdmission = () => {
                           <h3 className="text-2xl font-bold text-green-800 mb-2">
                             Review Your Application
                           </h3>
-                          <p className="text-green-700 font-medium">
+                          <p className="text-green-700 font-semibold">
                             Please verify all information carefully. Once submitted, changes cannot be made.
                           </p>
                         </div>
@@ -1505,7 +1459,7 @@ const NyaribuAdmission = () => {
                         color: 'purple',
                         fields: [
                           { label: 'Email', value: formData.email },
-                          { label: 'Phone', value: formData.phone },
+                          { label: 'Phone', value: formData.phone || 'Not provided' },
                           { label: 'Alternative Phone', value: formData.alternativePhone || 'Not provided' },
                           { label: 'Postal Address', value: formData.postalAddress },
                           { label: 'Postal Code', value: formData.postalCode || 'Not provided' },
@@ -1529,7 +1483,6 @@ const NyaribuAdmission = () => {
                         fields: [
                           { label: 'Previous School', value: formData.previousSchool },
                           { label: 'Previous Class', value: formData.previousClass },
-                          { label: 'Preferred Stream', value: streams.find(s => s.value === formData.preferredStream)?.label },
                           ...(formData.kcpeYear ? [{ label: 'KCPE Year', value: formData.kcpeYear }] : []),
                           ...(formData.kcpeMarks ? [{ label: 'KCPE Marks', value: formData.kcpeMarks }] : []),
                           ...(formData.meanGrade ? [{ label: 'Mean Grade', value: formData.meanGrade }] : []),
@@ -1542,7 +1495,6 @@ const NyaribuAdmission = () => {
                         fields: [
                           { label: 'Medical Conditions', value: formData.medicalCondition || 'None reported' },
                           { label: 'Allergies', value: formData.allergies || 'None reported' },
-                          { label: 'Blood Group', value: formData.bloodGroup || 'Not specified' },
                           { label: 'Sports Interests', value: formData.sportsInterests || 'Not specified' },
                           { label: 'Clubs Interests', value: formData.clubsInterests || 'Not specified' },
                           { label: 'Special Talents', value: formData.talents || 'Not specified' },
@@ -1587,7 +1539,7 @@ const NyaribuAdmission = () => {
                             required
                             className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-1"
                           />
-                          <span className="text-gray-800 font-medium">
+                          <span className="text-gray-800 font-semibold">
                             I certify that all information provided is accurate to the best of my knowledge and belief.
                           </span>
                         </label>
@@ -1597,7 +1549,7 @@ const NyaribuAdmission = () => {
                             required
                             className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-1"
                           />
-                          <span className="text-gray-800 font-medium">
+                          <span className="text-gray-800 font-semibold">
                             I agree to the terms and conditions of Nyaribu Secondary School's admission process and understand that providing false information may lead to disqualification.
                           </span>
                         </label>
@@ -1607,7 +1559,7 @@ const NyaribuAdmission = () => {
                             required
                             className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mt-1"
                           />
-                          <span className="text-gray-800 font-medium">
+                          <span className="text-gray-800 font-semibold">
                             I consent to the school processing my personal data for admission purposes in accordance with the Data Protection Act.
                           </span>
                         </label>
@@ -1620,7 +1572,7 @@ const NyaribuAdmission = () => {
               {/* Form Footer with Navigation - 3 buttons for Preview/Submit */}
               <div className="bg-gradient-to-r from-gray-50 to-slate-100 px-8 py-6 border-t border-gray-200">
                 <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                  <div className="text-sm text-gray-700 font-medium">
+                  <div className="text-sm text-gray-700 font-semibold">
                     {step === 4 ? 'Ready to submit?' : `Step ${step} of 4`}
                   </div>
                   
@@ -1629,7 +1581,7 @@ const NyaribuAdmission = () => {
                       <button
                         type="button"
                         onClick={prevStep}
-                        className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
+                        className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
                       >
                         <FiArrowRight className="mr-2 rotate-180" /> Back
                       </button>
@@ -1639,7 +1591,7 @@ const NyaribuAdmission = () => {
                       <button
                         type="button"
                         onClick={nextStep}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all hover:shadow-lg flex items-center shadow-md"
+                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all hover:shadow-lg flex items-center shadow-md"
                       >
                         Continue <FiArrowRight className="ml-2" />
                       </button>
@@ -1648,7 +1600,7 @@ const NyaribuAdmission = () => {
                         <button
                           type="button"
                           onClick={prevStep}
-                          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
+                          className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all hover:shadow-md flex items-center shadow-sm"
                         >
                           <FiEye className="mr-2" /> Preview
                         </button>
@@ -1656,7 +1608,7 @@ const NyaribuAdmission = () => {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="px-10 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all hover:shadow-lg flex items-center disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+                          className="px-10 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all hover:shadow-lg flex items-center disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
                         >
                           {loading ? (
                             <>
@@ -1683,7 +1635,7 @@ const NyaribuAdmission = () => {
         <div className="mt-12 text-center relative z-10">
           <div className="bg-gradient-to-r from-blue-50/80 to-emerald-50/80 backdrop-blur-sm rounded-2xl p-8 border border-blue-100 mb-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-800 mb-3">📞 Need Assistance?</h3>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 font-medium">
               <div className="flex items-center">
                 <FiPhone className="mr-2 text-blue-600" />
                 <span>Admissions: <strong className="text-gray-900">0712 345 678</strong></span>
@@ -1699,10 +1651,10 @@ const NyaribuAdmission = () => {
             </div>
           </div>
           
-          <p className="text-gray-600 text-sm font-medium">
+          <p className="text-gray-600 text-sm font-semibold">
             © {new Date().getFullYear()} Nyaribu Secondary School. Excellence Through Discipline and Diligence.
           </p>
-          <p className="text-gray-500 text-xs mt-2">
+          <p className="text-gray-500 text-xs mt-2 font-medium">
             All applications are processed in accordance with our privacy policy and data protection regulations.
           </p>
         </div>

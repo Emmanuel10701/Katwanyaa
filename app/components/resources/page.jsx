@@ -1891,53 +1891,66 @@ export default function ResourcesManager() {
       />
 
 
-<div className="relative z-10">
-  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-    
-    {/* Left Content */}
-    <div className="flex-1 min-w-0">
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        
-        {/* Icon */}
-        <div className="relative shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl blur-lg opacity-70" />
-          <div className="relative p-3 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl shadow-2xl">
-            <FiFolder className="text-white w-6 h-6 sm:w-7 sm:h-7" />
-          </div>
-        </div>
+{/* Modern Responsive Header with Bronze Gradient */}
+<div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-amber-700 via-amber-600 to-yellow-700 p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl">
+  {/* Background Pattern - Optimized for performance */}
+  <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none">
+    <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/5 to-yellow-500/5" />
+  </div>
+  
+  {/* Gold Glow Effect - Responsive sizes */}
+ <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-blue-500 to-sky-400 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl md:blur-3xl" />
 
-        {/* Text */}
-        <div className="flex-1 min-w-0">
+<div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl md:blur-3xl" />
+
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
+      {/* Left Content - Title & Description */}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+          {/* Icon Container */}
+          <div className="relative self-start shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-60 sm:opacity-70" />
+           
+          </div>
           
-          {/* Badge */}
-          <div className="hidden xs:inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 max-w-max">
-            <FiShield className="w-3 h-3 text-white" />
-            <span className="text-xs font-bold text-white uppercase tracking-widest">
-              Resource Hub
-            </span>
+          {/* Text Content */}
+          <div className="flex-1 min-w-0">
+            {/* Badge - Hidden on smallest screens */}
+            <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
+              <FiShield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+              <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-wide sm:tracking-widest">Secure Portal</span>
+            </div>
+            
+            {/* Title */}
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight sm:leading-tight">
+              Resources <span className="block sm:inline">& </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-200">
+                Manager
+              </span>
+            </h1>
+            
+            {/* Description - Responsive sizing and line clamping */}
+            <p className="text-amber-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+  Centralized hub for uploading, organizing, and securely managing learning resources and documents.
+</p>
+
           </div>
-
-          {/* Title */}
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white leading-tight tracking-tight">
-            Learning
-            <span className="block sm:inline"> </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-200">
-              Resources
-            </span>
-          </h1>
-
-          {/* Description */}
-          <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-blue-100/90 max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-            Upload, organize, and share educational materials securely with staff and students.
-          </p>
         </div>
       </div>
-    </div>
-
-    {/* Right Content */}
-    <div className="flex flex-col xs:flex-row lg:flex-col items-stretch lg:items-end gap-3 sm:gap-4">
-
-      {/* Buttons */}
+      
+      {/* Right Content - Stats & Buttons */}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
+        {/* Today's Sessions Counter - Responsive positioning */}
+        <div className="flex items-center gap-2 xs:gap-3 lg:hidden">
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] xs:text-xs font-bold text-amber-200/70 uppercase tracking-wide">Today</span>
+            <span className="text-xl xs:text-2xl font-black text-white">{stats.today || 0}</span>
+          </div>
+          <div className="h-6 w-px bg-white/20" />
+        </div>
+        
+         {/* Buttons */}
       <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
         
         {/* Refresh */}
@@ -1982,6 +1995,7 @@ export default function ResourcesManager() {
         </button>
       </div>
 
+      </div>
     </div>
   </div>
 </div>

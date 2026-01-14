@@ -358,7 +358,7 @@ model AdmissionApplication {
   ward                   String
   village                String?
   email                  String    @unique
-  phone                  String
+  phone                  String?   // Changed to optional
   alternativePhone       String?
   postalAddress          String
   postalCode             String?
@@ -380,10 +380,10 @@ model AdmissionApplication {
   kcpeIndex              String?
   kcpeMarks              Int?
   meanGrade              String?
-  preferredStream        String
+  // Removed preferredStream field
   medicalCondition       String?
   allergies              String?
-  bloodGroup             String?
+  bloodGroup             String?   // Still kept but not in form
   sportsInterests        String?
   clubsInterests         String?
   talents                String?
@@ -421,7 +421,6 @@ model AdmissionApplication {
   @@index([createdAt])
   @@index([decisionDate])
   @@index([county])
-  @@index([preferredStream])
   @@index([kcpeMarks])
 }
 

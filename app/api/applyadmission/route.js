@@ -42,6 +42,8 @@ function generateApplicationNumber() {
 }
 
 function validatePhone(phone) {
+  if (!phone || phone.trim() === '') return true; // Phone is now optional
+  
   const cleaned = phone.replace(/\s/g, '');
   const regex = /^(07|01)\d{8}$/;
   return regex.test(cleaned);
@@ -60,16 +62,6 @@ function getStatusLabel(status) {
     'WITHDRAWN': 'Withdrawn'
   };
   return statusMap[status] || status;
-}
-
-function getStreamLabel(stream) {
-  const streamMap = {
-    'SCIENCE': 'Science',
-    'ARTS': 'Arts',
-    'BUSINESS': 'Business',
-    'TECHNICAL': 'Technical'
-  };
-  return streamMap[stream] || stream;
 }
 
 // ====================================================================
@@ -265,9 +257,6 @@ async function sendAdminNotification(applicantData, applicationNumber) {
               <strong>County:</strong> <span>${applicantData.county}</span>
             </div>
             <div class="detail-row">
-              <strong>Preferred Stream:</strong> <span>${applicantData.preferredStream}</span>
-            </div>
-            <div class="detail-row">
               <strong>Previous School:</strong> <span>${applicantData.previousSchool}</span>
             </div>
             <div class="detail-row">
@@ -277,7 +266,10 @@ async function sendAdminNotification(applicantData, applicationNumber) {
               <strong>Contact Email:</strong> <span>${applicantData.email}</span>
             </div>
             <div class="detail-row">
-              <strong>Contact Phone:</strong> <span>${applicantData.phone}</span>
+              <strong>Contact Phone:</strong> <span>${applicantData.phone || 'Not provided'}</span>
+            </div>
+            <div class="detail-row">
+              <strong>Blood Group:</strong> <span>${applicantData.bloodGroup || 'Not provided'}</span>
             </div>
             <div class="detail-row">
               <strong>Submitted At:</strong> <span>${new Date().toLocaleString('en-US')}</span>
@@ -321,8 +313,8 @@ export async function POST(req) {
     const requiredFields = [
       'firstName', 'lastName', 'gender', 'dateOfBirth',
       'nationality', 'county', 'constituency', 'ward',
-      'email', 'phone', 'postalAddress',
-      'previousSchool', 'previousClass', 'preferredStream'
+      'email', 'postalAddress',
+      'previousSchool', 'previousClass'
     ];
 
     const missingFields = requiredFields.filter(field => !data[field]?.trim());
@@ -339,13 +331,14 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: "Invalid email format" }, { status: 400 });
     }
 
-    // Phone validation
-    const cleanedPhone = data.phone.replace(/\s/g, '');
-    if (!validatePhone(data.phone)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid phone format. Use 07XXXXXXXX or 01XXXXXXXX" 
-      }, { status: 400 });
+    // Phone validation (phone is now optional, but validate if provided)
+    if (data.phone && data.phone.trim() !== '') {
+      if (!validatePhone(data.phone)) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Invalid phone format. Use 07XXXXXXXX or 01XXXXXXXX (or leave empty)" 
+        }, { status: 400 });
+      }
     }
 
     // Check for existing email
@@ -378,7 +371,7 @@ export async function POST(req) {
       
       // Contact
       email: data.email.trim().toLowerCase(),
-      phone: cleanedPhone,
+      phone: data.phone ? data.phone.replace(/\s/g, '') : null,
       alternativePhone: data.alternativePhone?.replace(/\s/g, ''),
       postalAddress: data.postalAddress.trim(),
       postalCode: data.postalCode?.trim(),
@@ -404,9 +397,6 @@ export async function POST(req) {
       kcpeIndex: data.kcpeIndex?.trim(),
       kcpeMarks: data.kcpeMarks ? parseInt(data.kcpeMarks) : null,
       meanGrade: data.meanGrade?.trim(),
-      
-      // Preferences
-      preferredStream: data.preferredStream,
       
       // Medical
       medicalCondition: data.medicalCondition?.trim(),
@@ -447,7 +437,6 @@ export async function POST(req) {
         name: `${application.firstName} ${application.lastName}`,
         email: application.email,
         phone: application.phone,
-        stream: application.preferredStream,
         submittedAt: application.createdAt
       }
     });
@@ -560,9 +549,6 @@ export async function GET(req) {
       kcpeMarks: app.kcpeMarks,
       meanGrade: app.meanGrade,
       
-      // Stream
-      preferredStream: app.preferredStream,
-      
       // Medical
       medicalCondition: app.medicalCondition,
       allergies: app.allergies,
@@ -602,7 +588,6 @@ export async function GET(req) {
       // Computed fields
       fullName: `${app.firstName} ${app.middleName ? app.middleName + ' ' : ''}${app.lastName}`,
       age: calculateAge(app.dateOfBirth),
-      streamLabel: getStreamLabel(app.preferredStream),
       statusLabel: getStatusLabel(app.status),
       school: SCHOOL_NAME,
       
