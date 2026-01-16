@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const SCHOOL_NAME = 'Nyaribu Secondary School';
-const SCHOOL_LOCATION = 'Kiganjo, Nyeri County';
-const SCHOOL_MOTTO = 'Soaring for Excellence';
+const SCHOOL_NAME = 'Katwanyaa High  School';
+const SCHOOL_LOCATION = 'Matungulu, Machakos County';
+const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_PHONE = '+254720123456';
-const CONTACT_EMAIL = 'admissions@nyaribusecondary.sc.ke';
+const CONTACT_EMAIL = 'admissions@katwanyaahighSchool.sc.ke';
 
 // ====================================================================
 // UTILITY FUNCTIONS
@@ -38,7 +38,7 @@ function calculateAge(dateOfBirth) {
 function generateApplicationNumber() {
   const year = new Date().getFullYear();
   const randomNum = randomBytes(4).toString('hex').toUpperCase();
-  return `NSS/${year}/${randomNum}`;
+  return `Katz/${year}/${randomNum}`;
 }
 
 function validatePhone(phone) {
@@ -390,7 +390,7 @@ function getApplicantConfirmationTemplate(name, appNumber) {
           <p class="text-medium">
             Dear <strong style="color: #1e3c72;">${name}</strong>,
             <br><br>
-            Thank you for choosing ${SCHOOL_NAME} for your secondary education journey. 
+            Thank you for choosing ${SCHOOL_NAME} for your High education journey. 
             We have successfully received your admission application and it is now under review.
           </p>
           

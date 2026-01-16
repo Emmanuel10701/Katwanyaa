@@ -1628,7 +1628,7 @@ const handleCreateOrUpdateCampaign = async () => {
           {/* Icon with Soft Glow */}
           <div className="relative">
             <div className="absolute inset-0 bg-current opacity-10 blur-xl rounded-full group-hover:opacity-20 transition-opacity" />
-            <div className="relative text-3xl sm:text-4xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+            <div className="relative text-3xl sm:text-4xl transition-transform duration-500 group-hover:scale-100 group-hover:rotate-3">
               {stat.icon}
             </div>
           </div>
@@ -2161,7 +2161,7 @@ const handleCreateOrUpdateCampaign = async () => {
         </div>
         <button 
           onClick={() => setShowCreateModal(false)} 
-          className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
+          className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-100"
         >
           <X className="w-5 h-5" />
         </button>
@@ -2483,7 +2483,7 @@ const handleCreateOrUpdateCampaign = async () => {
             hover:shadow-xl
             transition-all duration-200
             min-w-[120px]
-            hover:scale-105
+            hover:scale-100
           "
         >
           {loadingStates.create ? (
@@ -2538,7 +2538,7 @@ const handleCreateOrUpdateCampaign = async () => {
             </div>
             <button 
               onClick={() => setShowDetailModal(false)} 
-              className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105"
+              className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-100"
             >
               <X className="w-5 h-5" />
             </button>

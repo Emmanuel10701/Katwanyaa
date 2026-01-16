@@ -476,7 +476,7 @@ const ModernSupportTeamCard = ({ member, onView, onContact, viewMode = 'grid' })
           <img
             src={member.image || '/default-avatar.jpg'}
             alt={member.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
           />
           
           {/* Gradient Overlay */}
@@ -1466,7 +1466,7 @@ const DEFAULT_SESSIONS = [
     priority: 'high',
     image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
     featured: true,
-    location: 'Nyaribu Church'
+    location: 'Katwanyaa Church'
   }
 ];
 

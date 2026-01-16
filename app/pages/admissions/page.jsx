@@ -2048,7 +2048,7 @@ export default function ComprehensiveAdmissions() {
                       Academic <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Programs</span>
                     </h2>
                     <p className="text-slate-500 text-base md:text-xl font-medium leading-relaxed">
-                      Nyaribu Secondary offers a future-ready curriculum designed to cultivate critical thinking, 
+                      Katwanyaa High Schooloffers a future-ready curriculum designed to cultivate critical thinking, 
                       innovation, and global leadership.
                     </p>
                   </div>

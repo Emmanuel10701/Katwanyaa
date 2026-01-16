@@ -77,8 +77,8 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                   {/* Main Title - Increased font sizes */}
                   <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl 
                     font-black text-white tracking-tight leading-tight xs:leading-none">
-                    Nyaribu <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-100">
-                      Secondary
+                    Katwanyaa <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-100">
+                      High
                     </span>
                   </h1>
                   
@@ -94,7 +94,7 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                       bg-gradient-to-r from-blue-800/40 to-indigo-800/40 backdrop-blur-sm 
                       rounded-full border border-white/10">
                       <span className="text-xs xs:text-sm font-bold text-cyan-200 tracking-wide">
-                        🚀 Soaring for Excellence
+                        🚀 Education is Light
                       </span>
                     </div>
                   </div>
@@ -167,7 +167,7 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                   className="group p-2 xs:p-2.5 sm:p-3 bg-white/15 rounded-xl text-white 
                     hover:bg-white/25 transition-all duration-300 border border-white/15 
                     flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed
-                    hover:shadow-lg hover:scale-105 active:scale-95"
+                    hover:shadow-lg hover:scale-100 active:scale-95"
                   title="Refresh Portal"
                 >
                   <div className="relative">
@@ -188,7 +188,7 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                   className="group flex items-center gap-2 xs:gap-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white 
                     px-4 xs:px-5 sm:px-6 py-2 xs:py-2.5 sm:py-3 
                     rounded-xl xs:rounded-2xl font-bold text-xs xs:text-sm sm:text-base
-                    hover:shadow-xl hover:scale-105 transition-all duration-300 
+                    hover:shadow-xl hover:scale-100 transition-all duration-300 
                     whitespace-nowrap flex-shrink-0
                     hover:from-cyan-600 hover:to-blue-700
                     active:scale-95"

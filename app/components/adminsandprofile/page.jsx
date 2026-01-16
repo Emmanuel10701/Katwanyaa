@@ -603,7 +603,7 @@ export default function AdminManager() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-blue-100">Status</p>
-                  <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-xs font-bold border border-green-300/30">
+                  <span className="px-3 py-1 bg-green-500/20 text-orange-500  rounded-full text-xs font-bold border border-green-300/30">
                     Active
                   </span>
                 </div>
@@ -923,7 +923,7 @@ export default function AdminManager() {
                 </div>
                 <button
                   onClick={() => setShowAdminModal(false)}
-                  className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-200 hover:scale-110"
+                  className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-200 hover:scale-100"
                 >
                   <FaX className="text-xl" />
                 </button>

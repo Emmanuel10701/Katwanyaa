@@ -2365,7 +2365,7 @@ const GuidanceTeamModal = ({
             
             <button 
               onClick={onClose}
-              className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-2xl transition-all duration-300 hover:scale-110"
+              className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-2xl transition-all duration-300 hover:scale-100"
               disabled={isLoading}
             >
               <FiX className="w-6 h-6" />
@@ -3434,7 +3434,7 @@ const handleViewMember = (member) => {
   className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-base font-bold tracking-tight shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
 >
   <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-  <FiUserPlus className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:-rotate-12" />
+  <FiUserPlus className="w-5 h-5 transition-transform group-hover:scale-100 group-hover:-rotate-12" />
   <span className="relative">Add Team Member</span>
 </button>
           </div>

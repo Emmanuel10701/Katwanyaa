@@ -1165,7 +1165,7 @@ export default function DashboardOverview() {
               <h1 className="text-3xl font-bold">Welcome back, {user.name}!</h1>
             </div>
             <p className="text-blue-100 text-lg max-w-2xl">
-              Managing <strong>{stats.totalStudents} students</strong>, <strong>{stats.totalStaff} staff members</strong>, and <strong>{stats.totalSubscribers} subscribers</strong>. You have <span className="text-yellow-300 font-semibold">{stats.activeAssignments} active assignments</span> and <span className="text-green-300 font-semibold">{stats.upcomingEvents} upcoming events</span>.
+              Managing <strong>{stats.totalStudents} students</strong>, <strong>{stats.totalStaff} staff members</strong>, and <strong>{stats.totalSubscribers} subscribers</strong>. You have <span className="text-yellow-300 font-semibold">{stats.activeAssignments} active assignments</span> and <span className="text-orange-500 0 0  font-semibold">{stats.upcomingEvents} upcoming events</span>.
             </p>
             
             <div className="flex items-center gap-3 sm:gap-4 mt-6">

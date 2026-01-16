@@ -234,7 +234,7 @@ export default function StaffProfilePage() {
               onClick={() => handleShare('whatsapp')}
               className="flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all group"
             >
-              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center group-hover:scale-100 transition-transform">
                 <FaWhatsapp className="text-white text-2xl" />
               </div>
               <div className="flex-1">
@@ -254,7 +254,7 @@ export default function StaffProfilePage() {
               onClick={() => handleShare('facebook')}
               className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all group"
             >
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-100 transition-transform">
                 <FaFacebook className="text-white text-2xl" />
               </div>
               <div className="flex-1">
@@ -271,7 +271,7 @@ export default function StaffProfilePage() {
               onClick={() => handleShare('instagram')}
               className="flex items-center gap-4 p-4 bg-pink-50 hover:bg-pink-100 rounded-xl transition-all group w-full text-left"
             >
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-100 transition-transform">
                 <FaInstagram className="text-white text-2xl" />
               </div>
               <div className="flex-1">

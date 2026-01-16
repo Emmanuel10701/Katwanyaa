@@ -261,7 +261,7 @@ if (viewMode === 'grid') {
           <img
             src={event.image || '/default-event.jpg'}
             alt={event.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
           />
           {event.featured && (
             <div className="absolute top-1 right-1">

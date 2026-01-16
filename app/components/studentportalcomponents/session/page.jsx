@@ -77,7 +77,7 @@ const DEFAULT_SESSIONS = [
     priority: 'high',
     image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
     featured: true,
-    location: 'Nyaribu Church'
+    location: 'Katwanyaa Church'
   }
 ];
 
@@ -185,7 +185,7 @@ function TeamsSection({ teamMembers = [] }) {
                       <img 
                         src={member.image} 
                         alt={member.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-100"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.parentElement.innerHTML = `

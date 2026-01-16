@@ -215,7 +215,7 @@ const downloadAllFiles = async (items, activeTab) => {
     // Show completion message
     loadingAlert.innerHTML = `
       <div class="flex items-center gap-2">
-        <div class="text-green-300">✓</div>
+        <div class="text-orange-500 ">✓</div>
         <span>Downloaded ${filesToDownload.length} files!</span>
       </div>
     `;
@@ -446,7 +446,7 @@ function AttachmentsSection({
 
       loadingAlert.innerHTML = `
         <div class="flex items-center gap-2">
-          <div class="text-green-300">✓</div>
+          <div class="text-orange-500 ">✓</div>
           <span>Downloaded ${attachments.length} files!</span>
         </div>
       `;

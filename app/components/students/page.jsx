@@ -804,7 +804,7 @@ const getStudentsByForm = (form) => {
                 {getStudentsByForm('Form 3')}
               </p>
             </div>
-            <FiBook className="text-xl lg:text-2xl text-orange-200" />
+            <FiBook className="text-xl lg:text-2xl text-orange-500 " />
           </div>
         </div>
 

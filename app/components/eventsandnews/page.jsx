@@ -625,7 +625,7 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
             src={imageUrl} 
             alt={item.title} 
             onClick={() => onView(item)}
-            className="w-full h-full object-cover object-top cursor-pointer hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover object-top cursor-pointer hover:scale-100 transition-transform duration-300"
             onError={() => setImageError(true)} 
           />
         ) : (

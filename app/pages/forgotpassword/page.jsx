@@ -126,7 +126,7 @@ const ForgotPasswordPage = () => {
               disabled={loading}
               className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-xl text-white font-semibold transition-all duration-300 transform ${
                 loading ? 'bg-indigo-400 cursor-not-allowed' :
-                'bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-105'
+                'bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-100'
               }`}
             >
               {loading ? (

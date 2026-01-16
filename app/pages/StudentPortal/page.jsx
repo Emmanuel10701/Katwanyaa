@@ -380,13 +380,13 @@ function ModernHomeView({ student, feeBalance, feeLoading, token }) {
       <div className="relative bg-white/95 sm:bg-white/90 md:bg-white/80 backdrop-blur-xs sm:backdrop-blur-sm md:backdrop-blur-xl rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl p-2.5 sm:p-3 md:p-4 lg:p-5 xl:p-6 border border-gray-100 sm:border-gray-150 md:border-white shadow-sm sm:shadow-md hover:shadow-md transition-all duration-300 overflow-hidden h-full">
         
         {/* Decorative Pattern - Smaller on mobile */}
-        <div className="absolute -right-1.5 -top-1.5 sm:-right-2 sm:-top-2 md:-right-3 md:-top-3 lg:-right-4 lg:-top-4 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-gray-50/30 to-transparent rounded-full opacity-40 md:opacity-50 group-hover:scale-105 transition-transform duration-500" />
+        <div className="absolute -right-1.5 -top-1.5 sm:-right-2 sm:-top-2 md:-right-3 md:-top-3 lg:-right-4 lg:-top-4 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-gray-50/30 to-transparent rounded-full opacity-40 md:opacity-50 group-hover:scale-100 transition-transform duration-500" />
 
         <div className="flex flex-col h-full">
           {/* Top Row: Icon and Trends - Stacked vertically on mobile */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1.5 sm:mb-2 md:mb-3 lg:mb-4">
             {/* Icon Container - Centered on mobile */}
-            <div className={`flex justify-center sm:justify-start p-1.5 sm:p-2 md:p-2.5 lg:p-3 bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl md:rounded-2xl text-white shadow-xs sm:shadow-sm md:shadow-lg group-hover:scale-105 transition-transform duration-300 self-center sm:self-auto mb-1 sm:mb-0`}>
+            <div className={`flex justify-center sm:justify-start p-1.5 sm:p-2 md:p-2.5 lg:p-3 bg-gradient-to-br ${stat.gradient} rounded-lg sm:rounded-xl md:rounded-2xl text-white shadow-xs sm:shadow-sm md:shadow-lg group-hover:scale-100 transition-transform duration-300 self-center sm:self-auto mb-1 sm:mb-0`}>
               <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7">
                 {stat.icon}
               </div>
@@ -885,7 +885,7 @@ if (!student || !token) {
 
 <div className="flex items-center gap-3">
   <Image
-    src="/lll.png"
+    src="/lkatz.png"
     alt="Katwanyaa High School Logo"
     width={48}
     height={48}
@@ -985,7 +985,7 @@ if (!student || !token) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {features.map((feature, i) => (
                 <div key={i} className="group p-8 bg-white border border-slate-200/80 rounded-[2rem] hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-100 transition-transform">
                     {feature.icon}
                   </div>
                   <h3 className="text-xl font-bold text-slate-950 mb-3">{feature.title}</h3>
@@ -1157,10 +1157,10 @@ if (!student || !token) {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                 <div className="text-center md:text-left">
                   <p className="text-gray-700 text-sm font-bold">
-                    © {new Date().getFullYear()} Nyaribu Secondary School
+                    © {new Date().getFullYear()} Katwanyaa High  School
                   </p>
                   <p className="text-gray-500 text-xs mt-1 sm:mt-2">
-                    Student Portal v3.0 • Soaring for Excellence in Education
+                    Student Portal v3.0 • Education is Light in Education
                   </p>
                   <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-3">
                     <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-pulse"></div>

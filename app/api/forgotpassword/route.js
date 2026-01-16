@@ -13,10 +13,10 @@ const transporter = nodemailer.createTransport({
 });
 
 // School Information
-const SCHOOL_NAME = 'Nyaribu Secondary School';
-const SCHOOL_LOCATION = 'Kiganjo, Nyeri County';
-const SCHOOL_MOTTO = 'Soaring for Excellence';
-const CONTACT_EMAIL = 'info@nyaribusecondary.sc.ke';
+const SCHOOL_NAME = 'Katwanyaa High SchooloolSchool';
+const SCHOOL_LOCATION = 'Matungulu, Machakos County';
+const SCHOOL_MOTTO = 'Education is Light';
+const CONTACT_EMAIL = 'info@katwanyaa highSchool.sc.ke';
 
 export async function POST(req) {
   try {

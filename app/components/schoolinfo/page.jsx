@@ -1452,7 +1452,7 @@ return (
     {/* Header Section */}
     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
       <div className="flex items-start gap-5">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50 transition-transform group-hover:scale-110">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-400 flex items-center justify-center shadow-xl shadow-blue-200 ring-4 ring-blue-50 transition-transform group-hover:scale-100">
           <FaBook className="text-white text-2xl" />
         </div>
         <div>
@@ -2189,7 +2189,7 @@ function ModernExamMappingView({
                 className="group relative bg-white rounded-3xl p-6 border border-slate-200 hover:border-purple-300 shadow-sm hover:shadow-2xl hover:shadow-purple-100 transition-all duration-500 flex flex-col gap-5 overflow-hidden"
               >
                 {/* Subtle Background Accent */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-110 duration-500" />
+                <div className="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-100 duration-500" />
 
                 <div className="relative flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -2465,7 +2465,7 @@ function ModernExamMappingView({
                     >
                       <div className="flex items-start gap-4">
                         {/* Modern File Branding */}
-                        <div className={`relative w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-transform group-hover:scale-110 duration-300 ${
+                        <div className={`relative w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-transform group-hover:scale-100 duration-300 ${
                           file.filetype === 'pdf' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-600'
                         }`}>
                           <FaFilePdf className="text-xl" />
@@ -4786,7 +4786,7 @@ const handleUpdateExamResults = async (formData) => {
     <div className="flex-1 min-w-0">
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-          <FaMapMarkerAlt className="text-white text-3xl group-hover:scale-110 transition-transform" />
+          <FaMapMarkerAlt className="text-white text-3xl group-hover:scale-100 transition-transform" />
         </div>
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -4796,7 +4796,7 @@ const handleUpdateExamResults = async (formData) => {
             <FaShieldAlt className="text-blue-300 text-[10px]" />
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
-            Nyaribu Secondary School
+            Katwanyaa High  School
           </h1>
         </div>
       </div>
@@ -5162,7 +5162,7 @@ const handleUpdateExamResults = async (formData) => {
 
 <div className="mb-10 space-y-6">
   <div className="flex items-center gap-4 mb-8">
-    <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100 shadow-sm transition-transform hover:scale-110">
+    <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100 shadow-sm transition-transform hover:scale-100">
       <FaGraduationCap className="text-purple-600 text-xl" />
     </div>
     <div>
@@ -5290,7 +5290,7 @@ const handleUpdateExamResults = async (formData) => {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Timeline Card - Spans 2 cols */}
       <div className="lg:col-span-2 group bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
+        <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-100 transition-transform duration-500">
           <FaCalendarAlt size={120} className="text-white" />
         </div>
         

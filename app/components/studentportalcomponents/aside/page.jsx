@@ -43,7 +43,7 @@ export default function NavigationSidebar({
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-xl">Student Portal</h2>
-                <p className="text-sm text-gray-500">Nyaribu Secondary</p>
+                <p className="text-sm text-gray-500">Katwanyaa High</p>
               </div>
             </div>
             

@@ -209,21 +209,21 @@ export default function ModernNavbar() {
               <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg border border-white/30 overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                 <Image
-                  src="/logo.jpg"
-                  alt="Nyaribo Secondary School Logo"
+                  src="/katz.png"
+                  alt="Katwanyaa High School Logo"
                   width={60}
                   height={60}
-                  className="relative z-10 filter drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
+                  className="relative z-10 filter drop-shadow-sm group-hover:scale-100 transition-transform duration-300"
                   priority
                   sizes="(max-width: 640px) 56px, 64px"
                 />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
-                   NSS
+                   Katz
                 </h1>
                 <p className="text-sm text-white/90 font-medium tracking-wide whitespace-nowrap">
-                  Soaring for Excellence
+                  Education is Light
                 </p>
               </div>
             </div>
@@ -306,7 +306,7 @@ export default function ModernNavbar() {
                           : 'text-white/85 hover:text-white'
                       }`}
                     >
-                      <item.icon className="text-xs flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <item.icon className="text-xs flex-shrink-0 group-hover:scale-100 transition-transform" />
                       <span className="truncate">{item.name}</span>
                       
                       {/* Active underline indicator */}

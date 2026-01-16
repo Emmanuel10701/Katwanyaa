@@ -44,7 +44,20 @@ import {
   IoClose,
   IoMenu
 } from 'react-icons/io5';
-import { CircularProgress, Backdrop } from '@mui/material';
+import {
+  IoCalendarClearOutline,
+  IoSparkles,
+  IoRibbonOutline,
+  IoPeopleCircle,
+  IoStatsChart,
+  IoShareSocialOutline,
+  IoLocationOutline,
+  IoTimeOutline,
+  IoPersonOutline,
+  IoShareOutline,
+  IoNewspaperOutline
+} from 'react-icons/io5';
+import { CircularProgress, Box, Typography, Stack } from '@mui/material';
 import Image from 'next/image';
 
 // Modern color palette
@@ -125,7 +138,7 @@ export default function ModernGallery() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [favorites, setFavorites] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('Nyaribu-gallery-favorites');
+      const saved = localStorage.getItem('Katwanyaa-gallery-favorites');
       return saved ? new Set(JSON.parse(saved)) : new Set();
     }
     return new Set();
@@ -150,7 +163,7 @@ export default function ModernGallery() {
 
   // School Information
   const schoolInfo = {
-    name: "Nyaribu Secondary School",
+    name: "Katwanyaa High  School",
     motto: "Discipline, Diligence, Excellence",
     established: 1982,
     students: 1450,
@@ -162,7 +175,7 @@ export default function ModernGallery() {
   // Save favorites to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('Nyaribu-gallery-favorites', JSON.stringify(Array.from(favorites)));
+      localStorage.setItem('Katwanyaa-gallery-favorites', JSON.stringify(Array.from(favorites)));
     }
   }, [favorites]);
 
@@ -746,7 +759,7 @@ export default function ModernGallery() {
   // Share functions
   const shareOnWhatsApp = () => {
     if (!selectedMedia) return;
-    const text = `Check out "${selectedMedia.title}" from Nyaribu Secondary School Gallery!`;
+    const text = `Check out "${selectedMedia.title}" from Katwanyaa High School Gallery!`;
     const url = window.location.href;
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
   };
@@ -758,7 +771,7 @@ export default function ModernGallery() {
 
   const shareOnTwitter = () => {
     if (!selectedMedia) return;
-    const text = `Check out "${selectedMedia.title}" from Nyaribu Secondary School Gallery!`;
+    const text = `Check out "${selectedMedia.title}" from Katwanyaa High SchoolGallery!`;
     const url = window.location.href;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
   };
@@ -1063,7 +1076,7 @@ const LoadingSpinner = () => (
       </div>
       
       <div className="text-gray-800 text-lg font-semibold mb-2">
-        Nyaribu Secondary School
+        Katwanyaa High  School
       </div>
       <div className="text-gray-600">
         Loading Gallery...
@@ -1072,9 +1085,71 @@ const LoadingSpinner = () => (
   </Backdrop>
 );
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+if (loading) {
+  return (
+    <Box 
+      className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
+    >
+      <Stack 
+        spacing={3} 
+        alignItems="center"
+        className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
+      >
+        {/* Modern Layered Loader */}
+        <Box className="relative flex items-center justify-center">
+          {/* Background Ring */}
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size={64}
+            thickness={4}
+            sx={{ color: '#f1f5f9' }} // Very light gray track
+          />
+          {/* Actual Animated Loader */}
+          <CircularProgress
+            variant="indeterminate"
+            disableShrink
+            size={64}
+            thickness={4}
+            sx={{
+              color: '#2563eb', // Modern Blue
+              animationDuration: '800ms',
+              position: 'absolute',
+              left: 0,
+              [`& .MuiCircularProgress-circle`]: {
+                strokeLinecap: 'round',
+              },
+            }}
+          />
+          {/* Center Icon */}
+          <Box className="absolute">
+            <IoSparkles className="text-blue-500 text-xl animate-pulse" />
+          </Box>
+        </Box>
+
+        {/* Clean Typography */}
+        <Stack spacing={0.5} alignItems="center">
+          <Typography 
+            variant="body1" 
+            fontWeight="600" 
+            color="text.primary"
+            sx={{ letterSpacing: '-0.01em' }}
+          >
+            Loading Images and School Gallery...
+          </Typography>
+          <Typography 
+            variant="caption" 
+            color="text.secondary"
+            className="flex items-center gap-1"
+          >
+            Fetching latest Images anf School Gallery
+          </Typography>
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}
+
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -1297,7 +1372,7 @@ const LoadingSpinner = () => (
                     <div className="flex items-start justify-between lg:block">
                       <div>
                         <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-                          Nyaribu Secondary School Gallery
+                          Katwanyaa High SchoolGallery
                         </h1>
                         <p className="text-lg opacity-90 mb-3">
                           <span className="font-bold">{schoolInfo.motto}</span> • {schoolInfo.motto2}
@@ -1757,7 +1832,7 @@ const LoadingSpinner = () => (
               </div>
               
               <p className="text-slate-600 mb-6 text-center text-sm">
-                Share "{selectedMedia.title}" from Nyaribu Secondary School Gallery
+                Share "{selectedMedia.title}" from Katwanyaa High SchoolGallery
               </p>
       
 <div className="grid grid-cols-2 gap-3">

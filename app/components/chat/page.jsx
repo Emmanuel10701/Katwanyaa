@@ -73,25 +73,25 @@ const staticCategories = {
   general: {
     name: "Overview",
     icon: 'school',
-    content: `🏫 NYARIBU SECONDARY SCHOOL
+    content: `🏫 A.I.C KATWANYAA HIGH SCHOOL
 
-**A Public Day School**
+**A Public County School in Machakos**
 
 Quick Facts:
-• Established: 1985
-• Location: Kiganjo, Nyeri
-• Students: 400+
-• Staff: 30+
+• Established: 1976
+• Location: Kambusu, Matungulu, Machakos County
+• Students: 1000+
+• Staff: 50+
 
 School Type:
-• Public Day School
-• Mixed (Boys & Girls)
-• 8-4-4 Curriculum
+• Public County School
+• Mixed (Boys & Girls) - Day & Boarding
+• Competency-Based Curriculum (CBE)
 
 Contact:
-• Phone: +254 720 123 456
-• Email: info@nyaribusecondary.sc.ke
-• Address: P.O. Box 123-10100
+• Phone: +254 729 370 590
+• Email: katwanyaaschool@yahoo.com
+• Address: P.O. Box 363 – 90131 Tala, Kenya
 
 Hours:
 • Mon-Fri: 7:30 AM - 5:00 PM
@@ -112,6 +112,7 @@ Requirements:
 • KCPE: 250+ Marks
 • Age: 13-16 years
 • Good conduct
+• Transfer students considered
 
 Documents:
 1. KCPE certificate
@@ -121,16 +122,21 @@ Documents:
 5. Medical report
 
 Steps:
-1. Get form
-2. Submit docs
-3. Assessment
-4. Interview
-5. Admission
+1. Collect admission form
+2. Submit required documents
+3. Academic assessment
+4. Parent/guardian interview
+5. Admission confirmation
 
-Transfer Students:
-• Forms 2 & 3
-• Good record
-• Limited spaces`,
+**Competency-Based Curriculum:**
+• STEM Pathway
+• Social Sciences Pathway
+• Arts & Sports Science Pathway
+
+**Technology Partnership:**
+• Angaza Center technology partnership
+• Fully equipped computer lab
+• Internet access for all students`,
     links: [
       { label: 'Admissions', path: '/pages/admissions', icon: 'file' },
       { label: 'Apply Now', path: '/pages/applyadmission', icon: 'user' }
@@ -139,29 +145,33 @@ Transfer Students:
   fees: {
     name: "Fees",
     icon: 'dollar',
-    content: `💰 FEES 2024
+    content: `💰 FEES STRUCTURE
 
-Day School Fees (Term):
-• Tuition: KES 12,000
-• Activities: KES 2,000
-• Total: KES 14,000
+**School Fees (Per Term):**
+• Day School: KES 12,000 - 15,000
+• Boarding School: KES 25,000 - 30,000
+• Activities: KES 2,000 - 3,000
 
-Optional:
-• Lunch: KES 4,500
-• Transport: Varies
+**Fee Distribution:**
+• Tuition fees
+• Activity fees
+• Laboratory charges
+• Library fees
+• Sports facilities
 
-Payment:
+**Payment Options:**
 • Bank Transfer
-• M-Pesa: 123456
-• Cash
-• Installment plans
+• M-Pesa payments
+• Cash payments at bursar's office
+• Installment plans available
 
-Scholarships:
-• Academic
-• Sports
-• Needy
+**Scholarships:**
+• Academic excellence scholarships
+• Sports scholarships
+• Needy student support
+• County government bursaries
 
-Affordable quality education!`,
+**Affordable quality education with flexible payment options!**`,
     links: [
       { label: 'Student Portal', path: '/pages/StudentPortal', icon: 'book' }
     ]
@@ -171,32 +181,34 @@ Affordable quality education!`,
     icon: 'book',
     content: `📚 ACADEMICS
 
-Curriculum: 8-4-4 System
+**Curriculum:** Competency-Based Education (CBE)
 
-Form 1 & 2 (Core):
+**Learning Pathways:**
+1. STEM (Science, Technology, Engineering, Mathematics)
+2. Social Sciences
+3. Arts & Sports Science
+
+**Form 1 & 2 (Core Subjects):**
 • English • Kiswahili
-• Mathematics • Sciences
-• Humanities • Business
-• Computer Studies
-• Life Skills
+• Mathematics • Integrated Sciences
+• Creative Arts • Business Studies
+• Computer Studies • Life Skills Education
 
-Streams (Form 3/4):
-1. Sciences
-2. Humanities
-3. Business
+**Special Features:**
+• Angaza Center Technology Partnership
+• Fully equipped computer laboratory
+• Science laboratories
+• Modern library
+• Career guidance programs
+• Remedial classes
 
-Features:
-• Computer Lab
-• Science Labs
-• Library
-• Career Guidance
-• Remedial Classes
+**Examination System:**
+• Continuous Assessment Tests (CATs)
+• End of Term examinations
+• Mock examinations
+• KCSE national examinations
 
-Exams:
-• CATs • Term
-• Mock • KCSE
-
-Quality education for all!`,
+**Quality holistic education for all students!**`,
     links: [
       { label: 'Academics', path: '/pages/academics', icon: 'book' },
       { label: 'Guidance & Counselling', path: '/pages/Guidance-and-Councelling', icon: 'users' }
@@ -214,33 +226,41 @@ Quality education for all!`,
   activities: {
     name: "Activities",
     icon: 'activity',
-    content: `⚽ ACTIVITIES
+    content: `⚽ CO-CURRICULAR ACTIVITIES
 
-Sports:
-• Football
-• Basketball
-• Volleyball
-• Athletics
-• Table Tennis
+**Sports:**
+• Football • Rugby
+• Basketball • Volleyball
+• Athletics • Netball
+• Table Tennis • Swimming
 
-Clubs:
-1. Science Club
-2. Drama Club
-3. Music Club
-4. Environmental Club
-5. Debate Club
+**Clubs & Societies:**
+1. Science & Technology Club
+2. Drama & Music Club
+3. Environmental Club
+4. Debate & Public Speaking Club
+5. Christian Union
+6. Scouts & Guides
+7. Journalism Club
 
-Competitions:
+**Competitions:**
 • Music Festivals
-• Sports Days
-• Science Fairs
-• Academic Contests
+• Science & Engineering Fairs
+• Sports championships
+• Academic contests
+• Drama festivals
 
-Leadership:
+**Leadership Development:**
 • Student Council
-• Class Prefects
-• Club Leaders
-• Peer Counselors`,
+• Class Prefects system
+• Club leadership positions
+• Peer counseling program
+
+**Talent Development:**
+• Art exhibitions
+• Music performances
+• Drama productions
+• Sports tournaments`,
     links: [
       { label: 'News & Events', path: '/pages/eventsandnews', icon: 'calendar' },
       { label: 'Sports', path: '/pages/sports', icon: 'activity' }
@@ -249,29 +269,36 @@ Leadership:
   achievements: {
     name: "Achievements",
     icon: 'award',
-    content: `🏆 ACHIEVEMENTS
+    content: `🏆 SCHOOL ACHIEVEMENTS
 
-Academic:
-• 2023 KCSE: B-
-• 85% University placement
-• Consistent improvement
-• Subject awards
+**Academic Excellence:**
+• Consistent improvement in KCSE results
+• High university placement rate
+• Subject specialization awards
+• STEM program recognition
 
-Sports:
-• County champions (Football)
+**Sports Achievements:**
+• County sports champions
 • Regional athletics medals
-• Basketball trophies
+• Basketball tournament winners
 • Sportsmanship awards
 
-Talent:
+**Talent Development:**
 • Music festival winners
 • Drama competition finalists
 • Art exhibition participants
+• Public speaking champions
 
-Community:
-• Cleanest school award
-• Environmental champions
-• Community service awards`,
+**Community Recognition:**
+• Environmental conservation awards
+• Community service recognition
+• Clean school initiatives
+• Leadership development programs
+
+**Technology Partnership:**
+• Angaza Center technology integration
+• Digital learning implementation
+• Computer literacy excellence`,
     links: [
       { label: 'News & Events', path: '/pages/eventsandnews', icon: 'calendar' },
       { label: 'Results', path: '/results', icon: 'award' }
@@ -282,25 +309,29 @@ Community:
     icon: 'phone',
     content: `📞 CONTACT US
 
-Administration:
-• Principal: Mr. Mwangi
+**School Administration:**
+• Principal: [Name to be updated]
 • Deputy Principal (Academics)
 • Deputy Principal (Administration)
-• Bursar: Mrs. Njeri
+• Senior Teacher
 
-Contacts:
-• Phone: +254 720 123 456
-• Email: info@nyaribusecondary.sc.ke
-• Admissions: admissions@nyaribusecondary.sc.ke
+**Contact Information:**
+• Phone: +254 729 370 590
+• Email: katwanyaaschool@yahoo.com
+• Admissions: katwanyaaschool@yahoo.com
 
-Address:
-Nyaribu Secondary School
-Kiganjo, Nyeri County
-P.O. Box 123-10100
+**Physical Address:**
+A.I.C Katwanyaa High School
+Kambusu, Matungulu Sub-County
+Machakos County
+P.O. Box 363 – 90131 Tala, Kenya
 
-Office Hours:
+**Office Hours:**
 • Monday-Friday: 8:00 AM - 5:00 PM
-• Saturday: 8:00 AM - 1:00 PM`,
+• Saturday: 8:00 AM - 1:00 PM
+• Sunday: Closed
+
+**Visit Us:** We welcome parents, guardians, and visitors during office hours.`,
     links: [
       { label: 'Contact', path: '/pages/contact', icon: 'phone' },
       { label: 'Staff Directory', path: '/pages/staff', icon: 'users' },
@@ -402,7 +433,7 @@ ${schoolData.subjects.map(subject => `• ${subject}`).join('\n')}
 ${schoolData.departments.map(dept => `• ${dept}`).join('\n')}
 
 **Curriculum:**
-• Comprehensive 8-4-4 curriculum
+• Comprehensive Competency-Based Curriculum (CBE)
 • Download curriculum details: ${schoolData.curriculumPdfName}
 
 **Examination Results:**
@@ -504,7 +535,7 @@ const formatMessage = (content) => {
       else if (/^\d+\./.test(line)) {
         return (
           <div key={index} className="flex items-start ml-1 mb-0.5">
-            <span className="text-green-300 mr-1 text-xs font-semibold">
+            <span className="text-orange-500 0  mr-1 text-xs font-semibold">
               {line.match(/^\d+/)[0]}.
             </span>
             <span className="text-gray-100 text-xs">{line.replace(/^\d+\.\s*/, '')}</span>
@@ -615,7 +646,7 @@ export default function ChatBot() {
   }, []);
 
   useEffect(() => {
-    const chatData = localStorage.getItem('nyaribu_chat');
+    const chatData = localStorage.getItem('Katwanyaa_chat');
     if (chatData) {
       const { messages: savedMessages, timestamp } = JSON.parse(chatData);
       const fourHoursAgo = Date.now() - (4 * 60 * 60 * 1000);
@@ -623,7 +654,7 @@ export default function ChatBot() {
       if (timestamp > fourHoursAgo) {
         setMessages(savedMessages);
       } else {
-        localStorage.removeItem('nyaribu_chat');
+        localStorage.removeItem('Katwanyaa_chat');
         setMessages([getWelcomeMessage()]);
       }
     } else {
@@ -632,24 +663,25 @@ export default function ChatBot() {
   }, []);
 
   const getWelcomeMessage = () => {
-    const schoolName = schoolData?.name || 'NYARIBU SECONDARY SCHOOL';
-    const motto = schoolData?.motto ? `\n\n**${schoolData.motto}** ✨` : '\n\n**SOARING FOR EXCELLENCE** ✨';
-    const studentCount = schoolData?.studentCount || '400+';
-    const staffCount = schoolData?.staffCount || '30+';
+    const schoolName = schoolData?.name || 'A.I.C KATWANYAA HIGH SCHOOL';
+    const motto = schoolData?.motto ? `\n\n**${schoolData.motto}** ✨` : '\n\n**EMPOWERING FUTURE LEADERS** ✨';
+    const studentCount = schoolData?.studentCount || '1000+';
+    const staffCount = schoolData?.staffCount || '50+';
     
     return {
       id: 1,
       role: 'assistant',
       content: `🎓 WELCOME TO ${schoolName.toUpperCase()}!${motto}
 
-Hello! I'm Nyari, your assistant.
+Hello! I'm Katwa, your assistant.
 
 About Our School:
-• Public Day School (Mixed)
-• Established: 1985
-• Location: Kiganjo, Nyeri
+• Public County School (Mixed - Day & Boarding)
+• Established: 1976
+• Location: Kambusu, Matungulu, Machakos County
 • Students: ${studentCount} | Teachers: ${staffCount}
-• 8-4-4 Curriculum System
+• Competency-Based Curriculum (CBE)
+• Angaza Center Technology Partnership
 
 ${schoolData ? 'For the most current information, choose a category below! 👇' : 'Choose a category below to learn more! 👇'}`,
       links: [
@@ -667,7 +699,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
         messages: messages,
         timestamp: Date.now()
       };
-      localStorage.setItem('nyaribu_chat', JSON.stringify(chatData));
+      localStorage.setItem('Katwanyaa_chat', JSON.stringify(chatData));
     }
   }, [messages]);
 
@@ -742,7 +774,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
   };
 
   const clearChat = () => {
-    localStorage.removeItem('nyaribu_chat');
+    localStorage.removeItem('Katwanyaa_chat');
     setMessages([getWelcomeMessage()]);
     setShowCategories(true);
   };
@@ -764,7 +796,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-105 active:scale-95"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-100 active:scale-95"
           aria-label="Open chat assistant"
           style={{
             transform: 'translateZ(0)',
@@ -794,18 +826,18 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-white flex-shrink-0">
                   <img 
-                    src="/logo.jpg" 
-                    alt="Nyaribu Secondary School Logo" 
+                    src="/katz.png" 
+                    alt="Katwanyaa High School Logo" 
                     className="w-full h-full object-cover"
                     style={{ imageRendering: 'auto' }}
                   />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-white truncate">
-                    {schoolData?.name || 'Nyaribu Secondary School'}
+                    {schoolData?.name || 'A.I.C Katwanyaa High School'}
                   </h3>
                   <p className="text-blue-200 text-xs sm:text-sm truncate">
-                    {schoolData?.motto || 'Soaring for Excellence'}
+                    {schoolData?.motto || 'Empowering Future Leaders'}
                   </p>
                 </div>
               </div>

@@ -11,9 +11,9 @@ const transporter = nodemailer.createTransport({
 });
 
 // School information
-const SCHOOL_NAME = 'Nyaribu Secondary School';
-const SCHOOL_LOCATION = 'Kiganjo, Nyeri County';
-const SCHOOL_MOTTO = 'Soaring for Excellence';
+const SCHOOL_NAME = 'Katwanyaa High  School';
+const SCHOOL_LOCATION = 'Matungulu, Machakos County';
+const SCHOOL_MOTTO = 'Education is Light';
 
 // Email templates
 const emailTemplates = {
@@ -53,7 +53,7 @@ const emailTemplates = {
             <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0; border-left: 4px solid #3b82f6;">
               <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Quick Facts:</h3>
               <ul style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-                <li>Public Day School in Kiganjo, Nyeri</li>
+                <li>Public Day School in Matungulu, Machakos</li>
                 <li>400+ students community</li>
                 <li>8-4-4 Curriculum System</li>
                 <li>Quality education for all</li>
@@ -67,7 +67,7 @@ const emailTemplates = {
             </div>
             
             <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
-              For more information, contact our admissions office at <strong>+254720123456</strong> or email <strong>admissions@nyaribusecondary.sc.ke</strong>
+              For more information, contact our admissions office at <strong>+254720123456</strong> or email <strong>admissions@katwanyaahighSchool.sc.ke</strong>
             </p>
           </div>
 
@@ -183,7 +183,7 @@ const emailTemplates = {
             </div>
             
             <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
-              Please RSVP by calling <strong>+254720123456</strong> or emailing <strong>info@nyaribusecondary.sc.ke</strong>
+              Please RSVP by calling <strong>+254720123456</strong> or emailing <strong>info@katwanyaa highSchool.sc.ke</strong>
             </p>
           </div>
 

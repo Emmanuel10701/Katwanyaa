@@ -595,7 +595,7 @@ const ModernEventsNewsSection = () => {
                             <img
                               src={event.image.startsWith('/') ? event.image : `/${event.image}`}
                               alt={event.title}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
                             />
                           ) : (
                             <div className={`absolute inset-0 ${colors.dark} flex items-center justify-center`}>
@@ -659,7 +659,7 @@ const ModernEventsNewsSection = () => {
                             <img
                               src={newsItem.image.startsWith('/') ? newsItem.image : `/${newsItem.image}`}
                               alt={newsItem.title}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
                             />
                           ) : (
                             <div className={`absolute inset-0 ${colors.dark} flex items-center justify-center`}>
@@ -789,7 +789,7 @@ const ModernEventsNewsSection = () => {
                         window.open(shareUrls[item.platform], '_blank');
                       }
                     }}
-                    className="flex flex-col items-center justify-center p-3 rounded-xl hover:scale-105 active:scale-95 transition-all"
+                    className="flex flex-col items-center justify-center p-3 rounded-xl hover:scale-100 active:scale-95 transition-all"
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 ${item.color}`}>
                       <Icon className="w-5 h-5" />
@@ -824,8 +824,8 @@ const ModernEventsNewsSection = () => {
               </div>
               <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 font-mono truncate">
                 {selectedTab === 'events' 
-                  ? (currentEvent ? `${window.location.origin}/events/${currentEvent.id}` : '')
-                  : (currentNews ? `${window.location.origin}/news/${currentNews.id}` : '')
+                  ? (currentEvent ? `${window.location.origin}/pages/eventsandnews` : '')
+                  : (currentNews ? `${window.location.origin}/pages/eventsandnews` : '')
                 }
               </div>
             </div>

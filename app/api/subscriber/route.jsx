@@ -3,11 +3,11 @@ import { prisma } from '../../../libs/prisma';
 import nodemailer from 'nodemailer';
 
 // School Information
-const SCHOOL_NAME = 'Nyaribu Secondary School';
-const SCHOOL_LOCATION = 'Kiganjo, Nyeri County';
-const SCHOOL_MOTTO = 'Soaring for Excellence';
+const SCHOOL_NAME = 'Katwanyaa High SchooloolSchool';
+const SCHOOL_LOCATION = 'Matungulu, Machakos County';
+const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_PHONE = '+254720123456';
-const CONTACT_EMAIL = 'info@nyaribusecondary.sc.ke';
+const CONTACT_EMAIL = 'info@katwanyaa highSchool.sc.ke';
 
 // Email Templates
 const emailTemplates = {
@@ -101,7 +101,7 @@ const emailTemplates = {
             <p style="color:#1a202c;font-size:16px;font-weight:700;margin:0;">${SCHOOL_NAME}</p>
             <p style="color:#718096;font-size:12px;margin:4px 0 0;">${SCHOOL_MOTTO}</p>
             <p style="color:#a0aec0;font-size:12px;margin-top:10px;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
-            <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Public Day School | Kiganjo, Nyeri | 400+ Students</p>
+            <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Public Day School | Matungulu, Machakos | 400+ Students</p>
           </div>
         </div>
       </body>

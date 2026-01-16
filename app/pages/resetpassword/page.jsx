@@ -128,7 +128,7 @@ const ResetPasswordContent = () => {
   // Helper component for the list items to apply conditional styling
   const ConditionItem = ({ condition, text }) => {
     const iconClasses = condition ? "text-green-500" : "text-gray-400";
-    const textClasses = condition ? "text-green-300" : "text-gray-400";
+    const textClasses = condition ? "text-orange-500 " : "text-gray-400";
 
     return (
       <li className="flex items-center gap-2">
@@ -313,7 +313,7 @@ const ResetPasswordContent = () => {
                   className={`w-full h-14 rounded-xl text-white font-semibold transition-all duration-300 transform ${
                     loading || !hasMinLength || !hasNumber || !hasLetter || !passwordsMatch
                       ? "bg-indigo-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-105"
+                      : "bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-100"
                   }`}
                 >
                   {loading ? (

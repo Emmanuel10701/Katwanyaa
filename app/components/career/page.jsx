@@ -249,7 +249,7 @@ const categories = [
 ];
 
   const departments = [
-    'Primary School', 'Secondary School', 'Administration', 'Finance', 
+    'Primary School', 'High School', 'Administration', 'Finance', 
     'IT', 'Maintenance', 'Medical', 'Library', 'Sports', 'Arts', 'Music',"security","Cafeteria", 'Cooking', 'Transportation',"Cleaning","farming"
   ];
 
@@ -949,7 +949,7 @@ export default function ModernCareersPage() {
   const [jobType, setJobType] = useState('');
 
   const categories = ['Teaching', 'Administrative', 'Support Staff', 'Medical', 'Academic', 'Technical', 'Accounting', 'Science'];
-  const departments = ['Primary School', 'Secondary School', 'Administration', 'Finance', 'IT', 'Maintenance', 'Medical', 'Library', 'Sports'];
+  const departments = ['Primary School', 'High School', 'Administration', 'Finance', 'IT', 'Maintenance', 'Medical', 'Library', 'Sports'];
   const jobTypes = ['full-time', 'part-time', 'contract', 'internship'];
 
   useEffect(() => {

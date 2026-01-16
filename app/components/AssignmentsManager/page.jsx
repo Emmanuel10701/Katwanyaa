@@ -695,7 +695,7 @@ return (
                     daysRemaining <= 0 
                       ? 'text-red-500' 
                       : daysRemaining <= 3 
-                      ? 'text-orange-500'
+                      ? 'text-orange-500 '
                       : 'text-green-500'
                   }`} size={20} />
                 </div>
@@ -747,7 +747,7 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
       case 'high': return 'text-red-500';
-      case 'medium': return 'text-orange-500';
+      case 'medium': return 'text-orange-500 ';
       case 'low': return 'text-blue-500';
       default: return 'text-gray-500';
     }
@@ -824,7 +824,7 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
             {daysRemaining !== null && (
               <span className={`text-[10px] font-bold ${
                 daysRemaining <= 0 ? 'text-red-500' : 
-                daysRemaining <= 3 ? 'text-orange-500' : 'text-green-500'
+                daysRemaining <= 3 ? 'text-orange-500 ' : 'text-green-500'
               }`}>
                 {daysRemaining <= 0 ? 'Overdue' : `${daysRemaining} days left`}
               </span>
