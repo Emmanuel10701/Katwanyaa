@@ -508,7 +508,7 @@ const ModernStaffLeadership = () => {
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center justify-between mb-1 md:mb-2">
-                      <span className="px-2 md:px-3 py-1 bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed text-white text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full">
+                      <span className="px-2 md:px-3 py-1 bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed  text-white text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded-full">
                         Principal
                       </span>
                       {viewMode === 'principal' && (

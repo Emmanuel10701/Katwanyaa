@@ -634,7 +634,7 @@ export default function ModernHero() {
                 </div>
                 <button
                   onClick={handleContactClick}
-                  className="px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed text-white text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed  text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={navigationBlocked}
                 >
                   Get To Know Us More
