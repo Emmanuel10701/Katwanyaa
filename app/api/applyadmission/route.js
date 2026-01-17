@@ -149,7 +149,7 @@ async function sendApplicantConfirmation(toEmail, applicantName, applicationNumb
                       About Our School:
                     </p>
                     <p style="margin: 0; color: #4b5563; font-size: 14px; line-height: 1.5;">
-                      ${SCHOOL_NAME} is a public day school located in ${SCHOOL_LOCATION}, providing quality education to 400+ students 
+                      ${SCHOOL_NAME} is a Public Mixed  Day and Boarding School located in ${SCHOOL_LOCATION}, providing quality education to 1200+ students 
                       through the 8-4-4 curriculum system. Our motto is "<strong>${SCHOOL_MOTTO}</strong>".
                     </p>
                   </div>
@@ -235,7 +235,7 @@ async function sendAdminNotification(applicantData, applicationNumber) {
             
             <div class="school-info">
               <h3 style="margin: 0 0 10px 0; color: #1e3c72;">${SCHOOL_NAME} Admissions System</h3>
-              <p style="margin: 0; color: #4b5563;">A new application has been submitted to our public day school admissions system.</p>
+              <p style="margin: 0; color: #4b5563;">A new application has been submitted to our Public Mixed  Day and Boarding School admissions system.</p>
             </div>
             
             <div class="highlight">
@@ -275,7 +275,7 @@ async function sendAdminNotification(applicantData, applicationNumber) {
               <strong>Submitted At:</strong> <span>${new Date().toLocaleString('en-US')}</span>
             </div>
             <div class="detail-row">
-              <strong>Application Type:</strong> <span>Public Day School Admission</span>
+              <strong>Application Type:</strong> <span>Public Mixed  Day and Boarding School Admission</span>
             </div>
 
             <div class="alert">
@@ -288,7 +288,7 @@ async function sendAdminNotification(applicantData, applicationNumber) {
                 <strong>School Information:</strong><br>
                 ${SCHOOL_NAME} | ${SCHOOL_LOCATION}<br>
                 Phone: ${CONTACT_PHONE} | Email: ${CONTACT_EMAIL}<br>
-                Motto: "${SCHOOL_MOTTO}" | Students: 400+
+                Motto: "${SCHOOL_MOTTO}" | Students: 1200+
               </p>
             </div>
           </div>

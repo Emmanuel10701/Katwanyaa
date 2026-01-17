@@ -266,7 +266,7 @@ const socialLinks = [
               </div>
               <div>
                 <h3 className="text-xl font-bold">Katwanyaa High school</h3>
-                <p className="text-amber-300 text-base">Empowering Future Leaders</p>
+                <p className="text-amber-300 text-base">Education is Light</p>
               </div>
             </div>
 

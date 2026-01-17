@@ -863,7 +863,7 @@ function getAdminNotificationTemplate(applicantData, applicationNumber) {
             <h4 style="color: #1e3c72; margin: 0 0 12px 0; font-size: 16px;">📊 School Statistics</h4>
             <div class="stats-grid">
               <div class="stat-item">
-                <p class="stat-number">400+</p>
+                <p class="stat-number">1200+</p>
                 <p class="stat-label">Total Students</p>
               </div>
               <div class="stat-item">

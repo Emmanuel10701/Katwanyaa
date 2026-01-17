@@ -22,7 +22,7 @@ const heroSlides = [
     background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
     image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1000",
     stats: { 
-      students: "400+ Active Learners", 
+      students: "1200+ Active Learners", 
       excellence: "94% KCSE Success", 
       years: "10+ Years Excellence" 
     },

@@ -2429,12 +2429,9 @@ const handleCreateOrUpdateCampaign = async () => {
           }`}>
             {campaignForm.status === 'draft' ? 'DRAFT MODE' : 'PUBLISH MODE'}
           </div>
+          
         </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Footer - Enhanced */}
+          {/* Footer - Enhanced */}
   <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -2515,6 +2512,11 @@ const handleCreateOrUpdateCampaign = async () => {
       </div>
     </div>
   </div>
+      </div>
+    </div>
+  </div>
+
+
 </ModernModal>
 <ModernModal open={showDetailModal} onClose={() => setShowDetailModal(false)} maxWidth="700px">
   {selectedCampaign && (

@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // School Information
-const SCHOOL_NAME = 'Katwanyaa High SchooloolSchool';
+const SCHOOL_NAME = 'Katwanyaa High School';
 const SCHOOL_LOCATION = 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_EMAIL = 'info@katwanyaa highSchool.sc.ke';
@@ -280,7 +280,7 @@ export async function POST(req) {
               <p>This email was sent to ${email} for ${SCHOOL_NAME} portal password reset.</p>
               <p>If you need assistance, contact school administration at ${CONTACT_EMAIL}</p>
               <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
-                Public Day School | 400+ Students | 8-4-4 Curriculum System
+                Public Mixed  Day and Boarding School | 1200+ Students | 8-4-4 Curriculum System
               </p>
             </div>
           </div>

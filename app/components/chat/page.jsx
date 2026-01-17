@@ -664,7 +664,7 @@ export default function ChatBot() {
 
   const getWelcomeMessage = () => {
     const schoolName = schoolData?.name || 'A.I.C KATWANYAA HIGH SCHOOL';
-    const motto = schoolData?.motto ? `\n\n**${schoolData.motto}** ✨` : '\n\n**EMPOWERING FUTURE LEADERS** ✨';
+    const motto = schoolData?.motto ? `\n\n**${schoolData.motto}** ✨` : '\n\n**Education is Light** ✨';
     const studentCount = schoolData?.studentCount || '1000+';
     const staffCount = schoolData?.staffCount || '50+';
     
@@ -837,7 +837,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
                     {schoolData?.name || 'A.I.C Katwanyaa High School'}
                   </h3>
                   <p className="text-blue-200 text-xs sm:text-sm truncate">
-                    {schoolData?.motto || 'Empowering Future Leaders'}
+                    {schoolData?.motto || 'Education is Light'}
                   </p>
                 </div>
               </div>

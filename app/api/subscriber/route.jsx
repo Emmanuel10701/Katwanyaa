@@ -3,7 +3,7 @@ import { prisma } from '../../../libs/prisma';
 import nodemailer from 'nodemailer';
 
 // School Information
-const SCHOOL_NAME = 'Katwanyaa High SchooloolSchool';
+const SCHOOL_NAME = 'Katwanyaa High School';
 const SCHOOL_LOCATION = 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_PHONE = '+254720123456';
@@ -39,7 +39,7 @@ const emailTemplates = {
               <p style="color:#4b5563;font-size:12px;margin:5px 0 0;line-height:1.4;">
                 ${SCHOOL_NAME}<br>
                 ${SCHOOL_LOCATION}<br>
-                Public Day School | 400+ Students | 8-4-4 Curriculum
+                Public Mixed  Day and Boarding School | 1200+ Students | 8-4-4 Curriculum
               </p>
             </div>
           </div>
@@ -73,7 +73,7 @@ const emailTemplates = {
             <p style="color:#1a202c;font-size:18px;line-height:1.6;">Hello! 👋</p>
             <p style="color:#4a5568;font-size:15px;line-height:1.6;margin:10px 0 20px;">
               Thank you for subscribing to <strong>${SCHOOL_NAME}</strong> newsletter with email <strong>${email}</strong>.<br/>
-              You'll now receive important school updates, announcements, events, and academic information from our public day school.
+              You'll now receive important school updates, announcements, events, and academic information from our Public Mixed  Day and Boarding School.
             </p>
             
             <div style="background:#f0f7ff;border-radius:12px;padding:20px;margin:25px auto;max-width:500px;text-align:left;">
@@ -101,7 +101,7 @@ const emailTemplates = {
             <p style="color:#1a202c;font-size:16px;font-weight:700;margin:0;">${SCHOOL_NAME}</p>
             <p style="color:#718096;font-size:12px;margin:4px 0 0;">${SCHOOL_MOTTO}</p>
             <p style="color:#a0aec0;font-size:12px;margin-top:10px;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
-            <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Public Day School | Matungulu, Machakos | 400+ Students</p>
+            <p style="color:#9ca3af;font-size:11px;margin-top:8px;">Public Mixed  Day and Boarding School | Matungulu, Machakos | 1200+ Students</p>
           </div>
         </div>
       </body>

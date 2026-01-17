@@ -174,7 +174,7 @@ export default function ModernHero() {
       background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
       image: "/student.jpg",
       stats: { 
-        students: "400+ Active Learners", 
+        students: "1200+ Active Learners", 
         excellence: "94% KCSE Success", 
         years: "10+ Years Excellence" 
       },
@@ -445,7 +445,7 @@ export default function ModernHero() {
 
   // Modern Loading Screen with Enhanced Design
   const LoadingScreen = () => (
-    <div className="fixed inset-0 bg-gradient-to-br from-orange-900 via-amber-900 to-red-900 z-50 flex flex-col items-center justify-center">
+<div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 z-50 flex flex-col items-center justify-center">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(15)].map((_, i) => (
@@ -465,13 +465,13 @@ export default function ModernHero() {
       <div className="relative z-10 flex flex-col items-center justify-center">
         {/* Animated Rings */}
         <div className="relative w-32 h-32 mb-8">
-          <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full"></div>
-          <div className="absolute inset-4 border-4 border-amber-500/30 rounded-full animate-ping"></div>
-          <div className="absolute inset-8 border-4 border-white/40 rounded-full animate-spin"></div>
-          
+         <div className="absolute inset-0 border-4 border-sky-400/20 rounded-full"></div>
+<div className="absolute inset-4 border-4 border-blue-400/30 rounded-full animate-ping"></div>
+<div className="absolute inset-8 border-4 border-cyan-200/40 rounded-full animate-spin"></div>
+
           {/* Center Logo */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center overflow-hidden">
+<div className="w-16 h-16 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
                 src="/katz.png" 
                 alt="Katwanyaa High  Logo" 
@@ -500,7 +500,7 @@ export default function ModernHero() {
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-3 h-3 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full animate-bounce"
+className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full animate-bounce"
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
@@ -508,7 +508,7 @@ export default function ModernHero() {
             
             {/* Progress Bar */}
             <div className="w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
-              <div className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 animate-gradient-loading"></div>
+<div className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 animate-gradient-loading"></div>
             </div>
             
             <p className="text-white/60 text-sm">Loading the School website...</p>

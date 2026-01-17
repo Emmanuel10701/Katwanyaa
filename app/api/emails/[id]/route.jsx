@@ -25,7 +25,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // School Information
-const SCHOOL_NAME = process.env.SCHOOL_NAME || 'Katwanyaa High SchooloolSchool';
+const SCHOOL_NAME = process.env.SCHOOL_NAME || 'Katwanyaa High School';
 const SCHOOL_LOCATION = process.env.SCHOOL_LOCATION || 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = process.env.SCHOOL_MOTTO || 'Education is Light';
 const CONTACT_PHONE = process.env.CONTACT_PHONE || '+254720123456';

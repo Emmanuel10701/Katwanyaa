@@ -138,7 +138,7 @@ export default function ModernNavbar() {
     },
     {
       name: 'Apply Now',
-      href: '/pages/applyadmission',
+      href: '/pages/apply-for-admissions',
       icon: FiUserPlus
     }
   ];

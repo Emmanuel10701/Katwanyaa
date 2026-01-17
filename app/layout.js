@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Katwanyaa High School | AIC Katwanyaa | Empowering Future Leaders in Matungulu",
+  title: "Katwanyaa High School | AIC Katwanyaa | Education is Light in Matungulu",
   description:
     "Official website for A.I.C Katwanyaa High School, a premier public county school in Kambusu, Matungulu, Machakos County. Founded in 1976, we offer a holistic Competency-Based Education (CBE) with STEM, Social Sciences, and Arts & Sports pathways, and a dedicated technology center through our Angaza Center partnership[citation:2][citation:4].",
   icons: {

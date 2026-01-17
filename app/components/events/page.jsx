@@ -255,24 +255,66 @@ const ModernEventsNewsSection = () => {
     );
   }
 
-  // Error state
-  if (error && events.length === 0 && news.length === 0) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="text-red-500 text-4xl mb-4">⚠️</div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Unable to load content</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+if (error && events.length === 0 && news.length === 0) {
+  return (
+    <div className="min-h-[70vh] w-full flex items-center justify-center p-4 bg-[#f8f9fa]">
+      {/* 80% Width Container - Clean & Editorial */}
+      <div className="w-full max-w-[80%] min-h-[480px] relative overflow-hidden rounded-[3rem] bg-white border border-gray-100 shadow-[0_40px_100px_-30px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center p-8 md:p-20 text-center">
+        
+        {/* Subtle Brand Accent */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+
+        {/* Branding Title */}
+        <div className="mb-6">
+          <h4 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">
+            Katwanya High School
+          </h4>
+        </div>
+
+        {/* Icon Container */}
+        <div className="mb-10 w-24 h-24 bg-gray-50 rounded-[2rem] flex items-center justify-center border border-gray-100 shadow-inner">
+          <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15M9 11l3 3m0 0l3-3m-3 3V8" />
+          </svg>
+        </div>
+
+        {/* Main Content */}
+        <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-6 tracking-tight">
+          News Feed Unavailable
+        </h2>
+        
+        <p className="text-gray-500 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto mb-12">
+          We’re currently experiencing a connection issue with our news archives. 
+          Our team is working to restore the latest updates and event schedules for our community.
+        </p>
+
+        {/* Action Button - Large & Tap-Friendly */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
           <button 
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-shadow"
+            className="group flex items-center gap-3 px-12 py-5 bg-gray-900 text-white font-bold rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-gray-200"
           >
-            Try Again
+            <svg 
+              className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Content
           </button>
         </div>
+
+        {/* Status indicator */}
+        <div className="mt-12 flex items-center gap-2 text-xs font-medium text-gray-400 uppercase tracking-widest">
+          <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+          System Error: {error || "Connection Timeout"}
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-sans p-4 md:p-8">
