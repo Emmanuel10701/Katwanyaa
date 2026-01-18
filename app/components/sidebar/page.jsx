@@ -198,10 +198,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         resultsRes,
         studentRes
       ] = await Promise.allSettled([
-        fetch('/api/student'),
         fetch('/api/staff'),
         fetch('/api/subscriber'),
-        fetch('/api/studentCouncil'),
         fetch('/api/events'),
         fetch('/api/news'),
         fetch('/api/assignment'),
@@ -216,10 +214,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       ]);
 
       // Process responses and get actual counts
-      const students = studentsRes.status === 'fulfilled' ? await studentsRes.value.json() : { students: [] };
       const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
       const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
-      const council = councilRes.status === 'fulfilled' ? await councilRes.value.json() : { councilMembers: [] };
       const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
       const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
@@ -348,13 +344,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
 
   // Enhanced quick stats with real data including resources
   const quickStats = [
-    { 
-      label: 'Students', 
-      value: realStats.totalStudents?.toLocaleString() || '0', 
-      icon: FiUser, 
-      color: 'blue', 
-      change: `${realStats.activeStudents || 0} active` 
-    },
+
     { 
       label: 'Resources', 
       value: realStats.totalResources?.toLocaleString() || '0', 
@@ -368,13 +358,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       icon: FiFileText, 
       color: 'purple', 
       change: realStats.pendingApplications > 0 ? `${realStats.pendingApplications} pending` : '+8%' 
-    },
-    { 
-      label: 'Staff', 
-      value: realStats.totalStaff?.toLocaleString() || '0', 
-      icon: IoStatsChart, 
-      color: 'green', 
-      change: '+5%' 
     }
   ];
 
@@ -426,23 +409,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       icon: FiMessageCircle,
       badge: 'purple'
     },
-    { 
-      id: 'students', 
-      label: 'Student Management', 
-      icon: FiUsers,
-      badge: 'blue'
-    },
+ 
     {
       id: 'results',
       label: 'Exam Results',
       icon: FiClipboard,
       badge: 'teal'
-    },
-    { 
-      id: 'student-council', 
-      label: 'Student Council', 
-      icon: FiUsers,
-      badge: 'green'
     },
     { 
       id: 'staff', 
@@ -462,6 +434,13 @@ id: 'careers',
       icon: FiCalendar,
       badge: 'lime'
 },
+    {
+      id: 'student',
+      label: 'Student Records',
+      icon: FiInfo,
+      badge: 'cyan'
+}
+,
     { 
       id: 'resources', 
       label: 'Learning Resources', 
@@ -474,13 +453,7 @@ id: 'careers',
       icon: FiDollarSign,
       badge: 'yellow'
     },
-    {
-      id: 'student',
-      label: 'Student Records',
-      icon: FiInfo,
-      badge: 'cyan'
-}
-,
+
     { 
       id: 'admissions', 
       label: 'Admission Applications', 
