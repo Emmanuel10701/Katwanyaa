@@ -485,7 +485,7 @@ export default function ModernHero() {
         <div className="text-center space-y-6">
           {/* School Name with Gradient */}
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
               Katwanyaa High School
             </h2>
             <div className="h-1 w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
@@ -493,7 +493,7 @@ export default function ModernHero() {
           
           {/* Loading Text */}
           <div className="space-y-4">
-            <p className="text-white/80 text-lg">Preparing an exceptional learning experience</p>
+            <p className="text-white/80 text-md md:text-lg">Preparing an exceptional learning experience</p>
             
             {/* Animated Dots */}
             <div className="flex items-center justify-center gap-2">
@@ -550,7 +550,7 @@ className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full ani
                   <FiPlay className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold">Virtual Campus Tour</h4>
+                  <h4 className="text-white font-bold">Virtual school Tour</h4>
                   <p className="text-white/60 text-sm">
                     {schoolData?.name || 'Loading...'}
                   </p>
@@ -637,8 +637,7 @@ className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full ani
                   className="px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed  text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={navigationBlocked}
                 >
-                  Get To Know Us More
-                </button>
+Learn more                </button>
               </div>
             </div>
           </div>
