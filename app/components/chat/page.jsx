@@ -824,14 +824,28 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 flex-shrink-0">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg overflow-hidden bg-white flex-shrink-0">
-                  <img 
-                    src="/katz.png" 
-                    alt="Katwanyaa High School Logo" 
-                    className="w-full h-full object-cover"
-                    style={{ imageRendering: 'auto' }}
-                  />
-                </div>
+             <div
+  className="
+    w-8 h-8
+    xs:w-9 xs:h-9
+    sm:w-10 sm:h-10
+    md:w-12 md:h-12
+    rounded-lg sm:rounded-xl
+    flex items-center justify-center
+    shadow-md sm:shadow-lg
+    overflow-hidden
+    bg-white
+    flex-shrink-0
+  "
+>
+  <img
+    src="/katz.png"
+    alt="Katwanyaa High School Logo"
+    className="w-full h-full object-cover"
+    style={{ imageRendering: 'auto' }}
+  />
+</div>
+
                 <div className="min-w-0">
                   <h3 className="text-lg sm:text-md font-bold text-white truncate">
                     {schoolData?.name || 'A.I.C Katwanyaa High'}
