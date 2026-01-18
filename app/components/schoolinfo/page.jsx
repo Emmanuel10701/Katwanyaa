@@ -2261,7 +2261,6 @@ function ModernExamMappingView({
             );
           })}
         </div>
-        
         <div className="pt-8 border-t border-slate-100/80">
           {/* Modern Header & Description Section */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
@@ -2291,25 +2290,40 @@ function ModernExamMappingView({
                 </div>
               </div>
               
-              <p className="text-sm leading-relaxed text-slate-500 max-w-2xl">
+              <p className="text-md leading-relaxed text-slate-900 max-w-2xl">
                 Manage your academic portfolio by organizing supplementary transcripts and examination records. 
                 All files are stored securely and can be previewed or downloaded instantly.
               </p>
               
               {/* Edit Button - Mobile (below description) */}
-              <div className="sm:hidden pt-2">
-              <button
-  onClick={() => setIsEditing(prev => !prev)}
-  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200
-    ${isEditing
-      ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm'
-      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}
-  `}
->
-  {isEditing ? 'Done' : 'Edit Files'}
-</button>
+       <div className="sm:hidden pt-2">
+  <button
+    onClick={() => setIsEditing(prev => !prev)}
+    className={`group inline-flex items-center gap-2
+      px-4 py-2 rounded-full
+      text-xs font-bold tracking-wide
+      transition-all duration-300 ease-out
+      ${
+        isEditing
+          ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-orange-200/40'
+          : 'bg-white/80 backdrop-blur border border-slate-200 text-slate-900 shadow-sm'
+      }
+    `}
+  >
+    <span className="transition-transform duration-300 group-hover:-translate-y-0.5">
+      {isEditing ? 'Done Editing' : 'Edit Files'}
+    </span>
 
-              </div>
+    <span
+      className={`text-[11px] transition-transform duration-300
+        ${isEditing ? 'group-hover:rotate-6' : 'group-hover:translate-x-0.5'}
+      `}
+    >
+      {isEditing ? '✓' : '✎'}
+    </span>
+  </button>
+</div>
+
             </div>
             
             <div className="flex items-center gap-2 self-start lg:self-center">
@@ -2317,144 +2331,139 @@ function ModernExamMappingView({
                 {/* Decorative file stack effect */}
                 {[...Array(Math.min(displayFiles.length, 3))].map((_, i) => (
                   <div key={i} className="w-8 h-8 rounded-lg border-2 border-white bg-slate-100 flex items-center justify-center shadow-sm">
-                    <FaFile className="text-[10px] text-slate-400" />
+                    <FaFile className="text-[10px] text-slate-900" />
                   </div>
                 ))}
               </div>
-              <span className="ml-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
+              <span className="ml-2 text-md font-bold text-slate-900 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm">
                 {displayFiles.length} {displayFiles.length === 1 ? 'Resource' : 'Resources'}
               </span>
             </div>
           </div>
 
-          {isEditing ? (
-            <div className="space-y-6">
-              {/* Upload Area for Edit Mode */}
-              <div 
-                className="border-2 border-dashed border-amber-300 rounded-3xl p-8 text-center transition-all duration-300 cursor-pointer bg-gradient-to-br from-amber-50/50 to-orange-50/30 hover:border-amber-400 hover:bg-amber-50"
-                onDrop={handleFileDrop}
-                onDragOver={(e) => { e.preventDefault(); }}
-                onDragLeave={(e) => { e.preventDefault(); }}
-                onClick={handleFileUploadClick}
-              >
-                <div className="relative">
-                  <FaUpload className="mx-auto text-3xl mb-3 text-amber-500" />
-                </div>
-                <p className="text-gray-700 mb-1 font-medium text-sm">
-                  Click to upload or drag & drop new files
-                </p>
-                <p className="text-xs text-gray-600">
-                  PDF, Images, Documents • Max 50MB each
-                </p>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  multiple
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-                />
-              </div>
+     {isEditing ? (
+  <div className="space-y-6">
+    {/* Upload Area */}
+    <div 
+      className="border-2 border-dashed border-gray-200 rounded-3xl p-8 text-center bg-gray-50 cursor-pointer"
+      onDrop={handleFileDrop}
+      onDragOver={(e) => { e.preventDefault(); }}
+      onDragLeave={(e) => { e.preventDefault(); }}
+      onClick={handleFileUploadClick}
+    >
+      <div className="relative">
+        <FaUpload className="mx-auto text-2xl mb-3 text-gray-400" />
+      </div>
+      <p className="text-gray-900 mb-1 font-semibold text-md">
+        Click to upload or drag & drop new files
+      </p>
+      <p className="text-md text-gray-900">
+        PDF, Images, Documents • Max 50MB each
+      </p>
+      <input 
+        ref={fileInputRef}
+        type="file" 
+        multiple
+        onChange={handleFileInputChange}
+        className="hidden"
+        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+      />
+    </div>
 
-              {/* Files List in Edit Mode */}
-              {displayFiles.length > 0 && (
-                <div className="space-y-4">
-                  <h5 className="text-sm font-bold text-gray-700">
-                    Files to be saved ({displayFiles.length} files):
-                    {filesToRemove.length > 0 && <span className="ml-2 text-red-600">({filesToRemove.length} marked for deletion)</span>}
-                  </h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {displayFiles.map((file) => (
-                      <div 
-                        key={file.id} 
-                        className={`bg-white rounded-xl p-4 border ${file.isReplaced ? 'border-yellow-200 bg-yellow-50' : file.isNew ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}
+    {/* Files List */}
+    {displayFiles.length > 0 && (
+      <div className="space-y-4">
+        <h5 className="text-md font-bold text-slate-900 uppercase tracking-wider">
+          Files to be saved ({displayFiles.length}):
+          {filesToRemove.length > 0 && <span className="ml-2 text-red-500">({filesToRemove.length} marked for deletion)</span>}
+        </h5>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {displayFiles.map((file) => (
+            <div 
+              key={file.id} 
+              className={`bg-white rounded-2xl p-4 border shadow-sm ${file.isReplaced ? 'border-amber-100 bg-amber-50/30' : file.isNew ? 'border-emerald-100 bg-emerald-50/30' : 'border-gray-100'}`}
+            >
+              <div className="flex items-start gap-3 mb-4">
+                <div className="p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+                  {getFileIcon(file.filetype)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 text-md truncate">
+                    {file.filename || file.name || 'Document'}
+                    {file.isReplaced && <span className="ml-2 text-md text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded font-bold uppercase">Replaced</span>}
+                    {file.isNew && !file.isReplacement && <span className="ml-2 text-md text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase">New</span>}
+                  </p>
+                  <p className="text-md text-gray-500 mt-0.5">
+                    {formatFileSize(file.filesize || file.size)} • 
+                    {file.isExisting ? ' Existing' : ' New'}
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  {file.isExisting && !file.isReplaced ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleReplaceFile(file.id)}
+                        className="p-2 text-blue-600 bg-blue-50 rounded-lg"
+                        title="Replace file"
                       >
-                        <div className="flex items-start gap-3 mb-3">
-                          <div className="p-2 bg-gray-100 rounded-lg">
-                            {getFileIcon(file.filetype)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-gray-900 text-sm truncate">
-                              {file.filename || file.name || 'Document'}
-                              {file.isReplaced && <span className="ml-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded">(Replaced)</span>}
-                              {file.isNew && !file.isReplacement && <span className="ml-2 text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">(New)</span>}
-                              {file.isNew && file.isReplacement && <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">(Replacement)</span>}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              {formatFileSize(file.filesize || file.size)} • 
-                              {file.isExisting ? ' Existing' : ' New'} • 
-                              {file.isModified && ' Modified'}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            {file.isExisting && !file.isReplaced ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleReplaceFile(file.id)}
-                                  className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
-                                  title="Replace file"
-                                >
-                                  <FaUpload className="text-xs" /> Replace
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveLocalFile(file.id)}
-                                  className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
-                                  title="Remove file"
-                                >
-                                  <FaTrash className="text-xs" /> Delete
-                                </button>
-                              </>
-                            ) : file.isNew ? (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveLocalFile(file.id)}
-                                className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-1"
-                                title="Remove file"
-                              >
-                                <FaTimes className="text-xs" /> Remove
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">
-                              Year
-                            </label>
-                            <input
-                              type="number"
-                              min="2000"
-                              max="2100"
-                              value={file.year || ''}
-                              onChange={(e) => handleFileYearChange(file.id, e.target.value)}
-                              placeholder="YYYY"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-xs font-bold text-gray-600 mb-1">
-                              Description
-                            </label>
-                            <input
-                              type="text"
-                              value={file.description || ''}
-                              onChange={(e) => handleFileDescriptionChange(file.id, e.target.value)}
-                              placeholder="Brief description..."
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        <FaUpload size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLocalFile(file.id)}
+                        className="p-2 text-red-600 bg-red-50 rounded-lg"
+                        title="Delete file"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </>
+                  ) : file.isNew ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLocalFile(file.id)}
+                      className="p-2 text-gray-400 bg-gray-100 rounded-lg"
+                      title="Remove file"
+                    >
+                      <FaTimes size={12} />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="col-span-1">
+                    <label className="block text-md font-bold text-slate-900 uppercase mb-1">Year</label>
+                    <input
+                      type="number"
+                      min="2000"
+                      max="2100"
+                      value={file.year || ''}
+                      onChange={(e) => handleFileYearChange(file.id, e.target.value)}
+                      placeholder="Enter Year"
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-md"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="block text-md font-bold text-slate-900 uppercase mb-1">Description</label>
+                    <input
+                      type="text"
+                      value={file.description || ''}
+                      onChange={(e) => handleFileDescriptionChange(file.id, e.target.value)}
+                      placeholder="Brief description..."
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-md"
+                    />
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          ) : (
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+) : (
             <div className="space-y-4">
               {displayFiles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -2465,7 +2474,7 @@ function ModernExamMappingView({
                     >
                       <div className="flex items-start gap-4">
                         {/* Modern File Branding */}
-                        <div className={`relative w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-transform group-hover:scale-100 duration-300 ${
+                        <div className={`relative w-12 h-14 rounded-xl flex flex-col items-center justify-center transition-transform group-hover:scale-110 duration-300 ${
                           file.filetype === 'pdf' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-600'
                         }`}>
                           <FaFilePdf className="text-xl" />
@@ -4021,11 +4030,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             required
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
                         
@@ -4042,11 +4070,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             required
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
                       </div>
@@ -4130,12 +4177,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             placeholder="Enter total day school fees"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '10px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem',
-                                fontWeight: 'bold'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
 
@@ -4184,11 +4249,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                                 placeholder="Year"
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
-                                    borderRadius: '8px',
-                                    backgroundColor: 'white',
-                                    fontSize: '0.875rem'
-                                  }
-                                }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                               />
                             </div>
                           </div>
@@ -4218,11 +4302,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                                 placeholder="Year"
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
-                                    borderRadius: '8px',
-                                    backgroundColor: 'white',
-                                    fontSize: '0.875rem'
-                                  }
-                                }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                               />
                             </div>
                           </div>
@@ -4276,12 +4379,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             placeholder="Enter total boarding fees"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '10px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem',
-                                fontWeight: 'bold'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
 
@@ -4328,11 +4449,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               onChange={(e) => handleChange('admissionOpenDate', e.target.value)}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: '8px',
-                                  backgroundColor: 'white',
-                                  fontSize: '0.875rem'
-                                }
-                              }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                             />
                           </div>
                           
@@ -4348,11 +4488,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                               onChange={(e) => handleChange('admissionCloseDate', e.target.value)}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-                                  borderRadius: '8px',
-                                  backgroundColor: 'white',
-                                  fontSize: '0.875rem'
-                                }
-                              }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                             />
                           </div>
                         </div>
@@ -4374,12 +4533,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             placeholder="Enter admission and uniform fee"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '10px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem',
-                                fontWeight: 'bold'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
 
@@ -4418,11 +4595,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                             placeholder="Enter admission capacity"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-                                borderRadius: '10px',
-                                backgroundColor: 'white',
-                                fontSize: '0.875rem'
-                              }
-                            }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                           />
                         </div>
                       </div>
@@ -4449,11 +4645,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         placeholder="admissions@school.edu"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            fontSize: '0.875rem'
-          }
-        }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
       />
     </div>
     
@@ -4470,11 +4685,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         placeholder="+254 123 456 789"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            fontSize: '0.875rem'
-          }
-        }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
       />
     </div>
     
@@ -4491,11 +4725,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         placeholder="https://school.edu/admissions"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            fontSize: '0.875rem'
-          }
-        }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
       />
     </div>
     
@@ -4511,11 +4764,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         placeholder="School Campus, Room 101"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            fontSize: '0.875rem'
-          }
-        }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
       />
     </div>
     
@@ -4531,11 +4803,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         placeholder="Mon-Fri: 8:00 AM - 4:00 PM"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '8px',
-            backgroundColor: 'white',
-            fontSize: '0.875rem'
-          }
-        }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
       />
     </div>
   </div>
@@ -4569,11 +4860,30 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                                   placeholder="Year"
                                   sx={{
                                     '& .MuiOutlinedInput-root': {
-                                      borderRadius: '8px',
-                                      backgroundColor: 'white',
-                                      fontSize: '0.875rem'
-                                    }
-                                  }}
+      width: '100%',
+      fontSize: '1rem',               // text-base
+      paddingLeft: '0px',             // handled by input
+      borderRadius: '12px',            // rounded-xl
+      backgroundColor: '#fff',
+
+      '& fieldset': {
+        borderWidth: '2px',            // border-2
+        borderColor: '#d1d5db',         // border-gray-300
+      },
+
+      '&:hover fieldset': {
+        borderColor: '#d1d5db',
+      },
+
+      '&.Mui-focused fieldset': {
+        borderColor: '#6366f1',         // indigo-500
+      },
+    },
+
+    '& .MuiOutlinedInput-input': {
+      padding: '14px 16px',             // py-3.5 px-4
+    },
+  }}
                                 />
                               </div>
                             </div>

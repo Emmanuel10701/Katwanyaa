@@ -139,7 +139,7 @@ Steps:
 • Internet access for all students`,
     links: [
       { label: 'Admissions', path: '/pages/admissions', icon: 'file' },
-      { label: 'Apply Now', path: '/pages/applyadmission', icon: 'user' }
+      { label: 'Apply Now', path: '/pages/apply-for-admissions', icon: 'user' }
     ]
   },
   fees: {

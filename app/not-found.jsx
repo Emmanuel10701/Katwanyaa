@@ -84,7 +84,7 @@ const Modern404 = () => {
                   {errorMessages[currentMessage]}
                 </h2>
                 <p className="text-base md:text-lg text-slate-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                  Even top students lose their way. This page seems to have wandered off-school. 
+                  Even  students lose their way. This page seems to have wandered off-school. 
                   Let's guide you back to your studies with the options below.
                 </p>
               </div>
