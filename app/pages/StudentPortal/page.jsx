@@ -519,7 +519,6 @@ export default function ModernStudentPortalPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-const router = useRouter();
 
 
   // Data State
@@ -828,6 +827,7 @@ const router = useRouter();
     closeMenuOnMobile();
   };
 
+  const router = useRouter()
   // Use your LoadingScreen component
   if (isLoading) {
     return <LoadingScreen />;
@@ -883,7 +883,7 @@ if (!student || !token) {
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <Image
-                src="/lkatz.png"
+                src="/katz.png"
                 alt="Katwanyaa High School Logo"
                 width={32}
                 height={32}
@@ -954,7 +954,7 @@ if (!student || !token) {
                 </button>
                 
                 {/* Mobile Help Desk Button */}
-                <button className="md:hidden flex items-center justify-center gap-1.5 px-5 xs:px-6 py-2.5 xs:py-3 
+                <button onClick={(router.push("/pages/contact"))} className="md:hidden flex items-center justify-center gap-1.5 px-5 xs:px-6 py-2.5 xs:py-3 
                   bg-white border border-slate-200 text-slate-700 rounded-lg xs:rounded-xl 
                   font-bold hover:bg-slate-50 transition-colors active:scale-[0.98] 
                   text-xs xs:text-sm w-full">

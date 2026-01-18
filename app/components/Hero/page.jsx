@@ -393,7 +393,7 @@ const ModernHero = () => {
           </div>
 
           {/* Action Buttons - Mobile Responsive */}
-          <div className="flex flex-wrap items-center justify-center gap-2 xs:gap-3 sm:gap-4 px-2">
+          <div className="flex flex-nowrap items-center justify-center gap-2 xs:gap-3 sm:gap-4 px-2">
             <button 
               onClick={handleSlideButtonClick} 
               className="px-4 xs:px-6 sm:px-8 py-2 xs:py-2.5 sm:py-3.5 bg-white text-black rounded-full 
