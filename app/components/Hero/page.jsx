@@ -429,7 +429,7 @@ const ModernHero = () => {
 
    {/* Action Buttons - Mobile Optimized */}
 <div className="
-  flex flex-col items-center justify-center gap-3
+  flex  items-center justify-center gap-3
   sm:flex-row sm:gap-4
   px-2
 ">
@@ -437,8 +437,6 @@ const ModernHero = () => {
     onClick={handleSlideButtonClick}
     disabled={navigationBlocked}
     className="
-      w-[70%] sm:w-auto
-      min-h-[48px] sm:min-h-0
       px-6 sm:px-8
       py-3
       bg-white text-black
@@ -458,8 +456,6 @@ const ModernHero = () => {
   <button
     onClick={openVideoModal}
     className="
-      w-[70%] sm:w-auto
-      min-h-[48px] sm:min-h-0
       px-6 sm:px-8
       py-3
       bg-transparent
