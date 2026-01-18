@@ -195,34 +195,36 @@ export default function ModernNavbar() {
             : 'bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 shadow-lg'
         }`}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between min-h-[5.2rem]">
+        <div className="w-full px-3 xs:px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between min-h-[4.5rem] sm:min-h-[5.2rem]">
             
-            {/* Logo Section - Far Left */}
+            {/* Logo Section - Mobile Responsive */}
             <div 
-              className="flex items-center gap-3 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity active:scale-95"
+              className="flex items-center gap-2 xs:gap-3 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity active:scale-95"
               onClick={handleLogoClick}
               role="button"
               tabIndex={0}
               onKeyDown={handleLogoKeyDown}
             >
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg border border-white/30 overflow-hidden group">
+              <div className="relative w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 
+                bg-white/20 rounded-lg xs:rounded-xl flex items-center justify-center 
+                shadow-lg border border-white/30 overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                 <Image
                   src="/katz.png"
                   alt="Katwanyaa High School Logo"
-                  width={60}
-                  height={60}
-                  className="relative z-10 filter drop-shadow-sm group-hover:scale-100 transition-transform duration-300"
+                  width={48}
+                  height={48}
+                  className="relative z-10 filter drop-shadow-sm group-hover:scale-100 transition-transform duration-300 w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14"
                   priority
-                  sizes="(max-width: 640px) 56px, 64px"
+                  sizes="(max-width: 480px) 48px, (max-width: 640px) 56px, 64px"
                 />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
                    Katz
                 </h1>
-                <p className="text-sm text-white/90 font-medium tracking-wide whitespace-nowrap">
+                <p className="text-xs sm:text-sm text-white/90 font-medium tracking-wide whitespace-nowrap">
                   Education is Light
                 </p>
               </div>
@@ -396,60 +398,61 @@ export default function ModernNavbar() {
               </div>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button - Responsive */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden p-3 rounded-xl text-white bg-white/15 hover:bg-white/25 transition-all active:scale-95 ml-auto"
+              className="lg:hidden p-2.5 xs:p-3 rounded-lg xs:rounded-xl text-white 
+                bg-white/15 hover:bg-white/25 transition-all active:scale-95 ml-auto"
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
             >
               {isOpen ? (
-                <FiX className="text-2xl sm:text-3xl" />
+                <FiX className="text-xl xs:text-2xl sm:text-3xl" />
               ) : (
-                <FiMenu className="text-2xl sm:text-3xl" />
+                <FiMenu className="text-xl xs:text-2xl sm:text-3xl" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Responsive */}
         {isOpen && (
           <div className="lg:hidden bg-gradient-to-b from-blue-700 to-purple-800 border-t border-white/10">
-            <div className="px-4 py-8 max-w-2xl mx-auto">
+            <div className="px-3 xs:px-4 sm:px-6 py-6 xs:py-8 max-w-2xl mx-auto">
               {/* Mobile Navigation */}
-              <div className="space-y-2 mb-8">
+              <div className="space-y-1.5 xs:space-y-2 mb-6 xs:mb-8">
                 {mainNavigation.map((item) => {
                   const isActive = isActiveLink(item.href, item.exact);
                   
                   if (item.hasDropdown) {
                     return (
-                      <div key={item.name} className="space-y-2" ref={mobileDropdownRef}>
+                      <div key={item.name} className="space-y-1.5 xs:space-y-2" ref={mobileDropdownRef}>
                         <button
                           onClick={() => setIsMobileDropdownOpen(!isMobileDropdownOpen)}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl text-left ${
+                          className={`w-full flex items-center justify-between p-3 xs:p-4 rounded-lg xs:rounded-xl text-left ${
                             isActive || isMobileDropdownOpen
                               ? 'bg-white/20 text-white'
                               : 'text-white/90 hover:bg-white/10'
                           }`}
                           aria-expanded={isMobileDropdownOpen}
                         >
-                          <div className="flex items-center gap-3">
-                            <item.icon className="text-xl" />
-                            <span className="font-bold text-lg uppercase tracking-wide">{item.name}</span>
+                          <div className="flex items-center gap-2 xs:gap-3">
+                            <item.icon className="text-lg xs:text-xl" />
+                            <span className="font-bold text-base xs:text-lg uppercase tracking-wide">{item.name}</span>
                           </div>
-                          <FiChevronDown className={`text-xl transition-transform duration-200 ${
+                          <FiChevronDown className={`text-lg xs:text-xl transition-transform duration-200 ${
                             isMobileDropdownOpen ? 'rotate-180' : ''
                           }`} />
                         </button>
                         
                         {/* Mobile Academic Dropdown Items */}
                         {isMobileDropdownOpen && (
-                          <div className="ml-8 space-y-2 pl-4 border-l-2 border-white/20">
+                          <div className="ml-6 xs:ml-8 space-y-1.5 xs:space-y-2 pl-3 xs:pl-4 border-l-2 border-white/20">
                             {academicDropdownItems.map((dropdownItem) => (
                               <a
                                 key={dropdownItem.name}
                                 href={dropdownItem.href}
-                                className={`flex items-center gap-3 p-3 rounded-lg ${
+                                className={`flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg ${
                                   isActiveLink(dropdownItem.href)
                                     ? 'bg-white/20 text-white'
                                     : 'text-white/80 hover:bg-white/10'
@@ -459,8 +462,8 @@ export default function ModernNavbar() {
                                   setIsMobileDropdownOpen(false);
                                 }}
                               >
-                                <dropdownItem.icon className="text-lg" />
-                                <span className="font-medium text-base">{dropdownItem.name}</span>
+                                <dropdownItem.icon className="text-base xs:text-lg" />
+                                <span className="font-medium text-sm xs:text-base">{dropdownItem.name}</span>
                               </a>
                             ))}
                           </div>
@@ -473,24 +476,24 @@ export default function ModernNavbar() {
                     <a
                       key={item.name}
                       href={item.href}
-                      className={`flex items-center gap-3 p-4 rounded-xl ${
+                      className={`flex items-center gap-2 xs:gap-3 p-3 xs:p-4 rounded-lg xs:rounded-xl ${
                         isActive
                           ? 'bg-white/20 text-white'
                           : 'text-white/90 hover:bg-white/10'
                       }`}
                       onClick={() => setIsOpen(false)}
                     >
-                      <item.icon className="text-xl" />
-                      <span className="font-bold text-lg uppercase tracking-wide">{item.name}</span>
+                      <item.icon className="text-lg xs:text-xl" />
+                      <span className="font-bold text-base xs:text-lg uppercase tracking-wide">{item.name}</span>
                     </a>
                   );
                 })}
 
                 {/* Mobile Resources Dropdown (Staff, Careers & Admin Login) */}
-                <div className="space-y-2" ref={mobileResourcesDropdownRef}>
+                <div className="space-y-1.5 xs:space-y-2" ref={mobileResourcesDropdownRef}>
                   <button
                     onClick={() => setIsMobileResourcesDropdownOpen(!isMobileResourcesDropdownOpen)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl text-left ${
+                    className={`w-full flex items-center justify-between p-3 xs:p-4 rounded-lg xs:rounded-xl text-left ${
                       isMobileResourcesDropdownOpen ||
                       isActiveLink('/pages/staff') ||
                       isActiveLink('/pages/career') ||
@@ -500,23 +503,23 @@ export default function ModernNavbar() {
                     }`}
                     aria-expanded={isMobileResourcesDropdownOpen}
                   >
-                    <div className="flex items-center gap-3">
-                      <FiGrid className="text-xl" />
-                      <span className="font-bold text-lg uppercase tracking-wide">Resources</span>
+                    <div className="flex items-center gap-2 xs:gap-3">
+                      <FiGrid className="text-lg xs:text-xl" />
+                      <span className="font-bold text-base xs:text-lg uppercase tracking-wide">Resources</span>
                     </div>
-                    <FiChevronDown className={`text-xl transition-transform duration-200 ${
+                    <FiChevronDown className={`text-lg xs:text-xl transition-transform duration-200 ${
                       isMobileResourcesDropdownOpen ? 'rotate-180' : ''
                     }`} />
                   </button>
                   
                   {/* Mobile Resources Dropdown Items */}
                   {isMobileResourcesDropdownOpen && (
-                    <div className="ml-8 space-y-2 pl-4 border-l-2 border-white/20">
+                    <div className="ml-6 xs:ml-8 space-y-1.5 xs:space-y-2 pl-3 xs:pl-4 border-l-2 border-white/20">
                       {resourcesDropdownItems.map((dropdownItem) => (
                         <a
                           key={dropdownItem.name}
                           href={dropdownItem.href}
-                          className={`flex items-center gap-3 p-3 rounded-lg ${
+                          className={`flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg ${
                             isActiveLink(dropdownItem.href)
                               ? dropdownItem.isHighlighted
                                 ? 'bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-white'
@@ -530,8 +533,8 @@ export default function ModernNavbar() {
                             setIsMobileResourcesDropdownOpen(false);
                           }}
                         >
-                          <dropdownItem.icon className="text-lg" />
-                          <span className={`font-medium text-base ${
+                          <dropdownItem.icon className="text-base xs:text-lg" />
+                          <span className={`font-medium text-sm xs:text-base ${
                             dropdownItem.isHighlighted ? 'font-bold' : ''
                           }`}>
                             {dropdownItem.name}
@@ -543,9 +546,9 @@ export default function ModernNavbar() {
                 </div>
               </div>
 
-              {/* Mobile Footer */}
-              <div className="mt-8 pt-6 border-t border-white/20 text-center">
-                <p className="text-white/70 text-sm font-medium">
+              {/* Mobile Footer - Responsive */}
+              <div className="mt-6 xs:mt-8 pt-4 xs:pt-6 border-t border-white/20 text-center">
+                <p className="text-white/70 text-xs xs:text-sm font-medium">
                   Excellence in Education Since 1995
                 </p>
               </div>
@@ -554,8 +557,8 @@ export default function ModernNavbar() {
         )}
       </nav>
 
-      {/* Spacer for fixed nav */}
-      <div className="h-20 lg:h-24 transition-all duration-300"></div>
+      {/* Spacer for fixed nav - Responsive */}
+      <div className="h-[4.5rem] xs:h-20 sm:h-22 lg:h-24 transition-all duration-300"></div>
     </>
   );
 }

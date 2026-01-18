@@ -519,6 +519,7 @@ export default function ModernStudentPortalPage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+const router = useRouter();
 
 
   // Data State
@@ -827,7 +828,6 @@ export default function ModernStudentPortalPage() {
     closeMenuOnMobile();
   };
 
-  const router = useRouter()
   // Use your LoadingScreen component
   if (isLoading) {
     return <LoadingScreen />;
@@ -953,13 +953,28 @@ if (!student || !token) {
                   <FaArrowRight className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
                 
-                {/* Mobile Help Desk Button */}
-                <button onClick={(router.push("/pages/contact"))} className="md:hidden flex items-center justify-center gap-1.5 px-5 xs:px-6 py-2.5 xs:py-3 
-                  bg-white border border-slate-200 text-slate-700 rounded-lg xs:rounded-xl 
-                  font-bold hover:bg-slate-50 transition-colors active:scale-[0.98] 
-                  text-xs xs:text-sm w-full">
-                  Help Desk
-                </button>
+            {/* Mobile Help Desk Button */}
+<button
+  onClick={() => router.push("/pages/contact")}
+  className="
+    md:hidden
+    flex items-center justify-center gap-2
+    px-6 xs:px-7
+    py-3 xs:py-3.5
+    bg-white border border-slate-200
+    text-slate-700
+    rounded-xl
+    font-semibold
+    hover:bg-slate-50
+    transition-all
+    active:scale-[0.98]
+    text-sm
+    w-[70%] mx-auto
+  "
+>
+  Help Desk
+</button>
+
               </div>
             </div>
 
