@@ -1,3 +1,45 @@
+# AGGRESSIVE ROBOTS.TXT - TELL EVERY SEARCH ENGINE TO INDEX US
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /dashboard/
+Crawl-delay: 1
+
+# Sitemaps
 Sitemap: https://katwanyaa.vercel.app/sitemap.xml
+Sitemap: https://katwanyaa.vercel.app/sitemap-news.xml
+
+# Specific Bots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Googlebot-News
+Allow: /
+Crawl-delay: 1
+
+User-agent: Googlebot-Image
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 3
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 3
