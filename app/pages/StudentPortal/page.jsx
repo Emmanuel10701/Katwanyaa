@@ -838,32 +838,32 @@ if (!student || !token) {
   // Define features array here since it's only used in the login view
   const features = [
     { 
-      icon: <FaBook className="w-5 h-5 text-blue-600" />, 
+      icon: <FaBook className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />, 
       title: "Learning Resources", 
       desc: "Access digital notes, revision e-books, and past papers." 
     },
     { 
-      icon: <FaAward className="w-5 h-5 text-emerald-600" />, 
+      icon: <FaAward className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />, 
       title: "Assignments", 
       desc: "View and submit your subject tasks and holiday projects." 
     },
     { 
-      icon: <FaChartBar className="w-5 h-5 text-indigo-600" />, 
+      icon: <FaChartBar className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />, 
       title: "Academic Results", 
       desc: "Personalized performance tracking vs class & KCSE targets." 
     },
     { 
-      icon: <FaDollarSign className="w-5 h-5 text-amber-600" />, 
+      icon: <FaDollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />, 
       title: "Fee Structures", 
       desc: "Check balance, download statements, and payment slips." 
     },
     { 
-      icon: <FaCalendar className="w-5 h-5 text-rose-600" />, 
+      icon: <FaCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-rose-600" />, 
       title: "School Events", 
       desc: "Academic calendar, sports days, and parent-teacher meets." 
     },
     { 
-      icon: <FaComments className="w-5 h-5 text-purple-600" />, 
+      icon: <FaComments className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />, 
       title: "School News", 
       desc: "Latest updates from the administration and student body." 
     }
@@ -878,95 +878,125 @@ if (!student || !token) {
       <Toaster position="top-right" expand={true} richColors theme="light" />
       
       <main className="relative z-10 flex flex-col min-h-screen">
-        {/* Navigation Bar */}
-        <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 md:px-12">
+        {/* Navigation Bar - Enhanced Mobile */}
+        <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-lg border-b border-slate-200/60 px-3 py-2.5 sm:px-4 sm:py-3 md:px-6 md:py-4 lg:px-12">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+              <Image
+                src="/lkatz.png"
+                alt="Katwanyaa High School Logo"
+                width={32}
+                height={32}
+                className="rounded-md w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12"
+                priority
+              />
 
-<div className="flex items-center gap-3">
-  <Image
-    src="/lkatz.png"
-    alt="Katwanyaa High School Logo"
-    width={48}
-    height={48}
-    className="rounded-md"
-    priority
-  />
-
-  <div>
-    <span className="text-lg font-black tracking-tighter block leading-none">
-      KATWANYAA
-    </span>
-    <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
-      High School Portal
-    </span>
-  </div>
-</div>
-
+              <div>
+                <span className="text-sm xs:text-base sm:text-lg md:text-xl font-black tracking-tighter block leading-none">
+                  KATWANYAA
+                </span>
+                <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-600 
+                  tracking-[0.1em] xs:tracking-[0.15em] sm:tracking-[0.2em] uppercase">
+                  High School Portal
+                </span>
+              </div>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-8">
-              <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full border border-blue-100">
+            <div className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 rounded-full border border-blue-100">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                 <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider">Secure Login</span>
               </div>
               <button className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors">Help Desk</button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button className="md:hidden flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg 
+              bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95">
+              <FaBars className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+            </button>
           </div>
         </nav>
 
-        {/* Hero Section with Login */}
-        <section className="px-6 md:px-12 py-12 lg:py-20 max-w-7xl mx-auto w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 text-[10px] font-bold tracking-widest uppercase text-slate-500">
-                <HiSparkles className="w-3 h-3 text-blue-600" />
+        {/* Hero Section with Login - Enhanced Mobile */}
+        <section className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8 md:py-12 lg:py-20 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xs:gap-8 sm:gap-10 md:gap-12 lg:gap-16 items-center">
+            <div className="space-y-4 xs:space-y-5 sm:space-y-6 md:space-y-8">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 rounded-lg border border-slate-200 
+                text-[8px] xs:text-[9px] sm:text-[10px] font-bold tracking-widest uppercase text-slate-500 whitespace-nowrap">
+                <HiSparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-600" />
                 Empowering Excellence Since 1978
               </div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9] text-slate-950">
-                EDUCATION  <br />
-                <span className="text-blue-600 italic">IS  LIGHT.</span>
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 
+                font-black tracking-tighter leading-[0.85] xs:leading-[0.9] text-slate-950">
+                EDUCATION  
+                <span className="block text-blue-600 italic mt-1 xs:mt-2">IS LIGHT.</span>
               </h1>
-              <p className="text-xl text-slate-500 font-medium max-w-md leading-snug">
+              <p className="text-sm xs:text-base sm:text-lg md:text-xl text-slate-500 font-medium 
+                max-w-full xs:max-w-xs sm:max-w-md leading-relaxed xs:leading-snug">
                 Welcome to the Katwanyaa High School Digital Student Portal. Your unified hub for academics, finance, and communication.
               </p>
               
-              {/* Login Button */}
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md">
+              {/* Login Button - Enhanced Mobile */}
+              <div className="flex flex-col xs:flex-row gap-3 xs:gap-4 max-w-full xs:max-w-xs sm:max-w-md">
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="flex items-center w-[50%] justify-center gap-3 px-8 py-4 bg-slate-950 text-white rounded-2xl font-bold hover:bg-blue-600 transition-all shadow-2xl shadow-slate-200 group"
+                  className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 
+                    px-5 xs:px-6 sm:px-8 py-2.5 xs:py-3 sm:py-4 
+                    bg-slate-950 text-white rounded-lg xs:rounded-xl sm:rounded-2xl font-bold 
+                    hover:bg-blue-600 transition-all duration-300 active:scale-[0.98]
+                    shadow-lg sm:shadow-xl shadow-slate-200/50 
+                    group w-full xs:w-auto"
                 >
-                  Access Portal <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="text-xs xs:text-sm sm:text-base">Access Portal</span>
+                  <FaArrowRight className="w-3.5 h-3.5 xs:w-4 xs:h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-           
+                
+                {/* Mobile Help Desk Button */}
+                <button className="md:hidden flex items-center justify-center gap-1.5 px-5 xs:px-6 py-2.5 xs:py-3 
+                  bg-white border border-slate-200 text-slate-700 rounded-lg xs:rounded-xl 
+                  font-bold hover:bg-slate-50 transition-colors active:scale-[0.98] 
+                  text-xs xs:text-sm w-full">
+                  Help Desk
+                </button>
               </div>
             </div>
 
-            {/* Quick Status / Communication Box */}
-            <div className="relative group">
-              <div className="absolute -inset-4 bg-blue-100/50 rounded-[3rem] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
-              <div className="relative bg-white border border-slate-200 shadow-xl rounded-[2.5rem] p-8 space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <h3 className="font-black text-sm uppercase tracking-widest text-slate-400">Portal Features</h3>
-                  <FaBrain className="w-5 h-5 text-blue-500" />
+            {/* Quick Status / Communication Box - Enhanced Mobile */}
+            <div className="relative group mt-4 xs:mt-6 sm:mt-0">
+              <div className="absolute -inset-2 xs:-inset-3 sm:-inset-4 bg-blue-100/40 rounded-[2rem] xs:rounded-[2.5rem] 
+                blur-xl xs:blur-2xl sm:blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+              <div className="relative bg-white border border-slate-200 shadow-lg xs:shadow-xl 
+                rounded-[1.5rem] xs:rounded-[2rem] sm:rounded-[2.5rem] p-4 xs:p-5 sm:p-6 md:p-8 space-y-4 xs:space-y-5 sm:space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 xs:pb-4">
+                  <h3 className="font-black text-xs xs:text-sm uppercase tracking-widest text-slate-400 whitespace-nowrap">
+                    Portal Features
+                  </h3>
+                  <FaBrain className="w-4 h-4 xs:w-5 xs:h-5 text-blue-500" />
                 </div>
-                <div className="space-y-4">
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-xs font-bold text-blue-600 mb-1">Academic Resources</p>
-                    <p className="text-sm font-semibold text-slate-800">Digital notes, e-books, and past papers available.</p>
+                <div className="space-y-3 xs:space-y-4">
+                  <div className="p-3 xs:p-4 bg-slate-50/80 rounded-xl xs:rounded-2xl border border-slate-100">
+                    <p className="text-[10px] xs:text-xs font-bold text-blue-600 mb-0.5 xs:mb-1">Academic Resources</p>
+                    <p className="text-xs xs:text-sm font-semibold text-slate-800 leading-tight">
+                      Digital notes, e-books, and past papers available.
+                    </p>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-xs font-bold text-emerald-600 mb-1">Performance Tracking</p>
-                    <p className="text-sm font-semibold text-slate-800">Monitor your progress vs KCSE targets.</p>
+                  <div className="p-3 xs:p-4 bg-slate-50/80 rounded-xl xs:rounded-2xl border border-slate-100">
+                    <p className="text-[10px] xs:text-xs font-bold text-emerald-600 mb-0.5 xs:mb-1">Performance Tracking</p>
+                    <p className="text-xs xs:text-sm font-semibold text-slate-800 leading-tight">
+                      Monitor your progress vs KCSE targets.
+                    </p>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <p className="text-xs font-bold text-purple-600 mb-1">Fee Management</p>
-                    <p className="text-sm font-semibold text-slate-800">Check balance and download payment slips.</p>
+                  <div className="p-3 xs:p-4 bg-slate-50/80 rounded-xl xs:rounded-2xl border border-slate-100">
+                    <p className="text-[10px] xs:text-xs font-bold text-purple-600 mb-0.5 xs:mb-1">Fee Management</p>
+                    <p className="text-xs xs:text-sm font-semibold text-slate-800 leading-tight">
+                      Check balance and download payment slips.
+                    </p>
                   </div>
                 </div>
-                <button className="w-full py-4 text-center text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">
+                <button className="w-full py-2.5 xs:py-3 text-center text-[10px] xs:text-xs font-black 
+                  uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors duration-300">
                   View All Features
                 </button>
               </div>
@@ -974,24 +1004,46 @@ if (!student || !token) {
           </div>
         </section>
 
-        {/* Feature Grid: School Features */}
-        <section className="bg-slate-50/50 border-y border-slate-200/60 py-20 px-6 md:px-12">
+        {/* Feature Grid: School Features - Enhanced Mobile */}
+        <section className="bg-slate-50/50 border-y border-slate-200/60 py-8 xs:py-12 sm:py-16 md:py-20 
+          px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-12">
-              <h2 className="text-3xl font-black tracking-tight mb-2">Portal Modules</h2>
-              <p className="text-slate-500 font-medium">Everything you need to navigate your school journey.</p>
+            <div className="mb-6 xs:mb-8 sm:mb-10 md:mb-12 px-2">
+              <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-black tracking-tight mb-1 xs:mb-2">
+                Portal Modules
+              </h2>
+              <p className="text-slate-500 font-medium text-sm xs:text-base">
+                Everything you need to navigate your school journey.
+              </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-5 md:gap-6 px-2">
               {features.map((feature, i) => (
-                <div key={i} className="group p-8 bg-white border border-slate-200/80 rounded-[2rem] hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-100 transition-transform">
+                <div key={i} className="group p-4 xs:p-5 sm:p-6 md:p-8 
+                  bg-white border border-slate-200/80 
+                  rounded-[1.5rem] xs:rounded-[1.75rem] sm:rounded-[2rem] 
+                  hover:shadow-xl hover:shadow-slate-200/30 
+                  hover:-translate-y-0.5 active:translate-y-0
+                  transition-all duration-300">
+                  <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 
+                    bg-slate-50 rounded-lg xs:rounded-xl sm:rounded-2xl 
+                    flex items-center justify-center mb-3 xs:mb-4 sm:mb-6 
+                    group-hover:scale-105 transition-transform duration-300">
                     {feature.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-slate-950 mb-3">{feature.title}</h3>
-                  <p className="text-slate-500 text-sm leading-relaxed mb-6">{feature.desc}</p>
-                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors cursor-pointer">
-                    Login to Access <FaArrowRight className="w-4 h-4" />
+                  <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl 
+                    font-bold text-slate-950 mb-1.5 xs:mb-2 sm:mb-3 leading-tight">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-500 text-xs xs:text-sm leading-relaxed mb-3 xs:mb-4 sm:mb-6 
+                    line-clamp-2 xs:line-clamp-3">
+                    {feature.desc}
+                  </p>
+                  <div className="flex items-center gap-1.5 xs:gap-2 text-[10px] xs:text-xs font-black 
+                    uppercase tracking-widest text-slate-400 
+                    group-hover:text-blue-600 transition-colors duration-300 cursor-pointer">
+                    Login to Access 
+                    <FaArrowRight className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
                   </div>
                 </div>
               ))}
@@ -999,31 +1051,47 @@ if (!student || !token) {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="px-6 py-12 md:px-12 bg-white">
-          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center gap-12">
-            <div className="flex flex-col items-center lg:items-start gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-                  <FaBrain className="w-4 h-4 text-slate-400" />
+        {/* Footer - Enhanced Mobile */}
+        <footer className="px-3 xs:px-4 sm:px-6 md:px-8 lg:px-12 py-6 xs:py-8 sm:py-10 md:py-12 bg-white">
+          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center 
+            gap-6 xs:gap-8 sm:gap-10 md:gap-12">
+            <div className="flex flex-col items-center lg:items-start gap-3 xs:gap-4 text-center lg:text-left">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 bg-slate-100 rounded-lg 
+                  flex items-center justify-center">
+                  <FaBrain className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-slate-400" />
                 </div>
-                <span className="text-sm font-bold tracking-tight">Katwanyaa Technical Lab</span>
+                <span className="text-sm xs:text-base font-bold tracking-tight">Katwanyaa Technical Lab</span>
               </div>
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">©2024 Katwanyaa High School. All Rights Reserved.</p>
+              <p className="text-[9px] xs:text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                ©2024 Katwanyaa High School. All Rights Reserved.
+              </p>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-10">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Academic Hub</p>
-                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">KNEC Portal</p>
+            <div className="flex flex-wrap justify-center gap-4 xs:gap-6 sm:gap-8 md:gap-10">
+              <div className="space-y-1 xs:space-y-2 text-center">
+                <p className="text-[9px] xs:text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                  Academic Hub
+                </p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors duration-300">
+                  KNEC Portal
+                </p>
               </div>
-              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Financials</p>
-                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">Payment Gateways</p>
+              <div className="space-y-1 xs:space-y-2 text-center">
+                <p className="text-[9px] xs:text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                  Financials
+                </p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors duration-300">
+                  Payment Gateways
+                </p>
               </div>
-              <div className="space-y-2">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Support</p>
-                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors">IT Service Desk</p>
+              <div className="space-y-1 xs:space-y-2 text-center">
+                <p className="text-[9px] xs:text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                  Support
+                </p>
+                <p className="text-xs font-bold hover:text-blue-600 cursor-pointer transition-colors duration-300">
+                  IT Service Desk
+                </p>
               </div>
             </div>
           </div>

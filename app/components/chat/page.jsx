@@ -833,8 +833,8 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
                   />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-lg sm:text-xl font-bold text-white truncate">
-                    {schoolData?.name || 'A.I.C Katwanyaa High School'}
+                  <h3 className="text-lg sm:text-lg font-bold text-white truncate">
+                    {schoolData?.name || 'A.I.C Katwanyaa High'}
                   </h3>
                   <p className="text-blue-200 text-xs sm:text-sm truncate">
                     {schoolData?.motto || 'Education is Light'}
