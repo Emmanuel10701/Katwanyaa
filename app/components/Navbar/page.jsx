@@ -200,7 +200,7 @@ export default function ModernNavbar() {
             
             {/* Logo Section - Mobile Responsive */}
             <div 
-              className="flex items-center gap-2 xs:gap-3 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity active:scale-95"
+              className="flex items-center gap-2 xs:gap-3 flex cursor-pointer hover:opacity-90 transition-opacity "
               onClick={handleLogoClick}
               role="button"
               tabIndex={0}
