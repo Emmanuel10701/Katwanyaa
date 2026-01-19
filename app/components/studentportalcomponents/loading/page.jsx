@@ -42,15 +42,15 @@ export default function LoadingScreen() {
         <div className="text-center space-y-6">
           {/* School Name with Gradient */}
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              Katwanyaa High  School
+            <h2 className="md:text-3xl font-bold text-white mb-2 text-lg sm:text-3xl">
+              Katwanyaa High School
             </h2>
             <div className="h-1 w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>
           
           {/* Loading Text */}
           <div className="space-y-4">
-            <p className="text-white/80 text-lg">Preparing an exceptional learning experience</p>
+            <p className="text-white/80 md:text-lg text-base sm:text-lg">Preparing an exceptional learning experience</p>
             
             {/* Animated Dots */}
             <div className="flex items-center justify-center gap-2">

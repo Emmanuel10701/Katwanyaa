@@ -448,80 +448,79 @@ export default function ModernHero() {
     }, 100);
   }, [router, closeVideoModal, navigationBlocked]);
 
-  // Modern Loading Screen with Enhanced Design
-  const LoadingScreen = () => (
-<div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 z-50 flex flex-col items-center justify-center">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-white/10 rounded-full animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${i * 0.3}s`,
-              animationDuration: `${4 + Math.random() * 3}s`
-            }}
-          />
-        ))}
-      </div>
+const LoadingScreen = () => (
+  <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 z-50 flex flex-col items-center justify-center p-4">
+    {/* Animated Background */}
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 bg-white/10 rounded-full animate-float"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${i * 0.3}s`,
+            animationDuration: `${4 + Math.random() * 3}s`
+          }}
+        />
+      ))}
+    </div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        {/* Animated Rings */}
-        <div className="relative w-32 h-32 mb-8">
-         <div className="absolute inset-0 border-4 border-sky-400/20 rounded-full"></div>
-<div className="absolute inset-4 border-4 border-blue-400/30 rounded-full animate-ping"></div>
-<div className="absolute inset-8 border-4 border-cyan-200/40 rounded-full animate-spin"></div>
+    <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
+      {/* Animated Rings - Scaled for small screens (w-24), original (w-32) on md+ */}
+      <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 md:mb-8">
+        <div className="absolute inset-0 border-4 border-sky-400/20 rounded-full"></div>
+        <div className="absolute inset-3 md:inset-4 border-4 border-blue-400/30 rounded-full animate-ping"></div>
+        <div className="absolute inset-6 md:inset-8 border-4 border-cyan-200/40 rounded-full animate-spin"></div>
 
-          {/* Center Logo */}
-          <div className="absolute inset-0 flex items-center justify-center">
-<div className="w-16 h-16 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-2xl flex items-center justify-center overflow-hidden">
-              <img 
-                src="/katz.png" 
-                alt="Katwanyaa High  Logo" 
-                className="w-full h-full object-contain p-2"
-              />
-            </div>
+        {/* Center Logo */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden">
+            <img 
+              src="/katz.png" 
+              alt="Katwanyaa High Logo" 
+              className="w-full h-full object-contain p-2"
+            />
           </div>
         </div>
+      </div>
+      
+      {/* Loading Content */}
+      <div className="text-center space-y-4 md:space-y-6">
+        {/* School Name */}
+        <div>
+          <h2 className="text-xl md:text-3xl font-bold text-white mb-2 px-2">
+            Katwanyaa High School
+          </h2>
+          <div className="h-1 w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+        </div>
         
-        {/* Loading Content */}
-        <div className="text-center space-y-6">
-          {/* School Name with Gradient */}
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Katwanyaa High School
-            </h2>
-            <div className="h-1 w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+        {/* Loading Text */}
+        <div className="space-y-4 px-4">
+          <p className="text-white/80 text-sm md:text-lg">Preparing an exceptional learning experience</p>
+          
+          {/* Animated Dots */}
+          <div className="flex items-center justify-center gap-2">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="w-2.5 h-2.5 md:w-3 md:h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
           </div>
           
-          {/* Loading Text */}
-          <div className="space-y-4">
-            <p className="text-white/80 text-md md:text-lg">Preparing an exceptional learning experience</p>
-            
-            {/* Animated Dots */}
-            <div className="flex items-center justify-center gap-2">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-className="w-3 h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full animate-bounce"
-                  style={{ animationDelay: `${i * 0.2}s` }}
-                />
-              ))}
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
-<div className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 animate-gradient-loading"></div>
-            </div>
-            
-            <p className="text-white/60 text-sm">Loading the School website...</p>
+          {/* Progress Bar - Scaled width for mobile */}
+          <div className="w-48 md:w-64 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+            <div className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 animate-gradient-loading"></div>
           </div>
+          
+          <p className="text-white/60 text-xs md:text-sm">Loading the School website...</p>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 
   if (isLoading) {
     return <LoadingScreen />;
