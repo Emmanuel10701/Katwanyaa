@@ -242,44 +242,44 @@ if (loading) {
 if (!featuredStaff) {
   return (
     <div className="min-h-[80vh] w-full flex items-center justify-center p-4">
-      {/* 80% Width Container - Responsive and Modern */}
-      <div className="w-full max-w-[80%] min-h-[500px] relative overflow-hidden rounded-[3rem] bg-white border border-gray-100 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] flex flex-col items-center justify-center p-8 md:p-20 text-center">
+      {/* Responsive Container: w-[95%] on mobile, max-w-[80%] on desktop */}
+      <div className="w-[95%] md:max-w-[80%] min-h-[400px] md:min-h-[500px] relative overflow-hidden rounded-[2rem] md:rounded-[3rem] bg-white border border-gray-100 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] flex flex-col items-center justify-center p-6 md:p-20 text-center">
         
-        {/* Subtle Background Glow - Representing "Light" */}
+        {/* Subtle Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-yellow-50/40 blur-[100px] -z-10" />
 
-        {/* Branding Badge - Simplified */}
-        <div className="mb-8">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-yellow-600 mb-2">
+        {/* Branding Badge - Smaller text on mobile */}
+        <div className="mb-6 md:mb-8">
+          <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-yellow-600 mb-2">
             Katwanya High School
           </p>
-          <div className="h-1 w-12 bg-yellow-400 mx-auto rounded-full" />
+          <div className="h-1 w-10 md:w-12 bg-yellow-400 mx-auto rounded-full" />
         </div>
 
-        {/* Main Icon */}
-        <div className="mb-10 text-gray-200">
-          <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Main Icon - Reduced from w-20 to w-14 on mobile */}
+        <div className="mb-6 md:mb-10 text-gray-200">
+          <svg className="w-14 h-14 md:w-20 md:h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </div>
 
-        {/* Primary Content */}
-        <h2 className="text-3xl md:text-5xl font-black text-gray-900 mb-6 tracking-tight">
+        {/* Primary Content - text-2xl on mobile to prevent overflow */}
+        <h2 className="text-2xl md:text-5xl font-black text-gray-900 mb-4 md:mb-6 tracking-tight">
           No Staff Available
         </h2>
         
-        <p className="text-gray-500 text-lg md:text-xl leading-relaxed max-w-xl mb-12">
+        <p className="text-gray-500 text-base md:text-xl leading-relaxed max-w-xl mb-8 md:mb-12 px-2">
           "Education is Light." We are currently updating our directory for the new term. 
           Please refresh to see the latest updates from Katwanya High.
         </p>
 
-        {/* Full Refresh Button */}
+        {/* Full Refresh Button - Scaled padding for mobile */}
         <button 
           onClick={() => window.location.reload()}
-          className="group flex items-center gap-3 px-12 py-5 bg-gray-900 text-white font-bold rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-gray-200"
+          className="group flex items-center gap-3 px-8 py-4 md:px-12 md:py-5 bg-gray-900 text-white text-sm md:text-base font-bold rounded-xl md:rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-gray-200"
         >
           <svg 
-            className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700" 
+            className="w-4 h-4 md:w-5 md:h-5 group-hover:rotate-180 transition-transform duration-700" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
