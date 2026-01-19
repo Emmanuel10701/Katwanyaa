@@ -1730,7 +1730,7 @@ const ModernMemberModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto py-8">
       {/* Modal Container */}
-      <div className="relative w-full max-w-5xl bg-white rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[90vh] md:max-h-[85vh] flex flex-col">
+      <div className="relative w-[85%] max-w-4xl bg-white rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden my-auto max-h-[80vh] md:max-h-[75vh] flex flex-col">
         
         {/* Close Button */}
         <button 
@@ -1896,23 +1896,22 @@ const ModernMemberModal = ({
                       <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500">
                         <FiPhone className="w-5 h-5 md:w-6 md:h-6" />
                       </div>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleFieldChange('phone', e.target.value)}
-                        className={`w-full pl-12 md:pl-14 pr-4 py-3.5 md:py-4 text-base md:text-lg border-2 rounded-xl md:rounded-2xl focus:outline-none focus:ring-4 transition-all shadow-sm ${
-                          errors.phone 
-                            ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
-                            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
-                        }`}
-                        placeholder="+1 (123) 456-7890"
-                        disabled={isLoading}
-                        inputMode="tel"
-                      />
+                  <input
+  type="tel"
+  value={formData.phone}
+  onChange={(e) => handleFieldChange('phone', e.target.value)}
+  className={`w-full pl-12 md:pl-14 pr-4 py-3.5 md:py-4 text-base md:text-lg border-2 rounded-xl md:rounded-2xl focus:outline-none focus:ring-4 transition-all shadow-sm ${
+    hasError // <-- your condition
+      ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
+      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
+  }`}
+  placeholder="+1 (123) 456-7890"
+  disabled={isLoading}
+  inputMode="tel"
+/>
+
                     </div>
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm mt-2 font-medium">{errors.phone}</p>
-                    )}
+                   
                   </div>
                   
                   <div>
