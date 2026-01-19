@@ -111,6 +111,53 @@ export default function ModernHero() {
 
   const router = useRouter();
 
+  // JSON-LD structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'School',
+    name: 'Mary Immaculate Girls Secondary School',
+    image: 'https://katwanyaa.vercel.app/katz.png',
+    description: 'Premier Catholic girls secondary school in Mweiga, Nyeri County offering academic excellence and holistic development.',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Mweiga',
+      addressLocality: 'Nyeri',
+      addressRegion: 'Nyeri County',
+      postalCode: '10100',
+      addressCountry: 'KE'
+    },
+    url: 'https://katwanyaa.vercel.app',
+    telephone: '+254700000000',
+    sameAs: [
+      'https://facebook.com/your-school',
+      'https://twitter.com/your-school',
+      'https://instagram.com/your-school'
+    ],
+    foundingDate: '2000',
+    founder: 'Catholic Diocese of Nyeri',
+    numberOfStudents: '400',
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Educational Programs',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Course',
+            name: 'Form 1-4 Secondary Education'
+          }
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Course',
+            name: 'STEM Programs'
+          }
+        }
+      ]
+    }
+  };
+
   // Block automatic navigation on initial load
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -124,7 +171,7 @@ export default function ModernHero() {
   // Modern Marketing Descriptions with Enhanced Content
   const marketingDescriptions = {
     hero: {
-      main: "Katwanyaa High School",
+      main: "Mary Immaculate Girls Secondary School",
       sub: "Where Academic Excellence Meets Character Development",
       highlights: [
         "94% KCSE Success Rate",
@@ -164,22 +211,17 @@ export default function ModernHero() {
     }
   };
 
-
-
-
-
-
   // Enhanced Hero Slides with Modern Design
   const heroSlides = [
     {
       title: "Academic Excellence",
       subtitle: "Redefined Through Innovation",
       gradient: "from-blue-500 via-cyan-400 to-purple-600",
-      description: "At Katwanyaa High School, we're pioneering a new era of education. With a 94% KCSE success rate and state-of-the-art STEM facilities, we're not just teaching—we're inspiring the next generation of leaders and innovators.",
+      description: "At Mary Immaculate Girls Secondary School, we're pioneering a new era of education. With a 94% KCSE success rate and state-of-the-art STEM facilities, we're not just teaching—we're inspiring the next generation of leaders and innovators.",
       background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
       image: "/student.jpg",
       stats: { 
-        students: "1200+ Active Learners", 
+        students: "400+ Active Learners", 
         excellence: "94% KCSE Success", 
         years: "10+ Years Excellence" 
       },
@@ -448,8 +490,9 @@ export default function ModernHero() {
     }, 100);
   }, [router, closeVideoModal, navigationBlocked]);
 
+  // Modern Loading Screen with Enhanced Design
 const LoadingScreen = () => (
-  <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 z-50 flex flex-col items-center justify-center p-4">
+  <div className="fixed inset-0 bg-gradient-to-br from-orange-900 via-amber-900 to-red-900 z-50 flex flex-col items-center justify-center p-4">
     {/* Animated Background */}
     <div className="absolute inset-0 overflow-hidden">
       {[...Array(15)].map((_, i) => (
@@ -469,16 +512,16 @@ const LoadingScreen = () => (
     <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
       {/* Animated Rings - Scaled for small screens (w-24), original (w-32) on md+ */}
       <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 md:mb-8">
-        <div className="absolute inset-0 border-4 border-sky-400/20 rounded-full"></div>
-        <div className="absolute inset-3 md:inset-4 border-4 border-blue-400/30 rounded-full animate-ping"></div>
-        <div className="absolute inset-6 md:inset-8 border-4 border-cyan-200/40 rounded-full animate-spin"></div>
-
-        {/* Center Logo */}
+        <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full"></div>
+        <div className="absolute inset-3 md:inset-4 border-4 border-amber-500/30 rounded-full animate-ping"></div>
+        <div className="absolute inset-6 md:inset-8 border-4 border-white/40 rounded-full animate-spin"></div>
+        
+        {/* Center Logo - Scaled for small screens (w-12), original (w-16) on md+ */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-900 to-indigo-900 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden">
             <img 
-              src="/katz.png" 
-              alt="Katwanyaa High Logo" 
+              src="/ll.png" 
+              alt="Mary Immaculate Girls Secondary Logo" 
               className="w-full h-full object-contain p-2"
             />
           </div>
@@ -486,33 +529,33 @@ const LoadingScreen = () => (
       </div>
       
       {/* Loading Content */}
-      <div className="text-center space-y-4 md:space-y-6">
-        {/* School Name */}
+      <div className="text-center space-y-4 md:space-y-6 px-2">
+        {/* School Name - Scaled text-xl for small screens, text-3xl for md+ */}
         <div>
-          <h2 className="text-xl md:text-3xl font-bold text-white mb-2 px-2">
-            Katwanyaa High School
+          <h2 className="text-xl md:text-3xl font-bold text-white mb-2 leading-tight">
+            Mary Immaculate Girls Secondary School
           </h2>
           <div className="h-1 w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
         </div>
         
         {/* Loading Text */}
-        <div className="space-y-4 px-4">
-          <p className="text-white/80 text-sm md:text-lg">Preparing an exceptional learning experience</p>
+        <div className="space-y-4">
+          <p className="text-white/80 text-base md:text-lg">Preparing an exceptional learning experience</p>
           
           {/* Animated Dots */}
           <div className="flex items-center justify-center gap-2">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="w-2.5 h-2.5 md:w-3 md:h-3 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full animate-bounce"
+                className="w-2.5 h-2.5 md:w-3 md:h-3 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full animate-bounce"
                 style={{ animationDelay: `${i * 0.2}s` }}
               />
             ))}
           </div>
           
-          {/* Progress Bar - Scaled width for mobile */}
-          <div className="w-48 md:w-64 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
-            <div className="h-full bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 animate-gradient-loading"></div>
+          {/* Progress Bar - Scaled width for small screens */}
+          <div className="w-48 md:w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+            <div className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 animate-gradient-loading"></div>
           </div>
           
           <p className="text-white/60 text-xs md:text-sm">Loading the School website...</p>
@@ -528,6 +571,12 @@ const LoadingScreen = () => (
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
+      {/* Inject JSON-LD structured data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Hero />
 
       {/* Modern Achievements & Stats Section */}
@@ -554,7 +603,7 @@ const LoadingScreen = () => (
                   <FiPlay className="text-white" />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold">Virtual school Tour</h4>
+                  <h4 className="text-white font-bold">Virtual Campus Tour</h4>
                   <p className="text-white/60 text-sm">
                     {schoolData?.name || 'Loading...'}
                   </p>
@@ -638,10 +687,11 @@ const LoadingScreen = () => (
                 </div>
                 <button
                   onClick={handleContactClick}
-                  className="px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed  text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 text-sm sm:text-base bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={navigationBlocked}
                 >
-Learn more                </button>
+                  Get To Know Us More
+                </button>
               </div>
             </div>
           </div>
