@@ -128,7 +128,7 @@ const ResetPasswordContent = () => {
   // Helper component for the list items to apply conditional styling
   const ConditionItem = ({ condition, text }) => {
     const iconClasses = condition ? "text-green-500" : "text-gray-400";
-    const textClasses = condition ? "text-orange-500 " : "text-gray-400";
+    const textClasses = condition ? "text-green-300" : "text-gray-400";
 
     return (
       <li className="flex items-center gap-2">
@@ -244,8 +244,8 @@ const ResetPasswordContent = () => {
                 Enter your new password below to reset your account password.
               </p>
               <div className="flex justify-center flex-wrap gap-2 text-sm font-medium mb-8">
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full">#Security</span>
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full">#AccountRecovery</span>
+                <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs sm:text-sm">#Security</span>
+                <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs sm:text-sm">#AccountRecovery</span>
               </div>
             </motion.div>
 
@@ -313,7 +313,7 @@ const ResetPasswordContent = () => {
                   className={`w-full h-14 rounded-xl text-white font-semibold transition-all duration-300 transform ${
                     loading || !hasMinLength || !hasNumber || !hasLetter || !passwordsMatch
                       ? "bg-indigo-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-100"
+                      : "bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 hover:scale-105"
                   }`}
                 >
                   {loading ? (
