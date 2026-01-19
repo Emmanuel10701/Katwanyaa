@@ -164,6 +164,11 @@ export default function ModernHero() {
     }
   };
 
+
+
+
+
+
   // Enhanced Hero Slides with Modern Design
   const heroSlides = [
     {
