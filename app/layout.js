@@ -129,7 +129,7 @@ export const metadata = {
   
   // Verification codes (add yours here)
   verification: {
-    google: "your_google_verification_code", // Add your code here
+    google: "google8c80f424765b151e", // Add your code here
   },
 };
 
