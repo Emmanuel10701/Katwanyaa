@@ -271,23 +271,23 @@ const systemMetrics = [
 
             <div className="relative z-10">
               {/* Title - School name updated */}
-              <h1 className="text-4xl lg:text-5xl font-black text-white mb-8 tracking-tighter leading-[0.95]">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 sm:mb-8 tracking-tighter leading-[0.95]">
                 Katz  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-white">Admin Portal</span>
               </h1>
 
               {/* Security Features Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8 sm:mb-10">
                 {securityFeatures.map((feature, index) => (
                   <div 
                     key={index}
-                    className="group p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]"
+                    className="group p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]"
                   >
-                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl bg-${feature.color}-500/20 mb-3`}>
-                      <div className={`text-${feature.color}-400`}>
+                    <div className={`inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-${feature.color}-500/20 mb-2 sm:mb-3`}>
+                      <div className={`text-${feature.color}-400 scale-75 sm:scale-100`}>
                         {feature.icon}
                       </div>
                     </div>
-                    <p className="text-xs font-bold text-white tracking-tight">{feature.label}</p>
+                    <p className="text-[10px] sm:text-xs font-bold text-white tracking-tight leading-tight">{feature.label}</p>
                   </div>
                 ))}
               </div>
@@ -298,14 +298,14 @@ const systemMetrics = [
                   <div className="w-1 h-6 bg-gradient-to-b from-blue-400 to-cyan-400 rounded-full "></div>
                   <h3 className="text-lg font-bold text-white">Live System Metrics</h3>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-4">
                   {systemMetrics.map((metric, index) => (
-                    <div key={index} className="text-center p-3 bg-white/5 rounded-xl">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <div className="text-blue-300">{metric.icon}</div>
-                        <div className="text-2xl font-black text-white">{metric.value}</div>
+                    <div key={index} className="text-center p-2 sm:p-3 bg-white/5 rounded-lg sm:rounded-xl">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                        <div className="text-blue-300 scale-75 sm:scale-100">{metric.icon}</div>
+                        <div className="text-lg sm:text-2xl font-black text-white">{metric.value}</div>
                       </div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{metric.label}</p>
+                      <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-slate-400 font-bold leading-tight">{metric.label}</p>
                     </div>
                   ))}
                 </div>
