@@ -1500,9 +1500,21 @@ export default function NewsEventsManager() {
             <p className="text-gray-600 text-sm lg:text-base">Manage school news articles and events</p>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={fetchData} className="flex items-center gap-2 bg-gray-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm">
-              <FiRotateCw className={`text-xs ${loading ? 'animate-spin' : ''}`} /> Refresh
-            </button>
+   <button
+  onClick={fetchData}
+  className={`flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+              text-white px-5 py-3 rounded-2xl font-semibold shadow-lg 
+              hover:scale-105 hover:shadow-xl transition-transform duration-300
+              cursor-pointer text-sm`}
+>
+  {/* Loading spinner */}
+  {loading && (
+    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+  )}
+  
+  {loading ? 'Refreshing...' : 'Refresh'}
+</button>
+
             <button onClick={handleCreate} className={`flex items-center gap-2 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm ${
               activeSection === 'news' 
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
