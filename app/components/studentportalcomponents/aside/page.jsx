@@ -1,4 +1,3 @@
-// components/studentportalcomponents/aside/page.jsx
 'use client';
 
 import { 
@@ -70,9 +69,9 @@ export default function NavigationSidebar({
               <h3 className="font-bold text-gray-900 text-lg">
                 {student?.fullName || 'Student Name'}
               </h3>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-semibold rounded-full">
-                   {student?.form} {student?.stream}
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
+                <span className="inline-block px-2.5 py-1 sm:px-3 sm:py-1 bg-blue-100 text-blue-700 text-xs sm:text-sm font-semibold rounded-full whitespace-nowrap">
+                  {student?.form} {student?.stream}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-2">
@@ -106,36 +105,36 @@ export default function NavigationSidebar({
           </div>
         </nav>
 
-      {/* Footer Actions - Flex Mode */}
-<div className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
-  <div className="flex flex-row items-center gap-3 w-full">
-    
-    {/* Refresh Button */}
-    <button
-      onClick={onRefresh}
-      className="group flex-1 flex items-center justify-center gap-2.5 px-4 py-3.5 
-      bg-white border border-blue-100 text-blue-600 rounded-2xl 
-      text-sm sm:text-base font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
-      active:bg-blue-50 active:shadow-none transition-all duration-200"
-    >
-      <FiRefreshCw className="text-lg" />
-      <span>Refresh</span>
-    </button>
+        {/* Footer Actions - Flex Mode */}
+        <div className="p-4 sm:p-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
+          <div className="flex flex-row items-center gap-3 w-full">
+            
+            {/* Refresh Button */}
+            <button
+              onClick={onRefresh}
+              className="group flex-1 flex items-center justify-center gap-2.5 px-4 py-3.5 
+              bg-white border border-blue-100 text-blue-600 rounded-2xl 
+              text-sm sm:text-base font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
+              active:bg-blue-50 active:shadow-none transition-all duration-200"
+            >
+              <FiRefreshCw className="text-lg" />
+              <span>Refresh</span>
+            </button>
 
-    {/* Logout Button */}
-    <button
-      onClick={onLogout}
-      className="flex-1 flex items-center justify-center gap-2.5 px-4 py-3.5 
-      bg-rose-50/50 border border-rose-100 text-rose-600 rounded-2xl 
-      text-sm sm:text-base font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
-      active:bg-rose-100 active:shadow-none transition-all duration-200"
-    >
-      <FiLogOut className="text-lg" />
-      <span>Logout</span>
-    </button>
-    
-  </div>
-</div>
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="flex-1 flex items-center justify-center gap-2.5 px-4 py-3.5 
+              bg-rose-50/50 border border-rose-100 text-rose-600 rounded-2xl 
+              text-sm sm:text-base font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
+              active:bg-rose-100 active:shadow-none transition-all duration-200"
+            >
+              <FiLogOut className="text-lg" />
+              <span>Logout</span>
+            </button>
+            
+          </div>
+        </div>
       </div>
     </aside>
   );

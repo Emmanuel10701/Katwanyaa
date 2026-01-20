@@ -30,7 +30,7 @@ const SCHOOL_LOCATION = process.env.SCHOOL_LOCATION || 'Matungulu, Machakos Coun
 const SCHOOL_MOTTO = process.env.SCHOOL_MOTTO || 'Education is Light';
 const CONTACT_PHONE = process.env.CONTACT_PHONE || '+254720123456';
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'admissions@katwanyaahighSchool.sc.ke';
-const SCHOOL_WEBSITE = process.env.SCHOOL_WEBSITE || 'https://katwanyaahighSchool.sc.ke';
+const SCHOOL_WEBSITE = process.env.SCHOOL_WEBSITE || 'https://katwanyaa.vercel.app';
 
 // Path for attachments storage
 const ATTACHMENTS_DIR = path.join(process.cwd(), 'public', 'emailattachments');

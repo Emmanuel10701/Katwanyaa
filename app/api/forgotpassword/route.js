@@ -56,7 +56,7 @@ export async function POST(req) {
     // Use NEXT_PUBLIC_URL for dynamic URL
     const baseUrl = process.env.NEXT_PUBLIC_URL || 
                    process.env.NEXTAUTH_URL || 
-                   'http://localhost:3001';
+                   'https://katwanyaa.vercel.app';
     
     // Updated reset link structure to match your app
     const resetLink = `${baseUrl}/pages/resetpassword?token=${token}`;
