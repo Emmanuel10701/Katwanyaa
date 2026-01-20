@@ -1,5 +1,5 @@
 // services/file-manager.js
-import { supabase } from '@/lib/supabase' // or '@/libs/supabase'
+import { supabase } from './superbase' // or '@/libs/supabase'
 
 export class FileManager {
   /**

@@ -1,7 +1,7 @@
 // app/api/counseling/events/[id]/route.js - USING FILEMANAGER SERVICE
 import { NextResponse } from "next/server";
 import { prisma } from '../../../../libs/prisma'; // ✅ named import
-import { FileManager } from "../../../../libs/file-manager"; 
+import { FileManager } from "../../../../libs/manager"; 
 
 // 🔹 GET single event (UNCHANGED)
 export async function GET(req, { params }) {
