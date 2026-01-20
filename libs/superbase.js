@@ -1,23 +1,21 @@
-// lib/supabase.js - FIXED VERSION
+// lib/supabase.js - FINAL WORKING VERSION
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-// ✅ Add validation and logging
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Missing Supabase environment variables:');
-  console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
-  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Missing');
-  throw new Error('Missing Supabase environment variables')
+// Clean environment variables (remove quotes)
+const cleanEnv = (value) => {
+  if (!value) return ''
+  return value.toString().replace(/^["']|["']$/g, '').trim()
 }
 
-console.log('✅ Supabase client initializing...');
-console.log('URL:', supabaseUrl.substring(0, 30) + '...');
+const supabaseUrl = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_URL)
+const supabaseKey = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Test connection
-console.log('✅ Supabase client created successfully');
+// Create client
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  }
+})
 
 export { supabase }
