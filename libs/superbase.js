@@ -1,7 +1,17 @@
-// lib/supabase.js - CREATE THIS FILE
+// lib/supabase-admin.js - CREATE THIS FILE
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY // ← USE SERVICE KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase service role key')
+}
+
+// Admin client bypasses RLS
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
