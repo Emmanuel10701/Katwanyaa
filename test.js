@@ -1,133 +1,85 @@
-// test-supabase-node.js - CREATE THIS FILE
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
+// libs/cloudinary.js - FIXED VERSION
+import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
+import { existsSync } from "fs";
+import { resolve } from "path";
 
-console.log('🔍 Testing Supabase Configuration (Node.js)...\n');
+console.log("=== Loading Environment Variables ===");
 
-// Get environment variables
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-let supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Clean values (remove quotes)
-const cleanValue = (value) => {
-  if (!value) return '';
-  return value.replace(/^["']|["']$/g, '').trim();
-};
-
-supabaseUrl = cleanValue(supabaseUrl);
-supabaseKey = cleanValue(supabaseKey);
-
-console.log('1. Environment Variables:');
-console.log('   URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : '❌ MISSING');
-console.log('   Key:', supabaseKey ? `${supabaseKey.substring(0, 20)}...` : '❌ MISSING');
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('\n❌ ERROR: Missing Supabase credentials!');
-  console.error('\nCheck your .env.local file:');
-  console.error('NEXT_PUBLIC_SUPABASE_URL=https://pkzsthlhoqwelzbxjyum.supabase.co');
-  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
-  process.exit(1);
+// Load from .env or .env.local
+const envPath = resolve(process.cwd(), '.env.local');
+if (!existsSync(envPath)) {
+  dotenv.config({ path: resolve(process.cwd(), '.env') });
+} else {
+  dotenv.config({ path: envPath });
 }
 
-// Create client
-console.log('\n2. Creating Supabase client...');
-const supabase = createClient(supabaseUrl, supabaseKey);
+console.log("\n=== Cloudinary Configuration ===");
 
-// Test connection
-async function testConnection() {
-  try {
-    console.log('\n3. Testing Supabase connection...');
+// Parse CLOUDINARY_URL if present
+if (process.env.CLOUDINARY_URL) {
+  console.log("Found CLOUDINARY_URL");
+  
+  // Parse the URL: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+  const url = process.env.CLOUDINARY_URL;
+  console.log("URL:", url);
+  
+  // Extract parts from the URL
+  const match = url.match(/cloudinary:\/\/([^:]+):([^@]+)@([^\/]+)/);
+  
+  if (match) {
+    const [, apiKey, apiSecret, cloudName] = match;
+    console.log("Parsed from URL:");
+    console.log("  Cloud Name:", cloudName);
+    console.log("  API Key:", apiKey ? "✓" : "✗");
+    console.log("  API Secret:", apiSecret ? "✓" : "✗");
     
-    // Test 1: List buckets
-    const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-    
-    if (bucketError) {
-      console.log('❌ Bucket list failed:', bucketError.message);
-      return false;
-    }
-    
-    console.log('✅ Connected to Supabase!');
-    console.log('   Available buckets:', buckets.map(b => b.name));
-    
-    const targetBucket = 'Katwanyaa High';
-    const hasBucket = buckets.some(b => b.name === targetBucket);
-    
-    console.log(`   Has "${targetBucket}" bucket:`, hasBucket ? '✅ Yes' : '❌ No');
-    
-    // Test 2: Try to upload a test file
-    console.log('\n4. Testing file upload...');
-    const testBuffer = Buffer.from('Test file content from Node.js');
-    const testFileName = `test-uploads/node-test-${Date.now()}.txt`;
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(targetBucket)
-      .upload(testFileName, testBuffer, {
-        contentType: 'text/plain'
-      });
-    
-    if (uploadError) {
-      console.log('❌ Upload test failed:', uploadError.message);
-      
-      // Check if it's an RLS error
-      if (uploadError.message.includes('row-level security')) {
-        console.log('\n💡 RLS Policy Issue Detected!');
-        console.log('Run this SQL in Supabase SQL Editor:');
-        console.log(`
-          CREATE POLICY "Allow public uploads" 
-          ON storage.objects 
-          FOR INSERT 
-          TO public 
-          WITH CHECK (bucket_id = 'Katwanyaa High');
-        `);
-      }
-      
-      return false;
-    }
-    
-    console.log('✅ Upload successful!');
-    console.log('   File path:', uploadData.path);
-    
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from(targetBucket)
-      .getPublicUrl(testFileName);
-    
-    console.log('   Public URL:', publicUrl);
-    
-    // Test 3: List files in bucket
-    console.log('\n5. Testing file listing...');
-    const { data: files, error: listError } = await supabase.storage
-      .from(targetBucket)
-      .list('test-uploads');
-    
-    if (listError) {
-      console.log('❌ File list failed:', listError.message);
-    } else {
-      console.log('✅ Files in test-uploads/:', files?.length || 0);
-    }
-    
-    return true;
-    
-  } catch (error) {
-    console.log('❌ Unexpected error:', error.message);
-    console.log('Stack:', error.stack);
-    return false;
-  }
-}
-
-// Run tests
-testConnection().then(success => {
-  console.log('\n' + '='.repeat(50));
-  if (success) {
-    console.log('🎉 SUCCESS: Supabase is configured correctly!');
-    console.log('Your file uploads should work now.');
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+    console.log("✅ Configured from parsed URL");
   } else {
-    console.log('❌ FAILURE: Supabase configuration has issues.');
-    console.log('Check:');
-    console.log('1. Environment variables in .env.local');
-    console.log('2. RLS policies in Supabase dashboard');
-    console.log('3. Bucket name matches exactly: Katwanyaa High');
+    console.error("❌ Could not parse CLOUDINARY_URL");
+    console.error("URL format should be: cloudinary://API_KEY:API_SECRET@CLOUD_NAME");
   }
-  console.log('='.repeat(50));
-  process.exit(success ? 0 : 1);
-});
+} else {
+  // Fallback to individual variables
+  console.log("Using individual environment variables");
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 
+                   process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY || 
+                 process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  console.log("Cloud Name:", cloudName || "Not set");
+  console.log("API Key:", apiKey ? "Set" : "Not set");
+  console.log("API Secret:", apiSecret ? "Set" : "Not set");
+
+  if (cloudName && apiKey && apiSecret) {
+    cloudinary.config({
+      cloud_name: cloudName,
+      api_key: apiKey,
+      api_secret: apiSecret,
+    });
+    console.log("✅ Configured from individual variables");
+  } else {
+    console.error("❌ Missing Cloudinary configuration");
+  }
+}
+
+// Verify configuration
+const config = cloudinary.config();
+console.log("\n=== Verification ===");
+console.log("Cloud Name:", config.cloud_name || "undefined");
+console.log("API Key:", config.api_key ? "✓ Set" : "✗ Not set");
+console.log("API Secret:", config.api_secret ? "✓ Set" : "✗ Not set");
+
+if (config.cloud_name && config.api_key) {
+  console.log("\n✅ SUCCESS: Cloudinary is properly configured!");
+} else {
+  console.log("\n❌ FAILURE: Cloudinary configuration failed!");
+}
+
+export default cloudinary;
