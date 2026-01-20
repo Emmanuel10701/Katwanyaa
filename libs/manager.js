@@ -1,5 +1,5 @@
 // services/file-manager.js - FIXED VERSION
-import { client } from './supabase';
+import { supabase as client } from './supabase';
 
 export class FileManager {
   /**
