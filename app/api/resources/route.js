@@ -2,38 +2,35 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
 
-// Helpers
+// Helper functions
 const uploadFileToCloudinary = async (file) => {
   if (!file || !file.name) return null;
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const timestamp = Date.now();
-  const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-
   try {
-    const result = await cloudinary.uploader.upload_stream(
-      {
-        resource_type: "auto", // supports images, videos, PDFs, docs, etc.
-        folder: "nextjs_uploads",
-        public_id: `${timestamp}-${sanitizedFileName}`,
-      },
-      (error, result) => {
-        if (error) throw error;
-        return result;
-      }
-    );
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    
+    // Clean filename and remove extension for public_id
+    const originalName = file.name;
+    const extension = originalName.split('.').pop().toLowerCase();
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
 
-    // Cloudinary uploader.upload_stream needs a stream; we wrap it in a Promise
     return await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           resource_type: "auto",
           folder: "nextjs_uploads",
           public_id: `${timestamp}-${sanitizedFileName}`,
+          // Don't add extension to public_id, Cloudinary will handle it
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            resolve(result);
+          }
         }
       );
       stream.end(buffer);
@@ -50,6 +47,9 @@ const uploadMultipleFilesToCloudinary = async (files) => {
   const uploadedFiles = [];
 
   for (const file of files) {
+    // Skip empty files
+    if (!file.name || file.size === 0) continue;
+    
     const result = await uploadFileToCloudinary(file);
     if (result) {
       uploadedFiles.push({
@@ -122,10 +122,17 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ success: true, resources, count: resources.length }, { status: 200 });
+    return NextResponse.json({ 
+      success: true, 
+      resources, 
+      count: resources.length 
+    }, { status: 200 });
   } catch (error) {
     console.error("❌ Error fetching resources:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 });
   }
 }
 
@@ -147,23 +154,34 @@ export async function POST(request) {
 
     if (!title || !subject || !className || !teacher) {
       return NextResponse.json(
-        { success: false, error: "Title, subject, class, and teacher are required" },
+        { 
+          success: false, 
+          error: "Title, subject, class, and teacher are required" 
+        },
         { status: 400 }
       );
     }
 
     const files = formData.getAll("files");
-    if (!files || files.length === 0 || (files.length === 1 && !files[0].name)) {
-      return NextResponse.json({ success: false, error: "At least one file is required" }, { status: 400 });
+    const validFiles = files.filter(file => file && file.name && file.size > 0);
+    
+    if (validFiles.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "At least one valid file is required" 
+      }, { status: 400 });
     }
 
     // Upload files to Cloudinary
-    const uploadedFiles = await uploadMultipleFilesToCloudinary(files);
+    const uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
     if (uploadedFiles.length === 0) {
-      return NextResponse.json({ success: false, error: "Failed to upload files" }, { status: 500 });
+      return NextResponse.json({ 
+        success: false, 
+        error: "Failed to upload files" 
+      }, { status: 500 });
     }
 
-    const mainType = determineMainTypeFromFiles(files);
+    const mainType = determineMainTypeFromFiles(validFiles);
 
     // Save resource to database
     const resource = await prisma.resource.create({
@@ -175,7 +193,7 @@ export async function POST(request) {
         description,
         category,
         type: mainType,
-        files: uploadedFiles, // Array of file objects with Cloudinary URLs
+        files: uploadedFiles,
         accessLevel,
         uploadedBy,
         downloads: 0,
@@ -184,11 +202,18 @@ export async function POST(request) {
     });
 
     return NextResponse.json(
-      { success: true, message: `Resource created with ${uploadedFiles.length} file(s)`, resource },
+      { 
+        success: true, 
+        message: `Resource created with ${uploadedFiles.length} file(s)`, 
+        resource 
+      },
       { status: 201 }
     );
   } catch (error) {
     console.error("❌ Error creating resource:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 });
   }
 }
