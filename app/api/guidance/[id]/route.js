@@ -1,7 +1,7 @@
 // app/api/counseling/events/[id]/route.js - REPLACE THIS FILE
 import { NextResponse } from "next/server";
-import { prisma } from "../../../../../libs/prisma";
-import { supabase } from "../../../../libs/superbase"; // Add this import
+import { prisma } from "../../../../libs/prisma";
+import { supabase } from "../../../../libs/superbase"; 
 import { randomUUID } from "crypto";
 
 // ✅ Helper: Extract file key from Supabase URL
