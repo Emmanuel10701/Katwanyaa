@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, React, useCallback } from 'react';
 import { 
   FiPlus, FiSearch, FiEdit, FiTrash2, FiImage, FiFilter, FiDownload,
   FiX, FiEye, FiUpload, FiStar, FiGrid, FiList, FiChevronLeft,
