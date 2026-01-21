@@ -655,23 +655,26 @@ const fetchGalleryItems = async () => {
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
+// Safe stats calculation without .length errors
 const stats = {
-  total: Array.isArray(galleryItems) ? galleryItems.length : 0,
-  totalFiles: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
-    return acc + (Array.isArray(item?.files) ? item.files.length : 0);
+  total: galleryItems ? galleryItems.length : 0,
+  totalFiles: galleryItems ? galleryItems.reduce((acc, item) => {
+    const files = item?.files;
+    return acc + (files ? files.length : 0);
   }, 0) : 0,
-  images: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
-    const isImage = item?.fileType === 'image';
-    const fileCount = Array.isArray(item?.files) ? item.files.length : 0;
-    return acc + (isImage ? fileCount : 0);
+  images: galleryItems ? galleryItems.reduce((acc, item) => {
+    const files = item?.files;
+    const fileType = item?.fileType;
+    const fileCount = files ? files.length : 0;
+    return acc + (fileType === 'image' ? fileCount : 0);
   }, 0) : 0,
-  videos: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
-    const isVideo = item?.fileType === 'video';
-    const fileCount = Array.isArray(item?.files) ? item.files.length : 0;
-    return acc + (isVideo ? fileCount : 0);
+  videos: galleryItems ? galleryItems.reduce((acc, item) => {
+    const files = item?.files;
+    const fileType = item?.fileType;
+    const fileCount = files ? files.length : 0;
+    return acc + (fileType === 'video' ? fileCount : 0);
   }, 0) : 0,
-  categories: Array.isArray(galleryItems) ? 
-    new Set(galleryItems.map(item => item?.category).filter(Boolean)).size : 0
+  categories: galleryItems ? new Set(galleryItems.map(item => item?.category).filter(Boolean)).size : 0
 };
 
   if (loading) {
@@ -716,9 +719,9 @@ const stats = {
                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-cyan-600 bg-clip-text text-transparent">
                     Media Gallery
                   </h1>
-           <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
+  <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
   <FiGrid className="text-xs" />
-  {Array.isArray(galleryItems) ? galleryItems.length : 0} Items
+  {galleryItems ? galleryItems.length : 0} Items
 </span>
                 </div>
                 <p className="text-gray-600 text-base md:text-lg max-w-2xl">
