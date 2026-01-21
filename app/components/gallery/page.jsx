@@ -10,6 +10,8 @@ import {
   FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace
 } from 'react-icons/fi';
 import { Toaster, toast } from 'sonner';
+import { Play, ArrowUpRight, Clock } from 'lucide-react';
+
 // Categories from your backend API
 const CATEGORIES = [
   { value: 'GENERAL', label: 'General', color: 'gray' },
@@ -95,11 +97,25 @@ export default function ModernGalleryManager() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch gallery items from API
+  // Fetch gallery items from API with error handling
   const fetchGalleryItems = async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/gallery');
+      
+      if (!response.ok) {
+        // Handle HTTP errors
+        if (response.status === 500) {
+          throw new Error('Server error. Please try again later.');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON");
+      }
+      
       const result = await response.json();
       
       if (result.success && result.galleries) {
@@ -133,10 +149,16 @@ export default function ModernGalleryManager() {
         setGalleryItems(sortedItems);
         setFilteredItems(sortedItems);
         toast.success(`Loaded ${sortedItems.length} galleries`);
+      } else {
+        throw new Error(result.error || 'Failed to load galleries');
       }
     } catch (error) {
       console.error('Error fetching gallery items:', error);
-      toast.error('Failed to load gallery items');
+      toast.error(`Failed to load gallery items: ${error.message}`);
+      
+      // Set empty arrays on error
+      setGalleryItems([]);
+      setFilteredItems([]);
     } finally {
       setLoading(false);
     }
@@ -284,7 +306,7 @@ export default function ModernGalleryManager() {
 
     setIsUploading(true);
     
-    toast.loading('Uploading gallery...');
+    const loadingToast = toast.loading('Uploading gallery...');
     
     try {
       const submitData = new FormData();
@@ -301,10 +323,15 @@ export default function ModernGalleryManager() {
         body: submitData,
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
       
+      toast.dismiss(loadingToast);
+      
       if (result.success) {
-        toast.dismiss();
         toast.success('Gallery created successfully!');
         setShowCreateModal(false);
         resetForm();
@@ -313,7 +340,7 @@ export default function ModernGalleryManager() {
         throw new Error(result.error || 'Failed to create gallery');
       }
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -341,7 +368,7 @@ export default function ModernGalleryManager() {
 
     setIsUploading(true);
     
-    toast.loading('Updating gallery...');
+    const loadingToast = toast.loading('Updating gallery...');
     
     try {
       const submitData = new FormData();
@@ -366,10 +393,15 @@ export default function ModernGalleryManager() {
         body: submitData,
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
       
+      toast.dismiss(loadingToast);
+      
       if (result.success) {
-        toast.dismiss();
         toast.success('Gallery updated successfully!');
         setShowEditModal(false);
         setEditingItem(null);
@@ -380,7 +412,7 @@ export default function ModernGalleryManager() {
         throw new Error(result.error || 'Failed to update gallery');
       }
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -396,14 +428,20 @@ export default function ModernGalleryManager() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
-    toast.loading('Deleting gallery...');
+    const loadingToast = toast.loading('Deleting gallery...');
     
     try {
       const response = await fetch(`/api/gallery/${itemToDelete.id}`, {
         method: 'DELETE',
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
+      
+      toast.dismiss(loadingToast);
       
       if (result.success) {
         setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
@@ -413,13 +451,12 @@ export default function ModernGalleryManager() {
           return newSet;
         });
         
-        toast.dismiss();
         toast.success('Gallery deleted successfully!');
       } else {
         throw new Error(result.error || 'Failed to delete gallery');
       }
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(`Error: ${error.message}`);
     } finally {
       setShowDeleteModal(false);
@@ -434,7 +471,7 @@ export default function ModernGalleryManager() {
       return;
     }
 
-    toast.loading(`Deleting ${selectedItems.size} galleries...`);
+    const loadingToast = toast.loading(`Deleting ${selectedItems.size} galleries...`);
     const deletePromises = Array.from(selectedItems).map(id => 
       fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => res.json())
     );
@@ -443,17 +480,18 @@ export default function ModernGalleryManager() {
       const results = await Promise.all(deletePromises);
       const successful = results.filter(result => result.success).length;
       
+      toast.dismiss(loadingToast);
+      
       if (successful > 0) {
         setGalleryItems(prev => prev.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         
-        toast.dismiss();
         toast.success(`${successful} galleries deleted successfully!`);
       } else {
         throw new Error('Failed to delete galleries');
       }
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(`Error: ${error.message}`);
     }
   };
@@ -484,7 +522,6 @@ export default function ModernGalleryManager() {
 
   // Preview existing file
   const previewExistingFile = (fileUrl) => {
-    // For now, just open in new tab
     window.open(fileUrl, '_blank');
   };
 
@@ -536,136 +573,99 @@ export default function ModernGalleryManager() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4 lg:p-6 space-y-6">
       <Toaster position="top-right" expand={false} richColors />
 
-{/* Modern Gallery Header */}
-<div className="relative bg-gradient-to-br from-white via-blue-50 to-cyan-50 rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-100/50 border border-blue-100">
-  {/* Decorative elements */}
-  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-400/5 rounded-full -translate-y-16 translate-x-8"></div>
-  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-violet-400/10 to-purple-400/5 rounded-full translate-y-8 -translate-x-8"></div>
+      {/* Modern Gallery Header */}
+      <div className="relative bg-gradient-to-br from-white via-blue-50 to-cyan-50 rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-100/50 border border-blue-100">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-400/5 rounded-full -translate-y-16 translate-x-8"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-violet-400/10 to-purple-400/5 rounded-full translate-y-8 -translate-x-8"></div>
 
-  <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-    {/* Left Content - Title and Description */}
-    <div className="flex-1 space-y-4">
-      <div className="flex items-center gap-4">
-        {/* Icon Badge */}
-        <div className="relative p-3 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 rounded-2xl shadow-lg shadow-blue-500/30">
-          <FiImage className="text-2xl text-white" />
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md">
-            <span className="text-xs font-bold text-white">{galleryItems.length}</span>
-          </div>
-        </div>
-        
-        {/* Title Section */}
-        <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-2">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-cyan-600 bg-clip-text text-transparent">
-              Media Gallery
-            </h1>
-            <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
-              <FiGrid className="text-xs" />
-              {galleryItems.length} Items
-            </span>
-          </div>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl">
-            Curate and manage your school's visual stories. Upload images & videos to showcase campus life, events, and achievements.
-          </p>
-          
-          {/* Stats */}
-          <div className="flex flex-wrap gap-4 pt-2">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <FiImage className="text-blue-500" />
-              <span>Images & Videos</span>
+        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          {/* Left Content - Title and Description */}
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center gap-4">
+              {/* Icon Badge */}
+              <div className="relative p-3 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 rounded-2xl shadow-lg shadow-blue-500/30">
+                <FiImage className="text-2xl text-white" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md">
+                  <span className="text-xs font-bold text-white">{galleryItems.length}</span>
+                </div>
+              </div>
+              
+              {/* Title Section */}
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-cyan-600 bg-clip-text text-transparent">
+                    Media Gallery
+                  </h1>
+                  <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
+                    <FiGrid className="text-xs" />
+                    {galleryItems.length} Items
+                  </span>
+                </div>
+                <p className="text-gray-600 text-base md:text-lg max-w-2xl">
+                  Curate and manage your school's visual stories. Upload images & videos to showcase campus life, events, and achievements.
+                </p>
+                
+                {/* Stats */}
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <FiImage className="text-blue-500" />
+                    <span>Images & Videos</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <FiFolder className="text-cyan-500" />
+                    <span>{Array.from(new Set(galleryItems.map(item => item.category))).length} Categories</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <FiCalendar className="text-violet-500" />
+                    <span>Updated just now</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <FiFolder className="text-cyan-500" />
-              <span>{Array.from(new Set(galleryItems.map(item => item.category))).length} Categories</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <FiCalendar className="text-violet-500" />
-              <span>Updated just now</span>
-            </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    {/* Right Content - Action Buttons */}
-    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-      {/* Refresh Button */}
-      <button
-        onClick={fetchGalleryItems}
-        className="group relative px-5 py-3 bg-gradient-to-r from-white to-gray-50 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-3 shadow-lg shadow-gray-200 hover:shadow-gray-300 transition-all duration-300 border border-gray-200 hover:border-gray-300 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-700 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
-        <FiRefreshCw className={`text-lg ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-        <span className="font-semibold">Refresh</span>
-        <div className="hidden sm:block text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-          ⌘R
-        </div>
-      </button>
-
-      {/* Upload Button */}
-      <button
-        onClick={() => setShowCreateModal(true)}
-        className="group relative px-5 py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg shadow-indigo-300/50 hover:shadow-indigo-400/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        {/* Shine effect */}
-        <div className="absolute inset-0 overflow-hidden rounded-xl">
-          <div className="absolute -inset-full top-0 bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-shine"></div>
-        </div>
-        
-        {/* Button content */}
-        <div className="relative flex items-center gap-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <FiUpload className="text-xl" />
-          </div>
-          <div className="text-left">
-            <span className="block">Upload Gallery</span>
-            <span className="text-xs font-normal text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-              Add images & videos
-            </span>
-          </div>
-          <div className="hidden sm:block p-1.5 bg-white/20 rounded-lg">
-            <FiPlus className="text-sm" />
-          </div>
-        </div>
-      </button>
-    </div>
-  </div>
-
-  {/* Quick Filters (Optional) */}
-  {galleryItems.length > 0 && (
-    <div className="relative mt-6 pt-6 border-t border-gray-100">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <span className="text-sm font-medium text-gray-500 flex items-center gap-2">
-          <FiFilter />
-          Quick Filters:
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {['ALL', 'RECENT', 'IMAGES', 'VIDEOS'].map((filter) => (
+          {/* Right Content - Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            {/* Refresh Button */}
             <button
-              key={filter}
-              className="px-3 py-1.5 text-sm bg-gradient-to-r from-gray-100 to-gray-50 text-gray-600 rounded-lg hover:from-gray-200 hover:to-gray-100 transition-all duration-200 border border-gray-200 hover:border-gray-300"
+              onClick={fetchGalleryItems}
+              className="group relative px-5 py-3 bg-gradient-to-r from-white to-gray-50 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-3 shadow-lg shadow-gray-200 hover:shadow-gray-300 transition-all duration-300 border border-gray-200 hover:border-gray-300 hover:scale-[1.02] active:scale-[0.98]"
             >
-              {filter}
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-700 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
+              <FiRefreshCw className={`text-lg ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+              <span className="font-semibold">Refresh</span>
+              <div className="hidden sm:block text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
+                ⌘R
+              </div>
             </button>
-          ))}
+
+            {/* Upload Button */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="group relative px-5 py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg shadow-indigo-300/50 hover:shadow-indigo-400/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {/* Button content */}
+              <div className="relative flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <FiUpload className="text-xl" />
+                </div>
+                <div className="text-left">
+                  <span className="block">Upload Gallery</span>
+                  <span className="text-xs font-normal text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Add images & videos
+                  </span>
+                </div>
+                <div className="hidden sm:block p-1.5 bg-white/20 rounded-lg">
+                  <FiPlus className="text-sm" />
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  )}
-</div>
 
-{/* Add this CSS for shine animation in your global CSS or style tag */}
-<style jsx>{`
-  @keyframes shine {
-    0% { transform: translateX(-100%) rotate(45deg); }
-    100% { transform: translateX(200%) rotate(45deg); }
-  }
-  .animate-shine {
-    animation: shine 1.5s ease-in-out infinite;
-  }
-`}</style>
-
+      {/* Rest of your component remains the same... */}
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -901,7 +901,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Edit Modal - Full modal with existing files management */}
+      {/* Edit Modal */}
       {showEditModal && editingItem && (
         <CreateEditModal
           mode="edit"
@@ -937,7 +937,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Preview Modal with Edit/Delete buttons - UPDATED STYLING */}
+      {/* Preview Modal */}
       {showPreviewModal && previewItem && (
         <PreviewModal
           item={previewItem}
@@ -968,7 +968,7 @@ export default function ModernGalleryManager() {
   );
 }
 
-// Modern Gallery Item Component with Updated Design
+// Modern Gallery Item Component
 const ModernGalleryItem = ({ 
   item, viewMode, isSelected, hasError, 
   onSelect, onEdit, onDelete, onPreview,
@@ -1070,184 +1070,183 @@ const ModernGalleryItem = ({
     );
   }
 
-  // Grid View - UPDATED DESIGN
-// Grid View - MODERN CARD DESIGN (inspired by FeatureCard)
-return (
-  <div className={`group relative w-full bg-white rounded-[2rem] p-3 transition-all duration-700 hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.06)] border border-slate-200/60 flex flex-col ${
-    isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
-  }`}>
-    
-    {/* Container for Media Preview - Realistic High-Res Aspect */}
-    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-inner cursor-pointer" onClick={onPreview}>
-      {hasError ? (
-        <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center">
-          <div className="text-center">
-            <FiImage className="text-slate-400 text-3xl mx-auto mb-3" />
-            <p className="text-slate-500 text-sm font-medium">Failed to load</p>
-          </div>
-        </div>
-      ) : item.fileType === 'image' ? (
-        <>
-          <img
-            src={item.files[0]}
-            alt={item.title}
-            className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
-            onError={onImageError}
-          />
-          {/* Overlay Gradient for depth */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          
-          {/* Play Icon Overlay for Images */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <FiEye className="text-slate-800 text-lg" />
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-          <div className="relative z-10 text-center">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-3 mx-auto shadow-lg">
-              <FiVideo className="text-white text-2xl" />
-            </div>
-            <p className="text-white/90 text-sm font-medium">Video Gallery</p>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
-              <Play className="text-white text-2xl ml-1" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Top Left Badge: Selection Checkbox - Glassmorphism */}
-      <button
-        onClick={onSelect}
-        className={`absolute top-4 left-4 z-20 flex items-center justify-center w-8 h-8 rounded-xl backdrop-blur-xl border ${
-          isSelected 
-            ? 'bg-gradient-to-r from-blue-500 to-cyan-500 border-white/40 text-white shadow-lg' 
-            : 'bg-white/70 border-white/40 text-slate-400 hover:bg-white hover:text-slate-800'
-        } transition-all duration-300`}
-      >
-        <FiCheck className={`text-sm ${isSelected ? '' : 'opacity-0 group-hover:opacity-100'}`} />
-      </button>
-
-      {/* Top Right Badge: Category - Glassmorphism */}
-      <div className="absolute top-4 right-4 z-10">
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-xl border border-white/40 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-800 shadow-sm">
-          <Folder size={12} className="text-indigo-600" />
-          {formatCategory(item.category)}
-        </div>
-      </div>
-
-      {/* Multiple Files Indicator */}
-      {item.files.length > 1 && (
-        <div className="absolute top-4 left-14 z-10">
-          <div className="px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-semibold shadow-lg">
-            +{item.files.length - 1}
-          </div>
-        </div>
-      )}
-
-      {/* Interactive Action: Magnetic Button Effect */}
-      <div className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg hover:shadow-xl transition-shadow">
-          <ArrowUpRight size={18} />
-        </button>
-      </div>
-    </div>
-
-    {/* Content Section: Refined Spacing */}
-    <div className="px-5 py-5 flex flex-col flex-grow">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[10px] font-black tracking-[0.2em] text-cyan-600 uppercase">
-          {item.fileType === 'image' ? 'PHOTO GALLERY' : 'VIDEO GALLERY'}
-        </span>
-        <div className="flex gap-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-          <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-        </div>
-      </div>
+  // Grid View
+  return (
+    <div className={`group relative w-full bg-white rounded-[2rem] p-3 transition-all duration-700 hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.06)] border border-slate-200/60 flex flex-col ${
+      isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
+    }`}>
       
-      <h2 
-        className="text-xl font-bold text-slate-900 mb-2 tracking-tight group-hover:text-indigo-600 transition-colors duration-300 cursor-pointer line-clamp-1"
-        onClick={onPreview}
-        title={item.title}
-      >
-        {item.title}
-      </h2>
-      
-      <p className="text-slate-500 leading-relaxed text-[14px] mb-5 line-clamp-2" title={item.description}>
-        {item.description || 'No description provided'}
-      </p>
+      {/* Container for Media Preview */}
+      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-inner cursor-pointer" onClick={onPreview}>
+        {hasError ? (
+          <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center">
+            <div className="text-center">
+              <FiImage className="text-slate-400 text-3xl mx-auto mb-3" />
+              <p className="text-slate-500 text-sm font-medium">Failed to load</p>
+            </div>
+          </div>
+        ) : item.fileType === 'image' ? (
+          <>
+            <img
+              src={item.files[0]}
+              alt={item.title}
+              className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+              onError={onImageError}
+            />
+            {/* Overlay Gradient for depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Play Icon Overlay for Images */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <FiEye className="text-slate-800 text-lg" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+            <div className="relative z-10 text-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-3 mx-auto shadow-lg">
+                <FiVideo className="text-white text-2xl" />
+              </div>
+              <p className="text-white/90 text-sm font-medium">Video Gallery</p>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
+                <Play className="text-white text-2xl ml-1" />
+              </div>
+            </div>
+          </div>
+        )}
 
-      {/* Action Buttons - Modern Design */}
-      <div className="flex gap-2 mb-5">
+        {/* Top Left Badge: Selection Checkbox */}
         <button
-          onClick={onPreview}
-          className="flex-1 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-slate-100 hover:to-slate-200 transition-all duration-300 group/btn"
+          onClick={onSelect}
+          className={`absolute top-4 left-4 z-20 flex items-center justify-center w-8 h-8 rounded-xl backdrop-blur-xl border ${
+            isSelected 
+              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 border-white/40 text-white shadow-lg' 
+              : 'bg-white/70 border-white/40 text-slate-400 hover:bg-white hover:text-slate-800'
+          } transition-all duration-300`}
         >
-          <FiEye className="text-slate-600 group-hover/btn:text-blue-600 transition-colors" />
-          <span>View</span>
+          <FiCheck className={`text-sm ${isSelected ? '' : 'opacity-0 group-hover:opacity-100'}`} />
         </button>
-        <button
-          onClick={onEdit}
-          className="flex-1 py-2.5 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-emerald-100 hover:to-emerald-200 transition-all duration-300 group/btn"
-        >
-          <FiEdit className="text-emerald-600 group-hover/btn:text-emerald-700" />
-          <span>Edit</span>
-        </button>
-        <button
-          onClick={onDelete}
-          className="flex-1 py-2.5 bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-rose-100 hover:to-rose-200 transition-all duration-300 group/btn"
-        >
-          <FiTrash2 className="text-rose-600 group-hover/btn:text-rose-700" />
-          <span>Delete</span>
-        </button>
+
+        {/* Top Right Badge: Category */}
+        <div className="absolute top-4 right-4 z-10">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-xl border border-white/40 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-800 shadow-sm">
+            <FiFolder size={12} className="text-indigo-600" />
+            {formatCategory(item.category)}
+          </div>
+        </div>
+
+        {/* Multiple Files Indicator */}
+        {item.files.length > 1 && (
+          <div className="absolute top-4 left-14 z-10">
+            <div className="px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-semibold shadow-lg">
+              +{item.files.length - 1}
+            </div>
+          </div>
+        )}
+
+        {/* Interactive Action */}
+        <div className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+          <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <ArrowUpRight size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Bottom Metadata: Footer of the card */}
-      <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-            <Clock size={14} className="text-slate-400" />
-          </div>
-          <span className="text-xs font-semibold text-slate-500">
-            {new Date(item.uploadDate).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric'
-            })}
+      {/* Content Section */}
+      <div className="px-5 py-5 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-black tracking-[0.2em] text-cyan-600 uppercase">
+            {item.fileType === 'image' ? 'PHOTO GALLERY' : 'VIDEO GALLERY'}
           </span>
+          <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <FiImage className="text-slate-400 text-sm" />
-            <span className="text-xs font-semibold text-slate-500">{item.files.length}</span>
+        <h2 
+          className="text-xl font-bold text-slate-900 mb-2 tracking-tight group-hover:text-indigo-600 transition-colors duration-300 cursor-pointer line-clamp-1"
+          onClick={onPreview}
+          title={item.title}
+        >
+          {item.title}
+        </h2>
+        
+        <p className="text-slate-500 leading-relaxed text-[14px] mb-5 line-clamp-2" title={item.description}>
+          {item.description || 'No description provided'}
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 mb-5">
+          <button
+            onClick={onPreview}
+            className="flex-1 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-slate-100 hover:to-slate-200 transition-all duration-300 group/btn"
+          >
+            <FiEye className="text-slate-600 group-hover/btn:text-blue-600 transition-colors" />
+            <span>View</span>
+          </button>
+          <button
+            onClick={onEdit}
+            className="flex-1 py-2.5 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-emerald-100 hover:to-emerald-200 transition-all duration-300 group/btn"
+          >
+            <FiEdit className="text-emerald-600 group-hover/btn:text-emerald-700" />
+            <span>Edit</span>
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex-1 py-2.5 bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-rose-100 hover:to-rose-200 transition-all duration-300 group/btn"
+          >
+            <FiTrash2 className="text-rose-600 group-hover/btn:text-rose-700" />
+            <span>Delete</span>
+          </button>
+        </div>
+
+        {/* Bottom Metadata */}
+        <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <Clock size={14} className="text-slate-400" />
+            </div>
+            <span className="text-xs font-semibold text-slate-500">
+              {new Date(item.uploadDate).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </span>
           </div>
-          <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-          <div className="flex -space-x-1.5">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gradient-to-br from-slate-300 to-slate-400">
-                <img 
-                  src={`https://i.pravatar.cc/100?u=gallery-${item.id}-${i}`} 
-                  alt="user" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <FiImage className="text-slate-400 text-sm" />
+              <span className="text-xs font-semibold text-slate-500">{item.files.length}</span>
+            </div>
+            <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+            <div className="flex -space-x-1.5">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gradient-to-br from-slate-300 to-slate-400">
+                  <img 
+                    src={`https://i.pravatar.cc/100?u=gallery-${item.id}-${i}`} 
+                    alt="user" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
-// Create/Edit Modal Component with Modern Dropdown
+// Create/Edit Modal Component
 const CreateEditModal = ({
   mode, formData, setFormData, editingItem, uploadProgress, isUploading, dragActive,
   categories, selectedFilePreviews, filesToRemove, setFilesToRemove, onClose, onSubmit, 
@@ -1255,8 +1254,6 @@ const CreateEditModal = ({
   fileInputRef, onRefresh, showExistingFiles, setShowExistingFiles,
   dropdownOpen, setDropdownOpen, dropdownRef
 }) => {
-  const [localEditMode, setLocalEditMode] = useState(false);
-
   // Determine if a file is marked for removal
   const isFileMarkedForRemoval = (fileUrl) => {
     return filesToRemove.includes(fileUrl);
@@ -1491,7 +1488,7 @@ const CreateEditModal = ({
                 </div>
               </div>
 
-              {/* Selected Files Preview - ACTUAL IMAGES */}
+              {/* Selected Files Preview */}
               {formData.files.length > 0 && (
                 <div className="mt-6">
                   <h4 className="font-medium text-gray-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
@@ -1608,7 +1605,6 @@ const CreateEditModal = ({
                                 : 'text-gray-700 hover:bg-gray-50'
                             }`}
                           >
-                            <div className={`w-3 h-3 rounded-full bg-${cat.color}-500`} />
                             <span>{cat.label}</span>
                             {formData.category === cat.value && (
                               <FiCheck className="ml-auto text-indigo-600" />
@@ -1697,7 +1693,7 @@ const CreateEditModal = ({
   );
 };
 
-// Preview Modal Component - MOBILE RESPONSIVE AND CENTERED
+// Preview Modal Component
 const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1713,15 +1709,14 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
     setCurrentIndex((prev) => (prev - 1 + item.files.length) % item.files.length);
   };
 
-const copyUrl = () => {
-  // window.location.origin gives you "http://localhost:3000"
-  const targetPath = "/pages/gallery";
-  const fullUrl = `${window.location.origin}${targetPath}`;
+  const copyUrl = () => {
+    const targetPath = "/pages/gallery";
+    const fullUrl = `${window.location.origin}${targetPath}`;
 
-  navigator.clipboard.writeText(fullUrl);
-  
-  toast.success('Gallery link copied to clipboard!');
-};
+    navigator.clipboard.writeText(fullUrl);
+    
+    toast.success('Gallery link copied to clipboard!');
+  };
 
   const downloadFile = () => {
     const link = document.createElement('a');
@@ -1848,7 +1843,7 @@ const copyUrl = () => {
             {item.files.length > 1 && (
               <div className="mt-4 sm:mt-6">
                 <h4 className="font-medium text-gray-800 mb-3 text-sm sm:text-base">All Files ({item.files.length})</h4>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 overflow-x-auto pb-2">
                   {item.files.map((file, index) => {
                     const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
                     
@@ -1911,7 +1906,7 @@ const copyUrl = () => {
   );
 };
 
-// NEW: Mobile-Responsive Delete Confirmation Modal
+// Delete Confirmation Modal
 const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
