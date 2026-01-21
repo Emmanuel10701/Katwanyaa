@@ -43,7 +43,7 @@ const ModernSchoolLayout = () => {
       metrics: "Complete Education"
     },
     {
-      title: "Catholic Values",
+      title: "Christian  Values",
       gradient: "from-purple-500 to-pink-500",
       description: "Founded on strong Christian principles, nurturing girls with moral integrity, discipline, and service to community.",
       metrics: "Values-Based Education"
@@ -51,7 +51,7 @@ const ModernSchoolLayout = () => {
     {
       title: "Modern Facilities",
       gradient: "from-orange-500 to-yellow-500",
-      description: "State-of-the-art laboratories, well-equipped classrooms, and serene learning environment in Mweiga's beautiful landscape.",
+      description: "State-of-the-art laboratories, well-equipped classrooms, and serene learning environment in Matungulu's beautiful landscape.",
       metrics: "Premier Infrastructure"
     }
   ];
@@ -76,7 +76,7 @@ const ModernSchoolLayout = () => {
     {
       title: "Modern Learning Environment",
       gradient: "from-purple-500 to-pink-500",
-      description: "Located in scenic Mweiga, our campus features well-equipped science laboratories, computer labs, digital resources, and spacious classrooms that create an ideal atmosphere for learning and innovation.",
+      description: "Located in scenic Matungulu, our campus features well-equipped science laboratories, computer labs, digital resources, and spacious classrooms that create an ideal atmosphere for learning and innovation.",
       highlight: "Advanced Facilities",
       details: ["Science Laboratories", "Computer Labs", "Library Resources", "Sports Facilities"],
       metrics: ["4 Science Labs", "2 Computer Labs", "10,000+ Books"]
@@ -92,9 +92,9 @@ const ModernSchoolLayout = () => {
     {
       title: "Spiritual & Moral Formation",
       gradient: "from-orange-500 to-yellow-500",
-      description: "As a Catholic institution, we emphasize spiritual growth, moral values, and character development. Regular religious education, retreats, and community service build responsible citizens.",
+      description: "As a Christian  institution, we emphasize spiritual growth, moral values, and character development. Regular religious education, retreats, and community service build responsible citizens.",
       highlight: "Values Education",
-      details: ["Catholic Teachings", "Character Building", "Community Service", "Ethical Education"],
+      details: ["Christian  Teachings", "Character Building", "Community Service", "Ethical Education"],
       metrics: ["Weekly Mass", "Retreats", "Service Projects"]
     },
     {
@@ -171,7 +171,7 @@ const ModernSchoolLayout = () => {
               Our Educational Pillars
             </h3>
             <p className="text-slate-600 text-sm sm:text-base md:text-lg font-medium">
-              Building academic excellence, strong character, and future-ready skills at Katwanyaa  High School, Mweiga.
+              Building academic excellence, strong character, and future-ready skills at Katwanyaa  High School, Matungulu.
             </p>
           </div>
 

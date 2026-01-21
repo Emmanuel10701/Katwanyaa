@@ -112,51 +112,49 @@ export default function ModernHero() {
   const router = useRouter();
 
   // JSON-LD structured data for SEO
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'School',
-    name: 'Mary Immaculate Girls Secondary School',
-    image: 'https://katwanyaa.vercel.app/katz.png',
-    description: 'Premier Catholic girls secondary school in Mweiga, Nyeri County offering academic excellence and holistic development.',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: 'Mweiga',
-      addressLocality: 'Nyeri',
-      addressRegion: 'Nyeri County',
-      postalCode: '10100',
-      addressCountry: 'KE'
-    },
-    url: 'https://katwanyaa.vercel.app',
-    telephone: '+254700000000',
-    sameAs: [
-      'https://facebook.com/your-school',
-      'https://twitter.com/your-school',
-      'https://instagram.com/your-school'
-    ],
-    foundingDate: '2000',
-    founder: 'Catholic Diocese of Nyeri',
-    numberOfStudents: '400',
-    hasOfferCatalog: {
-      '@type': 'OfferCatalog',
-      name: 'Educational Programs',
-      itemListElement: [
-        {
-          '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Course',
-            name: 'Form 1-4 Secondary Education'
-          }
-        },
-        {
-          '@type': 'Offer',
-          itemOffered: {
-            '@type': 'Course',
-            name: 'STEM Programs'
-          }
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'School',
+  name: 'Katwanyaa High School',
+  image: 'https://katwanyaa.vercel.app/katz.png',
+  description: 'A leading secondary school committed to academic excellence, integrity, and holistic student development.',
+  address: {
+    '@type': 'PostalAddress',
+    'streetAddress': 'Katwanyaa',
+    'addressLocality': 'Machakos', // Adjust if the specific locality differs
+    'addressRegion': 'Machakos County',
+    'addressCountry': 'KE'
+  },
+  url: 'https://katwanyaa.vercel.app',
+  telephone: '+254700000000', // Update with the actual school office line
+  sameAs: [
+    'https://facebook.com/katwanyaahigh',
+    'https://twitter.com/katwanyaahigh',
+    'https://instagram.com/katwanyaahigh'
+  ],
+  foundingDate: '1970', // Update with the actual founding year
+  numberOfStudents: '500', // Update with current enrollment
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Educational Programs',
+    itemListElement: [
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Course',
+          name: 'KCSE Curriculum (Form 1-4)'
         }
-      ]
-    }
-  };
+      },
+      {
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Course',
+          name: 'Extra-Curricular & Sports'
+        }
+      }
+    ]
+  }
+};
 
   // Block automatic navigation on initial load
   useEffect(() => {

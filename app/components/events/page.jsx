@@ -529,31 +529,30 @@ if (error && events.length === 0 && news.length === 0) {
                             )}
                           </ul>
                         </div>
-
-                        {/* Action Buttons */}
-                        <div className="pt-3 md:pt-4 border-t border-slate-200">
-                          <div className="flex flex-col gap-3">
-                            <button 
-                              onClick={() => {
-                                if (!currentEvent) return;
-                                const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentEvent.title)}&dates=20260129/20260129&details=${encodeURIComponent(currentEvent.description)}&location=${encodeURIComponent(currentEvent.location)}`;
-                                window.open(url, '_blank');
-                              }}
-                              className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:shadow-lg active:scale-[0.98] transition-all"
-                            >
-                              <IoLogoGoogle className="w-5 h-5" />
-                              Add to Calendar
-                            </button>
-                            
-                            <button 
-                              onClick={() => setShowShareModal(true)}
-                              className="w-full py-3.5 bg-white border-2 border-slate-900 text-slate-900 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-[0.98] transition-all"
-                            >
-                              <FiShare2 className="w-5 h-5" />
-                              Share Event
-                            </button>
-                          </div>
-                        </div>
+{/* Action Buttons */}
+<div className="pt-3 md:pt-4 border-t border-slate-200">
+  <div className="flex gap-2 sm:gap-3">
+    <button 
+      onClick={() => {
+        if (!currentEvent) return;
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentEvent.title)}&dates=20260129/20260129&details=${encodeURIComponent(currentEvent.description)}&location=${encodeURIComponent(currentEvent.location)}`;
+        window.open(url, '_blank');
+      }}
+      className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:shadow-lg active:scale-[0.98] transition-all min-w-0"
+    >
+      <IoLogoGoogle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+      <span className="truncate">Add to Calendar</span>
+    </button>
+    
+    <button 
+      onClick={() => setShowShareModal(true)}
+      className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-slate-50 active:scale-[0.98] transition-all min-w-0"
+    >
+      <FiShare2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+      <span className="truncate">Share Event</span>
+    </button>
+  </div>
+</div>
                       </>
                     ) : selectedTab === 'news' && currentNews ? (
                       <>
@@ -736,11 +735,27 @@ if (error && events.length === 0 && news.length === 0) {
                   );
                 })
               ) : (
-                <div className="w-full bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl md:rounded-2xl p-6 text-center">
-                  <IoNewspaperOutline className="text-purple-400 text-3xl mx-auto mb-3" />
-                  <p className="text-slate-600 font-medium">No news articles</p>
-                  <p className="text-slate-500 text-sm mt-1">Check back later</p>
-                </div>
+<div className="w-full bg-gradient-to-br from-white via-purple-50/50 to-pink-50/30 rounded-2xl border border-purple-100/70 p-6 sm:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 backdrop-blur-sm">
+  <div className="relative inline-flex mb-4 sm:mb-5">
+    <IoNewspaperOutline className="text-purple-400 text-4xl sm:text-5xl relative z-10" />
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-200/40 to-pink-200/20 blur-xl rounded-full" />
+  </div>
+  
+  <p className="text-slate-700 font-semibold text-lg sm:text-xl mb-2">
+    No News Articles Yet
+  </p>
+  
+  <p className="text-slate-500 text-sm sm:text-base max-w-xs mx-auto leading-relaxed">
+    We'll be sharing updates and announcements here soon
+  </p>
+  
+  {/* Optional decorative elements */}
+  <div className="mt-6 flex justify-center items-center gap-3 text-purple-300/50">
+    <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-purple-300/30" />
+    <span className="text-xs font-medium tracking-wider">COMING SOON</span>
+    <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-purple-300/30 to-transparent" />
+  </div>
+</div>
               )
             )}
 
