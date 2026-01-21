@@ -11,8 +11,7 @@ import {
   FiBookmark, FiExternalLink, FiZap, FiTrendingUp, FiCopy, FiBell,
   FiUserPlus, FiArrowRight, FiPlus, FiRotateCw, FiEdit3, FiTrash2,
   FiSave, FiUpload, FiMapPin, FiAlertTriangle, FiMail, FiPhone, FiFolder, FiLock 
-} from 'react-icons/fi';
-import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
+} from 'react-icons/fi';import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
 import { 
   IoClose, IoMenu, IoSparkles
 } from 'react-icons/io5';
@@ -815,7 +814,7 @@ export default function ModernGallery() {
     { id: 'GRADUATION', name: 'Graduation', icon: FiAward, gradient: 'from-rose-500 to-red-500' }
   ];
 
-  // Dynamic stats
+// ✅ CORRECTED - No comment, proper syntax
 const [stats, setStats] = useState([
   { 
     icon: FiImage, 
@@ -840,8 +839,7 @@ const [stats, setStats] = useState([
   },
   { 
     icon: FiCalendar, 
-    // FIXED: Removed the extra {} and corrected the spelling to getFullYear()
-    number: new Date().getFullYear().toString(), 
+    number: new Date().getFullYear().toString(), // ✅ Fixed: Removed comment inline
     label: 'Latest', 
     sublabel: 'This year',
     gradient: 'from-amber-500 to-orange-500'
