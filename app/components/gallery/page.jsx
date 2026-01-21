@@ -781,40 +781,25 @@ const stats = {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Galleries', value: stats.total, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-          { label: 'Total Files', value: stats.totalFiles, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-          { label: 'Images', value: stats.images, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-          { label: 'Videos', value: stats.videos, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent"
-          >
-            <div className="flex flex-col items-start gap-4">
-              {/* Icon Container */}
-              <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${stat.bg} ${stat.border} border transition-all duration-300 group-hover:scale-110 group-hover:shadow-inner`}>
-                <stat.icon className={`text-xl ${stat.color}`} />
-              </div>
-              
-              {/* Text Content */}
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  {stat.label}
-                </p>
-                <h3 className="text-3xl font-bold tracking-tight text-gray-900">
-                  {stat.value.toLocaleString()}
-                </h3>
-              </div>
-            </div>
-            
-            {/* Subtle bottom accent line that appears on hover */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gray-900 rounded-full transition-all duration-300 group-hover:w-1/3 opacity-10" />
-          </div>
-        ))}
-      </div>
+{/* Stats Cards - SAFE VERSION */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  {[
+    { label: 'Total Galleries', value: Array.isArray(galleryItems) ? galleryItems.length : 0, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+    { label: 'Total Files', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => acc + (Array.isArray(item?.files) ? item.files.length : 0), 0) : 0, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { label: 'Images', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
+      const isImage = item?.fileType === 'image';
+      return acc + (isImage && Array.isArray(item?.files) ? item.files.length : 0);
+    }, 0) : 0, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+    { label: 'Videos', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
+      const isVideo = item?.fileType === 'video';
+      return acc + (isVideo && Array.isArray(item?.files) ? item.files.length : 0);
+    }, 0) : 0, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+  ].map((stat) => (
+    <div key={stat.label} className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent">
+      {/* ... rest of your card code ... */}
+    </div>
+  ))}
+</div>
 
       {/* Modernized Filters Bar */}
       <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-4 border border-gray-100 shadow-sm transition-all duration-300">
@@ -1705,24 +1690,34 @@ return (
           >
             Cancel
           </button>
-          <button
-            onClick={onSubmit}
-            disabled={isUploading || !formData.title.trim()}
-            className={`flex-1 sm:flex-none px-10 py-4 rounded-[1.25rem] text-sm font-bold text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
-              mode === 'create' 
-                ? 'bg-slate-900 hover:bg-slate-800' 
-                : 'bg-emerald-600 hover:bg-emerald-500'
-            } disabled:bg-gray-200 disabled:shadow-none`}
-          >
-            {isUploading ? (
-              <FiRotateCw className="animate-spin text-lg" />
-            ) : (
-              <>
-                {mode === 'create' ? <FiPlus /> : <FiSave />}
-                {mode === 'create' ? 'Publish Gallery' : 'Save Changes'}
-              </>
-            )}
-          </button>
+<button
+  onClick={() => {
+    if (!formData.title.trim()) {
+      toast.error('Please enter a gallery title');
+      return;
+    }
+    if (mode === 'create' && (!formData.files || formData.files.length === 0)) {
+      toast.error('Please select at least one file');
+      return;
+    }
+    onSubmit();
+  }}
+  disabled={isUploading}
+  className={`flex-1 sm:flex-none px-10 py-4 rounded-[1.25rem] text-sm font-bold text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
+    mode === 'create' 
+      ? 'bg-slate-900 hover:bg-slate-800' 
+      : 'bg-emerald-600 hover:bg-emerald-500'
+  } disabled:bg-gray-200 disabled:shadow-none`}
+>
+  {isUploading ? (
+    <FiRotateCw className="animate-spin text-lg" />
+  ) : (
+    <>
+      {mode === 'create' ? <FiPlus /> : <FiSave />}
+      {mode === 'create' ? 'Publish Gallery' : 'Save Changes'}
+    </>
+  )}
+</button>
         </div>
       </div>
     </div>
