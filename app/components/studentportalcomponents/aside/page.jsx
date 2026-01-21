@@ -31,7 +31,17 @@ export default function NavigationSidebar({
   };
 
   return (
-    <aside className="fixed lg:relative inset-y-0 left-0 z-50 h-full bg-white border-r border-gray-200 w-full max-w-[280px] lg:max-w-[260px] xl:max-w-[280px] flex flex-col">
+<aside className="
+  fixed lg:relative inset-y-0 left-0 z-50 h-full
+  bg-white border-r border-gray-200
+  w-full
+  sm:w-[80%]
+  md:w-[40%]
+  lg:w-[22%]
+  xl:w-[20%]
+  max-w-none
+  flex flex-col
+">
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-5 lg:p-6 border-b border-gray-200">
