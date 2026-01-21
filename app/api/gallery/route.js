@@ -1,14 +1,80 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import path from "path";
-import fs from "fs";
+import cloudinary from "../../../libs/cloudinary";
 import { randomUUID } from "crypto";
 
-// Ensure upload folder exists
-const uploadDir = path.join(process.cwd(), "public/gallery");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Helper: Upload file to Cloudinary
+const uploadFileToCloudinary = async (file) => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+
+    const isVideo = file.type.startsWith('video/');
+    
+    return await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: isVideo ? "video" : "image",
+          folder: "school_gallery",
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...(isVideo ? {
+            transformation: [
+              { width: 1280, crop: "scale" },
+              { quality: "auto" }
+            ]
+          } : {
+            transformation: [
+              { width: 1200, height: 800, crop: "fill" },
+              { quality: "auto:good" }
+            ]
+          })
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(buffer);
+    });
+  } catch {
+    return null;
+  }
+};
+
+// Helper: Delete files from Cloudinary
+const deleteFilesFromCloudinary = async (fileUrls) => {
+  if (!Array.isArray(fileUrls)) return;
+
+  try {
+    const deletePromises = fileUrls.map(async (fileUrl) => {
+      if (!fileUrl?.includes('cloudinary.com')) return;
+
+      try {
+        const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+(?:$|\?)/);
+        if (!urlMatch) return;
+        
+        const publicId = urlMatch[1];
+        const isVideo = fileUrl.includes('/video/') || 
+                       fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
+        
+        await cloudinary.uploader.destroy(publicId, { 
+          resource_type: isVideo ? "video" : "image" 
+        });
+      } catch {
+        // Silent fail on individual file delete
+      }
+    });
+
+    await Promise.all(deletePromises);
+  } catch {
+    // Silent fail
+  }
+};
 
 // 🔹 GET all galleries
 export async function GET() {
@@ -33,7 +99,7 @@ export async function POST(req) {
 
     const title = formData.get("title");
     const description = formData.get("description");
-    const category = formData.get("category"); // Single category field
+    const category = formData.get("category");
 
     if (!title || !category) {
       return NextResponse.json(
@@ -42,7 +108,7 @@ export async function POST(req) {
       );
     }
 
-    // Valid categories (removed CAMPUS and LIBRARY)
+    // Valid categories
     const validCategories = [
       'GENERAL', 'CLASSROOMS', 'LABORATORIES', 'DORMITORIES', 
       'DINING_HALL', 'SPORTS_FACILITIES', 'TEACHING', 
@@ -72,10 +138,17 @@ export async function POST(req) {
       );
     }
 
+    // Upload files to Cloudinary
     for (const file of fileEntries) {
       if (file && file.size > 0) {
         // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/mpeg'];
+        const allowedTypes = [
+          'image/jpeg', 'image/png', 'image/gif', 'image/webp', 
+          'image/bmp', 'image/svg+xml',
+          'video/mp4', 'video/mpeg', 'video/avi', 'video/mov',
+          'video/wmv', 'video/flv', 'video/webm', 'video/mkv'
+        ];
+        
         if (!allowedTypes.includes(file.type)) {
           return NextResponse.json(
             { success: false, error: `Invalid file type: ${file.type}` },
@@ -92,12 +165,18 @@ export async function POST(req) {
           );
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const fileName = `${randomUUID()}-${file.name.replace(/\s+/g, '-')}`;
-        const filePath = path.join(uploadDir, fileName);
-        fs.writeFileSync(filePath, buffer);
-        files.push(`/gallery/${fileName}`);
+        const result = await uploadFileToCloudinary(file);
+        if (result) {
+          files.push(result.secure_url);
+        }
       }
+    }
+
+    if (files.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Failed to upload files" },
+        { status: 400 }
+      );
     }
 
     // Create gallery entry
@@ -105,7 +184,7 @@ export async function POST(req) {
       data: { 
         title, 
         description, 
-        category, // Single category field
+        category,
         files 
       },
     });
@@ -113,13 +192,13 @@ export async function POST(req) {
     return NextResponse.json({ 
       success: true, 
       gallery: newGallery,
-      message: "Gallery image uploaded successfully" 
-    });
+      message: "Gallery uploaded successfully" 
+    }, { status: 201 });
   } catch (error) {
     console.error("❌ POST Gallery Error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message || "Failed to upload gallery image" 
+      error: error.message || "Failed to upload gallery" 
     }, { status: 500 });
   }
 }
