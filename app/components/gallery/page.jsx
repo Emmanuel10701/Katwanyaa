@@ -97,78 +97,78 @@ export default function ModernGalleryManager() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-const fetchGalleryItems = async () => {
-  try {
-    setLoading(true);
-    
-    const response = await fetch('/api/gallery');
-    
-    if (!response.ok) {
-      // Check if response is HTML error page
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("text/html")) {
-        throw new Error(`Server error (${response.status}). Please try again later.`);
-      }
+  const fetchGalleryItems = async () => {
+    try {
+      setLoading(true);
       
-      // Try to get JSON error if available
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-      } catch {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    }
-    
-    const result = await response.json();
-    
-    if (result.success && result.galleries) {
-      const transformedItems = result.galleries.map(gallery => ({
-        id: gallery.id,
-        title: gallery.title,
-        description: gallery.description || '',
-        category: gallery.category,
-        files: gallery.files || [],
-        fileType: determineMediaType(gallery.files?.[0]),
-        previewUrl: gallery.files?.[0] || '',
-        fileCount: gallery.files?.length || 0,
-        uploadDate: gallery.createdAt || new Date().toISOString(),
-        updatedAt: gallery.updatedAt || new Date().toISOString(),
-        views: Math.floor(Math.random() * 1000),
-        likes: Math.floor(Math.random() * 500),
-        isPublic: true
-      }));
+      const response = await fetch('/api/gallery');
       
-      // Sort items
-      const sortedItems = transformedItems.sort((a, b) => {
-        switch(sortBy) {
-          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-          case 'title': return a.title.localeCompare(b.title);
-          case 'mostFiles': return b.fileCount - a.fileCount;
-          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+      if (!response.ok) {
+        // Check if response is HTML error page
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
         }
-      });
+        
+        // Try to get JSON error if available
+        try {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Server error: ${response.status}`);
+        } catch {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      }
       
-      setGalleryItems(sortedItems);
-      setFilteredItems(sortedItems);
-      toast.success(`Loaded ${sortedItems.length} galleries`);
-    } else {
-      throw new Error(result.error || 'Failed to load galleries');
+      const result = await response.json();
+      
+      if (result.success && result.galleries) {
+        const transformedItems = result.galleries.map(gallery => ({
+          id: gallery.id,
+          title: gallery.title,
+          description: gallery.description || '',
+          category: gallery.category,
+          files: gallery.files || [],
+          fileType: determineMediaType(gallery.files?.[0]),
+          previewUrl: gallery.files?.[0] || '',
+          fileCount: gallery.files?.length || 0,
+          uploadDate: gallery.createdAt || new Date().toISOString(),
+          updatedAt: gallery.updatedAt || new Date().toISOString(),
+          views: Math.floor(Math.random() * 1000),
+          likes: Math.floor(Math.random() * 500),
+          isPublic: true
+        }));
+        
+        // Sort items
+        const sortedItems = transformedItems.sort((a, b) => {
+          switch(sortBy) {
+            case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
+            case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
+            case 'title': return a.title.localeCompare(b.title);
+            case 'mostFiles': return b.fileCount - a.fileCount;
+            default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+          }
+        });
+        
+        setGalleryItems(sortedItems);
+        setFilteredItems(sortedItems);
+        toast.success(`Loaded ${sortedItems.length} galleries`);
+      } else {
+        throw new Error(result.error || 'Failed to load galleries');
+      }
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
+      toast.error(`Failed to load gallery items: ${error.message}`);
+      
+      // Set empty arrays on error
+      setGalleryItems([]);
+      setFilteredItems([]);
+      
+      // Log for debugging
+      console.log('Setting gallery items to empty due to error');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching gallery items:', error);
-    toast.error(`Failed to load gallery items: ${error.message}`);
-    
-    // Set empty arrays on error
-    setGalleryItems([]);
-    setFilteredItems([]);
-    
-    // Log for debugging
-    console.log('Setting gallery items to empty due to error');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Determine media type
   const determineMediaType = (filePath) => {
@@ -330,7 +330,18 @@ const fetchGalleryItems = async () => {
       });
 
       if (!response.ok) {
+        // Check if response is HTML error page
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check content type before parsing JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON. Please try again.");
       }
 
       const result = await response.json();
@@ -400,7 +411,18 @@ const fetchGalleryItems = async () => {
       });
 
       if (!response.ok) {
+        // Check if response is HTML error page
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check content type before parsing JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON. Please try again.");
       }
 
       const result = await response.json();
@@ -442,7 +464,18 @@ const fetchGalleryItems = async () => {
       });
 
       if (!response.ok) {
+        // Check if response is HTML error page
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+          throw new Error(`Server error (${response.status}). Please try again later.`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Check content type before parsing JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON. Please try again.");
       }
 
       const result = await response.json();
@@ -479,7 +512,14 @@ const fetchGalleryItems = async () => {
 
     const loadingToast = toast.loading(`Deleting ${selectedItems.size} galleries...`);
     const deletePromises = Array.from(selectedItems).map(id => 
-      fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => res.json())
+      fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => {
+        // Check content type before parsing JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          return { success: false, error: "Server did not return JSON" };
+        }
+        return res.json();
+      })
     );
 
     try {
@@ -555,29 +595,28 @@ const fetchGalleryItems = async () => {
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-  // Stats
-// Stats calculation
-const stats = {
-  total: galleryItems?.length || 0,
-  totalFiles: galleryItems?.reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-  images: galleryItems?.filter(item => item?.fileType === 'image').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-  videos: galleryItems?.filter(item => item?.fileType === 'video').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-  categories: new Set(galleryItems?.map(item => item?.category).filter(Boolean)).size || 0
-};
+  // Stats calculation
+  const stats = {
+    total: galleryItems?.length || 0,
+    totalFiles: galleryItems?.reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+    images: galleryItems?.filter(item => item?.fileType === 'image').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+    videos: galleryItems?.filter(item => item?.fileType === 'video').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+    categories: new Set(galleryItems?.map(item => item?.category).filter(Boolean)).size || 0
+  };
 
-if (loading) {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-        <div>
-          <p className="text-gray-600 text-lg font-medium">Loading gallery...</p>
-          <p className="text-gray-400 text-sm">This may take a moment</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <div>
+            <p className="text-gray-600 text-lg font-medium">Loading gallery...</p>
+            <p className="text-gray-400 text-sm">This may take a moment</p>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4 lg:p-6 space-y-6">
@@ -624,7 +663,7 @@ if (loading) {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <FiFolder className="text-cyan-500" />
-                    <span>{Array.from(new Set(galleryItems.map(item => item.category))).length} Categories</span>
+                    <span>{stats.categories} Categories</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <FiCalendar className="text-violet-500" />
@@ -635,152 +674,147 @@ if (loading) {
             </div>
           </div>
 
-        {/* Right Content - Action Buttons */}
-<div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          {/* Right Content - Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            {/* Refresh Button */}
+            <button
+              onClick={fetchGalleryItems}
+              disabled={loading}
+              className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md
+                         flex items-center justify-center gap-2 text-sm font-medium
+                         hover:bg-gray-100 transition disabled:opacity-60"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                  Refreshing…
+                </>
+              ) : (
+                'Refresh'
+              )}
+            </button>
 
-  {/* Refresh Button */}
-  <button
-    onClick={fetchGalleryItems}
-    disabled={loading}
-    className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md
-               flex items-center justify-center gap-2 text-sm font-medium
-               hover:bg-gray-100 transition disabled:opacity-60"
-  >
-    {loading ? (
-      <>
-        <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-        Refreshing…
-      </>
-    ) : (
-      'Refresh'
-    )}
-  </button>
-
-  {/* Upload Button */}
-  <button
-    onClick={() => setShowCreateModal(true)}
-    disabled={loading}
-    className="px-4 py-2.5 bg-indigo-600 text-white rounded-md
-               flex items-center justify-center gap-2 text-sm font-medium
-               hover:bg-indigo-700 transition disabled:opacity-60"
-  >
-    Upload Gallery
-  </button>
-
-</div>
-
+            {/* Upload Button */}
+            <button
+              onClick={() => setShowCreateModal(true)}
+              disabled={loading}
+              className="px-4 py-2.5 bg-indigo-600 text-white rounded-md
+                         flex items-center justify-center gap-2 text-sm font-medium
+                         hover:bg-indigo-700 transition disabled:opacity-60"
+            >
+              Upload Gallery
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Rest of your component remains the same... */}
-{/* Stats Cards */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-  {[
-    { label: 'Total Galleries', value: stats.total, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-    { label: 'Total Files', value: stats.totalFiles, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-    { label: 'Images', value: stats.images, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-    { label: 'Videos', value: stats.videos, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-  ].map((stat) => (
-    <div
-      key={stat.label}
-      className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent"
-    >
-      <div className="flex flex-col items-start gap-4">
-        {/* Icon Container */}
-        <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${stat.bg} ${stat.border} border transition-all duration-300 group-hover:scale-110 group-hover:shadow-inner`}>
-          <stat.icon className={`text-xl ${stat.color}`} />
-        </div>
-        
-        {/* Text Content */}
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            {stat.label}
-          </p>
-          <h3 className="text-3xl font-bold tracking-tight text-gray-900">
-            {stat.value.toLocaleString()}
-          </h3>
-        </div>
-      </div>
-      
-      {/* Subtle bottom accent line that appears on hover */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gray-900 rounded-full transition-all duration-300 group-hover:w-1/3 opacity-10" />
-    </div>
-  ))}
-</div>
-
-  {/* Modernized Filters Bar */}
-<div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-4 border border-gray-100 shadow-sm transition-all duration-300">
-  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-    
-    {/* Search - Spans 4 columns */}
-    <div className="md:col-span-4 relative group">
-      <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-      <input
-        type="text"
-        placeholder="Search galleries..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none placeholder:text-gray-400"
-      />
-    </div>
-
-    {/* Category Select - Spans 3 columns */}
-    <div className="md:col-span-3">
-      <select
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
-      >
-        <option value="all">All Categories</option>
-        {CATEGORIES.map(cat => (
-          <option key={cat.value} value={cat.value}>{cat.label}</option>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: 'Total Galleries', value: stats.total, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+          { label: 'Total Files', value: stats.totalFiles, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+          { label: 'Images', value: stats.images, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+          { label: 'Videos', value: stats.videos, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent"
+          >
+            <div className="flex flex-col items-start gap-4">
+              {/* Icon Container */}
+              <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${stat.bg} ${stat.border} border transition-all duration-300 group-hover:scale-110 group-hover:shadow-inner`}>
+                <stat.icon className={`text-xl ${stat.color}`} />
+              </div>
+              
+              {/* Text Content */}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  {stat.label}
+                </p>
+                <h3 className="text-3xl font-bold tracking-tight text-gray-900">
+                  {stat.value.toLocaleString()}
+                </h3>
+              </div>
+            </div>
+            
+            {/* Subtle bottom accent line that appears on hover */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gray-900 rounded-full transition-all duration-300 group-hover:w-1/3 opacity-10" />
+          </div>
         ))}
-      </select>
-    </div>
-
-    {/* Sort Select - Spans 2 columns */}
-    <div className="md:col-span-2">
-      <select
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
-      >
-        <option value="newest">Newest</option>
-        <option value="oldest">Oldest</option>
-        <option value="title">A-Z</option>
-        <option value="mostFiles">Files</option>
-      </select>
-    </div>
-
-    {/* Actions & Toggle - Spans 3 columns */}
-    <div className="md:col-span-3 flex items-center justify-between gap-3 pl-2">
-      <div className="flex bg-gray-100/80 p-1 rounded-xl items-center">
-        <button
-          onClick={() => setViewMode('grid')}
-          className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
-        >
-          <FiGrid className="text-lg" />
-        </button>
-        <button
-          onClick={() => setViewMode('list')}
-          className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
-        >
-          <FiList className="text-lg" />
-        </button>
       </div>
-      
-      <button 
-        onClick={selectAll}
-        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
-      >
-        {selectedItems.size === currentItems.length ? 'Deselect' : 'Select All'}
-      </button>
-    </div>
 
-  </div>
-</div>
+      {/* Modernized Filters Bar */}
+      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-4 border border-gray-100 shadow-sm transition-all duration-300">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          
+          {/* Search - Spans 4 columns */}
+          <div className="md:col-span-4 relative group">
+            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search galleries..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none placeholder:text-gray-400"
+            />
+          </div>
+
+          {/* Category Select - Spans 3 columns */}
+          <div className="md:col-span-3">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+            >
+              <option value="all">All Categories</option>
+              {CATEGORIES.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort Select - Spans 2 columns */}
+          <div className="md:col-span-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="title">A-Z</option>
+              <option value="mostFiles">Files</option>
+            </select>
+          </div>
+
+          {/* Actions & Toggle - Spans 3 columns */}
+          <div className="md:col-span-3 flex items-center justify-between gap-3 pl-2">
+            <div className="flex bg-gray-100/80 p-1 rounded-xl items-center">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <FiGrid className="text-lg" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                <FiList className="text-lg" />
+              </button>
+            </div>
+            
+            <button 
+              onClick={selectAll}
+              className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
+            >
+              {selectedItems.size === currentItems.length ? 'Deselect' : 'Select All'}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Bulk Actions */}
       {selectedItems.size > 0 && (
@@ -817,27 +851,133 @@ if (loading) {
       )}
 
       {/* Gallery Content */}
-      {currentItems.length === 0 ? (
-        <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50">
-          <div className="text-gray-300 text-6xl mb-4">📷</div>
-          <h3 className="text-gray-800 text-xl font-semibold mb-2">No galleries found</h3>
-          <p className="text-gray-600 mb-6">
-            {searchTerm || selectedCategory !== 'all' 
-              ? 'Try adjusting your search or filters' 
-              : 'Start by uploading your first gallery'
-            }
-          </p>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedCategory('all');
-              setShowCreateModal(true);
-            }}
-            className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-semibold shadow-lg text-sm sm:text-base"
-          >
-            <FiUpload className="inline mr-2" />
-            Upload Gallery
-          </button>
+      {loading ? (
+        <div className="text-center py-24 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50">
+          <div className="inline-flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <FiImage className="text-blue-500 text-2xl" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-gray-800 text-xl font-semibold mb-2">Loading Galleries</h3>
+              <p className="text-gray-500 text-sm">Fetching your media collection...</p>
+            </div>
+          </div>
+        </div>
+      ) : currentItems.length === 0 ? (
+        <div className="bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/20 rounded-2xl p-8 border border-gray-200/50 shadow-sm">
+          <div className="max-w-md mx-auto text-center space-y-6">
+            {/* Icon/Illustration */}
+            <div className="relative">
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-cyan-100 rounded-3xl flex items-center justify-center shadow-inner">
+                {galleryItems.length === 0 ? (
+                  <FiFolderPlus className="text-blue-400 text-4xl" />
+                ) : (
+                  <FiSearch className="text-gray-400 text-4xl" />
+                )}
+              </div>
+              <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
+                {galleryItems.length === 0 ? (
+                  <FiPlus className="text-white text-sm" />
+                ) : (
+                  <FiFilter className="text-white text-sm" />
+                )}
+              </div>
+            </div>
+            
+            {/* Title & Description */}
+            <div className="space-y-3">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {galleryItems.length === 0 
+                  ? 'Your gallery is empty' 
+                  : 'No galleries found'
+                }
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {searchTerm || selectedCategory !== 'all' 
+                  ? 'No galleries match your current search and filter criteria.'
+                  : 'Start building your visual collection by uploading images and videos.'
+                }
+              </p>
+            </div>
+            
+            {/* Stats/Info */}
+            {(searchTerm || selectedCategory !== 'all') && galleryItems.length > 0 && (
+              <div className="bg-white/50 rounded-xl p-4 border border-gray-100">
+                <p className="text-sm text-gray-500 mb-2">Current filters:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {searchTerm && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                      <FiSearch size={12} />
+                      "{searchTerm}"
+                    </span>
+                  )}
+                  {selectedCategory !== 'all' && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-full text-sm font-medium">
+                      <FiFolder size={12} />
+                      {CATEGORIES.find(c => c.value === selectedCategory)?.label || selectedCategory}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+              {/* Clear Filters Button (only show when searching/filtering) */}
+              {(searchTerm || selectedCategory !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                  }}
+                  className="px-5 py-3 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all group"
+                >
+                  <FiX className="text-gray-500 group-hover:text-gray-700" />
+                  Clear Filters
+                  {galleryItems.length > 0 && (
+                    <span className="ml-1 bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                      {galleryItems.length} available
+                    </span>
+                  )}
+                </button>
+              )}
+              
+              {/* Retry Button (if fetch failed) */}
+              {galleryItems.length === 0 && (
+                <button
+                  onClick={fetchGalleryItems}
+                  className="px-5 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 text-blue-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-all"
+                >
+                  <FiRefreshCw className="text-blue-500" />
+                  Retry Loading
+                </button>
+              )}
+              
+              {/* Upload Button */}
+              <button
+                onClick={() => {
+                  setShowCreateModal(true);
+                }}
+                className="px-5 py-3 bg-gradient-to-r from-indigo-500 to-violet-500 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-md"
+              >
+                <FiUpload className="text-white" />
+                {galleryItems.length === 0 ? 'Upload First Gallery' : 'Upload New Gallery'}
+              </button>
+            </div>
+            
+            {/* Help Text */}
+            <div className="pt-6 border-t border-gray-100">
+              <p className="text-xs text-gray-400">
+                {galleryItems.length === 0 
+                  ? 'Supported formats: JPG, PNG, GIF, MP4, WebM (max 10MB each)'
+                  : 'Try different keywords or browse all categories'
+                }
+              </p>
+            </div>
+          </div>
         </div>
       ) : (
         <>
@@ -869,7 +1009,7 @@ if (loading) {
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
               >
                 <FiChevronLeft className="text-lg" />
               </button>
@@ -880,10 +1020,10 @@ if (loading) {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-semibold ${
+                    className={`w-10 h-10 rounded-xl font-semibold transition-all ${
                       currentPage === page
                         ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg'
-                        : 'bg-white text-gray-600 border border-gray-300'
+                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
                     }`}
                   >
                     {page}
@@ -894,7 +1034,7 @@ if (loading) {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
               >
                 <FiChevronRight className="text-lg" />
               </button>
@@ -1351,7 +1491,7 @@ return (
           
           {/* Section: Asset Management */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">Assets & Media</h3>
+            <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em] ml-1">Assets & Media</h3>
             
             {/* Existing Files: Floating Glass Card */}
             {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
@@ -1359,7 +1499,7 @@ return (
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
-                    <h3 className="font-bold text-gray-800 text-sm">
+                    <h3 className="font-bold text-black text-sm">
                       Existing Gallery Files ({editingItem.files.length})
                     </h3>
                   </div>
@@ -1388,7 +1528,7 @@ return (
                               </button>
                             ) : (
                               <button onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg">
-                                <FiRotateCcw size={18} />
+                                <FiRotateCwc size={18} />
                               </button>
                             )}
                           </div>
@@ -1413,7 +1553,7 @@ return (
                 <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <FiUploadCloud className="text-3xl text-indigo-500" />
                 </div>
-                <h4 className="text-lg font-bold text-gray-900">Drop your files here</h4>
+                <h4 className="text-lg font-bold text-black">Drop your files here</h4>
                 <p className="text-sm text-gray-400 mt-1 mb-6">PNG, JPG, MP4 or WebM (Max 10MB)</p>
                 <span className="px-6 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 shadow-sm">Browse Files</span>
               </div>
@@ -1424,23 +1564,23 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Gallery Title</label>
+                <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Gallery Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Summer Vacation 2024"
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-gray-900 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none"
+                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-black font-bold focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none"
                 />
               </div>
 
               <div className="space-y-2" ref={dropdownRef}>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Category</label>
+                <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Category</label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-left flex items-center justify-between text-gray-700 font-medium"
+                    className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-left flex items-center justify-between text-black font-bold"
                   >
                     <span>{categories.find(c => c.value === formData.category)?.label || 'Choose category...'}</span>
                     <FiChevronDown className={`transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -1451,7 +1591,7 @@ return (
                         <button
                           key={cat.value}
                           onClick={() => handleCategorySelect(cat.value)}
-                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-black hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                         >
                           {cat.label}
                         </button>
@@ -1463,13 +1603,13 @@ return (
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Description</label>
+              <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={6}
                 placeholder="Write a brief story about this gallery..."
-                className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-gray-900 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none resize-none"
+                className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-black font-bold focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none resize-none"
               />
             </div>
           </div>
@@ -1553,7 +1693,7 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
 
  return (
   <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 z-50">
-    <div className="bg-white sm:rounded-[2.5rem] w-full max-w-6xl max-h-screen sm:max-h-[95vh] overflow-hidden shadow-2xl flex flex-col transition-all">
+    <div className="bg-white sm:rounded-[2.5rem] w-full max-w-3xl max-h-screen sm:max-h-[80vh] overflow-hidden shadow-2xl flex flex-col transition-all">
       
       {/* Immersive Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -1562,7 +1702,7 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
             <FiEye className="text-blue-600 text-lg" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 truncate tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-black truncate tracking-tight">
               {item.title}
             </h2>
             <p className="text-gray-400 text-[10px] sm:text-xs uppercase font-bold tracking-widest">
@@ -1592,20 +1732,20 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
         <div className="flex flex-col">
           
           {/* Media Stage: Dark background makes content pop */}
-          <div className="relative bg-slate-50 group aspect-video sm:aspect-auto sm:min-h-[500px] flex items-center justify-center overflow-hidden">
+          <div className="relative bg-slate-50 group aspect-video sm:aspect-auto sm:min-h-[350px] flex items-center justify-center overflow-hidden">
             
             {/* Nav Arrows - Only visible on hover/touch */}
             {item.files.length > 1 && (
               <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-10 pointer-events-none">
                 <button
                   onClick={prevFile}
-                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-gray-900 pointer-events-auto opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300"
+                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-black pointer-events-auto opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300"
                 >
                   <FiChevronLeft size={24} />
                 </button>
                 <button
                   onClick={nextFile}
-                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-gray-900 pointer-events-auto opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
+                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-black pointer-events-auto opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
                 >
                   <FiChevronRight size={24} />
                 </button>
@@ -1632,7 +1772,7 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
           </div>
 
           {/* Details & Info Panel */}
-          <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-tighter rounded-lg">
@@ -1642,28 +1782,28 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                    {item.files.length} Files
                 </span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight">{item.title}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+              <h3 className="text-xl font-bold text-black mb-3 leading-tight">{item.title}</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
                 {item.description}
               </p>
               
               {/* Thumbnail Strip */}
               {item.files.length > 1 && (
-                <div className="mt-8">
-                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gallery Collection</h4>
+                <div className="mt-6">
+                  <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-4">Gallery Collection</h4>
                   <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
                     {item.files.map((file, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentIndex(index)}
-                        className={`relative min-w-[80px] h-20 rounded-2xl overflow-hidden transition-all duration-300 ${
-                          index === currentIndex ? 'ring-4 ring-blue-500 ring-offset-2 scale-95' : 'opacity-60 hover:opacity-100'
+                        className={`relative min-w-[70px] h-16 rounded-2xl overflow-hidden transition-all duration-300 ${
+                          index === currentIndex ? 'ring-2 ring-blue-500 ring-offset-2 scale-95' : 'opacity-60 hover:opacity-100'
                         }`}
                       >
                         <img src={file} className="w-full h-full object-cover" />
                         {file.match(/\.(mp4|webm|mov)$/i) && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                            <FiVideo className="text-white" />
+                            <FiVideo className="text-white text-xs" />
                           </div>
                         )}
                       </button>
@@ -1675,14 +1815,14 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
 
             {/* Quick Actions Sidebar */}
             <div className="space-y-3">
-               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Actions</h4>
+               <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-4">Actions</h4>
                <button onClick={downloadFile} className="w-full flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all group">
-                 <span className="font-semibold">Download Original</span>
-                 <FiDownload className="group-hover:translate-y-0.5 transition-transform" />
+                 <span className="font-bold text-sm">Download Original</span>
+                 <FiDownload className="group-hover:translate-y-0.5 transition-transform text-sm" />
                </button>
-               <button onClick={copyUrl} className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 text-gray-700 rounded-2xl hover:border-blue-200 hover:bg-blue-50 transition-all">
-                 <span className="font-semibold">Copy Direct Link</span>
-                 <FiCopy />
+               <button onClick={copyUrl} className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 text-black rounded-2xl hover:border-blue-200 hover:bg-blue-50 transition-all">
+                 <span className="font-bold text-sm">Copy Direct Link</span>
+                 <FiCopy className="text-sm" />
                </button>
                <div className="grid grid-cols-2 gap-3 pt-2">
                  <button onClick={onEdit} className="flex items-center justify-center gap-2 p-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-100 transition-all">
@@ -1712,7 +1852,7 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
             <FiAlertCircle className="text-white text-2xl" />
           </div>
           <div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Delete Gallery</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-black">Delete Gallery</h3>
             <p className="text-gray-600 text-sm">This action cannot be undone</p>
           </div>
         </div>
@@ -1721,14 +1861,14 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
         <div className="p-6">
           <p className="text-gray-600 mb-4 text-sm sm:text-base">
             Are you sure you want to delete the gallery 
-            <span className="font-semibold text-gray-800"> "{item.title}"</span>?
+            <span className="font-bold text-black"> "{item.title}"</span>?
           </p>
           
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3 text-red-700">
               <FiAlertCircle className="flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-sm sm:text-base">This will permanently delete:</p>
+                <p className="font-bold text-sm sm:text-base">This will permanently delete:</p>
                 <ul className="mt-2 space-y-1 text-sm">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
@@ -1759,7 +1899,7 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-medium text-gray-800 truncate">{item.title}</p>
+              <p className="text-sm sm:text-base font-bold text-black truncate">{item.title}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
                   {item.category.replace(/_/g, ' ')}
@@ -1776,13 +1916,13 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
         <div className="flex gap-3 p-6 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full font-medium text-sm sm:text-base"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full font-bold text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-medium text-sm sm:text-base"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-bold text-sm sm:text-base"
           >
             Delete Gallery
           </button>
