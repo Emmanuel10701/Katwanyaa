@@ -188,25 +188,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => setShowMobileWarning(false)}
-              className="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all duration-200 hover:shadow-lg"
-            >
-              <FiMonitor className="text-lg" />
-              Continue Anyway
-            </button>
-            <button
-              onClick={() => {
-                // Redirect to mobile-friendly page or close modal
-                setShowMobileWarning(false);
-              }}
-              className="flex-1 px-6 py-3.5 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl font-bold text-sm hover:bg-gray-700 transition-all duration-200"
-            >
-              View Mobile Version
-            </button>
-          </div>
+        
         </div>
         
         {/* Footer */}
