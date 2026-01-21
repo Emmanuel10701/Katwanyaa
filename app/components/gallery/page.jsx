@@ -625,132 +625,152 @@ export default function ModernGalleryManager() {
             </div>
           </div>
 
-          {/* Right Content - Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {/* Refresh Button */}
-            <button
-              onClick={fetchGalleryItems}
-              className="group relative px-5 py-3 bg-gradient-to-r from-white to-gray-50 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-3 shadow-lg shadow-gray-200 hover:shadow-gray-300 transition-all duration-300 border border-gray-200 hover:border-gray-300 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-700 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
-              <FiRefreshCw className={`text-lg ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-              <span className="font-semibold">Refresh</span>
-              <div className="hidden sm:block text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
-                ⌘R
-              </div>
-            </button>
+        {/* Right Content - Action Buttons */}
+<div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
 
-            {/* Upload Button */}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="group relative px-5 py-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 text-white rounded-xl font-semibold flex items-center justify-center gap-3 shadow-lg shadow-indigo-300/50 hover:shadow-indigo-400/50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {/* Button content */}
-              <div className="relative flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <FiUpload className="text-xl" />
-                </div>
-                <div className="text-left">
-                  <span className="block">Upload Gallery</span>
-                  <span className="text-xs font-normal text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Add images & videos
-                  </span>
-                </div>
-                <div className="hidden sm:block p-1.5 bg-white/20 rounded-lg">
-                  <FiPlus className="text-sm" />
-                </div>
-              </div>
-            </button>
-          </div>
+  {/* Refresh Button */}
+  <button
+    onClick={fetchGalleryItems}
+    disabled={loading}
+    className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md
+               flex items-center justify-center gap-2 text-sm font-medium
+               hover:bg-gray-100 transition disabled:opacity-60"
+  >
+    {loading ? (
+      <>
+        <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+        Refreshing…
+      </>
+    ) : (
+      'Refresh'
+    )}
+  </button>
+
+  {/* Upload Button */}
+  <button
+    onClick={() => setShowCreateModal(true)}
+    disabled={loading}
+    className="px-4 py-2.5 bg-indigo-600 text-white rounded-md
+               flex items-center justify-center gap-2 text-sm font-medium
+               hover:bg-indigo-700 transition disabled:opacity-60"
+  >
+    Upload Gallery
+  </button>
+
+</div>
+
         </div>
       </div>
 
       {/* Rest of your component remains the same... */}
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Galleries', value: stats.total, icon: FiFolder, color: 'blue', bg: 'from-blue-500 to-cyan-500' },
-          { label: 'Total Files', value: stats.totalFiles, icon: FiImage, color: 'green', bg: 'from-green-500 to-emerald-500' },
-          { label: 'Images', value: stats.images, icon: FiImage, color: 'purple', bg: 'from-purple-500 to-pink-500' },
-          { label: 'Videos', value: stats.videos, icon: FiVideo, color: 'red', bg: 'from-red-500 to-orange-500' },
-        ].map((stat, index) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 backdrop-blur-sm"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-2xl font-bold text-gray-800">{stat.value.toLocaleString()}</p>
-                <p className="text-gray-600 text-sm">{stat.label}</p>
-              </div>
-              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.bg} shadow-md`}>
-                <stat.icon className="text-xl text-white" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Enhanced Filters Bar */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200/50">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-3 text-gray-400 text-lg" />
-            <input
-              type="text"
-              placeholder="Search galleries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          >
-            <option value="all">All Categories</option>
-            {CATEGORIES.map(cat => (
-              <option key={cat.value} value={cat.value}>{cat.label}</option>
-            ))}
-          </select>
-
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="title">Title A-Z</option>
-            <option value="mostFiles">Most Files</option>
-          </select>
-
-          <div className="flex items-center gap-4">
-            <div className="flex bg-gray-100 rounded-xl p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600'}`}
-              >
-                <FiGrid className="text-lg" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-lg' : 'text-gray-600'}`}
-              >
-                <FiList className="text-lg" />
-              </button>
-            </div>
-            <button 
-              onClick={selectAll}
-              className="text-blue-600 text-sm font-semibold whitespace-nowrap"
-            >
-              {selectedItems.size === currentItems.length ? 'Deselect All' : 'Select All'}
-            </button>
-          </div>
+{/* Stats Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  {[
+    { label: 'Total Galleries', value: stats.total, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+    { label: 'Total Files', value: stats.totalFiles, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+    { label: 'Images', value: stats.images, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
+    { label: 'Videos', value: stats.videos, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
+  ].map((stat) => (
+    <div
+      key={stat.label}
+      className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent"
+    >
+      <div className="flex flex-col items-start gap-4">
+        {/* Icon Container */}
+        <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${stat.bg} ${stat.border} border transition-all duration-300 group-hover:scale-110 group-hover:shadow-inner`}>
+          <stat.icon className={`text-xl ${stat.color}`} />
+        </div>
+        
+        {/* Text Content */}
+        <div className="space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            {stat.label}
+          </p>
+          <h3 className="text-3xl font-bold tracking-tight text-gray-900">
+            {stat.value.toLocaleString()}
+          </h3>
         </div>
       </div>
+      
+      {/* Subtle bottom accent line that appears on hover */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-1 bg-gray-900 rounded-full transition-all duration-300 group-hover:w-1/3 opacity-10" />
+    </div>
+  ))}
+</div>
+
+  {/* Modernized Filters Bar */}
+<div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-4 border border-gray-100 shadow-sm transition-all duration-300">
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+    
+    {/* Search - Spans 4 columns */}
+    <div className="md:col-span-4 relative group">
+      <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+      <input
+        type="text"
+        placeholder="Search galleries..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none placeholder:text-gray-400"
+      />
+    </div>
+
+    {/* Category Select - Spans 3 columns */}
+    <div className="md:col-span-3">
+      <select
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+      >
+        <option value="all">All Categories</option>
+        {CATEGORIES.map(cat => (
+          <option key={cat.value} value={cat.value}>{cat.label}</option>
+        ))}
+      </select>
+    </div>
+
+    {/* Sort Select - Spans 2 columns */}
+    <div className="md:col-span-2">
+      <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+      >
+        <option value="newest">Newest</option>
+        <option value="oldest">Oldest</option>
+        <option value="title">A-Z</option>
+        <option value="mostFiles">Files</option>
+      </select>
+    </div>
+
+    {/* Actions & Toggle - Spans 3 columns */}
+    <div className="md:col-span-3 flex items-center justify-between gap-3 pl-2">
+      <div className="flex bg-gray-100/80 p-1 rounded-xl items-center">
+        <button
+          onClick={() => setViewMode('grid')}
+          className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <FiGrid className="text-lg" />
+        </button>
+        <button
+          onClick={() => setViewMode('list')}
+          className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
+        >
+          <FiList className="text-lg" />
+        </button>
+      </div>
+      
+      <button 
+        onClick={selectAll}
+        className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
+      >
+        {selectedItems.size === currentItems.length ? 'Deselect' : 'Select All'}
+      </button>
+    </div>
+
+  </div>
+</div>
 
       {/* Bulk Actions */}
       {selectedItems.size > 0 && (
