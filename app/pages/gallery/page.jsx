@@ -1,60 +1,27 @@
 'use client';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { toast, Toaster } from 'sonner';
 import { 
-  FiCalendar, 
-  FiClock, 
-  FiUser, 
-  FiArrowRight,
-  FiSearch,
-  FiBookOpen,
-  FiTarget,
-  FiUsers,
-  FiAward,
-  FiStar,
-  FiShield,
-  FiMusic,
-  FiHeart,
-  FiAlertTriangle,
-  FiPhone,
-  FiMail,
-  FiPhoneCall,
-  FiMapPin,
-  FiPlus,
-  FiX,
-  FiFilter,
-  FiRotateCw,
-  FiEdit3,
-  FiTrash2,
-  FiMessageCircle,
-  FiSave,
-  FiImage,
-  FiUpload,
-  FiEye,
-  FiChevronRight,
-  FiChevronLeft,
-  FiGrid,
-  FiList,
-  FiBookmark,
-  FiShare2,
-  FiDownload,
-  FiExternalLink,
-  FiZap,
-  FiTrendingUp,
-  FiGlobe,
-  FiCopy,
-  FiBell,
-  FiUserPlus 
+  FiSearch, FiFilter, FiX, FiHome, FiChevronLeft, FiChevronRight,
+  FiDownload, FiShare2, FiHeart, FiImage, FiVideo, FiPlay, FiPause,
+  FiVolume2, FiVolumeX, FiGrid, FiList, FiChevronUp, FiChevronDown,
+  FiUsers, FiBook, FiAward, FiMusic, FiMic, FiCamera, FiCalendar,
+  FiUser, FiBookOpen, FiTarget, FiStar, FiGlobe, FiMessageSquare,
+  FiFacebook, FiTwitter, FiFileText, FiInfo, FiRefreshCw, FiEye,
+  FiBookmark, FiExternalLink, FiZap, FiTrendingUp, FiCopy, FiBell,
+  FiUserPlus, FiArrowRight, FiPlus, FiRotateCw, FiEdit3, FiTrash2,
+  FiSave, FiUpload, FiMapPin, FiAlertTriangle, FiMail, FiPhone
 } from 'react-icons/fi';
-
+import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
+import { 
+  IoClose, IoMenu, IoSparkles
+} from 'react-icons/io5';
 import {
   IoCalendarClearOutline,
-  IoSparkles,
   IoRibbonOutline,
   IoPeopleCircle,
   IoStatsChart,
   IoShareSocialOutline,
-  IoClose,
   IoLocationOutline,
   IoTimeOutline,
   IoPersonOutline,
@@ -63,127 +30,27 @@ import {
 } from 'react-icons/io5';
 import { CircularProgress, Box, Typography, Stack } from '@mui/material';
 
-// Modern color palette
-const COLORS = {
-  primary: '#1d4ed8',
-  secondary: '#3b82f6',
-  accent: '#f59e0b',
-  background: '#f8fafc',
-  surface: '#ffffff',
-  text: '#1e293b',
-  textLight: '#64748b',
-  border: '#e2e8f0',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  info: '#3b82f6',
-  overlay: 'rgba(0, 0, 0, 0.85)'
-};
-
-// Modern Button Component
-const ModernButton = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  icon: Icon, 
-  onClick, 
-  disabled, 
-  className = '',
-  type = 'button'
-}) => {
-  const sizeClasses = {
-    sm: 'px-3 py-2 text-sm rounded-lg',
-    md: 'px-4 py-3 text-sm rounded-lg',
-    lg: 'px-6 py-4 text-base rounded-xl'
-  };
-
-  const variantClasses = {
-    primary: 'bg-gradient-to-r from-blue-700 to-blue-600 text-white shadow-md hover:shadow-lg',
-    secondary: 'bg-white text-slate-800 border border-slate-200 shadow-sm hover:bg-slate-50',
-    outline: 'border border-slate-200 text-slate-700 bg-transparent hover:bg-slate-50',
-    ghost: 'text-slate-700 bg-transparent hover:bg-slate-100/50',
-    danger: 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-md hover:shadow-lg',
-    success: 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md hover:shadow-lg'
-  };
-
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`
-        font-medium transition-all duration-200 
-        flex items-center justify-center gap-2 
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        ${sizeClasses[size]} 
-        ${variantClasses[variant]} 
-        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} 
-        ${className}
-      `}
-    >
-      {Icon && <Icon className="text-current" />}
-      {children}
-    </button>
-  );
-};
-
-// Modern Card Component
-const ModernCard = ({ children, className = '', elevation = 'md' }) => {
-  const elevationClasses = {
-    none: 'shadow-none',
-    sm: 'shadow-sm',
-    md: 'shadow',
-    lg: 'shadow-lg',
-    xl: 'shadow-xl'
-  };
-
-  return (
-    <div className={`bg-white rounded-xl ${elevationClasses[elevation]} border border-slate-100 ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-// Modern Badge Component
-const ModernBadge = ({ children, color = 'blue', className = '', icon: Icon }) => {
-  const colorClasses = {
-    blue: 'bg-blue-100 text-blue-700',
-    green: 'bg-emerald-100 text-emerald-700',
-    red: 'bg-red-100 text-red-700',
-    yellow: 'bg-amber-100 text-amber-700',
-    purple: 'bg-purple-100 text-purple-700',
-    slate: 'bg-slate-100 text-slate-700'
-  };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${colorClasses[color]} ${className}`}>
-      {Icon && <Icon className="text-xs" />}
-      {children}
-    </span>
-  );
-};
-
-// Modern Modal Component
-const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
+// Modern Modal Component with Glass Morphism
+const ModernModal = ({ children, open, onClose, maxWidth = '800px', blur = true }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${blur ? 'backdrop-blur-md' : 'bg-black/50'}`}>
       <div 
-        className="relative bg-white rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-slate-200"
+        className="relative bg-white/95 rounded-3xl shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden border border-white/40"
         style={{ 
           width: '90%',
           maxWidth: maxWidth,
           maxHeight: '90vh',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.98) 100%)'
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)'
         }}
       >
         <div className="absolute top-4 right-4 z-10">
           <button 
             onClick={onClose}
-            className="p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white cursor-pointer border border-slate-200 shadow-sm"
+            className="p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white cursor-pointer border border-gray-200 shadow-sm"
           >
-            <FiX className="text-slate-600 w-5 h-5" />
+            <FiX className="text-gray-600 w-5 h-5" />
           </button>
         </div>
         {children}
@@ -192,13 +59,83 @@ const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
   );
 };
 
-// Modern Counseling Card
-const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
+// Modern Card Component
+const GlassCard = ({ children, className = '', hover = true }) => (
+  <div className={`
+    bg-white/80 backdrop-blur-sm rounded-2xl border border-white/60 
+    shadow-lg shadow-black/5 transition-all duration-300
+    ${hover ? 'hover:shadow-xl hover:shadow-black/10 hover:-translate-y-1' : ''}
+    ${className}
+  `}>
+    {children}
+  </div>
+);
+
+// Modern Hero Banner Component
+const ModernHeroBanner = ({ stats, onRefresh }) => {
+  return (
+    <div className="relative bg-[#0F172A] rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
+      {/* Abstract Mesh Gradient Background */}
+      <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-blue-600/30 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
+      
+      <div className="relative z-10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+          <div>
+            {/* Institutional Branding */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
+                  Katwanyaa High School
+                </h2>
+                <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
+                  "Education is Light"
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
+              <div className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 w-fit">
+                <IoSparkles className="text-2xl sm:text-3xl text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.6)]" />
+              </div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+                School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-blue-200">Gallery</span>
+              </h1>
+            </div>
+          </div>
+          
+          {/* Modern Glass Refresh Button */}
+          <button
+            onClick={onRefresh}
+            className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 w-full sm:w-fit"
+          >
+            <FiRefreshCw className="text-lg" />
+            <span>REFRESH GALLERY</span>
+          </button>
+        </div>
+        
+        {/* Summary Text */}
+        <div className="mb-8">
+          <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
+            Explore <span className="text-white font-bold underline decoration-blue-500/50 decoration-2 underline-offset-4">{stats.totalFiles} media files</span> 
+            across <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4 mx-2">{stats.totalCategories} categories</span> 
+            capturing our school's journey. This month: <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/20 mx-1">{stats.thisMonth} new galleries</span>.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modern Gallery Card Component (Matching Counseling Session Card Design)
+const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid' }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const getCategoryStyle = (category) => {
     const styles = {
-      academic: { 
+      GENERAL: { 
         gradient: 'from-blue-500 to-cyan-500', 
         bg: 'bg-blue-50', 
         text: 'text-blue-700',
@@ -206,7 +143,15 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
         iconBg: 'bg-blue-100',
         iconColor: 'text-blue-600'
       },
-      emotional: { 
+      CLASSROOMS: { 
+        gradient: 'from-emerald-500 to-green-500', 
+        bg: 'bg-emerald-50', 
+        text: 'text-emerald-700',
+        border: 'border-emerald-200',
+        iconBg: 'bg-emerald-100',
+        iconColor: 'text-emerald-600'
+      },
+      TEACHING: { 
         gradient: 'from-purple-500 to-pink-500', 
         bg: 'bg-purple-50', 
         text: 'text-purple-700',
@@ -214,7 +159,7 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
         iconBg: 'bg-purple-100',
         iconColor: 'text-purple-600'
       },
-      devotion: { 
+      LABORATORIES: { 
         gradient: 'from-indigo-500 to-purple-500', 
         bg: 'bg-indigo-50', 
         text: 'text-indigo-700',
@@ -222,7 +167,7 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
         iconBg: 'bg-indigo-100',
         iconColor: 'text-indigo-600'
       },
-      worship: { 
+      SPORTS_DAY: { 
         gradient: 'from-amber-500 to-orange-500', 
         bg: 'bg-amber-50', 
         text: 'text-amber-700',
@@ -230,31 +175,20 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
         iconBg: 'bg-amber-100',
         iconColor: 'text-amber-600'
       },
-      support: { 
-        gradient: 'from-emerald-500 to-green-500', 
-        bg: 'bg-emerald-50', 
-        text: 'text-emerald-700',
-        border: 'border-emerald-200',
-        iconBg: 'bg-emerald-100',
-        iconColor: 'text-emerald-600'
-      },
-      drugs: { 
-        gradient: 'from-red-500 to-rose-500', 
-        bg: 'bg-red-50', 
-        text: 'text-red-700',
-        border: 'border-red-200',
-        iconBg: 'bg-red-100',
-        iconColor: 'text-red-600'
+      GRADUATION: { 
+        gradient: 'from-rose-500 to-red-500', 
+        bg: 'bg-rose-50', 
+        text: 'text-rose-700',
+        border: 'border-rose-200',
+        iconBg: 'bg-rose-100',
+        iconColor: 'text-rose-600'
       }
     };
-    return styles[category] || styles.academic;
+    return styles[category] || styles.GENERAL;
   };
 
   const formatDate = (dateString) => {
     try {
-      if (dateString === 'Always Available' || dateString === 'Monday - Friday') {
-        return dateString;
-      }
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -262,950 +196,807 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
         day: 'numeric'
       });
     } catch {
-      return 'Available';
+      return 'Recently added';
     }
   };
 
-  // Grid View
+  // Modern Grid View (Matching Counseling Card)
   if (viewMode === 'grid') {
-    const theme = getCategoryStyle(session.category);
+    const theme = getCategoryStyle(gallery.category);
     
     return (
-      <ModernCard 
-        elevation="sm" 
-        className="overflow-hidden cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
-        onClick={() => onView(session)}
+      <div 
+        onClick={() => onView(gallery)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="relative group cursor-pointer"
       >
-        {/* Image Header */}
-        <div className="relative h-48 w-full">
-          {session.image ? (
-            <img
-              src={session.image}
-              alt={session.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${theme.gradient}`} />
-          )}
-          
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            <ModernBadge 
-              color={theme.text.includes('blue') ? 'blue' : 
-                     theme.text.includes('purple') ? 'purple' : 
-                     theme.text.includes('emerald') ? 'green' : 
-                     theme.text.includes('amber') ? 'yellow' : 
-                     theme.text.includes('red') ? 'red' : 'slate'}
-              className="shadow-sm backdrop-blur-sm"
-            >
-              {session.category || 'Counseling'}
-            </ModernBadge>
-            {session.featured && (
-              <ModernBadge color="yellow" icon={IoSparkles} className="shadow-sm">
-                Featured
-              </ModernBadge>
+        <div className="relative bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+          {/* 1. Static Image Header */}
+          <div className="relative h-52 w-full shrink-0">
+            {gallery.files && gallery.files[0] ? (
+              <img
+                src={gallery.files[0]}
+                alt={gallery.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className={`w-full h-full bg-gradient-to-br ${theme.gradient}`} />
             )}
+            
+            {/* Permanent Badges */}
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border ${theme.bg} ${theme.text} ${theme.border}`}>
+                {gallery.category.replace(/_/g, ' ') || 'Gallery'}
+              </span>
+              {gallery.year && (
+                <span className="px-3 py-1 bg-slate-900/90 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm">
+                  <IoSparkles className="text-amber-400" /> {gallery.year}
+                </span>
+              )}
+            </div>
+
+            {/* Favorite Button */}
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavorite(gallery);
+                  setIsFavorite(!isFavorite);
+                }}
+                className={`p-2.5 rounded-xl backdrop-blur-md border shadow-sm ${
+                  isFavorite 
+                    ? 'bg-amber-500 border-amber-500 text-white' 
+                    : 'bg-white/90 border-white/10 text-slate-700 hover:bg-white'
+                }`}
+              >
+                <FiBookmark className={isFavorite ? 'fill-current' : ''} size={16} />
+              </button>
+            </div>
+
+            {/* File Count Overlay */}
+            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-black/40 to-transparent flex items-end p-4">
+              <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                {gallery.files?.length || 0} files
+              </span>
+            </div>
           </div>
 
-          {/* Bookmark Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsBookmarked(!isBookmarked);
-              onBookmark(session);
-            }}
-            className={`absolute top-3 right-3 p-2 rounded-lg backdrop-blur-md border shadow-sm ${
-              isBookmarked 
-                ? 'bg-amber-500 border-amber-500 text-white' 
-                : 'bg-white/90 border-white/10 text-slate-700 hover:bg-white'
-            }`}
-          >
-            <FiBookmark className={isBookmarked ? 'fill-current' : ''} size={16} />
-          </button>
+          {/* 2. Content Area */}
+          <div className="p-6">
+            <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-2 leading-tight">
+              {gallery.title}
+            </h3>
+            
+            <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">
+              {gallery.description || 'School gallery collection.'}
+            </p>
+
+            {/* 3. Bento-Style Info Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
+                <div className={`p-1.5 rounded-lg ${theme.iconBg}`}>
+                  <FiCalendar className={`${theme.iconColor}`} size={14} />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">
+                  {formatDate(gallery.date)}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
+                <div className={`p-1.5 rounded-lg ${theme.iconBg}`}>
+                  <FiImage className={`${theme.iconColor}`} size={14} />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">
+                  {gallery.files?.length || 0} items
+                </span>
+              </div>
+
+              <div className="col-span-2 flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
+                <div className={`p-1.5 rounded-lg ${theme.iconBg}`}>
+                  <FiFolder className={`${theme.iconColor}`} size={14} />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">
+                  {gallery.category.replace(/_/g, ' ')}
+                </span>
+              </div>
+            </div>
+
+            {/* 4. Status Indicator */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full bg-emerald-500 animate-pulse`} />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Active Collection
+                </span>
+              </div>
+              
+              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200`}>
+                Published
+              </div>
+            </div>
+
+            {/* 5. Final Action Button */}
+            <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform hover:shadow-lg">
+              View Gallery
+              <FiArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List View
+  return (
+    <div 
+      onClick={() => onView(gallery)}
+      className="relative bg-white rounded-[24px] border border-slate-100 p-4 shadow-sm cursor-pointer transition-colors active:bg-slate-50 group"
+    >
+      <div className="flex gap-5">
+        {/* Image Container */}
+        <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 shadow-sm">
+          {gallery.files && gallery.files[0] ? (
+            <img
+              src={gallery.files[0]}
+              alt={gallery.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-br ${getCategoryStyle(gallery.category).gradient}`} />
+          )}
+          <div className="absolute inset-0 ring-1 ring-inset ring-black/5 rounded-2xl"></div>
         </div>
 
         {/* Content Area */}
-        <div className="p-5">
-          <h3 className="text-lg font-semibold text-slate-800 mb-2 line-clamp-2">
-            {session.title}
-          </h3>
-          
-          <p className="text-slate-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-            {session.description || 'Professional counseling and support session for students.'}
-          </p>
-
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-              <div className={`p-1.5 rounded ${theme.iconBg}`}>
-                <FiCalendar className={`${theme.iconColor}`} size={14} />
+        <div className="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            {/* Metadata Row */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
+                  getCategoryStyle(gallery.category).bg
+                } ${getCategoryStyle(gallery.category).text} ${
+                  getCategoryStyle(gallery.category).border
+                }`}>
+                  {gallery.category.replace(/_/g, ' ')}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                  {formatDate(gallery.date)}
+                </span>
               </div>
-              <span className="text-xs font-medium text-slate-700 truncate">
-                {formatDate(session.date)}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
-              <div className={`p-1.5 rounded ${theme.iconBg}`}>
-                <FiClock className={`${theme.iconColor}`} size={14} />
-              </div>
-              <span className="text-xs font-medium text-slate-700 truncate">
-                {session.time || 'Flexible'}
-              </span>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${
-                session.priority === 'high' ? 'bg-red-500 animate-pulse' :
-                session.priority === 'medium' ? 'bg-yellow-500' :
-                'bg-green-500'
-              }`} />
-              <span className="text-xs text-slate-500">
-                {session.priority || 'medium'} priority
-              </span>
-            </div>
-            
-            <ModernButton
-              variant="primary"
-              size="sm"
-              icon={FiArrowRight}
-              className="px-3 py-2"
-            >
-              View
-            </ModernButton>
-          </div>
-        </div>
-      </ModernCard>
-    );
-  }
-
-  // List View
-  return (
-    <ModernCard 
-      elevation="sm" 
-      className="cursor-pointer transition-all hover:bg-slate-50/50"
-      onClick={() => onView(session)}
-    >
-      <div className="flex gap-4 p-4">
-        {/* Thumbnail */}
-        <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
-          {session.image ? (
-            <img
-              src={session.image}
-              alt={session.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${getCategoryStyle(session.category).gradient}`} />
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <ModernBadge 
-                color={getCategoryStyle(session.category).text.includes('blue') ? 'blue' : 'slate'}
-                className="text-xs"
-              >
-                {session.category || 'Support'}
-              </ModernBadge>
-              <span className="text-xs text-slate-500">
-                {formatDate(session.date)}
-              </span>
-            </div>
-            
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsBookmarked(!isBookmarked);
-                onBookmark(session);
-              }}
-              className={`p-1.5 rounded-lg ${
-                isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-slate-500'
-              }`}
-            >
-              <FiBookmark className={isBookmarked ? 'fill-current' : ''} size={14} />
-            </button>
-          </div>
-
-          <h3 className="text-base font-semibold text-slate-800 line-clamp-1 mb-1">
-            {session.title}
-          </h3>
-
-          <p className="text-slate-600 text-sm line-clamp-2 mb-3">
-            {session.description}
-          </p>
-
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <div className="flex items-center gap-3">
+              
+              {/* Action Buttons */}
               <div className="flex items-center gap-1">
-                <FiUser className="text-slate-400" size={12} />
-                <span className="font-medium">{session.counselor}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFavorite(gallery);
+                    setIsFavorite(!isFavorite);
+                  }}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    isFavorite ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-slate-500'
+                  }`}
+                >
+                  <FiBookmark className={isFavorite ? 'fill-current' : ''} size={14} />
+                </button>
+              </div>
+            </div>
+
+            <h3 className="text-base font-bold text-slate-900 leading-snug line-clamp-2 mb-2">
+              {gallery.title}
+            </h3>
+
+            <p className="text-slate-500 text-xs line-clamp-2 mb-3">
+              {gallery.description || 'School gallery collection.'}
+            </p>
+          </div>
+
+          {/* Footer: Details & Action */}
+          <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-1">
+                <FiImage className="text-slate-400" size={12} />
+                <span className="font-semibold">{gallery.files?.length || 0} files</span>
               </div>
               <div className="flex items-center gap-1">
-                <FiClock className="text-slate-400" size={12} />
-                <span>{session.time}</span>
+                <FiCalendar className="text-slate-400" size={12} />
+                <span>{gallery.year}</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-1 text-blue-600 font-medium">
+            <div className="flex items-center gap-1 text-blue-600 font-bold text-[11px] uppercase tracking-wider">
               View
               <FiArrowRight size={12} />
             </div>
           </div>
         </div>
       </div>
-    </ModernCard>
+    </div>
   );
 };
 
-// Modern Support Team Card
-const ModernSupportTeamCard = ({ member, onView, onContact, viewMode = 'grid' }) => {
-  const getRoleStyle = (role) => {
-    const styles = {
-      'teacher': { 
-        gradient: 'from-blue-500 to-cyan-500', 
-        bg: 'bg-blue-50', 
-        text: 'text-blue-700',
-        border: 'border-blue-200',
-        iconBg: 'bg-blue-100',
-        iconColor: 'text-blue-600'
-      },
-      'matron': { 
-        gradient: 'from-purple-500 to-pink-500', 
-        bg: 'bg-purple-50', 
-        text: 'text-purple-700',
-        border: 'border-purple-200',
-        iconBg: 'bg-purple-100',
-        iconColor: 'text-purple-600'
-      },
-      'patron': { 
-        gradient: 'from-emerald-500 to-green-500', 
-        bg: 'bg-emerald-50', 
-        text: 'text-emerald-700',
-        border: 'border-emerald-200',
-        iconBg: 'bg-emerald-100',
-        iconColor: 'text-emerald-600'
-      }
-    };
-    return styles[role] || { 
-      gradient: 'from-slate-500 to-slate-600', 
-      bg: 'bg-slate-50', 
-      text: 'text-slate-700',
-      border: 'border-slate-200',
-      iconBg: 'bg-slate-100',
-      iconColor: 'text-slate-600'
-    };
-  };
-
-  const roleStyle = getRoleStyle(member.role);
-  
-  if (viewMode === 'grid') {
-    return (
-      <ModernCard 
-        elevation="sm" 
-        className="overflow-hidden cursor-pointer transition-all hover:scale-[1.02]"
-        onClick={() => onView(member)}
-      >
-        {/* Image Header */}
-        <div className="relative h-40 w-full">
-          <img
-            src={member.image || '/default-avatar.jpg'}
-            alt={member.name}
-            className="w-full h-full object-cover"
-          />
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          
-          {/* Role Badge */}
-          <div className="absolute top-3 left-3">
-            <ModernBadge 
-              color={roleStyle.text.includes('blue') ? 'blue' : 
-                     roleStyle.text.includes('purple') ? 'purple' : 
-                     roleStyle.text.includes('emerald') ? 'green' : 'slate'}
-              className="shadow-sm backdrop-blur-sm"
-            >
-              {member.role || 'Team Member'}
-            </ModernBadge>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="text-lg font-semibold text-slate-800 mb-1">
-            {member.name}
-          </h3>
-          
-          <p className="text-slate-600 text-sm mb-3 line-clamp-2">
-            {member.bio || 'Dedicated professional providing guidance and support to students.'}
-          </p>
-
-          {/* Contact Info */}
-          <div className="space-y-2 mb-4">
-            {member.phone && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <FiPhone className="text-slate-400" size={14} />
-                <span className="truncate">{member.phone}</span>
-              </div>
-            )}
-            
-            {member.email && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <FiMail className="text-slate-400" size={14} />
-                <span className="truncate">{member.email}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Action Button */}
-          <ModernButton
-            variant="primary"
-            size="sm"
-            className="w-full"
-          >
-            View Profile
-          </ModernButton>
-        </div>
-      </ModernCard>
-    );
-  }
-
-  // List View
-  return (
-    <ModernCard 
-      elevation="sm" 
-      className="cursor-pointer transition-all hover:bg-slate-50/50"
-      onClick={() => onView(member)}
-    >
-      <div className="flex gap-4 p-4">
-        {/* Avatar */}
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
-          <img
-            src={member.image || '/default-avatar.jpg'}
-            alt={member.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-2">
-            <ModernBadge 
-              color={roleStyle.text.includes('blue') ? 'blue' : 
-                     roleStyle.text.includes('purple') ? 'purple' : 
-                     roleStyle.text.includes('emerald') ? 'green' : 'slate'}
-              className="text-xs"
-            >
-              {member.role || 'Team Member'}
-            </ModernBadge>
-          </div>
-
-          <h3 className="text-base font-semibold text-slate-800 line-clamp-1 mb-1">
-            {member.name}
-          </h3>
-
-          <p className="text-slate-600 text-sm line-clamp-2 mb-3">
-            {member.bio?.substring(0, 100) || 'Dedicated professional providing guidance and support to students.'}
-          </p>
-
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            {member.phone && (
-              <div className="flex items-center gap-1">
-                <FiPhone className="text-slate-400" size={12} />
-                <span className="font-medium">{member.phone}</span>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-1 text-blue-600 font-medium">
-              Contact
-              <FiArrowRight size={12} />
-            </div>
-          </div>
-        </div>
-      </div>
-    </ModernCard>
-  );
-};
-
-// Modern Team Member Modal
-const TeamMemberModal = ({ member, isOpen, onClose, onContact }) => {
-  const [activeTab, setActiveTab] = useState('overview');
-
-  if (!isOpen || !member) return null;
-
-  const getRoleStyle = (role) => {
-    const styles = {
-      'teacher': { 
-        gradient: 'from-blue-500 to-cyan-500', 
-        bg: 'bg-blue-50', 
-        text: 'text-blue-700',
-        border: 'border-blue-200'
-      },
-      'matron': { 
-        gradient: 'from-purple-500 to-pink-500', 
-        bg: 'bg-purple-50', 
-        text: 'text-purple-700',
-        border: 'border-purple-200'
-      },
-      'patron': { 
-        gradient: 'from-emerald-500 to-green-500', 
-        bg: 'bg-emerald-50', 
-        text: 'text-emerald-700',
-        border: 'border-emerald-200'
-      }
-    };
-    return styles[role] || { 
-      gradient: 'from-slate-500 to-slate-600', 
-      bg: 'bg-slate-50', 
-      text: 'text-slate-700',
-      border: 'border-slate-200'
-    };
-  };
-
-  const roleStyle = getRoleStyle(member.role);
-  const isSupportStaff = member.role === 'teacher' || member.role === 'matron' || member.role === 'patron';
-
-  return (
-    <ModernModal open={isOpen} onClose={onClose} maxWidth="4xl">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className={`relative bg-gradient-to-r ${roleStyle.gradient} p-8`}>
-          <div className="flex items-start gap-6">
-            {/* Profile Image */}
-            <div className="relative">
-              <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-white shadow-xl">
-                <img
-                  src={member.image || '/default-avatar.jpg'}
-                  alt={member.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {isSupportStaff && (
-                <ModernBadge 
-                  color="green" 
-                  icon={FiClock}
-                  className="absolute -bottom-2 -right-2 border-2 border-white"
-                >
-                  24/7
-                </ModernBadge>
-              )}
-            </div>
-            
-            {/* Header Info */}
-            <div className="flex-1 pt-4">
-              <div className="flex items-center gap-3 mb-3">
-                <ModernBadge 
-                  color={roleStyle.text.includes('blue') ? 'blue' : 
-                         roleStyle.text.includes('purple') ? 'purple' : 
-                         roleStyle.text.includes('emerald') ? 'green' : 'slate'}
-                  className="px-4 py-2"
-                >
-                  {member.role || 'Team Member'}
-                </ModernBadge>
-                {isSupportStaff && (
-                  <ModernBadge color="green" icon={FiClock}>
-                    24/7 Available
-                  </ModernBadge>
-                )}
-              </div>
-              
-              <h2 className="text-2xl font-bold text-white mb-2">{member.name}</h2>
-              <p className="text-white/90 text-lg mb-4">{member.title || member.role}</p>
-              
-              <div className="flex items-center gap-6">
-                {member.phone && (
-                  <div className="flex items-center gap-2">
-                    <FiPhone className="text-white" size={18} />
-                    <span className="text-white font-medium">{member.phone}</span>
-                  </div>
-                )}
-                
-                {member.email && (
-                  <div className="flex items-center gap-2">
-                    <FiMail className="text-white" size={18} />
-                    <span className="text-white font-medium truncate max-w-[200px]">{member.email}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="border-b border-slate-200">
-          <div className="flex px-8 pt-6 gap-6">
-            {['overview', 'contact', 'availability'].map((tab) => (
-              <button
-                key={tab}
-                className={`pb-3 font-medium text-sm border-b-2 transition-colors ${
-                  activeTab === tab 
-                    ? `border-blue-600 text-blue-600` 
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === 'overview' && <><FiUser className="inline mr-2" /> Overview</>}
-                {tab === 'contact' && <><FiPhone className="inline mr-2" /> Contact</>}
-                {tab === 'availability' && <><FiClock className="inline mr-2" /> Availability</>}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-3">About</h3>
-                <p className="text-slate-600 leading-relaxed">
-                  {member.bio || `As a dedicated ${member.role}, ${member.name.split(' ')[0]} provides comprehensive support and guidance to students.`}
-                </p>
-              </div>
-              
-              {isSupportStaff && (
-                <div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-3">Support Services</h3>
-                  <ul className="space-y-2">
-                    {['24/7 emergency support', 'Academic guidance', 'Personal development', 'Crisis intervention'].map((service, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-slate-600">
-                        <div className={`w-2 h-2 rounded-full ${roleStyle.bg}`} />
-                        {service}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'contact' && (
-            <div className="grid grid-cols-2 gap-4">
-              {member.phone && (
-                <ModernCard className="p-4">
-                  <FiPhone className="text-blue-500 mb-3 text-xl" />
-                  <h4 className="font-semibold text-slate-800 mb-1">Phone</h4>
-                  <p className="text-slate-700 font-medium">{member.phone}</p>
-                  <p className="text-slate-500 text-sm mt-2">Direct line for immediate assistance</p>
-                </ModernCard>
-              )}
-              
-              {member.email && (
-                <ModernCard className="p-4">
-                  <FiMail className="text-purple-500 mb-3 text-xl" />
-                  <h4 className="font-semibold text-slate-800 mb-1">Email</h4>
-                  <p className="text-slate-700 font-medium truncate">{member.email}</p>
-                  <p className="text-slate-500 text-sm mt-2">Response within 24 hours</p>
-                </ModernCard>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'availability' && (
-            <div className="space-y-4">
-              <ModernCard className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50">
-                <h4 className="font-semibold text-slate-800 mb-4">Availability Schedule</h4>
-                <div className="space-y-3">
-                  {isSupportStaff ? (
-                    <>
-                      <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
-                        <div>
-                          <span className="font-medium text-slate-900">24/7 Emergency Support</span>
-                          <span className="text-slate-500 text-sm ml-3">Always Available</span>
-                        </div>
-                        <span className="font-bold text-emerald-600">Active Now</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
-                        <div>
-                          <span className="font-medium text-slate-900">Regular Consultation</span>
-                          <span className="text-slate-500 text-sm ml-3">Scheduled</span>
-                        </div>
-                        <span className="font-bold text-slate-700">8:00 AM - 5:00 PM</span>
-                      </div>
-                    </>
-                  ) : (
-                    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) => (
-                      <div key={day} className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
-                        <span className="font-medium text-slate-900">{day}</span>
-                        <span className="font-bold text-slate-700">8:00 AM - 5:00 PM</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ModernCard>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-slate-200">
-          <div className="flex items-center justify-between">
-            <ModernButton
-              variant="secondary"
-              size="md"
-              icon={FiCopy}
-              onClick={() => {
-                const contactInfo = `${member.name}\n${member.title}\nPhone: ${member.phone}\nEmail: ${member.email}`;
-                navigator.clipboard.writeText(contactInfo);
-                toast.success('Contact info copied to clipboard');
-              }}
-            >
-              Copy Contact
-            </ModernButton>
-            
-            <div className="flex items-center gap-3">
-              <ModernButton
-                variant="outline"
-                size="md"
-                onClick={onClose}
-              >
-                Close
-              </ModernButton>
-              <ModernButton
-                variant="primary"
-                size="md"
-                onClick={onContact}
-              >
-                Contact
-              </ModernButton>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ModernModal>
-  );
-};
-
-// Modern Detail Modal
-const ModernDetailModal = ({ session, onClose, onContact }) => {
-  if (!session) return null;
-
-  const getCategoryStyle = (category) => {
-    const styles = {
-      academic: { gradient: 'from-blue-500 to-cyan-500', icon: FiTarget },
-      emotional: { gradient: 'from-purple-500 to-pink-500', icon: FiHeart },
-      devotion: { gradient: 'from-indigo-500 to-purple-500', icon: FiHeart },
-      worship: { gradient: 'from-amber-500 to-orange-500', icon: FiMusic },
-      support: { gradient: 'from-emerald-500 to-green-500', icon: FiPhoneCall },
-      drugs: { gradient: 'from-red-500 to-rose-500', icon: FiAlertTriangle }
-    };
-    return styles[category] || { gradient: 'from-slate-500 to-slate-600', icon: FiBookOpen };
-  };
-
-  const categoryStyle = getCategoryStyle(session.category);
-  const CategoryIcon = categoryStyle.icon;
-
-  const formatFullDate = (dateString) => {
-    if (dateString === 'Always Available' || dateString === 'Monday - Friday') {
-      return dateString;
-    }
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  return (
-    <ModernModal open={!!session} onClose={onClose} maxWidth="3xl">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className={`relative bg-gradient-to-r ${categoryStyle.gradient} p-8`}>
-          <div className="flex items-start gap-6">
-            <div className={`p-4 rounded-2xl bg-white/20 backdrop-blur-sm`}>
-              <CategoryIcon className="text-white text-3xl" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <ModernBadge 
-                  color="white"
-                  className="bg-white/20 backdrop-blur-sm border-white/30"
-                >
-                  {session.category || 'Counseling'}
-                </ModernBadge>
-                {session.featured && (
-                  <ModernBadge color="yellow" icon={IoSparkles}>
-                    Featured
-                  </ModernBadge>
-                )}
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-3">{session.title}</h2>
-              <p className="text-white/90 text-lg">{session.type || 'Counseling Session'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="space-y-6">
-            {/* Quick Info */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <ModernCard className="p-4 text-center">
-                <FiCalendar className="text-blue-500 mx-auto mb-2 text-xl" />
-                <p className="text-sm text-slate-500 mb-1">Date</p>
-                <p className="font-semibold text-slate-800">{formatFullDate(session.date)}</p>
-              </ModernCard>
-              
-              <ModernCard className="p-4 text-center">
-                <FiClock className="text-emerald-500 mx-auto mb-2 text-xl" />
-                <p className="text-sm text-slate-500 mb-1">Time</p>
-                <p className="font-semibold text-slate-800">{session.time || 'Flexible'}</p>
-              </ModernCard>
-              
-              <ModernCard className="p-4 text-center">
-                <FiUser className="text-purple-500 mx-auto mb-2 text-xl" />
-                <p className="text-sm text-slate-500 mb-1">Counselor</p>
-                <p className="font-semibold text-slate-800">{session.counselor}</p>
-              </ModernCard>
-              
-              <ModernCard className="p-4 text-center">
-                <FiShield className="text-amber-500 mx-auto mb-2 text-xl" />
-                <p className="text-sm text-slate-500 mb-1">Status</p>
-                <p className="font-semibold text-slate-800 capitalize">{session.status || 'scheduled'}</p>
-              </ModernCard>
-            </div>
-
-            {/* Description */}
-            <ModernCard className="p-6">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">About this session</h3>
-              <p className="text-slate-600 leading-relaxed">
-                {session.description || 'Professional counseling and support session.'}
-              </p>
-            </ModernCard>
-
-            {/* Support Info */}
-            {session.isSupport && (
-              <ModernCard className="p-6 bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-emerald-500 rounded-xl">
-                    <FiPhoneCall className="text-white text-2xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-800">24/7 Support Available</h3>
-                    <p className="text-slate-600">Immediate assistance whenever you need it</p>
-                  </div>
-                </div>
-                <div className="space-y-2 text-slate-700">
-                  {['Available round the clock for emergencies', 'Confidential and secure conversations', 'Trained professional counselors'].map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </ModernCard>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-slate-200">
-          <div className="flex gap-3">
-            <ModernButton
-              variant={session.isSupport ? 'success' : 'primary'}
-              size="lg"
-              icon={session.isSupport ? FiPhoneCall : FiCalendar}
-              className="flex-1"
-              onClick={session.isSupport ? onContact : () => {
-                // Add to calendar logic
-                toast.success('Opening Google Calendar...');
-              }}
-            >
-              {session.isSupport ? 'Contact Support' : 'Join Session'}
-            </ModernButton>
-            
-            <ModernButton
-              variant="outline"
-              size="lg"
-              onClick={onClose}
-            >
-              Close
-            </ModernButton>
-          </div>
-        </div>
-      </div>
-    </ModernModal>
-  );
-};
-
-// Modern Stats Card
+// Modern Stats Card Component
 const ModernStatCard = ({ stat }) => {
   const Icon = stat.icon;
   
   return (
-    <ModernCard className="p-5 text-center">
-      <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${stat.gradient} bg-opacity-10 mb-4`}>
-        <Icon className={`text-xl ${stat.gradient.includes('blue') ? 'text-blue-600' : 
-                            stat.gradient.includes('emerald') ? 'text-emerald-600' :
-                            stat.gradient.includes('purple') ? 'text-purple-600' :
-                            'text-amber-600'}`} />
+    <div className="relative flex flex-col justify-between overflow-hidden bg-white border border-slate-100 p-4 md:p-6 rounded-[24px] md:rounded-[32px] shadow-sm">
+      {/* Top Section: Icon & Badge */}
+      <div className="flex items-start justify-between mb-4 md:mb-8">
+        <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-br ${stat.gradient} bg-opacity-[0.08] text-slate-700`}>
+          <Icon className="text-lg md:text-2xl" />
+        </div>
+        
+        {/* Status Dot */}
+        <div className="hidden xs:block h-2 w-2 rounded-full bg-slate-200" />
       </div>
-      <h3 className="text-2xl font-bold text-slate-800 mb-1">{stat.number}</h3>
-      <p className="text-sm font-medium text-slate-700 mb-1">{stat.label}</p>
-      <p className="text-xs text-slate-500">{stat.sublabel}</p>
-    </ModernCard>
+
+      {/* Content Section */}
+      <div className="space-y-1">
+        {/* Label */}
+        <p className="text-[9px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">
+          {stat.label}
+        </p>
+        
+        <div className="flex items-baseline gap-1">
+          {/* Number */}
+          <h3 className="text-xl md:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900">
+            {stat.number}
+          </h3>
+        </div>
+
+        {/* Sublabel */}
+        <p className="text-[10px] md:text-sm font-medium text-slate-500 leading-tight line-clamp-1 md:line-clamp-none">
+          {stat.sublabel}
+        </p>
+      </div>
+
+      {/* Decorative Background Element */}
+      <div className={`absolute -bottom-2 -right-2 w-12 h-12 md:w-20 md:h-20 opacity-[0.03] rounded-full bg-gradient-to-br ${stat.gradient} hidden md:block`} />
+    </div>
   );
 };
 
-// Helper functions
-function getNextThursday() {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysUntilThursday = (4 - dayOfWeek + 7) % 7 || 7;
-  const nextThursday = new Date(today);
-  nextThursday.setDate(today.getDate() + daysUntilThursday);
-  return nextThursday.toISOString().split('T')[0];
-}
+// Modern Gallery Detail Modal
+const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => {
+  const [activeTab, setActiveTab] = useState('preview');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-function getNextSunday() {
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const daysUntilSunday = (0 - dayOfWeek + 7) % 7 || 7;
-  const nextSunday = new Date(today);
-  nextSunday.setDate(today.getDate() + daysUntilSunday);
-  return nextSunday.toISOString().split('T')[0];
-}
+  if (!gallery) return null;
 
-// Default sessions
-const DEFAULT_SESSIONS = [
-  {
-    id: 'devotion-thursday',
-    title: 'Thursday Devotion Session',
-    counselor: 'School Chaplain',
-    date: getNextThursday(),
-    time: '10:00 AM - 11:00 AM',
-    type: 'Spiritual Session',
-    category: 'devotion',
-    status: 'scheduled',
-    description: 'Weekly devotion session to strengthen students in religious study and worship.',
-    priority: 'high',
-    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80',
-    featured: true,
-    location: 'School Chapel'
-  },
-  {
-    id: 'devotion-sunday',
-    title: 'Sunday Youth Worship',
-    counselor: 'Youth Leaders & CU',
-    date: getNextSunday(),
-    time: '2:00 PM - 4:00 PM',
-    type: 'Youth Worship',
-    category: 'worship',
-    status: 'scheduled',
-    description: 'Youth worship session with CU and YCS active worship groups.',
-    priority: 'high',
-    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
-    featured: true,
-    location: 'Katwanyaa Church'
-  }
-];
+  const getCategoryStyle = (category) => {
+    const styles = {
+      GENERAL: { gradient: 'from-blue-500 to-cyan-500', icon: FiGlobe },
+      CLASSROOMS: { gradient: 'from-emerald-500 to-green-500', icon: FiBookOpen },
+      TEACHING: { gradient: 'from-purple-500 to-pink-500', icon: FiBook },
+      LABORATORIES: { gradient: 'from-indigo-500 to-purple-500', icon: FiTarget },
+      SPORTS_DAY: { gradient: 'from-amber-500 to-orange-500', icon: FiAward },
+      GRADUATION: { gradient: 'from-rose-500 to-red-500', icon: FiAward }
+    };
+    return styles[category] || { gradient: 'from-slate-500 to-slate-600', icon: FiImage };
+  };
 
-// Main Component
-export default function StudentCounseling() {
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedSession, setSelectedSession] = useState(null);
+  const categoryStyle = getCategoryStyle(gallery.category);
+  const CategoryIcon = categoryStyle.icon;
+
+  const isVideoFile = (filename) => {
+    if (!filename) return false;
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.wmv', '.flv', '.webm', '.mkv'];
+    return videoExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  };
+
+  const isImageFile = (filename) => {
+    if (!filename) return false;
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4 bg-slate-900/90 backdrop-blur-sm">
+      <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-3xl bg-white sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col">
+        
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-5 right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
+        >
+          <IoClose size={24} />
+        </button>
+
+        {/* 1. Hero Image */}
+        <div className="relative h-[40vh] sm:h-[350px] w-full shrink-0">
+          {gallery.files && gallery.files[selectedIndex] ? (
+            <img
+              src={gallery.files[selectedIndex]}
+              alt={gallery.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className={`w-full h-full bg-gradient-to-r ${categoryStyle.gradient}`} />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
+          
+          {/* Badge Overlays */}
+          <div className="absolute bottom-6 left-6 flex gap-2">
+            <span className="px-4 py-1.5 bg-white shadow-xl rounded-full text-xs font-bold uppercase tracking-widest text-slate-900">
+              {gallery.category.replace(/_/g, ' ')}
+            </span>
+            <span className="px-4 py-1.5 bg-slate-900 text-white rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-1">
+              <IoSparkles className="text-amber-400" /> {gallery.year}
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Content Area - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white">
+          <div className="max-w-2xl mx-auto space-y-8">
+            
+            {/* Title & Category */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-2xl bg-gradient-to-r ${categoryStyle.gradient}`}>
+                  <CategoryIcon className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight">
+                    {gallery.title}
+                  </h2>
+                  <p className="text-slate-600 text-lg">{gallery.category.replace(/_/g, ' ')} Collection</p>
+                </div>
+              </div>
+
+              {/* Quick Info Bar */}
+              <div className="flex flex-wrap gap-y-3 gap-x-6 text-sm font-semibold text-slate-500">
+                <div className="flex items-center gap-2">
+                  <IoCalendarClearOutline className="text-blue-500 text-lg" />
+                  {new Date(gallery.date).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <IoPersonOutline className="text-emerald-500 text-lg" />
+                  {gallery.files?.length || 0} files
+                </div>
+                <div className="flex items-center gap-2">
+                  <IoLocationOutline className="text-rose-500 text-lg" />
+                  School Archives
+                </div>
+              </div>
+            </section>
+
+            {/* Tabs */}
+            <div className="border-b border-slate-200">
+              <div className="flex gap-8">
+                <button
+                  className={`pb-3 font-bold text-sm border-b-2 transition-colors ${
+                    activeTab === 'preview' 
+                      ? `border-blue-500 text-blue-600` 
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                  onClick={() => setActiveTab('preview')}
+                >
+                  <FiEye className="inline mr-2" />
+                  Preview
+                </button>
+                <button
+                  className={`pb-3 font-bold text-sm border-b-2 transition-colors ${
+                    activeTab === 'files' 
+                      ? `border-blue-500 text-blue-600` 
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                  onClick={() => setActiveTab('files')}
+                >
+                  <FiImage className="inline mr-2" />
+                  All Files ({gallery.files?.length || 0})
+                </button>
+                <button
+                  className={`pb-3 font-bold text-sm border-b-2 transition-colors ${
+                    activeTab === 'info' 
+                      ? `border-blue-500 text-blue-600` 
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                  onClick={() => setActiveTab('info')}
+                >
+                  <FiInfo className="inline mr-2" />
+                  Info
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'preview' && (
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Gallery Preview</h3>
+                <div className="text-slate-700 leading-relaxed text-lg">
+                  {gallery.description || 'No description available.'}
+                </div>
+                
+                {/* Thumbnail Grid */}
+                {gallery.files && gallery.files.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 mt-6">
+                    {gallery.files.slice(0, 6).map((file, index) => (
+                      <div
+                        key={index}
+                        onClick={() => setSelectedIndex(index)}
+                        className={`aspect-square rounded-xl overflow-hidden cursor-pointer border-2 ${
+                          selectedIndex === index ? 'border-blue-500' : 'border-transparent'
+                        }`}
+                      >
+                        {isVideoFile(file) ? (
+                          <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                            <FiVideo className="text-white text-xl" />
+                          </div>
+                        ) : (
+                          <img
+                            src={file}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {activeTab === 'files' && (
+              <section className="space-y-4">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">All Files</h3>
+                <div className="space-y-3">
+                  {gallery.files?.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100"
+                    >
+                      <div className="p-2 bg-white rounded-lg">
+                        {isVideoFile(file) ? (
+                          <FiVideo className="text-blue-600" />
+                        ) : (
+                          <FiImage className="text-emerald-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {file.split('/').pop()}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {isVideoFile(file) ? 'Video File' : 'Image File'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedIndex(index);
+                          setActiveTab('preview');
+                        }}
+                        className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
+                      >
+                        View
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {activeTab === 'info' && (
+              <section className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Gallery Information</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <h4 className="font-bold text-slate-900 mb-1">Category</h4>
+                      <p className="text-slate-700">{gallery.category.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <h4 className="font-bold text-slate-900 mb-1">Year</h4>
+                      <p className="text-slate-700">{gallery.year}</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <h4 className="font-bold text-slate-900 mb-1">Total Files</h4>
+                      <p className="text-slate-700">{gallery.files?.length || 0}</p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <h4 className="font-bold text-slate-900 mb-1">Date Added</h4>
+                      <p className="text-slate-700">{new Date(gallery.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">File Types</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <span className="text-sm text-slate-600">Images: {gallery.files?.filter(f => isImageFile(f)).length || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                      <span className="text-sm text-slate-600">Videos: {gallery.files?.filter(f => isVideoFile(f)).length || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Gallery Stats */}
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full bg-emerald-500`} />
+                  <p className="text-[10px] uppercase font-bold text-slate-400">Status</p>
+                </div>
+                <p className="font-bold text-slate-900 capitalize">Published</p>
+              </div>
+              
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-2">
+                  <FiImage size={16} />
+                </div>
+                <p className="text-[10px] uppercase font-bold text-slate-400">Images</p>
+                <p className="font-bold text-slate-900">{gallery.files?.filter(f => isImageFile(f)).length || 0}</p>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-2">
+                  <FiVideo size={16} />
+                </div>
+                <p className="text-[10px] uppercase font-bold text-slate-400">Videos</p>
+                <p className="font-bold text-slate-900">{gallery.files?.filter(f => isVideoFile(f)).length || 0}</p>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-2">
+                  <FiStar size={16} />
+                </div>
+                <p className="text-[10px] uppercase font-bold text-slate-400">Quality</p>
+                <p className="font-bold text-slate-900">High</p>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* 3. Action Footer - Sticky */}
+        <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
+          <div className="max-w-2xl mx-auto flex gap-3">
+            <button
+              onClick={() => {
+                onDownload(gallery);
+                toast.success('Downloading gallery files...');
+              }}
+              className="flex-[2] h-14 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <FiDownload size={20} />
+              Download All Files
+            </button>
+            
+            <button
+              onClick={() => {
+                onShare(gallery);
+                toast.success('Share link copied to clipboard');
+              }}
+              className="flex-1 h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <FiShare2 size={20} />
+              Share
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default function ModernGallery() {
+  const [activeCategory, setActiveCategory] = useState('GENERAL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGallery, setSelectedGallery] = useState(null);
+  const [favorites, setFavorites] = useState(new Set());
+  const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [counselingSessions, setCounselingSessions] = useState(DEFAULT_SESSIONS);
-  const [teamMembers, setTeamMembers] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
-  const [bookmarkedSessions, setBookmarkedSessions] = useState(new Set());
-  const [selectedMember, setSelectedMember] = useState(null);
-  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState('all');
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [categories, setCategories] = useState([]);
 
-  // Stats
-  const [stats] = useState([
+  // Categories for filtering
+  const categoryOptions = [
+    { id: 'all', name: 'All Galleries', icon: FiGlobe, gradient: 'from-slate-500 to-slate-600' },
+    { id: 'GENERAL', name: 'General', icon: FiGlobe, gradient: 'from-blue-500 to-cyan-500' },
+    { id: 'CLASSROOMS', name: 'Classrooms', icon: FiBookOpen, gradient: 'from-emerald-500 to-green-500' },
+    { id: 'TEACHING', name: 'Teaching', icon: FiBook, gradient: 'from-purple-500 to-pink-500' },
+    { id: 'LABORATORIES', name: 'Laboratories', icon: FiTarget, gradient: 'from-indigo-500 to-purple-500' },
+    { id: 'SPORTS_DAY', name: 'Sports Day', icon: FiAward, gradient: 'from-amber-500 to-orange-500' },
+    { id: 'GRADUATION', name: 'Graduation', icon: FiAward, gradient: 'from-rose-500 to-red-500' }
+  ];
+
+  // Dynamic stats
+  const [stats, setStats] = useState([
     { 
-      icon: FiCalendar, 
-      number: '15+', 
-      label: 'Active Sessions', 
-      sublabel: 'This month',
+      icon: FiImage, 
+      number: '0', 
+      label: 'Media Files', 
+      sublabel: 'Total files',
       gradient: 'from-blue-500 to-cyan-500'
     },
     { 
-      icon: FiPhoneCall, 
-      number: '24/7', 
-      label: 'Support', 
-      sublabel: 'Always available',
+      icon: FiFolder, 
+      number: '0', 
+      label: 'Galleries', 
+      sublabel: 'Collections',
       gradient: 'from-emerald-500 to-green-500'
     },
     { 
-      icon: FiShield, 
-      number: '100%', 
-      label: 'Confidential', 
-      sublabel: 'All sessions',
+      icon: FiGrid, 
+      number: '0', 
+      label: 'Categories', 
+      sublabel: 'Available',
       gradient: 'from-purple-500 to-pink-500'
     },
     { 
-      icon: FiUsers, 
-      number: '8', 
-      label: 'Categories', 
-      sublabel: 'Available support',
+      icon: FiCalendar, 
+      number: '2024', 
+      label: 'Latest', 
+      sublabel: 'This year',
       gradient: 'from-amber-500 to-orange-500'
     }
   ]);
 
-  // Categories
-  const categoryOptions = [
-    { id: 'all', name: 'All Sessions', icon: FiBookOpen },
-    { id: 'academic', name: 'Academic', icon: FiTarget },
-    { id: 'emotional', name: 'Emotional', icon: FiHeart },
-    { id: 'devotion', name: 'Devotion', icon: FiHeart },
-    { id: 'worship', name: 'Worship', icon: FiMusic },
-    { id: 'support', name: '24/7 Support', icon: FiPhoneCall },
-    { id: 'drugs', name: 'Drug Awareness', icon: FiAlertTriangle }
-  ];
+  // Fetch galleries from API
+  useEffect(() => {
+    const fetchGalleries = async () => {
+      try {
+        const response = await fetch('/api/gallery');
+        const data = await response.json();
+        
+        if (data.success && data.galleries) {
+          setGalleries(data.galleries);
+          
+          // Extract unique categories
+          const uniqueCategories = [...new Set(data.galleries.map(g => g?.category).filter(Boolean))];
+          setCategories(uniqueCategories);
+          
+          // Calculate file count
+          const totalFiles = data.galleries.reduce((acc, gallery) => acc + (gallery?.files?.length || 0), 0);
+          
+          // Update stats
+          setStats([
+            { 
+              icon: FiImage, 
+              number: totalFiles.toString(), 
+              label: 'Media Files', 
+              sublabel: 'Total files',
+              gradient: 'from-blue-500 to-cyan-500'
+            },
+            { 
+              icon: FiFolder, 
+              number: data.galleries.length.toString(), 
+              label: 'Galleries', 
+              sublabel: 'Collections',
+              gradient: 'from-emerald-500 to-green-500'
+            },
+            { 
+              icon: FiGrid, 
+              number: uniqueCategories.length.toString(), 
+              label: 'Categories', 
+              sublabel: 'Available',
+              gradient: 'from-purple-500 to-pink-500'
+            },
+            { 
+              icon: FiCalendar, 
+              number: '2024', 
+              label: 'Latest', 
+              sublabel: 'This year',
+              gradient: 'from-amber-500 to-orange-500'
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching galleries:', error);
+        toast.error('Failed to load galleries');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filter sessions
-  const filteredSessions = counselingSessions.filter(session => {
-    const matchesTab = activeTab === 'all' || session.category === activeTab;
-    const matchesSearch = searchTerm === '' || 
-      session.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.counselor?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesTab && matchesSearch;
-  });
+    fetchGalleries();
+  }, []);
 
-  const handleBookmark = (session) => {
-    const newBookmarked = new Set(bookmarkedSessions);
-    if (newBookmarked.has(session.id)) {
-      newBookmarked.delete(session.id);
-      toast.success('Removed from bookmarks');
+  // Transform API data
+  const transformedGalleries = useMemo(() => {
+    return (galleries || []).map(gallery => ({
+      id: gallery.id || Math.random().toString(),
+      category: gallery.category || 'GENERAL',
+      title: gallery.title || 'Untitled Gallery',
+      description: gallery.description || 'No description available',
+      files: gallery.files || [],
+      date: gallery.createdAt || new Date().toISOString(),
+      year: gallery.createdAt ? new Date(gallery.createdAt).getFullYear() : new Date().getFullYear()
+    }));
+  }, [galleries]);
+
+  // Get available years
+  const years = useMemo(() => {
+    const yearSet = new Set();
+    galleries.forEach(gallery => {
+      if (gallery?.createdAt) {
+        const year = new Date(gallery.createdAt).getFullYear();
+        yearSet.add(year);
+      }
+    });
+    return Array.from(yearSet).sort((a, b) => b - a);
+  }, [galleries]);
+
+  // Filter galleries
+  const filteredGalleries = useMemo(() => {
+    let filtered = transformedGalleries.filter(gallery => {
+      const matchesCategory = activeCategory === 'all' || gallery.category === activeCategory;
+      const matchesYear = selectedYear === 'all' || gallery.year.toString() === selectedYear;
+      const matchesSearch = searchTerm === '' || 
+        gallery.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (gallery.description && gallery.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesCategory && matchesYear && matchesSearch;
+    });
+    
+    // Sort by newest first
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    return filtered;
+  }, [activeCategory, searchTerm, selectedYear, transformedGalleries]);
+
+  const handleFavorite = (gallery) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(gallery.id)) {
+      newFavorites.delete(gallery.id);
+      toast.success('Removed from favorites');
     } else {
-      newBookmarked.add(session.id);
-      toast.success('Bookmarked session');
+      newFavorites.add(gallery.id);
+      toast.success('Added to favorites');
     }
-    setBookmarkedSessions(newBookmarked);
+    setFavorites(newFavorites);
   };
 
-  const handleContactSupport = (member) => {
-    toast.success(`Viewing ${member?.name || 'support'} profile`);
+  const handleViewGallery = (gallery) => {
+    setSelectedGallery(gallery);
   };
 
-  const refreshData = () => {
+  const handleDownload = (gallery) => {
+    // Implement download logic
+    toast.info(`Downloading ${gallery.title}...`);
+  };
+
+  const handleShare = (gallery) => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(`${gallery.title} - ${url}`);
+    toast.success('Link copied to clipboard');
+  };
+
+  const refreshData = async () => {
     setRefreshing(true);
     setTimeout(() => {
-      toast.success('Data refreshed!');
-      setRefreshing(false);
+      window.location.reload();
+      toast.success('Gallery refreshed!');
     }, 1000);
   };
 
   if (loading) {
     return (
-      <Box className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <Stack spacing={3} alignItems="center" className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100">
+      <Box 
+        className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
+      >
+        <Stack 
+          spacing={3} 
+          alignItems="center"
+          className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
+        >
+          {/* Modern Layered Loader */}
           <Box className="relative flex items-center justify-center">
+            {/* Background Ring */}
             <CircularProgress
               variant="determinate"
               value={100}
@@ -1213,6 +1004,7 @@ export default function StudentCounseling() {
               thickness={4}
               sx={{ color: '#f1f5f9' }}
             />
+            {/* Actual Animated Loader */}
             <CircularProgress
               variant="indeterminate"
               disableShrink
@@ -1223,18 +1015,33 @@ export default function StudentCounseling() {
                 animationDuration: '800ms',
                 position: 'absolute',
                 left: 0,
+                [`& .MuiCircularProgress-circle`]: {
+                  strokeLinecap: 'round',
+                },
               }}
             />
+            {/* Center Icon */}
             <Box className="absolute">
               <IoSparkles className="text-blue-500 text-xl animate-pulse" />
             </Box>
           </Box>
+
+          {/* Clean Typography */}
           <Stack spacing={0.5} alignItems="center">
-            <Typography variant="body1" fontWeight="600" color="text.primary">
-              Loading Guidance and Counseling sessions...
+            <Typography 
+              variant="body1" 
+              fontWeight="600" 
+              color="text.primary"
+              sx={{ letterSpacing: '-0.01em' }}
+            >
+              Loading School Gallery...
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Fetching latest sessions and team information
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              className="flex items-center gap-1"
+            >
+              Fetching memories and moments
             </Typography>
           </Stack>
         </Stack>
@@ -1243,256 +1050,394 @@ export default function StudentCounseling() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 p-4 md:p-6">
       <Toaster position="top-right" richColors />
       
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <ModernBadge color="purple" icon={FiHeart} className="mb-3">
-              Student Support
-            </ModernBadge>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-2">
-              Guidance & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Counseling</span>
-            </h1>
-            <p className="text-slate-600">
-              Professional support for academic, emotional, and spiritual well-being
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <ModernButton
-              variant="secondary"
-              icon={FiRotateCw}
-              onClick={refreshData}
-              disabled={refreshing}
-            >
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </ModernButton>
-            
-            <div className="flex bg-white rounded-lg border border-slate-200 overflow-hidden">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 ${viewMode === 'grid' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'}`}
-              >
-                <FiGrid />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 ${viewMode === 'list' ? 'bg-blue-50 text-blue-600' : 'text-slate-600'}`}
-              >
-                <FiList />
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Modern Hero Banner */}
+        <ModernHeroBanner 
+          stats={{
+            totalFiles: stats[0].number,
+            totalCategories: stats[2].number,
+            thisMonth: transformedGalleries.length
+          }} 
+          onRefresh={refreshData}
+        />
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Dynamic Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-10">
           {stats.map((stat, index) => (
             <ModernStatCard key={index} stat={stat} />
           ))}
         </div>
 
-        {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Column */}
-          <div className="flex-1 space-y-6">
-            {/* Header */}
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-600 rounded-xl">
-                <FiHeart className="text-white text-2xl" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800">Counseling Sessions</h2>
-                <p className="text-sm text-slate-500">{filteredSessions.length} Sessions Available</p>
+        {/* Main Content Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column: Galleries */}
+          <div className="flex-1 min-w-0 space-y-8">
+            
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-1">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-900 rounded-2xl shadow-lg">
+                  <FiImage className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">School Galleries</h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    {filteredGalleries.length} Galleries Available
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Search & Filter */}
-            <ModernCard className="p-4">
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiSearch className="text-slate-400" />
+            {/* Modern Search & Filter Section */}
+            <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 p-3 rounded-[28px] shadow-sm">
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                {/* Search */}
+                <div className="relative w-full flex-1 group">
+                  <div className="relative flex items-center bg-white border border-slate-200 rounded-2xl shadow-sm transition-all focus-within:border-slate-900 focus-within:ring-4 focus-within:ring-slate-900/5">
+                    <div className="pl-5 pr-3 flex items-center justify-center pointer-events-none">
+                      <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={18} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search galleries, categories, or years..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full py-4 bg-transparent text-slate-900 placeholder:text-slate-400 font-semibold text-sm focus:outline-none"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="pr-4 text-slate-400 hover:text-slate-600"
+                      >
+                        <FiX size={18} />
+                      </button>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search sessions..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
                 </div>
-                
-                <select 
-                  value={activeTab}
-                  onChange={(e) => setActiveTab(e.target.value)}
-                  className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  {categoryOptions.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                
-                <ModernButton
-                  variant="outline"
-                  icon={FiX}
+
+                {/* Category Selector */}
+                <div className="relative w-full md:w-auto">
+                  <select 
+                    value={activeCategory}
+                    onChange={(e) => setActiveCategory(e.target.value)}
+                    className="w-full md:w-48 appearance-none px-5 py-3.5 bg-slate-50 border-none rounded-2xl font-semibold text-slate-600 text-sm cursor-pointer focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  >
+                    {categoryOptions.map((category) => {
+                      const Icon = category.icon;
+                      return (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+
+                {/* Year Selector */}
+                <div className="relative w-full md:w-auto">
+                  <select 
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="w-full md:w-36 appearance-none px-5 py-3.5 bg-slate-50 border-none rounded-2xl font-semibold text-slate-600 text-sm cursor-pointer focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  >
+                    <option value="all">All Years</option>
+                    {years.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+
+                {/* Reset Button */}
+                <button
                   onClick={() => {
                     setSearchTerm('');
-                    setActiveTab('all');
+                    setActiveCategory('all');
+                    setSelectedYear('all');
                   }}
+                  className="px-6 py-3.5 bg-purple-600 text-white rounded-2xl font-bold text-sm shadow-md shadow-purple-200 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
-                  Clear
-                </ModernButton>
+                  <FiFilter size={16} />
+                  Reset
+                </button>
               </div>
-            </ModernCard>
-
-            {/* Category Pills */}
-            <div className="flex flex-wrap gap-2">
-              {categoryOptions.map((category) => (
-                <ModernButton
-                  key={category.id}
-                  variant={activeTab === category.id ? 'primary' : 'outline'}
-                  size="sm"
-                  icon={category.icon}
-                  onClick={() => setActiveTab(category.id)}
-                >
-                  {category.name}
-                </ModernButton>
-              ))}
             </div>
 
-            {/* Sessions */}
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}>
-              {filteredSessions.map((session) => (
-                <ModernCounselingCard 
-                  key={session.id} 
-                  session={session} 
-                  onView={setSelectedSession}
-                  onBookmark={handleBookmark}
-                  viewMode={viewMode}
-                />
-              ))}
+            {/* Modern Category Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2">
+              {categoryOptions.map((category) => {
+                const Icon = category.icon;
+                const isActive = activeCategory === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all border ${
+                      isActive 
+                        ? "bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-100" 
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {Icon && <Icon className={isActive ? "text-white" : "text-slate-400"} />}
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-800">{filteredGalleries.length}</span> galleries found
+              </div>
+              <div className="flex bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-3 ${viewMode === 'grid' ? 'bg-purple-50 text-purple-600' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <FiGrid />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-3 ${viewMode === 'list' ? 'bg-purple-50 text-purple-600' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  <FiList />
+                </button>
+              </div>
+            </div>
+
+            {/* Galleries Grid/List */}
+            <div className="relative">
+              {filteredGalleries.length === 0 ? (
+                <div className="bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 py-16 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <FiImage className="text-slate-300 text-2xl" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">No galleries found</h3>
+                  <p className="text-slate-500 text-sm mt-1 mb-6">Try adjusting your filters or search.</p>
+                  <button 
+                    onClick={() => { setSearchTerm(''); setActiveCategory('all'); setSelectedYear('all'); }}
+                    className="px-6 py-2.5 bg-white border border-slate-200 rounded-full font-bold text-slate-700 hover:bg-slate-50 transition-all text-sm"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                  {filteredGalleries.map((gallery, index) => (
+                    <ModernGalleryCard 
+                      key={gallery.id || index} 
+                      gallery={gallery} 
+                      onView={handleViewGallery}
+                      onFavorite={handleFavorite}
+                      viewMode={viewMode}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="lg:w-80 space-y-6">
-            {/* Quick Actions */}
-            <ModernCard className="p-5">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <ModernButton
-                  variant="danger"
-                  icon={FiPhoneCall}
-                  className="w-full"
-                  onClick={() => toast.info('Emergency contact feature coming soon!')}
-                >
-                  Emergency Contact
-                </ModernButton>
-                
-                <ModernButton
-                  variant="primary"
-                  icon={FiCalendar}
-                  className="w-full"
-                  onClick={() => toast.info('Schedule session feature coming soon!')}
-                >
-                  Schedule Session
-                </ModernButton>
-                
-                <ModernButton
-                  variant="success"
-                  icon={FiBookOpen}
-                  className="w-full"
-                  onClick={() => toast.info('Resources feature coming soon!')}
-                >
-                  Resources
-                </ModernButton>
-              </div>
-            </ModernCard>
-
-            {/* Team Section */}
-            <ModernCard className="p-5 bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-emerald-500 rounded-lg">
-                  <FiUsers className="text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800">Support Team</h3>
-                  <p className="text-sm text-slate-500">Professional counselors</p>
-                </div>
-              </div>
+          {/* Right Column: Quick Actions & Info */}
+          <div className="lg:w-[380px] space-y-6">
+            <div className="lg:sticky lg:top-24 space-y-6">
               
-              <div className="space-y-3">
-                {teamMembers.slice(0, 3).map((member) => (
-                  <ModernSupportTeamCard
-                    key={member.id}
-                    member={member}
-                    onView={() => {
-                      setSelectedMember(member);
-                      setIsTeamModalOpen(true);
-                    }}
-                    onContact={handleContactSupport}
-                    viewMode="list"
-                  />
-                ))}
-              </div>
-            </ModernCard>
+              {/* Quick Actions Card */}
+              <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <FiZap className="text-purple-600 text-xl" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
+                </div>
 
-            {/* Confidentiality */}
-            <ModernCard className="p-5 bg-gradient-to-r from-purple-900 to-indigo-900 text-white">
-              <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mb-4">
-                <FiShield className="text-white text-2xl" />
+                <div className="space-y-3">
+                  <button
+                    onClick={() => toast.info('Upload gallery feature coming soon!')}
+                    className="w-full p-4 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-xl">
+                        <FiUpload className="text-blue-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">Upload Gallery</p>
+                        <p className="text-xs text-blue-600">Add new photos/videos</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-blue-400" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const mostRecent = filteredGalleries[0];
+                      if (mostRecent) {
+                        handleViewGallery(mostRecent);
+                      }
+                    }}
+                    className="w-full p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100 flex items-center justify-between hover:bg-emerald-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-100 rounded-xl">
+                        <FiEye className="text-emerald-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">Latest Gallery</p>
+                        <p className="text-xs text-emerald-600">View most recent</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-emerald-400" />
+                  </button>
+
+                  <button
+                    onClick={() => toast.info('Favorites feature coming soon!')}
+                    className="w-full p-4 bg-amber-50 text-amber-700 rounded-2xl border border-amber-100 flex items-center justify-between hover:bg-amber-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-100 rounded-xl">
+                        <FiHeart className="text-amber-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">My Favorites</p>
+                        <p className="text-xs text-amber-600">{favorites.size} saved</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-amber-400" />
+                  </button>
+                </div>
               </div>
-              <h4 className="text-lg font-semibold mb-2">100% Confidential</h4>
-              <p className="text-purple-200 text-sm">
-                All sessions are private and secure. Your information is protected.
-              </p>
-            </ModernCard>
+
+              {/* Year Info Banner */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-[32px] p-6 border border-blue-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2.5 bg-blue-100 rounded-xl">
+                    <FiCalendar className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900">Gallery Years</h4>
+                    <p className="text-sm text-slate-600">Browse by year</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <span className="text-sm font-medium text-slate-700">All Years</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600">{transformedGalleries.length}</span>
+                  </div>
+                  
+                  {years.slice(0, 3).map(year => (
+                    <div key={year} className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span className="text-sm font-medium text-slate-700">{year}</span>
+                      </div>
+                      <span className="text-xs font-bold text-blue-600">
+                        {transformedGalleries.filter(g => g.year === year).length}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confidentiality Banner */}
+              <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-[32px] p-6 text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-[50px]" />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-4">
+                    <FiLock className="text-white text-xl" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2">School Memories</h4>
+                  <p className="text-sm text-purple-200 mb-4">
+                    Preserving our school's legacy through photos and videos.
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>High quality media</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>Organized by category</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>Easy to download & share</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Feature Banner */}
-        <ModernCard className="p-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-              <FiHeart className="text-white text-2xl" />
+        <div className="relative overflow-hidden bg-gradient-to-r from-purple-900 to-indigo-800 rounded-3xl p-5 md:p-8 shadow-xl">
+          {/* Abstract Background */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 blur-[80px] rounded-full -mr-24 -mt-24" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full -ml-24 -mb-24" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+            
+            {/* Icon */}
+            <div className="shrink-0">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+                <FiImage className="text-purple-600 text-2xl md:text-3xl" />
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold mb-2">Your Well-being Matters</h3>
-              <p className="text-blue-100">
-                Professional support for academic success, emotional health, and personal growth.
+
+            {/* Content */}
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2 tracking-tight">
+                Preserving School History.
+              </h3>
+              <p className="text-purple-200 text-sm md:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
+                Every photo tells a story. Explore decades of academic excellence, achievements, and memories.
               </p>
+
+              {/* Feature Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+                {[
+                  { label: 'High Quality', icon: FiStar, color: 'text-blue-300', bg: 'bg-blue-400/10' },
+                  { label: 'Organized', icon: FiFolder, color: 'text-emerald-300', bg: 'bg-emerald-400/10' },
+                  { label: 'Downloadable', icon: FiDownload, color: 'text-purple-300', bg: 'bg-purple-400/10' },
+                  { label: 'Shareable', icon: FiShare2, color: 'text-pink-300', bg: 'bg-pink-400/10' }
+                ].map((feature, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10"
+                  >
+                    <div className={`p-1.5 rounded-md ${feature.bg} ${feature.color} shrink-0`}>
+                      <feature.icon size={16} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-200 truncate">
+                      {feature.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <ModernButton variant="secondary" className="bg-white text-blue-600">
-              Learn More
-            </ModernButton>
           </div>
-        </ModernCard>
+        </div>
       </div>
 
-      {/* Modals */}
-      {selectedSession && (
-        <ModernDetailModal
-          session={selectedSession}
-          onClose={() => setSelectedSession(null)}
-          onContact={handleContactSupport}
-        />
-      )}
-
-      {selectedMember && (
-        <TeamMemberModal
-          member={selectedMember}
-          isOpen={isTeamModalOpen}
-          onClose={() => {
-            setIsTeamModalOpen(false);
-            setSelectedMember(null);
-          }}
-          onContact={handleContactSupport}
+      {/* Gallery Detail Modal */}
+      {selectedGallery && (
+        <ModernGalleryDetailModal
+          gallery={selectedGallery}
+          onClose={() => setSelectedGallery(null)}
+          onDownload={handleDownload}
+          onShare={handleShare}
         />
       )}
     </div>
