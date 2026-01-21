@@ -101,8 +101,11 @@ export default function ModernGalleryManager() {
   const fetchGalleryItems = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/gallery');
-      
+const response = await fetch('/api/gallery');
+if (!response.ok) {
+    const errorText = await response.text(); // Read the HTML error instead of crashing
+    throw new Error(`Server Error: ${response.status}`);
+}      
       if (!response.ok) {
         // Handle HTTP errors
         if (response.status === 500) {
@@ -119,13 +122,13 @@ export default function ModernGalleryManager() {
       const result = await response.json();
       
       if (result.success && result.galleries) {
-        const transformedItems = result.galleries.map(gallery => ({
-          id: gallery.id,
+const transformedItems = result.galleries.map(gallery => ({      
+      id: gallery.id,
           title: gallery.title,
           description: gallery.description || '',
           category: gallery.category,
           files: gallery.files || [],
-          fileType: determineMediaType(gallery.files?.[0]),
+    fileType: determineMediaType(gallery.files?.[0]),
           previewUrl: gallery.files?.[0] || '',
           fileCount: gallery.files?.length || 0,
           uploadDate: gallery.createdAt,
