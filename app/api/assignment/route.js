@@ -1,26 +1,111 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import path from "path";
-import fs from "fs";
-import { writeFile } from "fs/promises";
+import cloudinary from "../../../libs/cloudinary";
 
-// Helpers
-const ensureUploadDir = (uploadDir) => {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Helper: Upload file to Cloudinary
+const uploadFileToCloudinary = async (file, folder = "assignments") => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    
+    // Determine resource type
+    let resourceType = 'auto';
+    let transformation = {};
+    
+    if (file.type.startsWith('image/')) {
+      resourceType = 'image';
+      transformation = {
+        transformation: [
+          { width: 1200, crop: "limit" },
+          { quality: "auto:good" }
+        ]
+      };
+    } else if (file.type.startsWith('video/')) {
+      resourceType = 'video';
+    } else if (file.type.includes('pdf') || file.type.includes('document') || 
+               file.type.includes('sheet') || file.type.includes('presentation')) {
+      resourceType = 'raw';
+    }
+    
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: `assignments/${folder}`,
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...transformation
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+    
+    return {
+      url: result.secure_url,
+      name: originalName,
+      size: file.size,
+      type: file.type,
+      format: result.format,
+      resource_type: result.resource_type
+    };
+  } catch (error) {
+    console.error("❌ Cloudinary upload error:", error);
+    return null;
   }
 };
 
-const uploadFiles = async (files, uploadDir) => {
+// Helper: Delete file from Cloudinary
+const deleteFileFromCloudinary = async (fileUrl) => {
+  if (!fileUrl || !fileUrl.includes('cloudinary.com')) return;
+
+  try {
+    // Extract public ID from Cloudinary URL
+    const urlParts = fileUrl.split('/');
+    const uploadIndex = urlParts.indexOf('upload');
+    
+    if (uploadIndex === -1) return;
+    
+    const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+    const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+    
+    // Determine resource type from URL
+    let resourceType = 'auto';
+    if (fileUrl.includes('/video/') || fileUrl.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+      resourceType = 'video';
+    } else if (fileUrl.includes('/image/') || fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+      resourceType = 'image';
+    } else if (fileUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i)) {
+      resourceType = 'raw';
+    }
+    
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  } catch (error) {
+    console.error("❌ Error deleting file from Cloudinary:", error);
+  }
+};
+
+// Helper: Upload multiple files to Cloudinary
+const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   const uploadedFiles = [];
   
   for (const file of files) {
-    if (file && file.name) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      const filePath = path.join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
-      uploadedFiles.push(`/assignments/${fileName}`);
+    if (file && file.name && file.size > 0) {
+      try {
+        const uploadedFile = await uploadFileToCloudinary(file, folder);
+        if (uploadedFile) {
+          uploadedFiles.push(uploadedFile.url);
+        }
+      } catch (error) {
+        console.error(`Error uploading file ${file.name}:`, error);
+      }
     }
   }
   
@@ -56,15 +141,25 @@ export async function POST(request) {
       );
     }
 
-    // Handle file uploads
-    const uploadDir = path.join(process.cwd(), "public/assignments");
-    ensureUploadDir(uploadDir);
-
-    // Upload assignment files
-    const assignmentFiles = await uploadFiles(formData.getAll("assignmentFiles"), uploadDir);
+    // Handle file uploads to Cloudinary
+    let assignmentFiles = [];
+    let attachments = [];
     
-    // Upload attachment files
-    const attachments = await uploadFiles(formData.getAll("attachments"), uploadDir);
+    try {
+      // Upload assignment files
+      const assignmentFileInputs = formData.getAll("assignmentFiles");
+      assignmentFiles = await uploadFilesToCloudinary(assignmentFileInputs, "assignment-files");
+      
+      // Upload attachment files
+      const attachmentInputs = formData.getAll("attachments");
+      attachments = await uploadFilesToCloudinary(attachmentInputs, "attachments");
+    } catch (fileError) {
+      console.error("File upload error:", fileError);
+      return NextResponse.json(
+        { success: false, error: "Failed to upload files. Please try again." },
+        { status: 500 }
+      );
+    }
 
     // Parse learning objectives
     let learningObjectivesArray = [];

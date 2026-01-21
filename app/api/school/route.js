@@ -1,26 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import { writeFile, unlink } from "fs/promises";
-import path from "path";
-import { mkdirSync, existsSync } from "fs";
-
-// Ensure upload directories exist
-const ensureDir = (dir) => {
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-};
-
-const videoDir = path.join(process.cwd(), "public/infomation/videos");
-const pdfDir = path.join(process.cwd(), "public/infomation/pdfs");
-const thumbnailDir = path.join(process.cwd(), "public/infomation/thumbnails");
-const dayFeesDir = path.join(pdfDir, "day-fees");
-const boardingFeesDir = path.join(pdfDir, "boarding-fees");
-const curriculumDir = path.join(pdfDir, "curriculum");
-const admissionDir = path.join(pdfDir, "admission");
-const examResultsDir = path.join(pdfDir, "exam-results");
-const additionalResultsDir = path.join(pdfDir, "additional-results");
-
-// Create all directories
-[pdfDir, videoDir, thumbnailDir, dayFeesDir, boardingFeesDir, curriculumDir, admissionDir, examResultsDir, additionalResultsDir].forEach(dir => ensureDir(dir));
+import cloudinary from "../../../libs/cloudinary";
 
 // Helper function to validate required fields
 const validateRequiredFields = (formData) => {
@@ -35,17 +15,37 @@ const validateRequiredFields = (formData) => {
   }
 };
 
-// Helper function to delete old files
-const deleteOldFile = async (filePath) => {
-  if (filePath && !filePath.startsWith('http') && !filePath.includes('youtube.com') && !filePath.includes('youtu.be')) {
-    try {
-      const fullPath = path.join(process.cwd(), 'public', filePath);
-      if (existsSync(fullPath)) {
-        await unlink(fullPath);
+// Helper to delete old files from Cloudinary
+const deleteOldFileFromCloudinary = async (filePath) => {
+  if (!filePath || filePath.includes('youtube.com') || filePath.includes('youtu.be')) {
+    return; // Skip YouTube URLs
+  }
+
+  try {
+    // Extract public ID from Cloudinary URL
+    if (filePath.includes('cloudinary.com')) {
+      const urlParts = filePath.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      
+      if (uploadIndex !== -1) {
+        const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+        const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+        
+        // Determine resource type from URL
+        let resourceType = 'auto';
+        if (filePath.includes('/video/') || filePath.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+          resourceType = 'video';
+        } else if (filePath.includes('/image/') || filePath.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+          resourceType = 'image';
+        } else if (filePath.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i)) {
+          resourceType = 'raw';
+        }
+        
+        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
       }
-    } catch (error) {
-      console.warn('⚠️ Could not delete old file:', error);
     }
+  } catch (error) {
+    console.warn('⚠️ Could not delete old file from Cloudinary:', error.message);
   }
 };
 
@@ -112,8 +112,57 @@ const parseFeeDistributionJson = (value, fieldName) => {
   }
 };
 
-// MAIN PDF UPLOAD HANDLER
-const handlePdfUpload = async (pdfFile, uploadDir, fieldName, existingFilePath = null) => {
+// Helper: Upload file to Cloudinary with appropriate resource type
+const uploadFileToCloudinary = async (file, folder, fieldName, resourceType = 'auto') => {
+  if (!file || file.size === 0) {
+    return null;
+  }
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: `school_info/${folder}`,
+          public_id: `${timestamp}-${fieldName}-${sanitizedFileName}`,
+          ...(resourceType === 'image' ? {
+            transformation: [
+              { width: 1200, crop: "limit" },
+              { quality: "auto:good" }
+            ]
+          } : {}),
+          allowed_formats: resourceType === 'video' ? ['mp4', 'webm', 'ogg'] : undefined
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+    
+    return {
+      url: result.secure_url,
+      name: originalName,
+      size: file.size,
+      format: result.format,
+      resource_type: result.resource_type,
+      public_id: result.public_id
+    };
+  } catch (error) {
+    console.error(`❌ Cloudinary upload error for ${fieldName}:`, error);
+    throw new Error(`Failed to upload ${fieldName}: ${error.message}`);
+  }
+};
+
+// MAIN PDF UPLOAD HANDLER (using Cloudinary)
+const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = null) => {
   if (!pdfFile || pdfFile.size === 0) {
     return {
       path: existingFilePath,
@@ -122,9 +171,9 @@ const handlePdfUpload = async (pdfFile, uploadDir, fieldName, existingFilePath =
     };
   }
 
-  // Delete old file if exists
-  if (existingFilePath) {
-    await deleteOldFile(existingFilePath);
+  // Delete old file from Cloudinary if exists
+  if (existingFilePath && existingFilePath.includes('cloudinary.com')) {
+    await deleteOldFileFromCloudinary(existingFilePath);
   }
 
   // Validate file type
@@ -135,23 +184,20 @@ const handlePdfUpload = async (pdfFile, uploadDir, fieldName, existingFilePath =
   // Validate file size (20MB limit)
   const maxSize = 20 * 1024 * 1024;
   if (pdfFile.size > maxSize) {
-    throw new Error(`${fieldName} PDF file too large. Maximum size: 20MB`);
+    throw new Error(`${fieldName} file too large. Maximum size: 20MB`);
   }
 
-  const buffer = Buffer.from(await pdfFile.arrayBuffer());
-  const fileName = `${Date.now()}_${fieldName}_${pdfFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const filePath = `/infomation/pdfs/${uploadDir}/${fileName}`;
-  
-  await writeFile(path.join(process.cwd(), "public", filePath), buffer);
+  // Upload to Cloudinary
+  const cloudinaryResult = await uploadFileToCloudinary(pdfFile, folder, fieldName, 'raw');
   
   return {
-    path: filePath,
-    name: pdfFile.name,
-    size: pdfFile.size
+    path: cloudinaryResult.url,
+    name: cloudinaryResult.name,
+    size: cloudinaryResult.size
   };
 };
 
-// NEW: Handle Additional Files Upload (supports multiple file types)
+// Handle Additional Files Upload (supports multiple file types)
 const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
   if (!file || file.size === 0) {
     return {
@@ -162,9 +208,9 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
     };
   }
 
-  // Delete old file if exists
-  if (existingFilePath) {
-    await deleteOldFile(existingFilePath);
+  // Delete old file from Cloudinary if exists
+  if (existingFilePath && existingFilePath.includes('cloudinary.com')) {
+    await deleteOldFileFromCloudinary(existingFilePath);
   }
 
   // Allowed file types for additional results
@@ -193,19 +239,22 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
     throw new Error(`File too large. Maximum size: 50MB`);
   }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const filePath = `/infomation/pdfs/additional-results/${fileName}`;
-  
-  await writeFile(path.join(process.cwd(), "public", filePath), buffer);
+  // Determine resource type
+  let resourceType = 'raw';
+  if (file.type.startsWith('image/')) {
+    resourceType = 'image';
+  }
+
+  // Upload to Cloudinary
+  const cloudinaryResult = await uploadFileToCloudinary(file, 'additional-results', 'additional', resourceType);
   
   // Determine file type for display
   const fileType = getFileTypeFromMime(file.type);
   
   return {
-    path: filePath,
-    name: file.name,
-    size: file.size,
+    path: cloudinaryResult.url,
+    name: cloudinaryResult.name,
+    size: cloudinaryResult.size,
     type: fileType
   };
 };
@@ -233,15 +282,15 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
       } : null;
     }
     // During create operations, delete existing thumbnail if provided
-    if (existingThumbnail) {
-      await deleteOldFile(existingThumbnail);
+    if (existingThumbnail && existingThumbnail.path.includes('cloudinary.com')) {
+      await deleteOldFileFromCloudinary(existingThumbnail.path);
     }
     return null;
   }
 
-  // Delete old thumbnail if exists (only when explicitly replacing)
-  if (existingThumbnail) {
-    await deleteOldFile(existingThumbnail);
+  // Delete old thumbnail from Cloudinary if exists (only when explicitly replacing)
+  if (existingThumbnail && existingThumbnail.path && existingThumbnail.path.includes('cloudinary.com')) {
+    await deleteOldFileFromCloudinary(existingThumbnail.path);
   }
 
   // If it's a File object
@@ -257,13 +306,11 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
         throw new Error("Thumbnail too large. Maximum size: 2MB");
       }
 
-      const buffer = Buffer.from(await thumbnailData.arrayBuffer());
-      const fileName = `thumbnail_${Date.now()}_${thumbnailData.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const filePath = `/infomation/thumbnails/${fileName}`;
+      // Upload to Cloudinary
+      const cloudinaryResult = await uploadFileToCloudinary(thumbnailData, 'thumbnails', 'thumbnail', 'image');
       
-      await writeFile(path.join(process.cwd(), "public", filePath), buffer);
       return {
-        path: filePath,
+        path: cloudinaryResult.url,
         type: 'generated'
       };
     } catch (fileError) {
@@ -290,12 +337,14 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
         throw new Error("Thumbnail too large. Maximum size: 2MB");
       }
 
-      const fileName = `thumbnail_${Date.now()}.${extension}`;
-      const filePath = `/infomation/thumbnails/${fileName}`;
+      // Create a File-like object from buffer
+      const file = new File([buffer], `thumbnail.${extension}`, { type: `image/${extension}` });
       
-      await writeFile(path.join(process.cwd(), "public", filePath), buffer);
+      // Upload to Cloudinary
+      const cloudinaryResult = await uploadFileToCloudinary(file, 'thumbnails', 'thumbnail', 'image');
+      
       return {
-        path: filePath,
+        path: cloudinaryResult.url,
         type: 'generated'
       };
     } catch (base64Error) {
@@ -304,8 +353,8 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
     }
   }
 
-  // If it's already a file path, return as-is
-  if (typeof thumbnailData === 'string' && thumbnailData.startsWith('/')) {
+  // If it's already a file path/URL, return as-is
+  if (typeof thumbnailData === 'string' && (thumbnailData.startsWith('/') || thumbnailData.includes('cloudinary.com'))) {
     return {
       path: thumbnailData,
       type: 'existing'
@@ -315,7 +364,7 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
   throw new Error("Invalid thumbnail data format");
 };
 
-// Update the handleVideoUpload function to properly store thumbnails
+// Update the handleVideoUpload function to properly store thumbnails with Cloudinary
 const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, existingVideo = null, existingThumbnail = null, isUpdateOperation = false) => {
   let videoPath = existingVideo?.videoTour || null;
   let videoType = existingVideo?.videoType || null;
@@ -325,14 +374,14 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
   // If YouTube link is provided
   if (youtubeLink !== null && youtubeLink !== undefined) {
     if (youtubeLink.trim() !== '') {
-      // Delete old video file if exists (if it was a local file)
-      if (existingVideo?.videoType === 'file' && existingVideo?.videoTour) {
-        await deleteOldFile(existingVideo.videoTour);
+      // Delete old video file from Cloudinary if exists (if it was a cloudinary file)
+      if (existingVideo?.videoType === 'file' && existingVideo?.videoTour && existingVideo.videoTour.includes('cloudinary.com')) {
+        await deleteOldFileFromCloudinary(existingVideo.videoTour);
       }
       
-      // Delete old thumbnail when switching to YouTube
-      if (thumbnailPath) {
-        await deleteOldFile(thumbnailPath);
+      // Delete old thumbnail from Cloudinary when switching to YouTube
+      if (thumbnailPath && thumbnailPath.includes('cloudinary.com')) {
+        await deleteOldFileFromCloudinary(thumbnailPath);
         thumbnailPath = null;
         thumbnailType = null;
       }
@@ -353,9 +402,9 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
   
   // If local video file upload is provided (MP4 mode)
   if (videoTourFile && videoTourFile.size > 0) {
-    // Delete old video file if exists
-    if (existingVideo?.videoTour && existingVideo?.videoType === 'file') {
-      await deleteOldFile(existingVideo.videoTour);
+    // Delete old video file from Cloudinary if exists
+    if (existingVideo?.videoTour && existingVideo?.videoType === 'file' && existingVideo.videoTour.includes('cloudinary.com')) {
+      await deleteOldFileFromCloudinary(existingVideo.videoTour);
     }
 
     // Validate file type
@@ -370,17 +419,15 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
       throw new Error("Video file too large. Maximum size: 100MB");
     }
 
-    const buffer = Buffer.from(await videoTourFile.arrayBuffer());
-    const fileName = `${Date.now()}_${videoTourFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const filePath = `/infomation/videos/${fileName}`;
-    await writeFile(path.join(process.cwd(), "public", filePath), buffer);
-    videoPath = filePath;
+    // Upload to Cloudinary
+    const cloudinaryResult = await uploadFileToCloudinary(videoTourFile, 'videos', 'video_tour', 'video');
+    videoPath = cloudinaryResult.url;
     videoType = "file";
     
     // Handle thumbnail for MP4 videos
     if (thumbnailData) {
       try {
-        const thumbnailResult = await handleThumbnailUpload(thumbnailData, thumbnailPath, isUpdateOperation);
+        const thumbnailResult = await handleThumbnailUpload(thumbnailData, { path: thumbnailPath }, isUpdateOperation);
         if (thumbnailResult) {
           thumbnailPath = thumbnailResult.path;
           thumbnailType = thumbnailResult.type;
@@ -405,10 +452,10 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
     }
   }
 
-  // If video is being removed completely, also remove thumbnail
+  // If video is being removed completely, also remove thumbnail from Cloudinary
   if ((!youtubeLink || youtubeLink.trim() === '') && !videoTourFile && existingVideo?.videoTour) {
-    if (thumbnailPath) {
-      await deleteOldFile(thumbnailPath);
+    if (thumbnailPath && thumbnailPath.includes('cloudinary.com')) {
+      await deleteOldFileFromCloudinary(thumbnailPath);
       thumbnailPath = null;
       thumbnailType = null;
     }
@@ -478,7 +525,7 @@ export async function POST(req) {
       );
     }
 
-    // Handle ALL PDF uploads
+    // Handle ALL PDF uploads to Cloudinary
     let pdfUploads = {};
     
     try {
@@ -532,7 +579,7 @@ export async function POST(req) {
       );
     }
 
-    // Handle additional results files
+    // Handle additional results files to Cloudinary
     let additionalResultsFiles = [];
 
     try {
@@ -998,7 +1045,7 @@ export async function PUT(req) {
       );
     }
 
-    // Handle ALL PDF uploads
+    // Handle ALL PDF uploads to Cloudinary
     let pdfUploads = {};
     
     try {
@@ -1052,164 +1099,159 @@ export async function PUT(req) {
       );
     }
 
-  
-  
-  
-    
-// 🔴 FIXED: Handle additional results files from form data - SUPPORTING MULTIPLE NEW FILES
-let additionalResultsFiles = [];
-try {
-  let existingAdditionalFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
-
-  const removedAdditionalFilesJson = formData.get('removedAdditionalFiles');
-  let removedFiles = [];
-  
-  if (removedAdditionalFilesJson && removedAdditionalFilesJson.trim() !== '') {
+    // Handle additional results files from form data - SUPPORTING MULTIPLE NEW FILES
+    let additionalResultsFiles = [];
     try {
-      removedFiles = JSON.parse(removedAdditionalFilesJson);
-      if (!Array.isArray(removedFiles)) {
-        removedFiles = [];
-      }
-    } catch (e) {
-      console.warn('Failed to parse removedAdditionalFiles:', e.message);
-      removedFiles = [];
-    }
-  }
+      let existingAdditionalFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
 
-  // Step 3: Parse replaced files from form data
-  const cancelledAdditionalFilesJson = formData.get('cancelledAdditionalFiles');
-  let replacedFiles = [];
-  
-  if (cancelledAdditionalFilesJson && cancelledAdditionalFilesJson.trim() !== '') {
-    try {
-      replacedFiles = JSON.parse(cancelledAdditionalFilesJson);
-      if (!Array.isArray(replacedFiles)) {
-        replacedFiles = [];
-      }
-    } catch (e) {
-      console.warn('Failed to parse cancelledAdditionalFiles:', e.message);
-      replacedFiles = [];
-    }
-  }
-
-  // Step 4: Start with existing files, remove marked ones
-  let finalFiles = existingAdditionalFiles.filter(file => {
-    const filepath = file.filepath || file.filename || '';
-    const shouldRemove = removedFiles.some(removedFile => 
-      (removedFile.filepath || removedFile.filename) === filepath
-    );
-    const shouldReplace = replacedFiles.some(replacedFile => 
-      (replacedFile.filepath || replacedFile.filename) === filepath
-    );
-    return !shouldRemove && !shouldReplace; // Keep if not removed or replaced
-  });
-
-  // Step 5: Process metadata updates for existing files
-  const existingUpdateEntries = [];
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith('existingAdditionalFilepath_')) {
-      const index = key.replace('existingAdditionalFilepath_', '');
-      existingUpdateEntries.push({
-        index,
-        filepath: value,
-        year: formData.get(`existingAdditionalYear_${index}`) || '',
-        description: formData.get(`existingAdditionalDesc_${index}`) || ''
-      });
-    }
-  }
-
-  // Apply updates to existing files
-  for (const update of existingUpdateEntries) {
-    if (update.filepath) {
-      const existingFileIndex = finalFiles.findIndex(file => 
-        (file.filepath === update.filepath || file.filename === update.filepath)
-      );
+      const removedAdditionalFilesJson = formData.get('removedAdditionalFiles');
+      let removedFiles = [];
       
-      if (existingFileIndex !== -1) {
-        // Update metadata
-        if (update.year !== null && update.year !== undefined && update.year.trim() !== '') {
-          finalFiles[existingFileIndex].year = update.year.trim();
-        }
-        if (update.description !== null && update.description !== undefined && update.description.trim() !== '') {
-          finalFiles[existingFileIndex].description = update.description.trim();
+      if (removedAdditionalFilesJson && removedAdditionalFilesJson.trim() !== '') {
+        try {
+          removedFiles = JSON.parse(removedAdditionalFilesJson);
+          if (!Array.isArray(removedFiles)) {
+            removedFiles = [];
+          }
+        } catch (e) {
+          console.warn('Failed to parse removedAdditionalFiles:', e.message);
+          removedFiles = [];
         }
       }
-    }
-  }
 
-  // Step 6: Process NEW additional files (including replacements)
-  // Find all files with pattern additionalResultsFile_{index}
-  const newFileEntries = [];
-  
-  // Collect all indexed file entries
-  for (let i = 0; i < 100; i++) { // Assume max 100 files
-    const fileField = `additionalResultsFile_${i}`;
-    const file = formData.get(fileField);
-    
-    if (!file) break;
-    
-    newFileEntries.push({
-      index: i,
-      file: file,
-      year: formData.get(`additionalResultsYear_${i}`) || '',
-      description: formData.get(`additionalResultsDesc_${i}`) || '',
-      // Check if this replaces an existing file
-      replacesFilepath: formData.get(`replacesAdditionalFilepath_${i}`) || null
-    });
-  }
-
-  // Process each new file entry
-  for (const entry of newFileEntries) {
-    if (entry.file && entry.file.size > 0) {
-      try {
-        // Check if this is a replacement
-        let oldFilePath = null;
-        if (entry.replacesFilepath) {
-          oldFilePath = entry.replacesFilepath;
-          // Remove the old file from finalFiles if it exists
-          finalFiles = finalFiles.filter(f => 
-            (f.filepath || f.filename) !== oldFilePath
-          );
+      // Parse replaced files from form data
+      const cancelledAdditionalFilesJson = formData.get('cancelledAdditionalFiles');
+      let replacedFiles = [];
+      
+      if (cancelledAdditionalFilesJson && cancelledAdditionalFilesJson.trim() !== '') {
+        try {
+          replacedFiles = JSON.parse(cancelledAdditionalFilesJson);
+          if (!Array.isArray(replacedFiles)) {
+            replacedFiles = [];
+          }
+        } catch (e) {
+          console.warn('Failed to parse cancelledAdditionalFiles:', e.message);
+          replacedFiles = [];
         }
+      }
 
-        const uploadResult = await handleAdditionalFileUpload(entry.file, oldFilePath);
-        
-        if (uploadResult && uploadResult.path) {
-          finalFiles.push({
-            filename: uploadResult.name,
-            filepath: uploadResult.path,
-            filetype: uploadResult.type,
-            year: entry.year ? entry.year.trim() : null,
-            description: entry.description ? entry.description.trim() : null,
-            filesize: uploadResult.size
+      // Start with existing files, remove marked ones
+      let finalFiles = existingAdditionalFiles.filter(file => {
+        const filepath = file.filepath || file.filename || '';
+        const shouldRemove = removedFiles.some(removedFile => 
+          (removedFile.filepath || removedFile.filename) === filepath
+        );
+        const shouldReplace = replacedFiles.some(replacedFile => 
+          (replacedFile.filepath || replacedFile.filename) === filepath
+        );
+        return !shouldRemove && !shouldReplace; // Keep if not removed or replaced
+      });
+
+      // Process metadata updates for existing files
+      const existingUpdateEntries = [];
+      for (const [key, value] of formData.entries()) {
+        if (key.startsWith('existingAdditionalFilepath_')) {
+          const index = key.replace('existingAdditionalFilepath_', '');
+          existingUpdateEntries.push({
+            index,
+            filepath: value,
+            year: formData.get(`existingAdditionalYear_${index}`) || '',
+            description: formData.get(`existingAdditionalDesc_${index}`) || ''
           });
         }
-      } catch (uploadError) {
-        console.warn(`Failed to upload additional file ${entry.index}:`, uploadError.message);
-        // Continue with other files
       }
-    }
-  }
 
-  // Step 7: Remove duplicates
-  const uniqueFiles = [];
-  const seenFilepaths = new Set();
-  
-  for (const file of finalFiles) {
-    const filepath = file.filepath;
-    if (filepath && !seenFilepaths.has(filepath)) {
-      seenFilepaths.add(filepath);
-      uniqueFiles.push(file);
-    }
-  }
-  
-  additionalResultsFiles = uniqueFiles;
+      // Apply updates to existing files
+      for (const update of existingUpdateEntries) {
+        if (update.filepath) {
+          const existingFileIndex = finalFiles.findIndex(file => 
+            (file.filepath === update.filepath || file.filename === update.filepath)
+          );
+          
+          if (existingFileIndex !== -1) {
+            // Update metadata
+            if (update.year !== null && update.year !== undefined && update.year.trim() !== '') {
+              finalFiles[existingFileIndex].year = update.year.trim();
+            }
+            if (update.description !== null && update.description !== undefined && update.description.trim() !== '') {
+              finalFiles[existingFileIndex].description = update.description.trim();
+            }
+          }
+        }
+      }
 
-} catch (additionalError) {
-  console.error('❌ Additional files processing error:', additionalError);
-  // In case of error, keep existing files from database
-  additionalResultsFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
-}
+      // Process NEW additional files (including replacements)
+      const newFileEntries = [];
+      
+      // Collect all indexed file entries
+      for (let i = 0; i < 100; i++) { // Assume max 100 files
+        const fileField = `additionalResultsFile_${i}`;
+        const file = formData.get(fileField);
+        
+        if (!file) break;
+        
+        newFileEntries.push({
+          index: i,
+          file: file,
+          year: formData.get(`additionalResultsYear_${i}`) || '',
+          description: formData.get(`additionalResultsDesc_${i}`) || '',
+          // Check if this replaces an existing file
+          replacesFilepath: formData.get(`replacesAdditionalFilepath_${i}`) || null
+        });
+      }
+
+      // Process each new file entry
+      for (const entry of newFileEntries) {
+        if (entry.file && entry.file.size > 0) {
+          try {
+            // Check if this is a replacement
+            let oldFilePath = null;
+            if (entry.replacesFilepath) {
+              oldFilePath = entry.replacesFilepath;
+              // Remove the old file from finalFiles if it exists
+              finalFiles = finalFiles.filter(f => 
+                (f.filepath || f.filename) !== oldFilePath
+              );
+            }
+
+            const uploadResult = await handleAdditionalFileUpload(entry.file, oldFilePath);
+            
+            if (uploadResult && uploadResult.path) {
+              finalFiles.push({
+                filename: uploadResult.name,
+                filepath: uploadResult.path,
+                filetype: uploadResult.type,
+                year: entry.year ? entry.year.trim() : null,
+                description: entry.description ? entry.description.trim() : null,
+                filesize: uploadResult.size
+              });
+            }
+          } catch (uploadError) {
+            console.warn(`Failed to upload additional file ${entry.index}:`, uploadError.message);
+            // Continue with other files
+          }
+        }
+      }
+
+      // Remove duplicates
+      const uniqueFiles = [];
+      const seenFilepaths = new Set();
+      
+      for (const file of finalFiles) {
+        const filepath = file.filepath;
+        if (filepath && !seenFilepaths.has(filepath)) {
+          seenFilepaths.add(filepath);
+          uniqueFiles.push(file);
+        }
+      }
+      
+      additionalResultsFiles = uniqueFiles;
+
+    } catch (additionalError) {
+      console.error('❌ Additional files processing error:', additionalError);
+      // In case of error, keep existing files from database
+      additionalResultsFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
+    }
 
     // Parse JSON fields
     let subjects = existing.subjects;
@@ -1400,7 +1442,7 @@ export async function DELETE() {
       );
     }
 
-    // Delete all associated files including thumbnails
+    // Delete all associated files from Cloudinary
     const filesToDelete = [
       existing.videoType === 'file' ? existing.videoTour : null,
       existing.videoThumbnail, // Add thumbnail to deletion list
@@ -1416,7 +1458,7 @@ export async function DELETE() {
       existing.kcseResultsPdf,
     ].filter(Boolean);
 
-    // Delete additional results files
+    // Delete additional results files from Cloudinary
     let additionalResultsFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
 
     // Add additional results files to deletion list
@@ -1426,9 +1468,9 @@ export async function DELETE() {
       }
     });
 
-    // Delete each file
+    // Delete each file from Cloudinary
     for (const filePath of filesToDelete) {
-      await deleteOldFile(filePath);
+      await deleteOldFileFromCloudinary(filePath);
     }
 
     await prisma.schoolInfo.deleteMany();

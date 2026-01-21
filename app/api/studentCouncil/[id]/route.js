@@ -1,14 +1,64 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
-import path from "path";
-import fs from "fs";
-import { randomUUID } from "crypto";
+import cloudinary from "../../../../libs/cloudinary";
 
-// Ensure upload folder exists
-const uploadDir = path.join(process.cwd(), "public", "council");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Helper: Upload image to Cloudinary
+const uploadImageToCloudinary = async (file) => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: "image",
+          folder: "student_council",
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          transformation: [
+            { width: 500, height: 500, crop: "fill", gravity: "face" },
+            { quality: "auto:good" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+    
+    return result.secure_url;
+  } catch (error) {
+    console.error("❌ Cloudinary upload error:", error);
+    return null;
+  }
+};
+
+// Helper: Delete image from Cloudinary
+const deleteImageFromCloudinary = async (imageUrl) => {
+  if (!imageUrl || !imageUrl.includes('cloudinary.com')) return;
+
+  try {
+    // Extract public ID from Cloudinary URL
+    const urlParts = imageUrl.split('/');
+    const uploadIndex = urlParts.indexOf('upload');
+    
+    if (uploadIndex === -1) return;
+    
+    const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+    const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+    
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error("❌ Error deleting image from Cloudinary:", error);
+    // Silent fail - don't block operation if delete fails
+  }
+};
 
 // Helper function to map string positions to CouncilPosition enum
 const mapPositionToEnum = (position) => {
@@ -168,16 +218,13 @@ export async function PUT(req, { params }) {
     // Handle image operations
     let imagePath = existingMember.image;
 
-    // Remove existing image if requested
-    if (removeImage === 'true' && existingMember.image) {
-      const oldImagePath = path.join(process.cwd(), 'public', existingMember.image);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
-      }
+    // Remove existing image from Cloudinary if requested
+    if (removeImage === 'true' && existingMember.image && existingMember.image.includes('cloudinary.com')) {
+      await deleteImageFromCloudinary(existingMember.image);
       imagePath = null;
     }
 
-    // Handle new image upload
+    // Handle new image upload to Cloudinary
     if (imageFile && imageFile instanceof File) {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
       const maxSize = 5 * 1024 * 1024; // 5MB
@@ -196,24 +243,20 @@ export async function PUT(req, { params }) {
         );
       }
 
-      // Remove old image if exists
-      if (existingMember.image) {
-        const oldImagePath = path.join(process.cwd(), 'public', existingMember.image);
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
+      // Remove old image from Cloudinary if exists
+      if (existingMember.image && existingMember.image.includes('cloudinary.com')) {
+        await deleteImageFromCloudinary(existingMember.image);
       }
 
-      // Generate unique filename and save new image
-      const fileExtension = path.extname(imageFile.name);
-      const fileName = `council_${randomUUID()}${fileExtension}`;
-      const filePath = path.join(uploadDir, fileName);
-
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      fs.writeFileSync(filePath, buffer);
-
-      imagePath = `/council/${fileName}`;
+      // Upload new image to Cloudinary
+      const cloudinaryUrl = await uploadImageToCloudinary(imageFile);
+      if (!cloudinaryUrl) {
+        return NextResponse.json(
+          { success: false, error: "Failed to upload image" },
+          { status: 500 }
+        );
+      }
+      imagePath = cloudinaryUrl;
     }
 
     const updatedMember = await prisma.studentCouncil.update({
@@ -284,12 +327,9 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    // Delete associated image file if exists
-    if (existingMember.image) {
-      const imagePath = path.join(process.cwd(), 'public', existingMember.image);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
+    // Delete associated image from Cloudinary if exists
+    if (existingMember.image && existingMember.image.includes('cloudinary.com')) {
+      await deleteImageFromCloudinary(existingMember.image);
     }
 
     await prisma.studentCouncil.delete({

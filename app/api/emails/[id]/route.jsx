@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import nodemailer from "nodemailer";
-import path from "path";
-import fs from "fs";
+import cloudinary from "../../../../libs/cloudinary";
 import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
@@ -32,13 +31,74 @@ const CONTACT_PHONE = process.env.CONTACT_PHONE || '+254720123456';
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'admissions@katwanyaahighSchool.sc.ke';
 const SCHOOL_WEBSITE = process.env.SCHOOL_WEBSITE || 'https://katwanyaa.vercel.app';
 
-// Path for attachments storage
-const ATTACHMENTS_DIR = path.join(process.cwd(), 'public', 'emailattachments');
+// ====================================================================
+// CLOUDINARY HELPER FUNCTIONS
+// ====================================================================
 
-// Ensure attachments directory exists
-if (!fs.existsSync(ATTACHMENTS_DIR)) {
-  fs.mkdirSync(ATTACHMENTS_DIR, { recursive: true });
-}
+// Helper: Upload file to Cloudinary
+const uploadFileToCloudinary = async (file) => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    
+    const fileType = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
+    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileType);
+    const isVideo = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'].includes(fileType);
+    
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: isVideo ? "video" : (isImage ? "image" : "auto"),
+          folder: "email_attachments",
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...(isImage ? {
+            transformation: [
+              { width: 1200, crop: "limit" },
+              { quality: "auto:good" }
+            ]
+          } : {}),
+          allowed_formats: isVideo ? ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'] : undefined
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+    
+    return {
+      filename: result.public_id,
+      originalName: originalName,
+      fileType: fileType,
+      fileSize: file.size,
+      uploadedAt: new Date().toISOString(),
+      url: result.secure_url,
+      resource_type: result.resource_type,
+      format: result.format
+    };
+  } catch (error) {
+    console.error("❌ Cloudinary upload error:", error);
+    return null;
+  }
+};
+
+// Helper: Delete file from Cloudinary
+const deleteFileFromCloudinary = async (publicId, resourceType = 'auto') => {
+  if (!publicId) return;
+
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  } catch (error) {
+    console.error("❌ Error deleting file from Cloudinary:", error);
+    // Silent fail - don't block operation if delete fails
+  }
+};
 
 // ====================================================================
 // HELPER FUNCTIONS
@@ -738,7 +798,7 @@ function generateAttachmentHTML(attachments) {
   if (!attachments || attachments.length === 0) return '';
   
   try {
-    const attachmentsArray = JSON.parse(attachments);
+    const attachmentsArray = Array.isArray(attachments) ? attachments : JSON.parse(attachments);
     if (!Array.isArray(attachmentsArray) || attachmentsArray.length === 0) return '';
     
     return `
@@ -749,8 +809,10 @@ function generateAttachmentHTML(attachments) {
             <li class="attachment-item">
               <span class="attachment-icon">${getFileIcon(attachment.fileType)}</span>
               <span class="attachment-name">
-                ${attachment.filename}
-                ${attachment.fileSize ? `<span class="attachment-size">(${formatFileSize(attachment.fileSize)})</span>` : ''}
+                <a href="${attachment.url || '#'}" target="_blank" style="color: #1e3c72; text-decoration: none;">
+                  ${attachment.originalName || attachment.filename}
+                </a>
+                ${attachment.fileSize ? `<br><small>${formatFileSize(attachment.fileSize)}</small>` : ''}
               </span>
             </li>
           `).join('')}
@@ -795,27 +857,24 @@ function getContentType(fileType) {
   return mimeTypes[fileType.toLowerCase()] || 'application/octet-stream';
 }
 
-// Helper to save uploaded file
+// Helper to save uploaded file to Cloudinary (REPLACED LOCAL STORAGE)
 async function saveUploadedFile(file) {
   if (!file || file.size === 0) return null;
   
-  const originalName = file.name;
-  const fileExtension = path.extname(originalName).toLowerCase();
-  const uniqueFilename = `${uuidv4()}${fileExtension}`;
-  const filePath = path.join(ATTACHMENTS_DIR, uniqueFilename);
+  // Validate file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    throw new Error(`File ${file.name} is too large. Maximum size is 10MB.`);
+  }
   
-  // Convert file to buffer and save
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  fs.writeFileSync(filePath, buffer);
+  // Upload to Cloudinary
+  const cloudinaryResult = await uploadFileToCloudinary(file);
   
-  return {
-    filename: uniqueFilename,
-    originalName: originalName,
-    fileType: fileExtension.replace('.', ''),
-    fileSize: file.size,
-    uploadedAt: new Date().toISOString()
-  };
+  if (!cloudinaryResult) {
+    throw new Error(`Failed to upload file ${file.name} to Cloudinary`);
+  }
+  
+  return cloudinaryResult;
 }
 
 async function sendModernEmails(campaign) {
@@ -831,18 +890,19 @@ async function sendModernEmails(campaign) {
   let attachmentsArray = [];
   try {
     if (campaign.attachments) {
-      attachmentsArray = JSON.parse(campaign.attachments);
+      attachmentsArray = Array.isArray(campaign.attachments) ? 
+        campaign.attachments : 
+        JSON.parse(campaign.attachments);
     }
   } catch (error) {
     console.error('Error parsing attachments:', error);
   }
   
-  // Prepare email attachments for nodemailer
+  // Prepare email attachments for nodemailer (Cloudinary URLs as links, not attachments)
   const emailAttachments = attachmentsArray.map(attachment => {
-    const filePath = path.join(ATTACHMENTS_DIR, attachment.filename);
     return {
-      filename: attachment.filename,
-      path: filePath,
+      filename: attachment.originalName || attachment.filename,
+      path: attachment.url,
       contentType: getContentType(attachment.fileType)
     };
   });
@@ -1489,18 +1549,17 @@ export async function DELETE(req, { params }) {
       }, { status: 404 });
     }
     
-    // Delete associated files from attachments directory
+    // Delete associated files from Cloudinary
     if (existingCampaign.attachments) {
       try {
         const attachments = JSON.parse(existingCampaign.attachments);
         attachments.forEach(attachment => {
-          const filePath = path.join(ATTACHMENTS_DIR, attachment.filename);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+          if (attachment.filename) {
+            deleteFileFromCloudinary(attachment.filename, attachment.resource_type);
           }
         });
       } catch (error) {
-        console.error('Error deleting attachment files:', error);
+        console.error('Error deleting files from Cloudinary:', error);
       }
     }
     

@@ -1,49 +1,124 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
-import path from "path";
-import fs from "fs";
-import { writeFile, unlink } from "fs/promises";
+import cloudinary from "../../../../libs/cloudinary";
 
-// Helpers (same as your working POST API)
-const ensureUploadDir = (uploadDir) => {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Helper: Upload file to Cloudinary
+const uploadFileToCloudinary = async (file, folder = "assignments") => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const timestamp = Date.now();
+    const originalName = file.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    
+    // Determine resource type
+    let resourceType = 'auto';
+    let transformation = {};
+    
+    if (file.type.startsWith('image/')) {
+      resourceType = 'image';
+      transformation = {
+        transformation: [
+          { width: 1200, crop: "limit" },
+          { quality: "auto:good" }
+        ]
+      };
+    } else if (file.type.startsWith('video/')) {
+      resourceType = 'video';
+    } else if (file.type.includes('pdf') || file.type.includes('document') || 
+               file.type.includes('sheet') || file.type.includes('presentation')) {
+      resourceType = 'raw';
+    }
+    
+    const result = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: resourceType,
+          folder: `assignments/${folder}`,
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...transformation
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(buffer);
+    });
+    
+    return result.secure_url;
+  } catch (error) {
+    console.error("❌ Cloudinary upload error:", error);
+    return null;
   }
 };
 
-const uploadFiles = async (files, uploadDir) => {
+// Helper: Delete file from Cloudinary
+const deleteFileFromCloudinary = async (fileUrl) => {
+  if (!fileUrl || !fileUrl.includes('cloudinary.com')) return;
+
+  try {
+    // Extract public ID from Cloudinary URL
+    const urlParts = fileUrl.split('/');
+    const uploadIndex = urlParts.indexOf('upload');
+    
+    if (uploadIndex === -1) return;
+    
+    const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+    const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+    
+    // Determine resource type from URL
+    let resourceType = 'auto';
+    if (fileUrl.includes('/video/') || fileUrl.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
+      resourceType = 'video';
+    } else if (fileUrl.includes('/image/') || fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+      resourceType = 'image';
+    } else if (fileUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i)) {
+      resourceType = 'raw';
+    }
+    
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  } catch (error) {
+    console.error("❌ Error deleting file from Cloudinary:", error);
+  }
+};
+
+// Helper: Upload multiple files to Cloudinary
+const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   const uploadedFiles = [];
   
   for (const file of files) {
-    if (file && file.name) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-      const filePath = path.join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
-      uploadedFiles.push(`/assignments/${fileName}`);
+    if (file && file.name && file.size > 0) {
+      try {
+        const uploadedFile = await uploadFileToCloudinary(file, folder);
+        if (uploadedFile) {
+          uploadedFiles.push(uploadedFile);
+        }
+      } catch (error) {
+        console.error(`Error uploading file ${file.name}:`, error);
+      }
     }
   }
   
   return uploadedFiles;
 };
 
-const deleteOldFiles = async (filePaths) => {
-  if (!filePaths || !Array.isArray(filePaths)) return;
+// Helper: Delete multiple files from Cloudinary
+const deleteFilesFromCloudinary = async (fileUrls) => {
+  if (!fileUrls || !Array.isArray(fileUrls)) return;
   
-  for (const filePath of filePaths) {
+  for (const fileUrl of fileUrls) {
     try {
-      const fullPath = path.join(process.cwd(), 'public', filePath);
-      if (fs.existsSync(fullPath)) {
-        await unlink(fullPath);
-        console.log(`✅ Deleted file: ${filePath}`);
-      }
+      await deleteFileFromCloudinary(fileUrl);
     } catch (error) {
-      console.error(`❌ Error deleting file ${filePath}:`, error);
+      console.error(`❌ Error deleting file ${fileUrl}:`, error);
     }
   }
 };
 
-// 🔹 PUT — Update assignment with file upload support (UPDATED VERSION)
+// 🔹 PUT — Update assignment with file upload support
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
@@ -69,8 +144,6 @@ export async function PUT(request, { params }) {
     }
 
     const formData = await request.formData();
-    const uploadDir = path.join(process.cwd(), "public/assignments");
-    ensureUploadDir(uploadDir);
 
     // Initialize update data
     const updateData = {};
@@ -118,7 +191,7 @@ export async function PUT(request, { params }) {
     if (newAssignmentFiles.length > 0 && newAssignmentFiles[0].name) {
       console.log(`📁 Uploading ${newAssignmentFiles.length} new assignment files`);
       
-      const uploadedFiles = await uploadFiles(newAssignmentFiles, uploadDir);
+      const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
       console.log(`✅ New assignment files uploaded:`, uploadedFiles);
       
       // Add new files to existing ones
@@ -130,7 +203,7 @@ export async function PUT(request, { params }) {
     if (newAttachments.length > 0 && newAttachments[0].name) {
       console.log(`📁 Uploading ${newAttachments.length} new attachments`);
       
-      const uploadedAttachments = await uploadFiles(newAttachments, uploadDir);
+      const uploadedAttachments = await uploadFilesToCloudinary(newAttachments, "attachments");
       console.log(`✅ New attachments uploaded:`, uploadedAttachments);
       
       // Add new files to existing ones
@@ -165,18 +238,18 @@ export async function PUT(request, { params }) {
 
     if (removeAssignmentFiles === "true") {
       console.log("🗑️ Removing all assignment files");
-      // Delete old assignment files from storage
+      // Delete old assignment files from Cloudinary
       if (existingAssignment.assignmentFiles && Array.isArray(existingAssignment.assignmentFiles)) {
-        await deleteOldFiles(existingAssignment.assignmentFiles);
+        await deleteFilesFromCloudinary(existingAssignment.assignmentFiles);
       }
       finalAssignmentFiles = [];
     }
 
     if (removeAttachments === "true") {
       console.log("🗑️ Removing all attachments");
-      // Delete old attachments from storage
+      // Delete old attachments from Cloudinary
       if (existingAssignment.attachments && Array.isArray(existingAssignment.attachments)) {
-        await deleteOldFiles(existingAssignment.attachments);
+        await deleteFilesFromCloudinary(existingAssignment.attachments);
       }
       finalAttachments = [];
     }
@@ -192,12 +265,12 @@ export async function PUT(request, { params }) {
 
     if (removedAssignmentFiles.length > 0) {
       console.log(`🗑️ Cleaning up ${removedAssignmentFiles.length} removed assignment files`);
-      await deleteOldFiles(removedAssignmentFiles);
+      await deleteFilesFromCloudinary(removedAssignmentFiles);
     }
 
     if (removedAttachments.length > 0) {
       console.log(`🗑️ Cleaning up ${removedAttachments.length} removed attachments`);
-      await deleteOldFiles(removedAttachments);
+      await deleteFilesFromCloudinary(removedAttachments);
     }
 
     // Update the file arrays in the database
@@ -281,7 +354,7 @@ export async function GET(request, { params }) {
   }
 }
 
-// 🔹 DELETE — Delete assignment with file cleanup (same as before)
+// 🔹 DELETE — Delete assignment with file cleanup
 export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
@@ -306,13 +379,13 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // Delete associated files
+    // Delete associated files from Cloudinary
     if (existingAssignment.assignmentFiles && Array.isArray(existingAssignment.assignmentFiles)) {
-      await deleteOldFiles(existingAssignment.assignmentFiles);
+      await deleteFilesFromCloudinary(existingAssignment.assignmentFiles);
     }
     
     if (existingAssignment.attachments && Array.isArray(existingAssignment.attachments)) {
-      await deleteOldFiles(existingAssignment.attachments);
+      await deleteFilesFromCloudinary(existingAssignment.attachments);
     }
 
     // Delete the assignment from database
