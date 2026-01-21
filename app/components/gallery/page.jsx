@@ -97,75 +97,78 @@ export default function ModernGalleryManager() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch gallery items from API with error handling
-  const fetchGalleryItems = async () => {
-    try {
-      setLoading(true);
-const response = await fetch('/api/gallery');
-if (!response.ok) {
-    const errorText = await response.text(); // Read the HTML error instead of crashing
-    throw new Error(`Server Error: ${response.status}`);
-}      
-      if (!response.ok) {
-        // Handle HTTP errors
-        if (response.status === 500) {
-          throw new Error('Server error. Please try again later.');
-        }
+const fetchGalleryItems = async () => {
+  try {
+    setLoading(true);
+    
+    const response = await fetch('/api/gallery');
+    
+    if (!response.ok) {
+      // Check if response is HTML error page
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error(`Server error (${response.status}). Please try again later.`);
+      }
+      
+      // Try to get JSON error if available
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Server error: ${response.status}`);
+      } catch {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON");
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.galleries) {
-const transformedItems = result.galleries.map(gallery => ({      
-      id: gallery.id,
-          title: gallery.title,
-          description: gallery.description || '',
-          category: gallery.category,
-          files: gallery.files || [],
-    fileType: determineMediaType(gallery.files?.[0]),
-          previewUrl: gallery.files?.[0] || '',
-          fileCount: gallery.files?.length || 0,
-          uploadDate: gallery.createdAt,
-          updatedAt: gallery.updatedAt,
-          views: Math.floor(Math.random() * 1000),
-          likes: Math.floor(Math.random() * 500),
-          isPublic: true
-        }));
-        
-        // Sort items
-        const sortedItems = transformedItems.sort((a, b) => {
-          switch(sortBy) {
-            case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-            case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-            case 'title': return a.title.localeCompare(b.title);
-            case 'mostFiles': return b.fileCount - a.fileCount;
-            default: return new Date(b.uploadDate) - new Date(a.uploadDate);
-          }
-        });
-        
-        setGalleryItems(sortedItems);
-        setFilteredItems(sortedItems);
-        toast.success(`Loaded ${sortedItems.length} galleries`);
-      } else {
-        throw new Error(result.error || 'Failed to load galleries');
-      }
-    } catch (error) {
-      console.error('Error fetching gallery items:', error);
-      toast.error(`Failed to load gallery items: ${error.message}`);
-      
-      // Set empty arrays on error
-      setGalleryItems([]);
-      setFilteredItems([]);
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    const result = await response.json();
+    
+    if (result.success && result.galleries) {
+      const transformedItems = result.galleries.map(gallery => ({
+        id: gallery.id,
+        title: gallery.title,
+        description: gallery.description || '',
+        category: gallery.category,
+        files: gallery.files || [],
+        fileType: determineMediaType(gallery.files?.[0]),
+        previewUrl: gallery.files?.[0] || '',
+        fileCount: gallery.files?.length || 0,
+        uploadDate: gallery.createdAt || new Date().toISOString(),
+        updatedAt: gallery.updatedAt || new Date().toISOString(),
+        views: Math.floor(Math.random() * 1000),
+        likes: Math.floor(Math.random() * 500),
+        isPublic: true
+      }));
+      
+      // Sort items
+      const sortedItems = transformedItems.sort((a, b) => {
+        switch(sortBy) {
+          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
+          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
+          case 'title': return a.title.localeCompare(b.title);
+          case 'mostFiles': return b.fileCount - a.fileCount;
+          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+        }
+      });
+      
+      setGalleryItems(sortedItems);
+      setFilteredItems(sortedItems);
+      toast.success(`Loaded ${sortedItems.length} galleries`);
+    } else {
+      throw new Error(result.error || 'Failed to load galleries');
+    }
+  } catch (error) {
+    console.error('Error fetching gallery items:', error);
+    toast.error(`Failed to load gallery items: ${error.message}`);
+    
+    // Set empty arrays on error
+    setGalleryItems([]);
+    setFilteredItems([]);
+    
+    // Log for debugging
+    console.log('Setting gallery items to empty due to error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Determine media type
   const determineMediaType = (filePath) => {
@@ -553,24 +556,28 @@ const transformedItems = result.galleries.map(gallery => ({
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   // Stats
-  const stats = {
-    total: galleryItems.length,
-    totalFiles: galleryItems.reduce((acc, item) => acc + item.files.length, 0),
-    images: galleryItems.filter(item => item.fileType === 'image').reduce((acc, item) => acc + item.files.length, 0),
-    videos: galleryItems.filter(item => item.fileType === 'video').reduce((acc, item) => acc + item.files.length, 0),
-    categories: new Set(galleryItems.map(item => item.category)).size
-  };
+// Stats calculation
+const stats = {
+  total: galleryItems?.length || 0,
+  totalFiles: galleryItems?.reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+  images: galleryItems?.filter(item => item?.fileType === 'image').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+  videos: galleryItems?.filter(item => item?.fileType === 'video').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
+  categories: new Set(galleryItems?.map(item => item?.category).filter(Boolean)).size || 0
+};
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
+if (loading) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+        <div>
           <p className="text-gray-600 text-lg font-medium">Loading gallery...</p>
+          <p className="text-gray-400 text-sm">This may take a moment</p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4 lg:p-6 space-y-6">
