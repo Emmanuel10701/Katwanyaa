@@ -147,91 +147,88 @@ function GalleryManagerContent() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchGalleryItems = async () => {
-    try {
-      setLoading(true);
-      
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch('/api/gallery', {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        // Check if response is HTML error page
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("text/html")) {
-          throw new Error(`Server error (${response.status}). Please try again later.`);
-        }
+const fetchGalleryItems = async () => {
+  try {
+    setLoading(true);
+    
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch('/api/gallery', {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.galleries) {
+      // Add validation for gallery data
+      const transformedItems = result.galleries.map(gallery => {
+        // Ensure files is always an array
+        const files = Array.isArray(gallery.files) ? gallery.files : [];
         
-        // Try to get JSON error if available
-        try {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Server error: ${response.status}`);
-        } catch {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.galleries) {
-        const transformedItems = result.galleries.map(gallery => ({
-          id: gallery.id,
-          title: gallery.title,
+        return {
+          id: gallery.id || randomUUID(),
+          title: gallery.title || 'Untitled Gallery',
           description: gallery.description || '',
-          category: gallery.category,
-          files: gallery.files || [],
-          fileType: determineMediaType(gallery.files?.[0]),
-          previewUrl: gallery.files?.[0] || '',
-          fileCount: gallery.files?.length || 0,
+          category: gallery.category || 'GENERAL',
+          files: files,
+          fileType: determineMediaType(files[0]),
+          previewUrl: files[0] || '',
+          fileCount: files.length,
           uploadDate: gallery.createdAt || new Date().toISOString(),
           updatedAt: gallery.updatedAt || new Date().toISOString(),
           views: Math.floor(Math.random() * 1000),
           likes: Math.floor(Math.random() * 500),
           isPublic: true
-        }));
-        
-        // Sort items
-        const sortedItems = transformedItems.sort((a, b) => {
-          switch(sortBy) {
-            case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-            case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-            case 'title': return a.title.localeCompare(b.title);
-            case 'mostFiles': return b.fileCount - a.fileCount;
-            default: return new Date(b.uploadDate) - new Date(a.uploadDate);
-          }
-        });
-        
-        setGalleryItems(sortedItems);
-        setFilteredItems(sortedItems);
-        toast.success(`Loaded ${sortedItems.length} galleries`);
-      } else {
-        throw new Error(result.error || 'Failed to load galleries');
-      }
-    } catch (error) {
-      console.error('Error fetching gallery items:', error);
+        };
+      });
       
-      if (error.name === 'AbortError') {
-        toast.error('Request timed out. Please check your connection.');
-      } else {
-        toast.error(`Failed to load gallery items: ${error.message}`);
-      }
+      // Sort items
+      const sortedItems = transformedItems.sort((a, b) => {
+        switch(sortBy) {
+          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
+          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
+          case 'title': return a.title.localeCompare(b.title);
+          case 'mostFiles': return b.fileCount - a.fileCount;
+          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+        }
+      });
       
-      // Set empty arrays on error
+      setGalleryItems(sortedItems);
+      setFilteredItems(sortedItems);
+      toast.success(`Loaded ${sortedItems.length} galleries`);
+    } else {
+      // Handle case where result is not in expected format
+      console.warn('Unexpected API response format:', result);
       setGalleryItems([]);
       setFilteredItems([]);
-      
-      // Log for debugging
-      console.log('Setting gallery items to empty due to error');
-    } finally {
-      setLoading(false);
+      toast.info('No galleries found');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching gallery items:', error);
+    
+    if (error.name === 'AbortError') {
+      toast.error('Request timed out. Please check your connection.');
+    } else if (error.message.includes('Failed to fetch')) {
+      toast.error('Network error. Please check your connection.');
+    } else {
+      toast.error(`Failed to load gallery items: ${error.message}`);
+    }
+    
+    // Set empty arrays on error
+    setGalleryItems([]);
+    setFilteredItems([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Determine media type
   const determineMediaType = (filePath) => {
@@ -658,14 +655,24 @@ function GalleryManagerContent() {
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-  // Stats calculation
-  const stats = {
-    total: galleryItems?.length || 0,
-    totalFiles: galleryItems?.reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-    images: galleryItems?.filter(item => item?.fileType === 'image').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-    videos: galleryItems?.filter(item => item?.fileType === 'video').reduce((acc, item) => acc + (item?.files?.length || 0), 0) || 0,
-    categories: new Set(galleryItems?.map(item => item?.category).filter(Boolean)).size || 0
-  };
+const stats = {
+  total: Array.isArray(galleryItems) ? galleryItems.length : 0,
+  totalFiles: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
+    return acc + (Array.isArray(item?.files) ? item.files.length : 0);
+  }, 0) : 0,
+  images: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
+    const isImage = item?.fileType === 'image';
+    const fileCount = Array.isArray(item?.files) ? item.files.length : 0;
+    return acc + (isImage ? fileCount : 0);
+  }, 0) : 0,
+  videos: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
+    const isVideo = item?.fileType === 'video';
+    const fileCount = Array.isArray(item?.files) ? item.files.length : 0;
+    return acc + (isVideo ? fileCount : 0);
+  }, 0) : 0,
+  categories: Array.isArray(galleryItems) ? 
+    new Set(galleryItems.map(item => item?.category).filter(Boolean)).size : 0
+};
 
   if (loading) {
     return (
@@ -709,10 +716,10 @@ function GalleryManagerContent() {
                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-cyan-600 bg-clip-text text-transparent">
                     Media Gallery
                   </h1>
-                  <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
-                    <FiGrid className="text-xs" />
-                    {galleryItems?.length || 0} Items
-                  </span>
+           <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
+  <FiGrid className="text-xs" />
+  {Array.isArray(galleryItems) ? galleryItems.length : 0} Items
+</span>
                 </div>
                 <p className="text-gray-600 text-base md:text-lg max-w-2xl">
                   Curate and manage your school's visual stories. Upload images & videos to showcase campus life, events, and achievements.
