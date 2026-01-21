@@ -93,7 +93,7 @@ export default function NavigationSidebar({
 
         {/* Navigation */}
         <nav className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto">
-          <div className="space-y-1 sm:space-y-2">
+          <div className="space-y-2 sm:space-y-4">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -121,10 +121,7 @@ export default function NavigationSidebar({
               </button>
             ))}
           </div>
-        </nav>
-
-        {/* Footer Actions */}
-        <div className="p-3 sm:p-4 lg:p-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
+               <div className="p-3 sm:p-4 lg:p-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
           <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
             
             {/* Refresh Button */}
@@ -153,6 +150,9 @@ export default function NavigationSidebar({
             
           </div>
         </div>
+        </nav>
+
+   
       </div>
     </aside>
   );
