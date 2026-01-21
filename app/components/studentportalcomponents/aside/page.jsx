@@ -121,7 +121,9 @@ export default function NavigationSidebar({
               </button>
             ))}
           </div>
-               <div className="p-3 sm:p-4 lg:p-6 bg-white/50 backdrop-blur-sm border-t border-gray-100">
+
+        </nav>
+               <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
           <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
             
             {/* Refresh Button */}
@@ -150,8 +152,6 @@ export default function NavigationSidebar({
             
           </div>
         </div>
-        </nav>
-
    
       </div>
     </aside>
