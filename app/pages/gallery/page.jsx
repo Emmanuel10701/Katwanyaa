@@ -816,36 +816,38 @@ export default function ModernGallery() {
   ];
 
   // Dynamic stats
-  const [stats, setStats] = useState([
-    { 
-      icon: FiImage, 
-      number: '0', 
-      label: 'Media Files', 
-      sublabel: 'Total files',
-      gradient: 'from-blue-500 to-cyan-500'
-    },
-    { 
-      icon: FiFolder, 
-      number: '0', 
-      label: 'Galleries', 
-      sublabel: 'Collections',
-      gradient: 'from-emerald-500 to-green-500'
-    },
-    { 
-      icon: FiGrid, 
-      number: '0', 
-      label: 'Categories', 
-      sublabel: 'Available',
-      gradient: 'from-purple-500 to-pink-500'
-    },
-    { 
-      icon: FiCalendar, 
-      number: '2024', 
-      label: 'Latest', 
-      sublabel: 'This year',
-      gradient: 'from-amber-500 to-orange-500'
-    }
-  ]);
+const [stats, setStats] = useState([
+  { 
+    icon: FiImage, 
+    number: '0', 
+    label: 'Media Files', 
+    sublabel: 'Total files',
+    gradient: 'from-blue-500 to-cyan-500'
+  },
+  { 
+    icon: FiFolder, 
+    number: '0', 
+    label: 'Galleries', 
+    sublabel: 'Collections',
+    gradient: 'from-emerald-500 to-green-500'
+  },
+  { 
+    icon: FiGrid, 
+    number: '0', 
+    label: 'Categories', 
+    sublabel: 'Available',
+    gradient: 'from-purple-500 to-pink-500'
+  },
+  { 
+    icon: FiCalendar, 
+    // FIXED: Removed the extra {} and corrected the spelling to getFullYear()
+    number: new Date().getFullYear().toString(), 
+    label: 'Latest', 
+    sublabel: 'This year',
+    gradient: 'from-amber-500 to-orange-500'
+  }
+]);
+
 
   // Fetch galleries from API
   useEffect(() => {
