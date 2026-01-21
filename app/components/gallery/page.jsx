@@ -45,7 +45,55 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other', color: 'gray' }
 ];
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Gallery Manager Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50/30 flex items-center justify-center p-6">
+          <div className="text-center space-y-6 max-w-md">
+            <div className="text-red-500 text-6xl">⚠️</div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+              <p className="text-gray-600 mb-4">{this.state.error?.message || 'An unexpected error occurred'}</p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full font-semibold shadow-lg"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 export default function ModernGalleryManager() {
+  return (
+    <ErrorBoundary>
+      <GalleryManagerContent />
+    </ErrorBoundary>
+  );
+}
+
+function GalleryManagerContent() {
   // State
   const [galleryItems, setGalleryItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -101,7 +149,15 @@ export default function ModernGalleryManager() {
     try {
       setLoading(true);
       
-      const response = await fetch('/api/gallery');
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch('/api/gallery', {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         // Check if response is HTML error page
@@ -157,7 +213,12 @@ export default function ModernGalleryManager() {
       }
     } catch (error) {
       console.error('Error fetching gallery items:', error);
-      toast.error(`Failed to load gallery items: ${error.message}`);
+      
+      if (error.name === 'AbortError') {
+        toast.error('Request timed out. Please check your connection.');
+      } else {
+        toast.error(`Failed to load gallery items: ${error.message}`);
+      }
       
       // Set empty arrays on error
       setGalleryItems([]);
@@ -636,7 +697,7 @@ export default function ModernGalleryManager() {
               <div className="relative p-3 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 rounded-2xl shadow-lg shadow-blue-500/30">
                 <FiImage className="text-2xl text-white" />
                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-xs font-bold text-white">{galleryItems.length}</span>
+                  <span className="text-xs font-bold text-white">{galleryItems?.length || 0}</span>
                 </div>
               </div>
               
@@ -648,7 +709,7 @@ export default function ModernGalleryManager() {
                   </h1>
                   <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
                     <FiGrid className="text-xs" />
-                    {galleryItems.length} Items
+                    {galleryItems?.length || 0} Items
                   </span>
                 </div>
                 <p className="text-gray-600 text-base md:text-lg max-w-2xl">
@@ -1528,7 +1589,7 @@ return (
                               </button>
                             ) : (
                               <button onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg">
-                                <FiRotateCwc size={18} />
+                                <FiRotateCw size={18} />
                               </button>
                             )}
                           </div>
@@ -1674,12 +1735,22 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   };
 
   const copyUrl = () => {
-    const targetPath = "/pages/gallery";
-    const fullUrl = `${window.location.origin}${targetPath}`;
+    try {
+      const targetPath = "/pages/gallery";
+      const fullUrl = `${window.location.origin}${targetPath}`;
 
-    navigator.clipboard.writeText(fullUrl);
-    
-    toast.success('Gallery link copied to clipboard!');
+      navigator.clipboard.writeText(fullUrl)
+        .then(() => {
+          toast.success('Gallery link copied to clipboard!');
+        })
+        .catch(err => {
+          console.error('Failed to copy:', err);
+          toast.error('Failed to copy link');
+        });
+    } catch (error) {
+      console.error('Copy URL error:', error);
+      toast.error('Failed to copy link');
+    }
   };
 
   const downloadFile = () => {
