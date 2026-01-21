@@ -10,7 +10,6 @@ import {
   FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace
 } from 'react-icons/fi';
 import { Toaster, toast } from 'sonner';
-
 // Categories from your backend API
 const CATEGORIES = [
   { value: 'GENERAL', label: 'General', color: 'gray' },
@@ -62,6 +61,7 @@ export default function ModernGalleryManager() {
   const [dragActive, setDragActive] = useState(false);
   const [imageErrors, setImageErrors] = useState(new Set());
   const [loading, setLoading] = useState(true);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -596,7 +596,7 @@ export default function ModernGalleryManager() {
         className="group relative px-5 py-3 bg-gradient-to-r from-white to-gray-50 text-gray-700 rounded-xl font-medium flex items-center justify-center gap-3 shadow-lg shadow-gray-200 hover:shadow-gray-300 transition-all duration-300 border border-gray-200 hover:border-gray-300 hover:scale-[1.02] active:scale-[0.98]"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-gray-600 to-gray-700 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
-        <FiRefreshCw className={`text-lg ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+        <FiRefreshCw className={`text-lg ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
         <span className="font-semibold">Refresh</span>
         <div className="hidden sm:block text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full">
           ⌘R
