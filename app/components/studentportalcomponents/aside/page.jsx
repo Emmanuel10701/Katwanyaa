@@ -31,12 +31,13 @@ export default function NavigationSidebar({
   };
 
   return (
-    <aside className="fixed lg:relative inset-y-0 left-0 z-50 h-full bg-white border-r border-gray-200 w-full sm:w-[80%] md:w-[40%] lg:w-[22%] xl:w-[20%] max-w-none flex flex-col">
+<aside className="fixed lg:relative inset-y-0 left-0 z-50 h-full bg-white border-r border-gray-200 w-full max-w-[300px] lg:max-w-[280px] xl:max-w-[300px] flex flex-col">
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-5 lg:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
+              {/* Logo - Using image like Admin sidebar */}
               <div className="relative">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
                   <img 
@@ -55,6 +56,7 @@ export default function NavigationSidebar({
               </div>
             </div>
             
+            {/* Mobile Close Button */}
             <button
               onClick={onMenuClose}
               className="lg:hidden p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
@@ -119,10 +121,12 @@ export default function NavigationSidebar({
               </button>
             ))}
           </div>
-        </nav>
 
-        <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
+        </nav>
+               <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
           <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
+            
+            {/* Refresh Button */}
             <button
               onClick={onRefresh}
               className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
@@ -134,6 +138,7 @@ export default function NavigationSidebar({
               <span className="truncate">Refresh</span>
             </button>
 
+            {/* Logout Button */}
             <button
               onClick={onLogout}
               className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
@@ -144,8 +149,10 @@ export default function NavigationSidebar({
               <FiLogOut className="text-sm sm:text-lg" />
               <span className="truncate">Logout</span>
             </button>
+            
           </div>
         </div>
+   
       </div>
     </aside>
   );
