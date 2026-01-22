@@ -14,6 +14,8 @@ import {
   FiCheck, FiLoader, FiAlertTriangle, FiInfo,
   FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall, FiArrowRight 
 } from 'react-icons/fi';
+import { IoClose } from "react-icons/io5"; // or /io for v4
+
 import { 
   FaBell, FaBars, FaChartBar, FaFolder, FaComments, 
   FaRocket, FaFire, FaBolt, FaCalendarCheck,
@@ -1876,120 +1878,185 @@ export default function GuidanceEventsView() {
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
 
   // Fetch all data with image handling
-  const fetchAllData = useCallback(async () => {
-    try {
-      setError(null);
-      
-      // Fetch events from API
-      const eventsRes = await fetch('/api/events');
-      const eventsData = await eventsRes.json();
-      if (eventsData.success) {
-        // Process events to ensure image paths are complete
-        const processedEvents = (eventsData.events || []).map(event => ({
+// Replace your current fetchAllData function with this updated version
+const fetchAllData = useCallback(async () => {
+  try {
+    setError(null);
+    
+    // Fetch events from API
+    const eventsRes = await fetch('/api/events');
+    const eventsData = await eventsRes.json();
+    
+    if (eventsData.success) {
+      // Process events with comprehensive image mapping
+      const processedEvents = (eventsData.events || []).map(event => {
+        // Try multiple possible image property names
+        const imageSource = 
+          event.image || 
+          event.imageUrl || 
+          event.image_url || 
+          event.thumbnail || 
+          event.cover_image || 
+          event.photo_url;
+        
+        return {
           ...event,
-          image: event.image ? event.image.startsWith('/') ? event.image : `/${event.image}` : null
-        }));
-        setEvents(processedEvents);
-      } else {
-        throw new Error('Failed to fetch events');
-      }
+          // Convert to complete URL if needed
+          image: imageSource ? 
+            (imageSource.startsWith('http') ? imageSource : 
+             imageSource.startsWith('/') ? imageSource : 
+             `/${imageSource}`) : null
+        };
+      });
+      setEvents(processedEvents);
+    } else {
+      throw new Error('Failed to fetch events');
+    }
 
-      // Fetch guidance from API
-      const guidanceRes = await fetch('/api/guidance');
-      const guidanceData = await guidanceRes.json();
-      if (guidanceData.success) {
-        // Process guidance to ensure image paths are complete
-        const processedGuidance = (guidanceData.events || []).map(session => ({
+    // Fetch guidance from API
+    const guidanceRes = await fetch('/api/guidance');
+    const guidanceData = await guidanceRes.json();
+    
+    if (guidanceData.success) {
+      // Process guidance sessions
+      const processedGuidance = (guidanceData.events || []).map(session => {
+        const imageSource = 
+          session.image || 
+          session.imageUrl || 
+          session.image_url || 
+          session.thumbnail;
+        
+        return {
           ...session,
-          image: session.image ? session.image.startsWith('/') ? session.image : `/${session.image}` : null
-        }));
-        // Add default devotion sessions to the beginning
-        setGuidance([...DEFAULT_SESSIONS, ...processedGuidance]);
-      } else {
-        throw new Error('Failed to fetch guidance sessions');
-      }
+          image: imageSource ? 
+            (imageSource.startsWith('http') ? imageSource : 
+             imageSource.startsWith('/') ? imageSource : 
+             `/${imageSource}`) : null
+        };
+      });
+      // Add default devotion sessions to the beginning
+      setGuidance([...DEFAULT_SESSIONS, ...processedGuidance]);
+    } else {
+      throw new Error('Failed to fetch guidance sessions');
+    }
 
-      // Fetch news from API
-      const newsRes = await fetch('/api/news');
-      const newsData = await newsRes.json();
-      if (newsData.success) {
-        // Process news to ensure image paths are complete
-        const processedNews = (newsData.news || []).map(newsItem => ({
-          ...newsItem,
-          image: newsItem.image ? newsItem.image.startsWith('/') ? newsItem.image : `/${newsItem.image}` : null
-        }));
-        setNews(processedNews);
-      } else {
-        throw new Error('Failed to fetch news');
-      }
+    // Fetch news from API
+    const newsRes = await fetch('/api/news');
+    const newsData = await newsRes.json();
+    
+    if (newsData.success) {
+      // IMPORTANT: Your API returns data.data, not data.news
+      const newsItems = newsData.data || newsData.news || [];
+      
+      // Process news items with comprehensive image mapping
+      const processedNews = newsItems.map(newsItem => {
+        // Try all possible image property names
+        const imageSource = 
+          newsItem.image || 
+          newsItem.imageUrl || 
+          newsItem.image_url || 
+          newsItem.thumbnail || 
+          newsItem.cover_image || 
+          newsItem.featured_image ||
+          newsItem.photo;
+        
+        return {
+          id: newsItem.id || newsItem._id,
+          title: newsItem.title || newsItem.headline,
+          excerpt: newsItem.excerpt || newsItem.summary || newsItem.description,
+          fullContent: newsItem.content || newsItem.full_content || newsItem.description,
+          date: newsItem.date || newsItem.createdAt || newsItem.published_date,
+          category: newsItem.category || newsItem.type,
+          author: newsItem.author || newsItem.created_by || 'School Admin',
+          likes: newsItem.likes || newsItem.like_count || 0,
+          // Handle image paths
+          image: imageSource ? 
+            (imageSource.startsWith('http') ? imageSource : 
+             imageSource.startsWith('/') ? imageSource : 
+             `/${imageSource}`) : null
+        };
+      });
+      setNews(processedNews);
+    } else {
+      throw new Error('Failed to fetch news');
+    }
 
-      // Fetch teams from /api/guidanceteam endpoint
-      try {
-        const teamsRes = await fetch('/api/guidanceteam');
-        const teamsData = await teamsRes.json();
-        if (teamsData.success) {
-          // Process team members to ensure image paths are complete
-          const processedTeams = (teamsData.members || []).map(member => ({
+    // Fetch teams
+    try {
+      const teamsRes = await fetch('/api/guidanceteam');
+      const teamsData = await teamsRes.json();
+      if (teamsData.success) {
+        const processedTeams = (teamsData.members || []).map(member => {
+          const imageSource = 
+            member.image || 
+            member.photo || 
+            member.avatar || 
+            member.profile_picture;
+          
+          return {
             ...member,
-            image: member.image ? member.image.startsWith('/') ? member.image : `/${member.image}` : null
-          }));
-          setTeams(processedTeams);
-        } else {
-          console.warn('Failed to fetch team members, using empty array');
-          setTeams([]);
-        }
-      } catch (teamsError) {
-        console.warn('Error fetching team members:', teamsError);
+            image: imageSource ? 
+              (imageSource.startsWith('http') ? imageSource : 
+               imageSource.startsWith('/') ? imageSource : 
+               `/${imageSource}`) : null
+          };
+        });
+        setTeams(processedTeams);
+      } else {
         setTeams([]);
       }
-
-      // Get student data from localStorage
-      const savedStudent = localStorage.getItem('student_data');
-      if (savedStudent) {
-        setStudent(JSON.parse(savedStudent));
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('Failed to load data. Please try again.');
-      
-      // Use sample data with image handling as fallback
-      setEvents([
-        {
-          id: 1,
-          title: "Annual Sports Day",
-          description: "Join us for our annual sports competition with various track and field events.",
-          date: "2026-01-23T00:00:00.000Z",
-          time: "9:00am - 4:00pm",
-          location: "School Playground",
-          category: "sports",
-          type: "external",
-          featured: true,
-          attendees: "All students",
-          image: null
-        }
-      ]);
-      
-      setGuidance([...DEFAULT_SESSIONS]);
-      
-      setNews([
-        {
-          id: 1,
-          title: "School Announces New Library Hours",
-          excerpt: "Extended library hours to support student studies",
-          fullContent: "The school library will now remain open until 6:00 PM on weekdays...",
-          date: "2026-01-02T00:00:00.000Z",
-          category: "announcement",
-          author: "School Administration",
-          likes: 15,
-          image: null
-        }
-      ]);
-      
+    } catch (teamsError) {
+      console.warn('Error fetching team members:', teamsError);
       setTeams([]);
-    } finally {
-      setLoading(false);
     }
-  }, []);
+
+    // Get student data
+    const savedStudent = localStorage.getItem('student_data');
+    if (savedStudent) {
+      setStudent(JSON.parse(savedStudent));
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    setError('Failed to load data. Please try again.');
+    
+    // Use sample data with proper images as fallback
+    setEvents([
+      {
+        id: 1,
+        title: "Annual Sports Day",
+        description: "Join us for our annual sports competition with various track and field events.",
+        date: "2026-01-23T00:00:00.000Z",
+        time: "9:00am - 4:00pm",
+        location: "School Playground",
+        category: "sports",
+        type: "external",
+        featured: true,
+        attendees: "All students",
+        image: "/images/events/sports-day.jpg" // Add proper fallback image
+      }
+    ]);
+    
+    setGuidance([...DEFAULT_SESSIONS]);
+    
+    setNews([
+      {
+        id: 1,
+        title: "School Announces New Library Hours",
+        excerpt: "Extended library hours to support student studies",
+        fullContent: "The school library will now remain open until 6:00 PM on weekdays...",
+        date: "2026-01-02T00:00:00.000Z",
+        category: "announcement",
+        author: "School Administration",
+        likes: 15,
+        image: "/images/news/library-announcement.jpg"
+      }
+    ]);
+    
+    setTeams([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   // Initial fetch
   useEffect(() => {
