@@ -1165,7 +1165,7 @@ const ModernGalleryItem = ({
         {/* Selection Checkbox - Enhanced */}
         <button
           onClick={onSelect}
-          className={`absolute top-3 left-3 w-7 h-7 rounded-full border-2 flex items-center justify-center z-30 transition-all duration-200 hover:scale-110 ${
+          className={`absolute top-3 left-3 w-7 h-7 rounded-full border-2 flex items-center justify-center z-30 transition-all duration-200  ${
             isSelected 
               ? 'bg-gradient-to-br from-blue-500 to-cyan-500 border-blue-500 text-white shadow-lg' 
               : 'bg-white/90 backdrop-blur-sm border-slate-300 hover:border-blue-400 hover:bg-blue-50'
@@ -1196,7 +1196,7 @@ const ModernGalleryItem = ({
                   <img
                     src={item.files[0]}
                     alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 "
                     onError={onImageError}
                   />
                   {/* Multiple Images Indicator - Enhanced */}
@@ -1243,7 +1243,7 @@ const ModernGalleryItem = ({
         {/* View Button - Enhanced */}
         <button
           onClick={onPreview}
-          className="w-full py-3.5 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white rounded-xl font-bold text-sm hover:from-amber-700 hover:via-orange-700 hover:to-red-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white rounded-xl font-bold text-sm hover:from-amber-700 hover:via-orange-700 hover:to-red-700 transition-all duration-300 hover:shadow-lg  flex items-center justify-center gap-2"
         >
           <FiEye className="text-base" />
           <span>VIEW GALLERY</span>
@@ -1411,7 +1411,7 @@ return (
                             <img
                               src={fileUrl}
                               alt={`Existing file ${index + 1}`}
-                              className="w-full h-full object-cover cursor-pointer transition-transform hover:scale-105"
+                              className="w-full h-full object-cover cursor-pointer transition-transform "
                               onClick={() => handlePreviewExisting(fileUrl)}
                             />
                           )}
@@ -1428,7 +1428,7 @@ return (
                           <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-2 transition-all">
                             <button
                               onClick={() => handlePreviewExisting(fileUrl)}
-                              className="p-2.5 bg-white/90 backdrop-blur-sm rounded-lg text-gray-800 hover:scale-105"
+                              className="p-2.5 bg-white/90 backdrop-blur-sm rounded-lg text-gray-800"
                               title="Preview"
                             >
                               <FiEye className="text-sm" />
@@ -1567,7 +1567,7 @@ return (
                             <img
                               src={previewUrl}
                               alt={fileObj.file?.name || `File ${index + 1}`}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              className="w-full h-full object-cover transition-transform "
                               onLoad={() => {
                                 // Clean up URL after image loads
                                 setTimeout(() => {
@@ -1823,7 +1823,6 @@ return (
                 hover:shadow-xl
                 transition-all duration-200
                 min-w-[120px]
-                hover:scale-100
               "
             >
               {isUploading ? (
@@ -1927,7 +1926,7 @@ const ModernPreviewModal = ({
                 </button>
                 <button
                   onClick={onClose}
-                  className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-100"
+                  className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all "
                 >
                   <FiX className="w-5 h-5 text-white" />
                 </button>
