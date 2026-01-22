@@ -921,16 +921,17 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
 }
 
 // Modern Assignment Modal Component (Create/Edit) - REDUCED WIDTH
+// Modern Assignment Modal Component (Create/Edit) - UPDATED
 function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
   // Form fields state
   const [formData, setFormData] = useState({
     title: assignment?.title || '',
     description: assignment?.description || '',
-    dueDate: assignment?.dueDate || new Date().toISOString().split('T')[0],
-    dateAssigned: assignment?.dateAssigned || new Date().toISOString().split('T')[0],
+    dueDate: assignment?.dueDate ? new Date(assignment.dueDate).toISOString().split('T')[0] : '',
+    dateAssigned: assignment?.dateAssigned ? new Date(assignment.dateAssigned).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     subject: assignment?.subject || '',
-    className: assignment?.className || assignment?.grade || '',
-    teacher: assignment?.teacher || assignment?.assignedTo || '',
+    className: assignment?.className || '',
+    teacher: assignment?.teacher || '',
     status: assignment?.status || 'pending',
     priority: assignment?.priority || 'medium',
     estimatedTime: assignment?.estimatedTime || '',
@@ -964,6 +965,10 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
   
   const [learningObjectives, setLearningObjectives] = useState(assignment?.learningObjectives || []);
   const [newObjective, setNewObjective] = useState('');
+
+  // Track files to remove
+  const [assignmentFilesToRemove, setAssignmentFilesToRemove] = useState([]);
+  const [attachmentsToRemove, setAttachmentsToRemove] = useState([]);
 
   // Class options
   const classOptions = [
@@ -1008,9 +1013,11 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
       name: file.name,
       size: `${(file.size / 1024).toFixed(1)}KB`,
       type: file.type,
-      file: file
+      file: file,
+      isExisting: false
     }));
     setAssignmentFiles(prev => [...prev, ...newFiles]);
+    e.target.value = ''; // Reset file input
   };
 
   const handleAttachmentFileChange = (e) => {
@@ -1019,16 +1026,26 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
       name: file.name,
       size: `${(file.size / 1024).toFixed(1)}KB`,
       type: file.type,
-      file: file
+      file: file,
+      isExisting: false
     }));
     setAttachments(prev => [...prev, ...newFiles]);
+    e.target.value = ''; // Reset file input
   };
 
   const removeAssignmentFile = (index) => {
+    const file = assignmentFiles[index];
+    if (file.isExisting) {
+      setAssignmentFilesToRemove(prev => [...prev, file.url]);
+    }
     setAssignmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const removeAttachment = (index) => {
+    const file = attachments[index];
+    if (file.isExisting) {
+      setAttachmentsToRemove(prev => [...prev, file.url]);
+    }
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -1041,7 +1058,9 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
       assignment?.id, 
       assignmentFiles, 
       attachments, 
-      learningObjectives
+      learningObjectives,
+      assignmentFilesToRemove,
+      attachmentsToRemove
     );
   };
 
@@ -1054,7 +1073,7 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '90%',
-        maxWidth: '900px', // Reduced from 1200px to 900px
+        maxWidth: '900px',
         maxHeight: '95vh',
         bgcolor: 'background.paper',
         borderRadius: 3,
@@ -1359,8 +1378,12 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
                         multiple
                         onChange={handleAssignmentFileChange}
                         className="hidden"
+                        id="assignment-files-input"
                       />
-                      <div className="px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div 
+                        className="px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                        onClick={() => document.getElementById('assignment-files-input').click()}
+                      >
                         <FiUpload className="text-blue-500" />
                         <span className="font-bold text-gray-700 text-sm">
                           Upload Assignment Files
@@ -1397,6 +1420,61 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
                 </div>
               </div>
 
+              {/* Attachments */}
+              <div>
+                <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
+                  <FiPaperclip className="text-purple-600" /> 
+                  Attachments
+                </label>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block">
+                      <input
+                        type="file"
+                        multiple
+                        onChange={handleAttachmentFileChange}
+                        className="hidden"
+                        id="attachments-input"
+                      />
+                      <div 
+                        className="px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                        onClick={() => document.getElementById('attachments-input').click()}
+                      >
+                        <FiUpload className="text-purple-500" />
+                        <span className="font-bold text-gray-700 text-sm">
+                          Upload Attachments
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+                  
+                  {/* Attachment List */}
+                  {attachments.length > 0 && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {attachments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-xl border border-purple-200">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <FiPaperclip className="text-purple-500 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
+                              <p className="text-purple-600 text-xs font-medium">
+                                {file.isExisting ? 'Existing attachment' : `New attachment - ${file.size}`}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
+                          >
+                            <FiX className="text-sm" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Form Actions */}

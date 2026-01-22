@@ -17,9 +17,6 @@ import {
   IoColorPalette, IoGameController, IoCode, IoBuild, IoCalculator
 } from 'react-icons/io5';
 
-
-
-
 import {
   CircularProgress, Tooltip, Badge, Chip, LinearProgress, Avatar,
   IconButton, Button, ToggleButton, ToggleButtonGroup
@@ -229,8 +226,9 @@ function LoadingSpinner() {
 function StatsCard({ title, value, icon: Icon, color, trend, unit = '', description, compact = false }) {
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
-      className={`bg-white rounded-2xl border border-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden ${
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden ${
         compact ? 'p-4' : 'p-5 sm:p-6'
       }`}
     >
@@ -254,7 +252,7 @@ function StatsCard({ title, value, icon: Icon, color, trend, unit = '', descript
           {value}
           {unit && <span className="text-lg text-gray-600 ml-1">{unit}</span>}
         </div>
-        <div className="text-sm font-semibold text-gray-700 truncate">{title}</div>
+        <div className="text-sm font-bold text-gray-700 truncate">{title}</div>
         {description && (
           <div className="text-xs text-gray-500 truncate">{description}</div>
         )}
@@ -284,7 +282,7 @@ function StatusBadge({ status, size = "md" }) {
   };
 
   return (
-    <div className={`inline-flex items-center gap-2 ${sizeClasses[size]} bg-gradient-to-r ${config.bg} text-white rounded-full font-semibold shadow-md`}>
+    <div className={`inline-flex items-center gap-2 ${sizeClasses[size]} bg-gradient-to-r ${config.bg} text-white rounded-full font-bold shadow-md`}>
       {config.icon}
       <span>{config.text}</span>
     </div>
@@ -297,16 +295,16 @@ function FilePreviewCard({ file, onDownload, onPreview, index }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 overflow-hidden"
+      className="bg-white rounded-xl border border-gray-200 overflow-hidden"
     >
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+            <div className="p-2 bg-gray-50 rounded-lg">
               {getFileIcon(file.fileType, file.extension, 20)}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 truncate">{file.fileName}</h4>
+              <h4 className="font-bold text-gray-900 truncate">{file.fileName}</h4>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs text-gray-500">{file.fileType}</span>
                 <span className="text-xs text-gray-400">•</span>
@@ -319,14 +317,14 @@ function FilePreviewCard({ file, onDownload, onPreview, index }) {
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <button
             onClick={() => onPreview?.(file)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
           >
             <IoEye size={16} />
             <span>Preview</span>
           </button>
           <button
             onClick={() => onDownload?.(file)}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-bold shadow-md"
           >
             <IoCloudDownload size={16} />
             <span>Download</span>
@@ -347,8 +345,9 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
 
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.01 }}
-      className="bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden"
     >
       {/* Card Header */}
       <div className={`p-5 bg-gradient-to-r ${
@@ -372,11 +371,11 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
                 {isResource ? item.type?.toUpperCase() : 'ASSIGNMENT'}
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded-full font-bold">
                   {item.subject}
                 </span>
                 {isOverdue && (
-                  <span className="text-xs bg-rose-600 px-2 py-1 rounded-full flex items-center gap-1">
+                  <span className="text-xs bg-rose-600 px-2 py-1 rounded-full flex items-center gap-1 font-bold">
                     <IoWarning size={10} />
                     Overdue
                   </span>
@@ -388,10 +387,10 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
           <div className="flex items-center gap-2">
             <button
               onClick={() => onBookmark?.(item)}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-lg ${
                 isBookmarked 
                   ? 'text-yellow-300 bg-white/20' 
-                  : 'text-white/70 hover:text-yellow-300 hover:bg-white/10'
+                  : 'text-white/70 bg-white/10'
               }`}
             >
               <FiBookmark size={18} />
@@ -409,10 +408,10 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
       <div className="p-5">
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-1">
-            <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+            <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">
               {isResource ? 'Class' : 'Teacher'}
             </div>
-            <div className="flex items-center gap-2 text-gray-900 font-semibold">
+            <div className="flex items-center gap-2 text-gray-900 font-bold">
               {isResource ? (
                 <IoSchool size={16} className="text-blue-500" />
               ) : (
@@ -423,10 +422,10 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
           </div>
           
           <div className="space-y-1">
-            <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+            <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">
               {isResource ? 'Date Added' : 'Due Date'}
             </div>
-            <div className="flex items-center gap-2 text-gray-900 font-semibold">
+            <div className="flex items-center gap-2 text-gray-900 font-bold">
               <IoCalendar size={16} className="text-amber-500" />
               <span>
                 {isResource 
@@ -440,7 +439,7 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
         
         {item.description && (
           <div className="mb-4">
-            <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+            <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">
               Description
             </div>
             <p className="text-gray-700 text-sm line-clamp-2">{item.description}</p>
@@ -457,15 +456,15 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
         <div className="flex gap-3 pt-4 border-t border-gray-100">
           <button
             onClick={() => onView?.(item)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white hover:bg-gray-800 rounded-xl font-semibold transition-colors group/btn"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-bold"
           >
             <span>View Details</span>
-            <IoArrowDown className="group-hover/btn:translate-y-0.5 transition-transform" />
+            <IoArrowDown />
           </button>
           
           <button
             onClick={() => onDownload?.(item)}
-            className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg"
+            className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-md"
             title={`Download ${totalFiles} ${totalFiles === 1 ? 'file' : 'files'}`}
           >
             <IoCloudDownload size={20} />
@@ -514,13 +513,13 @@ function DetailModal({ item, type, onClose, onDownload }) {
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl sm:text-3xl font-bold truncate">{item.title}</h2>
                 <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className="text-sm opacity-90">{item.subject}</span>
+                  <span className="text-sm font-bold opacity-90">{item.subject}</span>
                   <span className="text-sm opacity-90">•</span>
-                  <span className="text-sm opacity-90">{item.className}</span>
+                  <span className="text-sm font-bold opacity-90">{item.className}</span>
                   {!isResource && (
                     <>
                       <span className="text-sm opacity-90">•</span>
-                      <span className="text-sm opacity-90">{item.teacher}</span>
+                      <span className="text-sm font-bold opacity-90">{item.teacher}</span>
                     </>
                   )}
                 </div>
@@ -528,7 +527,7 @@ function DetailModal({ item, type, onClose, onDownload }) {
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-2xl transition-colors ml-4"
+              className="p-2 rounded-2xl ml-4"
             >
               <IoClose className="text-2xl" />
             </button>
@@ -540,14 +539,14 @@ function DetailModal({ item, type, onClose, onDownload }) {
           {/* Status & Info */}
           <div className="flex flex-wrap gap-3">
             {!isResource && <StatusBadge status={item.status} size="md" />}
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
               {item.className}
             </span>
-            <span className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
+            <span className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full text-sm font-bold">
               {item.subject}
             </span>
             {isOverdue && (
-              <span className="px-4 py-2 bg-rose-100 text-rose-800 rounded-full text-sm font-semibold flex items-center gap-2">
+              <span className="px-4 py-2 bg-rose-100 text-rose-800 rounded-full text-sm font-bold flex items-center gap-2">
                 <IoWarning />
                 Overdue
               </span>
@@ -559,13 +558,13 @@ function DetailModal({ item, type, onClose, onDownload }) {
             {!isResource && (
               <>
                 <div className="text-center p-4 bg-gray-50 rounded-2xl">
-                  <div className="text-sm text-gray-600 font-semibold">Due Date</div>
+                  <div className="text-sm text-gray-600 font-bold">Due Date</div>
                   <div className="text-lg font-bold text-gray-900 mt-2">
                     {new Date(item.dueDate).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-2xl">
-                  <div className="text-sm text-gray-600 font-semibold">Priority</div>
+                  <div className="text-sm text-gray-600 font-bold">Priority</div>
                   <div className={`text-lg font-bold mt-2 ${
                     item.priority === 'high' ? 'text-rose-600' :
                     item.priority === 'medium' ? 'text-amber-600' : 'text-emerald-600'
@@ -576,11 +575,11 @@ function DetailModal({ item, type, onClose, onDownload }) {
               </>
             )}
             <div className="text-center p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm text-gray-600 font-semibold">Teacher</div>
+              <div className="text-sm text-gray-600 font-bold">Teacher</div>
               <div className="text-lg font-bold text-gray-900 mt-2 truncate">{item.teacher}</div>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm text-gray-600 font-semibold">Files</div>
+              <div className="text-sm text-gray-600 font-bold">Files</div>
               <div className="text-lg font-bold text-gray-900 mt-2">
                 {isResource 
                   ? (item.mainAttachment ? 1 : 0)
@@ -643,7 +642,7 @@ function DetailModal({ item, type, onClose, onDownload }) {
                       </h3>
                       <button
                         onClick={() => downloadMultipleFiles(item.assignmentFileAttachments || [])}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2"
                       >
                         <IoCloudDownload />
                         Download All
@@ -672,7 +671,7 @@ function DetailModal({ item, type, onClose, onDownload }) {
                       </h3>
                       <button
                         onClick={() => downloadMultipleFiles(item.attachmentAttachments || [])}
-                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2"
                       >
                         <IoCloudDownload />
                         Download All
@@ -699,7 +698,7 @@ function DetailModal({ item, type, onClose, onDownload }) {
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-2xl font-bold text-lg transition-colors flex items-center justify-center gap-3"
+              className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg flex items-center justify-center gap-3"
             >
               <IoClose />
               <span>Close</span>
@@ -707,7 +706,7 @@ function DetailModal({ item, type, onClose, onDownload }) {
             
             <button
               onClick={() => onDownload?.(item)}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3"
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-3"
             >
               <IoCloudDownload />
               <span>Download All Files</span>
@@ -999,63 +998,57 @@ export default function ModernResourcesAssignmentsView({
   const filteredCount = currentItems.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-2 sm:p-4 md:p-6">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-900 rounded-3xl p-6 sm:p-8 text-white overflow-hidden mb-6 sm:mb-8"
+        className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-900 rounded-3xl p-4 sm:p-6 md:p-8 text-white overflow-hidden mb-4 sm:mb-6 md:mb-8"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/20 rounded-full -ml-24 -mb-24 blur-3xl"></div>
         
         <div className="relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+            <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                  <IoDocumentsOutline className="text-2xl text-yellow-300" />
+                <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                  <IoDocumentsOutline className="text-xl sm:text-2xl text-yellow-300" />
                 </div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Learning Hub</h1>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Learning Hub</h1>
               </div>
-              <p className="text-blue-100 text-base sm:text-lg max-w-2xl">
+              <p className="text-blue-100 text-sm sm:text-base max-w-2xl">
                 Access assignments, resources, and study materials all in one place
                 {student && (
-                  <span className="ml-2 text-yellow-300 font-semibold">
+                  <span className="ml-2 text-yellow-300 font-bold">
                     ({student.form} {student.stream})
                   </span>
                 )}
               </p>
             </div>
             
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 onClick={handleDownloadAll}
                 disabled={filteredCount === 0}
-                className="px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl font-bold text-sm sm:text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <IoCloudDownload />
                 <span>Download All ({filteredCount})</span>
               </button>
-           <button
-  disabled={isLoading} // Optional: prevents double-clicks while loading
-  onClick={() => {
-    if (activeTab === 'assignments') fetchAssignments();
-    else fetchResources();
-  }}
-  className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-sm sm:text-base transition-all flex items-center gap-2"
->
-  {/* The text changes based on the isLoading state */}
-  <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
-</button>
-
+              <button
+                onClick={activeTab === 'assignments' ? fetchAssignments : fetchResources}
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2"
+              >
+                <span>Refresh</span>
+              </button>
             </div>
           </div>
         </div>
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
         <StatsCard
           title="Total Assignments"
           value={stats.totalAssignments}
@@ -1095,17 +1088,17 @@ export default function ModernResourcesAssignmentsView({
       </div>
 
       {/* Main Content Card */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl p-4 sm:p-6 mb-6">
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
         {/* Tabs & Controls */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Tabs */}
           <div className="flex bg-gradient-to-r from-gray-50 to-white/50 rounded-2xl p-1 border border-gray-200 overflow-hidden">
             <button
               onClick={() => setActiveTab('assignments')}
-              className={`flex-1 py-4 px-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 ${
+              className={`flex-1 py-3 sm:py-4 px-2 rounded-xl flex items-center justify-center gap-2 sm:gap-3 ${
                 activeTab === 'assignments'
                   ? 'bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20 text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/50'
+                  : 'text-gray-600'
               }`}
             >
               <div className={`p-2 rounded-lg ${activeTab === 'assignments' ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
@@ -1121,10 +1114,10 @@ export default function ModernResourcesAssignmentsView({
             
             <button
               onClick={() => setActiveTab('resources')}
-              className={`flex-1 py-4 px-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 ${
+              className={`flex-1 py-3 sm:py-4 px-2 rounded-xl flex items-center justify-center gap-2 sm:gap-3 ${
                 activeTab === 'resources'
                   ? 'bg-gradient-to-r from-purple-500 to-violet-600 shadow-lg shadow-purple-500/20 text-white'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/50'
+                  : 'text-gray-600'
               }`}
             >
               <div className={`p-2 rounded-lg ${activeTab === 'resources' ? 'bg-white/20' : 'bg-purple-50 text-purple-600'}`}>
@@ -1140,68 +1133,65 @@ export default function ModernResourcesAssignmentsView({
           </div>
 
           {/* Search & Controls */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {/* Search */}
             <div className="flex-1">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-300"></div>
-                <div className="relative">
-                  <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder={`Search ${activeTab === 'assignments' ? 'assignments...' : 'resources...'}`}
-                    className="w-full pl-12 pr-12 py-3.5 text-base border-2 border-gray-200 bg-white/80 backdrop-blur-sm rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all placeholder:text-gray-400"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <IoClose className="text-lg" />
-                    </button>
-                  )}
-                </div>
+              <div className="relative">
+                <FiSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base sm:text-lg" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={`Search ${activeTab === 'assignments' ? 'assignments...' : 'resources...'}`}
+                  className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3.5 text-sm sm:text-base border-2 border-gray-200 bg-white/80 backdrop-blur-sm rounded-2xl focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  >
+                    <IoClose className="text-base sm:text-lg" />
+                  </button>
+                )}
               </div>
             </div>
 
             {/* View & Filter Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Bookmark Toggle */}
               <button
                 onClick={() => setShowBookmarkedOnly(!showBookmarkedOnly)}
-                className={`p-3 rounded-2xl border transition-all ${
+                className={`p-2.5 sm:p-3 rounded-2xl border ${
                   showBookmarkedOnly
                     ? 'bg-gradient-to-r from-amber-50 to-amber-100/50 border-amber-200 text-amber-600 shadow-lg shadow-amber-500/10'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-amber-200 hover:text-amber-600'
+                    : 'bg-white border-gray-200 text-gray-600'
                 }`}
               >
-                <IoStar className="text-xl" />
+                <IoStar className="text-lg sm:text-xl" />
               </button>
 
               {/* View Toggle */}
               <div className="flex bg-gradient-to-r from-gray-50 to-gray-50/50 rounded-2xl p-1 border border-gray-200">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-3 rounded-xl flex items-center gap-2 transition-all ${
+                  className={`p-2 sm:p-3 rounded-xl flex items-center gap-2 ${
                     viewMode === 'grid' 
                       ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      : 'text-gray-600'
                   }`}
                 >
-                  <FiGrid className="text-lg" />
+                  <FiGrid className="text-base sm:text-lg" />
                   <span className="text-sm font-bold hidden sm:inline">Grid</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-3 rounded-xl flex items-center gap-2 transition-all ${
+                  className={`p-2 sm:p-3 rounded-xl flex items-center gap-2 ${
                     viewMode === 'list' 
                       ? 'bg-white text-gray-900 shadow-sm border border-gray-200' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                      : 'text-gray-600'
                   }`}
                 >
-                  <FiList className="text-lg" />
+                  <FiList className="text-base sm:text-lg" />
                   <span className="text-sm font-bold hidden sm:inline">List</span>
                 </button>
               </div>
@@ -1209,13 +1199,13 @@ export default function ModernResourcesAssignmentsView({
               {/* Filter Button */}
               <button
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className={`p-3 rounded-2xl border transition-all ${
+                className={`p-2.5 sm:p-3 rounded-2xl border ${
                   showAdvancedFilters
                     ? 'bg-gradient-to-r from-blue-50 to-indigo-50/50 border-blue-200 text-blue-600 shadow-lg shadow-blue-500/10'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-blue-200 hover:text-blue-600'
+                    : 'bg-white border-gray-200 text-gray-600'
                 }`}
               >
-                <IoFilter className="text-xl" />
+                <IoFilter className="text-lg sm:text-xl" />
               </button>
             </div>
           </div>
@@ -1229,8 +1219,8 @@ export default function ModernResourcesAssignmentsView({
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="pt-6 border-t border-gray-200 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="pt-4 sm:pt-6 border-t border-gray-200 space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {/* Class Filter */}
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-2">
@@ -1240,7 +1230,7 @@ export default function ModernResourcesAssignmentsView({
                       <select
                         value={selectedClass}
                         onChange={(e) => setSelectedClass(e.target.value)}
-                        className="w-full px-4 py-3 text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500"
                       >
                         {classes.map(cls => (
                           <option key={cls} value={cls}>
@@ -1259,7 +1249,7 @@ export default function ModernResourcesAssignmentsView({
                       <select
                         value={selectedSubject}
                         onChange={(e) => setSelectedSubject(e.target.value)}
-                        className="w-full px-4 py-3 text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500"
                       >
                         {subjects.map(subject => (
                           <option key={subject} value={subject}>
@@ -1291,7 +1281,7 @@ export default function ModernResourcesAssignmentsView({
                             ? setSelectedStatus(e.target.value)
                             : setSelectedResourceType(e.target.value)
                         }
-                        className="w-full px-4 py-3 text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border-2 border-gray-200 bg-white rounded-2xl focus:outline-none focus:border-blue-500"
                       >
                         {activeTab === 'assignments' ? (
                           statuses.map(status => (
@@ -1316,7 +1306,7 @@ export default function ModernResourcesAssignmentsView({
                         searchTerm || showBookmarkedOnly) && (
                         <button
                           onClick={clearFilters}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl hover:from-gray-800 hover:to-gray-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2"
                         >
                           <IoClose />
                           <span className="font-bold">Clear All</span>
@@ -1332,47 +1322,47 @@ export default function ModernResourcesAssignmentsView({
                     <div className="flex flex-wrap gap-2">
                       <span className="text-sm text-gray-500">Active filters:</span>
                       {selectedClass !== 'all' && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
-                          <IoSchool className="text-sm" />
+                        <span className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm font-bold border border-blue-100">
+                          <IoSchool className="text-xs sm:text-sm" />
                           {selectedClass}
-                          <button onClick={() => setSelectedClass('all')} className="ml-1 text-blue-500 hover:text-blue-700">
-                            <IoClose className="text-sm" />
+                          <button onClick={() => setSelectedClass('all')} className="ml-1 text-blue-500">
+                            <IoClose className="text-xs sm:text-sm" />
                           </button>
                         </span>
                       )}
                       {selectedSubject !== 'all' && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100">
-                          <FiBookOpen className="text-sm" />
+                        <span className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs sm:text-sm font-bold border border-indigo-100">
+                          <FiBookOpen className="text-xs sm:text-sm" />
                           {selectedSubject}
-                          <button onClick={() => setSelectedSubject('all')} className="ml-1 text-indigo-500 hover:text-indigo-700">
-                            <IoClose className="text-sm" />
+                          <button onClick={() => setSelectedSubject('all')} className="ml-1 text-indigo-500">
+                            <IoClose className="text-xs sm:text-sm" />
                           </button>
                         </span>
                       )}
                       {activeTab === 'assignments' && selectedStatus !== 'all' && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium border border-emerald-100">
-                          <FiCheckCircle className="text-sm" />
+                        <span className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs sm:text-sm font-bold border border-emerald-100">
+                          <FiCheckCircle className="text-xs sm:text-sm" />
                           {statuses.find(s => s.id === selectedStatus)?.label}
-                          <button onClick={() => setSelectedStatus('all')} className="ml-1 text-emerald-500 hover:text-emerald-700">
-                            <IoClose className="text-sm" />
+                          <button onClick={() => setSelectedStatus('all')} className="ml-1 text-emerald-500">
+                            <IoClose className="text-xs sm:text-sm" />
                           </button>
                         </span>
                       )}
                       {activeTab === 'resources' && selectedResourceType !== 'all' && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-sm font-medium border border-purple-100">
-                          <FiTag className="text-sm" />
+                        <span className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs sm:text-sm font-bold border border-purple-100">
+                          <FiTag className="text-xs sm:text-sm" />
                           {resourceTypes.find(t => t.id === selectedResourceType)?.label}
-                          <button onClick={() => setSelectedResourceType('all')} className="ml-1 text-purple-500 hover:text-purple-700">
-                            <IoClose className="text-sm" />
+                          <button onClick={() => setSelectedResourceType('all')} className="ml-1 text-purple-500">
+                            <IoClose className="text-xs sm:text-sm" />
                           </button>
                         </span>
                       )}
                       {showBookmarkedOnly && (
-                        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full text-sm font-medium border border-amber-100">
-                          <IoStar className="text-sm" />
+                        <span className="inline-flex items-center gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-amber-50 text-amber-700 rounded-full text-xs sm:text-sm font-bold border border-amber-100">
+                          <IoStar className="text-xs sm:text-sm" />
                           Bookmarked Only
-                          <button onClick={() => setShowBookmarkedOnly(false)} className="ml-1 text-amber-500 hover:text-amber-700">
-                            <IoClose className="text-sm" />
+                          <button onClick={() => setShowBookmarkedOnly(false)} className="ml-1 text-amber-500">
+                            <IoClose className="text-xs sm:text-sm" />
                           </button>
                         </span>
                       )}
@@ -1386,14 +1376,14 @@ export default function ModernResourcesAssignmentsView({
       </div>
 
       {/* Content Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl p-4 sm:p-6">
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl p-3 sm:p-4 md:p-6">
         {/* Results Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
               {activeTab === 'assignments' ? 'Assignments' : 'Learning Resources'}
             </h2>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Showing {filteredCount} of {totalItems} items
               {searchTerm && ` • Search: "${searchTerm}"`}
               {showBookmarkedOnly && ` • Bookmarked only`}
@@ -1401,7 +1391,7 @@ export default function ModernResourcesAssignmentsView({
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="text-sm text-gray-500">
+            <div className="text-xs sm:text-sm text-gray-500">
               {isLoading ? 'Loading...' : 'Updated just now'}
             </div>
           </div>
@@ -1412,15 +1402,15 @@ export default function ModernResourcesAssignmentsView({
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12 sm:py-16"
+            className="text-center py-8 sm:py-12 md:py-16"
           >
-            <div className="inline-block p-6 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl mb-6">
-              <IoDocumentsOutline className="text-gray-400 text-4xl sm:text-5xl" />
+            <div className="inline-block p-4 sm:p-6 bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl mb-4 sm:mb-6">
+              <IoDocumentsOutline className="text-gray-400 text-3xl sm:text-4xl md:text-5xl" />
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-2">
               No {activeTab === 'assignments' ? 'assignments' : 'resources'} found
             </h3>
-            <p className="text-gray-600 max-w-md mx-auto mb-6">
+            <p className="text-gray-600 max-w-md mx-auto mb-4 sm:mb-6 text-sm sm:text-base">
               {searchTerm || selectedClass !== 'all' || selectedSubject !== 'all' || 
                selectedStatus !== 'all' || selectedResourceType !== 'all' || showBookmarkedOnly
                 ? 'Try adjusting your filters or search terms'
@@ -1430,7 +1420,7 @@ export default function ModernResourcesAssignmentsView({
               selectedStatus !== 'all' || selectedResourceType !== 'all' || showBookmarkedOnly) && (
               <button
                 onClick={clearFilters}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold shadow-lg"
               >
                 Clear All Filters
               </button>
@@ -1440,7 +1430,7 @@ export default function ModernResourcesAssignmentsView({
           /* Grid View */
           <motion.div
             layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {currentItems.map((item, index) => (
               <motion.div
@@ -1463,27 +1453,27 @@ export default function ModernResourcesAssignmentsView({
           </motion.div>
         ) : (
           /* List View */
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {currentItems.map((item, index) => (
               <motion.div
                 key={item.id || index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all duration-300 p-4 sm:p-6"
+                className="bg-white rounded-2xl border border-gray-200 shadow p-3 sm:p-4 md:p-6"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   {/* Icon & Status */}
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-2xl ${
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`p-2 sm:p-3 rounded-2xl ${
                       activeTab === 'assignments' 
                         ? 'bg-gradient-to-r from-purple-100 to-purple-200' 
                         : 'bg-gradient-to-r from-blue-100 to-blue-200'
                     }`}>
                       {activeTab === 'assignments' ? (
-                        <IoDocument className="text-purple-600 text-xl" />
+                        <IoDocument className="text-purple-600 text-lg sm:text-xl" />
                       ) : (
-                        getFileIcon(item.type, item.extension, 24)
+                        getFileIcon(item.type, item.extension, 20)
                       )}
                     </div>
                     
@@ -1496,25 +1486,25 @@ export default function ModernResourcesAssignmentsView({
                           <StatusBadge status={item.status} size="sm" />
                         )}
                       </div>
-                      <h3 className="font-bold text-gray-900 text-lg line-clamp-1">{item.title}</h3>
+                      <h3 className="font-bold text-gray-900 text-base sm:text-lg line-clamp-1">{item.title}</h3>
                     </div>
                   </div>
 
                   {/* Metadata */}
-                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                     <div className="space-y-1">
                       <div className="text-xs text-gray-500">Subject</div>
-                      <div className="font-semibold text-gray-900">{item.subject}</div>
+                      <div className="font-bold text-gray-900">{item.subject}</div>
                     </div>
                     <div className="space-y-1">
                       <div className="text-xs text-gray-500">Class</div>
-                      <div className="font-semibold text-gray-900">{item.className}</div>
+                      <div className="font-bold text-gray-900">{item.className}</div>
                     </div>
                     <div className="space-y-1">
                       <div className="text-xs text-gray-500">
                         {activeTab === 'assignments' ? 'Due Date' : 'Date Added'}
                       </div>
-                      <div className="font-semibold text-gray-900">
+                      <div className="font-bold text-gray-900">
                         {activeTab === 'assignments' 
                           ? new Date(item.dueDate).toLocaleDateString()
                           : new Date(item.createdAt || item.dateAdded).toLocaleDateString()
@@ -1523,7 +1513,7 @@ export default function ModernResourcesAssignmentsView({
                     </div>
                     <div className="space-y-1">
                       <div className="text-xs text-gray-500">Files</div>
-                      <div className="font-semibold text-gray-900">
+                      <div className="font-bold text-gray-900">
                         {activeTab === 'assignments'
                           ? ((item.assignmentFileAttachments?.length || 0) + (item.attachmentAttachments?.length || 0))
                           : (item.mainAttachment ? 1 : 0)
@@ -1533,27 +1523,27 @@ export default function ModernResourcesAssignmentsView({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <button
                       onClick={() => toggleBookmark(item)}
                       className={`p-2 rounded-xl ${
                         bookmarkedItems.has(item.id)
                           ? 'text-yellow-500 bg-yellow-50'
-                          : 'text-gray-400 hover:text-yellow-500 hover:bg-yellow-50'
+                          : 'text-gray-400 bg-gray-50'
                       }`}
                     >
-                      <IoStar className="text-xl" />
+                      <IoStar className="text-lg sm:text-xl" />
                     </button>
                     <button
                       onClick={() => setSelectedItem(item)}
-                      className="px-4 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-xl font-semibold transition-colors flex items-center gap-2"
+                      className="px-3 sm:px-4 py-2 bg-gray-900 text-white rounded-xl font-bold flex items-center gap-2"
                     >
                       <FiEye />
                       <span className="hidden sm:inline">View</span>
                     </button>
                     <button
                       onClick={() => handleDownload(item)}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                      className="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2"
                     >
                       <IoCloudDownload />
                       <span className="hidden sm:inline">Download</span>
@@ -1579,12 +1569,12 @@ export default function ModernResourcesAssignmentsView({
       </AnimatePresence>
 
       {/* Footer */}
-      <div className="mt-8 text-center text-gray-500 text-sm">
+      <div className="mt-6 text-center text-gray-500 text-xs sm:text-sm">
         <p>
           {totalItems} total items • {bookmarkedItems.size} bookmarked • 
           Last updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
-        <p className="mt-2 text-xs">
+        <p className="mt-1 sm:mt-2 text-xs">
           All files are securely stored and downloaded directly from Supabase storage
         </p>
       </div>

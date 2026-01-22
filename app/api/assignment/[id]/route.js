@@ -2,53 +2,115 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import { FileManager } from "../../../../libs/superbase";
 
-// Helper: Upload file to Supabase
+// Helper: Upload file to Supabase and return detailed object
 const uploadFileToSupabase = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
   try {
     const result = await FileManager.uploadFile(file, `assignments/${folder}`);
-    return result?.url || null;
+    
+    if (!result) return null;
+    
+    return {
+      url: result.url,
+      name: result.fileName,
+      size: result.fileSize,
+      type: result.fileType,
+      extension: result.fileName.substring(result.fileName.lastIndexOf('.')).toLowerCase(),
+      storageType: 'supabase'
+    };
   } catch (error) {
     console.error("❌ Supabase upload error:", error);
     return null;
   }
 };
 
-// Helper: Delete file from Supabase
-const deleteFileFromSupabase = async (fileUrl) => {
-  if (!fileUrl) return;
+// Helper: Get file info from URL (Supabase URLs)
+const getFileInfoFromUrl = (url) => {
+  if (!url) return null;
   
   try {
-    await FileManager.deleteFile(fileUrl);
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Extract filename from URL
+    const pathParts = pathname.split('/');
+    let fileName = pathParts[pathParts.length - 1];
+    
+    // Decode URL-encoded filename
+    fileName = decodeURIComponent(fileName);
+    
+    // Extract extension
+    const extension = fileName.includes('.') 
+      ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+      : '';
+    
+    // Determine file type
+    const getFileType = (ext) => {
+      const typeMap = {
+        '.pdf': 'PDF Document',
+        '.doc': 'Word Document',
+        '.docx': 'Word Document',
+        '.txt': 'Text File',
+        '.jpg': 'Image',
+        '.jpeg': 'Image',
+        '.png': 'Image',
+        '.gif': 'Image',
+        '.webp': 'Image',
+        '.bmp': 'Image',
+        '.svg': 'Image',
+        '.mp4': 'Video',
+        '.mov': 'Video',
+        '.avi': 'Video',
+        '.wmv': 'Video',
+        '.flv': 'Video',
+        '.webm': 'Video',
+        '.mkv': 'Video',
+        '.mp3': 'Audio',
+        '.wav': 'Audio',
+        '.m4a': 'Audio',
+        '.ogg': 'Audio',
+        '.xls': 'Excel Spreadsheet',
+        '.xlsx': 'Excel Spreadsheet',
+        '.ppt': 'Presentation',
+        '.pptx': 'Presentation',
+        '.zip': 'Archive',
+        '.rar': 'Archive',
+        '.7z': 'Archive'
+      };
+      
+      return typeMap[ext] || 'File';
+    };
+
+    return {
+      url,
+      fileName,
+      extension,
+      fileType: getFileType(extension),
+      storageType: 'supabase'
+    };
   } catch (error) {
-    console.error("❌ Error deleting file from Supabase:", error);
-  }
-};
-
-// Helper: Delete multiple files from Supabase
-const deleteFilesFromSupabase = async (fileUrls) => {
-  if (!fileUrls || (Array.isArray(fileUrls) && fileUrls.length === 0)) return;
-
-  const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
-  
-  for (const url of urls) {
-    if (url) {
-      await deleteFileFromSupabase(url);
-    }
+    console.error("Error parsing URL:", url, error);
+    return {
+      url,
+      fileName: 'download',
+      extension: '',
+      fileType: 'File',
+      storageType: 'supabase'
+    };
   }
 };
 
 // Helper: Upload multiple files to Supabase
 const uploadFilesToSupabase = async (files, folder = "assignments") => {
-  const uploadedUrls = [];
+  const uploadedFiles = [];
   
   for (const file of files) {
     if (file && file.name && file.size > 0) {
       try {
-        const uploadedUrl = await uploadFileToSupabase(file, folder);
-        if (uploadedUrl) {
-          uploadedUrls.push(uploadedUrl);
+        const uploadedFile = await uploadFileToSupabase(file, folder);
+        if (uploadedFile) {
+          uploadedFiles.push(uploadedFile);
         }
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
@@ -56,7 +118,7 @@ const uploadFilesToSupabase = async (files, folder = "assignments") => {
     }
   }
   
-  return uploadedUrls;
+  return uploadedFiles;
 };
 
 // 🔹 GET single assignment
@@ -82,9 +144,24 @@ export async function GET(request, { params }) {
       );
     }
     
+    // Process assignment to add file information
+    const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url) => {
+      return getFileInfoFromUrl(url);
+    }).filter(Boolean);
+    
+    const attachmentAttachments = (assignment.attachments || []).map((url) => {
+      return getFileInfoFromUrl(url);
+    }).filter(Boolean);
+    
+    const processedAssignment = {
+      ...assignment,
+      assignmentFileAttachments,
+      attachmentAttachments
+    };
+    
     return NextResponse.json({ 
       success: true, 
-      assignment 
+      assignment: processedAssignment 
     });
   } catch (error) {
     console.error("❌ GET Single Assignment Error:", error);
@@ -145,12 +222,12 @@ export async function PUT(request, { params }) {
     const attachmentsToRemove = formData.getAll("attachmentsToRemove");
     
     if (assignmentFilesToRemove.length > 0) {
-      await deleteFilesFromSupabase(assignmentFilesToRemove);
+      await FileManager.deleteFiles(assignmentFilesToRemove);
       updatedAssignmentFiles = updatedAssignmentFiles.filter(file => !assignmentFilesToRemove.includes(file));
     }
     
     if (attachmentsToRemove.length > 0) {
-      await deleteFilesFromSupabase(attachmentsToRemove);
+      await FileManager.deleteFiles(attachmentsToRemove);
       updatedAttachments = updatedAttachments.filter(file => !attachmentsToRemove.includes(file));
     }
     
@@ -160,12 +237,12 @@ export async function PUT(request, { params }) {
     
     if (newAssignmentFiles.length > 0) {
       const uploadedFiles = await uploadFilesToSupabase(newAssignmentFiles, "assignment-files");
-      updatedAssignmentFiles = [...updatedAssignmentFiles, ...uploadedFiles];
+      updatedAssignmentFiles = [...updatedAssignmentFiles, ...uploadedFiles.map(f => f.url)];
     }
     
     if (newAttachments.length > 0) {
       const uploadedFiles = await uploadFilesToSupabase(newAttachments, "attachments");
-      updatedAttachments = [...updatedAttachments, ...uploadedFiles];
+      updatedAttachments = [...updatedAttachments, ...uploadedFiles.map(f => f.url)];
     }
     
     // Parse learning objectives
@@ -251,7 +328,7 @@ export async function DELETE(request, { params }) {
     ];
     
     if (allFiles.length > 0) {
-      await deleteFilesFromSupabase(allFiles);
+      await FileManager.deleteFiles(allFiles);
     }
 
     // Delete from database
