@@ -346,38 +346,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     setShowSupportModal(true);
   };
 
-  // Enhanced quick stats with real data including resources
-  const quickStats = [
-    { 
-      label: 'Students', 
-      value: realStats.totalStudents?.toLocaleString() || '0', 
-      icon: FiUser, 
-      color: 'blue', 
-      change: `${realStats.activeStudents || 0} active` 
-    },
-    { 
-      label: 'Resources', 
-      value: realStats.totalResources?.toLocaleString() || '0', 
-      icon: FiFolder, 
-      color: 'emerald', 
-      change: `${realStats.recentResources || 0} recent` 
-    },
-    { 
-      label: 'Applications', 
-      value: realStats.totalApplications?.toLocaleString() || '0', 
-      icon: FiFileText, 
-      color: 'purple', 
-      change: realStats.pendingApplications > 0 ? `${realStats.pendingApplications} pending` : '+8%' 
-    },
-    { 
-      label: 'Staff', 
-      value: realStats.totalStaff?.toLocaleString() || '0', 
-      icon: IoStatsChart, 
-      color: 'green', 
-      change: '+5%' 
-    }
-  ];
-
+ 
   // Resource specific stats for the expanded view
   const resourceStats = [
     { 
@@ -650,7 +619,7 @@ id: 'careers',
               <div className="relative">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
                   <img 
-                    src="/llil.png" 
+                    src="/katz.png" 
                     alt="School Logo" 
                     className="w-full h-full object-contain p-2"
                   />
@@ -723,70 +692,7 @@ id: 'careers',
             })}
             </div>
 
-            {/* Quick Stats with Real Data */}
-            <div className="mt-6 lg:mt-8 space-y-3 lg:space-y-4">
-              {/* Main Stats */}
-              <div className="p-4 lg:p-5 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border border-blue-200 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-blue-600 mb-3 lg:mb-4">
-                  <IoSparkles className="text-sm lg:text-lg" />
-                  <span className="font-semibold text-xs lg:text-sm">Live Stats</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                  {quickStats.map((stat, index) => {
-                    const StatIcon = stat.icon || FiUser;
-                    return (
-                     <div
-                       key={stat.label}
-                       className="text-center p-2 lg:p-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-all duration-200 cursor-pointer shadow-sm"
-                     >
-                      <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-lg bg-${stat.color}-100 flex items-center justify-center mx-auto mb-1 lg:mb-2`}>
-                        <StatIcon className={`text-${stat.color}-600 text-xs lg:text-sm`} />
-                      </div>
-                      <div className="text-gray-800 font-bold text-xs lg:text-sm">{stat.value}</div>
-                      <div className="text-gray-600 text-[10px] lg:text-xs mt-1 truncate">{stat.label}</div>
-                      <div className={`text-${stat.color}-600 text-[10px] lg:text-xs font-semibold mt-1 truncate`}>
-                        {stat.change}
-                      </div>
-                     </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Resource Type Breakdown */}
-              {realStats.totalResources > 0 && (
-                <div className="p-3 lg:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border border-emerald-200 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-2 lg:mb-3">
-                    <div className="flex items-center gap-2 text-emerald-600">
-                      <FiFolder className="text-sm lg:text-lg" />
-                      <span className="font-semibold text-xs lg:text-sm">Resource Types</span>
-                    </div>
-                    <span className="text-emerald-600 text-[10px] lg:text-xs font-bold">
-                      {realStats.totalResources} total
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 lg:gap-2">
-                    {resourceStats.map((stat, index) => {
-                      const StatIcon = stat.icon;
-                      return (
-                        <div
-                          key={stat.label}
-                          className="flex items-center gap-1 lg:gap-2 p-1 lg:p-2 bg-white/80 rounded-lg border border-emerald-100 hover:border-emerald-200 transition-colors duration-200"
-                        >
-                          <div className={`w-5 h-5 lg:w-7 lg:h-7 rounded-lg bg-${stat.color}-100 flex items-center justify-center`}>
-                            <StatIcon className={`text-${stat.color}-600 text-[10px] lg:text-xs`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-emerald-800 font-bold text-xs lg:text-sm truncate">{stat.value}</div>
-                            <div className="text-gray-600 text-[10px] lg:text-xs truncate">{stat.label}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
+         
           </nav>
 
           {/* Footer */}
@@ -841,16 +747,14 @@ id: 'careers',
               onClick={handleLogout}
               className="w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2 lg:py-3 text-red-600 hover:text-red-700 rounded-xl transition-all duration-200 border border-red-200 hover:border-red-300 hover:bg-red-50 group"
             >
-              <div className="group-hover:rotate-180 transition-transform duration-300">
                 <FiLogOut className="text-sm lg:text-lg" />
-              </div>
               <span className="font-semibold text-xs lg:text-sm truncate">Sign Out</span>
             </button>
 
             {/* Version Info */}
             <div className="text-center mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-200">
               <p className="text-gray-400 text-[10px] lg:text-xs">
-                v2.1.0 • Nyaribu Secondary School
+                v2.1.0 • Katwanyaa High  School
               </p>
             </div>
           </div>
