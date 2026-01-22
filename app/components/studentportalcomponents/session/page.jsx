@@ -12,7 +12,7 @@ import {
   FiBell, FiBook, FiFileText, FiAward, FiMail,
   FiPhone, FiSave, FiPlus, FiTrash2, FiEdit,
   FiCheck, FiLoader, FiAlertTriangle, FiInfo,
-  FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall 
+  FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall, FiArrowRight 
 } from 'react-icons/fi';
 import { 
   FaBell, FaBars, FaChartBar, FaFolder, FaComments, 
