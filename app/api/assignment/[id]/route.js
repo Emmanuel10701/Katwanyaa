@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import cloudinary from "../../../../libs/cloudinary";
 
-// Helper: Upload file to Cloudinary
+// Helper: Upload file to Cloudinary (same as in collection route)
 const uploadFileToCloudinary = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
@@ -10,14 +10,25 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     const originalName = file.name;
+    
+    const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
     const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
     
-    // Determine resource type
-    let resourceType = 'auto';
+    let resourceType = 'image';
     let transformation = {};
+    let uploadOptions = {};
     
-    if (file.type.startsWith('image/')) {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
+    const isPdf = file.type === 'application/pdf' || fileExt === '.pdf';
+    const isDocument = file.type.includes('document') || 
+                       file.type.includes('sheet') || 
+                       file.type.includes('presentation') ||
+                       ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(fileExt);
+    
+    if (isImage) {
       resourceType = 'image';
       transformation = {
         transformation: [
@@ -25,20 +36,42 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
           { quality: "auto:good" }
         ]
       };
-    } else if (file.type.startsWith('video/')) {
+    } else if (isVideo) {
       resourceType = 'video';
-    } else if (file.type.includes('pdf') || file.type.includes('document') || 
-               file.type.includes('sheet') || file.type.includes('presentation')) {
+      transformation = {
+        transformation: [
+          { width: 1280, crop: "limit" },
+          { quality: "auto" }
+        ]
+      };
+    } else if (isAudio) {
+      resourceType = 'video';
+      transformation = {
+        resource_type: 'video',
+        format: 'mp3'
+      };
+    } else {
       resourceType = 'raw';
+      uploadOptions = {
+        resource_type: 'raw',
+        public_id: `${timestamp}-${sanitizedFileName}${fileExt}`,
+        filename_override: originalName,
+        use_filename: true,
+        unique_filename: false,
+        transformation: undefined
+      };
     }
     
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          resource_type: resourceType,
           folder: `assignments/${folder}`,
-          public_id: `${timestamp}-${sanitizedFileName}`,
-          ...transformation
+          ...(resourceType !== 'raw' ? {
+            public_id: `${timestamp}-${sanitizedFileName}`,
+          } : {}),
+          ...transformation,
+          ...uploadOptions,
+          resource_type: resourceType
         },
         (error, result) => {
           if (error) reject(error);
@@ -60,80 +93,130 @@ const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl || !fileUrl.includes('cloudinary.com')) return;
 
   try {
-    // Extract public ID from Cloudinary URL
-    const urlParts = fileUrl.split('/');
-    const uploadIndex = urlParts.indexOf('upload');
+    const url = new URL(fileUrl);
+    const pathname = url.pathname;
     
-    if (uploadIndex === -1) return;
+    let publicId = '';
+    let resourceType = 'image';
     
-    const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
-    const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
+    const uploadMatch = pathname.match(/\/upload\/(?:v\d+\/)?(.*)/);
     
-    // Determine resource type from URL
-    let resourceType = 'auto';
-    if (fileUrl.includes('/video/') || fileUrl.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
-      resourceType = 'video';
-    } else if (fileUrl.includes('/image/') || fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
-      resourceType = 'image';
-    } else if (fileUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i)) {
-      resourceType = 'raw';
+    if (uploadMatch) {
+      publicId = uploadMatch[1];
+      
+      if (pathname.includes('/image/') || 
+          pathname.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+        resourceType = 'image';
+        publicId = publicId.replace(/\.[^/.]+$/, '');
+      } else if (pathname.includes('/video/') || 
+                 pathname.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|mp3|wav|m4a)$/i)) {
+        resourceType = 'video';
+        publicId = publicId.replace(/\.[^/.]+$/, '');
+      } else if (pathname.includes('/raw/') || 
+                 pathname.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)$/i)) {
+        resourceType = 'raw';
+      }
     }
     
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    if (!publicId) return;
+    
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+      invalidate: true
+    });
+    
+    console.log(`✅ Deleted: ${publicId} (${resourceType})`);
   } catch (error) {
-    console.error("❌ Error deleting file from Cloudinary:", error);
+    console.error("❌ Error deleting file:", error);
   }
 };
 
-// Helper: Upload multiple files to Cloudinary
+// Helper: Delete multiple files
+const deleteFilesFromCloudinary = async (fileUrls) => {
+  if (!fileUrls || (Array.isArray(fileUrls) && fileUrls.length === 0)) return;
+
+  const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
+  
+  for (const url of urls) {
+    if (url) {
+      await deleteFileFromCloudinary(url);
+    }
+  }
+};
+
+// Helper: Upload multiple files
 const uploadFilesToCloudinary = async (files, folder = "assignments") => {
-  const uploadedFiles = [];
+  const uploadedUrls = [];
   
   for (const file of files) {
     if (file && file.name && file.size > 0) {
       try {
-        const uploadedFile = await uploadFileToCloudinary(file, folder);
-        if (uploadedFile) {
-          uploadedFiles.push(uploadedFile);
+        const uploadedUrl = await uploadFileToCloudinary(file, folder);
+        if (uploadedUrl) {
+          uploadedUrls.push(uploadedUrl);
         }
       } catch (error) {
-        console.error(`Error uploading file ${file.name}:`, error);
+        console.error(`Error uploading ${file.name}:`, error);
       }
     }
   }
   
-  return uploadedFiles;
+  return uploadedUrls;
 };
 
-// Helper: Delete multiple files from Cloudinary
-const deleteFilesFromCloudinary = async (fileUrls) => {
-  if (!fileUrls || !Array.isArray(fileUrls)) return;
-  
-  for (const fileUrl of fileUrls) {
-    try {
-      await deleteFileFromCloudinary(fileUrl);
-    } catch (error) {
-      console.error(`❌ Error deleting file ${fileUrl}:`, error);
-    }
-  }
-};
-
-// 🔹 PUT — Update assignment with file upload support
-export async function PUT(request, { params }) {
+// 🔹 GET single assignment
+export async function GET(request, { params }) {
   try {
-    const { id } = await params;
-    const assignmentId = parseInt(id);
-
-    if (isNaN(assignmentId)) {
+    const { id } = params;
+    
+    if (!id || isNaN(parseInt(id))) {
       return NextResponse.json(
-        { success: false, error: "Invalid assignment ID" },
+        { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
       );
     }
 
+    const assignment = await prisma.assignment.findUnique({ 
+      where: { id: parseInt(id) } 
+    });
+    
+    if (!assignment) {
+      return NextResponse.json(
+        { success: false, error: "Assignment not found" }, 
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      assignment 
+    });
+  } catch (error) {
+    console.error("❌ GET Single Assignment Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch assignment" }, 
+      { status: 500 }
+    );
+  }
+}
+
+// 🔹 PUT update assignment
+export async function PUT(request, { params }) {
+  try {
+    const { id } = params;
+    
+    if (!id || isNaN(parseInt(id))) {
+      return NextResponse.json(
+        { success: false, error: "Valid assignment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const formData = await request.formData();
+
     // Check if assignment exists
     const existingAssignment = await prisma.assignment.findUnique({
-      where: { id: assignmentId },
+      where: { id: parseInt(id) }
     });
 
     if (!existingAssignment) {
@@ -143,192 +226,120 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const formData = await request.formData();
+    // Extract updated fields (use existing values as defaults)
+    const title = formData.get("title")?.toString().trim() || existingAssignment.title;
+    const subject = formData.get("subject")?.toString().trim() || existingAssignment.subject;
+    const className = formData.get("className")?.toString().trim() || existingAssignment.className;
+    const teacher = formData.get("teacher")?.toString().trim() || existingAssignment.teacher;
+    const dueDate = formData.get("dueDate")?.toString() || existingAssignment.dueDate;
+    const status = formData.get("status")?.toString() || existingAssignment.status;
+    const description = formData.get("description")?.toString().trim() || existingAssignment.description;
+    const instructions = formData.get("instructions")?.toString().trim() || existingAssignment.instructions;
+    const priority = formData.get("priority")?.toString() || existingAssignment.priority;
+    const estimatedTime = formData.get("estimatedTime")?.toString().trim() || existingAssignment.estimatedTime;
+    const additionalWork = formData.get("additionalWork")?.toString().trim() || existingAssignment.additionalWork;
+    const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || existingAssignment.teacherRemarks;
+    const learningObjectives = formData.get("learningObjectives")?.toString() || JSON.stringify(existingAssignment.learningObjectives);
 
-    // Initialize update data
-    const updateData = {};
-
-    // Handle text fields
-    const textFields = [
-      'title', 'subject', 'className', 'teacher', 'status', 'description',
-      'instructions', 'priority', 'estimatedTime', 'additionalWork',
-      'teacherRemarks', 'feedback', 'grade'
-    ];
-
-    for (const field of textFields) {
-      const value = formData.get(field);
-      if (value !== null && value !== '') {
-        updateData[field] = value;
-      }
+    // Handle file updates
+    let updatedAssignmentFiles = [...existingAssignment.assignmentFiles];
+    let updatedAttachments = [...existingAssignment.attachments];
+    
+    // Remove files if specified
+    const assignmentFilesToRemove = formData.getAll("assignmentFilesToRemove");
+    const attachmentsToRemove = formData.getAll("attachmentsToRemove");
+    
+    if (assignmentFilesToRemove.length > 0) {
+      await deleteFilesFromCloudinary(assignmentFilesToRemove);
+      updatedAssignmentFiles = updatedAssignmentFiles.filter(file => !assignmentFilesToRemove.includes(file));
     }
-
-    // Handle date fields
-    const dueDate = formData.get('dueDate');
-    const dateAssigned = formData.get('dateAssigned');
-    if (dueDate) updateData.dueDate = new Date(dueDate);
-    if (dateAssigned) updateData.dateAssigned = new Date(dateAssigned);
-
-    // Handle learning objectives
-    const learningObjectives = formData.get('learningObjectives');
-    if (learningObjectives && learningObjectives !== '') {
-      try {
-        updateData.learningObjectives = JSON.parse(learningObjectives);
-      } catch (error) {
-        console.error("Error parsing learning objectives:", error);
-        updateData.learningObjectives = existingAssignment.learningObjectives || [];
-      }
+    
+    if (attachmentsToRemove.length > 0) {
+      await deleteFilesFromCloudinary(attachmentsToRemove);
+      updatedAttachments = updatedAttachments.filter(file => !attachmentsToRemove.includes(file));
     }
-
-    // Start with existing files
-    let finalAssignmentFiles = existingAssignment.assignmentFiles || [];
-    let finalAttachments = existingAssignment.attachments || [];
-
-    console.log('📂 Existing assignment files:', finalAssignmentFiles);
-    console.log('📂 Existing attachments:', finalAttachments);
-
-    // Handle new assignment files upload
+    
+    // Add new files
     const newAssignmentFiles = formData.getAll("assignmentFiles");
-    if (newAssignmentFiles.length > 0 && newAssignmentFiles[0].name) {
-      console.log(`📁 Uploading ${newAssignmentFiles.length} new assignment files`);
-      
-      const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
-      console.log(`✅ New assignment files uploaded:`, uploadedFiles);
-      
-      // Add new files to existing ones
-      finalAssignmentFiles = [...finalAssignmentFiles, ...uploadedFiles];
-    }
-
-    // Handle new attachments upload
     const newAttachments = formData.getAll("attachments");
-    if (newAttachments.length > 0 && newAttachments[0].name) {
-      console.log(`📁 Uploading ${newAttachments.length} new attachments`);
-      
-      const uploadedAttachments = await uploadFilesToCloudinary(newAttachments, "attachments");
-      console.log(`✅ New attachments uploaded:`, uploadedAttachments);
-      
-      // Add new files to existing ones
-      finalAttachments = [...finalAttachments, ...uploadedAttachments];
-    }
-
-    // Handle existing assignment files that should be kept
-    const existingAssignmentFiles = formData.getAll("existingAssignmentFiles");
-    if (existingAssignmentFiles.length > 0) {
-      console.log(`📋 Keeping ${existingAssignmentFiles.length} existing assignment files`);
-      
-      // Filter to keep only the existing files that are in the list
-      finalAssignmentFiles = finalAssignmentFiles.filter(file => 
-        existingAssignmentFiles.includes(file)
-      );
-    }
-
-    // Handle existing attachments that should be kept
-    const existingAttachments = formData.getAll("existingAttachments");
-    if (existingAttachments.length > 0) {
-      console.log(`📋 Keeping ${existingAttachments.length} existing attachments`);
-      
-      // Filter to keep only the existing files that are in the list
-      finalAttachments = finalAttachments.filter(file => 
-        existingAttachments.includes(file)
-      );
-    }
-
-    // Handle file removal flags (for complete removal)
-    const removeAssignmentFiles = formData.get("removeAssignmentFiles");
-    const removeAttachments = formData.get("removeAttachments");
-
-    if (removeAssignmentFiles === "true") {
-      console.log("🗑️ Removing all assignment files");
-      // Delete old assignment files from Cloudinary
-      if (existingAssignment.assignmentFiles && Array.isArray(existingAssignment.assignmentFiles)) {
-        await deleteFilesFromCloudinary(existingAssignment.assignmentFiles);
-      }
-      finalAssignmentFiles = [];
-    }
-
-    if (removeAttachments === "true") {
-      console.log("🗑️ Removing all attachments");
-      // Delete old attachments from Cloudinary
-      if (existingAssignment.attachments && Array.isArray(existingAssignment.attachments)) {
-        await deleteFilesFromCloudinary(existingAssignment.attachments);
-      }
-      finalAttachments = [];
-    }
-
-    // Clean up files that were removed from the list but not flagged for complete removal
-    const removedAssignmentFiles = existingAssignment.assignmentFiles?.filter(file => 
-      !finalAssignmentFiles.includes(file)
-    ) || [];
     
-    const removedAttachments = existingAssignment.attachments?.filter(file => 
-      !finalAttachments.includes(file)
-    ) || [];
-
-    if (removedAssignmentFiles.length > 0) {
-      console.log(`🗑️ Cleaning up ${removedAssignmentFiles.length} removed assignment files`);
-      await deleteFilesFromCloudinary(removedAssignmentFiles);
+    if (newAssignmentFiles.length > 0) {
+      const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
+      updatedAssignmentFiles = [...updatedAssignmentFiles, ...uploadedFiles];
     }
-
-    if (removedAttachments.length > 0) {
-      console.log(`🗑️ Cleaning up ${removedAttachments.length} removed attachments`);
-      await deleteFilesFromCloudinary(removedAttachments);
-    }
-
-    // Update the file arrays in the database
-    updateData.assignmentFiles = finalAssignmentFiles;
-    updateData.attachments = finalAttachments;
     
-    // Add updated timestamp
-    updateData.updatedAt = new Date();
-
-    console.log("📝 Final update data:", updateData);
-    console.log("📂 Final assignment files:", finalAssignmentFiles);
-    console.log("📂 Final attachments:", finalAttachments);
-
-    const assignment = await prisma.assignment.update({
-      where: { id: assignmentId },
-      data: updateData,
+    if (newAttachments.length > 0) {
+      const uploadedFiles = await uploadFilesToCloudinary(newAttachments, "attachments");
+      updatedAttachments = [...updatedAttachments, ...uploadedFiles];
+    }
+    
+    // Parse learning objectives
+    let learningObjectivesArray = existingAssignment.learningObjectives;
+    try {
+      learningObjectivesArray = JSON.parse(learningObjectives);
+    } catch (error) {
+      console.error("Error parsing learning objectives:", error);
+    }
+    
+    // Update assignment
+    const updatedAssignment = await prisma.assignment.update({
+      where: { id: parseInt(id) },
+      data: { 
+        title,
+        subject,
+        className,
+        teacher,
+        dueDate: new Date(dueDate),
+        status,
+        description,
+        instructions,
+        priority,
+        estimatedTime,
+        additionalWork,
+        teacherRemarks,
+        assignmentFiles: updatedAssignmentFiles,
+        attachments: updatedAttachments,
+        learningObjectives: learningObjectivesArray,
+      },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Assignment updated successfully",
-        assignment,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ 
+      success: true, 
+      assignment: updatedAssignment,
+      message: "Assignment updated successfully" 
+    });
   } catch (error) {
-    console.error("❌ Error updating assignment:", error);
+    console.error("❌ PUT Assignment Error:", error);
     
-    if (error.code === "P2025") {
+    if (error.code === 'P2025') {
       return NextResponse.json(
         { success: false, error: "Assignment not found" },
         { status: 404 }
       );
     }
-
+    
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || "Failed to update assignment" }, 
       { status: 500 }
     );
   }
 }
 
-// 🔹 GET — Get single assignment by ID
-export async function GET(request, { params }) {
+// 🔹 DELETE assignment
+export async function DELETE(request, { params }) {
   try {
-    const { id } = await params;
-    const assignmentId = parseInt(id);
-
-    if (isNaN(assignmentId)) {
+    const { id } = params;
+    
+    if (!id || isNaN(parseInt(id))) {
       return NextResponse.json(
-        { success: false, error: "Invalid assignment ID" },
+        { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
       );
     }
 
+    // Find assignment to get file URLs
     const assignment = await prisma.assignment.findUnique({
-      where: { id: assignmentId },
+      where: { id: parseInt(id) }
     });
 
     if (!assignment) {
@@ -338,80 +349,37 @@ export async function GET(request, { params }) {
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        assignment,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("❌ Error fetching assignment:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-// 🔹 DELETE — Delete assignment with file cleanup
-export async function DELETE(request, { params }) {
-  try {
-    const { id } = await params;
-    const assignmentId = parseInt(id);
-
-    if (isNaN(assignmentId)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid assignment ID" },
-        { status: 400 }
-      );
+    // Delete all files from Cloudinary
+    const allFiles = [
+      ...(assignment.assignmentFiles || []),
+      ...(assignment.attachments || [])
+    ];
+    
+    if (allFiles.length > 0) {
+      await deleteFilesFromCloudinary(allFiles);
     }
 
-    // Check if assignment exists and get file paths
-    const existingAssignment = await prisma.assignment.findUnique({
-      where: { id: assignmentId },
+    // Delete from database
+    await prisma.assignment.delete({ 
+      where: { id: parseInt(id) } 
     });
 
-    if (!existingAssignment) {
+    return NextResponse.json({ 
+      success: true, 
+      message: "Assignment deleted successfully" 
+    });
+  } catch (error) {
+    console.error("❌ DELETE Assignment Error:", error);
+    
+    if (error.code === 'P2025') {
       return NextResponse.json(
         { success: false, error: "Assignment not found" },
         { status: 404 }
       );
     }
-
-    // Delete associated files from Cloudinary
-    if (existingAssignment.assignmentFiles && Array.isArray(existingAssignment.assignmentFiles)) {
-      await deleteFilesFromCloudinary(existingAssignment.assignmentFiles);
-    }
     
-    if (existingAssignment.attachments && Array.isArray(existingAssignment.attachments)) {
-      await deleteFilesFromCloudinary(existingAssignment.attachments);
-    }
-
-    // Delete the assignment from database
-    await prisma.assignment.delete({
-      where: { id: assignmentId },
-    });
-
     return NextResponse.json(
-      {
-        success: true,
-        message: "Assignment deleted successfully",
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("❌ Error deleting assignment:", error);
-    
-    if (error.code === "P2025") {
-      return NextResponse.json(
-        { success: false, error: "Assignment not found" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || "Failed to delete assignment" }, 
       { status: 500 }
     );
   }
