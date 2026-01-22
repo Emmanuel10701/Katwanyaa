@@ -1311,366 +1311,386 @@ const ModernModal = ({
     setDropdownOpen(false);
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      {/* CHANGED: Narrower modal on large screens - from max-w-5xl to max-w-4xl */}
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl ${mode === 'create' ? 'bg-gradient-to-br from-cyan-600 to-blue-600' : 'bg-gradient-to-br from-green-500 to-emerald-500'}`}>
-              {mode === 'create' ? <FiUpload className="text-white text-xl" /> : <FiEdit2 className="text-white text-xl" />}
+return (
+  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+    <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
+      {/* Modern Gradient Header */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-600"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
+        <div className="relative p-5 text-white">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30 shadow-lg">
+                {mode === 'create' ? 
+                  <FiUpload className="w-5 h-5 text-white" /> : 
+                  <FiEdit2 className="w-5 h-5 text-white" />
+                }
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">
+                  {mode === 'create' ? 'Create New Gallery' : 'Edit Gallery'}
+                </h2>
+                <p className="text-white/90 text-sm mt-1">
+                  {mode === 'create' ? 'Upload and organize your media' : 'Update gallery details and media'}
+                </p>
+              </div>
             </div>
-            <div>
-              {/* CHANGED: Bolded title */}
-              <h2 className="text-lg sm:text-xl font-black text-slate-800">
-                {mode === 'create' ? 'Create New Gallery' : 'Edit Gallery'}
-              </h2>
-              <p className="text-slate-600 text-xs sm:text-sm">
-                {mode === 'create' ? 'Upload and organize your media' : 'Update gallery details and media'}
-              </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onRefresh}
+                className="p-2 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-white/30 transition-all"
+              >
+                <FiRefreshCw className="text-sm" />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-100"
+                disabled={isUploading}
+              >
+                <FiX className="w-5 h-5 text-white" />
+              </button>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onRefresh}
-              className="p-2 sm:px-4 sm:py-2 bg-slate-100 text-slate-700 rounded-full text-sm font-medium flex items-center gap-1 sm:gap-2"
-            >
-              <FiRefreshCw className="text-sm" />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl border border-slate-200"
-              disabled={isUploading}
-            >
-              <FiX className="text-xl text-slate-600" />
-            </button>
           </div>
         </div>
+      </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
-          <div className="p-4 sm:p-6 space-y-6">
-            {/* Existing Files Section (Edit Mode Only) */}
-            {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
-              <div className="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setShowExistingFiles(!showExistingFiles)}
-                      className="p-2 hover:bg-slate-100 rounded-lg"
-                    >
-                      {showExistingFiles ? <FiChevronUp className="text-slate-600" /> : <FiChevronDown className="text-slate-600" />}
-                    </button>
-                    <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+      {/* Scrollable Content */}
+      <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-4 sm:p-5 lg:p-6 modern-scrollbar">
+        <div className="space-y-5">
+          
+          {/* Existing Files Section - Enhanced */}
+          {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowExistingFiles(!showExistingFiles)}
+                    className="p-2.5 hover:bg-white rounded-xl transition-all"
+                  >
+                    {showExistingFiles ? <FiChevronUp className="text-gray-600" /> : <FiChevronDown className="text-gray-600" />}
+                  </button>
+                  <div>
+                    <h3 className=" text-md font-bold text-gray-800 flex items-center gap-2">
                       <FiImage className="text-purple-500" />
                       <span>Existing Files ({editingItem.files.length})</span>
                     </h3>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hidden sm:inline">
+                    <p className="text-xs text-gray-600 mt-0.5">
                       Click to view • Click X to remove
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs sm:text-sm text-slate-600">
-                      {filesToRemove.length} file{filesToRemove.length !== 1 ? 's' : ''} marked
-                    </span>
+                    </p>
                   </div>
                 </div>
-                
-                {showExistingFiles && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {editingItem.files.map((fileUrl, index) => {
-                      const isVideo = fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
-                      const isMarkedForRemoval = isFileMarkedForRemoval(fileUrl);
-                      
-                      return (
-                        <div 
-                          key={index} 
-                          className={`relative bg-white rounded-xl border overflow-hidden ${
-                            isMarkedForRemoval 
-                              ? 'border-rose-300 bg-rose-50/50' 
-                              : 'border-slate-200'
-                          }`}
-                        >
-                          {/* File Preview */}
-                          <div className="h-32 relative">
-                            {isVideo ? (
-                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                <FiVideo className="text-3xl text-purple-500" />
-                              </div>
-                            ) : (
-                              <img
-                                src={fileUrl}
-                                alt={`Existing file ${index + 1}`}
-                                className="w-full h-full object-cover cursor-pointer"
-                                onClick={() => handlePreviewExisting(fileUrl)}
-                              />
-                            )}
-                            
-                            {/* Marked for removal overlay */}
-                            {isMarkedForRemoval && (
-                              <div className="absolute inset-0 bg-rose-500/20 flex items-center justify-center">
-                                <div className="text-center">
-                                  <FiXCircle className="text-rose-600 text-2xl mx-auto mb-1" />
-                                  <p className="text-rose-700 text-xs font-medium">Will be removed</p>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Action Buttons */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handlePreviewExisting(fileUrl)}
-                                className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-slate-800"
-                                title="Preview"
-                              >
-                                <FiEye className="text-sm" />
-                              </button>
-                              {!isMarkedForRemoval && (
-                                <button
-                                  onClick={() => handleRemoveExisting(fileUrl)}
-                                  className="p-2 bg-rose-500/90 backdrop-blur-sm rounded-lg text-white"
-                                  title="Remove file"
-                                >
-                                  <FiX className="text-sm" />
-                                </button>
-                              )}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-gray-800">
+                    {filesToRemove.length} file{filesToRemove.length !== 1 ? 's' : ''} marked
+                  </span>
+                  <div className="w-2 h-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full"></div>
+                </div>
+              </div>
+              
+              {showExistingFiles && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {editingItem.files.map((fileUrl, index) => {
+                    const isVideo = fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                    const isMarkedForRemoval = isFileMarkedForRemoval(fileUrl);
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`relative bg-white rounded-xl border overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md ${
+                          isMarkedForRemoval 
+                            ? 'border-red-300 bg-red-50/50' 
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="aspect-square relative">
+                          {isVideo ? (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                              <FiVideo className="text-3xl text-purple-500" />
                             </div>
-                            
-                            {/* Restore button if marked for removal */}
-                            {isMarkedForRemoval && (
+                          ) : (
+                            <img
+                              src={fileUrl}
+                              alt={`Existing file ${index + 1}`}
+                              className="w-full h-full object-cover cursor-pointer transition-transform hover:scale-105"
+                              onClick={() => handlePreviewExisting(fileUrl)}
+                            />
+                          )}
+                          
+                          {isMarkedForRemoval && (
+                            <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                              <div className="text-center">
+                                <FiXCircle className="text-red-600 text-2xl mx-auto mb-1" />
+                                <p className="text-red-700 text-xs font-bold">Will be removed</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-2 transition-all">
+                            <button
+                              onClick={() => handlePreviewExisting(fileUrl)}
+                              className="p-2.5 bg-white/90 backdrop-blur-sm rounded-lg text-gray-800 hover:scale-105"
+                              title="Preview"
+                            >
+                              <FiEye className="text-sm" />
+                            </button>
+                            {!isMarkedForRemoval && (
                               <button
-                                onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))}
-                                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg"
-                                title="Keep this file"
+                                onClick={() => handleRemoveExisting(fileUrl)}
+                                className="p-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:shadow-lg"
+                                title="Remove file"
                               >
-                                <FiCheck className="text-xs" />
+                                <FiX className="text-sm" />
                               </button>
                             )}
                           </div>
                           
-                          {/* File info */}
-                          <div className="p-2">
-                            <p className="text-xs font-medium text-slate-800 truncate">
-                              {isVideo ? 'Video File' : 'Image'} {index + 1}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {isMarkedForRemoval ? (
-                                <span className="text-rose-600 font-medium">To be removed</span>
-                              ) : (
-                                <span className="text-emerald-600 font-medium">Keeping</span>
-                              )}
+                          {isMarkedForRemoval && (
+                            <button
+                              onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))}
+                              className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl"
+                              title="Keep this file"
+                            >
+                              <FiCheck className="text-xs" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="p-3">
+                          <p className="text-sm font-bold text-gray-800 truncate">
+                            {isVideo ? 'Video File' : 'Image'} {index + 1}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className={`w-2 h-2 rounded-full ${isMarkedForRemoval ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                            <p className="text-xs font-bold text-gray-500">
+                              {isMarkedForRemoval ? 'To be removed' : 'Keeping'}
                             </p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-            {/* File Upload Section */}
-            <div className="rounded-2xl p-4 sm:p-5 border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
-              <div className="flex items-center justify-between mb-4">
-                {/* CHANGED: Bolded label */}
-                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+          {/* File Upload Section - Enhanced */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-dashed border-blue-300">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className=" text-md font-bold text-gray-800 flex items-center gap-2">
                   <FiUpload className="text-blue-500" />
                   <span>
                     {mode === 'edit' ? 'Add New Files (Optional)' : 'Upload Files *'}
                   </span>
                 </h3>
-                <span className="text-xs text-slate-500">
-                  Max 10MB per file
-                </span>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  Max 10MB per file • Supported: Images & Videos
+                </p>
               </div>
-              
-              {/* Drag & Drop Zone */}
-              <div
-                className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer ${
-                  dragActive 
-                    ? 'border-blue-500 bg-blue-100/30' 
-                    : 'border-blue-300'
-                } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
-                onDragEnter={onDrag}
-                onDragLeave={onDrag}
-                onDragOver={onDrag}
-                onDrop={onDrop}
-                onClick={() => !isUploading && fileInputRef.current?.click()}
-              >
-                <div className="max-w-sm mx-auto">
-                  <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl inline-block mb-4">
-                    <FiUploadCloud className="text-3xl sm:text-4xl text-blue-500" />
-                  </div>
-                  <p className="text-slate-700 mb-2 font-bold text-base sm:text-lg">
-                    {isUploading ? 'Uploading...' : 'Drag & drop files here'}
-                  </p>
-                  <p className="text-slate-500 mb-6 text-sm sm:text-base">
-                    or click to browse files from your computer
-                  </p>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*,video/*"
-                    onChange={(e) => onFileSelect(e.target.files)}
-                    className="hidden"
-                    ref={fileInputRef}
-                    disabled={isUploading}
-                  />
-                  {!isUploading && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                      className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-bold text-sm sm:text-base"
-                    >
-                      Browse Files
-                    </button>
-                  )}
-                </div>
+              <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
+                {formData.files.length} SELECTED
               </div>
-
-              {/* Selected Files Preview - FIXED: No cascading errors when removing files */}
-              {formData.files.length > 0 && (
-                <div className="mt-6">
-                  {/* CHANGED: Bolded label */}
-                  <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                    <FiCheckCircle className="text-emerald-500" />
-                    <span>New Files to Add ({formData.files.length})</span>
-                  </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {formData.files.map((fileObj) => {
-                      const isRemoving = removingFile === fileObj.id;
-                      
-                      return (
-                        <div 
-                          key={fileObj.id} 
-                          className={`group relative bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-200 ${
-                            isRemoving ? 'opacity-50' : 'opacity-100'
-                          }`}
-                        >
-                          {/* Preview Image or Video Icon */}
-                          <div className="h-32 relative">
-                            {fileObj.preview ? (
-                              <img
-                                src={fileObj.preview}
-                                alt={fileObj.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : fileObj.type.startsWith('video/') ? (
-                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                <FiVideo className="text-3xl text-purple-500" />
-                              </div>
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                                <FiFile className="text-3xl text-slate-400" />
-                              </div>
-                            )}
-                            
-                            {/* Progress bar overlay */}
-                            {uploadProgress[fileObj.id] !== undefined && (
-                              <div className="absolute bottom-0 left-0 right-0 h-2 bg-slate-200/80">
-                                <div 
-                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-300"
-                                  style={{ width: `${uploadProgress[fileObj.id]}%` }}
-                                />
-                              </div>
-                            )}
-                            
-                            {/* Remove button - Only shows when not being removed */}
-                            {!isRemoving && (
-                              <button
-                                onClick={() => removeFile(fileObj.id)}
-                                disabled={isUploading}
-                                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg transition-opacity duration-200 disabled:opacity-0"
-                                title="Remove file"
-                              >
-                                <FiX className="text-xs" />
-                              </button>
-                            )}
-                            
-                            {/* Removing indicator */}
-                            {isRemoving && (
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <div className="text-center">
-                                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto mb-1"></div>
-                                  <p className="text-white text-xs font-medium">Removing...</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* File info */}
-                          <div className="p-2">
-                            <p className="text-xs font-medium text-slate-800 truncate" title={fileObj.name}>
-                              {fileObj.name}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {(fileObj.size / (1024 * 1024)).toFixed(1)} MB
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+            </div>
+            
+            {/* Drag & Drop Zone */}
+            <div
+              className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all duration-200 ${
+                dragActive 
+                  ? 'border-blue-500 bg-blue-100/30 shadow-inner' 
+                  : 'border-blue-300'
+              } ${isUploading ? 'pointer-events-none opacity-60' : 'hover:border-blue-400 hover:bg-blue-50/50'}`}
+              onDragEnter={onDrag}
+              onDragLeave={onDrag}
+              onDragOver={onDrag}
+              onDrop={onDrop}
+              onClick={() => !isUploading && fileInputRef.current?.click()}
+            >
+              <div className="max-w-sm mx-auto">
+                <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl inline-block mb-4 shadow-sm">
+                  <FiUploadCloud className="text-3xl sm:text-4xl text-blue-500" />
                 </div>
-              )}
+                <p className="text-gray-700 mb-2 font-bold text-base sm:text-lg">
+                  {isUploading ? 'Uploading...' : 'Drag & drop files here'}
+                </p>
+                <p className="text-gray-500 mb-6 text-sm sm:text-base">
+                  or click to browse files from your computer
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={(e) => onFileSelect(e.target.files)}
+                  className="hidden"
+                  ref={fileInputRef}
+                  disabled={isUploading}
+                />
+                {!isUploading && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-full font-bold text-sm sm:text-base hover:shadow-lg hover:from-indigo-700 hover:to-violet-700 transition-all duration-200"
+                  >
+                    Browse Files
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Form Fields */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="md:col-span-2">
-                {/* CHANGED: Bolded label */}
-                <label className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <FiTag className="text-blue-500" />
-                  <span>Gallery Title *</span>
+            {/* Selected Files Preview */}
+            {formData.files.length > 0 && (
+              <div className="mt-6">
+                <h4 className=" text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <FiCheckCircle className="text-green-500" />
+                  <span>New Files to Add ({formData.files.length})</span>
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {formData.files.map((file, index) => {
+                    const previewUrl = selectedFilePreviews[file.name] || (file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+                    
+                    return (
+                      <div key={index} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+                        <div className="aspect-square relative">
+                          {file.type.startsWith('image/') && previewUrl ? (
+                            <img
+                              src={previewUrl}
+                              alt={file.name}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                          ) : file.type.startsWith('video/') ? (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                              <FiVideo className="text-3xl text-purple-500" />
+                            </div>
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <FiFile className="text-3xl text-gray-400" />
+                            </div>
+                          )}
+                          
+                          {uploadProgress[file.name] !== undefined && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
+                              <div 
+                                className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
+                                style={{ width: `${uploadProgress[file.name]}%` }}
+                              />
+                            </div>
+                          )}
+                          
+                          <button
+                            onClick={() => removeFile(file.name)}
+                            className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg hover:shadow-xl transition-all"
+                            title="Remove file"
+                          >
+                            <FiX className="text-xs" />
+                          </button>
+                        </div>
+                        
+                        <div className="p-3">
+                          <p className="text-sm font-bold text-gray-800 truncate" title={file.name}>
+                            {file.name}
+                          </p>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs font-bold text-gray-500">
+                              {(file.size / (1024 * 1024)).toFixed(1)} MB
+                            </p>
+                            <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Form Fields */}
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* Title Field - Enhanced */}
+            <div className="md:col-span-2">
+              <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-200">
+                <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                  <span className="text-red-500">*</span>
+                  <FiTag className="text-indigo-500" />
+                  <span>Gallery Title</span>
                 </label>
-                {/* CHANGED: Bolded input */}
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base font-medium"
+                  className="
+                    w-full px-4 py-3
+                    bg-white
+                    border-2 border-indigo-200
+                    rounded-xl focus:outline-none
+                    focus:ring-2 focus:ring-indigo-500/40
+                    focus:border-indigo-400 text-md
+                    font-bold
+                    shadow-sm
+                    transition-all duration-200
+                    placeholder:text-gray-400
+                  "
                   placeholder="Enter a descriptive title"
                   disabled={isUploading}
                   required
                 />
               </div>
+            </div>
 
-              {/* Modern Dropdown for Category Selection */}
-              <div className="md:col-span-2" ref={dropdownRef}>
-                {/* CHANGED: Bolded label */}
-                <label className="text-sm font-bold mb-3 flex items-center gap-2">
+            {/* Category Dropdown - Enhanced */}
+            <div className="md:col-span-2" ref={dropdownRef}>
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                  <span className="text-red-500">*</span>
                   <FiFolder className="text-purple-500" />
-                  <span>Category *</span>
+                  <span>Category</span>
                 </label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-full border border-slate-300 rounded-2xl px-4 py-3 text-left flex items-center justify-between focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-sm sm:text-base font-medium"
+                    className="
+                      w-full px-4 py-3
+                      bg-white
+                      border-2 border-purple-200
+                      rounded-xl text-left flex items-center justify-between
+                      focus:ring-2 focus:ring-purple-500/40
+                      focus:border-purple-400 text-md
+                      font-bold
+                      shadow-sm
+                      transition-all duration-200
+                      cursor-pointer
+                    "
                     disabled={isUploading}
                   >
-                    <span>{categories.find(cat => cat.value === formData.category)?.label || 'Select Category'}</span>
-                    <FiChevronDown className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <span className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full bg-${categories.find(cat => cat.value === formData.category)?.color || 'gray'}-500`} />
+                      {categories.find(cat => cat.value === formData.category)?.label || 'Select Category'}
+                    </span>
+                    <FiChevronDown className={`text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {dropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-300 rounded-2xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-1 bg-white border-2 border-purple-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       <div className="p-2">
                         {categories.map(cat => (
                           <button
                             key={cat.value}
                             type="button"
                             onClick={() => handleCategorySelect(cat.value)}
-                            className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 text-sm sm:text-base ${
-                              formData.category === cat.value
-                                ? 'bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-700 font-bold'
-                                : 'text-slate-700 hover:bg-slate-50 font-medium'
-                            }`}
+                            className={`
+                              w-full text-left px-4 py-3 rounded-lg flex items-center gap-2 text-md font-bold
+                              transition-all duration-200 ${
+                                formData.category === cat.value
+                                  ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
                           >
                             <div className={`w-3 h-3 rounded-full bg-${cat.color}-500`} />
                             <span>{cat.label}</span>
                             {formData.category === cat.value && (
-                              <FiCheck className="ml-auto text-cyan-600" />
+                              <FiCheck className="ml-auto text-purple-600" />
                             )}
                           </button>
                         ))}
@@ -1679,46 +1699,85 @@ const ModernModal = ({
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="md:col-span-2">
-                {/* CHANGED: Bolded label */}
-                <label className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <FiEdit2 className="text-orange-500" />
+            {/* Description Field - Enhanced */}
+            <div className="md:col-span-2">
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                <label className=" text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                  <FiEdit2 className="text-amber-500" />
                   <span>Description</span>
                 </label>
-                {/* CHANGED: Bolded textarea */}
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base font-medium"
+                  className="
+                    w-full px-4 py-3
+                    bg-white
+                    border-2 border-amber-200
+                    rounded-xl focus:outline-none
+                    focus:ring-2 focus:ring-amber-500/40
+                    focus:border-amber-400 text-md
+                    font-bold
+                    shadow-sm
+                    transition-all duration-200
+                    placeholder:text-gray-400
+                    resize-vertical
+                    min-h-[120px]
+                  "
                   placeholder="Describe what this gallery contains..."
                   disabled={isUploading}
                 />
+                <div className="flex items-center gap-2 mt-2 px-1">
+                  <div className="w-2 h-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"></div>
+                  <span className="text-xs font-bold text-gray-500">{formData.description.length}/500 characters</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between gap-4 p-4 sm:p-6 border-t border-slate-200 bg-slate-50/50">
-          <div className="text-xs sm:text-sm text-slate-600">
-            {mode === 'edit' ? (
-              <>
-                {editingItem?.files.length || 0} existing • 
-                {filesToRemove.length} to remove • 
-                {formData.files.length} to add
-              </>
-            ) : (
-              <>
-                {formData.files.length} file{formData.files.length !== 1 ? 's' : ''} selected
-              </>
-            )}
+      {/* Enhanced Footer Actions */}
+      <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-violet-100 px-3 py-1.5 rounded-full">
+              <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full"></div>
+              <span className="font-bold">
+                {mode === 'edit' ? (
+                  <>
+                    {editingItem?.files.length || 0} existing • 
+                    {filesToRemove.length} to remove • 
+                    {formData.files.length} to add
+                  </>
+                ) : (
+                  <>
+                    {formData.files.length} file{formData.files.length !== 1 ? 's' : ''} selected
+                  </>
+                )}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 sm:px-6 py-2 sm:py-3 text-slate-600 font-bold border border-slate-300 rounded-full min-w-20 sm:min-w-24 text-sm sm:text-base"
+              className="
+                px-6
+                py-2.5
+                rounded-xl
+                text-sm
+                font-bold
+                border-2 border-gray-300
+                text-gray-700
+                bg-white
+                hover:bg-gray-50
+                hover:border-gray-400
+                transition-all duration-200
+                min-w-[100px]
+                shadow-sm
+              "
               disabled={isUploading}
             >
               Cancel
@@ -1726,37 +1785,49 @@ const ModernModal = ({
             <button
               onClick={onSubmit}
               disabled={isUploading || (mode === 'create' && formData.files.length === 0) || !formData.title.trim()}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-24 sm:min-w-32 justify-center text-sm sm:text-base ${
-                mode === 'create' 
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white' 
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-              }`}
+              className="
+                px-8
+                py-2.5
+                rounded-xl
+                font-bold
+                text-sm
+                text-white
+                bg-gradient-to-r from-indigo-600 via-purple-600 to-violet-600
+                hover:from-indigo-700 hover:via-purple-700 hover:to-violet-700
+                disabled:opacity-60
+                disabled:cursor-not-allowed
+                shadow-lg
+                hover:shadow-xl
+                transition-all duration-200
+                min-w-[120px]
+                hover:scale-100
+              "
             >
               {isUploading ? (
-                <>
-                  <FiRotateCw className="animate-spin" />
-                  {mode === 'create' ? 'Uploading...' : 'Updating...'}
-                </>
+                <span className="flex items-center justify-center gap-2">
+                  <FiRotateCw className="w-4 h-4 animate-spin" />
+                  <span>{mode === 'create' ? 'Uploading...' : 'Updating...'}</span>
+                </span>
               ) : mode === 'edit' ? (
-                <>
-                  <FiSave />
-                  <span className="hidden sm:inline">Save Changes</span>
-                  <span className="sm:hidden">Save</span>
-                </>
+                <span className="flex items-center justify-center gap-2">
+                  <FiSave className="w-4 h-4" />
+                  <span>Save Changes</span>
+                </span>
               ) : (
-                <>
-                  <FiUpload />
-                  <span className="hidden sm:inline">Create Gallery</span>
-                  <span className="sm:hidden">Create</span>
-                </>
+                <span className="flex items-center justify-center gap-2">
+                  <FiUpload className="w-4 h-4" />
+                  <span>Create Gallery</span>
+                </span>
               )}
             </button>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  </div>
+);
+}
+
 
 // Modern Preview Modal Component
 const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
