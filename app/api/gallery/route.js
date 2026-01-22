@@ -97,13 +97,60 @@ export async function POST(req) {
   try {
     const formData = await req.formData();
 
-    const title = formData.get("title");
-    const description = formData.get("description");
-    const category = formData.get("category");
+    let title = formData.get("title")?.toString() || "";
+    let description = formData.get("description")?.toString() || "";
+    let category = formData.get("category")?.toString() || "";
 
+    // TRIM and validate inputs
+    title = title.trim();
+    description = description.trim();
+    category = category.trim();
+
+    // VALIDATION: Check required fields
     if (!title || !category) {
       return NextResponse.json(
         { success: false, error: "Title and category are required" },
+        { status: 400 }
+      );
+    }
+
+    // VALIDATION: Check length limits (adjust based on your schema)
+    const MAX_TITLE_LENGTH = 200; // Adjust based on your schema
+    const MAX_DESCRIPTION_LENGTH = 2000; // Adjust based on your schema
+    const MAX_CATEGORY_LENGTH = 50; // Adjust based on your schema
+
+    if (title.length > MAX_TITLE_LENGTH) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Title is too long. Maximum ${MAX_TITLE_LENGTH} characters allowed.` 
+        },
+        { status: 400 }
+      );
+    }
+
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      // Option 1: Truncate automatically
+      description = description.substring(0, MAX_DESCRIPTION_LENGTH);
+      
+      // Option 2: Return error (comment out above line and use this)
+      /*
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Description is too long. Maximum ${MAX_DESCRIPTION_LENGTH} characters allowed.` 
+        },
+        { status: 400 }
+      );
+      */
+    }
+
+    if (category.length > MAX_CATEGORY_LENGTH) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Category is too long. Maximum ${MAX_CATEGORY_LENGTH} characters allowed.` 
+        },
         { status: 400 }
       );
     }
@@ -183,7 +230,7 @@ export async function POST(req) {
     const newGallery = await prisma.galleryImage.create({
       data: { 
         title, 
-        description, 
+        description: description || null, // Use null if empty string
         category,
         files 
       },
@@ -196,6 +243,15 @@ export async function POST(req) {
     }, { status: 201 });
   } catch (error) {
     console.error("❌ POST Gallery Error:", error);
+    
+    // Handle specific Prisma errors
+    if (error.code === 'P2000') {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Input data is too long. Please shorten your description or title."
+      }, { status: 400 });
+    }
+    
     return NextResponse.json({ 
       success: false, 
       error: error.message || "Failed to upload gallery" 
