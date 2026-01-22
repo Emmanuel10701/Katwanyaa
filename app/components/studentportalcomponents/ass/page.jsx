@@ -1276,41 +1276,41 @@ export default function ModernResourcesAssignmentsView({
     setSelectedItem(item);
     onViewDetails?.(item);
   };
-
-  const handleDownload = (item) => {
-    if (activeTab === 'resources') {
-      if (item.mainAttachment?.url) {
-        const link = document.createElement('a');
-        link.href = item.mainAttachment.url;
-        link.download = item.mainAttachment.fileName || 'download';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } else {
-      if (item.assignmentFileAttachments?.[0]?.url) {
-        const attachment = item.assignmentFileAttachments[0];
-        const link = document.createElement('a');
-        link.href = attachment.url;
-        link.download = attachment.fileName || 'download';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (item.attachmentAttachments?.[0]?.url) {
-        const attachment = item.attachmentAttachments[0];
-        const link = document.createElement('a');
-        link.href = attachment.url;
-        link.download = attachment.fileName || 'download';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        alert('No files available for download');
-      }
+const handleDownload = (item) => {
+  let downloadUrl = '';
+  
+  if (activeTab === 'resources') {
+    if (item.mainAttachment?.url) {
+      downloadUrl = item.mainAttachment.url;
     }
-    
-    onDownload?.(item);
-  };
+  } else {
+    if (item.assignmentFileAttachments?.[0]?.url) {
+      downloadUrl = item.assignmentFileAttachments[0].url;
+    } else if (item.attachmentAttachments?.[0]?.url) {
+      downloadUrl = item.attachmentAttachments[0].url;
+    }
+  }
+  
+  if (!downloadUrl) {
+    alert('No files available for download');
+    return;
+  }
+  
+  // Fix for raw files: convert /upload/ to /raw/upload/
+  if (downloadUrl.includes('cloudinary.com') && 
+      downloadUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)$/i)) {
+    downloadUrl = downloadUrl.replace('/upload/', '/raw/upload/');
+  }
+  
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = item.mainAttachment?.fileName || 'download';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  onDownload?.(item);
+};
 
   // Download all functionality
   const handleDownloadAll = () => {
