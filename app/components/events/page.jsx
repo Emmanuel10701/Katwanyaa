@@ -62,15 +62,16 @@ const ModernEventsNewsSection = () => {
     fetchEvents();
   }, []);
 
-  // Fetch news data
+  // Fetch news data - FIXED: using data.data instead of data.news
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const response = await fetch('/api/news');
         const data = await response.json();
         
-        if (data.success && Array.isArray(data.news)) {
-          const sortedNews = data.news
+        // FIX: Access data.data instead of data.news
+        if (data.success && Array.isArray(data.data)) {
+          const sortedNews = data.data
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
             .slice(0, 3);
           setNews(sortedNews);
@@ -255,66 +256,66 @@ const ModernEventsNewsSection = () => {
     );
   }
 
-if (error && events.length === 0 && news.length === 0) {
-  return (
-    <div className="min-h-[70vh] w-full flex items-center justify-center p-3 sm:p-4 bg-[#f8f9fa]">
-      {/* 80% Width Container - Clean & Editorial */}
-      <div className="w-full max-w-[90%] sm:max-w-[80%] min-h-[360px] sm:min-h-[480px] relative overflow-hidden rounded-2xl sm:rounded-3xl lg:rounded-[3rem] bg-white border border-gray-100 shadow-lg sm:shadow-[0_40px_100px_-30px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center p-6 sm:p-8 md:p-20 text-center">
-        
-        {/* Subtle Brand Accent */}
-        <div className="absolute top-0 left-0 w-full h-1 sm:h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+  if (error && events.length === 0 && news.length === 0) {
+    return (
+      <div className="min-h-[70vh] w-full flex items-center justify-center p-3 sm:p-4 bg-[#f8f9fa]">
+        {/* 80% Width Container - Clean & Editorial */}
+        <div className="w-full max-w-[90%] sm:max-w-[80%] min-h-[360px] sm:min-h-[480px] relative overflow-hidden rounded-2xl sm:rounded-3xl lg:rounded-[3rem] bg-white border border-gray-100 shadow-lg sm:shadow-[0_40px_100px_-30px_rgba(0,0,0,0.08)] flex flex-col items-center justify-center p-6 sm:p-8 md:p-20 text-center">
+          
+          {/* Subtle Brand Accent */}
+          <div className="absolute top-0 left-0 w-full h-1 sm:h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
 
-        {/* Branding Title */}
-        <div className="mb-4 sm:mb-6">
-          <h4 className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gray-400">
-            Katwanya High School
-          </h4>
-        </div>
+          {/* Branding Title */}
+          <div className="mb-4 sm:mb-6">
+            <h4 className="text-xs sm:text-sm font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-gray-400">
+              Katwanya High School
+            </h4>
+          </div>
 
-        {/* Icon Container */}
-        <div className="mb-6 sm:mb-10 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gray-50 rounded-xl sm:rounded-2xl lg:rounded-[2rem] flex items-center justify-center border border-gray-100 shadow-inner">
-          <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15M9 11l3 3m0 0l3-3m-3 3V8" />
-          </svg>
-        </div>
-
-        {/* Main Content */}
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black text-gray-900 mb-4 sm:mb-6 tracking-tight">
-          News Feed Unavailable
-        </h2>
-        
-        <p className="text-gray-500 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-12 px-2">
-          We're currently experiencing a connection issue with our news archives. 
-          Our team is working to restore the latest updates and event schedules for our community.
-        </p>
-
-        {/* Action Button - Large & Tap-Friendly */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
-          <button 
-            onClick={() => window.location.reload()}
-            className="group flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 bg-gray-900 text-white font-bold rounded-xl sm:rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-lg sm:shadow-xl shadow-gray-200 text-sm sm:text-base"
-          >
-            <svg 
-              className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-180 transition-transform duration-700" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          {/* Icon Container */}
+          <div className="mb-6 sm:mb-10 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gray-50 rounded-xl sm:rounded-2xl lg:rounded-[2rem] flex items-center justify-center border border-gray-100 shadow-inner">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15M9 11l3 3m0 0l3-3m-3 3V8" />
             </svg>
-            Refresh Content
-          </button>
-        </div>
+          </div>
 
-        {/* Status indicator */}
-        <div className="mt-8 sm:mt-12 flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
-          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400 animate-pulse" />
-          <span className="text-xs">System Error: {error || "Connection Timeout"}</span>
+          {/* Main Content */}
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black text-gray-900 mb-4 sm:mb-6 tracking-tight">
+            News Feed Unavailable
+          </h2>
+          
+          <p className="text-gray-500 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-12 px-2">
+            We're currently experiencing a connection issue with our news archives. 
+            Our team is working to restore the latest updates and event schedules for our community.
+          </p>
+
+          {/* Action Button - Large & Tap-Friendly */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
+            <button 
+              onClick={() => window.location.reload()}
+              className="group flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 bg-gray-900 text-white font-bold rounded-xl sm:rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-lg sm:shadow-xl shadow-gray-200 text-sm sm:text-base"
+            >
+              <svg 
+                className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-180 transition-transform duration-700" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh Content
+            </button>
+          </div>
+
+          {/* Status indicator */}
+          <div className="mt-8 sm:mt-12 flex items-center gap-1.5 sm:gap-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-400 animate-pulse" />
+            <span className="text-xs">System Error: {error || "Connection Timeout"}</span>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-sans p-3 sm:p-4 md:p-6 lg:p-8">
@@ -380,7 +381,7 @@ if (error && events.length === 0 && news.length === 0) {
                   <>
                     {currentEvent.image ? (
                       <Image
-                        src={currentEvent.image.startsWith('/') ? currentEvent.image : `/${currentEvent.image}`}
+                        src={currentEvent.image} 
                         alt={currentEvent.title}
                         fill
                         className="object-cover"
@@ -426,7 +427,7 @@ if (error && events.length === 0 && news.length === 0) {
                   <>
                     {currentNews.image ? (
                       <Image
-                        src={currentNews.image.startsWith('/') ? currentNews.image : `/${currentNews.image}`}
+                        src={currentNews.image} 
                         alt={currentNews.title}
                         fill
                         className="object-cover"
@@ -529,30 +530,30 @@ if (error && events.length === 0 && news.length === 0) {
                             )}
                           </ul>
                         </div>
-{/* Action Buttons */}
-<div className="pt-3 md:pt-4 border-t border-slate-200">
-  <div className="flex gap-2 sm:gap-3">
-    <button 
-      onClick={() => {
-        if (!currentEvent) return;
-        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentEvent.title)}&dates=20260129/20260129&details=${encodeURIComponent(currentEvent.description)}&location=${encodeURIComponent(currentEvent.location)}`;
-        window.open(url, '_blank');
-      }}
-      className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:shadow-lg active:scale-[0.98] transition-all min-w-0"
-    >
-      <IoLogoGoogle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-      <span className="truncate">Add to Calendar</span>
-    </button>
-    
-    <button 
-      onClick={() => setShowShareModal(true)}
-      className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-slate-50 active:scale-[0.98] transition-all min-w-0"
-    >
-      <FiShare2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-      <span className="truncate">Share Event</span>
-    </button>
-  </div>
-</div>
+                        {/* Action Buttons */}
+                        <div className="pt-3 md:pt-4 border-t border-slate-200">
+                          <div className="flex gap-2 sm:gap-3">
+                            <button 
+                              onClick={() => {
+                                if (!currentEvent) return;
+                                const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentEvent.title)}&dates=20260129/20260129&details=${encodeURIComponent(currentEvent.description)}&location=${encodeURIComponent(currentEvent.location)}`;
+                                window.open(url, '_blank');
+                              }}
+                              className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:shadow-lg active:scale-[0.98] transition-all min-w-0"
+                            >
+                              <IoLogoGoogle className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                              <span className="truncate">Add to Calendar</span>
+                            </button>
+                            
+                            <button 
+                              onClick={() => setShowShareModal(true)}
+                              className="flex-1 py-2.5 sm:py-3 px-2 sm:px-3 bg-white border-2 border-slate-900 text-slate-900 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-slate-50 active:scale-[0.98] transition-all min-w-0"
+                            >
+                              <FiShare2 className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                              <span className="truncate">Share Event</span>
+                            </button>
+                          </div>
+                        </div>
                       </>
                     ) : selectedTab === 'news' && currentNews ? (
                       <>
@@ -634,7 +635,7 @@ if (error && events.length === 0 && news.length === 0) {
                         <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
                           {event.image ? (
                             <img
-                              src={event.image.startsWith('/') ? event.image : `/${event.image}`}
+                              src={event.image} 
                               alt={event.title}
                               className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
                             />
@@ -671,24 +672,24 @@ if (error && events.length === 0 && news.length === 0) {
                   );
                 })
               ) : (
-<div className="w-full bg-gradient-to-br from-white to-purple-50/30 rounded-xl sm:rounded-2xl border border-purple-100 p-4 sm:p-6 md:p-8 text-center">
-  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-    <FiCalendar className="text-purple-400 text-xl sm:text-2xl md:text-3xl" />
-  </div>
-  
-  <h3 className="text-slate-800 font-bold text-base sm:text-lg mb-1 sm:mb-2">
-    No Upcoming Events
-  </h3>
-  
-  <p className="text-slate-600 text-sm sm:text-base mb-3 sm:mb-4">
-    Events will appear here once scheduled
-  </p>
-  
-  <button className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-purple-200 text-purple-600 rounded-lg text-xs sm:text-sm font-medium hover:bg-purple-50 transition-colors duration-200">
-    <span>Get Notified</span>
-    <FiCalendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-  </button>
-</div>
+                <div className="w-full bg-gradient-to-br from-white to-purple-50/30 rounded-xl sm:rounded-2xl border border-purple-100 p-4 sm:p-6 md:p-8 text-center">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    <FiCalendar className="text-purple-400 text-xl sm:text-2xl md:text-3xl" />
+                  </div>
+                  
+                  <h3 className="text-slate-800 font-bold text-base sm:text-lg mb-1 sm:mb-2">
+                    No Upcoming Events
+                  </h3>
+                  
+                  <p className="text-slate-600 text-sm sm:text-base mb-3 sm:mb-4">
+                    Events will appear here once scheduled
+                  </p>
+                  
+                  <button className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-purple-200 text-purple-600 rounded-lg text-xs sm:text-sm font-medium hover:bg-purple-50 transition-colors duration-200">
+                    <span>Get Notified</span>
+                    <FiCalendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  </button>
+                </div>
               )
             ) : (
               news.length > 0 ? (
@@ -711,7 +712,7 @@ if (error && events.length === 0 && news.length === 0) {
                         <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
                           {newsItem.image ? (
                             <img
-                              src={newsItem.image.startsWith('/') ? newsItem.image : `/${newsItem.image}`}
+                              src={newsItem.image} 
                               alt={newsItem.title}
                               className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
                             />
@@ -748,27 +749,27 @@ if (error && events.length === 0 && news.length === 0) {
                   );
                 })
               ) : (
-<div className="w-full bg-gradient-to-br from-white via-purple-50/50 to-pink-50/30 rounded-xl sm:rounded-2xl border border-purple-100/70 p-4 sm:p-6 md:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 backdrop-blur-sm">
-  <div className="relative inline-flex mb-3 sm:mb-4 md:mb-5">
-    <IoNewspaperOutline className="text-purple-400 text-3xl sm:text-4xl md:text-5xl relative z-10" />
-    <div className="absolute inset-0 bg-gradient-to-br from-purple-200/40 to-pink-200/20 blur-xl rounded-full" />
-  </div>
-  
-  <p className="text-slate-700 font-semibold text-base sm:text-lg md:text-xl mb-1.5 sm:mb-2">
-    No News Articles Yet
-  </p>
-  
-  <p className="text-slate-500 text-sm sm:text-base max-w-xs mx-auto leading-relaxed">
-    We'll be sharing updates and announcements here soon
-  </p>
-  
-  {/* Optional decorative elements */}
-  <div className="mt-4 sm:mt-6 flex justify-center items-center gap-2 sm:gap-3 text-purple-300/50">
-    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-transparent to-purple-300/30" />
-    <span className="text-xs font-medium tracking-wider">COMING SOON</span>
-    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-purple-300/30 to-transparent" />
-  </div>
-</div>
+                <div className="w-full bg-gradient-to-br from-white via-purple-50/50 to-pink-50/30 rounded-xl sm:rounded-2xl border border-purple-100/70 p-4 sm:p-6 md:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 backdrop-blur-sm">
+                  <div className="relative inline-flex mb-3 sm:mb-4 md:mb-5">
+                    <IoNewspaperOutline className="text-purple-400 text-3xl sm:text-4xl md:text-5xl relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-200/40 to-pink-200/20 blur-xl rounded-full" />
+                  </div>
+                  
+                  <p className="text-slate-700 font-semibold text-base sm:text-lg md:text-xl mb-1.5 sm:mb-2">
+                    No News Articles Yet
+                  </p>
+                  
+                  <p className="text-slate-500 text-sm sm:text-base max-w-xs mx-auto leading-relaxed">
+                    We'll be sharing updates and announcements here soon
+                  </p>
+                  
+                  {/* Optional decorative elements */}
+                  <div className="mt-4 sm:mt-6 flex justify-center items-center gap-2 sm:gap-3 text-purple-300/50">
+                    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-transparent to-purple-300/30" />
+                    <span className="text-xs font-medium tracking-wider">COMING SOON</span>
+                    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-purple-300/30 to-transparent" />
+                  </div>
+                </div>
               )
             )}
 
