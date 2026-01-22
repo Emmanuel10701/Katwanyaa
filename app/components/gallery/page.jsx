@@ -1,7 +1,5 @@
 'use client';
-
-
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   FiPlus, FiSearch, FiEdit, FiTrash2, FiImage, FiFilter, FiDownload,
   FiX, FiEye, FiUpload, FiStar, FiGrid, FiList, FiChevronLeft,
@@ -9,10 +7,11 @@ import {
   FiTag, FiFolder, FiInfo, FiUsers, FiAlertCircle, FiExternalLink,
   FiChevronUp, FiChevronDown, FiShare2, FiCopy, FiMaximize2, FiMinimize2,
   FiEdit2, FiSave, FiXCircle, FiEyeOff, FiLock, FiUnlock, FiLink,
-  FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace
+  FiRefreshCw, FiFile, FiCheckCircle, FiUploadCloud, FiReplace,
+  FiCloud, FiDatabase, FiServer, FiMonitor, FiHardDrive
 } from 'react-icons/fi';
 import { Toaster, toast } from 'sonner';
-import { Play, ArrowUpRight, Clock } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
 // Categories from your backend API
 const CATEGORIES = [
@@ -47,55 +46,56 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other', color: 'gray' }
 ];
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
+// Modern Loading Spinner (matching Dashboard style)
+function ModernLoadingSpinner({ message = "Loading gallery data...", size = "medium" }) {
+  const sizes = {
+    small: { outer: 48, inner: 24 },
+    medium: { outer: 64, inner: 32 },
+    large: { outer: 80, inner: 40 }
   }
 
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
+  const { outer, inner } = sizes[size] || sizes.medium;
 
-  componentDidCatch(error, errorInfo) {
-    console.error('Gallery Manager Error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-pink-50/30 flex items-center justify-center p-6">
-          <div className="text-center space-y-6 max-w-md">
-            <div className="text-red-500 text-6xl">⚠️</div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-              <p className="text-gray-600 mb-4">{this.state.error?.message || 'An unexpected error occurred'}</p>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full font-semibold shadow-lg"
-            >
-              Reload Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default function ModernGalleryManager() {
   return (
-    <ErrorBoundary>
-      <GalleryManagerContent />
-    </ErrorBoundary>
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50">
+      <div className="text-center">
+        <div className="relative inline-block">
+          <div className="relative">
+            <CircularProgress 
+              size={outer} 
+              thickness={5}
+              className="text-indigo-600"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full animate-ping opacity-25"
+                   style={{ width: inner, height: inner }}></div>
+            </div>
+          </div>
+          <div className="absolute -inset-6 bg-gradient-to-r from-indigo-100 to-violet-100 rounded-full blur-xl opacity-30 animate-pulse"></div>
+        </div>
+        
+        <div className="mt-6 space-y-3">
+          <span className="block text-lg font-semibold text-gray-800">
+            {message}
+          </span>
+          
+          <div className="flex justify-center space-x-1.5">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" 
+                   style={{ animationDelay: `${i * 0.15}s` }}></div>
+            ))}
+          </div>
+          
+          <p className="text-gray-500 text-sm mt-2">
+            Please wait while we fetch media files
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function GalleryManagerContent() {
+export default function ModernGalleryManager() {
   // State
   const [galleryItems, setGalleryItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -105,7 +105,6 @@ function GalleryManagerContent() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedMedia, setSelectedMedia] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [uploadProgress, setUploadProgress] = useState({});
@@ -113,16 +112,16 @@ function GalleryManagerContent() {
   const [dragActive, setDragActive] = useState(false);
   const [imageErrors, setImageErrors] = useState(new Set());
   const [loading, setLoading] = useState(true);
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewItem, setPreviewItem] = useState(null);
   const [sortBy, setSortBy] = useState('newest');
   const [selectedFilePreviews, setSelectedFilePreviews] = useState({});
-  const [filesToRemove, setFilesToRemove] = useState([]); // Track files to remove during edit
-  const [showExistingFiles, setShowExistingFiles] = useState(true); // Toggle existing files view
+  const [filesToRemove, setFilesToRemove] = useState([]);
+  const [showExistingFiles, setShowExistingFiles] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -147,88 +146,52 @@ function GalleryManagerContent() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-const fetchGalleryItems = async () => {
-  try {
-    setLoading(true);
-    
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    const response = await fetch('/api/gallery', {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      throw new Error(`Server error: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (result.success && result.galleries) {
-      // Add validation for gallery data
-      const transformedItems = result.galleries.map(gallery => {
-        // Ensure files is always an array
-        const files = Array.isArray(gallery.files) ? gallery.files : [];
-        
-        return {
-          id: gallery.id || randomUUID(),
-          title: gallery.title || 'Untitled Gallery',
+  // Fetch gallery items from API
+  const fetchGalleryItems = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/gallery');
+      const result = await response.json();
+      
+      if (result.success && result.galleries) {
+        const transformedItems = result.galleries.map(gallery => ({
+          id: gallery.id,
+          title: gallery.title,
           description: gallery.description || '',
-          category: gallery.category || 'GENERAL',
-          files: files,
-          fileType: determineMediaType(files[0]),
-          previewUrl: files[0] || '',
-          fileCount: files.length,
-          uploadDate: gallery.createdAt || new Date().toISOString(),
-          updatedAt: gallery.updatedAt || new Date().toISOString(),
+          category: gallery.category,
+          files: gallery.files || [],
+          fileType: determineMediaType(gallery.files?.[0]),
+          previewUrl: gallery.files?.[0] || '',
+          fileCount: gallery.files?.length || 0,
+          uploadDate: gallery.createdAt,
+          updatedAt: gallery.updatedAt,
           views: Math.floor(Math.random() * 1000),
           likes: Math.floor(Math.random() * 500),
           isPublic: true
-        };
-      });
-      
-      // Sort items
-      const sortedItems = transformedItems.sort((a, b) => {
-        switch(sortBy) {
-          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-          case 'title': return a.title.localeCompare(b.title);
-          case 'mostFiles': return b.fileCount - a.fileCount;
-          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
-        }
-      });
-      
-      setGalleryItems(sortedItems);
-      setFilteredItems(sortedItems);
-      toast.success(`Loaded ${sortedItems.length} galleries`);
-    } else {
-      // Handle case where result is not in expected format
-      console.warn('Unexpected API response format:', result);
-      setGalleryItems([]);
-      setFilteredItems([]);
-      toast.info('No galleries found');
+        }));
+        
+        // Sort items
+        const sortedItems = transformedItems.sort((a, b) => {
+          switch(sortBy) {
+            case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
+            case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
+            case 'title': return a.title.localeCompare(b.title);
+            case 'mostFiles': return b.fileCount - a.fileCount;
+            default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+          }
+        });
+        
+        setGalleryItems(sortedItems);
+        setFilteredItems(sortedItems);
+        toast.success(`Loaded ${sortedItems.length} galleries`);
+      }
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
+      toast.error('Failed to load gallery items');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching gallery items:', error);
-    
-    if (error.name === 'AbortError') {
-      toast.error('Request timed out. Please check your connection.');
-    } else if (error.message.includes('Failed to fetch')) {
-      toast.error('Network error. Please check your connection.');
-    } else {
-      toast.error(`Failed to load gallery items: ${error.message}`);
-    }
-    
-    // Set empty arrays on error
-    setGalleryItems([]);
-    setFilteredItems([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // Determine media type
   const determineMediaType = (filePath) => {
@@ -372,7 +335,7 @@ const fetchGalleryItems = async () => {
 
     setIsUploading(true);
     
-    const loadingToast = toast.loading('Uploading gallery...');
+    toast.loading('Uploading gallery...');
     
     try {
       const submitData = new FormData();
@@ -389,26 +352,10 @@ const fetchGalleryItems = async () => {
         body: submitData,
       });
 
-      if (!response.ok) {
-        // Check if response is HTML error page
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("text/html")) {
-          throw new Error(`Server error (${response.status}). Please try again later.`);
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check content type before parsing JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON. Please try again.");
-      }
-
       const result = await response.json();
       
-      toast.dismiss(loadingToast);
-      
       if (result.success) {
+        toast.dismiss();
         toast.success('Gallery created successfully!');
         setShowCreateModal(false);
         resetForm();
@@ -417,7 +364,7 @@ const fetchGalleryItems = async () => {
         throw new Error(result.error || 'Failed to create gallery');
       }
     } catch (error) {
-      toast.dismiss(loadingToast);
+      toast.dismiss();
       toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -427,7 +374,7 @@ const fetchGalleryItems = async () => {
 
   const handleEdit = (item) => {
     setEditingItem(item);
-    setFilesToRemove([]); // Reset files to remove
+    setFilesToRemove([]);
     setFormData({
       title: item.title,
       description: item.description || '',
@@ -445,7 +392,7 @@ const fetchGalleryItems = async () => {
 
     setIsUploading(true);
     
-    const loadingToast = toast.loading('Updating gallery...');
+    toast.loading('Updating gallery...');
     
     try {
       const submitData = new FormData();
@@ -470,26 +417,10 @@ const fetchGalleryItems = async () => {
         body: submitData,
       });
 
-      if (!response.ok) {
-        // Check if response is HTML error page
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("text/html")) {
-          throw new Error(`Server error (${response.status}). Please try again later.`);
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check content type before parsing JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON. Please try again.");
-      }
-
       const result = await response.json();
       
-      toast.dismiss(loadingToast);
-      
       if (result.success) {
+        toast.dismiss();
         toast.success('Gallery updated successfully!');
         setShowEditModal(false);
         setEditingItem(null);
@@ -500,7 +431,7 @@ const fetchGalleryItems = async () => {
         throw new Error(result.error || 'Failed to update gallery');
       }
     } catch (error) {
-      toast.dismiss(loadingToast);
+      toast.dismiss();
       toast.error(`Error: ${error.message}`);
     } finally {
       setIsUploading(false);
@@ -516,31 +447,14 @@ const fetchGalleryItems = async () => {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
-    const loadingToast = toast.loading('Deleting gallery...');
+    toast.loading('Deleting gallery...');
     
     try {
       const response = await fetch(`/api/gallery/${itemToDelete.id}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        // Check if response is HTML error page
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("text/html")) {
-          throw new Error(`Server error (${response.status}). Please try again later.`);
-        }
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check content type before parsing JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON. Please try again.");
-      }
-
       const result = await response.json();
-      
-      toast.dismiss(loadingToast);
       
       if (result.success) {
         setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
@@ -550,12 +464,13 @@ const fetchGalleryItems = async () => {
           return newSet;
         });
         
+        toast.dismiss();
         toast.success('Gallery deleted successfully!');
       } else {
         throw new Error(result.error || 'Failed to delete gallery');
       }
     } catch (error) {
-      toast.dismiss(loadingToast);
+      toast.dismiss();
       toast.error(`Error: ${error.message}`);
     } finally {
       setShowDeleteModal(false);
@@ -570,34 +485,26 @@ const fetchGalleryItems = async () => {
       return;
     }
 
-    const loadingToast = toast.loading(`Deleting ${selectedItems.size} galleries...`);
+    toast.loading(`Deleting ${selectedItems.size} galleries...`);
     const deletePromises = Array.from(selectedItems).map(id => 
-      fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => {
-        // Check content type before parsing JSON
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          return { success: false, error: "Server did not return JSON" };
-        }
-        return res.json();
-      })
+      fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => res.json())
     );
 
     try {
       const results = await Promise.all(deletePromises);
       const successful = results.filter(result => result.success).length;
       
-      toast.dismiss(loadingToast);
-      
       if (successful > 0) {
         setGalleryItems(prev => prev.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         
+        toast.dismiss();
         toast.success(`${successful} galleries deleted successfully!`);
       } else {
         throw new Error('Failed to delete galleries');
       }
     } catch (error) {
-      toast.dismiss(loadingToast);
+      toast.dismiss();
       toast.error(`Error: ${error.message}`);
     }
   };
@@ -649,461 +556,391 @@ const fetchGalleryItems = async () => {
     setImageErrors(prev => new Set(prev).add(id));
   };
 
+  // Refresh dashboard data
+  const refreshDashboard = async () => {
+    setRefreshing(true);
+    await fetchGalleryItems();
+    setRefreshing(false);
+  };
+
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
-// Safe stats calculation without .length errors
-const stats = {
-  total: galleryItems ? galleryItems.length : 0,
-  totalFiles: galleryItems ? galleryItems.reduce((acc, item) => {
-    const files = item?.files;
-    return acc + (files ? files.length : 0);
-  }, 0) : 0,
-  images: galleryItems ? galleryItems.reduce((acc, item) => {
-    const files = item?.files;
-    const fileType = item?.fileType;
-    const fileCount = files ? files.length : 0;
-    return acc + (fileType === 'image' ? fileCount : 0);
-  }, 0) : 0,
-  videos: galleryItems ? galleryItems.reduce((acc, item) => {
-    const files = item?.files;
-    const fileType = item?.fileType;
-    const fileCount = files ? files.length : 0;
-    return acc + (fileType === 'video' ? fileCount : 0);
-  }, 0) : 0,
-  categories: galleryItems ? new Set(galleryItems.map(item => item?.category).filter(Boolean)).size : 0
-};
+  // Stats
+  const stats = {
+    total: galleryItems.length,
+    totalFiles: galleryItems.reduce((acc, item) => acc + item.files.length, 0),
+    images: galleryItems.filter(item => item.fileType === 'image').reduce((acc, item) => acc + item.files.length, 0),
+    videos: galleryItems.filter(item => item.fileType === 'video').reduce((acc, item) => acc + item.files.length, 0),
+    categories: new Set(galleryItems.map(item => item.category)).size
+  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-          <div>
-            <p className="text-gray-600 text-lg font-medium">Loading gallery...</p>
-            <p className="text-gray-400 text-sm">This may take a moment</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <ModernLoadingSpinner />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 p-4 lg:p-6 space-y-6">
+    <>
       <Toaster position="top-right" expand={false} richColors />
-
-      {/* Modern Gallery Header */}
-      <div className="relative bg-gradient-to-br from-white via-blue-50 to-cyan-50 rounded-3xl p-6 md:p-8 shadow-2xl shadow-blue-100/50 border border-blue-100">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-400/5 rounded-full -translate-y-16 translate-x-8"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-violet-400/10 to-purple-400/5 rounded-full translate-y-8 -translate-x-8"></div>
-
-        <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          {/* Left Content - Title and Description */}
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-4">
-              {/* Icon Badge */}
-              <div className="relative p-3 bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 rounded-2xl shadow-lg shadow-blue-500/30">
-                <FiImage className="text-2xl text-white" />
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md">
-                  <span className="text-xs font-bold text-white">{galleryItems?.length || 0}</span>
+      
+      <div className="p-6 space-y-6">
+        {/* Welcome Section */}
+        <div className="relative bg-[#0F172A] rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 text-white overflow-hidden shadow-2xl border border-white/5">
+          
+          {/* Abstract Mesh Gradient Background */}
+          <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-blue-600/30 rounded-full blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+              <div>
+                {/* Institutional Branding */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
+                  <div>
+                    <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
+                      Katwanyaa High School
+                    </h2>
+                    <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
+                      "Media Gallery"
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
+                  <div className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 w-fit">
+                    <FiImage className="text-2xl sm:text-3xl text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
+                  </div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+                    Media Gallery <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 via-white to-purple-200">Manager</span>
+                  </h1>
                 </div>
               </div>
               
-              {/* Title Section */}
-              <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-end gap-2">
-                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-700 to-cyan-600 bg-clip-text text-transparent">
-                    Media Gallery
-                  </h1>
-  <span className="px-3 py-1 bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 rounded-full text-sm font-medium inline-flex items-center gap-1">
-  <FiGrid className="text-xs" />
-  {galleryItems ? galleryItems.length : 0} Items
-</span>
-                </div>
-                <p className="text-gray-600 text-base md:text-lg max-w-2xl">
-                  Curate and manage your school's visual stories. Upload images & videos to showcase campus life, events, and achievements.
-                </p>
-                
-                {/* Stats */}
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <FiImage className="text-blue-500" />
-                    <span>Images & Videos</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <FiFolder className="text-cyan-500" />
-                    <span>{stats.categories} Categories</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <FiCalendar className="text-violet-500" />
-                    <span>Updated just now</span>
-                  </div>
-                </div>
-              </div>
+              {/* Modern Glass Refresh Button */}
+              <button
+                onClick={refreshDashboard}
+                disabled={refreshing}
+                className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 disabled:opacity-50 w-full sm:w-fit"
+              >
+                <FiRefreshCw className={`text-lg transition-transform ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'UPDATING...' : 'REFRESH DATA'}</span>
+              </button>
+            </div>
+            
+            {/* Summary Text */}
+            <div className="mb-8">
+              <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
+                Managing <span className="text-white font-bold underline decoration-cyan-500/50 decoration-2 underline-offset-4">{stats.total} galleries</span> with <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4">{stats.totalFiles} files</span>. 
+                You have <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-cyan-400/20 text-cyan-300 border border-cyan-400/20 mx-1">{stats.images} images</span> 
+                and <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/20 mx-1">{stats.videos} videos</span> across <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-emerald-400/20 text-emerald-300 border border-emerald-400/20 mx-1">{stats.categories} categories</span>.
+              </p>
+            </div>
+            
+            {/* Call to Action */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl sm:rounded-2xl font-bold sm:font-black text-sm uppercase tracking-widest shadow-lg transition-all w-full sm:w-auto"
+              >
+                <FiUpload />
+                Upload Gallery
+              </button>
+              
+              <div className="h-[1px] w-full sm:h-10 sm:w-[1px] bg-white/10 sm:mx-2" />
+              
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest text-center sm:text-left">
+                Storage Status: <span className="text-emerald-400">{(stats.totalFiles * 5).toLocaleString()} MB used</span>
+              </p>
             </div>
           </div>
-
-          {/* Right Content - Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {/* Refresh Button */}
-            <button
-              onClick={fetchGalleryItems}
-              disabled={loading}
-              className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md
-                         flex items-center justify-center gap-2 text-sm font-medium
-                         hover:bg-gray-100 transition disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                  Refreshing…
-                </>
-              ) : (
-                'Refresh'
-              )}
-            </button>
-
-            {/* Upload Button */}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={loading}
-              className="px-4 py-2.5 bg-indigo-600 text-white rounded-md
-                         flex items-center justify-center gap-2 text-sm font-medium
-                         hover:bg-indigo-700 transition disabled:opacity-60"
-            >
-              Upload Gallery
-            </button>
-          </div>
         </div>
-      </div>
 
-{/* Stats Cards - SAFE VERSION */}
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-  {[
-    { label: 'Total Galleries', value: Array.isArray(galleryItems) ? galleryItems.length : 0, icon: FiFolder, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-    { label: 'Total Files', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => acc + (Array.isArray(item?.files) ? item.files.length : 0), 0) : 0, icon: FiImage, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-    { label: 'Images', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
-      const isImage = item?.fileType === 'image';
-      return acc + (isImage && Array.isArray(item?.files) ? item.files.length : 0);
-    }, 0) : 0, icon: FiImage, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100' },
-    { label: 'Videos', value: Array.isArray(galleryItems) ? galleryItems.reduce((acc, item) => {
-      const isVideo = item?.fileType === 'video';
-      return acc + (isVideo && Array.isArray(item?.files) ? item.files.length : 0);
-    }, 0) : 0, icon: FiVideo, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100' },
-  ].map((stat) => (
-    <div key={stat.label} className="group relative bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-xl hover:border-transparent">
-      {/* ... rest of your card code ... */}
-    </div>
-  ))}
-</div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { 
+              label: 'Total Galleries', 
+              value: stats.total, 
+              icon: FiHardDrive, 
+              color: 'blue',
+              change: 12,
+              calculation: 'Galleries in system'
+            },
+            { 
+              label: 'Media Files', 
+              value: stats.totalFiles, 
+              icon: FiFile, 
+              color: 'emerald',
+              change: 24,
+              calculation: 'Images & videos'
+            },
+            { 
+              label: 'Images', 
+              value: stats.images, 
+              icon: FiImage, 
+              color: 'purple',
+              change: 8,
+              calculation: 'Photo galleries'
+            },
+            { 
+              label: 'Videos', 
+              value: stats.videos, 
+              icon: FiVideo, 
+              color: 'rose',
+              change: -2,
+              calculation: 'Video content'
+            }
+          ].map((stat, index) => {
+            const isPositive = stat.change >= 0;
+            
+            const colorStyles = {
+              blue: 'bg-blue-50 border-blue-100 text-blue-600',
+              emerald: 'bg-emerald-50 border-emerald-100 text-emerald-600',
+              purple: 'bg-purple-50 border-purple-100 text-purple-600',
+              rose: 'bg-rose-50 border-rose-100 text-rose-600'
+            };
+            
+            const style = colorStyles[stat.color] || colorStyles.blue;
+            
+            return (
+              <div 
+                key={index} 
+                className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] overflow-hidden"
+              >
+                {/* Background Accent Blur */}
+                <div className={`absolute -right-2 -top-2 h-20 w-20 rounded-full blur-2xl opacity-10 group-hover:opacity-30 transition-opacity ${style}`} />
+                
+                <div className="flex items-start justify-between relative z-10">
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
+                      {stat.label}
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-3xl font-black text-slate-900 tracking-tighter tabular-nums">
+                        {stat.value.toLocaleString()}
+                      </h3>
+                      <span className="text-[10px] font-bold text-slate-400 italic">
+                        {stat.calculation}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Modern Icon Pod */}
+                  <div className={`p-3.5 rounded-2xl border shadow-sm transition-transform group-hover:scale-100 duration-500 ${style}`}>
+                    <stat.icon className="text-xl" />
+                  </div>
+                </div>
+                
+                {/* Trend Footer */}
+                <div className="mt-6 flex items-center justify-between relative z-10">
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-tight border ${
+                    isPositive 
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                      : 'bg-rose-50 text-rose-600 border-rose-100'
+                  }`}>
+                    {isPositive ? <FiCheck size={14} /> : <FiX size={14} />}
+                    <span>{isPositive ? '+' : ''}{stat.change}%</span>
+                  </div>
+                  
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Last 30 days
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-      {/* Modernized Filters Bar */}
-      <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-4 border border-gray-100 shadow-sm transition-all duration-300">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          
-          {/* Search - Spans 4 columns */}
-          <div className="md:col-span-4 relative group">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-            <input
-              type="text"
-              placeholder="Search galleries..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* Category Select - Spans 3 columns */}
-          <div className="md:col-span-3">
+        {/* Enhanced Filters Bar */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-[2rem] p-4 lg:p-6 shadow-lg border border-slate-100/50">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-3 text-slate-400 text-lg" />
+              <input
+                type="text"
+                placeholder="Search galleries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+            
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
             >
               <option value="all">All Categories</option>
               {CATEGORIES.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
             </select>
-          </div>
 
-          {/* Sort Select - Spans 2 columns */}
-          <div className="md:col-span-2">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold text-black focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%239ca3af\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundPosition: 'right 1rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.2em' }}
+              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
             >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="title">A-Z</option>
-              <option value="mostFiles">Files</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title">Title A-Z</option>
+              <option value="mostFiles">Most Files</option>
             </select>
-          </div>
 
-          {/* Actions & Toggle - Spans 3 columns */}
-          <div className="md:col-span-3 flex items-center justify-between gap-3 pl-2">
-            <div className="flex bg-gray-100/80 p-1 rounded-xl items-center">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
+            <div className="flex items-center gap-4">
+              <div className="flex bg-slate-100 rounded-2xl p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-xl ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-lg' : 'text-slate-600'}`}
+                >
+                  <FiGrid className="text-lg" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-xl ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-lg' : 'text-slate-600'}`}
+                >
+                  <FiList className="text-lg" />
+                </button>
+              </div>
+              <button 
+                onClick={selectAll}
+                className="text-blue-600 text-xs font-semibold whitespace-nowrap"
               >
-                <FiGrid className="text-lg" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all duration-200 ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm scale-100' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                <FiList className="text-lg" />
+                {selectedItems.size === currentItems.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
-            
-            <button 
-              onClick={selectAll}
-              className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-blue-600 hover:bg-blue-50 rounded-xl transition-colors whitespace-nowrap"
+          </div>
+        </div>
+
+        {/* Bulk Actions */}
+        {selectedItems.size > 0 && (
+          <div className="bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-2xl p-4 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <FiCheck className="text-xl" />
+                </div>
+                <span className="font-semibold text-sm">
+                  {selectedItems.size} gallery{selectedItems.size > 1 ? 's' : ''} selected
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-4 sm:px-6 py-2 bg-red-500/80 rounded-full font-semibold flex items-center gap-2 text-xs sm:text-sm"
+                >
+                  <FiTrash2 />
+                  <span className="hidden sm:inline">Delete Selected</span>
+                  <span className="sm:hidden">Delete</span>
+                </button>
+                <button
+                  onClick={() => setSelectedItems(new Set())}
+                  className="px-4 sm:px-6 py-2 bg-white/20 rounded-full font-semibold flex items-center gap-2 text-xs sm:text-sm"
+                >
+                  <FiX />
+                  <span className="hidden sm:inline">Clear Selection</span>
+                  <span className="sm:hidden">Clear</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Gallery Content */}
+        {currentItems.length === 0 ? (
+          <div className="text-center py-16 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100/50">
+            <div className="text-slate-300 text-6xl mb-4">📷</div>
+            <h3 className="text-slate-800 text-xl font-semibold mb-2">No galleries found</h3>
+            <p className="text-slate-600 mb-6 text-sm">
+              {searchTerm || selectedCategory !== 'all' 
+                ? 'Try adjusting your search or filters' 
+                : 'Start by uploading your first gallery'
+              }
+            </p>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCategory('all');
+                setShowCreateModal(true);
+              }}
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-semibold shadow-lg text-xs sm:text-sm"
             >
-              {selectedItems.size === currentItems.length ? 'Deselect' : 'Select All'}
+              <FiUpload className="inline mr-2" />
+              Upload Gallery
             </button>
           </div>
-        </div>
-      </div>
+        ) : (
+          <>
+            {/* Gallery Grid/List */}
+            <div className={`${
+              viewMode === 'grid' 
+                ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' 
+                : 'space-y-3'
+            }`}>
+              {currentItems.map((item) => (
+                <ModernGalleryItem
+                  key={item.id}
+                  item={item}
+                  viewMode={viewMode}
+                  isSelected={selectedItems.has(item.id)}
+                  hasError={imageErrors.has(item.id)}
+                  onSelect={() => toggleSelection(item.id)}
+                  onEdit={() => handleEdit(item)}
+                  onDelete={() => handleDelete(item)}
+                  onPreview={() => handlePreview(item)}
+                  onImageError={() => handleImageError(item.id)}
+                />
+              ))}
+            </div>
 
-      {/* Bulk Actions */}
-      {selectedItems.size > 0 && (
-        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-2xl p-4 shadow-lg">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <FiCheck className="text-xl" />
-              </div>
-              <span className="font-semibold">
-                {selectedItems.size} gallery{selectedItems.size > 1 ? 's' : ''} selected
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 sm:px-6 py-2 bg-red-500/80 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base"
-              >
-                <FiTrash2 />
-                <span className="hidden sm:inline">Delete Selected</span>
-                <span className="sm:hidden">Delete</span>
-              </button>
-              <button
-                onClick={() => setSelectedItems(new Set())}
-                className="px-4 sm:px-6 py-2 bg-white/20 rounded-full font-semibold flex items-center gap-2 text-sm sm:text-base"
-              >
-                <FiX />
-                <span className="hidden sm:inline">Clear Selection</span>
-                <span className="sm:hidden">Clear</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-2xl bg-white border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiChevronLeft className="text-lg" />
+                </button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-10 h-10 rounded-2xl font-semibold ${
+                        currentPage === page
+                          ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg'
+                          : 'bg-white text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
 
-      {/* Gallery Content */}
-      {loading ? (
-        <div className="text-center py-24 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50">
-          <div className="inline-flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <FiImage className="text-blue-500 text-2xl" />
-              </div>
-            </div>
-            <div>
-              <h3 className="text-gray-800 text-xl font-semibold mb-2">Loading Galleries</h3>
-              <p className="text-gray-500 text-sm">Fetching your media collection...</p>
-            </div>
-          </div>
-        </div>
-      ) : currentItems.length === 0 ? (
-        <div className="bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/20 rounded-2xl p-8 border border-gray-200/50 shadow-sm">
-          <div className="max-w-md mx-auto text-center space-y-6">
-            {/* Icon/Illustration */}
-            <div className="relative">
-              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-cyan-100 rounded-3xl flex items-center justify-center shadow-inner">
-                {galleryItems.length === 0 ? (
-                  <FiFolderPlus className="text-blue-400 text-4xl" />
-                ) : (
-                  <FiSearch className="text-gray-400 text-4xl" />
-                )}
-              </div>
-              <div className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full flex items-center justify-center shadow-lg">
-                {galleryItems.length === 0 ? (
-                  <FiPlus className="text-white text-sm" />
-                ) : (
-                  <FiFilter className="text-white text-sm" />
-                )}
-              </div>
-            </div>
-            
-            {/* Title & Description */}
-            <div className="space-y-3">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {galleryItems.length === 0 
-                  ? 'Your gallery is empty' 
-                  : 'No galleries found'
-                }
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {searchTerm || selectedCategory !== 'all' 
-                  ? 'No galleries match your current search and filter criteria.'
-                  : 'Start building your visual collection by uploading images and videos.'
-                }
-              </p>
-            </div>
-            
-            {/* Stats/Info */}
-            {(searchTerm || selectedCategory !== 'all') && galleryItems.length > 0 && (
-              <div className="bg-white/50 rounded-xl p-4 border border-gray-100">
-                <p className="text-sm text-gray-500 mb-2">Current filters:</p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  {searchTerm && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                      <FiSearch size={12} />
-                      "{searchTerm}"
-                    </span>
-                  )}
-                  {selectedCategory !== 'all' && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-full text-sm font-medium">
-                      <FiFolder size={12} />
-                      {CATEGORIES.find(c => c.value === selectedCategory)?.label || selectedCategory}
-                    </span>
-                  )}
-                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-2xl bg-white border border-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FiChevronRight className="text-lg" />
+                </button>
               </div>
             )}
-            
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-              {/* Clear Filters Button (only show when searching/filtering) */}
-              {(searchTerm || selectedCategory !== 'all') && (
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('all');
-                  }}
-                  className="px-5 py-3 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all group"
-                >
-                  <FiX className="text-gray-500 group-hover:text-gray-700" />
-                  Clear Filters
-                  {galleryItems.length > 0 && (
-                    <span className="ml-1 bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">
-                      {galleryItems.length} available
-                    </span>
-                  )}
-                </button>
-              )}
-              
-              {/* Retry Button (if fetch failed) */}
-              {galleryItems.length === 0 && (
-                <button
-                  onClick={fetchGalleryItems}
-                  className="px-5 py-3 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 text-blue-600 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-all"
-                >
-                  <FiRefreshCw className="text-blue-500" />
-                  Retry Loading
-                </button>
-              )}
-              
-              {/* Upload Button */}
-              <button
-                onClick={() => {
-                  setShowCreateModal(true);
-                }}
-                className="px-5 py-3 bg-gradient-to-r from-indigo-500 to-violet-500 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-indigo-200 transition-all shadow-md"
-              >
-                <FiUpload className="text-white" />
-                {galleryItems.length === 0 ? 'Upload First Gallery' : 'Upload New Gallery'}
-              </button>
-            </div>
-            
-            {/* Help Text */}
-            <div className="pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
-                {galleryItems.length === 0 
-                  ? 'Supported formats: JPG, PNG, GIF, MP4, WebM (max 10MB each)'
-                  : 'Try different keywords or browse all categories'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Gallery Grid/List */}
-          <div className={`${
-            viewMode === 'grid' 
-              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4' 
-              : 'space-y-3'
-          }`}>
-            {currentItems.map((item) => (
-              <ModernGalleryItem
-                key={item.id}
-                item={item}
-                viewMode={viewMode}
-                isSelected={selectedItems.has(item.id)}
-                hasError={imageErrors.has(item.id)}
-                onSelect={() => toggleSelection(item.id)}
-                onEdit={() => handleEdit(item)}
-                onDelete={() => handleDelete(item)}
-                onPreview={() => handlePreview(item)}
-                onImageError={() => handleImageError(item.id)}
-              />
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-8">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-              >
-                <FiChevronLeft className="text-lg" />
-              </button>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-10 h-10 rounded-xl font-semibold transition-all ${
-                      currentPage === page
-                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg'
-                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-xl bg-white border border-gray-300 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-all"
-              >
-                <FiChevronRight className="text-lg" />
-              </button>
-            </div>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </div>
 
       {/* Create Modal */}
       {showCreateModal && (
-        <CreateEditModal
+        <ModernModal
           mode="create"
           formData={formData}
           setFormData={setFormData}
@@ -1131,7 +968,7 @@ const stats = {
 
       {/* Edit Modal */}
       {showEditModal && editingItem && (
-        <CreateEditModal
+        <ModernModal
           mode="edit"
           formData={formData}
           setFormData={setFormData}
@@ -1167,7 +1004,7 @@ const stats = {
 
       {/* Preview Modal */}
       {showPreviewModal && previewItem && (
-        <PreviewModal
+        <ModernPreviewModal
           item={previewItem}
           onClose={() => setShowPreviewModal(false)}
           onEdit={() => {
@@ -1183,7 +1020,7 @@ const stats = {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && itemToDelete && (
-        <DeleteConfirmationModal
+        <ModernDeleteModal
           item={itemToDelete}
           onClose={() => {
             setShowDeleteModal(false);
@@ -1192,7 +1029,7 @@ const stats = {
           onConfirm={confirmDelete}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -1210,7 +1047,7 @@ const ModernGalleryItem = ({
   if (viewMode === 'list') {
     return (
       <div
-        className={`bg-white rounded-2xl p-4 flex items-center gap-4 border border-gray-200/50 ${
+        className={`bg-white rounded-2xl p-4 flex items-center gap-4 border border-slate-100/50 ${
           isSelected ? 'border-blue-500 bg-blue-50/30' : ''
         }`}
       >
@@ -1219,17 +1056,17 @@ const ModernGalleryItem = ({
           className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
             isSelected 
               ? 'bg-blue-500 border-blue-500 text-white' 
-              : 'bg-white border-gray-300'
+              : 'bg-white border-slate-300'
           }`}
         >
           {isSelected && <FiCheck className="text-xs" />}
         </button>
 
         {/* Thumbnail */}
-        <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={onPreview}>
+        <div className="w-20 h-20 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={onPreview}>
           {hasError ? (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <FiImage className="text-gray-400 text-xl" />
+            <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+              <FiImage className="text-slate-400 text-xl" />
             </div>
           ) : item.fileType === 'image' ? (
             <>
@@ -1246,7 +1083,7 @@ const ModernGalleryItem = ({
               )}
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center">
               <FiVideo className="text-white text-2xl" />
             </div>
           )}
@@ -1254,14 +1091,14 @@ const ModernGalleryItem = ({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-800 truncate cursor-pointer" onClick={onPreview}>{item.title}</h3>
+            <h3 className="font-semibold text-slate-800 truncate cursor-pointer" onClick={onPreview}>{item.title}</h3>
             <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
               {formatCategory(item.category)}
             </span>
           </div>
-          <p className="text-gray-600 text-sm mb-1 truncate">{item.description || 'No description'}</p>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <span className={`px-2 py-1 rounded ${item.fileType === 'image' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
+          <p className="text-slate-600 text-sm mb-1 truncate">{item.description || 'No description'}</p>
+          <div className="flex items-center gap-3 text-xs text-slate-500">
+            <span className={`px-2 py-1 rounded ${item.fileType === 'image' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800'}`}>
               {item.fileType === 'image' ? 'GALLERY' : 'VIDEO'}
             </span>
             <span>•</span>
@@ -1274,7 +1111,7 @@ const ModernGalleryItem = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onPreview}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-xs sm:text-sm font-medium"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-xs sm:text-sm font-medium"
           >
             <span className="hidden sm:inline">View</span>
             <FiEye className="sm:hidden" />
@@ -1288,7 +1125,7 @@ const ModernGalleryItem = ({
           </button>
           <button
             onClick={onDelete}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-xs sm:text-sm font-medium"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full text-xs sm:text-sm font-medium"
           >
             <span className="hidden sm:inline">Delete</span>
             <FiTrash2 className="sm:hidden" />
@@ -1300,173 +1137,110 @@ const ModernGalleryItem = ({
 
   // Grid View
   return (
-    <div className={`group relative w-full bg-white rounded-[2rem] p-3 transition-all duration-700 hover:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.06)] border border-slate-200/60 flex flex-col ${
-      isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
-    }`}>
-      
-      {/* Container for Media Preview */}
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[1.5rem] bg-slate-100 shadow-inner cursor-pointer" onClick={onPreview}>
-        {hasError ? (
-          <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center">
-            <div className="text-center">
-              <FiImage className="text-slate-400 text-3xl mx-auto mb-3" />
-              <p className="text-slate-500 text-sm font-medium">Failed to load</p>
-            </div>
-          </div>
-        ) : item.fileType === 'image' ? (
-          <>
-            <img
-              src={item.files[0]}
-              alt={item.title}
-              className="h-full w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
-              onError={onImageError}
-            />
-            {/* Overlay Gradient for depth */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
-            {/* Play Icon Overlay for Images */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                <FiEye className="text-slate-800 text-lg" />
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            <div className="relative z-10 text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center mb-3 mx-auto shadow-lg">
-                <FiVideo className="text-white text-2xl" />
-              </div>
-              <p className="text-white/90 text-sm font-medium">Video Gallery</p>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-xl">
-                <Play className="text-white text-2xl ml-1" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Top Left Badge: Selection Checkbox */}
+    <div
+      className={`bg-white rounded-2xl overflow-hidden border border-slate-100/50 group ${
+        isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
+      }`}
+    >
+      <div className="relative">
+        {/* Selection Checkbox */}
         <button
           onClick={onSelect}
-          className={`absolute top-4 left-4 z-20 flex items-center justify-center w-8 h-8 rounded-xl backdrop-blur-xl border ${
+          className={`absolute top-3 left-3 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${
             isSelected 
-              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 border-white/40 text-white shadow-lg' 
-              : 'bg-white/70 border-white/40 text-slate-400 hover:bg-white hover:text-slate-800'
-          } transition-all duration-300`}
+              ? 'bg-blue-500 border-blue-500 text-white' 
+              : 'bg-white/90 border-slate-300'
+          }`}
         >
-          <FiCheck className={`text-sm ${isSelected ? '' : 'opacity-0 group-hover:opacity-100'}`} />
+          <FiCheck className="text-xs" />
         </button>
 
-        {/* Top Right Badge: Category */}
-        <div className="absolute top-4 right-4 z-10">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 backdrop-blur-xl border border-white/40 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-800 shadow-sm">
-            <FiFolder size={12} className="text-indigo-600" />
+        {/* Category Badge */}
+        <div className="absolute top-3 right-3 z-20">
+          <span className="px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm bg-blue-100 text-blue-800">
             {formatCategory(item.category)}
-          </div>
+          </span>
         </div>
 
-        {/* Multiple Files Indicator */}
-        {item.files.length > 1 && (
-          <div className="absolute top-4 left-14 z-10">
-            <div className="px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-semibold shadow-lg">
-              +{item.files.length - 1}
+        {/* Media Preview */}
+        <div className="aspect-square bg-slate-100 relative overflow-hidden cursor-pointer" onClick={onPreview}>
+          {hasError ? (
+            <div className="w-full h-full bg-slate-200 flex items-center justify-center">
+              <div className="text-center">
+                <FiImage className="text-slate-400 text-2xl mx-auto mb-2" />
+                <p className="text-slate-500 text-xs">Failed to load</p>
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* Interactive Action */}
-        <div className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-          <button className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg hover:shadow-xl transition-shadow">
-            <ArrowUpRight size={18} />
-          </button>
+          ) : item.fileType === 'image' ? (
+            <>
+              <img
+                src={item.files[0]}
+                alt={item.title}
+                className="w-full h-full object-cover"
+                onError={onImageError}
+              />
+              {/* Multiple Images Indicator */}
+              {item.files.length > 1 && (
+                <div className="absolute top-2 left-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
+                  +{item.files.length - 1}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
+              <div className="text-center">
+                <FiVideo className="text-white text-4xl mb-2" />
+                <p className="text-white/80 text-sm">Video Gallery</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="px-5 py-5 flex flex-col flex-grow">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-black tracking-[0.2em] text-cyan-600 uppercase">
-            {item.fileType === 'image' ? 'PHOTO GALLERY' : 'VIDEO GALLERY'}
-          </span>
-          <div className="flex gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
-            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-          </div>
-        </div>
-        
-        <h2 
-          className="text-xl font-bold text-slate-900 mb-2 tracking-tight group-hover:text-indigo-600 transition-colors duration-300 cursor-pointer line-clamp-1"
-          onClick={onPreview}
-          title={item.title}
-        >
+      {/* Content */}
+      <div className="p-4">
+        <h3 className="font-semibold text-slate-800 text-sm mb-2 truncate cursor-pointer" onClick={onPreview} title={item.title}>
           {item.title}
-        </h2>
+        </h3>
         
-        <p className="text-slate-500 leading-relaxed text-[14px] mb-5 line-clamp-2" title={item.description}>
+        <p className="text-xs text-slate-600 mb-3 line-clamp-2" title={item.description}>
           {item.description || 'No description provided'}
         </p>
-
+        
         {/* Action Buttons */}
-        <div className="flex gap-2 mb-5">
+        <div className="flex gap-2 mb-3">
           <button
             onClick={onPreview}
-            className="flex-1 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100 text-slate-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-slate-100 hover:to-slate-200 transition-all duration-300 group/btn"
+            className="flex-1 py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-xs font-medium"
           >
-            <FiEye className="text-slate-600 group-hover/btn:text-blue-600 transition-colors" />
-            <span>View</span>
+            <span className="hidden sm:inline">View</span>
+            <FiEye className="sm:hidden mx-auto" />
           </button>
           <button
             onClick={onEdit}
-            className="flex-1 py-2.5 bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-emerald-100 hover:to-emerald-200 transition-all duration-300 group/btn"
+            className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-medium"
           >
-            <FiEdit className="text-emerald-600 group-hover/btn:text-emerald-700" />
-            <span>Edit</span>
+            <span className="hidden sm:inline">Edit</span>
+            <FiEdit className="sm:hidden mx-auto" />
           </button>
           <button
             onClick={onDelete}
-            className="flex-1 py-2.5 bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 rounded-xl font-medium text-sm flex items-center justify-center gap-2 hover:from-rose-100 hover:to-rose-200 transition-all duration-300 group/btn"
+            className="flex-1 py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full text-xs font-medium"
           >
-            <FiTrash2 className="text-rose-600 group-hover/btn:text-rose-700" />
-            <span>Delete</span>
+            <span className="hidden sm:inline">Delete</span>
+            <FiTrash2 className="sm:hidden mx-auto" />
           </button>
         </div>
 
-        {/* Bottom Metadata */}
-        <div className="pt-5 border-t border-slate-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-              <Clock size={14} className="text-slate-400" />
-            </div>
-            <span className="text-xs font-semibold text-slate-500">
-              {new Date(item.uploadDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })}
-            </span>
+        {/* Stats & Info */}
+        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
+          <div className="flex items-center gap-1">
+            <FiCalendar className="text-xs" />
+            <span>{new Date(item.uploadDate).toLocaleDateString()}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <FiImage className="text-slate-400 text-sm" />
-              <span className="text-xs font-semibold text-slate-500">{item.files.length}</span>
-            </div>
-            <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-            <div className="flex -space-x-1.5">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gradient-to-br from-slate-300 to-slate-400">
-                  <img 
-                    src={`https://i.pravatar.cc/100?u=gallery-${item.id}-${i}`} 
-                    alt="user" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center gap-1">
+            <FiImage className="text-xs" />
+            <span>{item.files.length}</span>
           </div>
         </div>
       </div>
@@ -1474,25 +1248,22 @@ const ModernGalleryItem = ({
   );
 };
 
-// Create/Edit Modal Component
-const CreateEditModal = ({
+// Modern Modal Component
+const ModernModal = ({
   mode, formData, setFormData, editingItem, uploadProgress, isUploading, dragActive,
   categories, selectedFilePreviews, filesToRemove, setFilesToRemove, onClose, onSubmit, 
   onFileSelect, onDrag, onDrop, removeFile, removeExistingFile, previewExistingFile,
   fileInputRef, onRefresh, showExistingFiles, setShowExistingFiles,
   dropdownOpen, setDropdownOpen, dropdownRef
 }) => {
-  // Determine if a file is marked for removal
   const isFileMarkedForRemoval = (fileUrl) => {
     return filesToRemove.includes(fileUrl);
   };
 
-  // Handle removing existing file
   const handleRemoveExisting = (fileUrl) => {
     removeExistingFile(fileUrl, editingItem?.id);
   };
 
-  // Handle previewing existing file
   const handlePreviewExisting = (fileUrl) => {
     previewExistingFile(fileUrl);
   };
@@ -1502,93 +1273,154 @@ const CreateEditModal = ({
     setDropdownOpen(false);
   };
 
-return (
-  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
-    <div className="bg-white sm:rounded-[2.5rem] w-full max-w-5xl max-h-screen sm:max-h-[92vh] overflow-hidden shadow-2xl my-auto flex flex-col border border-white/20">
-      
-      {/* Header: Dynamic Gradient based on Mode */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
-            mode === 'create' 
-              ? 'bg-gradient-to-br from-indigo-500 to-violet-600' 
-              : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-          }`}>
-            {mode === 'create' ? <FiUpload className="text-white text-xl" /> : <FiEdit2 className="text-white text-xl" />}
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${mode === 'create' ? 'bg-gradient-to-br from-cyan-600 to-blue-600' : 'bg-gradient-to-br from-green-500 to-emerald-500'}`}>
+              {mode === 'create' ? <FiUpload className="text-white text-xl" /> : <FiEdit2 className="text-white text-xl" />}
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+                {mode === 'create' ? 'Create New Gallery' : 'Edit Gallery'}
+              </h2>
+              <p className="text-slate-600 text-xs sm:text-sm">
+                {mode === 'create' ? 'Upload and organize your media' : 'Update gallery details and media'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 tracking-tight">
-              {mode === 'create' ? 'New Gallery' : 'Edit Gallery'}
-            </h2>
-            <p className="text-gray-400 text-xs font-medium">
-              {mode === 'create' ? 'Set up your collection' : 'Modify gallery details and assets'}
-            </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onRefresh}
+              className="p-2 sm:px-4 sm:py-2 bg-slate-100 text-slate-700 rounded-full text-sm font-medium flex items-center gap-1 sm:gap-2"
+            >
+              <FiRefreshCw className="text-sm" />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl border border-slate-200"
+              disabled={isUploading}
+            >
+              <FiX className="text-xl text-slate-600" />
+            </button>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
-          >
-            <FiRefreshCw className={`text-sm ${isUploading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="p-3 rounded-xl bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-            disabled={isUploading}
-          >
-            <FiX size={20} />
-          </button>
-        </div>
-      </div>
 
-      <div className="overflow-y-auto flex-1 custom-scrollbar">
-        <div className="p-6 sm:p-8 space-y-8">
-          
-          {/* Section: Asset Management */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-black uppercase tracking-[0.2em] ml-1">Assets & Media</h3>
-            
-            {/* Existing Files: Floating Glass Card */}
+        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="p-4 sm:p-6 space-y-6">
+            {/* Existing Files Section (Edit Mode Only) */}
             {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
-              <div className="rounded-[2rem] p-6 bg-slate-50 border border-gray-100 shadow-inner">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
-                    <h3 className="font-bold text-black text-sm">
-                      Existing Gallery Files ({editingItem.files.length})
+              <div className="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowExistingFiles(!showExistingFiles)}
+                      className="p-2 hover:bg-slate-100 rounded-lg"
+                    >
+                      {showExistingFiles ? <FiChevronUp className="text-slate-600" /> : <FiChevronDown className="text-slate-600" />}
+                    </button>
+                    <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+                      <FiImage className="text-purple-500" />
+                      <span>Existing Files ({editingItem.files.length})</span>
                     </h3>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full hidden sm:inline">
+                      Click to view • Click X to remove
+                    </span>
                   </div>
-                  <button
-                    onClick={() => setShowExistingFiles(!showExistingFiles)}
-                    className="px-3 py-1 bg-white rounded-lg text-xs font-bold text-violet-600 shadow-sm hover:shadow-md transition-all"
-                  >
-                    {showExistingFiles ? 'Collapse View' : 'Expand View'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm text-slate-600">
+                      {filesToRemove.length} file{filesToRemove.length !== 1 ? 's' : ''} marked
+                    </span>
+                  </div>
                 </div>
                 
                 {showExistingFiles && (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {editingItem.files.map((fileUrl, index) => {
-                      const isMarked = isFileMarkedForRemoval(fileUrl);
+                      const isVideo = fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                      const isMarkedForRemoval = isFileMarkedForRemoval(fileUrl);
+                      
                       return (
-                        <div key={index} className={`group relative aspect-square rounded-2xl overflow-hidden transition-all duration-300 ${
-                          isMarked ? 'ring-2 ring-red-500 ring-offset-2 scale-90' : 'hover:shadow-xl'
-                        }`}>
-                          <img src={fileUrl} className={`w-full h-full object-cover ${isMarked ? 'opacity-30 grayscale' : ''}`} />
-                          
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            {!isMarked ? (
-                              <button onClick={() => handleRemoveExisting(fileUrl)} className="p-2 bg-red-500 text-white rounded-xl shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all">
-                                <FiTrash2 size={18} />
-                              </button>
+                        <div 
+                          key={index} 
+                          className={`relative bg-white rounded-xl border overflow-hidden ${
+                            isMarkedForRemoval 
+                              ? 'border-rose-300 bg-rose-50/50' 
+                              : 'border-slate-200'
+                          }`}
+                        >
+                          {/* File Preview */}
+                          <div className="aspect-square relative">
+                            {isVideo ? (
+                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                <FiVideo className="text-3xl text-purple-500" />
+                              </div>
                             ) : (
-                              <button onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))} className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg">
-                                <FiRotateCw size={18} />
+                              <img
+                                src={fileUrl}
+                                alt={`Existing file ${index + 1}`}
+                                className="w-full h-full object-cover cursor-pointer"
+                                onClick={() => handlePreviewExisting(fileUrl)}
+                              />
+                            )}
+                            
+                            {/* Marked for removal overlay */}
+                            {isMarkedForRemoval && (
+                              <div className="absolute inset-0 bg-rose-500/20 flex items-center justify-center">
+                                <div className="text-center">
+                                  <FiXCircle className="text-rose-600 text-2xl mx-auto mb-1" />
+                                  <p className="text-rose-700 text-xs font-medium">Will be removed</p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Action Buttons */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => handlePreviewExisting(fileUrl)}
+                                className="p-2 bg-white/90 backdrop-blur-sm rounded-lg text-slate-800"
+                                title="Preview"
+                              >
+                                <FiEye className="text-sm" />
+                              </button>
+                              {!isMarkedForRemoval && (
+                                <button
+                                  onClick={() => handleRemoveExisting(fileUrl)}
+                                  className="p-2 bg-rose-500/90 backdrop-blur-sm rounded-lg text-white"
+                                  title="Remove file"
+                                >
+                                  <FiX className="text-sm" />
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* Restore button if marked for removal */}
+                            {isMarkedForRemoval && (
+                              <button
+                                onClick={() => setFilesToRemove(prev => prev.filter(url => url !== fileUrl))}
+                                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-lg"
+                                title="Keep this file"
+                              >
+                                <FiCheck className="text-xs" />
                               </button>
                             )}
+                          </div>
+                          
+                          {/* File info */}
+                          <div className="p-2">
+                            <p className="text-xs font-medium text-slate-800 truncate">
+                              {isVideo ? 'Video File' : 'Image'} {index + 1}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {isMarkedForRemoval ? (
+                                <span className="text-rose-600 font-medium">To be removed</span>
+                              ) : (
+                                <span className="text-emerald-600 font-medium">Keeping</span>
+                              )}
+                            </p>
                           </div>
                         </div>
                       );
@@ -1598,135 +1430,271 @@ return (
               </div>
             )}
 
-            {/* Upload Zone: Modern Minimalist */}
-            <div 
-              onDragOver={onDrag} onDrop={onDrop}
-              onClick={() => !isUploading && fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-[2.5rem] p-10 text-center transition-all cursor-pointer group ${
-                dragActive ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-200 hover:border-indigo-300 bg-gray-50/30'
-              }`}
-            >
-              <input type="file" multiple ref={fileInputRef} onChange={(e) => onFileSelect(e.target.files)} className="hidden" />
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <FiUploadCloud className="text-3xl text-indigo-500" />
-                </div>
-                <h4 className="text-lg font-bold text-black">Drop your files here</h4>
-                <p className="text-sm text-gray-400 mt-1 mb-6">PNG, JPG, MP4 or WebM (Max 10MB)</p>
-                <span className="px-6 py-2 bg-white border border-gray-100 rounded-xl text-sm font-bold text-gray-600 shadow-sm">Browse Files</span>
+            {/* File Upload Section */}
+            <div className="rounded-2xl p-4 sm:p-5 border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+                  <FiUpload className="text-blue-500" />
+                  <span>
+                    {mode === 'edit' ? 'Add New Files (Optional)' : 'Upload Files *'}
+                  </span>
+                </h3>
+                <span className="text-xs text-slate-500">
+                  Max 10MB per file
+                </span>
               </div>
-            </div>
-          </div>
+              
+              {/* Drag & Drop Zone */}
+              <div
+                className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer ${
+                  dragActive 
+                    ? 'border-blue-500 bg-blue-100/30' 
+                    : 'border-blue-300'
+                } ${isUploading ? 'pointer-events-none opacity-60' : ''}`}
+                onDragEnter={onDrag}
+                onDragLeave={onDrag}
+                onDragOver={onDrag}
+                onDrop={onDrop}
+                onClick={() => !isUploading && fileInputRef.current?.click()}
+              >
+                <div className="max-w-sm mx-auto">
+                  <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl inline-block mb-4">
+                    <FiUploadCloud className="text-3xl sm:text-4xl text-blue-500" />
+                  </div>
+                  <p className="text-slate-700 mb-2 font-medium text-base sm:text-lg">
+                    {isUploading ? 'Uploading...' : 'Drag & drop files here'}
+                  </p>
+                  <p className="text-slate-500 mb-6 text-sm sm:text-base">
+                    or click to browse files from your computer
+                  </p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={(e) => onFileSelect(e.target.files)}
+                    className="hidden"
+                    ref={fileInputRef}
+                    disabled={isUploading}
+                  />
+                  {!isUploading && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-semibold text-sm sm:text-base"
+                    >
+                      Browse Files
+                    </button>
+                  )}
+                </div>
+              </div>
 
-          {/* Section: Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Gallery Title</label>
+              {/* Selected Files Preview */}
+              {formData.files.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
+                    <FiCheckCircle className="text-emerald-500" />
+                    <span>New Files to Add ({formData.files.length})</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {formData.files.map((file, index) => {
+                      const previewUrl = selectedFilePreviews[file.name] || (file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+                      
+                      return (
+                        <div key={index} className="group relative bg-white rounded-xl border border-slate-200 overflow-hidden">
+                          {/* Preview Image or Video Icon */}
+                          <div className="aspect-square relative">
+                            {file.type.startsWith('image/') && previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt={file.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : file.type.startsWith('video/') ? (
+                              <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                <FiVideo className="text-3xl text-purple-500" />
+                              </div>
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                                <FiFile className="text-3xl text-slate-400" />
+                              </div>
+                            )}
+                            
+                            {/* Progress bar overlay */}
+                            {uploadProgress[file.name] !== undefined && (
+                              <div className="absolute bottom-0 left-0 right-0 h-2 bg-slate-200/80">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
+                                  style={{ width: `${uploadProgress[file.name]}%` }}
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Remove button */}
+                            <button
+                              onClick={() => removeFile(file.name)}
+                              className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg"
+                              title="Remove file"
+                            >
+                              <FiX className="text-xs" />
+                            </button>
+                          </div>
+                          
+                          {/* File info */}
+                          <div className="p-2">
+                            <p className="text-xs font-medium text-slate-800 truncate" title={file.name}>
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {(file.size / (1024 * 1024)).toFixed(1)} MB
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Form Fields */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FiTag className="text-blue-500" />
+                  <span>Gallery Title *</span>
+                </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Summer Vacation 2024"
-                  className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-black font-bold focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none"
+                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  placeholder="Enter a descriptive title"
+                  disabled={isUploading}
+                  required
                 />
               </div>
 
-              <div className="space-y-2" ref={dropdownRef}>
-                <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Category</label>
+              {/* Modern Dropdown for Category Selection */}
+              <div className="md:col-span-2" ref={dropdownRef}>
+                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FiFolder className="text-purple-500" />
+                  <span>Category *</span>
+                </label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-full bg-gray-50 rounded-2xl px-5 py-4 text-left flex items-center justify-between text-black font-bold"
+                    className="w-full border border-slate-300 rounded-2xl px-4 py-3 text-left flex items-center justify-between focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-sm sm:text-base"
+                    disabled={isUploading}
                   >
-                    <span>{categories.find(c => c.value === formData.category)?.label || 'Choose category...'}</span>
-                    <FiChevronDown className={`transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <span>{categories.find(cat => cat.value === formData.category)?.label || 'Select Category'}</span>
+                    <FiChevronDown className={`text-slate-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
+                  
                   {dropdownOpen && (
-                    <div className="absolute z-[60] w-full mt-2 bg-white/80 backdrop-blur-xl border border-gray-100 rounded-2xl shadow-2xl p-2 animate-in fade-in slide-in-from-top-2">
-                      {categories.map(cat => (
-                        <button
-                          key={cat.value}
-                          onClick={() => handleCategorySelect(cat.value)}
-                          className="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-black hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-slate-300 rounded-2xl shadow-lg max-h-64 overflow-y-auto">
+                      <div className="p-2">
+                        {categories.map(cat => (
+                          <button
+                            key={cat.value}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat.value)}
+                            className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 text-sm sm:text-base ${
+                              formData.category === cat.value
+                                ? 'bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-700 font-medium'
+                                : 'text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className={`w-3 h-3 rounded-full bg-${cat.color}-500`} />
+                            <span>{cat.label}</span>
+                            {formData.category === cat.value && (
+                              <FiCheck className="ml-auto text-cyan-600" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-black uppercase tracking-widest ml-1">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={6}
-                placeholder="Write a brief story about this gallery..."
-                className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-black font-bold focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all outline-none resize-none"
-              />
+              <div className="md:col-span-2">
+                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <FiEdit2 className="text-orange-500" />
+                  <span>Description</span>
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
+                  placeholder="Describe what this gallery contains..."
+                  disabled={isUploading}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer: Floating Style */}
-      <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm">
-          <div className="w-2 h-2 rounded-full bg-indigo-500" />
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-tighter">
-             {formData.files.length} Queue • {filesToRemove.length} Removal
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button
-            onClick={onClose}
-            className="flex-1 sm:flex-none px-8 py-3 rounded-2xl text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Cancel
-          </button>
-<button
-  onClick={() => {
-    if (!formData.title.trim()) {
-      toast.error('Please enter a gallery title');
-      return;
-    }
-    if (mode === 'create' && (!formData.files || formData.files.length === 0)) {
-      toast.error('Please select at least one file');
-      return;
-    }
-    onSubmit();
-  }}
-  disabled={isUploading}
-  className={`flex-1 sm:flex-none px-10 py-4 rounded-[1.25rem] text-sm font-bold text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2 ${
-    mode === 'create' 
-      ? 'bg-slate-900 hover:bg-slate-800' 
-      : 'bg-emerald-600 hover:bg-emerald-500'
-  } disabled:bg-gray-200 disabled:shadow-none`}
->
-  {isUploading ? (
-    <FiRotateCw className="animate-spin text-lg" />
-  ) : (
-    <>
-      {mode === 'create' ? <FiPlus /> : <FiSave />}
-      {mode === 'create' ? 'Publish Gallery' : 'Save Changes'}
-    </>
-  )}
-</button>
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between gap-4 p-4 sm:p-6 border-t border-slate-200 bg-slate-50/50">
+          <div className="text-xs sm:text-sm text-slate-600">
+            {mode === 'edit' ? (
+              <>
+                {editingItem?.files.length || 0} existing • 
+                {filesToRemove.length} to remove • 
+                {formData.files.length} to add
+              </>
+            ) : (
+              <>
+                {formData.files.length} file{formData.files.length !== 1 ? 's' : ''} selected
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="px-4 sm:px-6 py-2 sm:py-3 text-slate-600 font-semibold border border-slate-300 rounded-full min-w-20 sm:min-w-24 text-sm sm:text-base"
+              disabled={isUploading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onSubmit}
+              disabled={isUploading || (mode === 'create' && formData.files.length === 0) || !formData.title.trim()}
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-24 sm:min-w-32 justify-center text-sm sm:text-base ${
+                mode === 'create' 
+                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white' 
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+              }`}
+            >
+              {isUploading ? (
+                <>
+                  <FiRotateCw className="animate-spin" />
+                  {mode === 'create' ? 'Uploading...' : 'Updating...'}
+                </>
+              ) : mode === 'edit' ? (
+                <>
+                  <FiSave />
+                  <span className="hidden sm:inline">Save Changes</span>
+                  <span className="sm:hidden">Save</span>
+                </>
+              ) : (
+                <>
+                  <FiUpload />
+                  <span className="hidden sm:inline">Create Gallery</span>
+                  <span className="sm:hidden">Create</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
-// Preview Modal Component
-const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
+// Modern Preview Modal Component
+const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -1742,22 +1710,12 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   };
 
   const copyUrl = () => {
-    try {
-      const targetPath = "/pages/gallery";
-      const fullUrl = `${window.location.origin}${targetPath}`;
+    const targetPath = "/pages/gallery";
+    const fullUrl = `${window.location.origin}${targetPath}`;
 
-      navigator.clipboard.writeText(fullUrl)
-        .then(() => {
-          toast.success('Gallery link copied to clipboard!');
-        })
-        .catch(err => {
-          console.error('Failed to copy:', err);
-          toast.error('Failed to copy link');
-        });
-    } catch (error) {
-      console.error('Copy URL error:', error);
-      toast.error('Failed to copy link');
-    }
+    navigator.clipboard.writeText(fullUrl);
+    
+    toast.success('Gallery link copied to clipboard!');
   };
 
   const downloadFile = () => {
@@ -1769,195 +1727,224 @@ const PreviewModal = ({ item, onClose, onEdit, onDelete }) => {
     document.body.removeChild(link);
   };
 
- return (
-  <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 z-50">
-    <div className="bg-white sm:rounded-[2.5rem] w-full max-w-3xl max-h-screen sm:max-h-[80vh] overflow-hidden shadow-2xl flex flex-col transition-all">
-      
-      {/* Immersive Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <FiEye className="text-blue-600 text-lg" />
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-base sm:text-lg font-bold text-black truncate tracking-tight">
-              {item.title}
-            </h2>
-            <p className="text-gray-400 text-[10px] sm:text-xs uppercase font-bold tracking-widest">
-              {currentIndex + 1} / {item.files.length} • {item.category.replace(/_/g, ' ')}
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2.5 rounded-full hover:bg-gray-100 transition-colors hidden sm:block text-gray-500"
-          >
-            {isFullscreen ? <FiMinimize2 size={20} /> : <FiMaximize2 size={20} />}
-          </button>
-          <button
-            onClick={onClose}
-            className="p-2.5 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 transition-all text-gray-600"
-          >
-            <FiX size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="flex flex-col">
-          
-          {/* Media Stage: Dark background makes content pop */}
-          <div className="relative bg-slate-50 group aspect-video sm:aspect-auto sm:min-h-[350px] flex items-center justify-center overflow-hidden">
-            
-            {/* Nav Arrows - Only visible on hover/touch */}
-            {item.files.length > 1 && (
-              <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex justify-between items-center z-10 pointer-events-none">
-                <button
-                  onClick={prevFile}
-                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-black pointer-events-auto opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300"
-                >
-                  <FiChevronLeft size={24} />
-                </button>
-                <button
-                  onClick={nextFile}
-                  className="p-4 rounded-2xl bg-white/90 backdrop-blur shadow-xl text-black pointer-events-auto opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300"
-                >
-                  <FiChevronRight size={24} />
-                </button>
-              </div>
-            )}
-
-            {/* Content Display */}
-            <div className="w-full h-full flex items-center justify-center p-4">
-              {isImage ? (
-                <img
-                  src={currentFile}
-                  alt={item.title}
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
-                />
-              ) : (
-                <video
-                  src={currentFile}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full rounded-xl shadow-2xl"
-                />
-              )}
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600">
+              <FiEye className="text-white text-xl" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800 truncate">
+                {item.title}
+              </h2>
+              <p className="text-slate-600 text-xs sm:text-sm truncate">
+                {currentIndex + 1} of {item.files.length} • {item.category.replace(/_/g, ' ')}
+              </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="p-2 rounded-xl border border-slate-200 hidden sm:flex"
+            >
+              {isFullscreen ? <FiMinimize2 className="text-slate-600" /> : <FiMaximize2 className="text-slate-600" />}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl border border-slate-200"
+            >
+              <FiX className="text-xl text-slate-600" />
+            </button>
+          </div>
+        </div>
 
-          {/* Details & Info Panel */}
-          <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-tighter rounded-lg">
-                   {item.category.replace(/_/g, ' ')}
-                </span>
-                <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-tighter rounded-lg">
-                   {item.files.length} Files
-                </span>
-              </div>
-              <h3 className="text-xl font-bold text-black mb-3 leading-tight">{item.title}</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">
-                {item.description}
-              </p>
-              
-              {/* Thumbnail Strip */}
+        {/* Main Content */}
+        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="p-4 sm:p-6">
+            <div className="relative">
+              {/* Navigation Buttons */}
               {item.files.length > 1 && (
-                <div className="mt-6">
-                  <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-4">Gallery Collection</h4>
-                  <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-                    {item.files.map((file, index) => (
+                <>
+                  <button
+                    onClick={prevFile}
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-slate-600"
+                  >
+                    <FiChevronLeft className="text-xl" />
+                  </button>
+                  
+                  <button
+                    onClick={nextFile}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-slate-600"
+                  >
+                    <FiChevronRight className="text-xl" />
+                  </button>
+                </>
+              )}
+
+              {/* Media Display */}
+              <div className="flex items-center justify-center p-2 sm:p-4">
+                {isImage ? (
+                  <img
+                    src={currentFile}
+                    alt={`${item.title} - ${currentIndex + 1}`}
+                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
+                  />
+                ) : (
+                  <video
+                    src={currentFile}
+                    controls
+                    autoPlay
+                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] rounded-lg"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Gallery Info */}
+            <div className="mt-4 sm:mt-6 p-4 border border-slate-200 rounded-xl">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-slate-800 text-base sm:text-lg mb-2">{item.title}</h3>
+                  <p className="text-slate-600 text-sm sm:text-base mb-3">{item.description}</p>
+                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-slate-500">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
+                      {item.category.replace(/_/g, ' ')}
+                    </span>
+                    <span>{item.files.length} files</span>
+                    <span>•</span>
+                    <span>Uploaded {new Date(item.uploadDate).toLocaleDateString()}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 sm:flex-col">
+                  <button
+                    onClick={downloadFile}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
+                    title="Download"
+                  >
+                    <FiDownload className="text-sm" />
+                    <span className="hidden sm:inline">Download</span>
+                  </button>
+                  <button
+                    onClick={copyUrl}
+                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
+                    title="Copy URL"
+                  >
+                    <FiCopy className="text-sm" />
+                    <span className="hidden sm:inline">Copy URL</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Thumbnail Strip */}
+            {item.files.length > 1 && (
+              <div className="mt-4 sm:mt-6">
+                <h4 className="font-medium text-slate-800 mb-3 text-sm sm:text-base">All Files ({item.files.length})</h4>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {item.files.map((file, index) => {
+                    const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                    
+                    return (
                       <button
                         key={index}
                         onClick={() => setCurrentIndex(index)}
-                        className={`relative min-w-[70px] h-16 rounded-2xl overflow-hidden transition-all duration-300 ${
-                          index === currentIndex ? 'ring-2 ring-blue-500 ring-offset-2 scale-95' : 'opacity-60 hover:opacity-100'
+                        className={`w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 ${
+                          index === currentIndex 
+                            ? 'border-cyan-500' 
+                            : 'border-transparent'
                         }`}
                       >
-                        <img src={file} className="w-full h-full object-cover" />
-                        {file.match(/\.(mp4|webm|mov)$/i) && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                            <FiVideo className="text-white text-xs" />
+                        {isVideo ? (
+                          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                            <FiVideo className="text-slate-400 text-lg sm:text-2xl" />
                           </div>
+                        ) : (
+                          <img
+                            src={file}
+                            alt={`Thumbnail ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         )}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
+        </div>
 
-            {/* Quick Actions Sidebar */}
-            <div className="space-y-3">
-               <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-4">Actions</h4>
-               <button onClick={downloadFile} className="w-full flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all group">
-                 <span className="font-bold text-sm">Download Original</span>
-                 <FiDownload className="group-hover:translate-y-0.5 transition-transform text-sm" />
-               </button>
-               <button onClick={copyUrl} className="w-full flex items-center justify-between p-4 bg-white border border-gray-200 text-black rounded-2xl hover:border-blue-200 hover:bg-blue-50 transition-all">
-                 <span className="font-bold text-sm">Copy Direct Link</span>
-                 <FiCopy className="text-sm" />
-               </button>
-               <div className="grid grid-cols-2 gap-3 pt-2">
-                 <button onClick={onEdit} className="flex items-center justify-center gap-2 p-3 bg-emerald-50 text-emerald-700 rounded-xl font-bold text-sm hover:bg-emerald-100 transition-all">
-                   <FiEdit2 size={16} /> Edit
-                 </button>
-                 <button onClick={onDelete} className="flex items-center justify-center gap-2 p-3 bg-rose-50 text-rose-700 rounded-xl font-bold text-sm hover:bg-rose-100 transition-all">
-                   <FiTrash2 size={16} /> Delete
-                 </button>
-               </div>
-            </div>
+        {/* Footer Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-6 border-t border-slate-200 bg-slate-50/50">
+          <div className="text-xs sm:text-sm text-slate-600">
+            {item.fileType === 'image' ? 'Image Gallery' : 'Video Gallery'} • File {currentIndex + 1} of {item.files.length}
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={onEdit}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <FiEdit2 />
+              <span className="hidden sm:inline">Edit Gallery</span>
+              <span className="sm:hidden">Edit</span>
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <FiTrash2 />
+              <span className="hidden sm:inline">Delete Gallery</span>
+              <span className="sm:hidden">Delete</span>
+            </button>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
-// Delete Confirmation Modal
-const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
+// Modern Delete Modal Component
+const ModernDeleteModal = ({ item, onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center gap-3 p-6 border-b border-gray-200">
-          <div className="p-3 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl">
+        <div className="flex items-center gap-3 p-6 border-b border-slate-200">
+          <div className="p-3 bg-gradient-to-br from-rose-500 to-pink-500 rounded-xl">
             <FiAlertCircle className="text-white text-2xl" />
           </div>
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-black">Delete Gallery</h3>
-            <p className="text-gray-600 text-sm">This action cannot be undone</p>
+            <h3 className="text-lg sm:text-xl font-semibold text-slate-800">Delete Gallery</h3>
+            <p className="text-slate-600 text-sm">This action cannot be undone</p>
           </div>
         </div>
         
         {/* Content */}
         <div className="p-6">
-          <p className="text-gray-600 mb-4 text-sm sm:text-base">
+          <p className="text-slate-600 mb-4 text-sm sm:text-base">
             Are you sure you want to delete the gallery 
-            <span className="font-bold text-black"> "{item.title}"</span>?
+            <span className="font-semibold text-slate-800"> "{item.title}"</span>?
           </p>
           
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-start gap-3 text-red-700">
+          <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3 text-rose-700">
               <FiAlertCircle className="flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-sm sm:text-base">This will permanently delete:</p>
+                <p className="font-medium text-sm sm:text-base">This will permanently delete:</p>
                 <ul className="mt-2 space-y-1 text-sm">
                   <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
                     <span>{item.files.length} file{item.files.length > 1 ? 's' : ''}</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
                     <span>Gallery title and description</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
                     <span>All associated metadata</span>
                   </li>
                 </ul>
@@ -1966,8 +1953,8 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
           </div>
           
           {/* Gallery Preview */}
-          <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
+          <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
               {item.files[0] && (
                 <img
                   src={item.files[0]}
@@ -1977,12 +1964,12 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-bold text-black truncate">{item.title}</p>
+              <p className="text-sm sm:text-base font-medium text-slate-800 truncate">{item.title}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
                   {item.category.replace(/_/g, ' ')}
                 </span>
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-slate-600">
                   {item.files.length} file{item.files.length > 1 ? 's' : ''}
                 </span>
               </div>
@@ -1991,16 +1978,16 @@ const DeleteConfirmationModal = ({ item, onClose, onConfirm }) => {
         </div>
         
         {/* Footer Actions */}
-        <div className="flex gap-3 p-6 border-t border-gray-200">
+        <div className="flex gap-3 p-6 border-t border-slate-200">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full font-bold text-sm sm:text-base"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-full font-medium text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full font-bold text-sm sm:text-base"
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-medium text-sm sm:text-base"
           >
             Delete Gallery
           </button>
