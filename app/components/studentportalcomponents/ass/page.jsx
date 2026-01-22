@@ -17,7 +17,7 @@ import {
   IoColorPalette, IoGameController, IoCode, IoBuild, IoCalculator
 } from 'react-icons/io5';
 
-import { IoRefreshCw } from "react-icons/io5"; // wrong if using io
+import { IoRefreshCw } from "react-icons/io";
 
 import {
   CircularProgress, Tooltip, Badge, Chip, LinearProgress, Avatar,
