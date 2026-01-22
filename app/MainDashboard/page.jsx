@@ -41,7 +41,7 @@ import SubscriberManager from '../components/subscriber/page';
 import EmailManager from '../components/email/page';
 import GalleryManager from '../components/gallery/page';
 import StudentCouncil from '../components/studentCouncil/page';
-import AdminsProfileManager from '../components/adminsandprofile/page';
+import AdminManager from '../components/adminsandprofile/page';
 import GuidanceCounselingTab from '../components/guidance/page';
 import SchoolInfoTab from '../components/schoolinfo/page';
 import ApplicationsManager from '../components/applications/page';
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
       case 'fees':
         return <Fees />;
       case 'admins-profile':
-        return <AdminsProfileManager user={user} />;
+        return <AdminManager user={user} />;
       default:
         return <DashboardOverview />;
     }
