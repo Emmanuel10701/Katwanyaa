@@ -1,8 +1,50 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import cloudinary from "../../../../libs/cloudinary";
+import { FileManager } from "../../../../libs/manager";
 
-// Helper: Upload file to Cloudinary (same as in collection route)
+// Helper: Upload file - images/videos to Cloudinary, documents to Supabase
+const uploadFileToStorage = async (file, folder = "assignments") => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const originalName = file.name;
+    const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
+    
+    // Determine file type
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
+    const isDocument = file.type.includes('document') || 
+                       file.type.includes('sheet') || 
+                       file.type.includes('presentation') ||
+                       file.type === 'application/pdf' ||
+                       file.type.includes('text') ||
+                       ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar'].includes(fileExt);
+    
+    let result;
+    
+    if (isImage || isVideo || isAudio) {
+      // Use Cloudinary for images, videos, audio
+      result = await uploadFileToCloudinary(file, folder);
+    } else if (isDocument) {
+      // Use Supabase for documents
+      result = await FileManager.uploadFile(file, `assignments/${folder}`);
+    } else {
+      // Default to Supabase for unknown types
+      result = await FileManager.uploadFile(file, `assignments/${folder}`);
+    }
+    
+    if (!result) return null;
+    
+    return result.url || result.secure_url;
+  } catch (error) {
+    console.error("❌ File upload error:", error);
+    return null;
+  }
+};
+
+// Helper: Upload file to Cloudinary (for images/videos/audio)
 const uploadFileToCloudinary = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
@@ -10,25 +52,13 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     const originalName = file.name;
-    
-    const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
     const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
     
     let resourceType = 'image';
     let transformation = {};
-    let uploadOptions = {};
     
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-    const isAudio = file.type.startsWith('audio/');
-    const isPdf = file.type === 'application/pdf' || fileExt === '.pdf';
-    const isDocument = file.type.includes('document') || 
-                       file.type.includes('sheet') || 
-                       file.type.includes('presentation') ||
-                       ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(fileExt);
-    
-    if (isImage) {
+    if (file.type.startsWith('image/')) {
       resourceType = 'image';
       transformation = {
         transformation: [
@@ -36,7 +66,7 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
           { quality: "auto:good" }
         ]
       };
-    } else if (isVideo) {
+    } else if (file.type.startsWith('video/')) {
       resourceType = 'video';
       transformation = {
         transformation: [
@@ -44,34 +74,21 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
           { quality: "auto" }
         ]
       };
-    } else if (isAudio) {
+    } else if (file.type.startsWith('audio/')) {
       resourceType = 'video';
       transformation = {
         resource_type: 'video',
         format: 'mp3'
-      };
-    } else {
-      resourceType = 'raw';
-      uploadOptions = {
-        resource_type: 'raw',
-        public_id: `${timestamp}-${sanitizedFileName}${fileExt}`,
-        filename_override: originalName,
-        use_filename: true,
-        unique_filename: false,
-        transformation: undefined
       };
     }
     
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
+          resource_type: resourceType,
           folder: `assignments/${folder}`,
-          ...(resourceType !== 'raw' ? {
-            public_id: `${timestamp}-${sanitizedFileName}`,
-          } : {}),
-          ...transformation,
-          ...uploadOptions,
-          resource_type: resourceType
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...transformation
         },
         (error, result) => {
           if (error) reject(error);
@@ -81,10 +98,31 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
       uploadStream.end(buffer);
     });
     
-    return result.secure_url;
+    return {
+      secure_url: result.secure_url,
+      name: originalName,
+      size: file.size,
+      type: file.type,
+      resource_type: result.resource_type
+    };
   } catch (error) {
     console.error("❌ Cloudinary upload error:", error);
     return null;
+  }
+};
+
+// Helper: Delete file from appropriate storage
+const deleteFileFromStorage = async (fileUrl) => {
+  if (!fileUrl) return;
+
+  try {
+    if (fileUrl.includes('cloudinary.com')) {
+      await deleteFileFromCloudinary(fileUrl);
+    } else if (fileUrl.includes('supabase.co')) {
+      await FileManager.deleteFile(fileUrl);
+    }
+  } catch (error) {
+    console.error("❌ Error deleting file:", error);
   }
 };
 
@@ -96,62 +134,55 @@ const deleteFileFromCloudinary = async (fileUrl) => {
     const url = new URL(fileUrl);
     const pathname = url.pathname;
     
-    let publicId = '';
-    let resourceType = 'image';
-    
     const uploadMatch = pathname.match(/\/upload\/(?:v\d+\/)?(.*)/);
     
     if (uploadMatch) {
-      publicId = uploadMatch[1];
+      let publicId = uploadMatch[1];
+      let resourceType = 'image';
       
-      if (pathname.includes('/image/') || 
-          pathname.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
-        resourceType = 'image';
-        publicId = publicId.replace(/\.[^/.]+$/, '');
-      } else if (pathname.includes('/video/') || 
-                 pathname.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|mp3|wav|m4a)$/i)) {
+      if (pathname.includes('/video/')) {
         resourceType = 'video';
         publicId = publicId.replace(/\.[^/.]+$/, '');
-      } else if (pathname.includes('/raw/') || 
-                 pathname.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)$/i)) {
+      } else if (pathname.includes('/image/')) {
+        resourceType = 'image';
+        publicId = publicId.replace(/\.[^/.]+$/, '');
+      } else {
         resourceType = 'raw';
       }
+      
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: resourceType,
+        invalidate: true
+      });
+      
+      console.log(`✅ Deleted from Cloudinary: ${publicId}`);
     }
-    
-    if (!publicId) return;
-    
-    await cloudinary.uploader.destroy(publicId, {
-      resource_type: resourceType,
-      invalidate: true
-    });
-    
-    console.log(`✅ Deleted: ${publicId} (${resourceType})`);
   } catch (error) {
-    console.error("❌ Error deleting file:", error);
+    console.error("❌ Error deleting from Cloudinary:", error);
   }
 };
 
 // Helper: Delete multiple files
-const deleteFilesFromCloudinary = async (fileUrls) => {
+const deleteFilesFromStorage = async (fileUrls) => {
   if (!fileUrls || (Array.isArray(fileUrls) && fileUrls.length === 0)) return;
 
   const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
   
   for (const url of urls) {
     if (url) {
-      await deleteFileFromCloudinary(url);
+      await deleteFileFromStorage(url);
     }
   }
 };
 
 // Helper: Upload multiple files
-const uploadFilesToCloudinary = async (files, folder = "assignments") => {
+const uploadFilesToStorage = async (files, folder = "assignments") => {
   const uploadedUrls = [];
   
   for (const file of files) {
     if (file && file.name && file.size > 0) {
       try {
-        const uploadedUrl = await uploadFileToCloudinary(file, folder);
+        const uploadedUrl = await uploadFileToStorage(file, folder);
         if (uploadedUrl) {
           uploadedUrls.push(uploadedUrl);
         }
@@ -250,12 +281,12 @@ export async function PUT(request, { params }) {
     const attachmentsToRemove = formData.getAll("attachmentsToRemove");
     
     if (assignmentFilesToRemove.length > 0) {
-      await deleteFilesFromCloudinary(assignmentFilesToRemove);
+      await deleteFilesFromStorage(assignmentFilesToRemove);
       updatedAssignmentFiles = updatedAssignmentFiles.filter(file => !assignmentFilesToRemove.includes(file));
     }
     
     if (attachmentsToRemove.length > 0) {
-      await deleteFilesFromCloudinary(attachmentsToRemove);
+      await deleteFilesFromStorage(attachmentsToRemove);
       updatedAttachments = updatedAttachments.filter(file => !attachmentsToRemove.includes(file));
     }
     
@@ -264,12 +295,12 @@ export async function PUT(request, { params }) {
     const newAttachments = formData.getAll("attachments");
     
     if (newAssignmentFiles.length > 0) {
-      const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
+      const uploadedFiles = await uploadFilesToStorage(newAssignmentFiles, "assignment-files");
       updatedAssignmentFiles = [...updatedAssignmentFiles, ...uploadedFiles];
     }
     
     if (newAttachments.length > 0) {
-      const uploadedFiles = await uploadFilesToCloudinary(newAttachments, "attachments");
+      const uploadedFiles = await uploadFilesToStorage(newAttachments, "attachments");
       updatedAttachments = [...updatedAttachments, ...uploadedFiles];
     }
     
@@ -349,14 +380,14 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    // Delete all files from Cloudinary
+    // Delete all files from storage
     const allFiles = [
       ...(assignment.assignmentFiles || []),
       ...(assignment.attachments || [])
     ];
     
     if (allFiles.length > 0) {
-      await deleteFilesFromCloudinary(allFiles);
+      await deleteFilesFromStorage(allFiles);
     }
 
     // Delete from database

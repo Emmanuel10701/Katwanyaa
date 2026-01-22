@@ -1,35 +1,58 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
+import { FileManager } from "../../../libs/manager";
 
-// Helper: Generate proper Cloudinary URL for raw files
-const generateCloudinaryUrl = (publicId, resourceType, format = null, folder = null) => {
-  const cloudName = cloudinary.config().cloud_name;
-  let url = `https://res.cloudinary.com/${cloudName}`;
-  
-  if (resourceType === 'raw') {
-    // For raw files, use different URL structure
-    url += `/raw/upload`;
-    if (folder) {
-      url += `/${folder}`;
+// Helper: Upload file - images/videos to Cloudinary, documents to Supabase
+const uploadFileToStorage = async (file, folder = "assignments") => {
+  if (!file?.name || file.size === 0) return null;
+
+  try {
+    const originalName = file.name;
+    const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
+    
+    // Determine file type
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
+    const isDocument = file.type.includes('document') || 
+                       file.type.includes('sheet') || 
+                       file.type.includes('presentation') ||
+                       file.type === 'application/pdf' ||
+                       file.type.includes('text') ||
+                       ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar'].includes(fileExt);
+    
+    let result;
+    
+    if (isImage || isVideo || isAudio) {
+      // Use Cloudinary for images, videos, audio
+      result = await uploadFileToCloudinary(file, folder);
+    } else if (isDocument) {
+      // Use Supabase for documents
+      result = await FileManager.uploadFile(file, `assignments/${folder}`);
+    } else {
+      // Default to Supabase for unknown types
+      result = await FileManager.uploadFile(file, `assignments/${folder}`);
     }
-    url += `/${publicId}`;
-  } else {
-    // For images/videos, use regular URL
-    url += `/${resourceType}/upload`;
-    if (folder) {
-      url += `/${folder}`;
-    }
-    url += `/${publicId}`;
-    if (format) {
-      url += `.${format}`;
-    }
+    
+    if (!result) return null;
+    
+    return {
+      url: result.url || result.secure_url,
+      name: originalName,
+      size: file.size,
+      type: file.type,
+      extension: fileExt,
+      isCloudinary: isImage || isVideo || isAudio,
+      storageType: isImage || isVideo || isAudio ? 'cloudinary' : 'supabase'
+    };
+  } catch (error) {
+    console.error("❌ File upload error:", error);
+    return null;
   }
-  
-  return url;
 };
 
-// Helper: Upload file to Cloudinary with PROPER raw file handling
+// Helper: Upload file to Cloudinary (for images/videos/audio)
 const uploadFileToCloudinary = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
@@ -37,128 +60,58 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     const originalName = file.name;
-    
-    // Get file extension (lowercase)
-    const fileExt = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
     const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
     
-    // Determine resource type
-    let resourceType = 'image'; // default
-    let uploadOptions = {};
+    let resourceType = 'image';
+    let transformation = {};
     
-    // Check file type
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-    const isAudio = file.type.startsWith('audio/');
-    const isPdf = file.type === 'application/pdf' || fileExt === '.pdf';
-    const isDocument = file.type.includes('document') || 
-                       file.type.includes('sheet') || 
-                       file.type.includes('presentation') ||
-                       ['.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'].includes(fileExt);
-    const isText = file.type.includes('text') || fileExt === '.txt';
-    const isArchive = fileExt.match(/\.(zip|rar|7z|tar|gz)$/i);
-    
-    if (isImage) {
+    if (file.type.startsWith('image/')) {
       resourceType = 'image';
-      uploadOptions = {
+      transformation = {
         transformation: [
           { width: 1200, crop: "limit" },
           { quality: "auto:good" }
         ]
       };
-    } else if (isVideo) {
+    } else if (file.type.startsWith('video/')) {
       resourceType = 'video';
-      uploadOptions = {
+      transformation = {
         transformation: [
           { width: 1280, crop: "limit" },
           { quality: "auto" }
         ]
       };
-    } else if (isAudio) {
-      resourceType = 'video';
-      uploadOptions = {
+    } else if (file.type.startsWith('audio/')) {
+      resourceType = 'video'; // Cloudinary uses 'video' for audio
+      transformation = {
         resource_type: 'video',
         format: 'mp3'
-      };
-    } else {
-      // For ALL other files (PDFs, docs, etc.) - use 'raw' resource type
-      resourceType = 'raw';
-      uploadOptions = {
-        resource_type: 'raw',
-        // IMPORTANT: Use the original filename for raw files
-        public_id: `${sanitizedFileName}${fileExt}`,
-        // Set to true to use the original filename
-        use_filename: true,
-        // Don't add unique identifiers
-        unique_filename: false,
-        // Override the filename
-        filename_override: originalName,
-        // Don't apply transformations to raw files
-        transformation: undefined
       };
     }
     
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          // Base options
-          folder: `assignments/${folder}`,
           resource_type: resourceType,
-          // For non-raw files, use timestamp in public_id
-          ...(resourceType !== 'raw' && {
-            public_id: `${timestamp}-${sanitizedFileName}`,
-          }),
-          // Merge with type-specific options
-          ...uploadOptions,
+          folder: `assignments/${folder}`,
+          public_id: `${timestamp}-${sanitizedFileName}`,
+          ...transformation
         },
         (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error details:", error);
-            reject(error);
-          } else {
-            console.log("Cloudinary upload result:", {
-              resource_type: result.resource_type,
-              format: result.format,
-              public_id: result.public_id,
-              secure_url: result.secure_url
-            });
-            resolve(result);
-          }
+          if (error) reject(error);
+          else resolve(result);
         }
       );
       uploadStream.end(buffer);
     });
     
-    // Generate a proper download URL
-    let downloadUrl = result.secure_url;
-    
-    // If it's a raw file, we need to construct a direct download URL
-    if (resourceType === 'raw') {
-      // For raw files, Cloudinary doesn't always provide direct download URLs
-      // We need to use the asset URL format
-      const cloudName = cloudinary.config().cloud_name;
-      // This is the format for direct download of raw files
-      downloadUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${result.public_id}`;
-      
-      // Alternative: Use the delivery URL if available
-      if (result.secure_url && result.secure_url.includes('cloudinary.com')) {
-        // Keep the original secure_url but ensure it's the direct one
-        downloadUrl = result.secure_url.replace('/upload/', '/raw/upload/');
-      }
-    }
-    
     return {
-      url: downloadUrl,
-      originalUrl: result.secure_url, // Keep original for reference
+      secure_url: result.secure_url,
       name: originalName,
       size: file.size,
       type: file.type,
-      format: result.format || fileExt.replace('.', ''),
-      resource_type: result.resource_type,
-      extension: fileExt,
-      public_id: result.public_id,
-      isRawFile: resourceType === 'raw'
+      resource_type: result.resource_type
     };
   } catch (error) {
     console.error("❌ Cloudinary upload error:", error);
@@ -166,77 +119,66 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
   }
 };
 
-// Helper: Delete file from Cloudinary - FIXED for all types
+// Helper: Delete file from appropriate storage
+const deleteFileFromStorage = async (fileUrl) => {
+  if (!fileUrl) return;
+
+  try {
+    if (fileUrl.includes('cloudinary.com')) {
+      await deleteFileFromCloudinary(fileUrl);
+    } else if (fileUrl.includes('supabase.co')) {
+      await FileManager.deleteFile(fileUrl);
+    }
+  } catch (error) {
+    console.error("❌ Error deleting file:", error);
+  }
+};
+
+// Helper: Delete file from Cloudinary
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl || !fileUrl.includes('cloudinary.com')) return;
 
   try {
-    // Parse the URL
     const url = new URL(fileUrl);
     const pathname = url.pathname;
     
-    // Extract public_id from URL pattern
-    let publicId = '';
-    let resourceType = 'image';
-    
-    // Match patterns like: /upload/v1234567890/folder/filename.ext
-    // Or: /raw/upload/v1234567890/folder/filename.ext
-    const rawMatch = pathname.match(/\/raw\/upload\/(?:v\d+\/)?(.*)/);
     const uploadMatch = pathname.match(/\/upload\/(?:v\d+\/)?(.*)/);
     
-    if (rawMatch) {
-      // This is a raw file
-      publicId = rawMatch[1];
-      resourceType = 'raw';
-      // For raw files, keep the extension in public_id
-    } else if (uploadMatch) {
-      publicId = uploadMatch[1];
+    if (uploadMatch) {
+      let publicId = uploadMatch[1];
+      let resourceType = 'image';
       
-      // Determine resource type from URL pattern
-      if (pathname.includes('/video/') || 
-          pathname.match(/\.(mp4|mov|avi|wmv|flv|webm|mkv|mp3|wav|m4a)$/i)) {
+      if (pathname.includes('/video/')) {
         resourceType = 'video';
         publicId = publicId.replace(/\.[^/.]+$/, '');
-      } else if (pathname.includes('/image/') || 
-                 pathname.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
+      } else if (pathname.includes('/image/')) {
         resourceType = 'image';
         publicId = publicId.replace(/\.[^/.]+$/, '');
       } else {
-        // Assume it's raw if it has document extensions
         resourceType = 'raw';
-        // Keep extension for raw files
       }
+      
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: resourceType,
+        invalidate: true
+      });
+      
+      console.log(`✅ Deleted from Cloudinary: ${publicId}`);
     }
-    
-    if (!publicId) return;
-    
-    console.log(`Deleting from Cloudinary: ${publicId} (${resourceType})`);
-    
-    // Delete the file
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: resourceType,
-      invalidate: true
-    });
-    
-    console.log(`✅ Deleted from Cloudinary: ${publicId} (${resourceType})`);
-    return result;
   } catch (error) {
     console.error("❌ Error deleting from Cloudinary:", error);
-    return null;
   }
 };
 
 // Helper: Upload multiple files
-const uploadFilesToCloudinary = async (files, folder = "assignments") => {
+const uploadFilesToStorage = async (files, folder = "assignments") => {
   const uploadedFiles = [];
   
   for (const file of files) {
     if (file && file.name && file.size > 0) {
       try {
-        console.log(`Uploading file: ${file.name} (${file.type}, ${file.size} bytes)`);
-        const uploadedFile = await uploadFileToCloudinary(file, folder);
+        const uploadedFile = await uploadFileToStorage(file, folder);
         if (uploadedFile) {
-          console.log(`✅ Uploaded: ${uploadedFile.name} as ${uploadedFile.resource_type}`);
           uploadedFiles.push(uploadedFile);
         }
       } catch (error) {
@@ -248,7 +190,7 @@ const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   return uploadedFiles;
 };
 
-// Helper: Get file info from URL (improved for raw files)
+// Helper: Get file info from URL
 const getFileInfoFromUrl = (url) => {
   if (!url) return null;
   
@@ -260,10 +202,9 @@ const getFileInfoFromUrl = (url) => {
     const pathParts = pathname.split('/');
     let fileName = pathParts[pathParts.length - 1];
     
-    // If it's a raw file URL, it might have version prefix
+    // If it's a Cloudinary URL with version prefix
     if (fileName.startsWith('v')) {
-      // Remove version prefix
-      fileName = pathParts[pathParts.length - 1].substring(1);
+      fileName = fileName.substring(1);
     }
     
     // Extract extension
@@ -301,11 +242,6 @@ const getFileInfoFromUrl = (url) => {
         return typeMap[ext];
       }
       
-      // Check URL pattern
-      if (urlStr.includes('/raw/upload/')) {
-        return 'Document';
-      }
-      
       return 'File';
     };
 
@@ -314,8 +250,7 @@ const getFileInfoFromUrl = (url) => {
       fileName,
       extension,
       fileType: getFileType(extension, url),
-      isRawFile: url.includes('/raw/upload/') || 
-                 ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip', '.rar'].includes(extension)
+      storageType: url.includes('cloudinary.com') ? 'cloudinary' : 'supabase'
     };
   } catch (error) {
     console.error("Error parsing URL:", url, error);
@@ -324,41 +259,12 @@ const getFileInfoFromUrl = (url) => {
       fileName: 'download',
       extension: '',
       fileType: 'File',
-      isRawFile: false
+      storageType: 'unknown'
     };
   }
 };
 
-// Helper: Generate direct download URL for raw files
-const getDirectDownloadUrl = (cloudinaryUrl) => {
-  if (!cloudinaryUrl || !cloudinaryUrl.includes('cloudinary.com')) {
-    return cloudinaryUrl;
-  }
-  
-  try {
-    const url = new URL(cloudinaryUrl);
-    const pathname = url.pathname;
-    
-    // If it's already a raw URL, return as-is
-    if (pathname.includes('/raw/upload/')) {
-      return cloudinaryUrl;
-    }
-    
-    // If it's a regular upload URL for documents, convert to raw
-    if (pathname.includes('/upload/') && 
-        cloudinaryUrl.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt|zip|rar)$/i)) {
-      // Convert /upload/ to /raw/upload/
-      return cloudinaryUrl.replace('/upload/', '/raw/upload/');
-    }
-    
-    return cloudinaryUrl;
-  } catch (error) {
-    console.error("Error generating direct download URL:", error);
-    return cloudinaryUrl;
-  }
-};
-
-// 🔹 POST — Create a new assignment (UPDATED with better file handling)
+// 🔹 POST — Create a new assignment
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -390,60 +296,27 @@ export async function POST(request) {
     // Handle file uploads
     let assignmentFiles = [];
     let attachments = [];
-    let fileDetails = []; // Store details for debugging
     
     try {
-      // Get files from form data
-      const assignmentFileInputs = formData.getAll("assignmentFiles");
-      const attachmentInputs = formData.getAll("attachments");
-      
-      console.log(`📤 Uploading ${assignmentFileInputs.length} assignment files and ${attachmentInputs.length} attachments`);
-      
       // Upload assignment files
-      if (assignmentFileInputs.length > 0) {
-        const uploadedFiles = await uploadFilesToCloudinary(assignmentFileInputs, "assignment-files");
-        assignmentFiles = uploadedFiles.map(file => {
-          // For raw files, use direct download URL
-          const url = file.isRawFile ? getDirectDownloadUrl(file.url) : file.url;
-          fileDetails.push({
-            name: file.name,
-            type: file.type,
-            resource_type: file.resource_type,
-            url: url,
-            originalUrl: file.originalUrl
-          });
-          return url;
-        });
-        console.log(`✅ Uploaded assignment files:`, uploadedFiles.map(f => ({
-          name: f.name,
-          type: f.resource_type,
-          url: f.url
-        })));
-      }
+      const assignmentFileInputs = formData.getAll("assignmentFiles");
+      const uploadedAssignmentFiles = await uploadFilesToStorage(assignmentFileInputs, "assignment-files");
+      assignmentFiles = uploadedAssignmentFiles.map(file => file.url);
+      console.log(`✅ Uploaded assignment files:`, uploadedAssignmentFiles.map(f => ({
+        name: f.name,
+        storage: f.storageType,
+        url: f.url
+      })));
       
       // Upload attachments
-      if (attachmentInputs.length > 0) {
-        const uploadedFiles = await uploadFilesToCloudinary(attachmentInputs, "attachments");
-        attachments = uploadedFiles.map(file => {
-          // For raw files, use direct download URL
-          const url = file.isRawFile ? getDirectDownloadUrl(file.url) : file.url;
-          fileDetails.push({
-            name: file.name,
-            type: file.type,
-            resource_type: file.resource_type,
-            url: url,
-            originalUrl: file.originalUrl
-          });
-          return url;
-        });
-        console.log(`✅ Uploaded attachments:`, uploadedFiles.map(f => ({
-          name: f.name,
-          type: f.resource_type,
-          url: f.url
-        })));
-      }
-      
-      console.log("📋 File details:", fileDetails);
+      const attachmentInputs = formData.getAll("attachments");
+      const uploadedAttachments = await uploadFilesToStorage(attachmentInputs, "attachments");
+      attachments = uploadedAttachments.map(file => file.url);
+      console.log(`✅ Uploaded attachments:`, uploadedAttachments.map(f => ({
+        name: f.name,
+        storage: f.storageType,
+        url: f.url
+      })));
       
     } catch (fileError) {
       console.error("File upload error:", fileError);
@@ -489,7 +362,10 @@ export async function POST(request) {
         success: true,
         message: "Assignment created successfully",
         assignment,
-        fileDetails: fileDetails
+        fileCounts: {
+          assignmentFiles: assignmentFiles.length,
+          attachments: attachments.length
+        }
       },
       { status: 201 }
     );
@@ -502,7 +378,7 @@ export async function POST(request) {
   }
 }
 
-// 🔹 GET — Fetch all assignments with filtering (UPDATED with better file info)
+// 🔹 GET — Fetch all assignments with filtering
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -550,22 +426,13 @@ export async function GET(request) {
 
     // Process assignments to add file information
     const processedAssignments = assignments.map(assignment => {
-      // Convert file URLs to file info objects
       const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url, index) => {
         const fileInfo = getFileInfoFromUrl(url);
-        // Ensure we have a direct download URL for raw files
-        if (fileInfo?.isRawFile) {
-          fileInfo.downloadUrl = getDirectDownloadUrl(url);
-        }
         return fileInfo;
       }).filter(Boolean);
       
       const attachmentAttachments = (assignment.attachments || []).map((url, index) => {
         const fileInfo = getFileInfoFromUrl(url);
-        // Ensure we have a direct download URL for raw files
-        if (fileInfo?.isRawFile) {
-          fileInfo.downloadUrl = getDirectDownloadUrl(url);
-        }
         return fileInfo;
       }).filter(Boolean);
       
