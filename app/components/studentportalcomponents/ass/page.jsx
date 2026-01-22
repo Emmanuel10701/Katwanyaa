@@ -681,23 +681,27 @@ return (
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 pt-3 sm:pt-4 md:pt-6 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-sm sm:text-base md:text-lg flex items-center justify-center gap-1 sm:gap-2 md:gap-3"
-            >
-              <IoClose className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Close</span>
-            </button>
-            
-            <button
-              onClick={() => onDownload?.(item)}
-              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-sm sm:text-base md:text-lg shadow-xl flex items-center justify-center gap-1 sm:gap-2 md:gap-3"
-            >
-              <IoCloudDownload className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Download All Files</span>
-            </button>
-          </div>
+<div className="flex flex-row items-center gap-2 sm:gap-3 md:gap-4 pt-3 sm:pt-4 md:pt-6 border-t border-gray-200">
+  <button
+    onClick={onClose}
+    /* min-w-0 and flex-1 ensures it doesn't push the other button off screen */
+    className="flex-1 min-w-0 h-11 sm:h-14 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-[12px] sm:text-base md:text-lg flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-all"
+  >
+    <IoClose className="shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+    <span className="truncate">Close</span>
+  </button>
+  
+  <button
+    onClick={() => onDownload?.(item)}
+    /* flex-[2] makes Download the primary focus while keeping it in the same row */
+    className="flex-[2] min-w-0 h-11 sm:h-14 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-[12px] sm:text-base md:text-lg shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-all"
+  >
+    <IoCloudDownload className="shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+    {/* Shortened text for small screens to prevent overlap */}
+    <span className="truncate sm:hidden">Download</span>
+    <span className="hidden sm:inline">Download All Files</span>
+  </button>
+</div>
         </div>
       </div>
     </div>
@@ -1087,9 +1091,7 @@ export default function ModernResourcesAssignmentsView({
                   : 'text-gray-600'
               }`}
             >
-              <div className={`p-2 rounded-lg ${activeTab === 'assignments' ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
-                <IoDocument className="text-lg" />
-              </div>
+       
               <div className="text-left">
                 <div className="text-sm font-bold">Assignments</div>
                 <div className={`text-xs ${activeTab === 'assignments' ? 'text-white/80' : 'text-gray-400'}`}>
@@ -1106,9 +1108,6 @@ export default function ModernResourcesAssignmentsView({
                   : 'text-gray-600'
               }`}
             >
-              <div className={`p-2 rounded-lg ${activeTab === 'resources' ? 'bg-white/20' : 'bg-purple-50 text-purple-600'}`}>
-                <IoDocumentsOutline className="text-lg" />
-              </div>
               <div className="text-left">
                 <div className="text-sm font-bold">Resources</div>
                 <div className={`text-xs ${activeTab === 'resources' ? 'text-white/80' : 'text-gray-400'}`}>
