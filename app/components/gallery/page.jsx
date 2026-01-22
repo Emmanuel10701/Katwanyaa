@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   FiPlus, FiSearch, FiEdit, FiTrash2, FiImage, FiFilter, FiDownload,
   FiX, FiEye, FiUpload, FiStar, FiGrid, FiList, FiChevronLeft,
@@ -161,7 +161,7 @@ export default function ModernGalleryManager() {
           description: gallery.description || '',
           category: gallery.category,
           files: gallery.files || [],
-          fileType: determineMediaType(gallery.files?.[0]),
+          fileType: 'image',
           previewUrl: gallery.files?.[0] || '',
           fileCount: gallery.files?.length || 0,
           uploadDate: gallery.createdAt,
@@ -194,18 +194,6 @@ export default function ModernGalleryManager() {
     }
   };
 
-  // Determine media type
-  const determineMediaType = (filePath) => {
-    if (!filePath) return 'image';
-    const extension = filePath.split('.').pop()?.toLowerCase();
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
-    const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'];
-    
-    if (imageExtensions.includes(extension)) return 'image';
-    if (videoExtensions.includes(extension)) return 'video';
-    return 'image';
-  };
-
   useEffect(() => {
     fetchGalleryItems();
   }, [sortBy]);
@@ -226,76 +214,75 @@ export default function ModernGalleryManager() {
     setCurrentPage(1);
   }, [galleryItems, searchTerm, selectedCategory]);
 
-const handleFilesSelect = (files) => {
-  const fileArray = Array.from(files);
-  const validFiles = fileArray.filter(file => {
-    // Check if file is valid
-    if (!file || !file.type) {
-      toast.error('Invalid file selected');
-      return false;
-    }
-    
-    const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
-    const isValidSize = file.size <= 10 * 1024 * 1024;
-    
-    if (!isValidType) {
-      toast.error(`${file.name || 'Unknown file'}: Unsupported format`);
-      return false;
-    }
-    if (!isValidSize) {
-      toast.error(`${file.name || 'Unknown file'}: Exceeds 10MB limit`);
-      return false;
-    }
-    return true;
-  });
-
-  if (validFiles.length === 0) {
-    toast.warning('Please select valid files (images, max 10MB)');
-    return;
-  }
-
-  // Create file objects with unique IDs and safe preview creation
-  const filesWithIds = validFiles.map(file => {
-    const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name || 'file'}`;
-    let previewUrl = null;
-    
-    // Only create preview for images
-    if (file.type.startsWith('image/')) {
-      try {
-        previewUrl = URL.createObjectURL(file);
-      } catch (err) {
-        console.error('Failed to create preview URL:', err);
-        previewUrl = null;
+  const handleFilesSelect = (files) => {
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter(file => {
+      if (!file || !file.type) {
+        toast.error('Invalid file selected');
+        return false;
       }
+      
+      const isValidType = file.type.startsWith('image/');
+      const isValidSize = file.size <= 10 * 1024 * 1024;
+      
+      if (!isValidType) {
+        toast.error(`${file.name || 'Unknown file'}: Unsupported format - images only`);
+        return false;
+      }
+      if (!isValidSize) {
+        toast.error(`${file.name || 'Unknown file'}: Exceeds 10MB limit`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) {
+      toast.warning('Please select valid image files (max 10MB)');
+      return;
     }
+
+    // Create file objects with unique IDs and safe preview creation
+    const filesWithIds = validFiles.map(file => {
+      const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name || 'file'}`;
+      let previewUrl = null;
+      
+      // Only create preview for images
+      if (file.type.startsWith('image/')) {
+        try {
+          previewUrl = URL.createObjectURL(file);
+        } catch (err) {
+          console.error('Failed to create preview URL:', err);
+          previewUrl = null;
+        }
+      }
+      
+      return {
+        id: fileId,
+        file: file,
+        preview: previewUrl,
+        type: file.type,
+        name: file.name || 'Unknown file',
+        size: file.size
+      };
+    });
+
+    // Update previews state
+    const newPreviews = {};
+    filesWithIds.forEach(fileObj => {
+      if (fileObj.preview) {
+        newPreviews[fileObj.id] = fileObj.preview;
+      }
+    });
+
+    setSelectedFilePreviews(prev => ({ ...prev, ...newPreviews }));
     
-    return {
-      id: fileId,
-      file: file,
-      preview: previewUrl,
-      type: file.type,
-      name: file.name || 'Unknown file',
-      size: file.size
-    };
-  });
-
-  // Update previews state
-  const newPreviews = {};
-  filesWithIds.forEach(fileObj => {
-    if (fileObj.preview) {
-      newPreviews[fileObj.id] = fileObj.preview;
-    }
-  });
-
-  setSelectedFilePreviews(prev => ({ ...prev, ...newPreviews }));
-  
-  setFormData(prev => ({ 
-    ...prev, 
-    files: [...prev.files, ...filesWithIds].slice(0, 20)
-  }));
-  
-  toast.success(`${validFiles.length} file(s) added`);
-};
+    setFormData(prev => ({ 
+      ...prev, 
+      files: [...prev.files, ...filesWithIds].slice(0, 20)
+    }));
+    
+    toast.success(`${validFiles.length} image(s) added`);
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -312,11 +299,10 @@ const handleFilesSelect = (files) => {
     }
   };
 
-  // FIXED: Remove file function that doesn't affect other files
+  // Remove file function
   const removeFile = (fileId) => {
     setRemovingFile(fileId);
     
-    // Find the file to remove
     const fileToRemove = formData.files.find(f => f.id === fileId);
     
     if (!fileToRemove) {
@@ -975,7 +961,7 @@ const handleFilesSelect = (files) => {
         )}
       </div>
 
-      {/* Create Modal - FIXED VERSION */}
+      {/* Create Modal */}
       {showCreateModal && (
         <ModernModal
           mode="create"
@@ -1004,7 +990,7 @@ const handleFilesSelect = (files) => {
         />
       )}
 
-      {/* Edit Modal - FIXED VERSION */}
+      {/* Edit Modal */}
       {showEditModal && editingItem && (
         <ModernModal
           mode="edit"
@@ -1041,7 +1027,7 @@ const handleFilesSelect = (files) => {
         />
       )}
 
-      {/* Preview Modal - Keep existing */}
+      {/* Preview Modal */}
       {showPreviewModal && previewItem && (
         <ModernPreviewModal
           item={previewItem}
@@ -1057,7 +1043,7 @@ const handleFilesSelect = (files) => {
         />
       )}
 
-      {/* Delete Confirmation Modal - Keep existing */}
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && itemToDelete && (
         <ModernDeleteModal
           item={itemToDelete}
@@ -1075,109 +1061,6 @@ const handleFilesSelect = (files) => {
 // Modern Gallery Item Component
 const ModernGalleryItem = ({ 
   item, viewMode, isSelected, hasError, 
-  onSelect, onEdit, onDelete, onPreview,
-  onImageError
-}) => {
-  const formatCategory = (category) => {
-    if (!category) return '';
-    return category.toLowerCase().replace(/_/g, ' ');
-  };
-
-  if (viewMode === 'list') {
-    return (
-      <div
-        className={`bg-white rounded-2xl p-4 flex items-center gap-4 border border-slate-100/50 ${
-          isSelected ? 'border-blue-500 bg-blue-50/30' : ''
-        }`}
-      >
-        <button 
-          onClick={onSelect}
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-            isSelected 
-              ? 'bg-blue-500 border-blue-500 text-white' 
-              : 'bg-white border-slate-300'
-          }`}
-        >
-          {isSelected && <FiCheck className="text-xs" />}
-        </button>
-
-        {/* Thumbnail */}
-        <div className="w-20 h-20 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 relative cursor-pointer" onClick={onPreview}>
-          {hasError ? (
-            <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-              <FiImage className="text-slate-400 text-xl" />
-            </div>
-          ) : item.fileType === 'image' ? (
-            <>
-              <img
-                src={item.files[0]}
-                alt={item.title}
-                className="w-full h-full object-cover"
-                onError={onImageError}
-              />
-              {item.files.length > 1 && (
-                <div className="absolute bottom-1 right-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                  +{item.files.length - 1}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-400 to-slate-600 flex items-center justify-center">
-              <FiVideo className="text-white text-2xl" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-slate-800 truncate cursor-pointer" onClick={onPreview}>{item.title}</h3>
-            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-              {formatCategory(item.category)}
-            </span>
-          </div>
-          <p className="text-slate-600 text-sm mb-1 truncate">{item.description || 'No description'}</p>
-          <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className={`px-2 py-1 rounded ${item.fileType === 'image' ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800'}`}>
-              {item.fileType === 'image' ? 'GALLERY' : 'VIDEO'}
-            </span>
-            <span>•</span>
-            <span>{item.files.length} file{item.files.length > 1 ? 's' : ''}</span>
-            <span>•</span>
-            <span>{new Date(item.uploadDate).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onPreview}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-xs sm:text-sm font-medium"
-          >
-            <span className="hidden sm:inline">View</span>
-            <FiEye className="sm:hidden" />
-          </button>
-          <button
-            onClick={onEdit}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs sm:text-sm font-medium"
-          >
-            <span className="hidden sm:inline">Edit</span>
-            <FiEdit className="sm:hidden" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full text-xs sm:text-sm font-medium"
-          >
-            <span className="hidden sm:inline">Delete</span>
-            <FiTrash2 className="sm:hidden" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Grid View
-// Modern Gallery Item Component
-const ModernGalleryItem = ({ 
-  item, viewMode, isSelected, hasError, 
   onSelect, onPreview, onImageError
 }) => {
   const formatCategory = (category) => {
@@ -1185,12 +1068,12 @@ const ModernGalleryItem = ({
     return category.toLowerCase().replace(/_/g, ' ');
   };
 
+  // Grid View
   return (
     <div
       className={`bg-white rounded-2xl overflow-hidden border border-slate-100/50 group transition-all duration-300 hover:shadow-xl hover:border-slate-200 ${
         isSelected ? 'border-blue-500 ring-4 ring-blue-100/50' : ''
       }`}
-      style={{ width: 'calc(100% + 20%)' }}
     >
       <div className="relative">
         {/* Selection Checkbox - Enhanced */}
@@ -1220,18 +1103,27 @@ const ModernGalleryItem = ({
               <p className="text-slate-500 text-sm font-medium">Failed to load image</p>
               <p className="text-slate-400 text-xs mt-1">Tap to refresh</p>
             </div>
-          ) : item.fileType === 'image' ? (
+          ) : (
             <>
-              <img
-                src={item.files[0]}
-                alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                onError={onImageError}
-              />
-              {/* Multiple Images Indicator - Enhanced */}
-              {item.files.length > 1 && (
-                <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full shadow-xl font-bold">
-                  +{item.files.length - 1} more
+              {item.files[0] ? (
+                <>
+                  <img
+                    src={item.files[0]}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={onImageError}
+                  />
+                  {/* Multiple Images Indicator - Enhanced */}
+                  {item.files.length > 1 && (
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full shadow-xl font-bold">
+                      +{item.files.length - 1} more
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center p-6">
+                  <FiImage className="text-slate-400 text-3xl mb-3" />
+                  <p className="text-slate-500 text-sm font-medium">No image available</p>
                 </div>
               )}
               {/* View Overlay */}
@@ -1242,12 +1134,6 @@ const ModernGalleryItem = ({
                 </div>
               </div>
             </>
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex flex-col items-center justify-center p-6">
-              <FiVideo className="text-white text-5xl mb-4" />
-              <p className="text-white text-lg font-bold mb-2">Video Gallery</p>
-              <p className="text-white/70 text-sm text-center">Click to view video content</p>
-            </div>
           )}
         </div>
       </div>
@@ -1311,9 +1197,8 @@ const ModernGalleryItem = ({
     </div>
   );
 };
-};
 
-// FIXED: Modern Modal Component with all fixes
+// Modern Modal Component
 const ModernModal = ({
   mode, formData, setFormData, editingItem, uploadProgress, isUploading, dragActive,
   categories, selectedFilePreviews, filesToRemove, setFilesToRemove, removingFile, onClose, onSubmit, 
@@ -1514,7 +1399,7 @@ return (
                   </span>
                 </h3>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Max 10MB per file • Supported: Images files
+                  Max 10MB per file • Supported: Images only
                 </p>
               </div>
               <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
@@ -1548,7 +1433,7 @@ return (
                 <input
                   type="file"
                   multiple
-                  accept="image/*,video/*"
+                  accept="image/*"
                   onChange={(e) => onFileSelect(e.target.files)}
                   className="hidden"
                   ref={fileInputRef}
@@ -1566,100 +1451,95 @@ return (
             </div>
 
             {/* Selected Files Preview */}
-{/* Selected Files Preview */}
-{formData.files.length > 0 && (
-  <div className="mt-6">
-    <h4 className="text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
-      <FiCheckCircle className="text-green-500" />
-      <span>New Files to Add ({formData.files.length})</span>
-    </h4>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-      {formData.files.map((file, index) => {
-        // FIXED: Proper file ID handling
-        const fileObj = file.file ? file : { id: `temp-${index}`, file: file, type: file.type };
-        const fileId = fileObj.id || `file-${index}`;
-        
-        // FIXED: Safe URL creation
-        let previewUrl = null;
-        if (fileObj.file && fileObj.file.type && fileObj.file.type.startsWith('image/')) {
-          try {
-            previewUrl = URL.createObjectURL(fileObj.file);
-          } catch (err) {
-            console.error('Failed to create preview URL:', err);
-            previewUrl = null;
-          }
-        }
-        
-        return (
-          <div key={fileId} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-            <div className="aspect-square relative">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt={fileObj.file?.name || `File ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  onLoad={() => {
-                    // Clean up URL after image loads
-                    setTimeout(() => {
-                      if (previewUrl && previewUrl.startsWith('blob:')) {
-                        URL.revokeObjectURL(previewUrl);
+            {formData.files.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <FiCheckCircle className="text-green-500" />
+                  <span>New Files to Add ({formData.files.length})</span>
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {formData.files.map((file, index) => {
+                    // Proper file ID handling
+                    const fileObj = file.file ? file : { id: `temp-${index}`, file: file, type: file.type };
+                    const fileId = fileObj.id || `file-${index}`;
+                    
+                    // Safe URL creation
+                    let previewUrl = null;
+                    if (fileObj.file && fileObj.file.type && fileObj.file.type.startsWith('image/')) {
+                      try {
+                        previewUrl = URL.createObjectURL(fileObj.file);
+                      } catch (err) {
+                        console.error('Failed to create preview URL:', err);
+                        previewUrl = null;
                       }
-                    }, 100);
-                  }}
-                />
-              ) : fileObj.type?.startsWith('video/') ? (
-                <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                  <FiVideo className="text-3xl text-purple-500" />
+                    }
+                    
+                    return (
+                      <div key={fileId} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+                        <div className="aspect-square relative">
+                          {previewUrl ? (
+                            <img
+                              src={previewUrl}
+                              alt={fileObj.file?.name || `File ${index + 1}`}
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              onLoad={() => {
+                                // Clean up URL after image loads
+                                setTimeout(() => {
+                                  if (previewUrl && previewUrl.startsWith('blob:')) {
+                                    URL.revokeObjectURL(previewUrl);
+                                  }
+                                }, 100);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <FiFile className="text-3xl text-gray-400" />
+                            </div>
+                          )}
+                          
+                          {/* Upload Progress */}
+                          {uploadProgress[fileId] !== undefined && (
+                            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
+                              <div 
+                                className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
+                                style={{ width: `${uploadProgress[fileId]}%` }}
+                              />
+                            </div>
+                          )}
+                          
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => removeFile(fileId)}
+                            className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg hover:shadow-xl transition-all"
+                            title="Remove file"
+                            disabled={removingFile === fileId}
+                          >
+                            {removingFile === fileId ? (
+                              <FiRotateCw className="text-xs animate-spin" />
+                            ) : (
+                              <FiX className="text-xs" />
+                            )}
+                          </button>
+                        </div>
+                        
+                        {/* File Info */}
+                        <div className="p-3">
+                          <p className="text-sm font-bold text-gray-800 truncate" title={fileObj.file?.name}>
+                            {fileObj.file?.name || `File ${index + 1}`}
+                          </p>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs font-bold text-gray-500">
+                              {fileObj.file?.size ? `${(fileObj.file.size / (1024 * 1024)).toFixed(1)} MB` : 'Unknown size'}
+                            </p>
+                            <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <FiFile className="text-3xl text-gray-400" />
-                </div>
-              )}
-              
-              {/* Upload Progress */}
-              {uploadProgress[fileId] !== undefined && (
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
-                    style={{ width: `${uploadProgress[fileId]}%` }}
-                  />
-                </div>
-              )}
-              
-              {/* Remove Button */}
-              <button
-                onClick={() => removeFile(fileId)}
-                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg hover:shadow-xl transition-all"
-                title="Remove file"
-                disabled={removingFile === fileId}
-              >
-                {removingFile === fileId ? (
-                  <FiRotateCw className="text-xs animate-spin" />
-                ) : (
-                  <FiX className="text-xs" />
-                )}
-              </button>
-            </div>
-            
-            {/* File Info */}
-            <div className="p-3">
-              <p className="text-sm font-bold text-gray-800 truncate" title={fileObj.file?.name}>
-                {fileObj.file?.name || `File ${index + 1}`}
-              </p>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-xs font-bold text-gray-500">
-                  {fileObj.file?.size ? `${(fileObj.file.size / (1024 * 1024)).toFixed(1)} MB` : 'Unknown size'}
-                </p>
-                <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
               </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-)}
+            )}
           </div>
 
           {/* Form Fields */}
@@ -1885,14 +1765,13 @@ return (
 );
 }
 
-
-// Modern Preview Modal Component - Updated to match create modal style
+// Modern Preview Modal Component
 const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const currentFile = item.files[currentIndex];
-  const isImage = item.fileType === 'image';
+  const isImage = true; // Since we only have images
 
   const nextFile = () => {
     setCurrentIndex((prev) => (prev + 1) % item.files.length);
@@ -1981,7 +1860,7 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
-                    {item.fileType === 'image' ? 'IMAGE GALLERY' : 'VIDEO GALLERY'}
+                    IMAGE GALLERY
                   </div>
                 </div>
               </div>
@@ -2008,19 +1887,17 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
 
                 {/* Media Display - Modern container */}
                 <div className="flex items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                  {isImage ? (
+                  {currentFile ? (
                     <img
                       src={currentFile}
                       alt={`${item.title} - ${currentIndex + 1}`}
                       className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
                     />
                   ) : (
-                    <video
-                      src={currentFile}
-                      controls
-                      autoPlay
-                      className="max-w-full max-h-[50vh] sm:max-h-[60vh] rounded-lg"
-                    />
+                    <div className="flex flex-col items-center justify-center p-8">
+                      <FiImage className="text-gray-400 text-4xl mb-3" />
+                      <p className="text-gray-500">No image available</p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -2108,46 +1985,36 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                 </div>
                 
                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                  {item.files.map((file, index) => {
-                    const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
-                    
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentIndex(index)}
-                        className={`relative rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-200 ${
-                          index === currentIndex 
-                            ? 'border-cyan-500 shadow-lg scale-105' 
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        style={{ width: '120px', height: '120px' }}
-                      >
-                        {isVideo ? (
-                          <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                            <FiVideo className="text-2xl text-purple-500" />
-                          </div>
-                        ) : (
-                          <img
-                            src={file}
-                            alt={`Thumbnail ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                        
-                        {/* Selection Indicator */}
-                        {index === currentIndex && (
-                          <div className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full shadow-lg">
-                            <FiCheck className="text-xs" />
-                          </div>
-                        )}
-                        
-                        {/* File Number */}
-                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                          {index + 1}
+                  {item.files.map((file, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentIndex(index)}
+                      className={`relative rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-200 ${
+                        index === currentIndex 
+                          ? 'border-cyan-500 shadow-lg scale-105' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      style={{ width: '120px', height: '120px' }}
+                    >
+                      <img
+                        src={file}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      
+                      {/* Selection Indicator */}
+                      {index === currentIndex && (
+                        <div className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full shadow-lg">
+                          <FiCheck className="text-xs" />
                         </div>
-                      </button>
-                    );
-                  })}
+                      )}
+                      
+                      {/* File Number */}
+                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                        {index + 1}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -2194,7 +2061,7 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
               <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-violet-100 px-3 py-1.5 rounded-full">
                 <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full"></div>
                 <span className="font-bold">
-                  Gallery #{item.id.slice(0, 8)} • {item.files.length} files • Created {new Date(item.uploadDate).toLocaleDateString()}
+                  Gallery #{item.id?.slice(0, 8) || 'Unknown'} • {item.files.length} files • Created {new Date(item.uploadDate).toLocaleDateString()}
                 </span>
               </div>
             </div>
