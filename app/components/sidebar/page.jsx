@@ -198,8 +198,10 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         resultsRes,
         studentRes
       ] = await Promise.allSettled([
+        fetch('/api/student'),
         fetch('/api/staff'),
         fetch('/api/subscriber'),
+        fetch('/api/studentCouncil'),
         fetch('/api/events'),
         fetch('/api/news'),
         fetch('/api/assignment'),
@@ -214,8 +216,10 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       ]);
 
       // Process responses and get actual counts
+      const students = studentsRes.status === 'fulfilled' ? await studentsRes.value.json() : { students: [] };
       const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
       const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
+      const council = councilRes.status === 'fulfilled' ? await councilRes.value.json() : { councilMembers: [] };
       const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
       const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
@@ -330,14 +334,13 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     window.location.href = '/pages/adminLogin';
   };
 
-const handleTabClick = (tabId) => {
-  e?.preventDefault(); // Add this line
-  setActiveTab(tabId);
-  // Only close sidebar on mobile screens
-  if (isMobile) {
-    setSidebarOpen(false);
-  }
-};
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    // Only close sidebar on mobile screens
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
 
   const handleSupportClick = () => {
     setShowSupportModal(true);
@@ -345,7 +348,13 @@ const handleTabClick = (tabId) => {
 
   // Enhanced quick stats with real data including resources
   const quickStats = [
-
+    { 
+      label: 'Students', 
+      value: realStats.totalStudents?.toLocaleString() || '0', 
+      icon: FiUser, 
+      color: 'blue', 
+      change: `${realStats.activeStudents || 0} active` 
+    },
     { 
       label: 'Resources', 
       value: realStats.totalResources?.toLocaleString() || '0', 
@@ -359,6 +368,13 @@ const handleTabClick = (tabId) => {
       icon: FiFileText, 
       color: 'purple', 
       change: realStats.pendingApplications > 0 ? `${realStats.pendingApplications} pending` : '+8%' 
+    },
+    { 
+      label: 'Staff', 
+      value: realStats.totalStaff?.toLocaleString() || '0', 
+      icon: IoStatsChart, 
+      color: 'green', 
+      change: '+5%' 
     }
   ];
 
@@ -410,12 +426,23 @@ const handleTabClick = (tabId) => {
       icon: FiMessageCircle,
       badge: 'purple'
     },
- 
+    { 
+      id: 'students', 
+      label: 'Student Management', 
+      icon: FiUsers,
+      badge: 'blue'
+    },
     {
       id: 'results',
       label: 'Exam Results',
       icon: FiClipboard,
       badge: 'teal'
+    },
+    { 
+      id: 'student-council', 
+      label: 'Student Council', 
+      icon: FiUsers,
+      badge: 'green'
     },
     { 
       id: 'staff', 
@@ -435,13 +462,6 @@ id: 'careers',
       icon: FiCalendar,
       badge: 'lime'
 },
-    {
-      id: 'student',
-      label: 'Student Records',
-      icon: FiInfo,
-      badge: 'cyan'
-}
-,
     { 
       id: 'resources', 
       label: 'Learning Resources', 
@@ -454,7 +474,13 @@ id: 'careers',
       icon: FiDollarSign,
       badge: 'yellow'
     },
-
+    {
+      id: 'student',
+      label: 'Student Records',
+      icon: FiInfo,
+      badge: 'cyan'
+}
+,
     { 
       id: 'admissions', 
       label: 'Admission Applications', 
@@ -624,7 +650,7 @@ id: 'careers',
               <div className="relative">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
                   <img 
-                    src="/katz.png" 
+                    src="/llil.png" 
                     alt="School Logo" 
                     className="w-full h-full object-contain p-2"
                   />
@@ -633,7 +659,7 @@ id: 'careers',
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm lg:text-lg font-bold text-gray-800 truncate">
-                  Katwanyaa High School
+                  Nyaribu Secondary School
                 </h1>
                 <p className="text-gray-600 text-xs lg:text-sm font-medium truncate">Admin Portal</p>
               </div>
@@ -658,7 +684,7 @@ id: 'careers',
                 return (
                  <button
                    key={tab.id}
-                      onClick={(e) => handleTabClick(tab.id, e)}  // Pass event
+                   onClick={() => handleTabClick(tab.id)}
                    className={`w-full flex items-center gap-3 lg:gap-4 px-3 lg:px-4 py-3 lg:py-4 rounded-2xl transition-all duration-200 group relative overflow-hidden ${
                      activeTab === tab.id
                        ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-lg shadow-blue-500/10 backdrop-blur-sm border border-blue-200'
@@ -768,7 +794,7 @@ id: 'careers',
             {/* User Profile */}
             <div 
               className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 rounded-2xl border border-gray-200 mb-3 lg:mb-4 cursor-pointer transition-all duration-200 hover:bg-blue-50 hover:border-blue-200"
-  onClick={(e) => handleTabClick('admins-profile', e)}  // Pass event
+              onClick={() => handleTabClick('admins-profile')}
             >
               <div className="relative">
                 <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
@@ -796,10 +822,8 @@ id: 'careers',
             <div className="grid grid-cols-2 gap-1 lg:gap-2 mb-2 lg:mb-3">
               <button
                 className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100"
- onClick={(e) => {
-  e?.preventDefault(); // ERROR: 'e' is not defined here!
-    handleTabClick('admins-profile');
-  }}              >
+                onClick={() => handleTabClick('admins-profile')}
+              >
                 <FiSettings className="text-sm lg:text-base" />
                 <span className="truncate">Settings</span>
               </button>
@@ -826,7 +850,7 @@ id: 'careers',
             {/* Version Info */}
             <div className="text-center mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-200">
               <p className="text-gray-400 text-[10px] lg:text-xs">
-                v2.1.0 • Katwanyaa High  School
+                v2.1.0 • Nyaribu Secondary School
               </p>
             </div>
           </div>
