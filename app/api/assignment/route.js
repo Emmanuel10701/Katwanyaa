@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import { FileManager } from "../../../libs/manager";
+import { FileManager } from "../../../libs/superbase";
 
 // Helper: Upload file to Supabase (for ALL file types)
 const uploadFileToSupabase = async (file, folder = "assignments") => {
