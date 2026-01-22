@@ -250,7 +250,7 @@ const handleFilesSelect = (files) => {
   });
 
   if (validFiles.length === 0) {
-    toast.warning('Please select valid files (images/videos, max 10MB)');
+    toast.warning('Please select valid files (images, max 10MB)');
     return;
   }
 
@@ -621,7 +621,6 @@ const handleFilesSelect = (files) => {
     total: galleryItems.length,
     totalFiles: galleryItems.reduce((acc, item) => acc + item.files.length, 0),
     images: galleryItems.filter(item => item.fileType === 'image').reduce((acc, item) => acc + item.files.length, 0),
-    videos: galleryItems.filter(item => item.fileType === 'video').reduce((acc, item) => acc + item.files.length, 0),
     categories: new Set(galleryItems.map(item => item.category)).size
   };
 
@@ -683,7 +682,6 @@ const handleFilesSelect = (files) => {
               <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
                 Managing <span className="text-white font-bold underline decoration-cyan-500/50 decoration-2 underline-offset-4">{stats.total} galleries</span> with <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4">{stats.totalFiles} files</span>. 
                 You have <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-cyan-400/20 text-cyan-300 border border-cyan-400/20 mx-1">{stats.images} images</span> 
-                and <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-purple-500/20 text-purple-400 border border-purple-500/20 mx-1">{stats.videos} videos</span> across <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-emerald-400/20 text-emerald-300 border border-emerald-400/20 mx-1">{stats.categories} categories</span>.
               </p>
             </div>
             
@@ -723,7 +721,7 @@ const handleFilesSelect = (files) => {
               icon: FiFile, 
               color: 'emerald',
               change: 24,
-              calculation: 'Images & videos'
+              calculation: 'Images files'
             },
             { 
               label: 'Images', 
@@ -732,14 +730,6 @@ const handleFilesSelect = (files) => {
               color: 'purple',
               change: 8,
               calculation: 'Photo galleries'
-            },
-            { 
-              label: 'Videos', 
-              value: stats.videos, 
-              icon: FiVideo, 
-              color: 'rose',
-              change: -2,
-              calculation: 'Video content'
             }
           ].map((stat, index) => {
             const isPositive = stat.change >= 0;
@@ -1498,7 +1488,7 @@ return (
                   </span>
                 </h3>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Max 10MB per file • Supported: Images & Videos
+                  Max 10MB per file • Supported: Images files
                 </p>
               </div>
               <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
