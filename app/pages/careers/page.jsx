@@ -1086,7 +1086,7 @@ return (
                 <div className="relative w-full flex-1 group">
                   <div className="relative flex items-center bg-white border border-slate-200 rounded-lg sm:rounded-xl md:rounded-2xl shadow-sm transition-all focus-within:border-slate-900 focus-within:ring-2 sm:focus-within:ring-4 focus-within:ring-slate-900/5">
                     <div className="pl-3 sm:pl-4 md:pl-5 pr-2 sm:pr-3 flex items-center justify-center pointer-events-none">
-                      <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16} sm:size={18} />
+                      <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16} />
                     </div>
                     <input
                       type="text"
@@ -1100,7 +1100,7 @@ return (
                         onClick={() => setSearch('')}
                         className="pr-3 sm:pr-4 text-slate-400 hover:text-slate-600"
                       >
-                        <FiX size={16} sm:size={18} />
+                        <FiX size={16}  />
                       </button>
                     )}
                   </div>
@@ -1132,7 +1132,7 @@ return (
                   onClick={clearFilters}
                   className="w-full md:w-auto px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-3.5 bg-blue-600 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-2"
                 >
-                  <FiFilter size={14} sm:size={16} />
+                  <FiFilter size={14} />
                   Reset
                 </button>
               </div>
