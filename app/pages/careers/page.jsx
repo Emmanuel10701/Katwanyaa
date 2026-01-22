@@ -1012,7 +1012,7 @@ return (
                   <FiMapPin className="text-rose-500 w-4 h-4 sm:w-5 sm:h-5" />
                   <div>
                     <p className="text-xs sm:text-sm font-bold text-slate-900">Location</p>
-                    <p className="text-[10px] sm:text-xs text-slate-500">Nakuru County, Kenya</p>
+                    <p className="text-[10px] sm:text-xs text-slate-500">Matungulu SUb County Machakos, Kenya</p>
                   </div>
                 </div>
 
