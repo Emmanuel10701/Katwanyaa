@@ -148,51 +148,70 @@ export default function ModernGalleryManager() {
   }, []);
 
   // Fetch gallery items from API
-  const fetchGalleryItems = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/gallery');
-      const result = await response.json();
+// In the fetchGalleryItems function, fix the data transformation:
+
+// Fetch gallery items from API
+const fetchGalleryItems = async () => {
+  try {
+    setLoading(true);
+    const response = await fetch('/api/gallery');
+    const result = await response.json();
+    
+    if (result.success && result.galleries) {
+      // FIX: Ensure galleries is an array
+      const galleriesArray = Array.isArray(result.galleries) 
+        ? result.galleries 
+        : (result.galleries.data || []);
       
-      if (result.success && result.galleries) {
-        const transformedItems = result.galleries.map(gallery => ({
-          id: gallery.id,
-          title: gallery.title,
-          description: gallery.description || '',
-          category: gallery.category,
-          files: gallery.files || [],
-          fileType: 'image',
-          previewUrl: gallery.files?.[0] || '',
-          fileCount: gallery.files?.length || 0,
-          uploadDate: gallery.createdAt,
-          updatedAt: gallery.updatedAt,
-          views: Math.floor(Math.random() * 1000),
-          likes: Math.floor(Math.random() * 500),
-          isPublic: true
-        }));
-        
-        // Sort items
-        const sortedItems = transformedItems.sort((a, b) => {
-          switch(sortBy) {
-            case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-            case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-            case 'title': return a.title.localeCompare(b.title);
-            case 'mostFiles': return b.fileCount - a.fileCount;
-            default: return new Date(b.uploadDate) - new Date(a.uploadDate);
-          }
-        });
-        
-        setGalleryItems(sortedItems);
-        setFilteredItems(sortedItems);
-        toast.success(`Loaded ${sortedItems.length} galleries`);
-      }
-    } catch (error) {
-      console.error('Error fetching gallery items:', error);
-      toast.error('Failed to load gallery items');
-    } finally {
-      setLoading(false);
+      const transformedItems = galleriesArray.map(gallery => ({
+        id: gallery.id || gallery._id,
+        title: gallery.title || '',
+        description: gallery.description || '',
+        category: gallery.category || 'GENERAL',
+        // FIX: Ensure files is an array
+        files: Array.isArray(gallery.files) ? gallery.files : (gallery.files || []),
+        fileType: 'image',
+        previewUrl: gallery.files?.[0] || '',
+        fileCount: Array.isArray(gallery.files) ? gallery.files.length : 0,
+        uploadDate: gallery.createdAt || gallery.uploadDate || new Date(),
+        updatedAt: gallery.updatedAt || new Date(),
+        views: Math.floor(Math.random() * 1000),
+        likes: Math.floor(Math.random() * 500),
+        isPublic: true
+      }));
+      
+      // Sort items
+      const sortedItems = transformedItems.sort((a, b) => {
+        switch(sortBy) {
+          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
+          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
+          case 'title': return a.title.localeCompare(b.title);
+          case 'mostFiles': return b.fileCount - a.fileCount;
+          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+        }
+      });
+      
+      setGalleryItems(sortedItems);
+      setFilteredItems(sortedItems);
+      toast.success(`Loaded ${sortedItems.length} galleries`);
+    } else {
+      // Handle empty or no data
+      setGalleryItems([]);
+      setFilteredItems([]);
+      toast.info('No galleries found');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching gallery items:', error);
+    toast.error('Failed to load gallery items');
+    // Set empty arrays to prevent errors
+    setGalleryItems([]);
+    setFilteredItems([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   useEffect(() => {
     fetchGalleryItems();
