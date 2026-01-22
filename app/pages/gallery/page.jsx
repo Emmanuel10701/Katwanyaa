@@ -762,16 +762,16 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
 
         {/* 3. Action Footer - Sticky */}
         <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-<div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
+<div className="max-w-2xl mx-auto flex flex-row items-center gap-2 px-1 sm:px-0">
   <button
     onClick={() => {
       onDownload(gallery);
       toast.success('Downloading gallery files...');
     }}
-    className="flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
+    className="flex-[1.5] sm:flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
   >
-    <FiDownload size={18} className="sm:size-[20px]" />
-    <span>Download All Files</span>
+    <FiDownload size={18} className="shrink-0" />
+    <span className="truncate">Download</span>
   </button>
   
   <button
@@ -779,10 +779,10 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
       onShare(gallery);
       toast.success('Share link copied to clipboard');
     }}
-    className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
+    className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
   >
-    <FiShare2 size={18} className="sm:size-[20px]" />
-    <span>Share</span>
+    <FiShare2 size={18} className="shrink-0" />
+    <span className="truncate">Share</span>
   </button>
 </div>
         </div>

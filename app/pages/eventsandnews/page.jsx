@@ -830,36 +830,36 @@ return (
           </div>
         </div>
 
-        {/* 3. Action Footer - Sticky at bottom */}
-        <div className="shrink-0 p-4 sm:p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-          <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 sm:gap-3">
-            {type === 'event' ? (
-              <button
-                onClick={onAddToCalendar}
-                className="flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-transform"
-              >
-                <IoCalendarClearOutline size={16} />
-                <span>Add to Calendar</span>
-              </button>
-            ) : (
-              <button
-                className="flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2"
-                onClick={onClose}
-              >
-                <IoNewspaperOutline size={16}  />
-                <span>See other articles</span>
-              </button>
-            )}
-            
-            <button
-              onClick={onShare}
-              className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-transform"
-            >
-              <IoShareOutline size={16} />
-              <span>Share</span>
-            </button>
-          </div>
-        </div>
+{/* 3. Action Footer - Sticky at bottom */}
+<div className="shrink-0 p-4 sm:p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
+  <div className="max-w-2xl mx-auto flex flex-row items-center gap-2 sm:gap-3">
+    {type === 'event' ? (
+      <button
+        onClick={onAddToCalendar}
+        className="flex-[2] min-w-0 h-11 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+      >
+        <IoCalendarClearOutline size={16} className="shrink-0 sm:size-[20px]" />
+        <span className="truncate">Add to Calendar</span>
+      </button>
+    ) : (
+      <button
+        className="flex-[2] min-w-0 h-11 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+        onClick={onClose}
+      >
+        <IoNewspaperOutline size={16} className="shrink-0 sm:size-[20px]" />
+        <span className="truncate">See articles</span>
+      </button>
+    )}
+    
+    <button
+      onClick={onShare}
+      className="flex-1 min-w-0 h-11 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+    >
+      <IoShareOutline size={16} className="shrink-0 sm:size-[20px]" />
+      <span className="truncate">Share</span>
+    </button>
+  </div>
+</div>
 
       </div>
     </div>
