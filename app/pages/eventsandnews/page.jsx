@@ -730,7 +730,7 @@ return (
           onClick={onClose}
           className="absolute top-4 right-4 sm:top-5 sm:right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
         >
-          <IoClose size={20} sm:size={24} />
+          <IoClose size={20}  />
         </button>
 
         {/* 1. Full-Bleed Hero Image */}
@@ -838,7 +838,7 @@ return (
                 onClick={onAddToCalendar}
                 className="flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-transform"
               >
-                <IoCalendarClearOutline size={16} sm:size={20} />
+                <IoCalendarClearOutline size={16} />
                 <span>Add to Calendar</span>
               </button>
             ) : (
@@ -846,7 +846,7 @@ return (
                 className="flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2"
                 onClick={onClose}
               >
-                <IoNewspaperOutline size={16} sm:size={20} />
+                <IoNewspaperOutline size={16}  />
                 <span>See other articles</span>
               </button>
             )}
@@ -855,7 +855,7 @@ return (
               onClick={onShare}
               className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 transition-transform"
             >
-              <IoShareOutline size={16} sm:size={20} />
+              <IoShareOutline size={16} />
               <span>Share</span>
             </button>
           </div>
@@ -1328,7 +1328,7 @@ Loading for our school latest news and events to stay updated
           
           {/* Search Icon - Always Static */}
           <div className="pl-3 sm:pl-4 md:pl-5 pr-2 sm:pr-3 flex items-center justify-center pointer-events-none">
-            <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16} sm:size={18} />
+            <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16}  />
           </div>
 
           <input
