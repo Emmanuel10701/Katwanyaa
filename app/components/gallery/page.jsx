@@ -226,65 +226,76 @@ export default function ModernGalleryManager() {
     setCurrentPage(1);
   }, [galleryItems, searchTerm, selectedCategory]);
 
-  // Fixed: File handling with unique IDs for each file
-  const handleFilesSelect = (files) => {
-    const fileArray = Array.from(files);
-    const validFiles = fileArray.filter(file => {
-      const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
-      const isValidSize = file.size <= 10 * 1024 * 1024;
-      
-      if (!isValidType) {
-        toast.error(`${file.name}: Unsupported format`);
-        return false;
-      }
-      if (!isValidSize) {
-        toast.error(`${file.name}: Exceeds 10MB limit`);
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length === 0) {
-      toast.warning('Please select valid files (images/videos, max 10MB)');
-      return;
+const handleFilesSelect = (files) => {
+  const fileArray = Array.from(files);
+  const validFiles = fileArray.filter(file => {
+    // Check if file is valid
+    if (!file || !file.type) {
+      toast.error('Invalid file selected');
+      return false;
     }
+    
+    const isValidType = file.type.startsWith('image/') || file.type.startsWith('video/');
+    const isValidSize = file.size <= 10 * 1024 * 1024;
+    
+    if (!isValidType) {
+      toast.error(`${file.name || 'Unknown file'}: Unsupported format`);
+      return false;
+    }
+    if (!isValidSize) {
+      toast.error(`${file.name || 'Unknown file'}: Exceeds 10MB limit`);
+      return false;
+    }
+    return true;
+  });
 
-    // Create file objects with unique IDs
-    const filesWithIds = validFiles.map(file => {
-      const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`;
-      let previewUrl = null;
-      
-      if (file.type.startsWith('image/')) {
+  if (validFiles.length === 0) {
+    toast.warning('Please select valid files (images/videos, max 10MB)');
+    return;
+  }
+
+  // Create file objects with unique IDs and safe preview creation
+  const filesWithIds = validFiles.map(file => {
+    const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name || 'file'}`;
+    let previewUrl = null;
+    
+    // Only create preview for images
+    if (file.type.startsWith('image/')) {
+      try {
         previewUrl = URL.createObjectURL(file);
+      } catch (err) {
+        console.error('Failed to create preview URL:', err);
+        previewUrl = null;
       }
-      
-      return {
-        id: fileId,
-        file: file,
-        preview: previewUrl,
-        type: file.type,
-        name: file.name,
-        size: file.size
-      };
-    });
-
-    // Update previews state
-    const newPreviews = {};
-    filesWithIds.forEach(fileObj => {
-      if (fileObj.preview) {
-        newPreviews[fileObj.id] = fileObj.preview;
-      }
-    });
-
-    setSelectedFilePreviews(prev => ({ ...prev, ...newPreviews }));
+    }
     
-    setFormData(prev => ({ 
-      ...prev, 
-      files: [...prev.files, ...filesWithIds].slice(0, 20)
-    }));
-    
-    toast.success(`${validFiles.length} file(s) added`);
-  };
+    return {
+      id: fileId,
+      file: file,
+      preview: previewUrl,
+      type: file.type,
+      name: file.name || 'Unknown file',
+      size: file.size
+    };
+  });
+
+  // Update previews state
+  const newPreviews = {};
+  filesWithIds.forEach(fileObj => {
+    if (fileObj.preview) {
+      newPreviews[fileObj.id] = fileObj.preview;
+    }
+  });
+
+  setSelectedFilePreviews(prev => ({ ...prev, ...newPreviews }));
+  
+  setFormData(prev => ({ 
+    ...prev, 
+    files: [...prev.files, ...filesWithIds].slice(0, 20)
+  }));
+  
+  toast.success(`${validFiles.length} file(s) added`);
+};
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -1539,70 +1550,100 @@ return (
             </div>
 
             {/* Selected Files Preview */}
-            {formData.files.length > 0 && (
-              <div className="mt-6">
-                <h4 className=" text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <FiCheckCircle className="text-green-500" />
-                  <span>New Files to Add ({formData.files.length})</span>
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {formData.files.map((file, index) => {
-                    const previewUrl = selectedFilePreviews[file.name] || (file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
-                    
-                    return (
-                      <div key={index} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-                        <div className="aspect-square relative">
-                          {file.type.startsWith('image/') && previewUrl ? (
-                            <img
-                              src={previewUrl}
-                              alt={file.name}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            />
-                          ) : file.type.startsWith('video/') ? (
-                            <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                              <FiVideo className="text-3xl text-purple-500" />
-                            </div>
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                              <FiFile className="text-3xl text-gray-400" />
-                            </div>
-                          )}
-                          
-                          {uploadProgress[file.name] !== undefined && (
-                            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
-                              <div 
-                                className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
-                                style={{ width: `${uploadProgress[file.name]}%` }}
-                              />
-                            </div>
-                          )}
-                          
-                          <button
-                            onClick={() => removeFile(file.name)}
-                            className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg hover:shadow-xl transition-all"
-                            title="Remove file"
-                          >
-                            <FiX className="text-xs" />
-                          </button>
-                        </div>
-                        
-                        <div className="p-3">
-                          <p className="text-sm font-bold text-gray-800 truncate" title={file.name}>
-                            {file.name}
-                          </p>
-                          <div className="flex items-center justify-between mt-1">
-                            <p className="text-xs font-bold text-gray-500">
-                              {(file.size / (1024 * 1024)).toFixed(1)} MB
-                            </p>
-                            <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+{/* Selected Files Preview */}
+{formData.files.length > 0 && (
+  <div className="mt-6">
+    <h4 className="text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <FiCheckCircle className="text-green-500" />
+      <span>New Files to Add ({formData.files.length})</span>
+    </h4>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      {formData.files.map((file, index) => {
+        // FIXED: Proper file ID handling
+        const fileObj = file.file ? file : { id: `temp-${index}`, file: file, type: file.type };
+        const fileId = fileObj.id || `file-${index}`;
+        
+        // FIXED: Safe URL creation
+        let previewUrl = null;
+        if (fileObj.file && fileObj.file.type && fileObj.file.type.startsWith('image/')) {
+          try {
+            previewUrl = URL.createObjectURL(fileObj.file);
+          } catch (err) {
+            console.error('Failed to create preview URL:', err);
+            previewUrl = null;
+          }
+        }
+        
+        return (
+          <div key={fileId} className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
+            <div className="aspect-square relative">
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt={fileObj.file?.name || `File ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  onLoad={() => {
+                    // Clean up URL after image loads
+                    setTimeout(() => {
+                      if (previewUrl && previewUrl.startsWith('blob:')) {
+                        URL.revokeObjectURL(previewUrl);
+                      }
+                    }, 100);
+                  }}
+                />
+              ) : fileObj.type?.startsWith('video/') ? (
+                <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                  <FiVideo className="text-3xl text-purple-500" />
                 </div>
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <FiFile className="text-3xl text-gray-400" />
+                </div>
+              )}
+              
+              {/* Upload Progress */}
+              {uploadProgress[fileId] !== undefined && (
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200/80">
+                  <div 
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
+                    style={{ width: `${uploadProgress[fileId]}%` }}
+                  />
+                </div>
+              )}
+              
+              {/* Remove Button */}
+              <button
+                onClick={() => removeFile(fileId)}
+                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg hover:shadow-xl transition-all"
+                title="Remove file"
+                disabled={removingFile === fileId}
+              >
+                {removingFile === fileId ? (
+                  <FiRotateCw className="text-xs animate-spin" />
+                ) : (
+                  <FiX className="text-xs" />
+                )}
+              </button>
+            </div>
+            
+            {/* File Info */}
+            <div className="p-3">
+              <p className="text-sm font-bold text-gray-800 truncate" title={fileObj.file?.name}>
+                {fileObj.file?.name || `File ${index + 1}`}
+              </p>
+              <div className="flex items-center justify-between mt-1">
+                <p className="text-xs font-bold text-gray-500">
+                  {fileObj.file?.size ? `${(fileObj.file.size / (1024 * 1024)).toFixed(1)} MB` : 'Unknown size'}
+                </p>
+                <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
               </div>
-            )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
           </div>
 
           {/* Form Fields */}
