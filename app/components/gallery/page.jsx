@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   FiPlus, FiSearch, FiEdit, FiTrash2, FiImage, FiFilter, FiDownload,
   FiX, FiEye, FiUpload, FiStar, FiGrid, FiList, FiChevronLeft,
@@ -123,6 +123,7 @@ export default function ModernGalleryManager() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [removingFile, setRemovingFile] = useState(null);
+  const [selectedPreviewItems, setSelectedPreviewItems] = useState(new Set());
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -148,81 +149,88 @@ export default function ModernGalleryManager() {
   }, []);
 
   // Fetch gallery items from API
-// In the fetchGalleryItems function, fix the data transformation:
-
-// Fetch gallery items from API
-const fetchGalleryItems = async () => {
-  try {
-    setLoading(true);
-    const response = await fetch('/api/gallery');
-    const result = await response.json();
-    
-    if (result.success && result.galleries) {
-      // FIX: Ensure galleries is an array
-      const galleriesArray = Array.isArray(result.galleries) 
-        ? result.galleries 
-        : (result.galleries.data || []);
+  const fetchGalleryItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/gallery');
+      const result = await response.json();
       
-      const transformedItems = galleriesArray.map(gallery => ({
-        id: gallery.id || gallery._id,
-        title: gallery.title || '',
-        description: gallery.description || '',
-        category: gallery.category || 'GENERAL',
-        // FIX: Ensure files is an array
-        files: Array.isArray(gallery.files) ? gallery.files : (gallery.files || []),
-        fileType: 'image',
-        previewUrl: gallery.files?.[0] || '',
-        fileCount: Array.isArray(gallery.files) ? gallery.files.length : 0,
-        uploadDate: gallery.createdAt || gallery.uploadDate || new Date(),
-        updatedAt: gallery.updatedAt || new Date(),
-        views: Math.floor(Math.random() * 1000),
-        likes: Math.floor(Math.random() * 500),
-        isPublic: true
-      }));
-      
-      // Sort items
-      const sortedItems = transformedItems.sort((a, b) => {
-        switch(sortBy) {
-          case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
-          case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
-          case 'title': return a.title.localeCompare(b.title);
-          case 'mostFiles': return b.fileCount - a.fileCount;
-          default: return new Date(b.uploadDate) - new Date(a.uploadDate);
+      if (result.success && result.galleries) {
+        // Ensure galleries is an array
+        let galleriesArray = [];
+        
+        if (Array.isArray(result.galleries)) {
+          galleriesArray = result.galleries;
+        } else if (result.galleries && typeof result.galleries === 'object') {
+          // Handle object response
+          if (Array.isArray(result.galleries.data)) {
+            galleriesArray = result.galleries.data;
+          } else {
+            // Convert object to array
+            galleriesArray = Object.values(result.galleries);
+          }
         }
-      });
-      
-      setGalleryItems(sortedItems);
-      setFilteredItems(sortedItems);
-      toast.success(`Loaded ${sortedItems.length} galleries`);
-    } else {
-      // Handle empty or no data
+        
+        const transformedItems = galleriesArray.map(gallery => ({
+          id: gallery.id || gallery._id || String(Math.random()).slice(2, 10),
+          title: gallery.title || '',
+          description: gallery.description || '',
+          category: gallery.category || 'GENERAL',
+          files: Array.isArray(gallery.files) ? gallery.files : [],
+          fileType: 'image',
+          previewUrl: Array.isArray(gallery.files) && gallery.files.length > 0 ? gallery.files[0] : '',
+          fileCount: Array.isArray(gallery.files) ? gallery.files.length : 0,
+          uploadDate: gallery.createdAt || gallery.uploadDate || new Date(),
+          updatedAt: gallery.updatedAt || new Date(),
+          views: Math.floor(Math.random() * 1000),
+          likes: Math.floor(Math.random() * 500),
+          isPublic: true
+        }));
+        
+        // Sort items
+        const sortedItems = transformedItems.sort((a, b) => {
+          switch(sortBy) {
+            case 'newest': 
+              return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+            case 'oldest': 
+              return new Date(a.uploadDate).getTime() - new Date(b.uploadDate).getTime();
+            case 'title': 
+              return (a.title || '').localeCompare(b.title || '');
+            case 'mostFiles': 
+              return (b.fileCount || 0) - (a.fileCount || 0);
+            default: 
+              return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+          }
+        });
+        
+        setGalleryItems(sortedItems);
+        setFilteredItems(sortedItems);
+        toast.success(`Loaded ${sortedItems.length} galleries`);
+      } else {
+        setGalleryItems([]);
+        setFilteredItems([]);
+        toast.info('No galleries found');
+      }
+    } catch (error) {
+      console.error('Error fetching gallery items:', error);
+      toast.error('Failed to load gallery items');
       setGalleryItems([]);
       setFilteredItems([]);
-      toast.info('No galleries found');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching gallery items:', error);
-    toast.error('Failed to load gallery items');
-    // Set empty arrays to prevent errors
-    setGalleryItems([]);
-    setFilteredItems([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  }, [sortBy]);
 
   useEffect(() => {
     fetchGalleryItems();
-  }, [sortBy]);
+  }, [fetchGalleryItems]);
 
   // Filter items
   useEffect(() => {
     let filtered = galleryItems.filter(item => {
       const matchesSearch = searchTerm === '' || 
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase());
+        (item.title && item.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       
@@ -297,7 +305,7 @@ const fetchGalleryItems = async () => {
     
     setFormData(prev => ({ 
       ...prev, 
-      files: [...prev.files, ...filesWithIds].slice(0, 20)
+      files: [...(Array.isArray(prev.files) ? prev.files : []), ...filesWithIds].slice(0, 20)
     }));
     
     toast.success(`${validFiles.length} image(s) added`);
@@ -319,7 +327,7 @@ const fetchGalleryItems = async () => {
   };
 
   // Remove file function
-  const removeFile = (fileId) => {
+  const removeFile = useCallback((fileId) => {
     setRemovingFile(fileId);
     
     const fileToRemove = formData.files.find(f => f.id === fileId);
@@ -344,7 +352,7 @@ const fetchGalleryItems = async () => {
     // Update form data
     setFormData(prev => ({
       ...prev,
-      files: prev.files.filter(file => file.id !== fileId)
+      files: (Array.isArray(prev.files) ? prev.files : []).filter(file => file.id !== fileId)
     }));
     
     // Update upload progress
@@ -356,20 +364,21 @@ const fetchGalleryItems = async () => {
     
     setRemovingFile(null);
     toast.info('File removed');
-  };
+  }, [formData.files]);
 
   // Remove existing file from gallery during edit
-  const removeExistingFile = (fileUrl, itemId) => {
+  const removeExistingFile = useCallback((fileUrl, itemId) => {
     if (editingItem && editingItem.id === itemId) {
       setFilesToRemove(prev => [...prev, fileUrl]);
       toast.info('File marked for removal. Click Save Changes to confirm.');
     }
-  };
+  }, [editingItem]);
 
   // Cleanup preview URLs on unmount
   useEffect(() => {
+    const previews = selectedFilePreviews;
     return () => {
-      Object.values(selectedFilePreviews).forEach(url => {
+      Object.values(previews).forEach(url => {
         if (url && url.startsWith('blob:')) {
           URL.revokeObjectURL(url);
         }
@@ -427,9 +436,9 @@ const fetchGalleryItems = async () => {
     setEditingItem(item);
     setFilesToRemove([]);
     setFormData({
-      title: item.title,
+      title: item.title || '',
       description: item.description || '',
-      category: item.category,
+      category: item.category || 'GENERAL',
       files: []
     });
     setShowEditModal(true);
@@ -560,7 +569,7 @@ const fetchGalleryItems = async () => {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       title: '',
       description: '',
@@ -577,11 +586,12 @@ const fetchGalleryItems = async () => {
     });
     setSelectedFilePreviews({});
     setRemovingFile(null);
-  };
+  }, [selectedFilePreviews]);
 
   // Preview handling
   const handlePreview = (item) => {
     setPreviewItem(item);
+    setSelectedPreviewItems(new Set());
     setShowPreviewModal(true);
   };
 
@@ -599,8 +609,36 @@ const fetchGalleryItems = async () => {
     });
   };
 
+  const togglePreviewSelection = (index) => {
+    setSelectedPreviewItems(prev => {
+      const newSet = new Set(prev);
+      newSet.has(index) ? newSet.delete(index) : newSet.add(index);
+      return newSet;
+    });
+  };
+
+  const selectAllPreviewItems = () => {
+    if (!previewItem || !previewItem.files) return;
+    
+    setSelectedPreviewItems(prev => {
+      if (prev.size === previewItem.files.length) {
+        return new Set();
+      } else {
+        return new Set([...Array(previewItem.files.length).keys()]);
+      }
+    });
+  };
+
   const selectAll = () => {
-    setSelectedItems(selectedItems.size === currentItems.length ? new Set() : new Set(currentItems.map(item => item.id)));
+    if (!Array.isArray(currentItems)) {
+      setSelectedItems(new Set());
+      return;
+    }
+    
+    setSelectedItems(selectedItems.size === currentItems.length ? 
+      new Set() : 
+      new Set(currentItems.map(item => item.id).filter(id => id))
+    );
   };
 
   // Image error handling
@@ -615,18 +653,43 @@ const fetchGalleryItems = async () => {
     setRefreshing(false);
   };
 
+  // Download selected files from preview
+  const downloadSelectedFiles = () => {
+    if (selectedPreviewItems.size === 0 || !previewItem || !previewItem.files) {
+      toast.warning('No files selected');
+      return;
+    }
+
+    selectedPreviewItems.forEach(index => {
+      const fileUrl = previewItem.files[index];
+      if (fileUrl) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileUrl.split('/').pop() || `file-${index + 1}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+    
+    toast.success(`Downloaded ${selectedPreviewItems.size} file(s)`);
+  };
+
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const currentItems = Array.isArray(filteredItems) ? 
+    filteredItems.slice(indexOfFirstItem, indexOfLastItem) : [];
+  const totalPages = Math.ceil((Array.isArray(filteredItems) ? filteredItems.length : 0) / itemsPerPage);
 
   // Stats
   const stats = {
-    total: galleryItems.length,
-    totalFiles: galleryItems.reduce((acc, item) => acc + item.files.length, 0),
-    images: galleryItems.filter(item => item.fileType === 'image').reduce((acc, item) => acc + item.files.length, 0),
-    categories: new Set(galleryItems.map(item => item.category)).size
+    total: Array.isArray(galleryItems) ? galleryItems.length : 0,
+    totalFiles: Array.isArray(galleryItems) ? 
+      galleryItems.reduce((acc, item) => acc + (Array.isArray(item.files) ? item.files.length : 0), 0) : 0,
+    images: Array.isArray(galleryItems) ? 
+      galleryItems.reduce((acc, item) => acc + (Array.isArray(item.files) ? item.files.length : 0), 0) : 0,
+    categories: new Set(Array.isArray(galleryItems) ? galleryItems.map(item => item.category) : []).size
   };
 
   if (loading) {
@@ -1050,6 +1113,10 @@ const fetchGalleryItems = async () => {
       {showPreviewModal && previewItem && (
         <ModernPreviewModal
           item={previewItem}
+          selectedItems={selectedPreviewItems}
+          onSelect={togglePreviewSelection}
+          onSelectAll={selectAllPreviewItems}
+          onDownloadSelected={downloadSelectedFiles}
           onClose={() => setShowPreviewModal(false)}
           onEdit={() => {
             setShowPreviewModal(false);
@@ -1124,7 +1191,7 @@ const ModernGalleryItem = ({
             </div>
           ) : (
             <>
-              {item.files[0] ? (
+              {item.files && item.files[0] ? (
                 <>
                   <img
                     src={item.files[0]}
@@ -1191,11 +1258,11 @@ const ModernGalleryItem = ({
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Uploaded</p>
               <p className="text-sm font-bold text-slate-800">
-                {new Date(item.uploadDate).toLocaleDateString('en-US', { 
+                {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString('en-US', { 
                   month: 'short', 
                   day: 'numeric',
                   year: 'numeric'
-                })}
+                }) : 'Unknown'}
               </p>
             </div>
           </div>
@@ -1207,7 +1274,7 @@ const ModernGalleryItem = ({
             <div className="text-right">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Files</p>
               <p className="text-sm font-bold text-slate-800">
-                {item.files.length} {item.files.length === 1 ? 'file' : 'files'}
+                {item.files ? item.files.length : 0} {item.files ? (item.files.length === 1 ? 'file' : 'files') : 'files'}
               </p>
             </div>
           </div>
@@ -1292,7 +1359,7 @@ return (
         <div className="space-y-5">
           
           {/* Existing Files Section - Enhanced */}
-          {mode === 'edit' && editingItem && editingItem.files.length > 0 && (
+          {mode === 'edit' && editingItem && editingItem.files && editingItem.files.length > 0 && (
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -1323,7 +1390,7 @@ return (
               {showExistingFiles && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                   {editingItem.files.map((fileUrl, index) => {
-                    const isVideo = fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                    const isVideo = fileUrl && fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
                     const isMarkedForRemoval = isFileMarkedForRemoval(fileUrl);
                     
                     return (
@@ -1704,7 +1771,7 @@ return (
               <span className="font-bold">
                 {mode === 'edit' ? (
                   <>
-                    {editingItem?.files.length || 0} existing • 
+                    {editingItem?.files?.length || 0} existing • 
                     {filesToRemove.length} to remove • 
                     {formData.files.length} to add
                   </>
@@ -1784,21 +1851,18 @@ return (
 );
 }
 
-// Modern Preview Modal Component
-const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+// Modern Preview Modal Component - UPDATED WITH CHECKBOX SELECTION
+const ModernPreviewModal = ({ 
+  item, 
+  selectedItems, 
+  onSelect, 
+  onSelectAll,
+  onDownloadSelected,
+  onClose, 
+  onEdit, 
+  onDelete 
+}) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const currentFile = item.files[currentIndex];
-  const isImage = true; // Since we only have images
-
-  const nextFile = () => {
-    setCurrentIndex((prev) => (prev + 1) % item.files.length);
-  };
-
-  const prevFile = () => {
-    setCurrentIndex((prev) => (prev - 1 + item.files.length) % item.files.length);
-  };
 
   const copyUrl = () => {
     const targetPath = "/pages/gallery";
@@ -1809,19 +1873,32 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
     toast.success('Gallery link copied to clipboard!');
   };
 
-  const downloadFile = () => {
-    const link = document.createElement('a');
-    link.href = currentFile;
-    link.download = currentFile.split('/').pop();
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadAllFiles = () => {
+    if (!item.files || item.files.length === 0) {
+      toast.warning('No files to download');
+      return;
+    }
+
+    item.files.forEach((fileUrl, index) => {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileUrl.split('/').pop() || `file-${index + 1}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+    
+    toast.success(`Downloaded ${item.files.length} files`);
+  };
+
+  const openFile = (fileUrl) => {
+    window.open(fileUrl, '_blank');
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
-        {/* Modern Gradient Header - Matching create modal */}
+        {/* Modern Gradient Header */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-600"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
@@ -1836,7 +1913,7 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                     Gallery Preview
                   </h2>
                   <p className="text-white/90 text-sm mt-1">
-                    View and manage gallery details
+                    Select files to download or manage
                   </p>
                 </div>
               </div>
@@ -1859,72 +1936,13 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {/* Scrollable Content - Matching create modal layout */}
+        {/* Scrollable Content */}
         <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-4 sm:p-5 lg:p-6 modern-scrollbar">
           <div className="space-y-5">
             
-            {/* Main Media Display - Enhanced with modern styling */}
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
-                      <FiImage className="text-purple-500" />
-                      <span>Gallery Preview ({currentIndex + 1}/{item.files.length})</span>
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      Use arrows to navigate • Click image to view full size
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
-                    IMAGE GALLERY
-                  </div>
-                </div>
-              </div>
-              
-              <div className="relative">
-                {/* Navigation Buttons - Modern style */}
-                {item.files.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevFile}
-                      className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 p-4 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-full text-gray-700 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <FiChevronLeft className="text-xl" />
-                    </button>
-                    
-                    <button
-                      onClick={nextFile}
-                      className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 p-4 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-full text-gray-700 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <FiChevronRight className="text-xl" />
-                    </button>
-                  </>
-                )}
-
-                {/* Media Display - Modern container */}
-                <div className="flex items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
-                  {currentFile ? (
-                    <img
-                      src={currentFile}
-                      alt={`${item.title} - ${currentIndex + 1}`}
-                      className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center p-8">
-                      <FiImage className="text-gray-400 text-4xl mb-3" />
-                      <p className="text-gray-500">No image available</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Gallery Info Section - Matching form styling */}
+            {/* Gallery Info Section */}
             <div className="grid md:grid-cols-2 gap-5">
-              {/* Title Field - Enhanced */}
+              {/* Title Field */}
               <div className="md:col-span-2">
                 <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-200">
                   <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -1937,7 +1955,7 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                 </div>
               </div>
 
-              {/* Category Display - Enhanced */}
+              {/* Category Display */}
               <div>
                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
                   <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -1961,17 +1979,17 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                     <span>Upload Date</span>
                   </label>
                   <div className="w-full px-4 py-3 bg-white border-2 border-amber-200 rounded-xl text-md font-bold text-gray-800">
-                    {new Date(item.uploadDate).toLocaleDateString('en-US', {
+                    {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
-                    })}
+                    }) : 'Unknown'}
                   </div>
                 </div>
               </div>
 
-              {/* Description Field - Enhanced */}
+              {/* Description Field */}
               <div className="md:col-span-2">
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
                   <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
@@ -1985,58 +2003,91 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
               </div>
             </div>
 
-            {/* Thumbnail Strip - Enhanced */}
-            {item.files.length > 1 && (
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
-                      <FiGrid className="text-blue-500" />
-                      <span>All Files ({item.files.length})</span>
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      Click to preview • Current file is highlighted
-                    </p>
-                  </div>
-                  <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
-                    {item.files.length} FILES
-                  </div>
+            {/* Files Grid with Checkboxes */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
+                    <FiGrid className="text-blue-500" />
+                    <span>Gallery Files ({item.files ? item.files.length : 0})</span>
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Select files using checkboxes • Click to preview
+                  </p>
                 </div>
-                
-                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-                  {item.files.map((file, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentIndex(index)}
-                      className={`relative rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-200 ${
-                        index === currentIndex 
-                          ? 'border-cyan-500 shadow-lg scale-105' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      style={{ width: '120px', height: '120px' }}
-                    >
-                      <img
-                        src={file}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                      
-                      {/* Selection Indicator */}
-                      {index === currentIndex && (
-                        <div className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full shadow-lg">
-                          <FiCheck className="text-xs" />
-                        </div>
-                      )}
-                      
-                      {/* File Number */}
-                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
-                        {index + 1}
-                      </div>
-                    </button>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
+                    {selectedItems.size} SELECTED
+                  </div>
+                  <button
+                    onClick={onSelectAll}
+                    className="text-sm font-bold text-blue-600 hover:text-blue-700"
+                  >
+                    {selectedItems.size === (item.files ? item.files.length : 0) ? 'Deselect All' : 'Select All'}
+                  </button>
                 </div>
               </div>
-            )}
+              
+              {item.files && item.files.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {item.files.map((fileUrl, index) => {
+                    const isSelected = selectedItems.has(index);
+                    const isVideo = fileUrl && fileUrl.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`relative bg-white rounded-xl border overflow-hidden shadow-sm transition-all duration-200 hover:shadow-md ${
+                          isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
+                        }`}
+                      >
+                        {/* Selection Checkbox */}
+                        <div className="absolute top-2 left-2 z-10">
+                          <button
+                            onClick={() => onSelect(index)}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                              isSelected 
+                                ? 'bg-gradient-to-br from-blue-500 to-cyan-500 border-blue-500 text-white' 
+                                : 'bg-white/90 backdrop-blur-sm border-gray-300 hover:border-blue-400'
+                            }`}
+                          >
+                            <FiCheck className={`text-xs transition-all ${isSelected ? 'scale-100' : 'scale-90 opacity-0'}`} />
+                          </button>
+                        </div>
+                        
+                        {/* File Preview */}
+                        <div className="aspect-square relative">
+                          {isVideo ? (
+                            <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                              <FiVideo className="text-3xl text-purple-500" />
+                            </div>
+                          ) : (
+                            <img
+                              src={fileUrl}
+                              alt={`File ${index + 1}`}
+                              className="w-full h-full object-cover cursor-pointer"
+                              onClick={() => openFile(fileUrl)}
+                            />
+                          )}
+                          
+                          {/* File Info Overlay */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-white">
+                            <p className="text-xs font-bold truncate">
+                              File {index + 1}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FiImage className="text-gray-300 text-4xl mx-auto mb-3" />
+                  <p className="text-gray-500">No files in this gallery</p>
+                </div>
+              )}
+            </div>
 
             {/* Quick Actions Section */}
             <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl p-5 border border-slate-200 shadow-sm">
@@ -2046,41 +2097,42 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
-                  onClick={downloadFile}
-                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-slate-700 hover:to-slate-800 transition-all duration-200"
+                  onClick={onDownloadSelected}
+                  disabled={selectedItems.size === 0}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-slate-700 hover:to-slate-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiDownload className="text-lg" />
-                  <span>Download Current</span>
+                  <span>Download Selected ({selectedItems.size})</span>
+                </button>
+                
+                <button
+                  onClick={downloadAllFiles}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-amber-800 hover:via-orange-800 hover:to-red-800 transition-all duration-200"
+                >
+                  <FiDownload className="text-lg" />
+                  <span>Download All</span>
                 </button>
                 
                 <button
                   onClick={copyUrl}
-                  className="flex items-center justify-center gap-3 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-amber-800 hover:via-orange-800 hover:to-red-800 transition-all duration-200"
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-indigo-700 hover:to-violet-700 transition-all duration-200"
                 >
                   <FiCopy className="text-lg" />
                   <span>Copy Gallery URL</span>
-                </button>
-                
-                <button
-                  onClick={() => window.open(currentFile, '_blank')}
-                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-indigo-700 hover:to-violet-700 transition-all duration-200"
-                >
-                  <FiExternalLink className="text-lg" />
-                  <span>Open in New Tab</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Footer Actions - Matching create modal */}
+        {/* Enhanced Footer Actions */}
         <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-violet-100 px-3 py-1.5 rounded-full">
                 <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full"></div>
                 <span className="font-bold">
-                  Gallery #{item.id?.slice(0, 8) || 'Unknown'} • {item.files.length} files • Created {new Date(item.uploadDate).toLocaleDateString()}
+                  Gallery {item.id ? `#${String(item.id).slice(0, 8)}` : 'Unknown'} • {item.files ? item.files.length : 0} files • Created {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString() : 'Unknown'}
                 </span>
               </div>
             </div>
@@ -2188,7 +2240,7 @@ const ModernDeleteModal = ({ item, onClose, onConfirm }) => {
                 <ul className="mt-2 space-y-1 text-sm">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
-                    <span>{item.files.length} file{item.files.length > 1 ? 's' : ''}</span>
+                    <span>{item.files ? item.files.length : 0} file{(item.files && item.files.length > 1) ? 's' : ''}</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-rose-500 rounded-full"></div>
@@ -2206,7 +2258,7 @@ const ModernDeleteModal = ({ item, onClose, onConfirm }) => {
           {/* Gallery Preview */}
           <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
-              {item.files[0] && (
+              {item.files && item.files[0] && (
                 <img
                   src={item.files[0]}
                   alt="Preview"
@@ -2218,10 +2270,10 @@ const ModernDeleteModal = ({ item, onClose, onConfirm }) => {
               <p className="text-sm sm:text-base font-medium text-slate-800 truncate">{item.title}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
-                  {item.category.replace(/_/g, ' ')}
+                  {item.category ? item.category.replace(/_/g, ' ') : 'Unknown'}
                 </span>
                 <span className="text-xs text-slate-600">
-                  {item.files.length} file{item.files.length > 1 ? 's' : ''}
+                  {item.files ? item.files.length : 0} file{(item.files && item.files.length > 1) ? 's' : ''}
                 </span>
               </div>
             </div>
