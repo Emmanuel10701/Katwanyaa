@@ -18,6 +18,8 @@ import {
 } from 'react-icons/io5';
 
 import { IoRefreshCw } from "react-icons/io";
+import { FiRefreshCw } from "react-icons/fi";
+
 
 import {
   CircularProgress, Tooltip, Badge, Chip, LinearProgress, Avatar,
@@ -1036,17 +1038,18 @@ export default function ModernResourcesAssignmentsView({
                 <IoCloudDownload />
                 <span>Download All ({filteredCount})</span>
               </button>
-              
-              <button
-                onClick={() => {
-                  if (activeTab === 'assignments') fetchAssignments();
-                  else fetchResources();
-                }}
-                className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-sm sm:text-base transition-all flex items-center gap-2"
-              >
-                <IoRefreshCw className={isLoading ? 'animate-spin' : ''} />
-                <span>Refresh</span>
-              </button>
+           <button
+  disabled={isLoading} // Optional: prevents double-clicks while loading
+  onClick={() => {
+    if (activeTab === 'assignments') fetchAssignments();
+    else fetchResources();
+  }}
+  className="px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-sm sm:text-base transition-all flex items-center gap-2"
+>
+  {/* The text changes based on the isLoading state */}
+  <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+</button>
+
             </div>
           </div>
         </div>
