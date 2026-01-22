@@ -1,45 +1,30 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
-import cloudinary from "../../../../libs/cloudinary";
+import { FileManager } from "../../../../libs/superbase"; // Changed from cloudinary
 
-// Helper functions (same as above, but consolidated)
-const uploadFileToCloudinary = async (file) => {
-  if (!file || !file.name) return null;
+// Helper functions
+const uploadFileToSupabase = async (file) => {
+  if (!file || !file.name || file.size === 0) return null;
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
+    const result = await FileManager.uploadFile(file, `resources/files`);
     
-    // Clean filename and remove extension for public_id
-    const originalName = file.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-
-    return await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "auto",
-          folder: "nextjs_uploads",
-          public_id: `${timestamp}-${sanitizedFileName}`,
-        },
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-      stream.end(buffer);
-    });
+    if (!result) return null;
+    
+    return {
+      url: result.url,
+      name: result.fileName,
+      size: result.fileSize,
+      extension: result.fileName.substring(result.fileName.lastIndexOf('.')).toLowerCase(),
+      uploadedAt: new Date().toISOString(),
+    };
   } catch (err) {
-    console.error("❌ Cloudinary upload error:", err);
+    console.error("❌ Supabase upload error:", err);
     return null;
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files) => {
+const uploadMultipleFilesToSupabase = async (files) => {
   if (!files || files.length === 0) return [];
 
   const uploadedFiles = [];
@@ -47,14 +32,14 @@ const uploadMultipleFilesToCloudinary = async (files) => {
   for (const file of files) {
     if (!file.name || file.size === 0) continue;
     
-    const result = await uploadFileToCloudinary(file);
+    const result = await uploadFileToSupabase(file);
     if (result) {
       uploadedFiles.push({
-        url: result.secure_url,
-        name: file.name,
-        size: formatFileSize(file.size),
-        extension: file.name.split(".").pop().toLowerCase(),
-        uploadedAt: new Date().toISOString(),
+        url: result.url,
+        name: result.name,
+        size: formatFileSize(result.size),
+        extension: result.extension,
+        uploadedAt: result.uploadedAt,
       });
     }
   }
@@ -62,21 +47,15 @@ const uploadMultipleFilesToCloudinary = async (files) => {
   return uploadedFiles;
 };
 
-const deleteFileFromCloudinary = async (fileUrl) => {
+const deleteFileFromSupabase = async (fileUrl) => {
   try {
     if (!fileUrl) return;
     
-    // Extract public ID from Cloudinary URL
-    const urlParts = fileUrl.split('/');
-    const fileName = urlParts[urlParts.length - 1];
-    const publicId = fileName.split('.')[0]; // Remove extension
-    
-    await cloudinary.uploader.destroy(`nextjs_uploads/${publicId}`, {
-      resource_type: "auto",
-    });
-    console.log(`✅ Deleted from Cloudinary: ${publicId}`);
+    // Use FileManager to delete file
+    await FileManager.deleteFiles(fileUrl);
+    console.log(`✅ Deleted from Supabase: ${fileUrl}`);
   } catch (err) {
-    console.warn("⚠️ Could not delete Cloudinary file:", err.message);
+    console.warn("⚠️ Could not delete Supabase file:", err.message);
   }
 };
 
@@ -103,9 +82,23 @@ const getFileType = (fileName) => {
     jpg: "image",
     jpeg: "image",
     png: "image",
+    webp: "image",
+    bmp: "image",
+    svg: "image",
     mp4: "video",
+    mov: "video",
+    avi: "video",
+    wmv: "video",
+    flv: "video",
+    webm: "video",
+    mkv: "video",
     mp3: "audio",
+    wav: "audio",
+    m4a: "audio",
+    ogg: "audio",
     zip: "archive",
+    rar: "archive",
+    "7z": "archive",
   };
 
   return typeMap[ext] || "document";
@@ -249,7 +242,7 @@ async function handleFormUpdate(request, id, existingResource) {
       case "addFiles":
         const newFiles = formData.getAll("files");
         if (newFiles && newFiles.length > 0 && newFiles[0].name) {
-          const uploadedNewFiles = await uploadMultipleFilesToCloudinary(newFiles);
+          const uploadedNewFiles = await uploadMultipleFilesToSupabase(newFiles);
           uploadedFiles = [...uploadedFiles, ...uploadedNewFiles];
           updateData.type = determineMainTypeFromFiles(uploadedFiles);
         }
@@ -260,7 +253,7 @@ async function handleFormUpdate(request, id, existingResource) {
         if (fileNameToRemove) {
           const fileToRemove = uploadedFiles.find((f) => f.name === fileNameToRemove);
           if (fileToRemove) {
-            await deleteFileFromCloudinary(fileToRemove.url);
+            await deleteFileFromSupabase(fileToRemove.url);
           }
           uploadedFiles = uploadedFiles.filter((f) => f.name !== fileNameToRemove);
         }
@@ -339,10 +332,11 @@ export async function DELETE(request, { params }) {
       }, { status: 404 });
     }
 
-    // Delete files from Cloudinary
+    // Delete files from Supabase
     if (resource.files && Array.isArray(resource.files)) {
-      for (const file of resource.files) {
-        await deleteFileFromCloudinary(file.url);
+      const fileUrls = resource.files.map(file => file.url).filter(url => url);
+      if (fileUrls.length > 0) {
+        await FileManager.deleteFiles(fileUrls);
       }
     }
 
@@ -398,7 +392,7 @@ export async function PATCH(request, { params }) {
       message: "Download count updated", 
       downloads: resource.downloads 
     }, { status: 200 });
-  } catch (Error) {
+  } catch (error) {
     console.error("❌ Error updating download count:", error);
     return NextResponse.json({ 
       success: false, 

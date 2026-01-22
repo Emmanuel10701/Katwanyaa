@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import cloudinary from "../../../libs/cloudinary";
+import { FileManager } from "../../../libs/superbase"; // Changed from cloudinary to superbase
 
 // Helper function to validate required fields
 const validateRequiredFields = (formData) => {
@@ -15,37 +15,19 @@ const validateRequiredFields = (formData) => {
   }
 };
 
-// Helper to delete old files from Cloudinary
-const deleteOldFileFromCloudinary = async (filePath) => {
+// Helper to delete old files from Supabase
+const deleteOldFileFromSupabase = async (filePath) => {
   if (!filePath || filePath.includes('youtube.com') || filePath.includes('youtu.be')) {
     return; // Skip YouTube URLs
   }
 
   try {
-    // Extract public ID from Cloudinary URL
-    if (filePath.includes('cloudinary.com')) {
-      const urlParts = filePath.split('/');
-      const uploadIndex = urlParts.indexOf('upload');
-      
-      if (uploadIndex !== -1) {
-        const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
-        const publicId = pathAfterUpload.replace(/\.[^/.]+$/, '');
-        
-        // Determine resource type from URL
-        let resourceType = 'auto';
-        if (filePath.includes('/video/') || filePath.match(/\.(mp4|webm|ogg|mov|avi)$/i)) {
-          resourceType = 'video';
-        } else if (filePath.includes('/image/') || filePath.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
-          resourceType = 'image';
-        } else if (filePath.match(/\.(pdf|doc|docx|xls|xlsx|ppt|pptx|txt)$/i)) {
-          resourceType = 'raw';
-        }
-        
-        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-      }
+    // Only delete Supabase files
+    if (filePath.includes('supabase.co')) {
+      await FileManager.deleteFiles(filePath);
     }
   } catch (error) {
-    console.warn('⚠️ Could not delete old file from Cloudinary:', error.message);
+    console.warn('⚠️ Could not delete old file from Supabase:', error.message);
   }
 };
 
@@ -112,56 +94,32 @@ const parseFeeDistributionJson = (value, fieldName) => {
   }
 };
 
-// Helper: Upload file to Cloudinary with appropriate resource type
-const uploadFileToCloudinary = async (file, folder, fieldName, resourceType = 'auto') => {
+// Helper: Upload file to Supabase
+const uploadFileToSupabase = async (file, folder, fieldName) => {
   if (!file || file.size === 0) {
     return null;
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
-    const originalName = file.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const result = await FileManager.uploadFile(file, `school-info/${folder}`);
     
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: resourceType,
-          folder: `school_info/${folder}`,
-          public_id: `${timestamp}-${fieldName}-${sanitizedFileName}`,
-          ...(resourceType === 'image' ? {
-            transformation: [
-              { width: 1200, crop: "limit" },
-              { quality: "auto:good" }
-            ]
-          } : {}),
-          allowed_formats: resourceType === 'video' ? ['mp4', 'webm', 'ogg'] : undefined
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
-    });
+    if (!result) return null;
     
     return {
-      url: result.secure_url,
-      name: originalName,
-      size: file.size,
-      format: result.format,
-      resource_type: result.resource_type,
-      public_id: result.public_id
+      url: result.url,
+      name: result.fileName,
+      size: result.fileSize,
+      type: result.fileType,
+      extension: result.fileName.substring(result.fileName.lastIndexOf('.')).toLowerCase(),
+      storageType: 'supabase'
     };
   } catch (error) {
-    console.error(`❌ Cloudinary upload error for ${fieldName}:`, error);
+    console.error(`❌ Supabase upload error for ${fieldName}:`, error);
     throw new Error(`Failed to upload ${fieldName}: ${error.message}`);
   }
 };
 
-// MAIN PDF UPLOAD HANDLER (using Cloudinary)
+// MAIN PDF UPLOAD HANDLER (using Supabase)
 const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = null) => {
   if (!pdfFile || pdfFile.size === 0) {
     return {
@@ -171,9 +129,9 @@ const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = nu
     };
   }
 
-  // Delete old file from Cloudinary if exists
-  if (existingFilePath && existingFilePath.includes('cloudinary.com')) {
-    await deleteOldFileFromCloudinary(existingFilePath);
+  // Delete old file from Supabase if exists
+  if (existingFilePath && existingFilePath.includes('supabase.co')) {
+    await deleteOldFileFromSupabase(existingFilePath);
   }
 
   // Validate file type
@@ -187,13 +145,13 @@ const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = nu
     throw new Error(`${fieldName} file too large. Maximum size: 20MB`);
   }
 
-  // Upload to Cloudinary
-  const cloudinaryResult = await uploadFileToCloudinary(pdfFile, folder, fieldName, 'raw');
+  // Upload to Supabase
+  const supabaseResult = await uploadFileToSupabase(pdfFile, folder, fieldName);
   
   return {
-    path: cloudinaryResult.url,
-    name: cloudinaryResult.name,
-    size: cloudinaryResult.size
+    path: supabaseResult.url,
+    name: supabaseResult.name,
+    size: supabaseResult.size
   };
 };
 
@@ -208,9 +166,9 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
     };
   }
 
-  // Delete old file from Cloudinary if exists
-  if (existingFilePath && existingFilePath.includes('cloudinary.com')) {
-    await deleteOldFileFromCloudinary(existingFilePath);
+  // Delete old file from Supabase if exists
+  if (existingFilePath && existingFilePath.includes('supabase.co')) {
+    await deleteOldFileFromSupabase(existingFilePath);
   }
 
   // Allowed file types for additional results
@@ -239,22 +197,16 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
     throw new Error(`File too large. Maximum size: 50MB`);
   }
 
-  // Determine resource type
-  let resourceType = 'raw';
-  if (file.type.startsWith('image/')) {
-    resourceType = 'image';
-  }
-
-  // Upload to Cloudinary
-  const cloudinaryResult = await uploadFileToCloudinary(file, 'additional-results', 'additional', resourceType);
+  // Upload to Supabase
+  const supabaseResult = await uploadFileToSupabase(file, 'additional-results', 'additional');
   
   // Determine file type for display
   const fileType = getFileTypeFromMime(file.type);
   
   return {
-    path: cloudinaryResult.url,
-    name: cloudinaryResult.name,
-    size: cloudinaryResult.size,
+    path: supabaseResult.url,
+    name: supabaseResult.name,
+    size: supabaseResult.size,
     type: fileType
   };
 };
@@ -270,7 +222,7 @@ const getFileTypeFromMime = (mimeType) => {
   return 'document';
 };
 
-// Helper to handle thumbnail upload (for MP4 videos only)
+// Helper to handle thumbnail upload
 const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, isUpdateOperation = false) => {
   // If no thumbnail data is provided
   if (!thumbnailData || (typeof thumbnailData === 'string' && thumbnailData.trim() === '')) {
@@ -282,15 +234,15 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
       } : null;
     }
     // During create operations, delete existing thumbnail if provided
-    if (existingThumbnail && existingThumbnail.path.includes('cloudinary.com')) {
-      await deleteOldFileFromCloudinary(existingThumbnail.path);
+    if (existingThumbnail && existingThumbnail.path.includes('supabase.co')) {
+      await deleteOldFileFromSupabase(existingThumbnail.path);
     }
     return null;
   }
 
-  // Delete old thumbnail from Cloudinary if exists (only when explicitly replacing)
-  if (existingThumbnail && existingThumbnail.path && existingThumbnail.path.includes('cloudinary.com')) {
-    await deleteOldFileFromCloudinary(existingThumbnail.path);
+  // Delete old thumbnail from Supabase if exists (only when explicitly replacing)
+  if (existingThumbnail && existingThumbnail.path && existingThumbnail.path.includes('supabase.co')) {
+    await deleteOldFileFromSupabase(existingThumbnail.path);
   }
 
   // If it's a File object
@@ -306,11 +258,11 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
         throw new Error("Thumbnail too large. Maximum size: 2MB");
       }
 
-      // Upload to Cloudinary
-      const cloudinaryResult = await uploadFileToCloudinary(thumbnailData, 'thumbnails', 'thumbnail', 'image');
+      // Upload to Supabase
+      const supabaseResult = await uploadFileToSupabase(thumbnailData, 'thumbnails', 'thumbnail');
       
       return {
-        path: cloudinaryResult.url,
+        path: supabaseResult.url,
         type: 'generated'
       };
     } catch (fileError) {
@@ -330,21 +282,36 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
 
       const extension = matches[1] === 'jpeg' ? 'jpg' : matches[1];
       const base64Data = matches[2];
-      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Convert base64 to File object
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+      
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+      
+      const blob = new Blob(byteArrays, { type: `image/${extension}` });
+      const file = new File([blob], `thumbnail.${extension}`, { type: `image/${extension}` });
       
       // Validate file size (max 2MB for thumbnails)
-      if (buffer.length > 2 * 1024 * 1024) {
+      if (file.size > 2 * 1024 * 1024) {
         throw new Error("Thumbnail too large. Maximum size: 2MB");
       }
 
-      // Create a File-like object from buffer
-      const file = new File([buffer], `thumbnail.${extension}`, { type: `image/${extension}` });
-      
-      // Upload to Cloudinary
-      const cloudinaryResult = await uploadFileToCloudinary(file, 'thumbnails', 'thumbnail', 'image');
+      // Upload to Supabase
+      const supabaseResult = await uploadFileToSupabase(file, 'thumbnails', 'thumbnail');
       
       return {
-        path: cloudinaryResult.url,
+        path: supabaseResult.url,
         type: 'generated'
       };
     } catch (base64Error) {
@@ -354,7 +321,7 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
   }
 
   // If it's already a file path/URL, return as-is
-  if (typeof thumbnailData === 'string' && (thumbnailData.startsWith('/') || thumbnailData.includes('cloudinary.com'))) {
+  if (typeof thumbnailData === 'string' && (thumbnailData.startsWith('/') || thumbnailData.includes('supabase.co'))) {
     return {
       path: thumbnailData,
       type: 'existing'
@@ -364,7 +331,7 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
   throw new Error("Invalid thumbnail data format");
 };
 
-// Update the handleVideoUpload function to properly store thumbnails with Cloudinary
+// Handle video upload to Supabase
 const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, existingVideo = null, existingThumbnail = null, isUpdateOperation = false) => {
   let videoPath = existingVideo?.videoTour || null;
   let videoType = existingVideo?.videoType || null;
@@ -374,14 +341,14 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
   // If YouTube link is provided
   if (youtubeLink !== null && youtubeLink !== undefined) {
     if (youtubeLink.trim() !== '') {
-      // Delete old video file from Cloudinary if exists (if it was a cloudinary file)
-      if (existingVideo?.videoType === 'file' && existingVideo?.videoTour && existingVideo.videoTour.includes('cloudinary.com')) {
-        await deleteOldFileFromCloudinary(existingVideo.videoTour);
+      // Delete old video file from Supabase if exists (if it was a supabase file)
+      if (existingVideo?.videoType === 'file' && existingVideo?.videoTour && existingVideo.videoTour.includes('supabase.co')) {
+        await deleteOldFileFromSupabase(existingVideo.videoTour);
       }
       
-      // Delete old thumbnail from Cloudinary when switching to YouTube
-      if (thumbnailPath && thumbnailPath.includes('cloudinary.com')) {
-        await deleteOldFileFromCloudinary(thumbnailPath);
+      // Delete old thumbnail from Supabase when switching to YouTube
+      if (thumbnailPath && thumbnailPath.includes('supabase.co')) {
+        await deleteOldFileFromSupabase(thumbnailPath);
         thumbnailPath = null;
         thumbnailType = null;
       }
@@ -402,9 +369,9 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
   
   // If local video file upload is provided (MP4 mode)
   if (videoTourFile && videoTourFile.size > 0) {
-    // Delete old video file from Cloudinary if exists
-    if (existingVideo?.videoTour && existingVideo?.videoType === 'file' && existingVideo.videoTour.includes('cloudinary.com')) {
-      await deleteOldFileFromCloudinary(existingVideo.videoTour);
+    // Delete old video file from Supabase if exists
+    if (existingVideo?.videoTour && existingVideo?.videoType === 'file' && existingVideo.videoTour.includes('supabase.co')) {
+      await deleteOldFileFromSupabase(existingVideo.videoTour);
     }
 
     // Validate file type
@@ -419,9 +386,9 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
       throw new Error("Video file too large. Maximum size: 100MB");
     }
 
-    // Upload to Cloudinary
-    const cloudinaryResult = await uploadFileToCloudinary(videoTourFile, 'videos', 'video_tour', 'video');
-    videoPath = cloudinaryResult.url;
+    // Upload to Supabase
+    const supabaseResult = await uploadFileToSupabase(videoTourFile, 'videos', 'video_tour');
+    videoPath = supabaseResult.url;
     videoType = "file";
     
     // Handle thumbnail for MP4 videos
@@ -452,10 +419,10 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
     }
   }
 
-  // If video is being removed completely, also remove thumbnail from Cloudinary
+  // If video is being removed completely, also remove thumbnail from Supabase
   if ((!youtubeLink || youtubeLink.trim() === '') && !videoTourFile && existingVideo?.videoTour) {
-    if (thumbnailPath && thumbnailPath.includes('cloudinary.com')) {
-      await deleteOldFileFromCloudinary(thumbnailPath);
+    if (thumbnailPath && thumbnailPath.includes('supabase.co')) {
+      await deleteOldFileFromSupabase(thumbnailPath);
       thumbnailPath = null;
       thumbnailType = null;
     }
@@ -525,7 +492,7 @@ export async function POST(req) {
       );
     }
 
-    // Handle ALL PDF uploads to Cloudinary
+    // Handle ALL PDF uploads to Supabase
     let pdfUploads = {};
     
     try {
@@ -579,31 +546,24 @@ export async function POST(req) {
       );
     }
 
-    // Handle additional results files to Cloudinary
+    // Handle additional results files to Supabase
     let additionalResultsFiles = [];
 
     try {
-      // 1) Start with existing additional files (POST has none; PUT will override below)
-      // For POST this will just build a fresh array from uploads
-      // For PUT we will use existing where appropriate (handled further down)
-      // Support two client patterns:
-      //  - multiple files under 'additionalFiles' (getAll)
-      //  - indexed pattern 'additionalResultsFile_{i}' with 'additionalResultsYear_{i}', 'additionalResultsDesc_{i}'
-      
       // Helper to push uploaded file object into array
       const pushUploadedAdditional = (arr, uploadResult, year = '', description = '') => {
         if (!uploadResult || !uploadResult.path) return;
         arr.push({
           filename: uploadResult.name,
           filepath: uploadResult.path,
-          filetype: uploadResult.type,
+          filetype: uploadResult.type || getFileTypeFromMime(uploadResult.name),
           year: year ? year.trim() : null,
           description: description ? description.trim() : null,
           filesize: uploadResult.size
         });
       };
 
-      // 2) First handle "modal" style multiple files: formData.getAll('additionalFiles')
+      // Handle "modal" style multiple files: formData.getAll('additionalFiles')
       const modalFiles = formData.getAll('additionalFiles') || [];
       for (let i = 0; i < modalFiles.length; i++) {
         const file = modalFiles[i];
@@ -617,7 +577,7 @@ export async function POST(req) {
         }
       }
 
-      // 3) Then handle indexed pattern additionalResultsFile_{i} (with year/desc)
+      // Handle indexed pattern additionalResultsFile_{i} (with year/desc)
       const newFileEntries = [];
       for (const [key, value] of formData.entries()) {
         if (key.startsWith('additionalResultsFile_')) {
@@ -634,9 +594,7 @@ export async function POST(req) {
       for (const entry of newFileEntries) {
         if (entry.file && entry.file.size > 0) {
           try {
-            // If a corresponding existing filepath was provided (replacement scenario),
-            // the client may supply existingAdditionalFilepath_{index}. We pass it to handler
-            // so the old file is removed and replaced.
+            // If a corresponding existing filepath was provided (replacement scenario)
             const existingFilePathField = formData.get(`existingAdditionalFilepath_${entry.index}`) || formData.get(`replaceAdditionalFilepath_${entry.index}`) || null;
             const uploadResult = await handleAdditionalFileUpload(entry.file, existingFilePathField || null);
             pushUploadedAdditional(additionalResultsFiles, uploadResult, entry.year, entry.description);
@@ -646,11 +604,11 @@ export async function POST(req) {
         }
       }
 
-      // 4) Deduplicate by filepath (keep first seen)
+      // Deduplicate by filepath (keep first seen)
       const unique = [];
       const seenPaths = new Set();
       for (const f of additionalResultsFiles) {
-        const p = f.filepath || f.path || f.file;
+        const p = f.filepath;
         if (p && !seenPaths.has(p)) {
           seenPaths.add(p);
           unique.push(f);
@@ -1045,7 +1003,7 @@ export async function PUT(req) {
       );
     }
 
-    // Handle ALL PDF uploads to Cloudinary
+    // Handle ALL PDF uploads to Supabase
     let pdfUploads = {};
     
     try {
@@ -1442,7 +1400,7 @@ export async function DELETE() {
       );
     }
 
-    // Delete all associated files from Cloudinary
+    // Delete all associated files from Supabase
     const filesToDelete = [
       existing.videoType === 'file' ? existing.videoTour : null,
       existing.videoThumbnail, // Add thumbnail to deletion list
@@ -1458,7 +1416,7 @@ export async function DELETE() {
       existing.kcseResultsPdf,
     ].filter(Boolean);
 
-    // Delete additional results files from Cloudinary
+    // Delete additional results files from Supabase
     let additionalResultsFiles = parseExistingAdditionalFiles(existing.additionalResultsFiles);
 
     // Add additional results files to deletion list
@@ -1468,9 +1426,9 @@ export async function DELETE() {
       }
     });
 
-    // Delete each file from Cloudinary
+    // Delete each file from Supabase
     for (const filePath of filesToDelete) {
-      await deleteOldFileFromCloudinary(filePath);
+      await deleteOldFileFromSupabase(filePath);
     }
 
     await prisma.schoolInfo.deleteMany();

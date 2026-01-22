@@ -1,47 +1,30 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import cloudinary from "../../../libs/cloudinary";
+import { FileManager } from "../../../libs/superbase"; // Changed from cloudinary
 
 // Helper functions
-const uploadFileToCloudinary = async (file) => {
-  if (!file || !file.name) return null;
+const uploadFileToSupabase = async (file) => {
+  if (!file || !file.name || file.size === 0) return null;
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
+    const result = await FileManager.uploadFile(file, `resources/files`);
     
-    // Clean filename and remove extension for public_id
-    const originalName = file.name;
-    const extension = originalName.split('.').pop().toLowerCase();
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-
-    return await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "auto",
-          folder: "nextjs_uploads",
-          public_id: `${timestamp}-${sanitizedFileName}`,
-          // Don't add extension to public_id, Cloudinary will handle it
-        },
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-      stream.end(buffer);
-    });
+    if (!result) return null;
+    
+    return {
+      url: result.url,
+      name: result.fileName,
+      size: result.fileSize,
+      extension: result.fileName.substring(result.fileName.lastIndexOf('.')).toLowerCase(),
+      uploadedAt: new Date().toISOString(),
+    };
   } catch (err) {
-    console.error("❌ Cloudinary upload error:", err);
+    console.error("❌ Supabase upload error:", err);
     return null;
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files) => {
+const uploadMultipleFilesToSupabase = async (files) => {
   if (!files || files.length === 0) return [];
 
   const uploadedFiles = [];
@@ -50,14 +33,14 @@ const uploadMultipleFilesToCloudinary = async (files) => {
     // Skip empty files
     if (!file.name || file.size === 0) continue;
     
-    const result = await uploadFileToCloudinary(file);
+    const result = await uploadFileToSupabase(file);
     if (result) {
       uploadedFiles.push({
-        url: result.secure_url,
-        name: file.name,
-        size: formatFileSize(file.size),
-        extension: file.name.split(".").pop().toLowerCase(),
-        uploadedAt: new Date().toISOString(),
+        url: result.url,
+        name: result.name,
+        size: formatFileSize(result.size),
+        extension: result.extension,
+        uploadedAt: result.uploadedAt,
       });
     }
   }
@@ -90,12 +73,23 @@ const getFileType = (fileName) => {
     jpeg: "image",
     png: "image",
     gif: "image",
+    webp: "image",
+    bmp: "image",
+    svg: "image",
     mp4: "video",
     mov: "video",
+    avi: "video",
+    wmv: "video",
+    flv: "video",
+    webm: "video",
+    mkv: "video",
     mp3: "audio",
     wav: "audio",
+    m4a: "audio",
+    ogg: "audio",
     zip: "archive",
     rar: "archive",
+    "7z": "archive",
   };
 
   return typeMap[ext] || "document";
@@ -172,8 +166,8 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Upload files to Cloudinary
-    const uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
+    // Upload files to Supabase
+    const uploadedFiles = await uploadMultipleFilesToSupabase(validFiles);
     if (uploadedFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 

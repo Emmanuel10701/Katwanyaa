@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import nodemailer from "nodemailer";
-import cloudinary from "../../../libs/cloudinary";
+import { FileManager } from "../../../libs/superbase"; // Changed from cloudinary
 import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
@@ -52,76 +52,47 @@ const SOCIAL_MEDIA = {
 };
 
 // ====================================================================
-// CLOUDINARY HELPER FUNCTIONS
+// SUPABASE HELPER FUNCTIONS (REPLACED CLOUDINARY)
 // ====================================================================
 
-// Helper: Upload file to Cloudinary
-const uploadFileToCloudinary = async (file) => {
+// Helper: Upload file to Supabase
+const uploadFileToSupabase = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
-    const originalName = file.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const result = await FileManager.uploadFile(file, `email-campaigns/attachments`);
     
-    const fileType = originalName.substring(originalName.lastIndexOf('.') + 1).toLowerCase();
-    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileType);
-    const isVideo = ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'].includes(fileType);
-    
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: isVideo ? "video" : (isImage ? "image" : "auto"),
-          folder: "email_attachments",
-          public_id: `${timestamp}-${sanitizedFileName}`,
-          ...(isImage ? {
-            transformation: [
-              { width: 1200, crop: "limit" },
-              { quality: "auto:good" }
-            ]
-          } : {}),
-          allowed_formats: isVideo ? ['mp4', 'mov', 'avi', 'wmv', 'flv', 'webm', 'mkv'] : undefined
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
-    });
+    if (!result) return null;
     
     return {
-      filename: result.public_id,
-      originalName: originalName,
-      fileType: fileType,
-      fileSize: file.size,
+      filename: result.key,
+      originalName: result.fileName,
+      fileType: result.fileType,
+      fileSize: result.fileSize,
       uploadedAt: new Date().toISOString(),
-      url: result.secure_url,
-      resource_type: result.resource_type,
-      format: result.format
+      url: result.url,
+      storageType: 'supabase'
     };
   } catch (error) {
-    console.error("❌ Cloudinary upload error:", error);
+    console.error("❌ Supabase upload error:", error);
     return null;
   }
 };
 
-// Helper: Delete file from Cloudinary
-const deleteFileFromCloudinary = async (publicId, resourceType = 'auto') => {
-  if (!publicId) return;
+// Helper: Delete file from Supabase
+const deleteFileFromSupabase = async (fileUrl) => {
+  if (!fileUrl) return;
 
   try {
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    await FileManager.deleteFiles(fileUrl);
   } catch (error) {
-    console.error("❌ Error deleting file from Cloudinary:", error);
+    console.error("❌ Error deleting file from Supabase:", error);
     // Silent fail - don't block operation if delete fails
   }
 };
 
 // ====================================================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (EXACTLY THE SAME AS BEFORE)
 // ====================================================================
 
 function getRecipientTypeLabel(type) {
@@ -256,7 +227,7 @@ async function sendModernEmails(campaign) {
     console.error('Error parsing attachments:', error);
   }
   
-  // Prepare email attachments for nodemailer (Cloudinary URLs as links, not attachments)
+  // Prepare email attachments for nodemailer (Supabase URLs as links, not attachments)
   const emailAttachments = attachmentsArray.map(attachment => {
     return {
       filename: attachment.originalName || attachment.filename,
@@ -398,7 +369,7 @@ function validateEmailList(emailList) {
   return { validEmails, invalidEmails };
 }
 
-// Helper to save uploaded file to Cloudinary (REPLACED LOCAL STORAGE)
+// Helper to save uploaded file to Supabase (REPLACED CLOUDINARY)
 async function saveUploadedFile(file) {
   if (!file || file.size === 0) return null;
   
@@ -408,14 +379,14 @@ async function saveUploadedFile(file) {
     throw new Error(`File ${file.name} is too large. Maximum size is 10MB.`);
   }
   
-  // Upload to Cloudinary
-  const cloudinaryResult = await uploadFileToCloudinary(file);
+  // Upload to Supabase
+  const supabaseResult = await uploadFileToSupabase(file);
   
-  if (!cloudinaryResult) {
-    throw new Error(`Failed to upload file ${file.name} to Cloudinary`);
+  if (!supabaseResult) {
+    throw new Error(`Failed to upload file ${file.name} to Supabase`);
   }
   
-  return cloudinaryResult;
+  return supabaseResult;
 }
 
 // Validate attachment size before saving
@@ -532,7 +503,7 @@ export async function POST(req) {
         fileSize: attachment.fileSize,
         uploadedAt: attachment.uploadedAt,
         url: attachment.url,
-        resource_type: attachment.resource_type
+        storageType: attachment.storageType || 'supabase'
       }));
       
       // Create campaign in database
@@ -1038,7 +1009,7 @@ export async function PUT(req) {
           fileSize: attachment.fileSize,
           uploadedAt: attachment.uploadedAt,
           url: attachment.url,
-          resource_type: attachment.resource_type
+          storageType: attachment.storageType || 'supabase'
         }));
         updateData.attachments = JSON.stringify(optimizedAttachments);
       } else {
@@ -1183,17 +1154,19 @@ export async function DELETE(req) {
       select: { attachments: true }
     });
     
-    // Delete files from Cloudinary if they exist
+    // Delete files from Supabase if they exist
     if (campaign?.attachments) {
       try {
         const attachments = JSON.parse(campaign.attachments);
-        for (const attachment of attachments) {
-          if (attachment.filename) {
-            await deleteFileFromCloudinary(attachment.filename, attachment.resource_type);
-          }
+        const fileUrls = attachments
+          .map(attachment => attachment.url)
+          .filter(url => url && url.includes('supabase.co'));
+        
+        if (fileUrls.length > 0) {
+          await FileManager.deleteFiles(fileUrls);
         }
       } catch (error) {
-        console.error('Error deleting files from Cloudinary:', error);
+        console.error('Error deleting files from Supabase:', error);
       }
     }
     
