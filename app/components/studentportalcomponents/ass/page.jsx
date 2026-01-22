@@ -754,7 +754,7 @@ export default function ModernResourcesAssignmentsView({
   const fetchAssignments = useCallback(async () => {
     setAssignmentsLoading(true);
     try {
-      const response = await fetch('/api/assignments');
+      const response = await fetch('/api/assignment');
       const data = await response.json();
       if (data.success) {
         const processedAssignments = (data.assignments || []).map((assignment) => ({
