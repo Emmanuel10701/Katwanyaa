@@ -591,7 +591,7 @@ function ModernDetailModal({ session, onClose, onContact }) {
             </span>
             {session.featured && (
               <span className="px-3 py-1 sm:px-4 sm:py-1.5 bg-slate-900 text-white rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest flex items-center gap-1">
-                <IoSparkles className="text-amber-400 w-3 h-3 sm:w-4 sm:h-4" /> 
+                <HiSparkles className="text-amber-400 w-3 h-3 sm:w-4 sm:h-4" /> 
                 <span className="hidden sm:inline">Featured</span>
                 <span className="sm:hidden">★</span>
               </span>
