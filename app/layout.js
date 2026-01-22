@@ -26,7 +26,7 @@ export const viewport = {
 const SCHOOL_INFO = {
   name: "Katwanyaa High School",
   alternateName: "Katz High School",
-  description: "Katwanyaa High School (Katz) is a top-performing public county school in Matungulu, Machakos County offering quality KCSE education with STEM programs, modern facilities, and comprehensive extracurricular activities.",
+  description: "Katwanyaa High School (Katz) is a  public county school in Matungulu, Machakos County offering quality KCSE education with STEM programs, modern facilities, and comprehensive extracurricular activities.",
   address: {
     street: "Kambusu",
     locality: "Matungulu",
@@ -43,7 +43,7 @@ export const metadata = {
   metadataBase: new URL('https://katwanyaa.vercel.app'),
   
   title: {
-    default: "Katwanyaa High School | Katz High School | Matungulu Machakos",
+    default: "Katwanyaa High School ",
     template: "%s | Katwanyaa High School"
   },
   
@@ -85,7 +85,7 @@ export const metadata = {
   // Open Graph for social sharing
   openGraph: {
     title: "Katwanyaa High School | Katz High School | Matungulu",
-    description: "Premier secondary education in Matungulu, Machakos County",
+    description: "A secondary education in Matungulu, Machakos County",
     url: 'https://katwanyaa.vercel.app',
     siteName: "Katwanyaa High School",
     locale: "en_KE",

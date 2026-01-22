@@ -46,7 +46,7 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other', color: 'gray' }
 ];
 
-// Modern Loading Spinner (matching Dashboard style)
+// Modern Loading Spinner
 function ModernLoadingSpinner({ message = "Loading gallery data...", size = "medium" }) {
   const sizes = {
     small: { outer: 48, inner: 24 },
@@ -122,6 +122,7 @@ export default function ModernGalleryManager() {
   const [showExistingFiles, setShowExistingFiles] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [removingFile, setRemovingFile] = useState(null);
 
   const fileInputRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -225,7 +226,7 @@ export default function ModernGalleryManager() {
     setCurrentPage(1);
   }, [galleryItems, searchTerm, selectedCategory]);
 
-  // File handling with previews
+  // Fixed: File handling with unique IDs for each file
   const handleFilesSelect = (files) => {
     const fileArray = Array.from(files);
     const validFiles = fileArray.filter(file => {
@@ -248,11 +249,30 @@ export default function ModernGalleryManager() {
       return;
     }
 
-    // Create preview URLs for images
-    const newPreviews = {};
-    validFiles.forEach(file => {
+    // Create file objects with unique IDs
+    const filesWithIds = validFiles.map(file => {
+      const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`;
+      let previewUrl = null;
+      
       if (file.type.startsWith('image/')) {
-        newPreviews[file.name] = URL.createObjectURL(file);
+        previewUrl = URL.createObjectURL(file);
+      }
+      
+      return {
+        id: fileId,
+        file: file,
+        preview: previewUrl,
+        type: file.type,
+        name: file.name,
+        size: file.size
+      };
+    });
+
+    // Update previews state
+    const newPreviews = {};
+    filesWithIds.forEach(fileObj => {
+      if (fileObj.preview) {
+        newPreviews[fileObj.id] = fileObj.preview;
       }
     });
 
@@ -260,7 +280,7 @@ export default function ModernGalleryManager() {
     
     setFormData(prev => ({ 
       ...prev, 
-      files: [...prev.files, ...validFiles].slice(0, 20)
+      files: [...prev.files, ...filesWithIds].slice(0, 20)
     }));
     
     toast.success(`${validFiles.length} file(s) added`);
@@ -281,29 +301,44 @@ export default function ModernGalleryManager() {
     }
   };
 
-  const removeFile = (fileName) => {
-    // Revoke object URL if it exists
-    if (selectedFilePreviews[fileName]) {
-      URL.revokeObjectURL(selectedFilePreviews[fileName]);
+  // FIXED: Remove file function that doesn't affect other files
+  const removeFile = (fileId) => {
+    setRemovingFile(fileId);
+    
+    // Find the file to remove
+    const fileToRemove = formData.files.find(f => f.id === fileId);
+    
+    if (!fileToRemove) {
+      setRemovingFile(null);
+      return;
+    }
+
+    // Revoke the object URL if it exists
+    if (fileToRemove.preview) {
+      URL.revokeObjectURL(fileToRemove.preview);
     }
     
+    // Update selected file previews
     setSelectedFilePreviews(prev => {
       const newPreviews = { ...prev };
-      delete newPreviews[fileName];
+      delete newPreviews[fileId];
       return newPreviews;
     });
     
+    // Update form data
     setFormData(prev => ({
       ...prev,
-      files: prev.files.filter(file => file.name !== fileName)
+      files: prev.files.filter(file => file.id !== fileId)
     }));
     
+    // Update upload progress
     setUploadProgress(prev => {
       const newProgress = { ...prev };
-      delete newProgress[fileName];
+      delete newProgress[fileId];
       return newProgress;
     });
     
+    setRemovingFile(null);
     toast.info('File removed');
   };
 
@@ -319,7 +354,7 @@ export default function ModernGalleryManager() {
   useEffect(() => {
     return () => {
       Object.values(selectedFilePreviews).forEach(url => {
-        if (url.startsWith('blob:')) {
+        if (url && url.startsWith('blob:')) {
           URL.revokeObjectURL(url);
         }
       });
@@ -343,8 +378,8 @@ export default function ModernGalleryManager() {
       submitData.append('description', formData.description);
       submitData.append('category', formData.category);
       
-      formData.files.forEach(file => {
-        submitData.append('files', file);
+      formData.files.forEach(fileObj => {
+        submitData.append('files', fileObj.file);
       });
 
       const response = await fetch('/api/gallery', {
@@ -407,8 +442,8 @@ export default function ModernGalleryManager() {
       
       // Append new files
       if (formData.files.length > 0) {
-        formData.files.forEach(file => {
-          submitData.append('files', file);
+        formData.files.forEach(fileObj => {
+          submitData.append('files', fileObj.file);
         });
       }
 
@@ -520,11 +555,12 @@ export default function ModernGalleryManager() {
     setFilesToRemove([]);
     // Clean up preview URLs
     Object.values(selectedFilePreviews).forEach(url => {
-      if (url.startsWith('blob:')) {
+      if (url && url.startsWith('blob:')) {
         URL.revokeObjectURL(url);
       }
     });
     setSelectedFilePreviews({});
+    setRemovingFile(null);
   };
 
   // Preview handling
@@ -765,14 +801,14 @@ export default function ModernGalleryManager() {
                 placeholder="Search galleries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium"
               />
             </div>
             
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium"
             >
               <option value="all">All Categories</option>
               {CATEGORIES.map(cat => (
@@ -783,7 +819,7 @@ export default function ModernGalleryManager() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm"
+              className="border border-slate-200 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-sm font-medium"
             >
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>
@@ -938,7 +974,7 @@ export default function ModernGalleryManager() {
         )}
       </div>
 
-      {/* Create Modal */}
+      {/* Create Modal - FIXED VERSION */}
       {showCreateModal && (
         <ModernModal
           mode="create"
@@ -949,6 +985,7 @@ export default function ModernGalleryManager() {
           dragActive={dragActive}
           categories={CATEGORIES}
           selectedFilePreviews={selectedFilePreviews}
+          removingFile={removingFile}
           dropdownOpen={dropdownOpen}
           setDropdownOpen={setDropdownOpen}
           dropdownRef={dropdownRef}
@@ -966,7 +1003,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Edit Modal */}
+      {/* Edit Modal - FIXED VERSION */}
       {showEditModal && editingItem && (
         <ModernModal
           mode="edit"
@@ -980,6 +1017,7 @@ export default function ModernGalleryManager() {
           selectedFilePreviews={selectedFilePreviews}
           filesToRemove={filesToRemove}
           setFilesToRemove={setFilesToRemove}
+          removingFile={removingFile}
           dropdownOpen={dropdownOpen}
           setDropdownOpen={setDropdownOpen}
           dropdownRef={dropdownRef}
@@ -1002,7 +1040,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Preview Modal */}
+      {/* Preview Modal - Keep existing */}
       {showPreviewModal && previewItem && (
         <ModernPreviewModal
           item={previewItem}
@@ -1018,7 +1056,7 @@ export default function ModernGalleryManager() {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal - Keep existing */}
       {showDeleteModal && itemToDelete && (
         <ModernDeleteModal
           item={itemToDelete}
@@ -1248,10 +1286,10 @@ const ModernGalleryItem = ({
   );
 };
 
-// Modern Modal Component
+// FIXED: Modern Modal Component with all fixes
 const ModernModal = ({
   mode, formData, setFormData, editingItem, uploadProgress, isUploading, dragActive,
-  categories, selectedFilePreviews, filesToRemove, setFilesToRemove, onClose, onSubmit, 
+  categories, selectedFilePreviews, filesToRemove, setFilesToRemove, removingFile, onClose, onSubmit, 
   onFileSelect, onDrag, onDrop, removeFile, removeExistingFile, previewExistingFile,
   fileInputRef, onRefresh, showExistingFiles, setShowExistingFiles,
   dropdownOpen, setDropdownOpen, dropdownRef
@@ -1275,7 +1313,8 @@ const ModernModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
-      <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
+      {/* CHANGED: Narrower modal on large screens - from max-w-5xl to max-w-4xl */}
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
@@ -1283,7 +1322,8 @@ const ModernModal = ({
               {mode === 'create' ? <FiUpload className="text-white text-xl" /> : <FiEdit2 className="text-white text-xl" />}
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+              {/* CHANGED: Bolded title */}
+              <h2 className="text-lg sm:text-xl font-black text-slate-800">
                 {mode === 'create' ? 'Create New Gallery' : 'Edit Gallery'}
               </h2>
               <p className="text-slate-600 text-xs sm:text-sm">
@@ -1353,7 +1393,7 @@ const ModernModal = ({
                           }`}
                         >
                           {/* File Preview */}
-                          <div className="aspect-square relative">
+                          <div className="h-32 relative">
                             {isVideo ? (
                               <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                                 <FiVideo className="text-3xl text-purple-500" />
@@ -1433,7 +1473,8 @@ const ModernModal = ({
             {/* File Upload Section */}
             <div className="rounded-2xl p-4 sm:p-5 border border-dashed border-blue-200 bg-gradient-to-br from-blue-50/50 to-cyan-50/50">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+                {/* CHANGED: Bolded label */}
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
                   <FiUpload className="text-blue-500" />
                   <span>
                     {mode === 'edit' ? 'Add New Files (Optional)' : 'Upload Files *'}
@@ -1461,7 +1502,7 @@ const ModernModal = ({
                   <div className="p-4 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-2xl inline-block mb-4">
                     <FiUploadCloud className="text-3xl sm:text-4xl text-blue-500" />
                   </div>
-                  <p className="text-slate-700 mb-2 font-medium text-base sm:text-lg">
+                  <p className="text-slate-700 mb-2 font-bold text-base sm:text-lg">
                     {isUploading ? 'Uploading...' : 'Drag & drop files here'}
                   </p>
                   <p className="text-slate-500 mb-6 text-sm sm:text-base">
@@ -1479,7 +1520,7 @@ const ModernModal = ({
                   {!isUploading && (
                     <button
                       onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                      className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-semibold text-sm sm:text-base"
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-full font-bold text-sm sm:text-base"
                     >
                       Browse Files
                     </button>
@@ -1487,28 +1528,34 @@ const ModernModal = ({
                 </div>
               </div>
 
-              {/* Selected Files Preview */}
+              {/* Selected Files Preview - FIXED: No cascading errors when removing files */}
               {formData.files.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-medium text-slate-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  {/* CHANGED: Bolded label */}
+                  <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <FiCheckCircle className="text-emerald-500" />
                     <span>New Files to Add ({formData.files.length})</span>
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {formData.files.map((file, index) => {
-                      const previewUrl = selectedFilePreviews[file.name] || (file.type.startsWith('image/') ? URL.createObjectURL(file) : null);
+                    {formData.files.map((fileObj) => {
+                      const isRemoving = removingFile === fileObj.id;
                       
                       return (
-                        <div key={index} className="group relative bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div 
+                          key={fileObj.id} 
+                          className={`group relative bg-white rounded-xl border border-slate-200 overflow-hidden transition-all duration-200 ${
+                            isRemoving ? 'opacity-50' : 'opacity-100'
+                          }`}
+                        >
                           {/* Preview Image or Video Icon */}
-                          <div className="aspect-square relative">
-                            {file.type.startsWith('image/') && previewUrl ? (
+                          <div className="h-32 relative">
+                            {fileObj.preview ? (
                               <img
-                                src={previewUrl}
-                                alt={file.name}
+                                src={fileObj.preview}
+                                alt={fileObj.name}
                                 className="w-full h-full object-cover"
                               />
-                            ) : file.type.startsWith('video/') ? (
+                            ) : fileObj.type.startsWith('video/') ? (
                               <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                                 <FiVideo className="text-3xl text-purple-500" />
                               </div>
@@ -1519,32 +1566,45 @@ const ModernModal = ({
                             )}
                             
                             {/* Progress bar overlay */}
-                            {uploadProgress[file.name] !== undefined && (
+                            {uploadProgress[fileObj.id] !== undefined && (
                               <div className="absolute bottom-0 left-0 right-0 h-2 bg-slate-200/80">
                                 <div 
-                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500"
-                                  style={{ width: `${uploadProgress[file.name]}%` }}
+                                  className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-300"
+                                  style={{ width: `${uploadProgress[fileObj.id]}%` }}
                                 />
                               </div>
                             )}
                             
-                            {/* Remove button */}
-                            <button
-                              onClick={() => removeFile(file.name)}
-                              className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg"
-                              title="Remove file"
-                            >
-                              <FiX className="text-xs" />
-                            </button>
+                            {/* Remove button - Only shows when not being removed */}
+                            {!isRemoving && (
+                              <button
+                                onClick={() => removeFile(fileObj.id)}
+                                disabled={isUploading}
+                                className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full opacity-0 group-hover:opacity-100 shadow-lg transition-opacity duration-200 disabled:opacity-0"
+                                title="Remove file"
+                              >
+                                <FiX className="text-xs" />
+                              </button>
+                            )}
+                            
+                            {/* Removing indicator */}
+                            {isRemoving && (
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent mx-auto mb-1"></div>
+                                  <p className="text-white text-xs font-medium">Removing...</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           {/* File info */}
                           <div className="p-2">
-                            <p className="text-xs font-medium text-slate-800 truncate" title={file.name}>
-                              {file.name}
+                            <p className="text-xs font-medium text-slate-800 truncate" title={fileObj.name}>
+                              {fileObj.name}
                             </p>
                             <p className="text-xs text-slate-500">
-                              {(file.size / (1024 * 1024)).toFixed(1)} MB
+                              {(fileObj.size / (1024 * 1024)).toFixed(1)} MB
                             </p>
                           </div>
                         </div>
@@ -1558,15 +1618,17 @@ const ModernModal = ({
             {/* Form Fields */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                {/* CHANGED: Bolded label */}
+                <label className="text-sm font-bold mb-3 flex items-center gap-2">
                   <FiTag className="text-blue-500" />
                   <span>Gallery Title *</span>
                 </label>
+                {/* CHANGED: Bolded input */}
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base font-medium"
                   placeholder="Enter a descriptive title"
                   disabled={isUploading}
                   required
@@ -1575,7 +1637,8 @@ const ModernModal = ({
 
               {/* Modern Dropdown for Category Selection */}
               <div className="md:col-span-2" ref={dropdownRef}>
-                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                {/* CHANGED: Bolded label */}
+                <label className="text-sm font-bold mb-3 flex items-center gap-2">
                   <FiFolder className="text-purple-500" />
                   <span>Category *</span>
                 </label>
@@ -1583,7 +1646,7 @@ const ModernModal = ({
                   <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-full border border-slate-300 rounded-2xl px-4 py-3 text-left flex items-center justify-between focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-sm sm:text-base"
+                    className="w-full border border-slate-300 rounded-2xl px-4 py-3 text-left flex items-center justify-between focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-sm sm:text-base font-medium"
                     disabled={isUploading}
                   >
                     <span>{categories.find(cat => cat.value === formData.category)?.label || 'Select Category'}</span>
@@ -1600,8 +1663,8 @@ const ModernModal = ({
                             onClick={() => handleCategorySelect(cat.value)}
                             className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 text-sm sm:text-base ${
                               formData.category === cat.value
-                                ? 'bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-700 font-medium'
-                                : 'text-slate-700 hover:bg-slate-50'
+                                ? 'bg-gradient-to-r from-cyan-50 to-blue-50 text-cyan-700 font-bold'
+                                : 'text-slate-700 hover:bg-slate-50 font-medium'
                             }`}
                           >
                             <div className={`w-3 h-3 rounded-full bg-${cat.color}-500`} />
@@ -1618,15 +1681,17 @@ const ModernModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-semibold mb-3 flex items-center gap-2">
+                {/* CHANGED: Bolded label */}
+                <label className="text-sm font-bold mb-3 flex items-center gap-2">
                   <FiEdit2 className="text-orange-500" />
                   <span>Description</span>
                 </label>
+                {/* CHANGED: Bolded textarea */}
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={4}
-                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full border border-slate-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm sm:text-base font-medium"
                   placeholder="Describe what this gallery contains..."
                   disabled={isUploading}
                 />
@@ -1653,7 +1718,7 @@ const ModernModal = ({
           <div className="flex items-center gap-4">
             <button
               onClick={onClose}
-              className="px-4 sm:px-6 py-2 sm:py-3 text-slate-600 font-semibold border border-slate-300 rounded-full min-w-20 sm:min-w-24 text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-3 text-slate-600 font-bold border border-slate-300 rounded-full min-w-20 sm:min-w-24 text-sm sm:text-base"
               disabled={isUploading}
             >
               Cancel
@@ -1661,7 +1726,7 @@ const ModernModal = ({
             <button
               onClick={onSubmit}
               disabled={isUploading || (mode === 'create' && formData.files.length === 0) || !formData.title.trim()}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-24 sm:min-w-32 justify-center text-sm sm:text-base ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center gap-2 min-w-24 sm:min-w-32 justify-center text-sm sm:text-base ${
                 mode === 'create' 
                   ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white' 
                   : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'

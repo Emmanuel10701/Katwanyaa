@@ -117,7 +117,7 @@ const jsonLd = {
   '@type': 'School',
   name: 'Katwanyaa High School',
   image: 'https://katwanyaa.vercel.app/katz.png',
-  description: 'A leading secondary school committed to academic excellence, integrity, and holistic student development.',
+  description: 'A secondary school committed to academic excellence, integrity, and holistic student development.',
   address: {
     '@type': 'PostalAddress',
     'streetAddress': 'Katwanyaa',
@@ -166,48 +166,6 @@ const jsonLd = {
     return () => clearTimeout(timer);
   }, []);
 
-  // Modern Marketing Descriptions with Enhanced Content
-  const marketingDescriptions = {
-    hero: {
-      main: "Mary Immaculate Girls Secondary School",
-      sub: "Where Academic Excellence Meets Character Development",
-      highlights: [
-        "94% KCSE Success Rate",
-        "State-of-the-art Facilities",
-        "Experienced Teaching Staff",
-        "Comprehensive Extracurricular Programs",
-        "Top University Placement",
-        "Digital Learning Environment"
-      ]
-    },
-    valueProposition: {
-      main: "Transforming Education in Our Community",
-      sub: "We offer a dynamic and supportive learning environment built on strong core values—empowering students with character, skills, and confidence for university success and lifelong achievement.",
-      points: [
-        "Integrity",
-        "Discipline",
-        "Holistic Growth",
-        "Academic Excellence",
-        "Innovation",
-        "Inclusivity",
-        "Creativity",
-        "Leadership",
-        "Citizenship",
-        "Lifelong Learning",
-        "Collaboration",
-        "Effective Communication",
-        "Emotional Intelligence",
-        "Ethical Excellence",
-        "Resilience",
-        "Problem Solving",
-        "Cultural Identity"
-      ]
-    },
-    achievements: {
-      main: "Proven Track Record of Excellence",
-      sub: "Consistently ranked among top performing schools in Nyamira County and beyond",
-    }
-  };
 
   // Enhanced Hero Slides with Modern Design
   const heroSlides = [
