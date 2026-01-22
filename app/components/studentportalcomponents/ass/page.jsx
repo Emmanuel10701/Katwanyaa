@@ -394,6 +394,8 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
             <div className="text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:px-2 sm:yp-1 rounded-full">
               {totalFiles} {totalFiles === 1 ? 'file' : 'files'}
             </div>
+                    <h3 className="text-lg sm:text-lg font-bold line-clamp-2">{item.form}</h3>
+
           </div>
         </div>
         
