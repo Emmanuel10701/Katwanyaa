@@ -191,7 +191,7 @@ model EmailCampaign {
 model GalleryImage {
   id          Int      @id @default(autoincrement())
   title       String
-  description String?
+  description   String?   @db.Text
   category    Category
   files       Json
   createdAt   DateTime @default(now())
