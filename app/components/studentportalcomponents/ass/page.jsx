@@ -344,39 +344,35 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
   const isOverdue = !isResource && new Date(item.dueDate) < new Date() && item.status !== 'completed';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden"
-    >
+    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
       {/* Card Header */}
-      <div className={`p-5 bg-gradient-to-r ${
+      <div className={`p-4 sm:p-5 bg-gradient-to-r ${
         isResource 
           ? 'from-blue-500 to-indigo-600' 
           : isOverdue
           ? 'from-rose-500 to-pink-600'
           : 'from-purple-500 to-violet-600'
       } text-white`}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl">
               {isResource ? (
-                getFileIcon(item.type, item.extension, 24)
+                getFileIcon(item.type, item.extension, 20)
               ) : (
-                <IoDocument className="text-white" size={24} />
+                <IoDocument className="text-white w-4 h-4 sm:w-6 sm:h-6" />
               )}
             </div>
             <div>
               <span className="text-xs font-bold uppercase tracking-wider opacity-90">
                 {isResource ? item.type?.toUpperCase() : 'ASSIGNMENT'}
               </span>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs bg-white/20 px-2 py-1 rounded-full font-bold">
+              <div className="flex items-center gap-1 sm:gap-2 mt-1">
+                <span className="text-xs bg-white/20 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full font-bold">
                   {item.subject}
                 </span>
                 {isOverdue && (
-                  <span className="text-xs bg-rose-600 px-2 py-1 rounded-full flex items-center gap-1 font-bold">
-                    <IoWarning size={10} />
+                  <span className="text-xs bg-rose-600 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full flex items-center gap-0.5 sm:gap-1 font-bold">
+                    <IoWarning className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     Overdue
                   </span>
                 )}
@@ -384,40 +380,40 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => onBookmark?.(item)}
-              className={`p-2 rounded-lg ${
+              className={`p-1.5 sm:p-2 rounded-md sm:rounded-lg ${
                 isBookmarked 
                   ? 'text-yellow-300 bg-white/20' 
                   : 'text-white/70 bg-white/10'
               }`}
             >
-              <FiBookmark size={18} />
+              <FiBookmark className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5" />
             </button>
-            <div className="text-xs font-bold bg-white/20 px-2 py-1 rounded-full">
+            <div className="text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:px-2 sm:yp-1 rounded-full">
               {totalFiles} {totalFiles === 1 ? 'file' : 'files'}
             </div>
           </div>
         </div>
         
-        <h3 className="text-xl font-bold line-clamp-2">{item.title}</h3>
+        <h3 className="text-lg sm:text-xl font-bold line-clamp-2">{item.title}</h3>
       </div>
       
       {/* Card Body */}
-      <div className="p-5">
-        <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="p-4 sm:p-5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div className="space-y-1">
             <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">
               {isResource ? 'Class' : 'Teacher'}
             </div>
-            <div className="flex items-center gap-2 text-gray-900 font-bold">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-900 font-bold">
               {isResource ? (
-                <IoSchool size={16} className="text-blue-500" />
+                <IoSchool className="text-blue-500 w-3.5 h-3.5 sm:w-4 sm:h-4" />
               ) : (
-                <IoPerson size={16} className="text-purple-500" />
+                <IoPerson className="text-purple-500 w-3.5 h-3.5 sm:w-4 sm:h-4" />
               )}
-              <span className="truncate">{isResource ? item.className : item.teacher}</span>
+              <span className="truncate text-sm sm:text-base">{isResource ? item.className : item.teacher}</span>
             </div>
           </div>
           
@@ -425,9 +421,9 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
             <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">
               {isResource ? 'Date Added' : 'Due Date'}
             </div>
-            <div className="flex items-center gap-2 text-gray-900 font-bold">
-              <IoCalendar size={16} className="text-amber-500" />
-              <span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-gray-900 font-bold">
+              <IoCalendar className="text-amber-500 w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-sm sm:text-base">
                 {isResource 
                   ? new Date(item.createdAt || item.dateAdded).toLocaleDateString()
                   : new Date(item.dueDate).toLocaleDateString()
@@ -438,63 +434,53 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
         </div>
         
         {item.description && (
-          <div className="mb-4">
-            <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">
+          <div className="mb-3 sm:mb-4">
+            <div className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-1.5 sm:mb-2">
               Description
             </div>
-            <p className="text-gray-700 text-sm line-clamp-2">{item.description}</p>
+            <p className="text-gray-700 text-xs sm:text-sm line-clamp-2">{item.description}</p>
           </div>
         )}
         
         {!isResource && item.status && (
-          <div className="mb-4">
+          <div className="mb-3 sm:mb-4">
             <StatusBadge status={item.status} size="sm" />
           </div>
         )}
         
-        {/* Action Buttons */}
-        <div className="flex gap-3 pt-4 border-t border-gray-100">
+        {/* Action Buttons - FLEX LAYOUT ONLY (not stacked on mobile) */}
+        <div className="flex gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-100">
           <button
             onClick={() => onView?.(item)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 text-white rounded-xl font-bold"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gray-900 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm"
           >
             <span>View Details</span>
-            <IoArrowDown />
+            <IoArrowDown className="w-3 h-3 sm:w-4 sm:h-4" />
           </button>
           
           <button
             onClick={() => onDownload?.(item)}
-            className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-md"
+            className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl font-bold shadow-md text-xs sm:text-sm"
             title={`Download ${totalFiles} ${totalFiles === 1 ? 'file' : 'files'}`}
           >
-            <IoCloudDownload size={20} />
+            <IoCloudDownload className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
-
 function DetailModal({ item, type, onClose, onDownload }) {
   if (!item) return null;
 
   const isResource = type === 'resource';
   const isOverdue = !isResource && new Date(item.dueDate) < new Date() && item.status !== 'completed';
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-    >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl"
-      >
+return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl md:rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Modal Header */}
-        <div className={`p-6 sm:p-8 text-white ${
+        <div className={`p-4 sm:p-6 md:p-8 text-white ${
           isResource 
             ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800' 
             : isOverdue
@@ -502,24 +488,24 @@ function DetailModal({ item, type, onClose, onDownload }) {
             : 'bg-gradient-to-r from-purple-600 via-purple-700 to-violet-800'
         }`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-2xl">
                 {isResource ? (
-                  getFileIcon(item.type, item.extension, 28)
+                  getFileIcon(item.type, item.extension, 20)
                 ) : (
-                  <IoDocument className="text-white" size={28} />
+                  <IoDocument className="text-white w-5 h-5 sm:w-7 sm:h-7" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl sm:text-3xl font-bold truncate">{item.title}</h2>
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className="text-sm font-bold opacity-90">{item.subject}</span>
-                  <span className="text-sm opacity-90">•</span>
-                  <span className="text-sm font-bold opacity-90">{item.className}</span>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold truncate">{item.title}</h2>
+                <div className="flex items-center gap-2 mt-1 sm:mt-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-bold opacity-90">{item.subject}</span>
+                  <span className="text-xs sm:text-sm opacity-90">•</span>
+                  <span className="text-xs sm:text-sm font-bold opacity-90">{item.className}</span>
                   {!isResource && (
                     <>
-                      <span className="text-sm opacity-90">•</span>
-                      <span className="text-sm font-bold opacity-90">{item.teacher}</span>
+                      <span className="text-xs sm:text-sm opacity-90">•</span>
+                      <span className="text-xs sm:text-sm font-bold opacity-90 truncate">{item.teacher}</span>
                     </>
                   )}
                 </div>
@@ -527,45 +513,45 @@ function DetailModal({ item, type, onClose, onDownload }) {
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-2xl ml-4"
+              className="p-1 sm:p-2 rounded-lg sm:rounded-xl ml-2 sm:ml-4"
             >
-              <IoClose className="text-2xl" />
+              <IoClose className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Modal Content */}
-        <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-6 sm:p-8 space-y-6">
+        <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-6">
           {/* Status & Info */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {!isResource && <StatusBadge status={item.status} size="md" />}
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-bold">
+            <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm font-bold">
               {item.className}
             </span>
-            <span className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full text-sm font-bold">
+            <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-100 text-indigo-800 rounded-full text-xs sm:text-sm font-bold">
               {item.subject}
             </span>
             {isOverdue && (
-              <span className="px-4 py-2 bg-rose-100 text-rose-800 rounded-full text-sm font-bold flex items-center gap-2">
-                <IoWarning />
+              <span className="px-3 py-1.5 sm:px-4 sm:py-2 bg-rose-100 text-rose-800 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-2">
+                <IoWarning className="w-3 h-3 sm:w-4 sm:h-4" />
                 Overdue
               </span>
             )}
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
             {!isResource && (
               <>
-                <div className="text-center p-4 bg-gray-50 rounded-2xl">
-                  <div className="text-sm text-gray-600 font-bold">Due Date</div>
-                  <div className="text-lg font-bold text-gray-900 mt-2">
+                <div className="text-center p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg sm:rounded-xl md:rounded-2xl">
+                  <div className="text-xs sm:text-sm text-gray-600 font-bold">Due Date</div>
+                  <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900 mt-1 sm:mt-2">
                     {new Date(item.dueDate).toLocaleDateString()}
                   </div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-2xl">
-                  <div className="text-sm text-gray-600 font-bold">Priority</div>
-                  <div className={`text-lg font-bold mt-2 ${
+                <div className="text-center p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg sm:rounded-xl md:rounded-2xl">
+                  <div className="text-xs sm:text-sm text-gray-600 font-bold">Priority</div>
+                  <div className={`text-sm sm:text-base md:text-lg font-bold mt-1 sm:mt-2 ${
                     item.priority === 'high' ? 'text-rose-600' :
                     item.priority === 'medium' ? 'text-amber-600' : 'text-emerald-600'
                   }`}>
@@ -574,13 +560,13 @@ function DetailModal({ item, type, onClose, onDownload }) {
                 </div>
               </>
             )}
-            <div className="text-center p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm text-gray-600 font-bold">Teacher</div>
-              <div className="text-lg font-bold text-gray-900 mt-2 truncate">{item.teacher}</div>
+            <div className="text-center p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg sm:rounded-xl md:rounded-2xl">
+              <div className="text-xs sm:text-sm text-gray-600 font-bold">Teacher</div>
+              <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900 mt-1 sm:mt-2 truncate">{item.teacher}</div>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-2xl">
-              <div className="text-sm text-gray-600 font-bold">Files</div>
-              <div className="text-lg font-bold text-gray-900 mt-2">
+            <div className="text-center p-2 sm:p-3 md:p-4 bg-gray-50 rounded-lg sm:rounded-xl md:rounded-2xl">
+              <div className="text-xs sm:text-sm text-gray-600 font-bold">Files</div>
+              <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900 mt-1 sm:mt-2">
                 {isResource 
                   ? (item.mainAttachment ? 1 : 0)
                   : ((item.assignmentFileAttachments?.length || 0) + (item.attachmentAttachments?.length || 0))
@@ -591,35 +577,35 @@ function DetailModal({ item, type, onClose, onDownload }) {
 
           {/* Description */}
           {(item.description || item.instructions) && (
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-4 md:space-y-6">
               {item.description && (
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <IoInformation className="text-blue-500" />
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-gray-200">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2 sm:gap-3">
+                    <IoInformation className="text-blue-500 w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Description</span>
                   </h3>
-                  <p className="text-gray-700 whitespace-pre-line">{item.description}</p>
+                  <p className="text-gray-700 text-sm sm:text-base whitespace-pre-line">{item.description}</p>
                 </div>
               )}
               
               {!isResource && item.instructions && (
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <IoDocument className="text-blue-600" />
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-blue-200">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-2 sm:gap-3">
+                    <IoDocument className="text-blue-600 w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Instructions</span>
                   </h3>
-                  <p className="text-gray-700 whitespace-pre-line">{item.instructions}</p>
+                  <p className="text-gray-700 text-sm sm:text-base whitespace-pre-line">{item.instructions}</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Files Section */}
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
             {isResource && item.mainAttachment && (
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                  <IoCloudDownload className="text-purple-600" />
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-purple-200">
+                <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 flex items-center gap-2 sm:gap-3">
+                  <IoCloudDownload className="text-purple-600 w-4 h-4 sm:w-5 sm:h-5" />
                   <span>Resource File</span>
                 </h3>
                 <FilePreviewCard 
@@ -634,21 +620,21 @@ function DetailModal({ item, type, onClose, onDownload }) {
             {!isResource && (
               <>
                 {(item.assignmentFileAttachments?.length || 0) > 0 && (
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <IoDocument className="text-blue-600" />
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-blue-200">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-0">
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                        <IoDocument className="text-blue-600 w-4 h-4 sm:w-5 sm:h-5" />
                         <span>Assignment Files ({item.assignmentFileAttachments?.length || 0})</span>
                       </h3>
                       <button
                         onClick={() => downloadMultipleFiles(item.assignmentFileAttachments || [])}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl font-bold shadow-md flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                       >
-                        <IoCloudDownload />
+                        <IoCloudDownload className="w-3 h-3 sm:w-4 sm:h-4" />
                         Download All
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                       {item.assignmentFileAttachments?.map((file, index) => (
                         <FilePreviewCard
                           key={index}
@@ -663,21 +649,21 @@ function DetailModal({ item, type, onClose, onDownload }) {
                 )}
                 
                 {(item.attachmentAttachments?.length || 0) > 0 && (
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-6 border border-emerald-200">
-                    <div className="flex items-center justify-between mb-6">
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                        <IoDocumentAttach className="text-emerald-600" />
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-emerald-200">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-0">
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+                        <IoDocumentAttach className="text-emerald-600 w-4 h-4 sm:w-5 sm:h-5" />
                         <span>Additional Attachments ({item.attachmentAttachments?.length || 0})</span>
                       </h3>
                       <button
                         onClick={() => downloadMultipleFiles(item.attachmentAttachments || [])}
-                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg sm:rounded-xl font-bold shadow-md flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
                       >
-                        <IoCloudDownload />
+                        <IoCloudDownload className="w-3 h-3 sm:w-4 sm:h-4" />
                         Download All
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                       {item.attachmentAttachments?.map((file, index) => (
                         <FilePreviewCard
                           key={index}
@@ -695,26 +681,26 @@ function DetailModal({ item, type, onClose, onDownload }) {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4 pt-3 sm:pt-4 md:pt-6 border-t border-gray-200">
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold text-lg flex items-center justify-center gap-3"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-sm sm:text-base md:text-lg flex items-center justify-center gap-1 sm:gap-2 md:gap-3"
             >
-              <IoClose />
+              <IoClose className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Close</span>
             </button>
             
             <button
               onClick={() => onDownload?.(item)}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-3"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-sm sm:text-base md:text-lg shadow-xl flex items-center justify-center gap-1 sm:gap-2 md:gap-3"
             >
-              <IoCloudDownload />
+              <IoCloudDownload className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Download All Files</span>
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
