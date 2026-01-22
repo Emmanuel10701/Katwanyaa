@@ -1021,22 +1021,28 @@ export default function ModernEventsNewsPage() {
     }
   };
 
-  const fetchNews = async (showRefresh = false) => {
-    try {
-      const response = await fetch('/api/news');
-      const data = await response.json();
-      if (data.success) {
-        setNewsData(data.news || getSampleNews());
-        if (showRefresh) toast.success('News refreshed!');
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching news:', error);
-      toast.error('Failed to load news');
-      setNewsData(getSampleNews());
+const fetchNews = async (showRefresh = false) => {
+  try {
+    const response = await fetch('/api/news');
+    const data = await response.json();
+    
+    // FIX HERE: Use data.data instead of data.news
+    if (data.success && Array.isArray(data.data)) {
+      setNewsData(data.data || getSampleNews());
+      if (showRefresh) toast.success('News refreshed!');
+    } else if (data.success && Array.isArray(data.news)) {
+      // Fallback to data.news if data.data doesn't exist
+      setNewsData(data.news || getSampleNews());
+      if (showRefresh) toast.success('News refreshed!');
+    } else {
+      throw new Error(data.error || 'Invalid response format');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    toast.error('Failed to load news');
+    setNewsData(getSampleNews());
+  }
+};
 
   const fetchData = async (showRefresh = false) => {
     if (!showRefresh) setLoading(true);
