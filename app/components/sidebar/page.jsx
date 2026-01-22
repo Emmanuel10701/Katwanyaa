@@ -330,13 +330,14 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     window.location.href = '/pages/adminLogin';
   };
 
-  const handleTabClick = (tabId) => {
-    setActiveTab(tabId);
-    // Only close sidebar on mobile screens
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
-  };
+const handleTabClick = (tabId) => {
+  e?.preventDefault(); // Add this line
+  setActiveTab(tabId);
+  // Only close sidebar on mobile screens
+  if (isMobile) {
+    setSidebarOpen(false);
+  }
+};
 
   const handleSupportClick = () => {
     setShowSupportModal(true);
@@ -657,7 +658,7 @@ id: 'careers',
                 return (
                  <button
                    key={tab.id}
-                   onClick={() => handleTabClick(tab.id)}
+                      onClick={(e) => handleTabClick(tab.id, e)}  // Pass event
                    className={`w-full flex items-center gap-3 lg:gap-4 px-3 lg:px-4 py-3 lg:py-4 rounded-2xl transition-all duration-200 group relative overflow-hidden ${
                      activeTab === tab.id
                        ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-lg shadow-blue-500/10 backdrop-blur-sm border border-blue-200'
@@ -767,7 +768,7 @@ id: 'careers',
             {/* User Profile */}
             <div 
               className="flex items-center gap-2 lg:gap-3 p-2 lg:p-3 rounded-2xl border border-gray-200 mb-3 lg:mb-4 cursor-pointer transition-all duration-200 hover:bg-blue-50 hover:border-blue-200"
-              onClick={() => handleTabClick('admins-profile')}
+  onClick={(e) => handleTabClick('admins-profile', e)}  // Pass event
             >
               <div className="relative">
                 <div className="w-8 h-8 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
@@ -795,8 +796,10 @@ id: 'careers',
             <div className="grid grid-cols-2 gap-1 lg:gap-2 mb-2 lg:mb-3">
               <button
                 className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-1 lg:py-2 text-gray-600 hover:text-gray-800 rounded-xl transition-all duration-200 text-xs lg:text-sm hover:bg-gray-100"
-                onClick={() => handleTabClick('admins-profile')}
-              >
+ onClick={(e) => {
+  e?.preventDefault(); // ERROR: 'e' is not defined here!
+    handleTabClick('admins-profile');
+  }}              >
                 <FiSettings className="text-sm lg:text-base" />
                 <span className="truncate">Settings</span>
               </button>
