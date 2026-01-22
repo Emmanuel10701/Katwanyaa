@@ -1175,116 +1175,142 @@ const ModernGalleryItem = ({
   }
 
   // Grid View
+// Modern Gallery Item Component
+const ModernGalleryItem = ({ 
+  item, viewMode, isSelected, hasError, 
+  onSelect, onPreview, onImageError
+}) => {
+  const formatCategory = (category) => {
+    if (!category) return '';
+    return category.toLowerCase().replace(/_/g, ' ');
+  };
+
   return (
     <div
-      className={`bg-white rounded-2xl overflow-hidden border border-slate-100/50 group ${
-        isSelected ? 'border-blue-500 ring-2 ring-blue-200' : ''
+      className={`bg-white rounded-2xl overflow-hidden border border-slate-100/50 group transition-all duration-300 hover:shadow-xl hover:border-slate-200 ${
+        isSelected ? 'border-blue-500 ring-4 ring-blue-100/50' : ''
       }`}
+      style={{ width: 'calc(100% + 20%)' }}
     >
       <div className="relative">
-        {/* Selection Checkbox */}
+        {/* Selection Checkbox - Enhanced */}
         <button
           onClick={onSelect}
-          className={`absolute top-3 left-3 w-6 h-6 rounded-full border-2 flex items-center justify-center z-20 ${
+          className={`absolute top-3 left-3 w-7 h-7 rounded-full border-2 flex items-center justify-center z-30 transition-all duration-200 hover:scale-110 ${
             isSelected 
-              ? 'bg-blue-500 border-blue-500 text-white' 
-              : 'bg-white/90 border-slate-300'
+              ? 'bg-gradient-to-br from-blue-500 to-cyan-500 border-blue-500 text-white shadow-lg' 
+              : 'bg-white/90 backdrop-blur-sm border-slate-300 hover:border-blue-400 hover:bg-blue-50'
           }`}
         >
-          <FiCheck className="text-xs" />
+          <FiCheck className={`text-sm transition-all ${isSelected ? 'scale-100' : 'scale-90 opacity-0'}`} />
         </button>
 
-        {/* Category Badge */}
+        {/* Category Badge - Enhanced */}
         <div className="absolute top-3 right-3 z-20">
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm bg-blue-100 text-blue-800">
+          <span className="px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide shadow-md bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
             {formatCategory(item.category)}
           </span>
         </div>
 
-        {/* Media Preview */}
-        <div className="aspect-square bg-slate-100 relative overflow-hidden cursor-pointer" onClick={onPreview}>
+        {/* Media Preview - Enhanced */}
+        <div className="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden cursor-pointer" onClick={onPreview}>
           {hasError ? (
-            <div className="w-full h-full bg-slate-200 flex items-center justify-center">
-              <div className="text-center">
-                <FiImage className="text-slate-400 text-2xl mx-auto mb-2" />
-                <p className="text-slate-500 text-xs">Failed to load</p>
-              </div>
+            <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center p-6">
+              <FiImage className="text-slate-400 text-3xl mb-3" />
+              <p className="text-slate-500 text-sm font-medium">Failed to load image</p>
+              <p className="text-slate-400 text-xs mt-1">Tap to refresh</p>
             </div>
           ) : item.fileType === 'image' ? (
             <>
               <img
                 src={item.files[0]}
                 alt={item.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={onImageError}
               />
-              {/* Multiple Images Indicator */}
+              {/* Multiple Images Indicator - Enhanced */}
               {item.files.length > 1 && (
-                <div className="absolute top-2 left-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full shadow-lg">
-                  +{item.files.length - 1}
+                <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full shadow-xl font-bold">
+                  +{item.files.length - 1} more
                 </div>
               )}
+              {/* View Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                <div className="flex items-center gap-2 text-white">
+                  <FiEye className="text-lg" />
+                  <span className="text-sm font-medium">View Gallery</span>
+                </div>
+              </div>
             </>
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center">
-              <div className="text-center">
-                <FiVideo className="text-white text-4xl mb-2" />
-                <p className="text-white/80 text-sm">Video Gallery</p>
-              </div>
+            <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-900 flex flex-col items-center justify-center p-6">
+              <FiVideo className="text-white text-5xl mb-4" />
+              <p className="text-white text-lg font-bold mb-2">Video Gallery</p>
+              <p className="text-white/70 text-sm text-center">Click to view video content</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-slate-800 text-sm mb-2 truncate cursor-pointer" onClick={onPreview} title={item.title}>
-          {item.title}
-        </h3>
-        
-        <p className="text-xs text-slate-600 mb-3 line-clamp-2" title={item.description}>
-          {item.description || 'No description provided'}
-        </p>
-        
-        {/* Action Buttons */}
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={onPreview}
-            className="flex-1 py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-xs font-medium"
+      {/* Content - Enhanced */}
+      <div className="p-5">
+        <div className="mb-4">
+          <h3 
+            className="font-bold text-slate-900 text-base mb-2 truncate cursor-pointer hover:text-blue-600 transition-colors" 
+            onClick={onPreview} 
+            title={item.title}
           >
-            <span className="hidden sm:inline">View</span>
-            <FiEye className="sm:hidden mx-auto" />
-          </button>
-          <button
-            onClick={onEdit}
-            className="flex-1 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full text-xs font-medium"
-          >
-            <span className="hidden sm:inline">Edit</span>
-            <FiEdit className="sm:hidden mx-auto" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="flex-1 py-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full text-xs font-medium"
-          >
-            <span className="hidden sm:inline">Delete</span>
-            <FiTrash2 className="sm:hidden mx-auto" />
-          </button>
+            {item.title}
+          </h3>
+          
+          <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed" title={item.description}>
+            {item.description || 'No description provided for this gallery'}
+          </p>
         </div>
+        
+        {/* View Button - Enhanced */}
+        <button
+          onClick={onPreview}
+          className="w-full py-3.5 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white rounded-xl font-bold text-sm hover:from-amber-700 hover:via-orange-700 hover:to-red-700 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] flex items-center justify-center gap-2"
+        >
+          <FiEye className="text-base" />
+          <span>VIEW GALLERY</span>
+        </button>
 
-        {/* Stats & Info */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100">
-          <div className="flex items-center gap-1">
-            <FiCalendar className="text-xs" />
-            <span>{new Date(item.uploadDate).toLocaleDateString()}</span>
+        {/* Stats & Info - Enhanced */}
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
+              <FiCalendar className="text-blue-500 text-sm" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Uploaded</p>
+              <p className="text-sm font-bold text-slate-800">
+                {new Date(item.uploadDate).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <FiImage className="text-xs" />
-            <span>{item.files.length}</span>
+          
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
+              <FiImage className="text-purple-500 text-sm" />
+            </div>
+            <div className="text-right">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Files</p>
+              <p className="text-sm font-bold text-slate-800">
+                {item.files.length} {item.files.length === 1 ? 'file' : 'files'}
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
+};
 };
 
 // FIXED: Modern Modal Component with all fixes
@@ -1860,7 +1886,7 @@ return (
 }
 
 
-// Modern Preview Modal Component
+// Modern Preview Modal Component - Updated to match create modal style
 const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1895,122 +1921,193 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl my-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-600">
-              <FiEye className="text-white text-xl" />
+        {/* Modern Gradient Header - Matching create modal */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-600"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-black/10"></div>
+          <div className="relative p-5 text-white">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30 shadow-lg">
+                  <FiEye className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">
+                    Gallery Preview
+                  </h2>
+                  <p className="text-white/90 text-sm mt-1">
+                    View and manage gallery details
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-2 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium flex items-center gap-1 sm:gap-2 hover:bg-white/30 transition-all"
+                >
+                  {isFullscreen ? <FiMinimize2 className="text-sm" /> : <FiMaximize2 className="text-sm" />}
+                  <span className="hidden sm:inline">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2.5 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-100"
+                >
+                  <FiX className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-800 truncate">
-                {item.title}
-              </h2>
-              <p className="text-slate-600 text-xs sm:text-sm truncate">
-                {currentIndex + 1} of {item.files.length} • {item.category.replace(/_/g, ' ')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-2 rounded-xl border border-slate-200 hidden sm:flex"
-            >
-              {isFullscreen ? <FiMinimize2 className="text-slate-600" /> : <FiMaximize2 className="text-slate-600" />}
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl border border-slate-200"
-            >
-              <FiX className="text-xl text-slate-600" />
-            </button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-180px)]">
-          <div className="p-4 sm:p-6">
-            <div className="relative">
-              {/* Navigation Buttons */}
-              {item.files.length > 1 && (
-                <>
-                  <button
-                    onClick={prevFile}
-                    className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-slate-600"
-                  >
-                    <FiChevronLeft className="text-xl" />
-                  </button>
-                  
-                  <button
-                    onClick={nextFile}
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 p-3 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-full text-slate-600"
-                  >
-                    <FiChevronRight className="text-xl" />
-                  </button>
-                </>
-              )}
-
-              {/* Media Display */}
-              <div className="flex items-center justify-center p-2 sm:p-4">
-                {isImage ? (
-                  <img
-                    src={currentFile}
-                    alt={`${item.title} - ${currentIndex + 1}`}
-                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
-                  />
-                ) : (
-                  <video
-                    src={currentFile}
-                    controls
-                    autoPlay
-                    className="max-w-full max-h-[50vh] sm:max-h-[60vh] rounded-lg"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Gallery Info */}
-            <div className="mt-4 sm:mt-6 p-4 border border-slate-200 rounded-xl">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-800 text-base sm:text-lg mb-2">{item.title}</h3>
-                  <p className="text-slate-600 text-sm sm:text-base mb-3">{item.description}</p>
-                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-slate-500">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
-                      {item.category.replace(/_/g, ' ')}
-                    </span>
-                    <span>{item.files.length} files</span>
-                    <span>•</span>
-                    <span>Uploaded {new Date(item.uploadDate).toLocaleDateString()}</span>
+        {/* Scrollable Content - Matching create modal layout */}
+        <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-4 sm:p-5 lg:p-6 modern-scrollbar">
+          <div className="space-y-5">
+            
+            {/* Main Media Display - Enhanced with modern styling */}
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
+                      <FiImage className="text-purple-500" />
+                      <span>Gallery Preview ({currentIndex + 1}/{item.files.length})</span>
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Use arrows to navigate • Click image to view full size
+                    </p>
                   </div>
                 </div>
-                <div className="flex gap-2 sm:flex-col">
-                  <button
-                    onClick={downloadFile}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
-                    title="Download"
-                  >
-                    <FiDownload className="text-sm" />
-                    <span className="hidden sm:inline">Download</span>
-                  </button>
-                  <button
-                    onClick={copyUrl}
-                    className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white rounded-full text-sm font-medium flex items-center justify-center gap-2"
-                    title="Copy URL"
-                  >
-                    <FiCopy className="text-sm" />
-                    <span className="hidden sm:inline">Copy URL</span>
-                  </button>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
+                    {item.fileType === 'image' ? 'IMAGE GALLERY' : 'VIDEO GALLERY'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="relative">
+                {/* Navigation Buttons - Modern style */}
+                {item.files.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevFile}
+                      className="absolute left-0 top-1/2 transform -translate-y-1/2 z-40 p-4 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-full text-gray-700 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      <FiChevronLeft className="text-xl" />
+                    </button>
+                    
+                    <button
+                      onClick={nextFile}
+                      className="absolute right-0 top-1/2 transform -translate-y-1/2 z-40 p-4 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-full text-gray-700 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      <FiChevronRight className="text-xl" />
+                    </button>
+                  </>
+                )}
+
+                {/* Media Display - Modern container */}
+                <div className="flex items-center justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                  {isImage ? (
+                    <img
+                      src={currentFile}
+                      alt={`${item.title} - ${currentIndex + 1}`}
+                      className="max-w-full max-h-[50vh] sm:max-h-[60vh] object-contain rounded-lg"
+                    />
+                  ) : (
+                    <video
+                      src={currentFile}
+                      controls
+                      autoPlay
+                      className="max-w-full max-h-[50vh] sm:max-h-[60vh] rounded-lg"
+                    />
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Thumbnail Strip */}
+            {/* Gallery Info Section - Matching form styling */}
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* Title Field - Enhanced */}
+              <div className="md:col-span-2">
+                <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl p-4 border border-indigo-200">
+                  <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FiTag className="text-indigo-500" />
+                    <span>Gallery Title</span>
+                  </label>
+                  <div className="w-full px-4 py-3 bg-white border-2 border-indigo-200 rounded-xl text-md font-bold text-gray-800">
+                    {item.title}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Display - Enhanced */}
+              <div>
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                  <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FiFolder className="text-purple-500" />
+                    <span>Category</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full bg-${CATEGORIES.find(cat => cat.value === item.category)?.color || 'gray'}-500`} />
+                    <span className="px-4 py-3 bg-white border-2 border-purple-200 rounded-xl text-md font-bold text-gray-800 flex-1">
+                      {CATEGORIES.find(cat => cat.value === item.category)?.label || item.category}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Upload Date */}
+              <div>
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
+                  <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FiCalendar className="text-amber-500" />
+                    <span>Upload Date</span>
+                  </label>
+                  <div className="w-full px-4 py-3 bg-white border-2 border-amber-200 rounded-xl text-md font-bold text-gray-800">
+                    {new Date(item.uploadDate).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Field - Enhanced */}
+              <div className="md:col-span-2">
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
+                  <label className="text-md font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <FiEdit2 className="text-emerald-500" />
+                    <span>Description</span>
+                  </label>
+                  <div className="w-full px-4 py-3 bg-white border-2 border-emerald-200 rounded-xl text-md font-bold text-gray-800 min-h-[120px]">
+                    {item.description || 'No description provided'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Thumbnail Strip - Enhanced */}
             {item.files.length > 1 && (
-              <div className="mt-4 sm:mt-6">
-                <h4 className="font-medium text-slate-800 mb-3 text-sm sm:text-base">All Files ({item.files.length})</h4>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-md font-bold text-gray-800 flex items-center gap-2">
+                      <FiGrid className="text-blue-500" />
+                      <span>All Files ({item.files.length})</span>
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-0.5">
+                      Click to preview • Current file is highlighted
+                    </p>
+                  </div>
+                  <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700">
+                    {item.files.length} FILES
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
                   {item.files.map((file, index) => {
                     const isVideo = file.toLowerCase().match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/);
                     
@@ -2018,15 +2115,16 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                       <button
                         key={index}
                         onClick={() => setCurrentIndex(index)}
-                        className={`w-16 h-16 sm:w-24 sm:h-24 rounded-lg overflow-hidden flex-shrink-0 border-2 ${
+                        className={`relative rounded-xl overflow-hidden flex-shrink-0 border-2 transition-all duration-200 ${
                           index === currentIndex 
-                            ? 'border-cyan-500' 
-                            : 'border-transparent'
+                            ? 'border-cyan-500 shadow-lg scale-105' 
+                            : 'border-gray-200 hover:border-gray-300'
                         }`}
+                        style={{ width: '120px', height: '120px' }}
                       >
                         {isVideo ? (
-                          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                            <FiVideo className="text-slate-400 text-lg sm:text-2xl" />
+                          <div className="w-full h-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                            <FiVideo className="text-2xl text-purple-500" />
                           </div>
                         ) : (
                           <img
@@ -2035,37 +2133,137 @@ const ModernPreviewModal = ({ item, onClose, onEdit, onDelete }) => {
                             className="w-full h-full object-cover"
                           />
                         )}
+                        
+                        {/* Selection Indicator */}
+                        {index === currentIndex && (
+                          <div className="absolute top-2 right-2 p-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-full shadow-lg">
+                            <FiCheck className="text-xs" />
+                          </div>
+                        )}
+                        
+                        {/* File Number */}
+                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full">
+                          {index + 1}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
             )}
+
+            {/* Quick Actions Section */}
+            <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl p-5 border border-slate-200 shadow-sm">
+              <h3 className="text-md font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <FiShare2 className="text-slate-500" />
+                <span>Quick Actions</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button
+                  onClick={downloadFile}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-slate-600 to-slate-700 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-slate-700 hover:to-slate-800 transition-all duration-200"
+                >
+                  <FiDownload className="text-lg" />
+                  <span>Download Current</span>
+                </button>
+                
+                <button
+                  onClick={copyUrl}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-amber-800 hover:via-orange-800 hover:to-red-800 transition-all duration-200"
+                >
+                  <FiCopy className="text-lg" />
+                  <span>Copy Gallery URL</span>
+                </button>
+                
+                <button
+                  onClick={() => window.open(currentFile, '_blank')}
+                  className="flex items-center justify-center gap-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-indigo-700 hover:to-violet-700 transition-all duration-200"
+                >
+                  <FiExternalLink className="text-lg" />
+                  <span>Open in New Tab</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-6 border-t border-slate-200 bg-slate-50/50">
-          <div className="text-xs sm:text-sm text-slate-600">
-            {item.fileType === 'image' ? 'Image Gallery' : 'Video Gallery'} • File {currentIndex + 1} of {item.files.length}
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              onClick={onEdit}
-              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              <FiEdit2 />
-              <span className="hidden sm:inline">Edit Gallery</span>
-              <span className="sm:hidden">Edit</span>
-            </button>
-            <button
-              onClick={onDelete}
-              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-semibold flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              <FiTrash2 />
-              <span className="hidden sm:inline">Delete Gallery</span>
-              <span className="sm:hidden">Delete</span>
-            </button>
+        {/* Enhanced Footer Actions - Matching create modal */}
+        <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-violet-100 px-3 py-1.5 rounded-full">
+                <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full"></div>
+                <span className="font-bold">
+                  Gallery #{item.id.slice(0, 8)} • {item.files.length} files • Created {new Date(item.uploadDate).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="
+                  px-6
+                  py-2.5
+                  rounded-xl
+                  text-sm
+                  font-bold
+                  border-2 border-gray-300
+                  text-gray-700
+                  bg-white
+                  hover:bg-gray-50
+                  hover:border-gray-400
+                  transition-all duration-200
+                  min-w-[100px]
+                  shadow-sm
+                "
+              >
+                Close
+              </button>
+              <button
+                onClick={onEdit}
+                className="
+                  px-6
+                  py-2.5
+                  rounded-xl
+                  font-bold
+                  text-sm
+                  text-white
+                  bg-gradient-to-r from-green-500 to-emerald-600
+                  hover:from-green-600 hover:to-emerald-700
+                  shadow-lg
+                  hover:shadow-xl
+                  transition-all duration-200
+                  min-w-[120px]
+                  hover:scale-100
+                  flex items-center justify-center gap-2
+                "
+              >
+                <FiEdit2 className="w-4 h-4" />
+                <span>Edit Gallery</span>
+              </button>
+              <button
+                onClick={onDelete}
+                className="
+                  px-6
+                  py-2.5
+                  rounded-xl
+                  font-bold
+                  text-sm
+                  text-white
+                  bg-gradient-to-r from-rose-500 to-pink-600
+                  hover:from-rose-600 hover:to-pink-700
+                  shadow-lg
+                  hover:shadow-xl
+                  transition-all duration-200
+                  min-w-[120px]
+                  hover:scale-100
+                  flex items-center justify-center gap-2
+                "
+              >
+                <FiTrash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
