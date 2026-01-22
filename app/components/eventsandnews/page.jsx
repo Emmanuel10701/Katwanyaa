@@ -22,6 +22,7 @@ import {
   FiEdit,
   FiTrash2,
   FiEye,
+  FiInfo, 
   FiCheck,
   FiCheckCircle,
   FiGlobe,
