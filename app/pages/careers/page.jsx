@@ -460,7 +460,7 @@ return (
           onClick={onClose}
           className="absolute top-4 right-4 sm:top-5 sm:right-5 z-50 p-2 bg-black/20 backdrop-blur-md text-white rounded-full border border-white/20 transition-all active:scale-90"
         >
-          <IoClose size={20} sm:size={24} />
+          <IoClose size={20}/>
         </button>
 
         {/* 1. Header with Gradient */}
@@ -617,7 +617,7 @@ return (
               onClick={onClose}
               className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              <IoClose size={16} sm:size={20} />
+              <IoClose size={16} />
               Close
             </button>
           </div>
