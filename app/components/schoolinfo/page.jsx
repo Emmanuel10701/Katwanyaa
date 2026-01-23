@@ -3158,17 +3158,33 @@ const schoolApiService = {
     return data.school
   },
 
-  async createSchoolInfo(formData) {
+async createSchoolInfo(formData) {
+  try {
     const response = await fetch('/api/school', {
       method: 'POST',
       body: formData,
     })
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to create school information')
+    
+    if (response.status === 413) {
+      throw new Error('413: Request Entity Too Large - File size exceeds limit');
     }
-    return await response.json()
-  },
+    
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+        throw new Error(errorData.error || `Failed to create school information (${response.status})`);
+      } catch (parseError) {
+        throw new Error(`Failed to create school information (${response.status})`);
+      }
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+},
 
   async updateSchoolInfo(formData) {
     const response = await fetch('/api/school', {
@@ -3453,155 +3469,185 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     }
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault()
+const handleFormSubmit = async (e) => {
+  e.preventDefault()
+  
+  if (currentStep < steps.length - 1) {
+    return
+  }
+
+  try {
+    const formDataToSend = new FormData()
     
-    if (currentStep < steps.length - 1) {
-      return
+    // Add basic fields first
+    Object.keys(formData).forEach(key => {
+      if (key === 'subjects' || key === 'departments' || key === 'admissionDocumentsRequired') {
+        const items = formData[key]
+        if (Array.isArray(items) && items.length > 0) {
+          formDataToSend.append(key, JSON.stringify(items))
+        }
+      } else if (key === 'youtubeLink') {
+        if (formData.youtubeLink.trim()) {
+          formDataToSend.append('youtubeLink', formData.youtubeLink.trim())
+        }
+      } else if (key.includes('DistributionJson') || key === 'admissionFeeDistribution') {
+        let feeObject = {};
+        if (key === 'feesDayDistributionJson') {
+          dayFees.forEach(fee => {
+            feeObject[fee.name] = fee.amount;
+          });
+        } else if (key === 'feesBoardingDistributionJson') {
+          boardingFees.forEach(fee => {
+            feeObject[fee.name] = fee.amount;
+          });
+        } else if (key === 'admissionFeeDistribution') {
+          admissionFees.forEach(fee => {
+            feeObject[fee.name] = fee.amount;
+          });
+        }
+        
+        if (Object.keys(feeObject).length > 0) {
+          formDataToSend.append(key, JSON.stringify(feeObject));
+        }
+      } else {
+        formDataToSend.append(key, formData[key] || '')
+      }
+    })
+
+    // Handle video file - compress if needed
+    if (files.videoFile) {
+      // Check video file size and compress if too large
+      if (files.videoFile.size > 50 * 1024 * 1024) { // 50MB limit
+        toast.error('Video file is too large. Maximum size: 50MB');
+        return;
+      }
+      formDataToSend.append('videoTour', files.videoFile)
+      
+      if (selectedThumbnail && !formData.youtubeLink.trim()) {
+        if (selectedThumbnail instanceof File) {
+          formDataToSend.append('videoThumbnail', selectedThumbnail)
+        }
+      }
     }
 
-    try {
-      const formDataToSend = new FormData()
-      
-      Object.keys(formData).forEach(key => {
-        if (key === 'subjects' || key === 'departments' || key === 'admissionDocumentsRequired') {
-          const items = formData[key]
-          if (Array.isArray(items) && items.length > 0) {
-            formDataToSend.append(key, JSON.stringify(items))
-          }
-        } else if (key === 'youtubeLink') {
-          if (formData.youtubeLink.trim()) {
-            formDataToSend.append('youtubeLink', formData.youtubeLink.trim())
-          }
-        } else if (key.includes('DistributionJson') || key === 'admissionFeeDistribution') {
-          let feeObject = {};
-          if (key === 'feesDayDistributionJson') {
-            dayFees.forEach(fee => {
-              feeObject[fee.name] = fee.amount;
-            });
-          } else if (key === 'feesBoardingDistributionJson') {
-            boardingFees.forEach(fee => {
-              feeObject[fee.name] = fee.amount;
-            });
-          } else if (key === 'admissionFeeDistribution') {
-            admissionFees.forEach(fee => {
-              feeObject[fee.name] = fee.amount;
-            });
-          }
-          
-          if (Object.keys(feeObject).length > 0) {
-            formDataToSend.append(key, JSON.stringify(feeObject));
-          }
-        } else {
-          formDataToSend.append(key, formData[key] || '')
-        }
-      })
+    if (cancelledVideo) {
+      formDataToSend.append('cancelVideo', 'true');
+    }
 
-      if (files.videoFile) {
-        formDataToSend.append('videoTour', files.videoFile)
-        
-        if (selectedThumbnail && !formData.youtubeLink.trim()) {
-          if (selectedThumbnail instanceof File) {
-            formDataToSend.append('videoThumbnail', selectedThumbnail)
-          }
+    if (removedVideo) {
+      formDataToSend.append('removeVideo', 'true');
+    }
+
+    // Handle PDF files - check sizes
+    const pdfFields = [
+      'curriculumPDF',
+      'feesDayDistributionPdf',
+      'feesBoardingDistributionPdf',
+      'admissionFeePdf',
+      'form1ResultsPdf',
+      'form2ResultsPdf',
+      'form3ResultsPdf',
+      'form4ResultsPdf',
+      'mockExamsResultsPdf',
+      'kcseResultsPdf'
+    ]
+
+    let totalFileSize = 0;
+    const maxTotalSize = 100 * 1024 * 1024; // 100MB total limit
+
+    pdfFields.forEach(field => {
+      if (files[field]) {
+        // Check individual file size (max 20MB each)
+        if (files[field].size > 20 * 1024 * 1024) {
+          toast.error(`${field.replace(/([A-Z])/g, ' $1').trim()} is too large. Maximum size: 20MB`);
+          throw new Error('File size too large');
+        }
+        totalFileSize += files[field].size;
+        formDataToSend.append(field, files[field]);
+      }
+      if (cancelledPdfs[field]) {
+        formDataToSend.append(`cancel_${field}`, 'true');
+      }
+      if (removedPdfs[field]) {
+        formDataToSend.append(`remove_${field}`, 'true');
+      }
+    });
+
+    // Check total file size
+    if (totalFileSize > maxTotalSize) {
+      toast.error('Total file size exceeds 100MB limit. Please reduce file sizes.');
+      return;
+    }
+
+    // Handle additional files with size limits
+    const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
+    newAdditionalFiles.forEach((fileObj, index) => {
+      if (fileObj.file) {
+        if (fileObj.file.size > 10 * 1024 * 1024) { // 10MB per additional file
+          toast.error(`Additional file "${fileObj.filename}" is too large. Maximum size: 10MB`);
+          return;
+        }
+        formDataToSend.append(`additionalResultsFile_${index}`, fileObj.file);
+        if (fileObj.year || fileObj.description) {
+          formDataToSend.append(`additionalResultsYear_${index}`, fileObj.year || '');
+          formDataToSend.append(`additionalResultsDesc_${index}`, fileObj.description || '');
         }
       }
+    });
 
-      if (cancelledVideo) {
-        formDataToSend.append('cancelVideo', 'true');
+    const existingFilesWithUpdates = additionalFiles.filter(file => 
+      file.isExisting && (file.year || file.description || file.isModified)
+    );
+
+    existingFilesWithUpdates.forEach((fileObj, index) => {
+      if (fileObj.filepath || fileObj.filename) {
+        formDataToSend.append(`existingAdditionalFilepath_${index}`, fileObj.filepath || fileObj.filename);
+        formDataToSend.append(`existingAdditionalYear_${index}`, fileObj.year || '');
+        formDataToSend.append(`existingAdditionalDesc_${index}`, fileObj.description || '');
       }
+    });
 
-      if (removedVideo) {
-        formDataToSend.append('removeVideo', 'true');
+    if (cancelledExistingFiles.length > 0) {
+      formDataToSend.append('cancelledAdditionalFiles', JSON.stringify(
+        cancelledExistingFiles.map(f => ({
+          filepath: f.filepath || f.filename,
+          filename: f.filename || f.name
+        }))
+      ));
+    }
+
+    if (removedAdditionalFiles.length > 0) {
+      formDataToSend.append('removedAdditionalFiles', JSON.stringify(
+        removedAdditionalFiles.map(f => ({
+          filepath: f.filepath || f.filename,
+          filename: f.filename || f.name
+        }))
+      ));
+    }
+
+    if (newAdditionalFiles.length > 0 || existingFilesWithUpdates.length > 0 || cancelledExistingFiles.length > 0 || removedAdditionalFiles.length > 0) {
+      formDataToSend.append('updateAdditionalFiles', 'true');
+    }
+
+    Object.keys(examYears).forEach(yearField => {
+      if (examYears[yearField]) {
+        formDataToSend.append(yearField, examYears[yearField])
       }
+    })
 
-      const pdfFields = [
-        'curriculumPDF',
-        'feesDayDistributionPdf',
-        'feesBoardingDistributionPdf',
-        'admissionFeePdf',
-        'form1ResultsPdf',
-        'form2ResultsPdf',
-        'form3ResultsPdf',
-        'form4ResultsPdf',
-        'mockExamsResultsPdf',
-        'kcseResultsPdf'
-      ]
+    // Show loading state
+    toast.loading('Uploading files, please wait...');
 
-      pdfFields.forEach(field => {
-        if (files[field]) {
-          formDataToSend.append(field, files[field])
-        }
-        if (cancelledPdfs[field]) {
-          formDataToSend.append(`cancel_${field}`, 'true');
-        }
-        if (removedPdfs[field]) {
-          formDataToSend.append(`remove_${field}`, 'true');
-        }
-      })
-
-      const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
-      newAdditionalFiles.forEach((fileObj, index) => {
-        if (fileObj.file) {
-          formDataToSend.append(`additionalResultsFile_${index}`, fileObj.file);
-          if (fileObj.year || fileObj.description) {
-            formDataToSend.append(`additionalResultsYear_${index}`, fileObj.year || '');
-            formDataToSend.append(`additionalResultsDesc_${index}`, fileObj.description || '');
-          }
-        }
-      });
-
-      const existingFilesWithUpdates = additionalFiles.filter(file => 
-        file.isExisting && (file.year || file.description || file.isModified)
-      );
-
-      existingFilesWithUpdates.forEach((fileObj, index) => {
-        if (fileObj.filepath || fileObj.filename) {
-          formDataToSend.append(`existingAdditionalFilepath_${index}`, fileObj.filepath || fileObj.filename);
-          formDataToSend.append(`existingAdditionalYear_${index}`, fileObj.year || '');
-          formDataToSend.append(`existingAdditionalDesc_${index}`, fileObj.description || '');
-        }
-      });
-
-      if (cancelledExistingFiles.length > 0) {
-        formDataToSend.append('cancelledAdditionalFiles', JSON.stringify(
-          cancelledExistingFiles.map(f => ({
-            filepath: f.filepath || f.filename,
-            filename: f.filename || f.name
-          }))
-        ));
-      }
-
-      if (removedAdditionalFiles.length > 0) {
-        formDataToSend.append('removedAdditionalFiles', JSON.stringify(
-          removedAdditionalFiles.map(f => ({
-            filepath: f.filepath || f.filename,
-            filename: f.filename || f.name
-          }))
-        ));
-      }
-
-      if (newAdditionalFiles.length > 0 || existingFilesWithUpdates.length > 0 || cancelledExistingFiles.length > 0 || removedAdditionalFiles.length > 0) {
-        formDataToSend.append('updateAdditionalFiles', 'true');
-      }
-
-      Object.keys(examYears).forEach(yearField => {
-        if (examYears[yearField]) {
-          formDataToSend.append(yearField, examYears[yearField])
-        }
-      })
-
-      console.log('FormData contents for debugging:');
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(`${key}:`, value);
-      }
-
-      await onSave(formDataToSend)
-    } catch (error) {
-      console.error('Form submission error:', error);
-      throw error
+    await onSave(formDataToSend)
+  } catch (error) {
+    console.error('Form submission error:', error);
+    if (error.message === 'File size too large') {
+      toast.error('File too large. Please reduce file sizes and try again.');
+    } else {
+      toast.error('Failed to submit form. Please check file sizes and try again.');
     }
   }
+}
 
   const handleNextStep = (e) => {
     e.preventDefault()
@@ -4992,26 +5038,32 @@ export default function ModernSchoolInformation() {
     }
   }
 
-  const handleSaveSchool = async (formData) => {
-    try {
-      setActionLoading(true)
-      let result
-      if (schoolInfo) {
-        result = await schoolApiService.updateSchoolInfo(formData)
-        toast.success('School information updated successfully!')
-      } else {
-        result = await schoolApiService.createSchoolInfo(formData)
-        toast.success('School information created successfully!')
-      }
-      setSchoolInfo(result.school)
-      setShowModal(false)
-    } catch (error) {
-      toast.error(error.message || 'Failed to save school information!')
-      throw error
-    } finally {
-      setActionLoading(false)
+const handleSaveSchool = async (formData) => {
+  try {
+    setActionLoading(true)
+    let result
+    if (schoolInfo) {
+      result = await schoolApiService.updateSchoolInfo(formData)
+      toast.success('School information updated successfully!')
+    } else {
+      result = await schoolApiService.createSchoolInfo(formData)
+      toast.success('School information created successfully!')
     }
+    setSchoolInfo(result.school)
+    setShowModal(false)
+  } catch (error) {
+    if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
+      toast.error('Total file size is too large. Maximum total size is 100MB. Please reduce file sizes.');
+    } else if (error.message.includes('Network Error')) {
+      toast.error('Network error. Please check your connection and try again.');
+    } else {
+      toast.error(error.message || 'Failed to save school information!');
+    }
+    throw error
+  } finally {
+    setActionLoading(false)
   }
+}
 
   const handleDeleteSchool = async () => {
     try {
