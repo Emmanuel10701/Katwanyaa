@@ -485,107 +485,119 @@ function ModernAssignmentDetailModal({ assignment, onClose, onEdit }) {
                 )}
               </div>
 
-              {/* Right Column - Information Panel */}
-              <div className="space-y-6">
-                {/* Information Card */}
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiBriefcase className="text-indigo-600" />
-                    Assignment Information
-                  </h3>
+             <div className="space-y-6">
+  {/* Modernized Information Card */}
+  <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm">
+    <div className="flex items-center gap-2 mb-6">
+      <div className="p-2 bg-indigo-50 rounded-lg">
+        <FiBriefcase className="text-indigo-600" size={18} />
+      </div>
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
+        Assignment Details
+      </h3>
+    </div>
 
-                  <div className="space-y-4">
-                    {/* Teacher */}
-                    {assignment.teacher && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Teacher</span>
-                        <div className="flex items-center gap-2">
-                          <FiUserCheck className="text-indigo-500" size={16} />
-                          <span className="text-gray-700 font-medium text-sm sm:text-base truncate">
-                            {assignment.teacher}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+    {/* Details Grid: 2 columns on mobile for better space usage */}
+    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+      {/* Teacher */}
+      {assignment.teacher && (
+        <div className="col-span-2 sm:col-span-1 flex flex-col">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Teacher</span>
+          <div className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-indigo-50 transition-colors">
+               <FiUserCheck className="text-indigo-500" size={14} />
+            </div>
+            <span className="text-slate-700 font-bold text-sm truncate">
+              {assignment.teacher}
+            </span>
+          </div>
+        </div>
+      )}
 
-                    {/* Due Date */}
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Due Date</span>
-                      <div className="flex items-center gap-2">
-                        <FiCalendar className="text-indigo-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">
-                          {new Date(assignment.dueDate).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                      </div>
-                    </div>
+      {/* Due Date */}
+      <div className="flex flex-col">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Due Date</span>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center border border-red-100">
+            <FiCalendar className="text-red-500" size={14} />
+          </div>
+          <span className="text-slate-700 font-bold text-sm">
+            {new Date(assignment.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+          </span>
+        </div>
+      </div>
 
-                    {/* Date Assigned */}
-                    {assignment.dateAssigned && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Date Assigned</span>
-                        <div className="flex items-center gap-2">
-                          <FiCalendar className="text-green-500" size={16} />
-                          <span className="text-gray-700 font-medium text-sm sm:text-base">
-                            {new Date(assignment.dateAssigned).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+      {/* Date Assigned */}
+      {assignment.dateAssigned && (
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Assigned</span>
+          <div className="flex items-center gap-2">
+             <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+              <FiCalendar className="text-emerald-500" size={14} />
+            </div>
+            <span className="text-slate-700 font-bold text-sm">
+              {new Date(assignment.dateAssigned).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+            </span>
+          </div>
+        </div>
+      )}
 
-                    {/* Estimated Time */}
-                    {assignment.estimatedTime && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Estimated Time</span>
-                        <div className="flex items-center gap-2">
-                          <FiClock className="text-amber-500" size={16} />
-                          <span className="text-gray-700 font-medium text-sm sm:text-base">{assignment.estimatedTime}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+      {/* Estimated Time */}
+      {assignment.estimatedTime && (
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Time Est.</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
+              <FiClock className="text-amber-500" size={14} />
+            </div>
+            <span className="text-slate-700 font-bold text-sm">{assignment.estimatedTime}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
 
-                {/* Assignment Files */}
-                {assignment.assignmentFiles && assignment.assignmentFiles.length > 0 && (
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <FiFileText className="text-blue-600" />
-                      Files ({assignment.assignmentFiles.length})
-                    </h3>
-                    <div className="space-y-2">
-                      {assignment.assignmentFiles.slice(0, 3).map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-white/50 rounded-lg border border-blue-100">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md">
-                              <FiFileText size={14} />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">
-                                {file.split('/').pop()}
-                              </p>
-                            </div>
-                          </div>
-                          <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer">
-                            <FiDownload size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      {assignment.assignmentFiles.length > 3 && (
-                        <div className="text-center pt-2">
-                          <span className="text-xs text-blue-600 font-medium">
-                            +{assignment.assignmentFiles.length - 3} more files
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+  {/* Modernized Files Card */}
+  {assignment.assignmentFiles?.length > 0 && (
+    <div className="bg-slate-900 rounded-[24px] p-5 text-white shadow-xl shadow-slate-200">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <FiFileText className="text-blue-400" />
+          <h3 className="text-sm font-bold tracking-wide">Resources</h3>
+        </div>
+        <span className="text-[10px] bg-white/10 px-2 py-1 rounded-md font-bold uppercase tracking-tighter">
+          {assignment.assignmentFiles.length} Total
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {assignment.assignmentFiles.slice(0, 3).map((file, index) => (
+          <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+                <FiFileText size={14} />
               </div>
+              <p className="text-xs font-semibold text-slate-200 truncate">
+                {file.split('/').pop()}
+              </p>
+            </div>
+            <button className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all cursor-pointer">
+              <FiDownload size={16} />
+            </button>
+          </div>
+        ))}
+        
+        {assignment.assignmentFiles.length > 3 && (
+          <button className="w-full py-2 mt-2 text-center border border-dashed border-white/20 rounded-xl hover:border-white/40 transition-all">
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              +{assignment.assignmentFiles.length - 3} more files
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
+  )}
+</div>
             </div>
 
             {/* Additional Sections - Full Width */}

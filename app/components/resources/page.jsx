@@ -535,65 +535,79 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
               </div>
 
               {/* Right Column - Information Panel */}
-              <div className="space-y-6">
-                {/* Information Card */}
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 sm:p-6 border border-blue-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FiBriefcase className="text-blue-600" />
-                    Resource Information
-                  </h3>
+<div className="space-y-6">
+  {/* Modernized Resource Information Card */}
+  <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md">
+    <div className="flex items-center gap-2 mb-6 px-1">
+      <div className="p-2 bg-blue-50 rounded-lg">
+        <FiBriefcase className="text-blue-600" size={18} />
+      </div>
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
+        Resource Metadata
+      </h3>
+    </div>
 
-                  <div className="space-y-4">
-                    {/* Teacher */}
-                    {resource.teacher && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Teacher</span>
-                        <div className="flex items-center gap-2">
-                          <FiUserCheck className="text-blue-500" size={16} />
-                          <span className="text-gray-700 font-medium text-sm sm:text-base truncate">
-                            {resource.teacher}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+    {/* Information Grid */}
+    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+      {/* Teacher Row - Full width if needed or half */}
+      {resource.teacher && (
+        <div className="col-span-2 flex flex-col p-3 bg-slate-50/50 rounded-2xl border border-slate-50">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">Lead Teacher</span>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-100 shrink-0">
+               <FiUserCheck className="text-white" size={16} />
+            </div>
+            <span className="text-slate-700 font-bold text-sm sm:text-base truncate">
+              {resource.teacher}
+            </span>
+          </div>
+        </div>
+      )}
 
-                    {/* Uploaded By */}
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Uploaded By</span>
-                      <div className="flex items-center gap-2">
-                        <FiUsers className="text-green-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">
-                          {resource.uploadedBy || 'System'}
-                        </span>
-                      </div>
-                    </div>
+      {/* Uploaded By */}
+      <div className="flex flex-col px-1">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Publisher</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 shrink-0">
+            <FiUsers className="text-emerald-500" size={14} />
+          </div>
+          <span className="text-slate-700 font-bold text-xs sm:text-sm truncate">
+            {resource.uploadedBy || 'System'}
+          </span>
+        </div>
+      </div>
 
-                    {/* Total Files */}
-                    {Array.isArray(resource.files) && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Files</span>
-                        <div className="flex items-center gap-2">
-                          <FiFile className="text-purple-500" size={16} />
-                          <span className="text-gray-700 font-medium text-sm sm:text-base">
-                            {resource.files.length} file(s)
-                          </span>
-                        </div>
-                      </div>
-                    )}
+      {/* Files Count */}
+      <div className="flex flex-col px-1">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Total Assets</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center border border-purple-100 shrink-0">
+            <FiFile className="text-purple-500" size={14} />
+          </div>
+          <span className="text-slate-700 font-bold text-xs sm:text-sm">
+            {resource.files?.length || 0} items
+          </span>
+        </div>
+      </div>
 
-                    {/* Downloads */}
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Downloads</span>
-                      <div className="flex items-center gap-2">
-                        <FiDownload className="text-red-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">
-                          {resource.downloads || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Downloads Stats */}
+      <div className="flex flex-col px-1">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Popularity</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
+            <FiDownload className="text-red-500" size={14} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-slate-700 font-bold text-xs sm:text-sm">
+              {resource.downloads || 0}
+            </span>
+            <span className="text-[9px] text-slate-400 font-medium -mt-1">downloads</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
           </div>
 
