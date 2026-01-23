@@ -30,6 +30,8 @@ import {
   IoSparkles
 } from 'react-icons/io5';
 
+import { useRouter } from 'next/navigation';
+
 // Import components
 import AdminSidebar from '../components/sidebar/page';
 import DashboardOverview from '../components/dashbaord/page';
@@ -102,6 +104,10 @@ export default function AdminDashboard() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+
+const router =useRouter()
+
+
   // Mobile Warning Modal Component
   const MobileWarningModal = () => (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-lg z-[100] flex items-center justify-center p-4">
@@ -118,12 +124,6 @@ export default function AdminDashboard() {
                 <p className="text-gray-400 text-sm">Limited Experience</p>
               </div>
             </div>
-            <button
-              onClick={() => setShowMobileWarning(false)}
-              className="p-2 hover:bg-gray-800 rounded-xl transition-colors duration-200"
-            >
-              <FiX className="text-gray-400 hover:text-white text-xl" />
-            </button>
           </div>
           
           <div className="flex items-center gap-3 p-3 bg-blue-900/30 rounded-xl border border-blue-800/50">
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
                 <IoSparkles className="text-yellow-400 text-xs" />
               </div>
               <div>
-                <h4 className="text-white font-semibold mb-1">Continue Anyway</h4>
+                <h4 className="text-white font-semibold mb-1">Go Back</h4>
                 <p className="text-gray-400 text-sm">
                   You can proceed with limited functionality, but some features may be restricted.
                 </p>
@@ -190,13 +190,23 @@ export default function AdminDashboard() {
           
         
         </div>
-        
-        {/* Footer */}
-        <div className="p-4 bg-gray-900/50 border-t border-gray-800">
-          <p className="text-gray-500 text-xs text-center">
-            For optimal experience, use a device with screen width greater than 768px
-          </p>
-        </div>
+  {/* Footer */}
+<div className="p-6 bg-gray-900/50 border-t border-gray-800 space-y-4">
+  <div className="flex justify-center">
+    <button
+      onClick={() => router.back()}
+      className="group flex items-center gap-2 px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-full border border-gray-700 transition-all active:scale-95 shadow-lg"
+    >
+      <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+      <span className="text-sm font-bold">Go Back</span>
+    </button>
+  </div>
+
+  <p className="text-gray-500 text-[10px] sm:text-xs text-center max-w-xs mx-auto leading-relaxed">
+    For optimal experience, use a device with screen width greater than 768px
+  </p>
+</div>
+
       </div>
     </div>
   );
