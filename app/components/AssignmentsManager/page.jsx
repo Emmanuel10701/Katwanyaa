@@ -1185,45 +1185,71 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
               />
             </div>
 
-            {/* Learning Objectives - Full Width */}
-            <div>
-              <label className="block text-base font-bold text-gray-800 mb-3">
-                Learning Objectives
-              </label>
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObjective())}
-                    className="flex-1 font-bold px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                    placeholder="Add learning objective..."
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddObjective}
-                    className="px-4 py-3 bg-purple-600 text-white rounded-xl font-bold cursor-pointer"
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {learningObjectives.map((objective, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-slate-600 rounded-xl border border-purple-100">
-                      <span className="text-sm text-gray-100 truncate">{objective}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveObjective(index)}
-                        className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
-                      >
-                        <FiX className="text-sm" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+<div>
+  {/* Label */}
+  <label className="block text-base font-bold text-gray-800 mb-3 flex items-center gap-2">
+    <div className="w-1.5 h-6 bg-purple-600 rounded-full" /> 
+    Learning Objectives
+  </label>
+
+  <div className="space-y-4">
+    {/* 1. Input Section - Modern Flex Row */}
+    <div className="flex flex-row items-center gap-2">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          value={newObjective}
+          onChange={(e) => setNewObjective(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObjective())}
+          className="w-full font-medium px-4 py-3 bg-gray-50 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all outline-none text-sm sm:text-base"
+          placeholder="e.g., Master React Hooks..."
+        />
+      </div>
+      <button
+        type="button"
+        onClick={handleAddObjective}
+        className="shrink-0 px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all active:scale-95 shadow-sm flex items-center justify-center text-sm"
+      >
+        Add
+      </button>
+    </div>
+
+    {/* 2. Mapping Section - Modern Visible Cards */}
+    <div className="space-y-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
+      {learningObjectives.length > 0 ? (
+        learningObjectives.map((objective, index) => (
+          <div 
+            key={index} 
+            className="group flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl hover:border-purple-200 hover:shadow-sm transition-all animate-in fade-in slide-in-from-left-2"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Decorative Bullet */}
+              <div className="w-2 h-2 rounded-full bg-purple-500/20 flex items-center justify-center">
+                <div className="w-1 h-1 rounded-full bg-purple-600" />
               </div>
+              <span className="text-sm font-semibold text-slate-700 truncate">
+                {objective}
+              </span>
             </div>
+            
+            <button
+              type="button"
+              onClick={() => handleRemoveObjective(index)}
+              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <FiX className="text-base" />
+            </button>
+          </div>
+        ))
+      ) : (
+        /* Empty State */
+        <div className="py-8 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No objectives set yet</p>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
             {/* Instructions - Full Width */}
             <div>
