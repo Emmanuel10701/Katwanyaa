@@ -12,7 +12,7 @@ import {
   FiBell, FiBook, FiFileText, FiAward, FiMail,
   FiPhone, FiSave, FiPlus, FiTrash2, FiEdit,
   FiCheck, FiLoader, FiAlertTriangle, FiInfo,
-  FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall, FiArrowRight 
+  FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall, FiArrowRight, FiHeart  
 } from 'react-icons/fi';
 import { IoClose, IoCalendarClearOutline } from "react-icons/io5"; // or /io for v4
 
