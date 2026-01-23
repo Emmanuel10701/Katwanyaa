@@ -3229,6 +3229,7 @@ async createSchoolInfo(formData) {
 }
 
 // Modern School Info Modal with 3 steps
+// Modern School Info Modal with 3 steps - COMPLETE VERSION
 function ModernSchoolModal({ onClose, onSave, school, loading }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
@@ -3248,6 +3249,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     feesDayDistributionJson: school?.feesDayDistribution ? JSON.stringify(school.feesDayDistribution) : '[]',
     feesBoarding: school?.feesBoarding?.toString() || '',
     feesBoardingDistributionJson: school?.feesBoardingDistribution ? JSON.stringify(school.feesBoardingDistribution) : '[]',
+    
+    // Admission Information
     admissionOpenDate: school?.admissionOpenDate ? new Date(school.admissionOpenDate).toISOString().split('T')[0] : '',
     admissionCloseDate: school?.admissionCloseDate ? new Date(school.admissionCloseDate).toISOString().split('T')[0] : '',
     admissionRequirements: school?.admissionRequirements || '',
@@ -3281,7 +3284,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   const [cancelledPdfs, setCancelledPdfs] = useState({});
   const [cancelledVideo, setCancelledVideo] = useState(false);
   const [replacedPdfs, setReplacedPdfs] = useState({});
-  
   const [removedPdfs, setRemovedPdfs] = useState({});
   const [removedVideo, setRemovedVideo] = useState(false);
   const [removedAdditionalFiles, setRemovedAdditionalFiles] = useState([]);
@@ -3330,7 +3332,11 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
       });
     }
     
-  
+    const pdfFields = [
+      'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+      'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+      'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+    ];
     
     pdfFields.forEach(field => {
       if (files[field] && files[field].size) {
@@ -3458,13 +3464,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     return true;
   };
 
-    const pdfFields = [
-        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-      ];
-
-
   const getExistingPdfData = (pdfField) => {
     if (!shouldShowExistingPdf(pdfField)) {
       return null;
@@ -3577,7 +3576,11 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
       }
       
-    
+      const pdfFields = [
+        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+      ];
       
       pdfFields.forEach(field => {
         if (files[field]) {
@@ -3657,7 +3660,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         formDataObj.append('videoThumbnail', selectedThumbnail);
       }
       
-    
+      // Add PDF files
+ 
       
       pdfFields.forEach(field => {
         if (files[field]) {
@@ -4270,6 +4274,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-6">
+                    {/* Day School Fee Structure */}
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 md:p-6 border border-green-200">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaDollarSign className="text-green-600" />
@@ -4337,6 +4342,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
+                    {/* Form 1 & 2 Results */}
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 md:p-6 border border-purple-200">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaAward className="text-purple-600" />
@@ -4443,9 +4449,305 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                         </div>
                       </div>
                     </div>
+
+                    {/* Admission Information Section */}
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-6 border border-indigo-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <FaUserCheck className="text-indigo-600" />
+                        Admission Information
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        {/* Admission Timeline */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Admission Opening Date
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              type="date"
+                              value={formData.admissionOpenDate} 
+                              onChange={(e) => handleChange('admissionOpenDate', e.target.value)}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Admission Closing Date
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              type="date"
+                              value={formData.admissionCloseDate} 
+                              onChange={(e) => handleChange('admissionCloseDate', e.target.value)}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Admission Requirements */}
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Admission Requirements
+                          </label>
+                          <TextareaAutosize
+                            minRows={3}
+                            value={formData.admissionRequirements}
+                            onChange={(e) => handleChange('admissionRequirements', e.target.value)}
+                            placeholder="Describe admission requirements, eligibility criteria..."
+                            style={{
+                              width: '100%',
+                              padding: '14px 16px',
+                              fontSize: '1rem',
+                              fontFamily: 'inherit',
+                              borderRadius: '12px',
+                              border: '2px solid #d1d5db',
+                              backgroundColor: '#fff',
+                              resize: 'none',
+                              outline: 'none',
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = '#6366f1';
+                              e.target.style.boxShadow = '0 0 0 1px #6366f1';
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = '#d1d5db';
+                              e.target.style.boxShadow = 'none';
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Admission Office Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Office Location
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              value={formData.admissionLocation} 
+                              onChange={(e) => handleChange('admissionLocation', e.target.value)}
+                              placeholder="Admission office location"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Office Hours
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              value={formData.admissionOfficeHours} 
+                              onChange={(e) => handleChange('admissionOfficeHours', e.target.value)}
+                              placeholder="e.g., 8:00 AM - 5:00 PM"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Contact Information */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Contact Email
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              type="email"
+                              value={formData.admissionContactEmail} 
+                              onChange={(e) => handleChange('admissionContactEmail', e.target.value)}
+                              placeholder="admissions@school.edu"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Contact Phone
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              value={formData.admissionContactPhone} 
+                              onChange={(e) => handleChange('admissionContactPhone', e.target.value)}
+                              placeholder="+254 XXX XXX XXX"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Website and Capacity */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Admission Website
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              type="url"
+                              value={formData.admissionWebsite} 
+                              onChange={(e) => handleChange('admissionWebsite', e.target.value)}
+                              placeholder="https://school.edu/admissions"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">
+                              Admission Capacity
+                            </label>
+                            <TextField 
+                              fullWidth 
+                              size="small"
+                              type="number"
+                              min="1"
+                              value={formData.admissionCapacity} 
+                              onChange={(e) => handleChange('admissionCapacity', e.target.value)}
+                              placeholder="Number of available slots"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Admission Documents Required */}
+                        <TagInput 
+                          label="Required Documents for Admission"
+                          tags={formData.admissionDocumentsRequired}
+                          onTagsChange={(tags) => handleTagsChange('admissionDocumentsRequired', tags)}
+                          placeholder="Type document name and press Enter..."
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-6">
+                    {/* Boarding Fee Structure */}
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 md:p-6 border border-blue-200">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaUniversity className="text-blue-600" />
@@ -4513,6 +4815,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
+                    {/* Other Important Documents */}
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 md:p-6 border border-indigo-200">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaGraduationCap className="text-indigo-600" />
@@ -4577,6 +4880,69 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                         ))}
                       </div>
                     </div>
+
+                    {/* Admission Fee Section */}
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6 border border-emerald-200">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-emerald-600" />
+                        Admission Fee Structure
+                      </h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Total Admission Fee (KES)
+                          </label>
+                          <TextField 
+                            fullWidth 
+                            size="small"
+                            type="number"
+                            min="0"
+                            value={formData.admissionFee} 
+                            onChange={(e) => handleChange('admissionFee', e.target.value)}
+                            placeholder="Enter total admission fee"
+                            sx={{
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                            }}
+                          />
+                        </div>
+
+                        <CustomFeeBreakdown
+                          title="Admission Fee"
+                          color="from-emerald-50 to-emerald-100"
+                          fees={admissionFees}
+                          onFeesChange={setAdmissionFees}
+                          totalField={formData.admissionFee}
+                          onTotalChange={(value) => handleChange('admissionFee', value)}
+                        />
+
+                        {/* Admission Fee PDF Upload */}
+                        <div className="mt-4">
+                          <ModernPdfUpload 
+                            pdfFile={files.admissionFeePdf}
+                            onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
+                            onRemove={() => handleFileRemove('admissionFeePdf')}
+                            label="Admission Fee Breakdown PDF"
+                            existingPdf={getExistingPdfData('admissionFeePdf')}
+                            onCancelExisting={() => handleCancelExistingPdf('admissionFeePdf')}
+                            onRemoveExisting={() => handleRemoveExistingPdf('admissionFeePdf')}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4638,6 +5004,173 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   )
 }
 
+
+// Modern Admission Office Details Component
+function ModernAdmissionOfficeDetailsView({
+  admissionLocation,
+  admissionOfficeHours,
+  admissionContactEmail,
+  admissionContactPhone,
+  admissionWebsite,
+  admissionCapacity
+}) {
+  const hasDetails = admissionLocation || admissionOfficeHours || admissionContactEmail || 
+                     admissionContactPhone || admissionWebsite || admissionCapacity;
+
+  if (!hasDetails) return null;
+
+  return (
+    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-2xl shadow-slate-200/40 relative overflow-hidden transition-all duration-500 hover:shadow-cyan-100/50 group">
+      {/* Decorative Background */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-full blur-3xl opacity-60 group-hover:opacity-100 transition-opacity" />
+
+      {/* Header Section */}
+      <div className="relative z-10 flex items-start gap-5 pb-8 mb-8 border-b border-slate-100/80">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 via-cyan-500 to-blue-400 flex items-center justify-center shadow-xl shadow-cyan-200 ring-4 ring-cyan-50">
+          <FaBuilding className="text-white text-2xl" />
+        </div>
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none mb-2">
+            Admission Office Details
+          </h3>
+          <p className="text-sm font-medium text-slate-500 max-w-sm leading-relaxed">
+            Contact information, location, and operational hours for admission inquiries.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+        {/* Location & Hours */}
+        <div className="space-y-6">
+          {admissionLocation && (
+            <div className="group/item bg-white rounded-2xl p-4 border border-slate-100 hover:border-cyan-200 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-cyan-50 rounded-lg">
+                  <FaMapMarkerAlt className="text-cyan-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                    Office Location
+                  </h4>
+                  <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                    {admissionLocation}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {admissionOfficeHours && (
+            <div className="group/item bg-white rounded-2xl p-4 border border-slate-100 hover:border-cyan-200 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-cyan-50 rounded-lg">
+                  <FaClock className="text-cyan-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                    Office Hours
+                  </h4>
+                  <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                    {admissionOfficeHours}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {admissionCapacity && (
+            <div className="group/item bg-white rounded-2xl p-4 border border-slate-100 hover:border-cyan-200 transition-all">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-cyan-50 rounded-lg">
+                  <FaUsers className="text-cyan-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                    Admission Capacity
+                  </h4>
+                  <p className="text-sm font-black text-slate-900">
+                    {admissionCapacity.toLocaleString()} slots available
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-6">
+          {admissionContactEmail && (
+            <a 
+              href={`mailto:${admissionContactEmail}`}
+              className="group/item bg-white rounded-2xl p-4 border border-slate-100 hover:border-cyan-200 hover:shadow-md transition-all block"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-cyan-50 rounded-lg group-hover/item:bg-cyan-100 transition-colors">
+                  <FaEnvelope className="text-cyan-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                    Email Address
+                  </h4>
+                  <p className="text-sm font-medium text-slate-700 group-hover/item:text-cyan-700 transition-colors">
+                    {admissionContactEmail}
+                  </p>
+                </div>
+              </div>
+            </a>
+          )}
+
+          {admissionContactPhone && (
+            <a 
+              href={`tel:${admissionContactPhone}`}
+              className="group/item bg-white rounded-2xl p-4 border border-slate-100 hover:border-cyan-200 hover:shadow-md transition-all block"
+            >
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-cyan-50 rounded-lg group-hover/item:bg-cyan-100 transition-colors">
+                  <FaPhone className="text-cyan-600" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                    Phone Number
+                  </h4>
+                  <p className="text-sm font-medium text-slate-700 group-hover/item:text-cyan-700 transition-colors">
+                    {admissionContactPhone}
+                  </p>
+                </div>
+              </div>
+            </a>
+          )}
+
+          {admissionWebsite && (
+            <a 
+              href={admissionWebsite}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/item bg-slate-900 rounded-2xl p-4 border border-slate-800 hover:border-cyan-400 hover:shadow-lg transition-all block"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-cyan-500/20 rounded-lg">
+                    <FaGlobe className="text-cyan-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-black text-cyan-300 uppercase tracking-[0.2em] mb-1">
+                      Admission Portal
+                    </h4>
+                    <p className="text-sm font-medium text-white truncate max-w-[180px]">
+                      {admissionWebsite.replace(/^https?:\/\//, '')}
+                    </p>
+                  </div>
+                </div>
+                <FaExternalLinkAlt className="text-cyan-300 text-sm" />
+              </div>
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ModernSchoolInformation() {
   const [schoolInfo, setSchoolInfo] = useState(null)

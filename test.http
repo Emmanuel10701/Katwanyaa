@@ -1,0 +1,486 @@
+### 1. Create School Info (Basic minimal data - no files)
+POST https://katwanyaa.vercel.app/api/school
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="name"
+
+Test School
+--WebAppBoundary
+Content-Disposition: form-data; name="studentCount"
+
+500
+--WebAppBoundary
+Content-Disposition: form-data; name="staffCount"
+
+50
+--WebAppBoundary
+Content-Disposition: form-data; name="openDate"
+
+2024-01-10
+--WebAppBoundary
+Content-Disposition: form-data; name="closeDate"
+
+2024-12-15
+--WebAppBoundary
+Content-Disposition: form-data; name="subjects"
+
+["Math", "Science", "English", "History"]
+--WebAppBoundary
+Content-Disposition: form-data; name="departments"
+
+["Science", "Languages", "Humanities"]
+--WebAppBoundary
+Content-Disposition: form-data; name="description"
+
+This is a test school description
+--WebAppBoundary
+Content-Disposition: form-data; name="motto"
+
+Excellence in Education
+--WebAppBoundary
+Content-Disposition: form-data; name="vision"
+
+To be the leading educational institution
+--WebAppBoundary
+Content-Disposition: form-data; name="mission"
+
+To provide quality education to all students
+--WebAppBoundary
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDay"
+
+15000
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayDistributionJson"
+
+{"tuition": 10000, "books": 3000, "activities": 2000}
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoarding"
+
+35000
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingDistributionJson"
+
+{"tuition": 10000, "boarding": 20000, "books": 3000, "activities": 2000}
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFee"
+
+5000
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeeDistribution"
+
+{"registration": 2000, "testing": 1500, "materials": 1500}
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Birth Certificate", "Previous Report Card", "Passport Photos"]
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionRequirements"
+
+Students must have completed primary education
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionCapacity"
+
+200
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionContactEmail"
+
+admissions@testschool.edu
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionContactPhone"
+
++1234567890
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://testschool.edu
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionLocation"
+
+123 Education Street, City
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+8:00 AM - 5:00 PM Monday to Friday
+--WebAppBoundary--
+
+### 2. Create School Info with YouTube Video and PDFs (more comprehensive)
+POST http://localhost:3000/api/school
+Content-Type: multipart/form-data; boundary=SchoolBoundary
+
+--SchoolBoundary
+Content-Disposition: form-data; name="name"
+
+Comprehensive Test School
+--SchoolBoundary
+Content-Disposition: form-data; name="studentCount"
+
+800
+--SchoolBoundary
+Content-Disposition: form-data; name="staffCount"
+
+75
+--SchoolBoundary
+Content-Disposition: form-data; name="openDate"
+
+2024-01-15
+--SchoolBoundary
+Content-Disposition: form-data; name="closeDate"
+
+2024-12-20
+--SchoolBoundary
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "Physics", "Chemistry", "Biology", "English", "Kiswahili", "History", "Geography", "Business", "Computer"]
+--SchoolBoundary
+Content-Disposition: form-data; name="departments"
+
+["Sciences", "Languages", "Humanities", "Technical", "Creative Arts"]
+--SchoolBoundary
+Content-Disposition: form-data; name="description"
+
+A comprehensive school with excellent facilities and qualified staff. We offer both day and boarding programs with modern classrooms and laboratories.
+--SchoolBoundary
+Content-Disposition: form-data; name="motto"
+
+Knowledge, Discipline, Excellence
+--SchoolBoundary
+Content-Disposition: form-data; name="vision"
+
+To nurture holistic individuals for global citizenship
+--SchoolBoundary
+Content-Disposition: form-data; name="mission"
+
+To provide transformative education through innovation and character building
+--SchoolBoundary
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=9bZkp7q19f0
+--SchoolBoundary
+Content-Disposition: form-data; name="feesDay"
+
+25000
+--SchoolBoundary
+Content-Disposition: form-data; name="feesDayDistributionJson"
+
+{"tuition": 15000, "books": 5000, "activities": 3000, "laboratory": 2000}
+--SchoolBoundary
+Content-Disposition: form-data; name="feesBoarding"
+
+55000
+--SchoolBoundary
+Content-Disposition: form-data; name="feesBoardingDistributionJson"
+
+{"tuition": 15000, "boarding": 30000, "meals": 5000, "books": 3000, "activities": 2000}
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionOpenDate"
+
+2024-03-01
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionCloseDate"
+
+2024-05-31
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionFee"
+
+7500
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionFeeDistribution"
+
+{"registration": 3000, "entrance_test": 2500, "materials": 1500, "id_card": 500}
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Birth Certificate", "KCPE Certificate", "Previous School Report", "4 Passport Photos", "Medical Report", "Parent ID Copy"]
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionRequirements"
+
+Minimum KCPE score of 300. Must pass entrance examination and interview. Good conduct required from previous school.
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionCapacity"
+
+150
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionContactEmail"
+
+info@comprehensiveschool.edu
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254712345678
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://comprehensiveschool.edu
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionLocation"
+
+456 Learning Avenue, Nairobi
+--SchoolBoundary
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+8:00 AM - 4:00 PM Weekdays, 9:00 AM - 1:00 PM Saturdays
+--SchoolBoundary
+Content-Disposition: form-data; name="form1ResultsYear"
+
+2023
+--SchoolBoundary
+Content-Disposition: form-data; name="form2ResultsYear"
+
+2023
+--SchoolBoundary
+Content-Disposition: form-data; name="form3ResultsYear"
+
+2023
+--SchoolBoundary
+Content-Disposition: form-data; name="form4ResultsYear"
+
+2023
+--SchoolBoundary
+Content-Disposition: form-data; name="mockExamsYear"
+
+2023
+--SchoolBoundary
+Content-Disposition: form-data; name="kcseYear"
+
+2022
+--SchoolBoundary--
+
+### 3. Test with file uploads (use in Visual Studio Code REST Client or similar)
+### Note: Replace paths with actual files on your system
+
+POST http://localhost:3000/api/school
+Content-Type: multipart/form-data; boundary=FileUploadBoundary
+
+--FileUploadBoundary
+Content-Disposition: form-data; name="name"
+
+File Upload Test School
+--FileUploadBoundary
+Content-Disposition: form-data; name="studentCount"
+
+600
+--FileUploadBoundary
+Content-Disposition: form-data; name="staffCount"
+
+60
+--FileUploadBoundary
+Content-Disposition: form-data; name="openDate"
+
+2024-01-10
+--FileUploadBoundary
+Content-Disposition: form-data; name="closeDate"
+
+2024-12-15
+--FileUploadBoundary
+Content-Disposition: form-data; name="subjects"
+
+["Math", "Science", "English"]
+--FileUploadBoundary
+Content-Disposition: form-data; name="departments"
+
+["Science", "Languages"]
+--FileUploadBoundary
+Content-Disposition: form-data; name="description"
+
+Testing file upload capabilities
+--FileUploadBoundary
+Content-Disposition: form-data; name="youtubeLink"
+
+https://youtu.be/dQw4w9WgXcQ
+--FileUploadBoundary
+### UNCOMMENT AND REPLACE WITH ACTUAL FILE PATHS ###
+### Content-Disposition: form-data; name="curriculumPDF"; filename="curriculum.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/curriculum.pdf
+--FileUploadBoundary
+### Content-Disposition: form-data; name="feesDayDistributionPdf"; filename="fees_day.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/fees_day.pdf
+--FileUploadBoundary
+### Content-Disposition: form-data; name="feesBoardingDistributionPdf"; filename="fees_boarding.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/fees_boarding.pdf
+--FileUploadBoundary
+### Content-Disposition: form-data; name="admissionFeePdf"; filename="admission.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/admission.pdf
+--FileUploadBoundary
+### Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1_results.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/form1_results.pdf
+--FileUploadBoundary
+Content-Disposition: form-data; name="form1ResultsYear"
+
+2023
+--FileUploadBoundary
+### Content-Disposition: form-data; name="additionalFiles"; filename="additional1.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/additional1.pdf
+--FileUploadBoundary
+### Content-Disposition: form-data; name="additionalFiles"; filename="additional2.docx"
+### Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+### < ./path/to/your/additional2.docx
+--FileUploadBoundary
+Content-Disposition: form-data; name="additionalResultsYear_0"
+
+2023
+--FileUploadBoundary
+Content-Disposition: form-data; name="additionalResultsDesc_0"
+
+School Magazine 2023
+--FileUploadBoundary
+### Content-Disposition: form-data; name="additionalResultsFile_0"; filename="magazine.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/magazine.pdf
+--FileUploadBoundary--
+
+### 4. Test validation error (missing required fields)
+POST http://localhost:3000/api/school
+Content-Type: multipart/form-data; boundary=ErrorBoundary
+
+--ErrorBoundary
+Content-Disposition: form-data; name="name"
+
+Incomplete School
+--ErrorBoundary
+Content-Disposition: form-data; name="studentCount"
+
+500
+--ErrorBoundary
+### Missing staffCount, openDate, closeDate, subjects, departments
+--ErrorBoundary--
+
+### 5. Test large file upload (if you have large files to test)
+POST http://localhost:3000/api/school
+Content-Type: multipart/form-data; boundary=LargeFileBoundary
+
+--LargeFileBoundary
+Content-Disposition: form-data; name="name"
+
+Large File Test
+--LargeFileBoundary
+Content-Disposition: form-data; name="studentCount"
+
+500
+--LargeFileBoundary
+Content-Disposition: form-data; name="staffCount"
+
+50
+--LargeFileBoundary
+Content-Disposition: form-data; name="openDate"
+
+2024-01-10
+--LargeFileBoundary
+Content-Disposition: form-data; name="closeDate"
+
+2024-12-15
+--LargeFileBoundary
+Content-Disposition: form-data; name="subjects"
+
+["Math", "Science"]
+--LargeFileBoundary
+Content-Disposition: form-data; name="departments"
+
+["Science"]
+--LargeFileBoundary
+### UNCOMMENT TO TEST LARGE FILE UPLOAD ###
+### Content-Disposition: form-data; name="videoTour"; filename="large_video.mp4"
+### Content-Type: video/mp4
+
+### < ./path/to/your/large_video.mp4
+--LargeFileBoundary--
+
+### 6. Test with multiple additional files
+POST http://localhost:3000/api/school
+Content-Type: multipart/form-data; boundary=MultipleFilesBoundary
+
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="name"
+
+Multi-File School
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="studentCount"
+
+700
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="staffCount"
+
+65
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="openDate"
+
+2024-01-10
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="closeDate"
+
+2024-12-15
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="subjects"
+
+["Math", "Science", "English"]
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="departments"
+
+["Science", "Languages"]
+--MultipleFilesBoundary
+### UNCOMMENT TO TEST MULTIPLE ADDITIONAL FILES ###
+### Content-Disposition: form-data; name="additionalFiles"; filename="doc1.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/doc1.pdf
+--MultipleFilesBoundary
+### Content-Disposition: form-data; name="additionalFiles"; filename="doc2.docx"
+### Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+### < ./path/to/your/doc2.docx
+--MultipleFilesBoundary
+### Content-Disposition: form-data; name="additionalFiles"; filename="image1.jpg"
+### Content-Type: image/jpeg
+
+### < ./path/to/your/image1.jpg
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="additionalResultsYear_0"
+
+2023
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="additionalResultsDesc_0"
+
+Annual Report
+--MultipleFilesBoundary
+### Content-Disposition: form-data; name="additionalResultsFile_0"; filename="report.pdf"
+### Content-Type: application/pdf
+
+### < ./path/to/your/report.pdf
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="additionalResultsYear_1"
+
+2022
+--MultipleFilesBoundary
+Content-Disposition: form-data; name="additionalResultsDesc_1"
+
+Sports Day Results
+--MultipleFilesBoundary
+### Content-Disposition: form-data; name="additionalResultsFile_1"; filename="sports.xlsx"
+### Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+### < ./path/to/your/sports.xlsx
+--MultipleFilesBoundary--
+
+### 7. Test GET request to verify POST worked
+GET http://localhost:3000/api/school
+
+### 8. Test DELETE if needed (after testing)
+DELETE http://localhost:3000/api/school
