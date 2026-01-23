@@ -3367,6 +3367,75 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     toast.success('Existing video marked for replacement. Select a new video.');
   };
 
+
+
+
+
+
+
+  // Add this function inside the ModernSchoolModal component
+const calculateTotalFileSize = () => {
+  let totalSize = 0;
+  const allFiles = [];
+  
+  // Add video file
+  if (files.videoFile && files.videoFile.size) {
+    totalSize += files.videoFile.size;
+    allFiles.push({
+      name: files.videoFile.name,
+      size: files.videoFile.size,
+      type: 'video'
+    });
+  }
+  
+  // Add all PDF files
+  const pdfFields = [
+    'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+    'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+    'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+  ];
+  
+  pdfFields.forEach(field => {
+    if (files[field] && files[field].size) {
+      totalSize += files[field].size;
+      allFiles.push({
+        name: files[field].name,
+        size: files[field].size,
+        type: 'pdf'
+      });
+    }
+  });
+  
+  // Add thumbnail
+  if (selectedThumbnail && selectedThumbnail instanceof File) {
+    totalSize += selectedThumbnail.size;
+    allFiles.push({
+      name: selectedThumbnail.name,
+      size: selectedThumbnail.size,
+      type: 'thumbnail'
+    });
+  }
+  
+  // Add additional files
+  const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
+  newAdditionalFiles.forEach(fileObj => {
+    if (fileObj.file && fileObj.file.size) {
+      totalSize += fileObj.file.size;
+      allFiles.push({
+        name: fileObj.filename,
+        size: fileObj.file.size,
+        type: 'additional'
+      });
+    }
+  });
+  
+  return {
+    totalSize,
+    allFiles,
+    totalMB: (totalSize / (1024 * 1024)).toFixed(2)
+  };
+};
+
   const handleRemoveExistingVideo = () => {
     console.log('Removing existing video');
     setRemovedVideo(true);
