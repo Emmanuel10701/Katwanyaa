@@ -728,7 +728,6 @@ function VideoThumbnailOptions({ videoFile, onThumbnailSelect, onClose }) {
   );
 }
 
-// Modern Video Upload Component with Remove functionality
 function ModernVideoUpload({ 
   videoType, 
   videoPath, 
@@ -797,102 +796,68 @@ function ModernVideoUpload({
     }, 100)
   }
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
 
-const calculateTotalFileSize = () => {
-  let totalSize = 0;
-  const allFiles = [];
-  
-  // Add all PDF files
-  Object.values(files).forEach(file => {
-    if (file && file.size) {
-      totalSize += file.size;
-      allFiles.push({
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
-    }
-  });
-  
-  // Add video file
-  if (files.videoFile && files.videoFile.size) {
-    totalSize += files.videoFile.size;
-    allFiles.push({
-      name: files.videoFile.name,
-      size: files.videoFile.size,
-      type: files.videoFile.type
-    });
-  }
-  
-  // Add additional files
-  additionalFiles.forEach(fileObj => {
-    if (fileObj.file && fileObj.file.size) {
-      totalSize += fileObj.file.size;
-      allFiles.push({
-        name: fileObj.filename,
-        size: fileObj.file.size,
-        type: 'additional'
-      });
-    }
-  });
-  
-  return {
-    totalSize,
-    allFiles,
-    totalMB: (totalSize / (1024 * 1024)).toFixed(2)
-  };
-};
-
-
-
-
-
-const handleFileChange = (e) => {
-  const files = Array.from(e.target.files).slice(0, 1)
-  
-  if (files.length === 0) return
-
-  setUploadProgress(0)
-
-  const progressInterval = setInterval(() => {
-    setUploadProgress(prev => {
-      if (prev >= 100) {
-        clearInterval(progressInterval)
-        return 100
+    const file = files[0];
+    
+    // Client-side validation for video file size
+    const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB limit (matching server)
+    
+    if (file.size > MAX_VIDEO_SIZE) {
+      toast.error(`Video file too large. Maximum size: 100MB. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      setUploadProgress(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-      return prev + 20
-    })
-  }, 100)
-
-  if (files.length > 0) {
-    const file = files[0]
-    
-    if (file.type !== 'application/pdf') {
-      toast.error('Only PDF files are allowed')
-      setUploadProgress(0)
-      return
+      return;
     }
 
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('PDF file too large. Maximum size: 20MB')
-      setUploadProgress(0)
-      return
+    // Validate file type
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/x-m4v', 'video/quicktime'];
+    if (!allowedVideoTypes.includes(file.type)) {
+      toast.error('Invalid video format. Only MP4, WebM, and OGG files are allowed');
+      setUploadProgress(0);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
     }
 
-    simulateUpload()
-    onPdfChange(file) // This should pass the file to the parent component
-    setPreviewName(file.name)
-    setUploadProgress(100)
-    setIsReplacing(false)
+    setUploadProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 100);
+
+    // Set the file and trigger the parent callback
+    setFileToUpload(file);
+    setPreviewName(file.name);
     
-    setTimeout(() => setUploadProgress(0), 1000)
-    
-    // CRITICAL FIX: Reset the file input so it doesn't share state
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Reset the input
+    // Call parent's onVideoChange to update the form data
+    if (onVideoChange) {
+      onVideoChange(file);
     }
-  }
-}
+    
+    // Clear YouTube link when uploading local video
+    setLocalYoutubeLink('');
+    if (onYoutubeLinkChange) {
+      onYoutubeLinkChange('');
+    }
+    
+    // Also add size info to the toast when upload starts
+    toast.info(`Video selected (${(file.size / (1024 * 1024)).toFixed(2)} MB). Fill in other details and save to upload.`);
+    
+    setTimeout(() => setUploadProgress(0), 1000);
+  };
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -1088,9 +1053,9 @@ const handleFileChange = (e) => {
                           {hasNewVideo ? 'New Upload' : 'Existing Video'}
                         </p>
                         {hasNewVideo && (
-                          <p className="text-xs text-gray-600 mt-1">
+                          <div className="text-xs text-gray-600 mt-1">
                             {(fileToUpload.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1224,7 +1189,6 @@ const handleFileChange = (e) => {
         onChange={handleFileChange} 
         className="hidden" 
         id="video-upload-input"
-        
         disabled={hasYouTubeLink}
       />
     </div>
@@ -2917,6 +2881,8 @@ function AdditionalFilesUpload({ files, onFilesChange, label = "Additional Files
         />
       </div>
 
+
+
       {files.length > 0 && (
         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
           {files.map((file, index) => (
@@ -3529,172 +3495,86 @@ const handleFormSubmit = async (e) => {
   }
 
   try {
-    const formDataToSend = new FormData()
+    // Calculate total file size BEFORE creating FormData
+    let totalSize = 0;
+    const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total limit
     
-    // Add basic fields first
-    Object.keys(formData).forEach(key => {
-      if (key === 'subjects' || key === 'departments' || key === 'admissionDocumentsRequired') {
-        const items = formData[key]
-        if (Array.isArray(items) && items.length > 0) {
-          formDataToSend.append(key, JSON.stringify(items))
-        }
-      } else if (key === 'youtubeLink') {
-        if (formData.youtubeLink.trim()) {
-          formDataToSend.append('youtubeLink', formData.youtubeLink.trim())
-        }
-      } else if (key.includes('DistributionJson') || key === 'admissionFeeDistribution') {
-        let feeObject = {};
-        if (key === 'feesDayDistributionJson') {
-          dayFees.forEach(fee => {
-            feeObject[fee.name] = fee.amount;
-          });
-        } else if (key === 'feesBoardingDistributionJson') {
-          boardingFees.forEach(fee => {
-            feeObject[fee.name] = fee.amount;
-          });
-        } else if (key === 'admissionFeeDistribution') {
-          admissionFees.forEach(fee => {
-            feeObject[fee.name] = fee.amount;
-          });
-        }
-        
-        if (Object.keys(feeObject).length > 0) {
-          formDataToSend.append(key, JSON.stringify(feeObject));
-        }
-      } else {
-        formDataToSend.append(key, formData[key] || '')
-      }
-    })
-
-    // Handle video file - compress if needed
+    // Check video file
     if (files.videoFile) {
-      // Check video file size and compress if too large
-      if (files.videoFile.size > 50 * 1024 * 1024) { // 50MB limit
-        toast.error('Video file is too large. Maximum size: 50MB');
-        return;
-      }
-      formDataToSend.append('videoTour', files.videoFile)
-      
-      if (selectedThumbnail && !formData.youtubeLink.trim()) {
-        if (selectedThumbnail instanceof File) {
-          formDataToSend.append('videoThumbnail', selectedThumbnail)
-        }
-      }
+      totalSize += files.videoFile.size;
     }
-
-    if (cancelledVideo) {
-      formDataToSend.append('cancelVideo', 'true');
-    }
-
-    if (removedVideo) {
-      formDataToSend.append('removeVideo', 'true');
-    }
-
-    // Handle PDF files - check sizes
+    
+    // Check all PDF files
     const pdfFields = [
-      'curriculumPDF',
-      'feesDayDistributionPdf',
-      'feesBoardingDistributionPdf',
-      'admissionFeePdf',
-      'form1ResultsPdf',
-      'form2ResultsPdf',
-      'form3ResultsPdf',
-      'form4ResultsPdf',
-      'mockExamsResultsPdf',
-      'kcseResultsPdf'
-    ]
-
-    let totalFileSize = 0;
-    const maxTotalSize = 100 * 1024 * 1024; // 100MB total limit
-
+      'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf', 
+      'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf', 
+      'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+    ];
+    
     pdfFields.forEach(field => {
       if (files[field]) {
-        // Check individual file size (max 20MB each)
-        if (files[field].size > 20 * 1024 * 1024) {
-          toast.error(`${field.replace(/([A-Z])/g, ' $1').trim()} is too large. Maximum size: 20MB`);
-          throw new Error('File size too large');
-        }
-        totalFileSize += files[field].size;
-        formDataToSend.append(field, files[field]);
-      }
-      if (cancelledPdfs[field]) {
-        formDataToSend.append(`cancel_${field}`, 'true');
-      }
-      if (removedPdfs[field]) {
-        formDataToSend.append(`remove_${field}`, 'true');
+        totalSize += files[field].size;
       }
     });
-
-    // Check total file size
-    if (totalFileSize > maxTotalSize) {
-      toast.error('Total file size exceeds 100MB limit. Please reduce file sizes.');
+    
+    // Check additional files
+    const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
+    newAdditionalFiles.forEach(fileObj => {
+      if (fileObj.file) {
+        totalSize += fileObj.file.size;
+      }
+    });
+    
+    // Check thumbnail
+    if (selectedThumbnail instanceof File) {
+      totalSize += selectedThumbnail.size;
+    }
+    
+    // Show error if total exceeds limit
+    if (totalSize > MAX_TOTAL_SIZE) {
+      const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
+      toast.error(`Total file size (${totalMB} MB) exceeds 100MB limit. Please reduce file sizes before uploading.`);
       return;
     }
-
-    // Handle additional files with size limits
-    const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
-    newAdditionalFiles.forEach((fileObj, index) => {
-      if (fileObj.file) {
-        if (fileObj.file.size > 10 * 1024 * 1024) { // 10MB per additional file
-          toast.error(`Additional file "${fileObj.filename}" is too large. Maximum size: 10MB`);
-          return;
-        }
-        formDataToSend.append(`additionalResultsFile_${index}`, fileObj.file);
-        if (fileObj.year || fileObj.description) {
-          formDataToSend.append(`additionalResultsYear_${index}`, fileObj.year || '');
-          formDataToSend.append(`additionalResultsDesc_${index}`, fileObj.description || '');
-        }
+    
+    // Also check individual video file size (server will reject >100MB)
+    if (files.videoFile && files.videoFile.size > 100 * 1024 * 1024) {
+      const videoMB = (files.videoFile.size / (1024 * 1024)).toFixed(2);
+      toast.error(`Video file (${videoMB} MB) exceeds 100MB limit. Please compress the video or use YouTube link instead.`);
+      return;
+    }
+    
+    // Log file sizes for debugging
+    console.log('📊 File size summary before upload:');
+    if (files.videoFile) {
+      console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
+    }
+    pdfFields.forEach(field => {
+      if (files[field]) {
+        console.log(`  ${field}: ${(files[field].size / (1024 * 1024)).toFixed(2)} MB`);
       }
     });
-
-    const existingFilesWithUpdates = additionalFiles.filter(file => 
-      file.isExisting && (file.year || file.description || file.isModified)
-    );
-
-    existingFilesWithUpdates.forEach((fileObj, index) => {
-      if (fileObj.filepath || fileObj.filename) {
-        formDataToSend.append(`existingAdditionalFilepath_${index}`, fileObj.filepath || fileObj.filename);
-        formDataToSend.append(`existingAdditionalYear_${index}`, fileObj.year || '');
-        formDataToSend.append(`existingAdditionalDesc_${index}`, fileObj.description || '');
-      }
-    });
-
-    if (cancelledExistingFiles.length > 0) {
-      formDataToSend.append('cancelledAdditionalFiles', JSON.stringify(
-        cancelledExistingFiles.map(f => ({
-          filepath: f.filepath || f.filename,
-          filename: f.filename || f.name
-        }))
-      ));
+    console.log(`  Total: ${(totalSize / (1024 * 1024)).toFixed(2)} MB / 100 MB`);
+    
+    // ... rest of existing code ...
+    
+    // Add a warning toast for large uploads
+    if (totalSize > 80 * 1024 * 1024) {
+      toast.warning('Total file size is large (>80MB). Upload may take several minutes...', {
+        duration: 5000,
+      });
     }
-
-    if (removedAdditionalFiles.length > 0) {
-      formDataToSend.append('removedAdditionalFiles', JSON.stringify(
-        removedAdditionalFiles.map(f => ({
-          filepath: f.filepath || f.filename,
-          filename: f.filename || f.name
-        }))
-      ));
-    }
-
-    if (newAdditionalFiles.length > 0 || existingFilesWithUpdates.length > 0 || cancelledExistingFiles.length > 0 || removedAdditionalFiles.length > 0) {
-      formDataToSend.append('updateAdditionalFiles', 'true');
-    }
-
-    Object.keys(examYears).forEach(yearField => {
-      if (examYears[yearField]) {
-        formDataToSend.append(yearField, examYears[yearField])
-      }
-    })
-
+    
     // Show loading state
-    toast.loading('Uploading files, please wait...');
-
-    await onSave(formDataToSend)
+    toast.loading(`Uploading ${(totalSize / (1024 * 1024)).toFixed(2)} MB of files, please wait...`);
+    
+    // ... rest of existing code ...
   } catch (error) {
     console.error('Form submission error:', error);
     if (error.message === 'File size too large') {
       toast.error('File too large. Please reduce file sizes and try again.');
+    } else if (error.message.includes('413')) {
+      toast.error('Total upload size exceeds server limit (100MB). Please reduce file sizes or split into smaller uploads.');
     } else {
       toast.error('Failed to submit form. Please check file sizes and try again.');
     }
@@ -5009,7 +4889,6 @@ const handleFormSubmit = async (e) => {
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                   <span className="font-semibold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
-// Add this near the bottom of the modal form, before the submit buttons
 {currentStep === steps.length - 1 && (
   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
     <div className="flex items-center justify-between mb-2">
