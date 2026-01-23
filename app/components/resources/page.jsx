@@ -418,12 +418,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => onEdit(resource)} 
-                className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-bold shadow-lg cursor-pointer whitespace-nowrap"
-              >
-                <FiEdit size={16} /> Edit
-              </button>
+             
               <button 
                 onClick={onClose} 
                 className="p-2 sm:p-3 bg-white/10 text-white rounded-full cursor-pointer"
