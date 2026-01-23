@@ -797,51 +797,102 @@ function ModernVideoUpload({
     }, 100)
   }
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 1)
+
+const calculateTotalFileSize = () => {
+  let totalSize = 0;
+  const allFiles = [];
+  
+  // Add all PDF files
+  Object.values(files).forEach(file => {
+    if (file && file.size) {
+      totalSize += file.size;
+      allFiles.push({
+        name: file.name,
+        size: file.size,
+        type: file.type
+      });
+    }
+  });
+  
+  // Add video file
+  if (files.videoFile && files.videoFile.size) {
+    totalSize += files.videoFile.size;
+    allFiles.push({
+      name: files.videoFile.name,
+      size: files.videoFile.size,
+      type: files.videoFile.type
+    });
+  }
+  
+  // Add additional files
+  additionalFiles.forEach(fileObj => {
+    if (fileObj.file && fileObj.file.size) {
+      totalSize += fileObj.file.size;
+      allFiles.push({
+        name: fileObj.filename,
+        size: fileObj.file.size,
+        type: 'additional'
+      });
+    }
+  });
+  
+  return {
+    totalSize,
+    allFiles,
+    totalMB: (totalSize / (1024 * 1024)).toFixed(2)
+  };
+};
+
+
+
+
+
+const handleFileChange = (e) => {
+  const files = Array.from(e.target.files).slice(0, 1)
+  
+  if (files.length === 0) return
+
+  setUploadProgress(0)
+
+  const progressInterval = setInterval(() => {
+    setUploadProgress(prev => {
+      if (prev >= 100) {
+        clearInterval(progressInterval)
+        return 100
+      }
+      return prev + 20
+    })
+  }, 100)
+
+  if (files.length > 0) {
+    const file = files[0]
     
-    if (files.length === 0) return
+    if (file.type !== 'application/pdf') {
+      toast.error('Only PDF files are allowed')
+      setUploadProgress(0)
+      return
+    }
 
-    setUploadProgress(0)
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('PDF file too large. Maximum size: 20MB')
+      setUploadProgress(0)
+      return
+    }
 
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval)
-          return 100
-        }
-        return prev + 20
-      })
-    }, 100)
-
-    if (files.length > 0) {
-      const file = files[0]
-      
-      const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v']
-      if (!allowedVideoTypes.includes(file.type)) {
-        toast.error('Invalid video format. Only MP4, WebM, OGG, MOV, and M4V files are allowed.')
-        setUploadProgress(0)
-        return
-      }
-
-      if (file.size > 100 * 1024 * 1024) {
-        toast.error('Video file too large. Maximum size: 100MB')
-        setUploadProgress(0)
-        return
-      }
-
-      simulateUpload()
-      setFileToUpload(file)
-      setPreviewName(file.name)
-      setLocalYoutubeLink('')
-      if (onVideoChange) {
-        onVideoChange(file)
-      }
-      setUploadProgress(100)
-      
-      setTimeout(() => setUploadProgress(0), 1000)
+    simulateUpload()
+    onPdfChange(file) // This should pass the file to the parent component
+    setPreviewName(file.name)
+    setUploadProgress(100)
+    setIsReplacing(false)
+    
+    setTimeout(() => setUploadProgress(0), 1000)
+    
+    // CRITICAL FIX: Reset the file input so it doesn't share state
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset the input
     }
   }
+}
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -1173,6 +1224,7 @@ function ModernVideoUpload({
         onChange={handleFileChange} 
         className="hidden" 
         id="video-upload-input"
+        
         disabled={hasYouTubeLink}
       />
     </div>
@@ -4957,11 +5009,39 @@ const handleFormSubmit = async (e) => {
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                   <span className="font-semibold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
-                {currentStep === steps.length - 1 && (
-                  <div className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
-                    <FaCheck className="text-sm" /> Ready to {school ? 'Update' : 'Create'}
-                  </div>
-                )}
+// Add this near the bottom of the modal form, before the submit buttons
+{currentStep === steps.length - 1 && (
+  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center gap-2">
+        <FaInfoCircle className="text-blue-500" />
+        <span className="text-sm font-bold text-gray-700">File Upload Summary</span>
+      </div>
+      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+        calculateTotalFileSize().totalMB > 80 ? 'bg-red-100 text-red-700' :
+        calculateTotalFileSize().totalMB > 50 ? 'bg-yellow-100 text-yellow-700' :
+        'bg-green-100 text-green-700'
+      }`}>
+        {calculateTotalFileSize().totalMB} MB total
+      </span>
+    </div>
+    
+    <div className="space-y-1 text-xs">
+      {calculateTotalFileSize().allFiles.map((file, index) => (
+        <div key={index} className="flex justify-between">
+          <span className="text-gray-600 truncate max-w-[200px]">{file.name}</span>
+          <span className="text-gray-500">{(file.size / 1024).toFixed(0)} KB</span>
+        </div>
+      ))}
+    </div>
+    
+    {calculateTotalFileSize().totalMB > 80 && (
+      <div className="mt-2 text-xs text-red-600 font-medium">
+        ⚠️ Total file size is approaching the 100MB limit. Consider reducing file sizes.
+      </div>
+    )}
+  </div>
+)}
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
