@@ -914,57 +914,67 @@ function ModernResourceModal({ onClose, onSave, resource, loading }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Validate required fields
+  if (!formData.title.trim() || !formData.subject || !formData.className || !formData.teacher) {
+    showNotification('error', 'Validation Error', 'Please fill in all required fields');
+    return;
+  }
+  
+  if (files.length === 0 && existingFiles.length === 0 && !resource) {
+    showNotification('error', 'Validation Error', 'Please upload at least one file');
+    return;
+  }
+
+  // Create FormData for submission
+  const formDataToSend = new FormData();
+  
+  // Add form data
+  Object.keys(formData).forEach(key => {
+    if (key === 'isActive') {
+      formDataToSend.append(key, formData[key] ? 'true' : 'false');
+    } else {
+      formDataToSend.append(key, formData[key]);
+    }
+  });
+
+  // Add action type
+  formDataToSend.append('action', 'update');
+
+  // Add existing files info (for updates) - IMPORTANT!
+  if (resource && existingFiles.length > 0) {
+    // Only include files that weren't removed
+    const filesToKeep = existingFiles
+      .filter(file => !filesToRemove.some(url => url === file.url))
+      .map(file => ({
+        url: file.url,
+        name: file.name,
+        size: file.size,
+        extension: file.extension,
+        uploadedAt: file.uploadedAt
+      }));
     
-    // Validate required fields
-    if (!formData.title.trim() || !formData.subject || !formData.className || !formData.teacher) {
-      alert('Please fill in all required fields');
-      return;
+    if (filesToKeep.length > 0) {
+      formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
     }
-    
-    if (files.length === 0 && existingFiles.length === 0 && !resource) {
-      alert('Please upload at least one file');
-      return;
+  }
+
+  // Add files to remove
+  if (filesToRemove.length > 0) {
+    formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
+  }
+
+  // Add new files
+  files.forEach(fileObj => {
+    if (fileObj.file && !fileObj.isExisting) {
+      formDataToSend.append('files', fileObj.file);
     }
+  });
 
-    // Create FormData for submission
-    const formDataToSend = new FormData();
-    
-    // Add form data
-    Object.keys(formData).forEach(key => {
-      if (key === 'isActive') {
-        formDataToSend.append(key, formData[key] ? 'true' : 'false');
-      } else {
-        formDataToSend.append(key, formData[key]);
-      }
-    });
-
-    // Add new files
-    files.forEach(fileObj => {
-      if (fileObj.file && !fileObj.isExisting) {
-        formDataToSend.append('files', fileObj.file);
-      }
-    });
-
-    // Add existing files info (for updates)
-    if (resource && existingFiles.length > 0) {
-      const existingFileUrls = existingFiles
-        .filter(file => file.url)
-        .map(file => file.url);
-      
-      if (existingFileUrls.length > 0) {
-        formDataToSend.append('existingFiles', JSON.stringify(existingFileUrls));
-      }
-    }
-
-    // Add files to remove
-    if (filesToRemove.length > 0) {
-      formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
-    }
-
-    await onSave(formDataToSend, resource?.id);
-  };
+  await onSave(formDataToSend, resource?.id);
+};
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -1704,18 +1714,29 @@ const handleSubmit = async (formData, id) => {
     let response;
     
     if (id) {
-      // Update existing resource
+      // Update existing resource - FIXED
+      // Ensure we're sending all existing files as JSON
+      if (existingFiles && existingFiles.length > 0) {
+        formData.append('existingFiles', JSON.stringify(existingFiles));
+      }
+      
+      // Send files to remove
+      if (filesToRemove && filesToRemove.length > 0) {
+        formData.append('filesToRemove', JSON.stringify(filesToRemove));
+      }
+      
+      // Send the action type
+      formData.append('action', 'update');
+      
       response = await fetch(`/api/resources/${id}`, {
         method: 'PUT',
         body: formData,
-        // Note: Don't set Content-Type header for FormData - browser sets it automatically
       });
     } else {
       // Create new resource
       response = await fetch('/api/resources', {
         method: 'POST',
         body: formData,
-        // Note: Don't set Content-Type header for FormData - browser sets it automatically
       });
     }
     
@@ -1725,6 +1746,9 @@ const handleSubmit = async (formData, id) => {
       // Refresh the list
       await fetchResources();
       setShowModal(false);
+      setFiles([]);
+      setExistingFiles([]);
+      setFilesToRemove([]);
       showNotification(
         'success',
         id ? 'Updated' : 'Created',
@@ -1740,7 +1764,6 @@ const handleSubmit = async (formData, id) => {
     setSaving(false);
   }
 };
-
   // Create new resource
   const handleCreate = () => {
     setEditingResource(null);

@@ -37,7 +37,7 @@ const uploadMultipleFilesToSupabase = async (files) => {
       uploadedFiles.push({
         url: result.url,
         name: result.name,
-        size: formatFileSize(result.size),
+        size: result.size, // Store the size in bytes
         extension: result.extension,
         uploadedAt: result.uploadedAt,
       });
@@ -46,6 +46,8 @@ const uploadMultipleFilesToSupabase = async (files) => {
 
   return uploadedFiles;
 };
+
+
 
 const deleteFileFromSupabase = async (fileUrl) => {
   try {
@@ -66,6 +68,8 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
+
+
 
 const getFileType = (fileName) => {
   const ext = fileName.split(".").pop().toLowerCase();
@@ -238,65 +242,115 @@ async function handleFormUpdate(request, id, existingResource) {
     let updateData = {};
     let uploadedFiles = [...(existingResource.files || [])];
 
-    switch (action) {
-      case "addFiles":
-        const newFiles = formData.getAll("files");
-        if (newFiles && newFiles.length > 0 && newFiles[0].name) {
-          const uploadedNewFiles = await uploadMultipleFilesToSupabase(newFiles);
-          uploadedFiles = [...uploadedFiles, ...uploadedNewFiles];
-          updateData.type = determineMainTypeFromFiles(uploadedFiles);
+    // Handle file updates for all actions
+    if (action === "update") {
+      // Get form fields
+      const title = formData.get("title")?.trim();
+      const subject = formData.get("subject")?.trim();
+      const className = formData.get("className")?.trim();
+      const teacher = formData.get("teacher")?.trim();
+      const description = formData.get("description")?.trim();
+      const category = formData.get("category")?.trim();
+      const accessLevel = formData.get("accessLevel")?.trim();
+      const uploadedBy = formData.get("uploadedBy")?.trim();
+      const isActive = formData.get("isActive");
+
+      if (title !== null) updateData.title = title;
+      if (subject !== null) updateData.subject = subject;
+      if (className !== null) updateData.className = className;
+      if (teacher !== null) updateData.teacher = teacher;
+      if (description !== null) updateData.description = description;
+      if (category !== null) updateData.category = category;
+      if (accessLevel !== null) updateData.accessLevel = accessLevel;
+      if (uploadedBy !== null) updateData.uploadedBy = uploadedBy;
+      if (isActive !== null) updateData.isActive = isActive === "true";
+
+      // Handle file updates - this is the CRITICAL FIX
+      const existingFilesStr = formData.get("existingFiles");
+      const filesToRemoveStr = formData.get("filesToRemove");
+      const newFiles = formData.getAll("files");
+
+      console.log("🔄 Update Action Details:");
+      console.log("- existingFilesStr:", existingFilesStr?.substring(0, 100));
+      console.log("- filesToRemoveStr:", filesToRemoveStr);
+      console.log("- New files count:", newFiles.length);
+
+      // Parse existing files that should remain
+      let filesToKeep = [];
+      if (existingFilesStr) {
+        try {
+          filesToKeep = JSON.parse(existingFilesStr);
+          console.log("- Files to keep:", filesToKeep.length);
+        } catch (error) {
+          console.error("❌ Error parsing existingFiles:", error);
+          filesToKeep = [...uploadedFiles]; // Fallback to all existing files
         }
-        break;
+      }
 
-      case "removeFile":
-        const fileNameToRemove = formData.get("fileName");
-        if (fileNameToRemove) {
-          const fileToRemove = uploadedFiles.find((f) => f.name === fileNameToRemove);
-          if (fileToRemove) {
-            await deleteFileFromSupabase(fileToRemove.url);
-          }
-          uploadedFiles = uploadedFiles.filter((f) => f.name !== fileNameToRemove);
+      // Parse files to remove
+      let filesToRemove = [];
+      if (filesToRemoveStr) {
+        try {
+          filesToRemove = JSON.parse(filesToRemoveStr);
+          console.log("- Files to remove:", filesToRemove.length);
+        } catch (error) {
+          console.error("❌ Error parsing filesToRemove:", error);
         }
-        break;
+      }
 
-      case "update":
-      default:
-        const title = formData.get("title")?.trim();
-        const subject = formData.get("subject")?.trim();
-        const className = formData.get("className")?.trim();
-        const teacher = formData.get("teacher")?.trim();
-        const description = formData.get("description")?.trim();
-        const category = formData.get("category")?.trim();
-        const accessLevel = formData.get("accessLevel")?.trim();
-        const uploadedBy = formData.get("uploadedBy")?.trim();
-        const isActive = formData.get("isActive");
+      // Remove files marked for deletion from Supabase
+      if (filesToRemove.length > 0) {
+        console.log("🗑️ Removing files from Supabase:", filesToRemove);
+        for (const fileUrl of filesToRemove) {
+          await deleteFileFromSupabase(fileUrl);
+        }
+      }
 
-        if (title !== null) updateData.title = title;
-        if (subject !== null) updateData.subject = subject;
-        if (className !== null) updateData.className = className;
-        if (teacher !== null) updateData.teacher = teacher;
-        if (description !== null) updateData.description = description;
-        if (category !== null) updateData.category = category;
-        if (accessLevel !== null) updateData.accessLevel = accessLevel;
-        if (uploadedBy !== null) updateData.uploadedBy = uploadedBy;
-        if (isActive !== null) updateData.isActive = isActive === "true";
-        break;
+      // Upload new files
+      let uploadedNewFiles = [];
+      if (newFiles && newFiles.length > 0 && newFiles[0].name) {
+        console.log("📤 Uploading new files:", newFiles.length);
+        uploadedNewFiles = await uploadMultipleFilesToSupabase(newFiles);
+        console.log("- Successfully uploaded:", uploadedNewFiles.length);
+      }
+
+      // Filter out removed files from filesToKeep
+      const filteredFilesToKeep = filesToKeep.filter(file => {
+        // Keep file if its URL is not in filesToRemove
+        return !filesToRemove.includes(file.url);
+      });
+
+      // Combine kept files and new files
+      const allFiles = [...filteredFilesToKeep, ...uploadedNewFiles];
+      console.log("📁 Final file count:", allFiles.length);
+      
+      // Update files array and type
+      updateData.files = allFiles;
+      if (allFiles.length > 0) {
+        // Get file names for type determination
+        const fileNames = allFiles.map(file => file.name || '');
+        updateData.type = determineMainTypeFromFiles(fileNames);
+        console.log("- Determined type:", updateData.type);
+      }
     }
 
-    if (action === "addFiles" || action === "removeFile") {
-      updateData.files = uploadedFiles;
-    }
-    
     updateData.updatedAt = new Date();
+
+    console.log("💾 Saving to database:", {
+      id,
+      updateData: { ...updateData, files: `Array(${updateData.files?.length || 0} files)` }
+    });
 
     const resource = await prisma.resource.update({
       where: { id: id },
       data: updateData,
     });
 
+    console.log("✅ Update successful");
+
     return NextResponse.json({ 
       success: true, 
-      message: getUpdateMessage(action, uploadedFiles.length), 
+      message: `Resource updated successfully with ${updateData.files?.length || 0} file(s)`, 
       resource 
     }, { status: 200 });
   } catch (error) {
