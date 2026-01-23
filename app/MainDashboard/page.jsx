@@ -21,7 +21,7 @@ import {
   FiClipboard,
   FiMonitor,
   FiSmartphone,
-  FiX
+FiArrowLeft 
 } from 'react-icons/fi';
 import { 
   IoStatsChart,
