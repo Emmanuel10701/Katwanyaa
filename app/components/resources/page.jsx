@@ -977,21 +977,23 @@ const handleSubmit = async (e) => {
 
   // Handle files for CREATE vs UPDATE
   if (resource) {
-    // UPDATE: Add existing files that should be kept
-    const filesToKeep = existingFiles
-      .filter(file => !filesToRemove.some(url => url === file.url))
-      .map(file => ({
-        url: file.url,
-        name: file.name,
-        size: file.size,
-        extension: file.extension || file.name?.split('.').pop() || 'unknown',
-        uploadedAt: file.uploadedAt || new Date().toISOString()
-      }));
-    
-    if (filesToKeep.length > 0) {
-      formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
-    }
+// When preparing existing files for the update:
+const filesToKeep = existingFiles
+  .filter(file => !filesToRemove.some(url => url === file.url))
+  .map(file => {
+    // Ensure file has required properties
+    return {
+      url: file.url || '',
+      name: file.name || 'Unknown File',
+      size: file.size || 0,
+      extension: file.extension || file.name?.split('.').pop()?.toLowerCase() || 'unknown',
+      uploadedAt: file.uploadedAt || new Date().toISOString()
+    };
+  });
 
+if (filesToKeep.length > 0) {
+  formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
+}
     // Add files to remove
     if (filesToRemove.length > 0) {
       formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
