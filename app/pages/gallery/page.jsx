@@ -1648,22 +1648,7 @@ export default function ModernGallery() {
                   <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
                 </div>
 
-                <div className="space-y-3">
-                  <button
-                    onClick={() => toast.info('Upload gallery feature coming soon!')}
-                    className="w-full p-4 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-xl">
-                        <FiUpload className="text-blue-600" />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-bold">Upload Gallery</p>
-                        <p className="text-xs text-blue-600">Add new photos/videos</p>
-                      </div>
-                    </div>
-                    <FiArrowRight className="text-blue-400" />
-                  </button>
+                <div className="space-y-3"
 
                   <button
                     onClick={() => {
