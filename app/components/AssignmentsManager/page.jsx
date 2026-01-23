@@ -563,32 +563,35 @@ function ModernAssignmentDetailModal({ assignment, onClose, onEdit }) {
           {assignment.assignmentFiles.length} Total
         </span>
       </div>
+<div className="space-y-2">
+  {assignment.assignmentFiles.slice(0, 3).map((file, index) => {
+    // 1. Get the filename from the URL
+    const rawFileName = file.split('/').pop();
+    // 2. Remove the leading timestamps and dashes
+    const cleanFileName = rawFileName.replace(/^[\d-]+/, "");
 
-      <div className="space-y-2">
-        {assignment.assignmentFiles.slice(0, 3).map((file, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
-                <FiFileText size={14} />
-              </div>
-              <p className="text-xs font-semibold text-slate-200 truncate">
-                {file.split('/').pop()}
-              </p>
-            </div>
-            <button className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-all cursor-pointer">
-              <FiDownload size={16} />
-            </button>
+    return (
+      <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all group">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+            <FiFileText size={14} />
           </div>
-        ))}
-        
-        {assignment.assignmentFiles.length > 3 && (
-          <button className="w-full py-2 mt-2 text-center border border-dashed border-white/20 rounded-xl hover:border-white/40 transition-all">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              +{assignment.assignmentFiles.length - 3} more files
-            </span>
-          </button>
-        )}
+          <p className="text-xs font-semibold text-slate-200 truncate">
+            {cleanFileName}
+          </p>
+        </div>
       </div>
+    );
+  })}
+  
+  {assignment.assignmentFiles.length > 3 && (
+    <button className="w-full py-2 mt-2 text-center border border-dashed border-white/20 rounded-xl hover:border-white/40 transition-all">
+      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+        +{assignment.assignmentFiles.length - 3} more files
+      </span>
+    </button>
+  )}
+</div>
     </div>
   )}
 </div>
@@ -790,10 +793,7 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
         {/* Progress Bar (if applicable) */}
         {assignment.completionRate !== undefined && (
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-600">Progress</span>
-              <span className="text-xs font-bold text-indigo-600">{assignment.completionRate}%</span>
-            </div>
+    
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"

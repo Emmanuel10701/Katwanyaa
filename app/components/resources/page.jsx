@@ -494,9 +494,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                           <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
   {file.name.replace(/^[\d-]+/, "")}
 </h4>
-                                <p className="text-gray-600 text-xs sm:text-sm">
-                                  {file.size ? formatFileSize(file.size) : 'N/A'}
-                                </p>
+                            
                               </div>
                             </div>
                           
@@ -767,19 +765,7 @@ function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSe
           </div>
         </div>
 
-        {/* Downloads */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-gray-600">Downloads</span>
-            <span className="text-xs font-bold text-indigo-600">{resource.downloads || 0}</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(((resource.downloads || 0) / 100) * 100, 100)}%` }}
-            ></div>
-          </div>
-        </div>
+
 
         {/* Modern Action Bar */}
         <div className="flex items-center gap-3">
@@ -1216,7 +1202,7 @@ if (filesToKeep.length > 0) {
           htmlFor="resourceFiles" 
           className="cursor-pointer w-full py-10 border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-400 transition-all flex flex-col items-center justify-center text-center px-6"
         >
-          <div className="p-4 bg-white shadow-sm rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+          <div className="p-4 bg-white shadow-sm rounded-2xl mb-4 group-hover:scale-100 transition-transform">
             <FiUpload className="text-blue-600 text-3xl" />
           </div>
           <p className="text-lg font-bold text-slate-800 mb-1">
