@@ -3228,7 +3228,6 @@ async createSchoolInfo(formData) {
   }
 }
 
-// Modern School Info Modal with 3 steps
 function ModernSchoolModal({ onClose, onSave, school, loading }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
@@ -3315,6 +3314,69 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
       : []
   );
 
+  // Add this function inside the ModernSchoolModal component
+  const calculateTotalFileSize = () => {
+    let totalSize = 0;
+    const allFiles = [];
+    
+    // Add video file
+    if (files.videoFile && files.videoFile.size) {
+      totalSize += files.videoFile.size;
+      allFiles.push({
+        name: files.videoFile.name,
+        size: files.videoFile.size,
+        type: 'video'
+      });
+    }
+    
+    // Add all PDF files
+    const pdfFields = [
+      'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+      'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+      'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+    ];
+    
+    pdfFields.forEach(field => {
+      if (files[field] && files[field].size) {
+        totalSize += files[field].size;
+        allFiles.push({
+          name: files[field].name,
+          size: files[field].size,
+          type: 'pdf'
+        });
+      }
+    });
+    
+    // Add thumbnail
+    if (selectedThumbnail && selectedThumbnail instanceof File) {
+      totalSize += selectedThumbnail.size;
+      allFiles.push({
+        name: selectedThumbnail.name,
+        size: selectedThumbnail.size,
+        type: 'thumbnail'
+      });
+    }
+    
+    // Add additional files
+    const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
+    newAdditionalFiles.forEach(fileObj => {
+      if (fileObj.file && fileObj.file.size) {
+        totalSize += fileObj.file.size;
+        allFiles.push({
+          name: fileObj.filename,
+          size: fileObj.file.size,
+          type: 'additional'
+        });
+      }
+    });
+    
+    return {
+      totalSize,
+      allFiles,
+      totalMB: (totalSize / (1024 * 1024)).toFixed(2)
+    };
+  };
+
   const steps = [
     { 
       id: 'basic', 
@@ -3366,75 +3428,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     setFormData(prev => ({ ...prev, youtubeLink: '' }));
     toast.success('Existing video marked for replacement. Select a new video.');
   };
-
-
-
-
-
-
-
-  // Add this function inside the ModernSchoolModal component
-const calculateTotalFileSize = () => {
-  let totalSize = 0;
-  const allFiles = [];
-  
-  // Add video file
-  if (files.videoFile && files.videoFile.size) {
-    totalSize += files.videoFile.size;
-    allFiles.push({
-      name: files.videoFile.name,
-      size: files.videoFile.size,
-      type: 'video'
-    });
-  }
-  
-  // Add all PDF files
-  const pdfFields = [
-    'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-    'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-    'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-  ];
-  
-  pdfFields.forEach(field => {
-    if (files[field] && files[field].size) {
-      totalSize += files[field].size;
-      allFiles.push({
-        name: files[field].name,
-        size: files[field].size,
-        type: 'pdf'
-      });
-    }
-  });
-  
-  // Add thumbnail
-  if (selectedThumbnail && selectedThumbnail instanceof File) {
-    totalSize += selectedThumbnail.size;
-    allFiles.push({
-      name: selectedThumbnail.name,
-      size: selectedThumbnail.size,
-      type: 'thumbnail'
-    });
-  }
-  
-  // Add additional files
-  const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
-  newAdditionalFiles.forEach(fileObj => {
-    if (fileObj.file && fileObj.file.size) {
-      totalSize += fileObj.file.size;
-      allFiles.push({
-        name: fileObj.filename,
-        size: fileObj.file.size,
-        type: 'additional'
-      });
-    }
-  });
-  
-  return {
-    totalSize,
-    allFiles,
-    totalMB: (totalSize / (1024 * 1024)).toFixed(2)
-  };
-};
 
   const handleRemoveExistingVideo = () => {
     console.log('Removing existing video');
@@ -3556,99 +3549,179 @@ const calculateTotalFileSize = () => {
     }
   };
 
-const handleFormSubmit = async (e) => {
-  e.preventDefault()
-  
-  if (currentStep < steps.length - 1) {
-    return
-  }
+  const handleFormSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (currentStep < steps.length - 1) {
+      return
+    }
 
-  try {
-    // Calculate total file size BEFORE creating FormData
-    let totalSize = 0;
-    const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total limit
-    
-    // Check video file
-    if (files.videoFile) {
-      totalSize += files.videoFile.size;
-    }
-    
-    // Check all PDF files
-    const pdfFields = [
-      'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf', 
-      'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf', 
-      'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-    ];
-    
-    pdfFields.forEach(field => {
-      if (files[field]) {
-        totalSize += files[field].size;
+    try {
+      // Calculate total file size BEFORE creating FormData
+      const fileSizeInfo = calculateTotalFileSize();
+      const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total limit
+      
+      // Check total file size
+      if (fileSizeInfo.totalSize > MAX_TOTAL_SIZE) {
+        toast.error(`Total file size (${fileSizeInfo.totalMB} MB) exceeds 100MB limit. Please reduce file sizes before uploading.`);
+        return;
       }
-    });
-    
-    // Check additional files
-    const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
-    newAdditionalFiles.forEach(fileObj => {
-      if (fileObj.file) {
-        totalSize += fileObj.file.size;
+      
+      // Also check individual video file size (server will reject >100MB)
+      if (files.videoFile && files.videoFile.size > 100 * 1024 * 1024) {
+        const videoMB = (files.videoFile.size / (1024 * 1024)).toFixed(2);
+        toast.error(`Video file (${videoMB} MB) exceeds 100MB limit. Please compress the video or use YouTube link instead.`);
+        return;
       }
-    });
-    
-    // Check thumbnail
-    if (selectedThumbnail instanceof File) {
-      totalSize += selectedThumbnail.size;
-    }
-    
-    // Show error if total exceeds limit
-    if (totalSize > MAX_TOTAL_SIZE) {
-      const totalMB = (totalSize / (1024 * 1024)).toFixed(2);
-      toast.error(`Total file size (${totalMB} MB) exceeds 100MB limit. Please reduce file sizes before uploading.`);
-      return;
-    }
-    
-    // Also check individual video file size (server will reject >100MB)
-    if (files.videoFile && files.videoFile.size > 100 * 1024 * 1024) {
-      const videoMB = (files.videoFile.size / (1024 * 1024)).toFixed(2);
-      toast.error(`Video file (${videoMB} MB) exceeds 100MB limit. Please compress the video or use YouTube link instead.`);
-      return;
-    }
-    
-    // Log file sizes for debugging
-    console.log('📊 File size summary before upload:');
-    if (files.videoFile) {
-      console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
-    }
-    pdfFields.forEach(field => {
-      if (files[field]) {
-        console.log(`  ${field}: ${(files[field].size / (1024 * 1024)).toFixed(2)} MB`);
+      
+      // Log file sizes for debugging
+      console.log('📊 File size summary before upload:');
+      if (files.videoFile) {
+        console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
       }
-    });
-    console.log(`  Total: ${(totalSize / (1024 * 1024)).toFixed(2)} MB / 100 MB`);
-    
-    // ... rest of existing code ...
-    
-    // Add a warning toast for large uploads
-    if (totalSize > 80 * 1024 * 1024) {
-      toast.warning('Total file size is large (>80MB). Upload may take several minutes...', {
-        duration: 5000,
+      
+  
+      
+      pdfFields.forEach(field => {
+        if (files[field]) {
+          console.log(`  ${field}: ${(files[field].size / (1024 * 1024)).toFixed(2)} MB`);
+        }
       });
+      
+      console.log(`  Total: ${fileSizeInfo.totalMB} MB / 100 MB`);
+      
+      // Add a warning toast for large uploads
+      if (fileSizeInfo.totalSize > 80 * 1024 * 1024) {
+        toast.warning('Total file size is large (>80MB). Upload may take several minutes...', {
+          duration: 5000,
+        });
+      }
+      
+      // Show loading state
+      toast.loading(`Uploading ${fileSizeInfo.totalMB} MB of files, please wait...`);
+      
+      // Create FormData for API submission
+      const formDataObj = new FormData();
+      
+      // Add basic fields
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+          if (Array.isArray(formData[key])) {
+            formDataObj.append(key, JSON.stringify(formData[key]));
+          } else {
+            formDataObj.append(key, formData[key]);
+          }
+        }
+      });
+      
+      // Add fee breakdowns
+      if (dayFees.length > 0) {
+        const dayFeesDistribution = {};
+        dayFees.forEach(fee => {
+          if (fee.name && fee.amount) {
+            dayFeesDistribution[fee.name] = fee.amount;
+          }
+        });
+        formDataObj.append('feesDayDistributionJson', JSON.stringify(dayFeesDistribution));
+      }
+      
+      if (boardingFees.length > 0) {
+        const boardingFeesDistribution = {};
+        boardingFees.forEach(fee => {
+          if (fee.name && fee.amount) {
+            boardingFeesDistribution[fee.name] = fee.amount;
+          }
+        });
+        formDataObj.append('feesBoardingDistributionJson', JSON.stringify(boardingFeesDistribution));
+      }
+      
+      if (admissionFees.length > 0) {
+        const admissionFeesDistribution = {};
+        admissionFees.forEach(fee => {
+          if (fee.name && fee.amount) {
+            admissionFeesDistribution[fee.name] = fee.amount;
+          }
+        });
+        formDataObj.append('admissionFeeDistribution', JSON.stringify(admissionFeesDistribution));
+      }
+      
+      // Add video
+      if (files.videoFile) {
+        formDataObj.append('videoTour', files.videoFile);
+      }
+      
+      // Add YouTube link if provided
+      if (formData.youtubeLink && formData.youtubeLink.trim() !== '') {
+        formDataObj.append('youtubeLink', formData.youtubeLink.trim());
+      }
+      
+      // Add thumbnail
+      if (selectedThumbnail) {
+        formDataObj.append('videoThumbnail', selectedThumbnail);
+      }
+      
+  
+      
+      pdfFields.forEach(field => {
+        if (files[field]) {
+          formDataObj.append(field, files[field]);
+        }
+      });
+      
+      // Add exam years
+      Object.entries(examYears).forEach(([key, value]) => {
+        if (value && value.trim() !== '') {
+          formDataObj.append(key, value);
+        }
+      });
+      
+      // Add additional files
+      additionalFiles.forEach((file, index) => {
+        if (file.isNew && file.file) {
+          formDataObj.append(`additionalResultsFile_${index}`, file.file);
+          formDataObj.append(`additionalResultsYear_${index}`, file.year || '');
+          formDataObj.append(`additionalResultsDesc_${index}`, file.description || '');
+        }
+      });
+      
+      // Add removed files info
+      if (removedAdditionalFiles.length > 0) {
+        formDataObj.append('removedAdditionalFiles', JSON.stringify(
+          removedAdditionalFiles.map(f => ({
+            filepath: f.filepath || f.filename,
+            filename: f.filename || f.name
+          }))
+        ));
+      }
+      
+      if (removedVideo) {
+        formDataObj.append('removeVideo', 'true');
+      }
+      
+      Object.entries(removedPdfs).forEach(([field, isRemoved]) => {
+        if (isRemoved) {
+          formDataObj.append(`remove${field.charAt(0).toUpperCase() + field.slice(1)}`, 'true');
+        }
+      });
+      
+      // Call the parent onSave function
+      await onSave(formDataObj);
+      
+      // Clear loading toast
+      toast.dismiss();
+      toast.success('School information saved successfully!');
+      
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast.dismiss();
+      
+      if (error.message === 'File size too large' || error.message.includes('413')) {
+        toast.error('Total upload size exceeds server limit (100MB). Please reduce file sizes or split into smaller uploads.');
+      } else {
+        toast.error('Failed to submit form. Please check file sizes and try again.');
+      }
     }
-    
-    // Show loading state
-    toast.loading(`Uploading ${(totalSize / (1024 * 1024)).toFixed(2)} MB of files, please wait...`);
-    
-    // ... rest of existing code ...
-  } catch (error) {
-    console.error('Form submission error:', error);
-    if (error.message === 'File size too large') {
-      toast.error('File too large. Please reduce file sizes and try again.');
-    } else if (error.message.includes('413')) {
-      toast.error('Total upload size exceeds server limit (100MB). Please reduce file sizes or split into smaller uploads.');
-    } else {
-      toast.error('Failed to submit form. Please check file sizes and try again.');
-    }
-  }
-}
+  };
 
   const handleNextStep = (e) => {
     e.preventDefault()
@@ -3786,128 +3859,111 @@ const handleFormSubmit = async (e) => {
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         School Name <span className="text-red-500">*</span>
                       </label>
-                   <TextField
-  fullWidth
-  value={formData.name}
-  onChange={(e) => handleChange('name', e.target.value)}
-  placeholder="Enter school name..."
-  required
-  sx={{
-    '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-/>
-
+                      <TextField
+                        fullWidth
+                        value={formData.name}
+                        onChange={(e) => handleChange('name', e.target.value)}
+                        placeholder="Enter school name..."
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            width: '100%',
+                            fontSize: '1rem',
+                            paddingLeft: '0px',
+                            borderRadius: '12px',
+                            backgroundColor: '#fff',
+                            '& fieldset': {
+                              borderWidth: '2px',
+                              borderColor: '#d1d5db',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#d1d5db',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                            },
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            padding: '14px 16px',
+                          },
+                        }}
+                      />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         Student Count <span className="text-red-500">*</span>
                       </label>
-                    <TextField
-  fullWidth
-  type="number"
-  inputProps={{ min: 1 }}
-  value={formData.studentCount}
-  onChange={(e) => handleChange('studentCount', e.target.value)}
-  placeholder="Enter number of students..."
-  required
-  sx={{
-    '& .MuiOutlinedInput-root': {
-      fontSize: '1rem',
-      borderRadius: '12px',
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',
-        borderColor: '#d1d5db',
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',
-      },
-
-      '&.Mui-focused': {
-        boxShadow: '0 0 0 1px #6366f1',
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',
-    },
-  }}
-/>
-
+                      <TextField
+                        fullWidth
+                        type="number"
+                        inputProps={{ min: 1 }}
+                        value={formData.studentCount}
+                        onChange={(e) => handleChange('studentCount', e.target.value)}
+                        placeholder="Enter number of students..."
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontSize: '1rem',
+                            borderRadius: '12px',
+                            backgroundColor: '#fff',
+                            '& fieldset': {
+                              borderWidth: '2px',
+                              borderColor: '#d1d5db',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#d1d5db',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                            },
+                            '&.Mui-focused': {
+                              boxShadow: '0 0 0 1px #6366f1',
+                            },
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            padding: '14px 16px',
+                          },
+                        }}
+                      />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         Staff Count <span className="text-red-500">*</span>
                       </label>
-                   <TextField
-  fullWidth
-  type="number"
-  inputProps={{ min: 1 }}
-  value={formData.staffCount}
-  onChange={(e) => handleChange('staffCount', e.target.value)}
-  placeholder="Enter number of staff..."
-  required
-  sx={{
-    '& .MuiOutlinedInput-root': {
-      fontSize: '1rem',
-      borderRadius: '12px',
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',
-        borderColor: '#d1d5db',
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',
-      },
-
-      '&.Mui-focused': {
-        boxShadow: '0 0 0 1px #6366f1',
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',
-    },
-  }}
-/>
-
+                      <TextField
+                        fullWidth
+                        type="number"
+                        inputProps={{ min: 1 }}
+                        value={formData.staffCount}
+                        onChange={(e) => handleChange('staffCount', e.target.value)}
+                        placeholder="Enter number of staff..."
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontSize: '1rem',
+                            borderRadius: '12px',
+                            backgroundColor: '#fff',
+                            '& fieldset': {
+                              borderWidth: '2px',
+                              borderColor: '#d1d5db',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#d1d5db',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                            },
+                            '&.Mui-focused': {
+                              boxShadow: '0 0 0 1px #6366f1',
+                            },
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            padding: '14px 16px',
+                          },
+                        }}
+                      />
                     </div>
                   </div>
                   
@@ -3916,105 +3972,97 @@ const handleFormSubmit = async (e) => {
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         School Motto
                       </label>
-                  <TextField
-  fullWidth
-  value={formData.motto}
-  onChange={(e) => handleChange('motto', e.target.value)}
-  placeholder="Enter school motto..."
-  sx={{
-    '& .MuiOutlinedInput-root': {
-      fontSize: '1rem',
-      borderRadius: '12px',
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',
-        borderColor: '#d1d5db',
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',
-      },
-
-      '&.Mui-focused': {
-        boxShadow: '0 0 0 1px #6366f1',
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',
-    },
-  }}
-/>
-
+                      <TextField
+                        fullWidth
+                        value={formData.motto}
+                        onChange={(e) => handleChange('motto', e.target.value)}
+                        placeholder="Enter school motto..."
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            fontSize: '1rem',
+                            borderRadius: '12px',
+                            backgroundColor: '#fff',
+                            '& fieldset': {
+                              borderWidth: '2px',
+                              borderColor: '#d1d5db',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#d1d5db',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#6366f1',
+                            },
+                            '&.Mui-focused': {
+                              boxShadow: '0 0 0 1px #6366f1',
+                            },
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            padding: '14px 16px',
+                          },
+                        }}
+                      />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         Vision Statement
                       </label>
-             <TextareaAutosize
-  minRows={2}
-  value={formData.vision}
-  onChange={(e) => handleChange('vision', e.target.value)}
-  placeholder="Enter vision statement..."
-  style={{
-    width: '100%',
-    padding: '14px 16px',           // py-3.5 px-4
-    fontSize: '1rem',               // text-base
-    fontFamily: 'inherit',
-    borderRadius: '12px',           // rounded-xl
-    border: '2px solid #d1d5db',    // border-gray-300
-    backgroundColor: '#fff',
-    resize: 'none',
-    outline: 'none',
-  }}
-  onFocus={(e) => {
-    e.target.style.borderColor = '#6366f1';     // indigo-500
-    e.target.style.boxShadow = '0 0 0 1px #6366f1';
-  }}
-  onBlur={(e) => {
-    e.target.style.borderColor = '#d1d5db';
-    e.target.style.boxShadow = 'none';
-  }}
-/>
-
+                      <TextareaAutosize
+                        minRows={2}
+                        value={formData.vision}
+                        onChange={(e) => handleChange('vision', e.target.value)}
+                        placeholder="Enter vision statement..."
+                        style={{
+                          width: '100%',
+                          padding: '14px 16px',
+                          fontSize: '1rem',
+                          fontFamily: 'inherit',
+                          borderRadius: '12px',
+                          border: '2px solid #d1d5db',
+                          backgroundColor: '#fff',
+                          resize: 'none',
+                          outline: 'none',
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#6366f1';
+                          e.target.style.boxShadow = '0 0 0 1px #6366f1';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#d1d5db';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-1.5">
                         Mission Statement
                       </label>
-                <TextareaAutosize
-  minRows={2}
-  value={formData.mission}
-  onChange={(e) => handleChange('mission', e.target.value)}
-  placeholder="Enter mission statement..."
-  style={{
-    width: '100%',
-    padding: '14px 16px',
-    fontSize: '1rem',
-    fontFamily: 'inherit',
-    borderRadius: '12px',
-    border: '2px solid #d1d5db',
-    backgroundColor: '#fff',
-    resize: 'none',
-    outline: 'none',
-  }}
-  onFocus={(e) => {
-    e.target.style.borderColor = '#6366f1';
-    e.target.style.boxShadow = '0 0 0 1px #6366f1';
-  }}
-  onBlur={(e) => {
-    e.target.style.borderColor = '#d1d5db';
-    e.target.style.boxShadow = 'none';
-  }}
-/>
-
+                      <TextareaAutosize
+                        minRows={2}
+                        value={formData.mission}
+                        onChange={(e) => handleChange('mission', e.target.value)}
+                        placeholder="Enter mission statement..."
+                        style={{
+                          width: '100%',
+                          padding: '14px 16px',
+                          fontSize: '1rem',
+                          fontFamily: 'inherit',
+                          borderRadius: '12px',
+                          border: '2px solid #d1d5db',
+                          backgroundColor: '#fff',
+                          resize: 'none',
+                          outline: 'none',
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#6366f1';
+                          e.target.style.boxShadow = '0 0 0 1px #6366f1';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#d1d5db';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -4023,32 +4071,31 @@ const handleFormSubmit = async (e) => {
                   <label className="block text-sm font-bold text-gray-700 mb-1.5">
                     School Description
                   </label>
-             <TextareaAutosize
-  minRows={3}
-  value={formData.description}
-  onChange={(e) => handleChange('description', e.target.value)}
-  placeholder="Describe your school... Write about history, achievements, facilities, etc."
-  style={{
-    width: '100%',
-    padding: '14px 16px',
-    fontSize: '1rem',
-    fontFamily: 'inherit',
-    borderRadius: '12px',
-    border: '2px solid #d1d5db',
-    backgroundColor: '#fff',
-    resize: 'none',
-    outline: 'none',
-  }}
-  onFocus={(e) => {
-    e.target.style.borderColor = '#6366f1';
-    e.target.style.boxShadow = '0 0 0 1px #6366f1';
-  }}
-  onBlur={(e) => {
-    e.target.style.borderColor = '#d1d5db';
-    e.target.style.boxShadow = 'none';
-  }}
-/>
-
+                  <TextareaAutosize
+                    minRows={3}
+                    value={formData.description}
+                    onChange={(e) => handleChange('description', e.target.value)}
+                    placeholder="Describe your school... Write about history, achievements, facilities, etc."
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      fontSize: '1rem',
+                      fontFamily: 'inherit',
+                      borderRadius: '12px',
+                      border: '2px solid #d1d5db',
+                      backgroundColor: '#fff',
+                      resize: 'none',
+                      outline: 'none',
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6366f1';
+                      e.target.style.boxShadow = '0 0 0 1px #6366f1';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#d1d5db';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -4077,30 +4124,26 @@ const handleFormSubmit = async (e) => {
                             required
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
                         
@@ -4117,30 +4160,26 @@ const handleFormSubmit = async (e) => {
                             required
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
                       </div>
@@ -4201,6 +4240,40 @@ const handleFormSubmit = async (e) => {
 
             {currentStep === 2 && (
               <div className="space-y-6">
+                {/* File Upload Summary */}
+                {calculateTotalFileSize().allFiles.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FaInfoCircle className="text-blue-500" />
+                        <span className="text-sm font-bold text-gray-700">File Upload Summary</span>
+                      </div>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        calculateTotalFileSize().totalMB > 80 ? 'bg-red-100 text-red-700' :
+                        calculateTotalFileSize().totalMB > 50 ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-green-100 text-green-700'
+                      }`}>
+                        {calculateTotalFileSize().totalMB} MB total
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs">
+                      {calculateTotalFileSize().allFiles.map((file, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-gray-600 truncate max-w-[200px]">{file.name}</span>
+                          <span className="text-gray-500">{(file.size / 1024).toFixed(0)} KB</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {calculateTotalFileSize().totalMB > 80 && (
+                      <div className="mt-2 text-xs text-red-600 font-medium">
+                        ⚠️ Total file size is approaching the 100MB limit. Consider reducing file sizes.
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-6">
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 md:p-6 border border-green-200">
@@ -4224,30 +4297,26 @@ const handleFormSubmit = async (e) => {
                             placeholder="Enter total day school fees"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
 
@@ -4296,30 +4365,26 @@ const handleFormSubmit = async (e) => {
                                 placeholder="Year"
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                    width: '100%',
+                                    fontSize: '1rem',
+                                    paddingLeft: '0px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#fff',
+                                    '& fieldset': {
+                                      borderWidth: '2px',
+                                      borderColor: '#d1d5db',
+                                    },
+                                    '&:hover fieldset': {
+                                      borderColor: '#d1d5db',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: '#6366f1',
+                                    },
+                                  },
+                                  '& .MuiOutlinedInput-input': {
+                                    padding: '14px 16px',
+                                  },
+                                }}
                               />
                             </div>
                           </div>
@@ -4349,30 +4414,26 @@ const handleFormSubmit = async (e) => {
                                 placeholder="Year"
                                 sx={{
                                   '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                    width: '100%',
+                                    fontSize: '1rem',
+                                    paddingLeft: '0px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#fff',
+                                    '& fieldset': {
+                                      borderWidth: '2px',
+                                      borderColor: '#d1d5db',
+                                    },
+                                    '&:hover fieldset': {
+                                      borderColor: '#d1d5db',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                      borderColor: '#6366f1',
+                                    },
+                                  },
+                                  '& .MuiOutlinedInput-input': {
+                                    padding: '14px 16px',
+                                  },
+                                }}
                               />
                             </div>
                           </div>
@@ -4384,20 +4445,6 @@ const handleFormSubmit = async (e) => {
                             existingPdf={getExistingPdfData('form2ResultsPdf')}
                             onCancelExisting={() => handleCancelExistingPdf('form2ResultsPdf')}
                             onRemoveExisting={() => handleRemoveExistingPdf('form2ResultsPdf')}
-                          />
-                        </div>
-
-                        <div className="pt-4 border-t border-purple-200">
-                          <AdditionalResultsUpload
-                            files={additionalFiles.filter(f => f.isNew)}
-                            onFilesChange={(newFiles) => {
-                              const existingFiles = additionalFiles.filter(f => f.isExisting);
-                              setAdditionalFiles([...existingFiles, ...newFiles]);
-                            }}
-                            label="Additional Files (Form 1 & 2)"
-                            existingFiles={school?.additionalResultsFiles || []}
-                            onCancelExisting={handleCancelExistingAdditionalFile}
-                            onRemoveExisting={handleRemoveExistingAdditionalFile}
                           />
                         </div>
                       </div>
@@ -4426,30 +4473,26 @@ const handleFormSubmit = async (e) => {
                             placeholder="Enter total boarding fees"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
 
@@ -4496,30 +4539,26 @@ const handleFormSubmit = async (e) => {
                               onChange={(e) => handleChange('admissionOpenDate', e.target.value)}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                  width: '100%',
+                                  fontSize: '1rem',
+                                  paddingLeft: '0px',
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  padding: '14px 16px',
+                                },
+                              }}
                             />
                           </div>
                           
@@ -4535,30 +4574,26 @@ const handleFormSubmit = async (e) => {
                               onChange={(e) => handleChange('admissionCloseDate', e.target.value)}
                               sx={{
                                 '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                  width: '100%',
+                                  fontSize: '1rem',
+                                  paddingLeft: '0px',
+                                  borderRadius: '12px',
+                                  backgroundColor: '#fff',
+                                  '& fieldset': {
+                                    borderWidth: '2px',
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&:hover fieldset': {
+                                    borderColor: '#d1d5db',
+                                  },
+                                  '&.Mui-focused fieldset': {
+                                    borderColor: '#6366f1',
+                                  },
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                  padding: '14px 16px',
+                                },
+                              }}
                             />
                           </div>
                         </div>
@@ -4580,30 +4615,26 @@ const handleFormSubmit = async (e) => {
                             placeholder="Enter admission and uniform fee"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
 
@@ -4642,313 +4673,45 @@ const handleFormSubmit = async (e) => {
                             placeholder="Enter admission capacity"
                             sx={{
                               '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
+                                width: '100%',
+                                fontSize: '1rem',
+                                paddingLeft: '0px',
+                                borderRadius: '12px',
+                                backgroundColor: '#fff',
+                                '& fieldset': {
+                                  borderWidth: '2px',
+                                  borderColor: '#d1d5db',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: '#d1d5db',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: '#6366f1',
+                                },
+                              },
+                              '& .MuiOutlinedInput-input': {
+                                padding: '14px 16px',
+                              },
+                            }}
                           />
                         </div>
                       </div>
                     </div>
-
-
-<div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-    <FaPhone className="text-blue-600" />
-    Admission Contact Information
-  </h3>
-  
-  <div className="space-y-3">
-    <div>
-      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-        Admission Contact Email
-      </label>
-      <TextField 
-        fullWidth 
-        size="small"
-        type="email"
-        value={formData.admissionContactEmail} 
-        onChange={(e) => handleChange('admissionContactEmail', e.target.value)}
-        placeholder="admissions@school.edu"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-      />
-    </div>
-    
-    <div>
-      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-        Admission Contact Phone
-      </label>
-      <TextField 
-        fullWidth 
-        size="small"
-        type="tel"
-        value={formData.admissionContactPhone} 
-        onChange={(e) => handleChange('admissionContactPhone', e.target.value)}
-        placeholder="+254 123 456 789"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-      />
-    </div>
-    
-    <div>
-      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-        Admission Website
-      </label>
-      <TextField 
-        fullWidth 
-        size="small"
-        type="url"
-        value={formData.admissionWebsite} 
-        onChange={(e) => handleChange('admissionWebsite', e.target.value)}
-        placeholder="https://school.edu/admissions"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-      />
-    </div>
-    
-    <div>
-      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-        Admission Location
-      </label>
-      <TextField 
-        fullWidth 
-        size="small"
-        value={formData.admissionLocation} 
-        onChange={(e) => handleChange('admissionLocation', e.target.value)}
-        placeholder="School Campus, Room 101"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-      />
-    </div>
-    
-    <div>
-      <label className="block text-xs font-bold text-gray-600 mb-1.5">
-        Admission Office Hours
-      </label>
-      <TextField 
-        fullWidth 
-        size="small"
-        value={formData.admissionOfficeHours} 
-        onChange={(e) => handleChange('admissionOfficeHours', e.target.value)}
-        placeholder="Mon-Fri: 8:00 AM - 4:00 PM"
-        sx={{
-          '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-      />
-    </div>
-  </div>
-</div>
-
-                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 md:p-6 border border-indigo-200">
-                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaGraduationCap className="text-indigo-600" />
-                        Other Important Documents
-                      </h3>
-                      
-                      <div className="space-y-4">
-                        {[
-                          { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', examKey: 'form3' },
-                          { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', examKey: 'form4' },
-                          { key: 'mockExamsResultsPdf', label: 'Mock Exams', yearKey: 'mockExamsYear', examKey: 'mockExams' },
-                          { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', examKey: 'kcse' }
-                        ].map((exam) => (
-                          <div key={exam.key} className="space-y-2">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                              <label className="text-sm font-bold text-gray-700">{exam.label}</label>
-                              <div className="w-full sm:w-28">
-                                <TextField 
-                                  fullWidth 
-                                  size="small"
-                                  type="number"
-                                  min="2000"
-                                  max="2100"
-                                  value={examYears[exam.yearKey]} 
-                                  onChange={(e) => handleExamYearChange(exam.yearKey, e.target.value)}
-                                  placeholder="Year"
-                                  sx={{
-                                    '& .MuiOutlinedInput-root': {
-      width: '100%',
-      fontSize: '1rem',               // text-base
-      paddingLeft: '0px',             // handled by input
-      borderRadius: '12px',            // rounded-xl
-      backgroundColor: '#fff',
-
-      '& fieldset': {
-        borderWidth: '2px',            // border-2
-        borderColor: '#d1d5db',         // border-gray-300
-      },
-
-      '&:hover fieldset': {
-        borderColor: '#d1d5db',
-      },
-
-      '&.Mui-focused fieldset': {
-        borderColor: '#6366f1',         // indigo-500
-      },
-    },
-
-    '& .MuiOutlinedInput-input': {
-      padding: '14px 16px',             // py-3.5 px-4
-    },
-  }}
-                                />
-                              </div>
-                            </div>
-                            <ModernPdfUpload 
-                              pdfFile={files[exam.key]}
-                              onPdfChange={(file) => handleFileChange(exam.key, file)}
-                              onRemove={() => handleFileRemove(exam.key)}
-                              label={`${exam.label} PDF`}
-                              existingPdf={getExistingPdfData(exam.key)}
-                              onCancelExisting={() => handleCancelExistingPdf(exam.key)}
-                              onRemoveExisting={() => handleRemoveExistingPdf(exam.key)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 </div>
+
+                {/* Additional files section */}
+                <AdditionalFilesUpload 
+                  files={additionalFiles.filter(f => f.isNew)}
+                  onFilesChange={(newFiles) => {
+                    const existingFiles = additionalFiles.filter(f => f.isExisting);
+                    setAdditionalFiles([...existingFiles, ...newFiles]);
+                  }}
+                  label="Additional Files"
+                  existingFiles={school?.additionalResultsFiles || []}
+                  onCancelExisting={handleCancelExistingAdditionalFile}
+                  onRemoveExisting={handleRemoveExistingAdditionalFile}
+                />
               </div>
             )}
 
@@ -4958,38 +4721,6 @@ const handleFormSubmit = async (e) => {
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                   <span className="font-semibold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
-{currentStep === steps.length - 1 && (
-  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-    <div className="flex items-center justify-between mb-2">
-      <div className="flex items-center gap-2">
-        <FaInfoCircle className="text-blue-500" />
-        <span className="text-sm font-bold text-gray-700">File Upload Summary</span>
-      </div>
-      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-        calculateTotalFileSize().totalMB > 80 ? 'bg-red-100 text-red-700' :
-        calculateTotalFileSize().totalMB > 50 ? 'bg-yellow-100 text-yellow-700' :
-        'bg-green-100 text-green-700'
-      }`}>
-        {calculateTotalFileSize().totalMB} MB total
-      </span>
-    </div>
-    
-    <div className="space-y-1 text-xs">
-      {calculateTotalFileSize().allFiles.map((file, index) => (
-        <div key={index} className="flex justify-between">
-          <span className="text-gray-600 truncate max-w-[200px]">{file.name}</span>
-          <span className="text-gray-500">{(file.size / 1024).toFixed(0)} KB</span>
-        </div>
-      ))}
-    </div>
-    
-    {calculateTotalFileSize().totalMB > 80 && (
-      <div className="mt-2 text-xs text-red-600 font-medium">
-        ⚠️ Total file size is approaching the 100MB limit. Consider reducing file sizes.
-      </div>
-    )}
-  </div>
-)}
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
