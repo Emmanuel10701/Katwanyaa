@@ -492,16 +492,14 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                               </div>
                               <div className="min-w-0">
                                 <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
-                                  {file.name || file.url?.split('/').pop()}
+                                  {file.name}
                                 </h4>
                                 <p className="text-gray-600 text-xs sm:text-sm">
                                   {file.size ? formatFileSize(file.size) : 'N/A'}
                                 </p>
                               </div>
                             </div>
-                            <button className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-100 rounded-lg cursor-pointer">
-                              <FiDownload size={16} />
-                            </button>
+                          
                           </div>
                           <div className="flex items-center justify-between text-xs">
                             {file.extension && (
@@ -518,13 +516,6 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                         </div>
                       ))}
                     </div>
-                    {resource.files.length > 4 && (
-                      <div className="text-center pt-2">
-                        <span className="text-sm text-orange-600 font-medium">
-                          +{resource.files.length - 4} more files
-                        </span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -592,12 +583,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
           <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
             <FiDownload className="text-red-500" size={14} />
           </div>
-          <div className="flex flex-col">
-            <span className="text-slate-700 font-bold text-xs sm:text-sm">
-              {resource.downloads || 0}
-            </span>
-            <span className="text-[9px] text-slate-400 font-medium -mt-1">downloads</span>
-          </div>
+        
         </div>
       </div>
     </div>
