@@ -3228,6 +3228,7 @@ async createSchoolInfo(formData) {
   }
 }
 
+// Modern School Info Modal with 3 steps
 function ModernSchoolModal({ onClose, onSave, school, loading }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
@@ -3314,7 +3315,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
       : []
   );
 
-  // Add this function inside the ModernSchoolModal component
+  // File size calculation function
   const calculateTotalFileSize = () => {
     let totalSize = 0;
     const allFiles = [];
@@ -3405,7 +3406,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   }, [school])
 
   const handleCancelExistingPdf = (pdfField) => {
-    console.log(`Cancelling PDF: ${pdfField}`);
     setCancelledPdfs(prev => ({ ...prev, [pdfField]: true }));
     setReplacedPdfs(prev => ({ ...prev, [pdfField]: true }));
     setFiles(prev => ({ ...prev, [pdfField]: null }));
@@ -3413,7 +3413,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   };
 
   const handleRemoveExistingPdf = (pdfField) => {
-    console.log(`Removing PDF: ${pdfField}`);
     setRemovedPdfs(prev => ({ ...prev, [pdfField]: true }));
     setReplacedPdfs(prev => ({ ...prev, [pdfField]: true }));
     setFiles(prev => ({ ...prev, [pdfField]: null }));
@@ -3421,7 +3420,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   };
 
   const handleCancelExistingVideo = () => {
-    console.log('Cancelling existing video');
     setCancelledVideo(true);
     setFiles(prev => ({ ...prev, videoFile: null }));
     setSelectedThumbnail(null);
@@ -3430,7 +3428,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   };
 
   const handleRemoveExistingVideo = () => {
-    console.log('Removing existing video');
     setRemovedVideo(true);
     setFiles(prev => ({ ...prev, videoFile: null }));
     setSelectedThumbnail(null);
@@ -3439,7 +3436,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   };
 
   const handleCancelExistingAdditionalFile = (file) => {
-    console.log('Cancelling existing additional file:', file);
     setCancelledExistingFiles(prev => [...prev, file]);
     setAdditionalFiles(prev => prev.filter(f => 
       f.filepath !== file.filepath && f.filename !== file.filename
@@ -3448,7 +3444,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   };
 
   const handleRemoveExistingAdditionalFile = (file) => {
-    console.log('Removing existing additional file:', file);
     setRemovedAdditionalFiles(prev => [...prev, file]);
     setAdditionalFiles(prev => prev.filter(f => 
       f.filepath !== file.filepath && f.filename !== file.filename
@@ -3580,7 +3575,11 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
       }
       
-  
+      const pdfFields = [
+        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+      ];
       
       pdfFields.forEach(field => {
         if (files[field]) {
@@ -3660,7 +3659,12 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         formDataObj.append('videoThumbnail', selectedThumbnail);
       }
       
-  
+      // Add PDF files
+      const pdfFields = [
+        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+      ];
       
       pdfFields.forEach(field => {
         if (files[field]) {
@@ -3750,7 +3754,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   }
 
   const handleFileChange = (field, file) => {
-    console.log(`File changed for ${field}:`, file?.name);
     setFiles(prev => ({ ...prev, [field]: file }));
     
     if (file) {
@@ -3763,12 +3766,10 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   }
 
   const handleFileRemove = (field) => {
-    console.log(`Removing file from ${field}`);
     setFiles(prev => ({ ...prev, [field]: null }));
   }
 
   const handleVideoRemove = () => {
-    console.log('Removing video file');
     setFiles(prev => ({ ...prev, videoFile: null }));
     setFormData(prev => ({ 
       ...prev, 
@@ -4519,199 +4520,72 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 md:p-6 border border-orange-200">
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 md:p-6 border border-indigo-200">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaUserCheck className="text-orange-600" />
-                        Admission Information
+                        <FaGraduationCap className="text-indigo-600" />
+                        Other Important Documents
                       </h3>
                       
                       <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">
-                              Admission Opens
-                            </label>
-                            <TextField 
-                              fullWidth 
-                              size="small"
-                              type="date"
-                              value={formData.admissionOpenDate} 
-                              onChange={(e) => handleChange('admissionOpenDate', e.target.value)}
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  width: '100%',
-                                  fontSize: '1rem',
-                                  paddingLeft: '0px',
-                                  borderRadius: '12px',
-                                  backgroundColor: '#fff',
-                                  '& fieldset': {
-                                    borderWidth: '2px',
-                                    borderColor: '#d1d5db',
-                                  },
-                                  '&:hover fieldset': {
-                                    borderColor: '#d1d5db',
-                                  },
-                                  '&.Mui-focused fieldset': {
-                                    borderColor: '#6366f1',
-                                  },
-                                },
-                                '& .MuiOutlinedInput-input': {
-                                  padding: '14px 16px',
-                                },
-                              }}
+                        {[
+                          { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', examKey: 'form3' },
+                          { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', examKey: 'form4' },
+                          { key: 'mockExamsResultsPdf', label: 'Mock Exams', yearKey: 'mockExamsYear', examKey: 'mockExams' },
+                          { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', examKey: 'kcse' }
+                        ].map((exam) => (
+                          <div key={exam.key} className="space-y-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                              <label className="text-sm font-bold text-gray-700">{exam.label}</label>
+                              <div className="w-full sm:w-28">
+                                <TextField 
+                                  fullWidth 
+                                  size="small"
+                                  type="number"
+                                  min="2000"
+                                  max="2100"
+                                  value={examYears[exam.yearKey]} 
+                                  onChange={(e) => handleExamYearChange(exam.yearKey, e.target.value)}
+                                  placeholder="Year"
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      width: '100%',
+                                      fontSize: '1rem',
+                                      paddingLeft: '0px',
+                                      borderRadius: '12px',
+                                      backgroundColor: '#fff',
+                                      '& fieldset': {
+                                        borderWidth: '2px',
+                                        borderColor: '#d1d5db',
+                                      },
+                                      '&:hover fieldset': {
+                                        borderColor: '#d1d5db',
+                                      },
+                                      '&.Mui-focused fieldset': {
+                                        borderColor: '#6366f1',
+                                      },
+                                    },
+                                    '& .MuiOutlinedInput-input': {
+                                      padding: '14px 16px',
+                                    },
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <ModernPdfUpload 
+                              pdfFile={files[exam.key]}
+                              onPdfChange={(file) => handleFileChange(exam.key, file)}
+                              onRemove={() => handleFileRemove(exam.key)}
+                              label={`${exam.label} PDF`}
+                              existingPdf={getExistingPdfData(exam.key)}
+                              onCancelExisting={() => handleCancelExistingPdf(exam.key)}
+                              onRemoveExisting={() => handleRemoveExistingPdf(exam.key)}
                             />
                           </div>
-                          
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">
-                              Admission Closes
-                            </label>
-                            <TextField 
-                              fullWidth 
-                              size="small"
-                              type="date"
-                              value={formData.admissionCloseDate} 
-                              onChange={(e) => handleChange('admissionCloseDate', e.target.value)}
-                              sx={{
-                                '& .MuiOutlinedInput-root': {
-                                  width: '100%',
-                                  fontSize: '1rem',
-                                  paddingLeft: '0px',
-                                  borderRadius: '12px',
-                                  backgroundColor: '#fff',
-                                  '& fieldset': {
-                                    borderWidth: '2px',
-                                    borderColor: '#d1d5db',
-                                  },
-                                  '&:hover fieldset': {
-                                    borderColor: '#d1d5db',
-                                  },
-                                  '&.Mui-focused fieldset': {
-                                    borderColor: '#6366f1',
-                                  },
-                                },
-                                '& .MuiOutlinedInput-input': {
-                                  padding: '14px 16px',
-                                },
-                              }}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Admission Uniform Breakdown (KES)
-                          </label>
-                          <TextField 
-                            fullWidth 
-                            size="small"
-                            type="number"
-                            inputProps={{ min: 0, step: 1 }} 
-                            value={formData.admissionFee} 
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
-                              handleChange('admissionFee', val);
-                            }}
-                            placeholder="Enter admission and uniform fee"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                width: '100%',
-                                fontSize: '1rem',
-                                paddingLeft: '0px',
-                                borderRadius: '12px',
-                                backgroundColor: '#fff',
-                                '& fieldset': {
-                                  borderWidth: '2px',
-                                  borderColor: '#d1d5db',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: '#d1d5db',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#6366f1',
-                                },
-                              },
-                              '& .MuiOutlinedInput-input': {
-                                padding: '14px 16px',
-                              },
-                            }}
-                          />
-                        </div>
-
-                        <CustomFeeBreakdown
-                          title="Admission Fee"
-                          color="from-orange-50 to-orange-100"
-                          fees={admissionFees}
-                          onFeesChange={setAdmissionFees}
-                          totalField={formData.admissionFee}
-                          onTotalChange={(value) => handleChange('admissionFee', value)}
-                        />
-
-                        <div className="mt-4">
-                          <ModernPdfUpload 
-                            pdfFile={files.admissionFeePdf}
-                            onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
-                            onRemove={() => handleFileRemove('admissionFeePdf')}
-                            label="Admission Requirements Breakdown PDF"
-                            existingPdf={getExistingPdfData('admissionFeePdf')}
-                            onCancelExisting={() => handleCancelExistingPdf('admissionFeePdf')}
-                            onRemoveExisting={() => handleRemoveExistingPdf('admissionFeePdf')}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
-                            Admission Capacity
-                          </label>
-                          <TextField 
-                            fullWidth 
-                            size="small"
-                            type="number"
-                            min="1"
-                            value={formData.admissionCapacity} 
-                            onChange={(e) => handleChange('admissionCapacity', e.target.value)}
-                            placeholder="Enter admission capacity"
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                width: '100%',
-                                fontSize: '1rem',
-                                paddingLeft: '0px',
-                                borderRadius: '12px',
-                                backgroundColor: '#fff',
-                                '& fieldset': {
-                                  borderWidth: '2px',
-                                  borderColor: '#d1d5db',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: '#d1d5db',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: '#6366f1',
-                                },
-                              },
-                              '& .MuiOutlinedInput-input': {
-                                padding: '14px 16px',
-                              },
-                            }}
-                          />
-                        </div>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Additional files section */}
-                <AdditionalFilesUpload 
-                  files={additionalFiles.filter(f => f.isNew)}
-                  onFilesChange={(newFiles) => {
-                    const existingFiles = additionalFiles.filter(f => f.isExisting);
-                    setAdditionalFiles([...existingFiles, ...newFiles]);
-                  }}
-                  label="Additional Files"
-                  existingFiles={school?.additionalResultsFiles || []}
-                  onCancelExisting={handleCancelExistingAdditionalFile}
-                  onRemoveExisting={handleRemoveExistingAdditionalFile}
-                />
               </div>
             )}
 
@@ -4771,7 +4645,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   )
 }
 
-// Main School Information Management Component
+
 export default function ModernSchoolInformation() {
   const [schoolInfo, setSchoolInfo] = useState(null)
   const [loading, setLoading] = useState(true)
