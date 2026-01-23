@@ -1092,42 +1092,7 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
  <div className="shrink-0 p-4 sm:p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
   <div className="max-w-2xl mx-auto flex flex-row gap-2 sm:gap-3 px-1">
     
-    {/* Download All Button */}
-    <button
-      onClick={downloadAllFiles}
-      disabled={downloading || !gallery.files || gallery.files.length === 0}
-      className={`
-        flex-1 min-w-0
-        h-11 sm:h-14
-        rounded-xl sm:rounded-2xl
-        font-semibold sm:font-bold
-        text-[10px] sm:text-sm
-        flex items-center justify-center gap-1.5 sm:gap-2
-        transition-all
-        ${
-          downloading
-            ? "bg-slate-800 text-white"
-            : "bg-slate-900 text-white active:scale-95"
-        }
-        ${(!gallery.files || gallery.files.length === 0)
-          ? "opacity-50 cursor-not-allowed"
-          : ""}
-      `}
-    >
-      {downloading ? (
-        <>
-          <CircularProgress size={16} className="text-white shrink-0" />
-          <span className="truncate">Downloading...</span>
-        </>
-      ) : (
-        <>
-          <FiDownload className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-          <span className="truncate">
-            Download All ({gallery.files?.length || 0})
-          </span>
-        </>
-      )}
-    </button>
+
 
     {/* Download Selected Button */}
     <button
