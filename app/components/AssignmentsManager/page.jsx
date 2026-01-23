@@ -368,352 +368,275 @@ function ModernAssignmentDetailModal({ assignment, onClose, onEdit }) {
     Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24)) : 
     null;
 
-return (
-  <Modal open={true} onClose={onClose}>
-    <Box sx={{
-      position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-      width: '95%',
-      maxWidth: '900px',
-      maxHeight: '95vh', bgcolor: 'background.paper',
-      borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f8ff 100%)'
-    }}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 md:p-8 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-            <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
-              <IoDocumentTextOutline className="text-xl sm:text-2xl" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-2xl sm:text-3xl font-bold truncate">Assignment Details</h2>
-              <p className="text-white/90 opacity-90 mt-1 text-sm sm:text-lg">
-                Complete overview of assignment
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => onEdit(assignment)} 
-              className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-bold shadow-lg cursor-pointer whitespace-nowrap"
-            >
-              <FiEdit size={16} /> Edit
-            </button>
-            <button 
-              onClick={onClose} 
-              className="p-2 sm:p-3 bg-white/10 text-white rounded-full cursor-pointer"
-            >
-              <FiX className="text-xl sm:text-2xl" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-h-[calc(95vh-140px)] overflow-y-auto">
-        <div className="p-4 sm:p-6 md:p-8 space-y-6">
-          {/* Assignment Title and Status */}
-          <div className="space-y-4">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words">
-              {assignment.title}
-            </h1>
-            <div className="flex flex-wrap gap-2">
-              <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${statusColor.bg} ${statusColor.text} border ${statusColor.border}`}>
-                {assignment.status?.charAt(0).toUpperCase() + assignment.status?.slice(1) || 'Pending'}
-              </span>
-              {assignment.priority && (
-                <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${priorityColor.bg} ${priorityColor.text}`}>
-                  {assignment.priority} Priority
-                </span>
-              )}
-              {assignment.subject && (
-                <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                  {assignment.subject}
-                </span>
-              )}
-              {assignment.className && (
-                <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-cyan-100 to-blue-100 text-blue-800 border border-blue-200">
-                  Class: {assignment.className}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Information Panel */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Description */}
-              <div className="bg-gradient-to-br from-gray-50 to-indigo-50 rounded-2xl p-4 sm:p-6 border border-gray-200">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                  <IoDocumentTextOutline className="text-indigo-600" />
-                  Description
-                </h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                  {assignment.description || 'No description available.'}
+  return (
+    <Modal open={true} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95%',
+        maxWidth: '900px',
+        maxHeight: '95vh', bgcolor: 'background.paper',
+        borderRadius: 3, boxShadow: 24, overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f8ff 100%)'
+      }}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 md:p-8 text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
+                <IoDocumentTextOutline className="text-xl sm:text-2xl" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-bold truncate">Assignment Details</h2>
+                <p className="text-white/90 opacity-90 mt-1 text-sm sm:text-lg">
+                  Complete overview of assignment
                 </p>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => onEdit(assignment)} 
+                className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-bold shadow-lg cursor-pointer whitespace-nowrap"
+              >
+                <FiEdit size={16} /> Edit
+              </button>
+              <button 
+                onClick={onClose} 
+                className="p-2 sm:p-3 bg-white/10 text-white rounded-full cursor-pointer"
+              >
+                <FiX className="text-xl sm:text-2xl" />
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* Instructions */}
-              {assignment.instructions && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 sm:p-6 border border-green-200">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                    <FiBookOpen className="text-green-600" />
-                    Instructions
-                  </h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                    {assignment.instructions}
-                  </p>
-                </div>
-              )}
-
-              {/* Learning Objectives */}
-              {assignment.learningObjectives && assignment.learningObjectives.length > 0 && (
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-4 sm:p-6 border border-purple-200">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                    <FiTarget className="text-purple-600" />
-                    Learning Objectives
-                  </h3>
-                  <ul className="space-y-2">
-                    {assignment.learningObjectives.map((objective, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" size={16} />
-                        <span className="text-gray-700 text-sm sm:text-base">{objective}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+        <div className="max-h-[calc(95vh-140px)] overflow-y-auto">
+          <div className="p-4 sm:p-6 md:p-8 space-y-8">
+            {/* Assignment Title and Status */}
+            <div className="space-y-4">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words">
+                {assignment.title}
+              </h1>
+              <div className="flex flex-wrap gap-2">
+                <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${statusColor.bg} ${statusColor.text} border ${statusColor.border}`}>
+                  {assignment.status?.charAt(0).toUpperCase() + assignment.status?.slice(1) || 'Pending'}
+                </span>
+                {assignment.priority && (
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${priorityColor.bg} ${priorityColor.text}`}>
+                    {assignment.priority} Priority
+                  </span>
+                )}
+                {assignment.subject && (
+                  <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                    {assignment.subject}
+                  </span>
+                )}
+                {assignment.className && (
+                  <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-cyan-100 to-blue-100 text-blue-800 border border-blue-200">
+                    Class: {assignment.className}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Right Column - Information Panel */}
-            <div className="space-y-6">
-              {/* Information Card */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-indigo-200">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FiBriefcase className="text-indigo-600" />
-                  Assignment Information
-                </h3>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column - Information Panel */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Description - Full Width */}
+                <div className="w-full">
+                  <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <IoDocumentTextOutline className="text-indigo-600" />
+                    Description
+                  </h3>
+                  <div className="bg-gradient-to-br from-gray-50 to-indigo-50 rounded-2xl p-6 border border-gray-200">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                      {assignment.description || 'No description available.'}
+                    </p>
+                  </div>
+                </div>
 
-                <div className="space-y-4">
-                  {/* Teacher */}
-                  {assignment.teacher && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs uppercase tracking-wide mb-1">Teacher</span>
-                      <div className="flex items-center gap-2">
-                        <FiUserCheck className="text-indigo-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base truncate">
-                          {assignment.teacher}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Due Date */}
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-xs uppercase tracking-wide mb-1">Due Date</span>
-                    <div className="flex items-center gap-2">
-                      <FiCalendar className="text-indigo-500" size={16} />
-                      <span className="text-gray-700 font-medium text-sm sm:text-base">
-                        {new Date(assignment.dueDate).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+                {/* Instructions - Full Width */}
+                {assignment.instructions && (
+                  <div className="w-full">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <FiBookOpen className="text-green-600" />
+                      Instructions
+                    </h3>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                        {assignment.instructions}
+                      </p>
                     </div>
                   </div>
+                )}
 
-                  {/* Date Assigned */}
-                  {assignment.dateAssigned && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs uppercase tracking-wide mb-1">Date Assigned</span>
-                      <div className="flex items-center gap-2">
-                        <FiCalendar className="text-green-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">
-                          {new Date(assignment.dateAssigned).toLocaleDateString()}
-                        </span>
-                      </div>
+                {/* Learning Objectives - Full Width */}
+                {assignment.learningObjectives && assignment.learningObjectives.length > 0 && (
+                  <div className="w-full">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <FiTarget className="text-purple-600" />
+                      Learning Objectives
+                    </h3>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+                      <ul className="space-y-2">
+                        {assignment.learningObjectives.map((objective, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <FiCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" size={16} />
+                            <span className="text-gray-700 text-sm sm:text-base">{objective}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  )}
-
-                  {/* Estimated Time */}
-                  {assignment.estimatedTime && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs uppercase tracking-wide mb-1">Estimated Time</span>
-                      <div className="flex items-center gap-2">
-                        <FiClock className="text-amber-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">{assignment.estimatedTime}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Created Date */}
-                  {assignment.createdAt && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs uppercase tracking-wide mb-1">Created</span>
-                      <div className="flex items-center gap-2">
-                        <FiClock className="text-purple-500" size={16} />
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">
-                          {new Date(assignment.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
-              {/* Assignment Files */}
-              {assignment.assignmentFiles && assignment.assignmentFiles.length > 0 && (
-                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-4 sm:p-6 border border-blue-200">
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-base sm:text-lg">
-                    <FiFileText className="text-blue-600" />
-                    Files ({assignment.assignmentFiles.length})
+              {/* Right Column - Information Panel */}
+              <div className="space-y-6">
+                {/* Information Card */}
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200">
+                  <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <FiBriefcase className="text-indigo-600" />
+                    Assignment Information
                   </h3>
-                  <div className="space-y-2">
-                    {assignment.assignmentFiles.slice(0, 3).map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-white/50 rounded-lg border border-blue-100">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md">
-                            <FiFileText size={14} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">
-                              {file.split('/').pop()}
-                            </p>
-                          </div>
+
+                  <div className="space-y-4">
+                    {/* Teacher */}
+                    {assignment.teacher && (
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Teacher</span>
+                        <div className="flex items-center gap-2">
+                          <FiUserCheck className="text-indigo-500" size={16} />
+                          <span className="text-gray-700 font-medium text-sm sm:text-base truncate">
+                            {assignment.teacher}
+                          </span>
                         </div>
-                        <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer">
-                          <FiDownload size={14} />
-                        </button>
                       </div>
-                    ))}
-                    {assignment.assignmentFiles.length > 3 && (
-                      <div className="text-center pt-2">
-                        <span className="text-xs text-blue-600 font-medium">
-                          +{assignment.assignmentFiles.length - 3} more files
+                    )}
+
+                    {/* Due Date */}
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Due Date</span>
+                      <div className="flex items-center gap-2">
+                        <FiCalendar className="text-indigo-500" size={16} />
+                        <span className="text-gray-700 font-medium text-sm sm:text-base">
+                          {new Date(assignment.dueDate).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Date Assigned */}
+                    {assignment.dateAssigned && (
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Date Assigned</span>
+                        <div className="flex items-center gap-2">
+                          <FiCalendar className="text-green-500" size={16} />
+                          <span className="text-gray-700 font-medium text-sm sm:text-base">
+                            {new Date(assignment.dateAssigned).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Estimated Time */}
+                    {assignment.estimatedTime && (
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Estimated Time</span>
+                        <div className="flex items-center gap-2">
+                          <FiClock className="text-amber-500" size={16} />
+                          <span className="text-gray-700 font-medium text-sm sm:text-base">{assignment.estimatedTime}</span>
+                        </div>
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* Assignment Files */}
+                {assignment.assignmentFiles && assignment.assignmentFiles.length > 0 && (
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
+                    <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <FiFileText className="text-blue-600" />
+                      Files ({assignment.assignmentFiles.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {assignment.assignmentFiles.slice(0, 3).map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-white/50 rounded-lg border border-blue-100">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-md">
+                              <FiFileText size={14} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">
+                                {file.split('/').pop()}
+                              </p>
+                            </div>
+                          </div>
+                          <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer">
+                            <FiDownload size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      {assignment.assignmentFiles.length > 3 && (
+                        <div className="text-center pt-2">
+                          <span className="text-xs text-blue-600 font-medium">
+                            +{assignment.assignmentFiles.length - 3} more files
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Additional Sections - Full Width */}
+            <div className="space-y-8">
+              {/* Additional Work - Full Width */}
+              {assignment.additionalWork && (
+                <div className="w-full">
+                  <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <FiFileText className="text-amber-600" />
+                    Additional Work
+                  </h3>
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                      {assignment.additionalWork}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Teacher Remarks - Full Width */}
+              {assignment.teacherRemarks && (
+                <div className="w-full">
+                  <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <FiEdit className="text-indigo-600" />
+                    Teacher Remarks
+                  </h3>
+                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-200">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                      {assignment.teacherRemarks}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
-          {/* Additional Sections - Full Width */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Additional Work */}
-            {assignment.additionalWork && (
-              <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-6 border border-amber-200">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                  <FiFileText className="text-amber-600" />
-                  Additional Work
-                </h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                  {assignment.additionalWork}
-                </p>
-              </div>
-            )}
-
-            {/* Teacher Remarks */}
-            {assignment.teacherRemarks && (
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-indigo-200">
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
-                  <FiEdit className="text-indigo-600" />
-                  Teacher Remarks
-                </h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
-                  {assignment.teacherRemarks}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {assignment.completionRate !== undefined && (
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-emerald-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-emerald-600 font-medium">Completion</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">{assignment.completionRate}%</p>
-                  </div>
-                  <FiPercent className="text-emerald-500" size={20} />
-                </div>
-              </div>
-            )}
-            
-            {assignment.averageScore !== undefined && (
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-blue-600 font-medium">Avg Score</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">{assignment.averageScore}</p>
-                  </div>
-                  <IoStatsChartOutline className="text-blue-500" size={20} />
-                </div>
-              </div>
-            )}
-            
-            {assignment.submissionsCount !== undefined && (
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-purple-600 font-medium">Submissions</p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">{assignment.submissionsCount}</p>
-                  </div>
-                  <FiSend className="text-purple-500" size={20} />
-                </div>
-              </div>
-            )}
-            
-            {daysRemaining !== null && (
-              <div className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 border ${
-                daysRemaining <= 0 
-                  ? 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200' 
-                  : daysRemaining <= 3 
-                  ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
-                  : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-              }`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium ${
-                      daysRemaining <= 0 
-                        ? 'text-red-600' 
-                        : daysRemaining <= 3 
-                        ? 'text-orange-600'
-                        : 'text-green-600'
-                    }">
-                      Days {daysRemaining <= 0 ? 'Overdue' : 'Remaining'}
-                    </p>
-                    <p className="text-lg sm:text-xl font-bold text-gray-900">
-                      {daysRemaining <= 0 ? Math.abs(daysRemaining) : daysRemaining}
-                    </p>
-                  </div>
-                  <IoTimeOutline className={`${
-                    daysRemaining <= 0 
-                      ? 'text-red-500' 
-                      : daysRemaining <= 3 
-                      ? 'text-orange-500 '
-                      : 'text-green-500'
-                  }`} size={20} />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 sm:p-6 border-t border-gray-200 bg-white">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <button 
-              onClick={onClose} 
-              className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-sm sm:text-base"
-            >
-              Close
-            </button>
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          {/* Footer */}
+          <div className="p-4 sm:p-6 border-t border-gray-200 bg-white">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <button 
+                onClick={onClose} 
+                className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-sm sm:text-base"
+              >
+                Close
+              </button>
               <button 
                 onClick={() => onEdit(assignment)} 
                 className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-sm sm:text-base"
@@ -723,10 +646,9 @@ return (
             </div>
           </div>
         </div>
-      </div>
-    </Box>
-  </Modal>
-)
+      </Box>
+    </Modal>
+  );
 }
 
 // Modern Assignment Card Component - UPDATED WITH SELECTION CHECKBOX
@@ -920,7 +842,7 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
   )
 }
 
-// Modern Assignment Modal Component (Create/Edit) - REDUCED WIDTH
+
 // Modern Assignment Modal Component (Create/Edit) - UPDATED
 function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
   // Form fields state
@@ -1105,252 +1027,235 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
 
         <div className="max-h-[calc(95vh-150px)] overflow-y-auto">
           <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
-            {/* Main Form Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-6">
-                {/* Title */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
-                    <IoDocumentTextOutline className="text-blue-600" /> 
-                    Assignment Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => handleChange('title', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                    placeholder="Enter assignment title"
-                  />
-                </div>
+            {/* Title - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Assignment Title *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                placeholder="Enter assignment title"
+              />
+            </div>
 
-                {/* Subject and Class */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
-                      <IoBookOutline className="text-purple-600" /> 
-                      Subject *
-                    </label>
-                    <select
-                      required
-                      value={formData.subject}
-                      onChange={(e) => handleChange('subject', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                    >
-                      <option value="">Select Subject</option>
-                      {subjectOptions.map(subject => (
-                        <option key={subject} value={subject}>{subject}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200">
-                      <FiUsers className="text-green-600" /> 
-                      Class *
-                    </label>
-                    <select
-                      required
-                      value={formData.className}
-                      onChange={(e) => handleChange('className', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
-                    >
-                      <option value="">Select Class</option>
-                      {classOptions.map(className => (
-                        <option key={className} value={className}>{className}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Teacher */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border border-amber-200">
-                    <FiUserCheck className="text-amber-600" /> 
-                    Teacher
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.teacher}
-                    onChange={(e) => handleChange('teacher', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-gray-50"
-                    placeholder="Enter teacher's name"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
-                    <FiFileText className="text-blue-600" /> 
-                    Description *
-                  </label>
-                  <textarea
-                    required
-                    value={formData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                    rows="4"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                    placeholder="Describe the assignment..."
-                  />
-                </div>
+            {/* Subject and Class in Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Subject *
+                </label>
+                <select
+                  required
+                  value={formData.subject}
+                  onChange={(e) => handleChange('subject', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
+                >
+                  <option value="">Select Subject</option>
+                  {subjectOptions.map(subject => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* Dates */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-xl border border-indigo-200">
-                    <FiCalendar className="text-indigo-600" /> 
-                    Dates
-                  </label>
-                  <div className="space-y-4">
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 mb-2">Due Date *</span>
-                      <input
-                        type="date"
-                        required
-                        value={formData.dueDate}
-                        onChange={(e) => handleChange('dueDate', e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-                      />
-                    </div>
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 mb-2">Date Assigned</span>
-                      <input
-                        type="date"
-                        value={formData.dateAssigned}
-                        onChange={(e) => handleChange('dateAssigned', e.target.value)}
-                        className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-                      />
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Class *
+                </label>
+                <select
+                  required
+                  value={formData.className}
+                  onChange={(e) => handleChange('className', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
+                >
+                  <option value="">Select Class</option>
+                  {classOptions.map(className => (
+                    <option key={className} value={className}>{className}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-                {/* Status and Priority */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => handleChange('status', e.target.value)}
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="in progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                      <option value="overdue">Overdue</option>
-                      <option value="assigned">Assigned</option>
-                    </select>
-                  </div>
+            {/* Teacher - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Teacher
+              </label>
+              <input
+                type="text"
+                value={formData.teacher}
+                onChange={(e) => handleChange('teacher', e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-gray-50"
+                placeholder="Enter teacher's name"
+              />
+            </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-2">Priority</label>
-                    <select
-                      value={formData.priority}
-                      onChange={(e) => handleChange('priority', e.target.value)}
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
+            {/* Description - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Description *
+              </label>
+              <textarea
+                required
+                value={formData.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                rows="4"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                placeholder="Describe the assignment..."
+              />
+            </div>
 
-                {/* Estimated Time */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border border-amber-200">
-                    <FiClock className="text-amber-600" /> 
-                    Estimated Time
-                  </label>
+            {/* Dates in Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Due Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.dueDate}
+                  onChange={(e) => handleChange('dueDate', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Date Assigned
+                </label>
+                <input
+                  type="date"
+                  value={formData.dateAssigned}
+                  onChange={(e) => handleChange('dateAssigned', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
+                />
+              </div>
+            </div>
+
+            {/* Status and Priority in Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="overdue">Overdue</option>
+                  <option value="assigned">Assigned</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-base font-bold text-gray-800 mb-3">
+                  Priority
+                </label>
+                <select
+                  value={formData.priority}
+                  onChange={(e) => handleChange('priority', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Estimated Time - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Estimated Time
+              </label>
+              <input
+                type="text"
+                value={formData.estimatedTime}
+                onChange={(e) => handleChange('estimatedTime', e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-gray-50"
+                placeholder="e.g., 2 Weeks, 5 Months"
+              />
+            </div>
+
+            {/* Learning Objectives - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Learning Objectives
+              </label>
+              <div className="space-y-3">
+                <div className="flex gap-2">
                   <input
                     type="text"
-                    value={formData.estimatedTime}
-                    onChange={(e) => handleChange('estimatedTime', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-gray-50"
-                    placeholder="e.g., 2 Weeks, 5 Months"
+                    value={newObjective}
+                    onChange={(e) => setNewObjective(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObjective())}
+                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
+                    placeholder="Add learning objective..."
                   />
+                  <button
+                    type="button"
+                    onClick={handleAddObjective}
+                    className="px-4 py-3 bg-purple-600 text-white rounded-xl font-bold cursor-pointer"
+                  >
+                    Add
+                  </button>
                 </div>
-
-                {/* Learning Objectives */}
-                <div>
-                  <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
-                    <FiTarget className="text-purple-600" /> 
-                    Learning Objectives
-                  </label>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newObjective}
-                        onChange={(e) => setNewObjective(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObjective())}
-                        className="flex-1 px-3 py-2 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                        placeholder="Add learning objective..."
-                      />
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {learningObjectives.map((objective, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-purple-50 rounded-xl border border-purple-100">
+                      <span className="text-sm text-gray-800 truncate">{objective}</span>
                       <button
                         type="button"
-                        onClick={handleAddObjective}
-                        className="px-3 py-2 bg-purple-600 text-white rounded-xl font-bold cursor-pointer text-sm"
+                        onClick={() => handleRemoveObjective(index)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
                       >
-                        Add
+                        <FiX className="text-sm" />
                       </button>
                     </div>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {learningObjectives.map((objective, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-purple-50 rounded-xl border border-purple-100">
-                          <span className="text-sm text-gray-800 truncate">{objective}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveObjective(index)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
-                          >
-                            <FiX className="text-xs" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Instructions and Additional Fields */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200">
-                  <FiBookOpen className="text-green-600" /> 
-                  Instructions
-                </label>
-                <textarea
-                  value={formData.instructions}
-                  onChange={(e) => handleChange('instructions', e.target.value)}
-                  rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
-                  placeholder="Provide detailed instructions..."
-                />
-              </div>
-
-              <div>
-                <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
-                  <FiFileText className="text-blue-600" /> 
-                  Additional Work
-                </label>
-                <textarea
-                  value={formData.additionalWork}
-                  onChange={(e) => handleChange('additionalWork', e.target.value)}
-                  rows="3"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                  placeholder="Any additional work or extra credit..."
-                />
-              </div>
+            {/* Instructions - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Instructions
+              </label>
+              <textarea
+                value={formData.instructions}
+                onChange={(e) => handleChange('instructions', e.target.value)}
+                rows="3"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
+                placeholder="Provide detailed instructions..."
+              />
             </div>
 
-            {/* Teacher Remarks */}
+            {/* Additional Work - Full Width */}
             <div>
-              <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border border-amber-200">
-                <FiEdit className="text-amber-600" /> 
+              <label className="block text-base font-bold text-gray-800 mb-3">
+                Additional Work
+              </label>
+              <textarea
+                value={formData.additionalWork}
+                onChange={(e) => handleChange('additionalWork', e.target.value)}
+                rows="3"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                placeholder="Any additional work or extra credit..."
+              />
+            </div>
+
+            {/* Teacher Remarks - Full Width */}
+            <div>
+              <label className="block text-base font-bold text-gray-800 mb-3">
                 Teacher Remarks
               </label>
               <textarea
@@ -1362,12 +1267,11 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
               />
             </div>
 
-            {/* File Upload Sections */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* File Upload Sections in Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Assignment Files */}
               <div>
-                <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
-                  <FiFileText className="text-blue-600" /> 
+                <label className="block text-base font-bold text-gray-800 mb-3">
                   Assignment Files
                 </label>
                 <div className="space-y-3">
@@ -1422,8 +1326,7 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
 
               {/* Attachments */}
               <div>
-                <label className="text-base font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
-                  <FiPaperclip className="text-purple-600" /> 
+                <label className="block text-base font-bold text-gray-800 mb-3">
                   Attachments
                 </label>
                 <div className="space-y-3">
@@ -1510,9 +1413,8 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
         </div>
       </Box>
     </Modal>
-  )
+  );
 }
-
 // Main Assignments Manager Component
 export default function AssignmentsManager() {
   const [assignments, setAssignments] = useState([]);
@@ -1891,97 +1793,122 @@ export default function AssignmentsManager() {
     }
   };
 
-  const handleSubmit = async (formData, id, assignmentFiles = [], attachments = [], learningObjectives = []) => {
-    setSaving(true);
-    try {
-      // Create FormData object
-      const formDataToSend = new FormData();
+const handleSubmit = async (formData, id, assignmentFiles = [], attachments = [], learningObjectives = [], assignmentFilesToRemove = [], attachmentsToRemove = []) => {
+  setSaving(true);
+  try {
+    // Create FormData object
+    const formDataToSend = new FormData();
+    
+    // Add all form fields to FormData
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('dueDate', formData.dueDate);
+    formDataToSend.append('dateAssigned', formData.dateAssigned || new Date().toISOString().split('T')[0]);
+    formDataToSend.append('subject', formData.subject);
+    formDataToSend.append('className', formData.className);
+    formDataToSend.append('teacher', formData.teacher);
+    formDataToSend.append('status', formData.status);
+    formDataToSend.append('priority', formData.priority);
+    formDataToSend.append('estimatedTime', formData.estimatedTime);
+    formDataToSend.append('instructions', formData.instructions);
+    formDataToSend.append('additionalWork', formData.additionalWork);
+    formDataToSend.append('teacherRemarks', formData.teacherRemarks);
+    
+    // Handle learning objectives - MUST be JSON string
+    const learningObjectivesString = JSON.stringify(learningObjectives || []);
+    formDataToSend.append('learningObjectives', learningObjectivesString);
+    
+    // Add existing assignment files (only URLs for updates)
+    if (id && assignmentFiles) {
+      const existingFiles = assignmentFiles
+        .filter(file => file.isExisting && file.url)
+        .map(file => file.url);
       
-      // Add all form fields to FormData
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('dueDate', formData.dueDate);
-      formDataToSend.append('dateAssigned', formData.dateAssigned || new Date().toISOString().split('T')[0]);
-      formDataToSend.append('subject', formData.subject);
-      formDataToSend.append('className', formData.className);
-      formDataToSend.append('teacher', formData.teacher);
-      formDataToSend.append('status', formData.status);
-      formDataToSend.append('priority', formData.priority);
-      formDataToSend.append('estimatedTime', formData.estimatedTime);
-      formDataToSend.append('instructions', formData.instructions);
-      formDataToSend.append('additionalWork', formData.additionalWork);
-      formDataToSend.append('teacherRemarks', formData.teacherRemarks);
-      
-      // Handle learning objectives - MUST be JSON string
-      const learningObjectivesString = JSON.stringify(learningObjectives || []);
-      formDataToSend.append('learningObjectives', learningObjectivesString);
-      
-      // Add assignment files
-      if (assignmentFiles && assignmentFiles.length > 0) {
-        assignmentFiles.forEach((file) => {
-          if (file.file) {
-            // New file to upload
-            formDataToSend.append('assignmentFiles', file.file);
-          } else if (file.url && file.isExisting) {
-            // Existing file - send as URL string
-            formDataToSend.append('existingAssignmentFiles', file.url);
-          }
-        });
+      if (existingFiles.length > 0) {
+        formDataToSend.append('existingAssignmentFiles', JSON.stringify(existingFiles));
       }
-      
-      // Add attachment files
-      if (attachments && attachments.length > 0) {
-        attachments.forEach((file) => {
-          if (file.file) {
-            // New attachment to upload
-            formDataToSend.append('attachments', file.file);
-          } else if (file.url && file.isExisting) {
-            // Existing attachment - send as URL string
-            formDataToSend.append('existingAttachments', file.url);
-          }
-        });
-      }
-      
-      let response;
-      let url;
-      
-      if (id) {
-        // Update existing assignment - PUT REQUEST
-        url = `/api/assignment/${id}`;
-        response = await fetch(url, {
-          method: 'PUT',
-          body: formDataToSend,
-        });
-      } else {
-        // Create new assignment - POST REQUEST
-        url = '/api/assignment';
-        response = await fetch(url, {
-          method: 'POST',
-          body: formDataToSend,
-        });
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Refresh the list
-        await fetchAssignments();
-        setShowModal(false);
-        showNotification(
-          'success',
-          id ? 'Updated' : 'Created',
-          `Assignment ${id ? 'updated' : 'created'} successfully!`
-        );
-      } else {
-        throw new Error(result.error || 'Failed to save assignment');
-      }
-    } catch (error) {
-      console.error('Error saving assignment:', error);
-      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} assignment`);
-    } finally {
-      setSaving(false);
     }
-  };
+    
+    // Add new assignment files (actual file objects)
+    if (assignmentFiles) {
+      assignmentFiles.forEach((file) => {
+        if (file.file && !file.isExisting) {
+          formDataToSend.append('assignmentFiles', file.file);
+        }
+      });
+    }
+    
+    // Add existing attachments (only URLs for updates)
+    if (id && attachments) {
+      const existingAttachments = attachments
+        .filter(file => file.isExisting && file.url)
+        .map(file => file.url);
+      
+      if (existingAttachments.length > 0) {
+        formDataToSend.append('existingAttachments', JSON.stringify(existingAttachments));
+      }
+    }
+    
+    // Add new attachments (actual file objects)
+    if (attachments) {
+      attachments.forEach((file) => {
+        if (file.file && !file.isExisting) {
+          formDataToSend.append('attachments', file.file);
+        }
+      });
+    }
+    
+    // Add files to remove
+    if (assignmentFilesToRemove.length > 0) {
+      formDataToSend.append('assignmentFilesToRemove', JSON.stringify(assignmentFilesToRemove));
+    }
+    
+    if (attachmentsToRemove.length > 0) {
+      formDataToSend.append('attachmentsToRemove', JSON.stringify(attachmentsToRemove));
+    }
+    
+    let response;
+    let url;
+    
+    if (id) {
+      // Update existing assignment - PUT REQUEST
+      url = `/api/assignment/${id}`;
+      response = await fetch(url, {
+        method: 'PUT',
+        body: formDataToSend,
+        // Note: Don't set Content-Type header for FormData - browser sets it automatically
+      });
+    } else {
+      // Create new assignment - POST REQUEST
+      url = '/api/assignment';
+      response = await fetch(url, {
+        method: 'POST',
+        body: formDataToSend,
+        // Note: Don't set Content-Type header for FormData - browser sets it automatically
+      });
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Refresh the list
+      await fetchAssignments();
+      setShowModal(false);
+      showNotification(
+        'success',
+        id ? 'Updated' : 'Created',
+        `Assignment ${id ? 'updated' : 'created'} successfully!`
+      );
+    } else {
+      throw new Error(result.error || 'Failed to save assignment');
+    }
+  } catch (error) {
+    console.error('Error saving assignment:', error);
+    showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} assignment`);
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Create new assignment
   const handleCreate = () => {
