@@ -1,6 +1,31 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import { FileManager } from "../../../libs/superbase"; // Changed from cloudinary to superbase
+import { FileManager } from "../../../libs/superbase";
+
+// ⚠️ CRITICAL: Configure API route to handle large uploads
+export const config = {
+  api: {
+    bodyParser: false, // Disable default body parser for file uploads
+    responseLimit: false,
+  },
+};
+
+// Helper to parse multipart/form-data manually
+async function parseFormData(request) {
+  const contentType = request.headers.get('content-type');
+  
+  if (!contentType || !contentType.includes('multipart/form-data')) {
+    throw new Error('Content-Type must be multipart/form-data');
+  }
+
+  try {
+    // Use native formData parser
+    return await request.formData();
+  } catch (error) {
+    console.error('FormData parsing error:', error);
+    throw new Error(`Failed to parse form data: ${error.message}`);
+  }
+}
 
 // Helper function to validate required fields
 const validateRequiredFields = (formData) => {
@@ -451,6 +476,10 @@ const parseExistingAdditionalFiles = (existingAdditionalFilesString) => {
 // 🟢 CREATE (only once)
 export async function POST(req) {
   try {
+    // Log the request size for debugging
+    const contentLength = req.headers.get('content-length');
+    console.log(`📦 POST request size: ${contentLength ? Math.round(parseInt(contentLength) / 1024 / 1024) : 'unknown'} MB`);
+    
     const existing = await prisma.schoolInfo.findFirst();
     if (existing) {
       return NextResponse.json(
@@ -459,7 +488,7 @@ export async function POST(req) {
       );
     }
 
-    const formData = await req.formData();
+    const formData = await parseFormData(req);
     
     // Validate required fields
     try {
@@ -957,6 +986,10 @@ const cleanSchoolResponse = (school) => {
 // 🟠 PUT update existing info - COMPLETE VERSION WITH MULTIPLE FILE SUPPORT
 export async function PUT(req) {
   try {
+    // Log the request size for debugging
+    const contentLength = req.headers.get('content-length');
+    console.log(`📦 PUT request size: ${contentLength ? Math.round(parseInt(contentLength) / 1024 / 1024) : 'unknown'} MB`);
+    
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
       return NextResponse.json(
@@ -965,7 +998,7 @@ export async function PUT(req) {
       );
     }
 
-    const formData = await req.formData();
+    const formData = await parseFormData(req);
     
     // Handle video upload with thumbnail - PRESERVE existing thumbnail by default
     let videoPath = existing.videoTour;
