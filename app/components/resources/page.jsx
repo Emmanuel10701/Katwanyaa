@@ -491,9 +491,9 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                                 {getFileIcon()}
                               </div>
                               <div className="min-w-0">
-                                <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
-                                  {file.name}
-                                </h4>
+                          <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
+  {file.name.replace(/^[\d-]+/, "")}
+</h4>
                                 <p className="text-gray-600 text-xs sm:text-sm">
                                   {file.size ? formatFileSize(file.size) : 'N/A'}
                                 </p>
