@@ -832,22 +832,50 @@ function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSe
 
 // Modern Resource Modal Component (Create/Edit) - WITH MULTIPLE FILE SUPPORT
 function ModernResourceModal({ onClose, onSave, resource, loading }) {
-  const [formData, setFormData] = useState({
-    title: resource?.title || '',
-    description: resource?.description || '',
-    subject: resource?.subject || '',
-    className: resource?.className || '',
-    teacher: resource?.teacher || '',
-    category: resource?.category || 'General',
-    accessLevel: resource?.accessLevel || 'student',
-    uploadedBy: resource?.uploadedBy || 'Admin',
-    isActive: resource?.isActive ?? true
-  });
+ // At the top of ModernResourceModal component, make sure you have:
+const [formData, setFormData] = useState({
+  title: resource?.title || '',
+  description: resource?.description || '',
+  subject: resource?.subject || '',
+  className: resource?.className || '',
+  teacher: resource?.teacher || '',
+  category: resource?.category || 'General',
+  accessLevel: resource?.accessLevel || 'student',
+  uploadedBy: resource?.uploadedBy || 'Admin',
+  isActive: resource?.isActive ?? true
+});
 
-  const [files, setFiles] = useState([]);
-  const [existingFiles, setExistingFiles] = useState(resource?.files || []);
-  const [filesToRemove, setFilesToRemove] = useState([]);
+const [files, setFiles] = useState([]); // New files to upload
+const [existingFiles, setExistingFiles] = useState([]); // Existing files from resource
+const [filesToRemove, setFilesToRemove] = useState([]); // Files to delete
 
+// Add this useEffect to properly initialize existingFiles
+useEffect(() => {
+  if (resource?.files) {
+    try {
+      // Handle different file formats
+      const filesArray = Array.isArray(resource.files) ? resource.files : [];
+      const formattedFiles = filesArray.map(file => {
+        // Ensure each file has required properties
+        const fileName = file.name || (typeof file === 'string' ? file : 'Unknown');
+        const fileUrl = file.url || (typeof file === 'string' ? file : '');
+        
+        return {
+          url: fileUrl,
+          name: fileName,
+          size: file.size || 0,
+          extension: file.extension || fileName.split('.').pop()?.toLowerCase() || 'unknown',
+          uploadedAt: file.uploadedAt || new Date().toISOString()
+        };
+      });
+      
+      setExistingFiles(formattedFiles);
+    } catch (error) {
+      console.error('Error parsing resource files:', error);
+      setExistingFiles([]);
+    }
+  }
+}, [resource]);
   // Class options
   const classOptions = [
     'Form 1',
@@ -902,29 +930,33 @@ function ModernResourceModal({ onClose, onSave, resource, loading }) {
     e.target.value = '';
   };
 
-  const removeFile = (index, isExisting = false) => {
-    if (isExisting) {
-      const file = existingFiles[index];
-      if (file.url) {
-        setFilesToRemove(prev => [...prev, file.url]);
-      }
-      setExistingFiles(prev => prev.filter((_, i) => i !== index));
-    } else {
-      setFiles(prev => prev.filter((_, i) => i !== index));
+const removeFile = (index, isExisting = false) => {
+  if (isExisting) {
+    const file = existingFiles[index];
+    if (file?.url) {
+      setFilesToRemove(prev => [...prev, file.url]);
     }
-  };
+    setExistingFiles(prev => prev.filter((_, i) => i !== index));
+  } else {
+    // Remove preview URL if it exists
+    if (files[index]?.preview) {
+      URL.revokeObjectURL(files[index].preview);
+    }
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  }
+};
 
 const handleSubmit = async (e) => {
   e.preventDefault();
   
   // Validate required fields
   if (!formData.title.trim() || !formData.subject || !formData.className || !formData.teacher) {
-    showNotification('error', 'Validation Error', 'Please fill in all required fields');
+    alert('Please fill in all required fields');
     return;
   }
   
   if (files.length === 0 && existingFiles.length === 0 && !resource) {
-    showNotification('error', 'Validation Error', 'Please upload at least one file');
+    alert('Please upload at least one file');
     return;
   }
 
@@ -943,30 +975,30 @@ const handleSubmit = async (e) => {
   // Add action type
   formDataToSend.append('action', 'update');
 
-  // Add existing files info (for updates) - IMPORTANT!
-  if (resource && existingFiles.length > 0) {
-    // Only include files that weren't removed
+  // Handle files for CREATE vs UPDATE
+  if (resource) {
+    // UPDATE: Add existing files that should be kept
     const filesToKeep = existingFiles
       .filter(file => !filesToRemove.some(url => url === file.url))
       .map(file => ({
         url: file.url,
         name: file.name,
         size: file.size,
-        extension: file.extension,
-        uploadedAt: file.uploadedAt
+        extension: file.extension || file.name?.split('.').pop() || 'unknown',
+        uploadedAt: file.uploadedAt || new Date().toISOString()
       }));
     
     if (filesToKeep.length > 0) {
       formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
     }
+
+    // Add files to remove
+    if (filesToRemove.length > 0) {
+      formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
+    }
   }
 
-  // Add files to remove
-  if (filesToRemove.length > 0) {
-    formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
-  }
-
-  // Add new files
+  // Add new files (for both CREATE and UPDATE)
   files.forEach(fileObj => {
     if (fileObj.file && !fileObj.isExisting) {
       formDataToSend.append('files', fileObj.file);
@@ -1234,32 +1266,36 @@ const handleSubmit = async (e) => {
                       </div>
                     )}
 
-                    {/* Existing Files */}
-                    {existingFiles.length > 0 && (
-                      <div className="space-y-3">
-                        <h5 className="text-sm font-bold text-gray-600">Existing Files:</h5>
-                        {existingFiles.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <FiFileText className="text-blue-500" />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-                                <p className="text-blue-600 text-xs font-medium">
-                                  Existing file
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index, true)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
-                            >
-                              <FiX className="text-sm" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+
+{/* Existing Files */}
+{existingFiles.length > 0 && (
+  <div className="space-y-3">
+    <h5 className="text-sm font-bold text-gray-600">Existing Files:</h5>
+    {existingFiles.map((file, index) => (
+      <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
+        <div className="flex items-center gap-3 min-w-0">
+          <FiFileText className="text-blue-500" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-800 truncate">
+              {file.name || 'Unknown File'}
+            </p>
+            <p className="text-blue-600 text-xs font-medium">
+              Existing file • {formatFileSize(file.size)}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => removeFile(index, true)}
+          className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+          title="Remove file"
+        >
+          <FiX className="text-sm" />
+        </button>
+      </div>
+    ))}
+  </div>
+)}
                   </div>
                 )}
               </div>
@@ -1714,29 +1750,18 @@ const handleSubmit = async (formData, id) => {
     let response;
     
     if (id) {
-      // Update existing resource - FIXED
-      // Ensure we're sending all existing files as JSON
-      if (existingFiles && existingFiles.length > 0) {
-        formData.append('existingFiles', JSON.stringify(existingFiles));
-      }
-      
-      // Send files to remove
-      if (filesToRemove && filesToRemove.length > 0) {
-        formData.append('filesToRemove', JSON.stringify(filesToRemove));
-      }
-      
-      // Send the action type
-      formData.append('action', 'update');
-      
+      // Update existing resource
       response = await fetch(`/api/resources/${id}`, {
         method: 'PUT',
         body: formData,
+        // Don't set Content-Type for FormData
       });
     } else {
       // Create new resource
       response = await fetch('/api/resources', {
         method: 'POST',
         body: formData,
+        // Don't set Content-Type for FormData
       });
     }
     
@@ -1746,9 +1771,6 @@ const handleSubmit = async (formData, id) => {
       // Refresh the list
       await fetchResources();
       setShowModal(false);
-      setFiles([]);
-      setExistingFiles([]);
-      setFilesToRemove([]);
       showNotification(
         'success',
         id ? 'Updated' : 'Created',
