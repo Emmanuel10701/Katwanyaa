@@ -166,10 +166,11 @@ const router =useRouter()
                 <IoSparkles className="text-yellow-400 text-xs" />
               </div>
               <div>
-                <h4 className="text-white font-semibold mb-1">Go Back</h4>
-                <p className="text-gray-400 text-sm">
-                  You can proceed with limited functionality, but some features may be restricted.
-                </p>
+<h4 className="text-white font-semibold mb-1">Go Back</h4>
+<p className="text-gray-400 text-sm">
+  Return to the previous page to review or change your settings and Navigate it with the Desktop or Laptop.
+</p>
+
               </div>
             </div>
           </div>
