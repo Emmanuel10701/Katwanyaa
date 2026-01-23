@@ -334,12 +334,7 @@ function Notification({
             </button>
           </div>
         </div>
-        <div className="h-1 bg-gray-200">
-          <div 
-            className={`h-full ${styles.progress} transition-all duration-100 ease-linear`}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+
       </div>
     </div>
   )
