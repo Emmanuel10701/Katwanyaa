@@ -1203,105 +1203,109 @@ if (filesToKeep.length > 0) {
               </div>
             </div>
 
-            {/* File Upload Section - Full Width */}
-            <div>
-              <label className="block text-base font-bold text-gray-800 mb-3">
-                Upload Files *
-              </label>
-              <div className="space-y-4">
-                {/* Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50">
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                    id="resourceFiles"
-                  />
-                  <label htmlFor="resourceFiles" className="cursor-pointer block text-center">
-                    <div className="p-3 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl inline-block mb-3">
-                      <FiUpload className="text-blue-600 text-2xl" />
-                    </div>
-                    <p className="text-lg font-bold text-gray-700 mb-2">
-                      Drag & drop files or click to browse
+<div className="w-full lg:w-[75%] mx-auto flex flex-col space-y-8">
+  <section className="bg-white rounded-[32px] p-2 sm:p-4">
+    <div className="flex items-center gap-3 mb-6 px-2">
+      <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+      <label className="text-xl font-black text-slate-800 tracking-tight">
+        Upload Resources *
+      </label>
+    </div>
+
+    <div className="space-y-6">
+      {/* 1. Modern Dropzone Area */}
+      <div className="relative group">
+        <input
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+          id="resourceFiles"
+        />
+        <label 
+          htmlFor="resourceFiles" 
+          className="cursor-pointer w-full py-10 border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-400 transition-all flex flex-col items-center justify-center text-center px-6"
+        >
+          <div className="p-4 bg-white shadow-sm rounded-2xl mb-4 group-hover:scale-110 transition-transform">
+            <FiUpload className="text-blue-600 text-3xl" />
+          </div>
+          <p className="text-lg font-bold text-slate-800 mb-1">
+            Drag & drop files or <span className="text-blue-600">browse</span>
+          </p>
+          <p className="text-slate-500 text-sm max-w-xs">
+            PDF, DOC, PPT, XLS, Images, Videos, or Audio
+          </p>
+          <div className="mt-4 flex gap-3">
+             <span className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+               Max 10MB
+             </span>
+          </div>
+        </label>
+      </div>
+
+      {/* 2. Uploaded Files List */}
+      {(files.length > 0 || existingFiles.length > 0) && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">
+              Selected Assets ({files.length + existingFiles.length})
+            </h4>
+          </div>
+
+          <div className="grid gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+            {/* New Files Segment */}
+            {files.map((fileObj, index) => (
+              <div key={`new-${index}`} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                    <FiFileText className="text-emerald-600 text-lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-700 truncate">{fileObj.name}</p>
+                    <p className="text-emerald-600 text-[11px] font-bold uppercase tracking-wider">
+                      Ready to Upload • {formatFileSize(fileObj.size)}
                     </p>
-                    <p className="text-gray-500">
-                      Upload multiple files (PDF, DOC, PPT, XLS, Images, Videos, Audio)
-                    </p>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Maximum file size: 10MB per file
-                    </p>
-                  </label>
+                  </div>
                 </div>
-                
-                {/* Uploaded Files List */}
-                {(files.length > 0 || existingFiles.length > 0) && (
-                  <div className="space-y-4">
-                    <h4 className="text-base font-bold text-gray-700">
-                      Selected Files ({files.length + existingFiles.length})
-                    </h4>
-                    
-                    {/* New Files */}
-                    {files.length > 0 && (
-                      <div className="space-y-3">
-                        <h5 className="text-sm font-bold text-gray-600">New Files to Upload:</h5>
-                        {files.map((fileObj, index) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <FiFileText className="text-gray-500" />
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-gray-800 truncate">{fileObj.name}</p>
-                                <p className="text-blue-600 text-xs font-medium">
-                                  New file - {formatFileSize(fileObj.size)}
-                                </p>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(index, false)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
-                            >
-                              <FiX className="text-sm" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                <button
+                  type="button"
+                  onClick={() => removeFile(index, false)}
+                  className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                >
+                  <FiX className="text-lg" />
+                </button>
+              </div>
+            ))}
 
-
-{/* Existing Files */}
-{existingFiles.length > 0 && (
-  <div className="space-y-3">
-    <h5 className="text-sm font-bold text-gray-600">Existing Files:</h5>
-    {existingFiles.map((file, index) => (
-      <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
-        <div className="flex items-center gap-3 min-w-0">
-          <FiFileText className="text-blue-500" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-gray-800 truncate">
-              {file.name || 'Unknown File'}
-            </p>
-            <p className="text-blue-600 text-xs font-medium">
-              Existing file • {formatFileSize(file.size)}
-            </p>
+            {/* Existing Files Segment */}
+            {existingFiles.map((file, index) => (
+              <div key={`exist-${index}`} className="group flex items-center justify-between p-4 bg-blue-50/30 border border-blue-100 rounded-2xl hover:shadow-sm transition-all">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
+                    <FiFileText className="text-white text-lg" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-700 truncate">{file.name || 'Cloud Resource'}</p>
+                    <p className="text-blue-600 text-[11px] font-bold uppercase tracking-wider">
+                      Stored in Cloud • {formatFileSize(file.size)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFile(index, true)}
+                  className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                >
+                  <FiX className="text-lg" />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => removeFile(index, true)}
-          className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
-          title="Remove file"
-        >
-          <FiX className="text-sm" />
-        </button>
-      </div>
-    ))}
-  </div>
-)}
-                  </div>
-                )}
-              </div>
-            </div>
+      )}
+    </div>
+  </section>
+</div>
 
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
