@@ -1101,7 +1101,7 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
         h-11 sm:h-14
         rounded-xl sm:rounded-2xl
         font-semibold sm:font-bold
-        text-[11px] sm:text-sm
+        text-[10px] sm:text-sm
         flex items-center justify-center gap-1.5 sm:gap-2
         transition-all
         ${
@@ -1138,7 +1138,7 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
         h-11 sm:h-14
         rounded-xl sm:rounded-2xl
         font-semibold sm:font-bold
-        text-[11px] sm:text-sm
+        text-[10px] sm:text-sm
         flex items-center justify-center gap-1.5 sm:gap-2
         transition-all
         ${
@@ -1162,7 +1162,7 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
         text-slate-900
         rounded-xl sm:rounded-2xl
         font-semibold sm:font-bold
-        text-[11px] sm:text-sm
+        text-[10px] sm:text-sm
         flex items-center justify-center gap-1.5 sm:gap-2
         active:scale-95 transition-all
       "
@@ -1648,7 +1648,8 @@ export default function ModernGallery() {
                   <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
                 </div>
 
-                <div className="space-y-3"
+                <div className="space-y-3">
+
 
                   <button
                     onClick={() => {
