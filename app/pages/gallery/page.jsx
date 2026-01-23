@@ -666,9 +666,11 @@ const ShareModal = ({ isOpen, onClose, gallery }) => {
 };
 
 // Modern Gallery Detail Modal
+// Modern Gallery Detail Modal with WORKING Download
 const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => {
   const [activeTab, setActiveTab] = useState('preview');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [downloading, setDownloading] = useState(false);
 
   if (!gallery) return null;
 
@@ -699,49 +701,100 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
     return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
   };
 
-  // Download all files function
+  // WORKING DOWNLOAD FUNCTION - Downloads each file individually
   const downloadAllFiles = async () => {
     if (!gallery || !gallery.files || gallery.files.length === 0) {
       toast.error('No files available to download');
       return;
     }
 
-    toast.loading(`Downloading ${gallery.files.length} files...`);
+    setDownloading(true);
+    const toastId = toast.loading(`Starting download of ${gallery.files.length} files...`);
     
     try {
-      // Create a zip file
-      const JSZip = (await import('jszip')).default;
-      const zip = new JSZip();
+      const files = gallery.files;
+      let downloadedCount = 0;
       
-      // Create a folder for this gallery
-      const folder = zip.folder(gallery.title.replace(/[^a-z0-9]/gi, '_'));
-      
-      // Add all files to the zip
-      for (let i = 0; i < gallery.files.length; i++) {
-        const fileUrl = gallery.files[i];
-        const response = await fetch(fileUrl);
-        const blob = await response.blob();
+      // Download each file one by one
+      for (let i = 0; i < files.length; i++) {
+        const fileUrl = files[i];
         const fileName = fileUrl.split('/').pop() || `file_${i + 1}`;
-        folder.file(fileName, blob);
+        
+        try {
+          // Update progress
+          toast.loading(`Downloading ${i + 1}/${files.length}: ${fileName}`, { id: toastId });
+          
+          // Create a hidden anchor element
+          const link = document.createElement('a');
+          link.href = fileUrl;
+          link.download = fileName;
+          link.style.display = 'none';
+          
+          // Add to document and trigger download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          downloadedCount++;
+          
+          // Small delay between downloads to avoid browser blocking
+          if (i < files.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          
+        } catch (error) {
+          console.error(`Failed to download ${fileName}:`, error);
+        }
       }
       
-      // Generate and download the zip file
-      const content = await zip.generateAsync({ type: 'blob' });
-      const downloadUrl = URL.createObjectURL(content);
+      // Show success message
+      toast.dismiss(toastId);
+      toast.success(`Successfully downloaded ${downloadedCount}/${files.length} files!`, {
+        duration: 5000
+      });
+      
+      if (downloadedCount < files.length) {
+        toast.info(`${files.length - downloadedCount} files may need to be downloaded manually`, {
+          duration: 7000
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error in download process:', error);
+      toast.dismiss(toastId);
+      toast.error('Download failed. Please try downloading files individually.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  // Alternative: Download selected file only
+  const downloadSelectedFile = async () => {
+    if (!gallery.files || !gallery.files[selectedIndex]) {
+      toast.error('No file selected to download');
+      return;
+    }
+    
+    const fileUrl = gallery.files[selectedIndex];
+    const fileName = fileUrl.split('/').pop() || `gallery_file_${selectedIndex + 1}`;
+    
+    try {
+      const toastId = toast.loading(`Downloading ${fileName}...`);
+      
       const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${gallery.title.replace(/[^a-z0-9]/gi, '_')}.zip`;
+      link.href = fileUrl;
+      link.download = fileName;
+      link.style.display = 'none';
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(downloadUrl);
       
-      toast.dismiss();
-      toast.success(`Downloaded ${gallery.files.length} files successfully!`);
+      toast.dismiss(toastId);
+      toast.success(`Downloaded: ${fileName}`);
     } catch (error) {
-      console.error('Error downloading files:', error);
-      toast.dismiss();
-      toast.error('Failed to download files');
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file. Please try again.');
     }
   };
 
@@ -921,15 +974,37 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
                           {isVideoFile(file) ? 'Video File' : 'Image File'}
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setSelectedIndex(index);
-                          setActiveTab('preview');
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
-                      >
-                        View
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedIndex(index);
+                            setActiveTab('preview');
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const fileName = file.split('/').pop() || `file_${index + 1}`;
+                            try {
+                              const link = document.createElement('a');
+                              link.href = file;
+                              link.download = fileName;
+                              link.style.display = 'none';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              toast.success(`Downloaded: ${fileName}`);
+                            } catch (error) {
+                              toast.error('Failed to download file');
+                            }
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-50 rounded-lg"
+                        >
+                          Download
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1015,21 +1090,51 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
 
         {/* 3. Action Footer - Sticky */}
         <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-          <div className="max-w-2xl mx-auto flex flex-row items-center gap-2 px-1 sm:px-0">
+          <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-3">
+            {/* Download All Button */}
             <button
               onClick={downloadAllFiles}
-              className="flex-[1.5] sm:flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
+              disabled={downloading || !gallery.files || gallery.files.length === 0}
+              className={`flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 transition-all ${
+                downloading 
+                  ? 'bg-slate-800 text-white' 
+                  : 'bg-slate-900 text-white hover:shadow-lg active:scale-95'
+              } ${(!gallery.files || gallery.files.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <FiDownload size={18} className="shrink-0" />
-              <span className="truncate">Download All ({gallery.files?.length || 0})</span>
+              {downloading ? (
+                <>
+                  <CircularProgress size={20} className="text-white" />
+                  <span>Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <FiDownload size={18} className="shrink-0" />
+                  <span>Download All ({gallery.files?.length || 0})</span>
+                </>
+              )}
             </button>
             
+            {/* Download Selected Button */}
+            <button
+              onClick={downloadSelectedFile}
+              disabled={!gallery.files || !gallery.files[selectedIndex]}
+              className={`flex-1 h-12 sm:h-14 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 transition-all ${
+                (!gallery.files || !gallery.files[selectedIndex]) 
+                  ? 'opacity-50 cursor-not-allowed bg-slate-200 text-slate-500'
+                  : 'bg-white border-2 border-slate-200 text-slate-900 hover:bg-slate-50 active:scale-95'
+              }`}
+            >
+              <FiDownload size={18} className="shrink-0" />
+              <span>Download Selected</span>
+            </button>
+            
+            {/* Share Button */}
             <button
               onClick={() => onShare(gallery)}
-              className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
+              className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 hover:bg-slate-50 active:scale-95 transition-all"
             >
               <FiShare2 size={18} className="shrink-0" />
-              <span className="truncate">Share</span>
+              <span>Share</span>
             </button>
           </div>
         </div>
