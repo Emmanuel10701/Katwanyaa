@@ -3330,12 +3330,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
       });
     }
     
-    // Add all PDF files
-    const pdfFields = [
-      'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-      'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-      'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-    ];
+  
     
     pdfFields.forEach(field => {
       if (files[field] && files[field].size) {
@@ -3463,6 +3458,13 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     return true;
   };
 
+    const pdfFields = [
+        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+      ];
+
+
   const getExistingPdfData = (pdfField) => {
     if (!shouldShowExistingPdf(pdfField)) {
       return null;
@@ -3575,11 +3577,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
       }
       
-      const pdfFields = [
-        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-      ];
+    
       
       pdfFields.forEach(field => {
         if (files[field]) {
@@ -3659,12 +3657,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
         formDataObj.append('videoThumbnail', selectedThumbnail);
       }
       
-      // Add PDF files
-      const pdfFields = [
-        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-      ];
+    
       
       pdfFields.forEach(field => {
         if (files[field]) {
