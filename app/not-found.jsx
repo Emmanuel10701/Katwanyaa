@@ -23,14 +23,17 @@ const Modern404 = () => {
   const quickLinks = [
     { name: 'Home Base', href: '/', icon: FiHome, description: 'Back to assembly' },
     { name: 'Academics', href: '/pages/academics', icon: FiBook, description: 'Course directory' },
-    { name: 'Library', href: '/pages/gallery', icon: FiBookOpen, description: 'School resources' },
+    { name: 'Gallery', href: '/pages/gallery', icon: FiBookOpen, description: 'School resources' },
     { name: 'Admissions', href: '/pages/admissions', icon: FiUsers, description: 'Join our family' },
-    { name: 'Schedule', href: '/pages/eventsandnews', icon: FiCalendar, description: 'Upcoming terms' },
+    { name: 'Events & News', href: '/pages/eventsandnews', icon: FiCalendar, description: 'Upcoming terms' },
     { name: 'Support', href: '/pages/contact', icon: FiMail, description: 'Talk to the office' },
+        { name: 'Portal', href: '/pages/StudentPortal', icon: FiMail, description: 'Navigate to Portal' },
+    { name: 'Guidance', href: '/pages/Guidance-and-Coucelling', icon: FiMail, description: 'Guidance sessions' },
+
   ];
 
   const errorMessages = [
-    "Looks like this page skipped class!",
+    "Looks like this page does not exist!",
     "This page is on a field trip!",
     "Assignment not found!",
     "This lesson hasn't been scheduled yet!",
