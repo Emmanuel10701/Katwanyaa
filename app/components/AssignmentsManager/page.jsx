@@ -1292,65 +1292,89 @@ function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
                 placeholder="Teacher's remarks or notes..."
               />
             </div>
+<div className="w-full lg:w-[75%] mx-auto flex flex-col space-y-8">
+  {/* Modernized File Upload Section */}
+  <section className="bg-white rounded-[32px] p-1 sm:p-2">
+    <div className="flex items-center gap-3 mb-6 px-2">
+      <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+      <label className="text-xl font-black text-slate-800 tracking-tight">
+        Assignment Resources
+      </label>
+    </div>
 
-            {/* File Upload Sections in Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Assignment Files */}
-              <div>
-                <label className="block text-base font-bold text-gray-800 mb-3">
-                  Assignment Files
-                </label>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block">
-                      <input
-                        type="file"
-                        multiple
-                        onChange={handleAssignmentFileChange}
-                        className="hidden"
-                        id="assignment-files-input"
-                      />
-                      <div 
-                        className="px-4 py-3 font-bold border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors"
-                        onClick={() => document.getElementById('assignment-files-input').click()}
-                      >
-                        <FiUpload className="text-blue-500" />
-                        <span className="font-bold text-gray-700 text-sm">
-                          Upload Assignment Files
-                        </span>
-                      </div>
-                    </label>
+    <div className="space-y-6">
+      {/* 1. Dropzone-style Upload Button */}
+      <div className="relative group">
+        <input
+          type="file"
+          multiple
+          onChange={handleAssignmentFileChange}
+          className="hidden"
+          id="assignment-files-input"
+        />
+        <div 
+          onClick={() => document.getElementById('assignment-files-input').click()}
+          className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-400 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 group-active:scale-[0.98]"
+        >
+          <div className="p-3 bg-white shadow-sm rounded-2xl group-hover:scale-110 transition-transform">
+            <FiUpload className="text-blue-600 text-2xl" />
+          </div>
+          <div className="text-center">
+            <p className="text-slate-800 font-bold text-sm sm:text-base">
+              Click to upload assignment files
+            </p>
+            <p className="text-slate-400 text-xs font-medium mt-1">
+              PDF, DOCX, or Images up to 10MB
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Modernized File List - Visible & Clean */}
+      {assignmentFiles.length > 0 && (
+        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          {assignmentFiles.map((file, index) => (
+            <div 
+              key={index} 
+              className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:shadow-md hover:border-blue-100 transition-all animate-in fade-in slide-in-from-bottom-2"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                {/* File Icon with background */}
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <FiFileText className="text-blue-600 text-lg" />
+                </div>
+                
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-700 truncate">
+                    {file.name}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                      file.isExisting ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-600'
+                    }`}>
+                      {file.isExisting ? 'Cloud' : 'Local'}
+                    </span>
+                    <span className="text-slate-400 text-xs font-medium">
+                      {file.isExisting ? 'Stored online' : file.size}
+                    </span>
                   </div>
-                  
-                  {/* File List */}
-                  {assignmentFiles.length > 0 && (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {assignmentFiles.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-200">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <FiFileText className="text-blue-500 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-                              <p className="text-blue-600 text-xs font-medium">
-                                {file.isExisting ? 'Existing file' : `New file - ${file.size}`}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAssignmentFile(index)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer flex-shrink-0"
-                          >
-                            <FiX className="text-sm" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
+              <button
+                type="button"
+                onClick={() => removeAssignmentFile(index)}
+                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0"
+              >
+                <FiX className="text-lg" />
+              </button>
             </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+</div>
 
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
@@ -1765,7 +1789,7 @@ export default function AssignmentsManager() {
     }
   };
 
-  
+
 const handleSubmit = async (formData, id, assignmentFiles = [], attachments = [], learningObjectives = [], assignmentFilesToRemove = [], attachmentsToRemove = []) => {
   setSaving(true);
   try {
