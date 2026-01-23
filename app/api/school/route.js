@@ -2,13 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import { FileManager } from "../../../libs/superbase";
 
-// ⚠️ CRITICAL: Configure API route to handle large uploads
-export const config = {
-  api: {
-    bodyParser: false, // Disable default body parser for file uploads
-    responseLimit: false,
-  },
-};
+// ✅ CORRECT: Use Next.js 13+ route segment config
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Helper to parse multipart/form-data manually
 async function parseFormData(request) {
