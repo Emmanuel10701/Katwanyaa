@@ -688,25 +688,49 @@ function ModernDetailModal({ session, onClose, onContact }) {
 
         {/* Action Footer - Sticky at bottom */}
         <div className="shrink-0 p-4 sm:p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-          <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button
-              onClick={addToCalendar}
-              disabled={!session.date || session.date === 'Always Available' || session.date === 'Monday - Friday'}
-              className="flex-1 min-w-0 h-11 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <IoCalendarClearOutline size={16} className="shrink-0 sm:size-[20px]" />
-              <span className="truncate">Add to Calendar</span>
-            </button>
-            
-            
-            <button
-              onClick={onClose}
-              className="flex-1 min-w-0 h-11 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[11px] sm:text-sm flex items-center justify-center gap-1.5 active:scale-95 transition-all"
-            >
-              <IoClose size={16} className="shrink-0 sm:size-[20px]" />
-              <span className="truncate">Close</span>
-            </button>
-          </div>
+<div className="max-w-2xl mx-auto flex flex-row gap-2 sm:gap-3 px-1">
+  <button
+    onClick={addToCalendar}
+    disabled={
+      !session.date ||
+      session.date === "Always Available" ||
+      session.date === "Monday - Friday"
+    }
+    className="
+      flex-1 min-w-0
+      h-11 sm:h-14
+      bg-slate-900 text-white
+      rounded-xl sm:rounded-2xl
+      font-semibold sm:font-bold
+      text-[11px] sm:text-sm
+      flex items-center justify-center gap-1.5 sm:gap-2
+      active:scale-95 transition-all
+      disabled:opacity-50 disabled:cursor-not-allowed
+    "
+  >
+    <IoCalendarClearOutline className="shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+    <span className="truncate">Add to Calendar</span>
+  </button>
+
+  <button
+    onClick={onClose}
+    className="
+      flex-1 min-w-0
+      h-11 sm:h-14
+      bg-white border-2 border-slate-200
+      text-slate-900
+      rounded-xl sm:rounded-2xl
+      font-semibold sm:font-bold
+      text-[11px] sm:text-sm
+      flex items-center justify-center gap-1.5 sm:gap-2
+      active:scale-95 transition-all
+    "
+  >
+    <IoClose className="shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
+    <span className="truncate">Close</span>
+  </button>
+</div>
+
         </div>
       </div>
     </div>
