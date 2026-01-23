@@ -566,8 +566,7 @@ export default function AdminLoginPage() {
         <div className={`fixed ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-50`}>
           <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 bg-slate-900/90 backdrop-blur-md rounded-full border border-white/10">
             <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
-            <span className="text-xs font-bold text-white hidden xs:inline">Prayer, Discipline and Hardwork</span>
-            <span className="text-xs font-bold text-white xs:hidden">P • D • H</span>
+            <span className="text-base font-bold text-white  inline">Prayer, Discipline and Hardwork</span>
           </div>
         </div>
       </div>
