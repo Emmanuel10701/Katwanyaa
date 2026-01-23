@@ -185,6 +185,7 @@ export async function PUT(request, { params }) {
     }
 
     const formData = await request.formData();
+    console.log('📥 PUT Update - Received form fields:', Array.from(formData.keys()));
 
     // Check if assignment exists
     const existingAssignment = await prisma.assignment.findUnique({
@@ -211,49 +212,121 @@ export async function PUT(request, { params }) {
     const estimatedTime = formData.get("estimatedTime")?.toString().trim() || existingAssignment.estimatedTime;
     const additionalWork = formData.get("additionalWork")?.toString().trim() || existingAssignment.additionalWork;
     const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || existingAssignment.teacherRemarks;
-    const learningObjectives = formData.get("learningObjectives")?.toString() || JSON.stringify(existingAssignment.learningObjectives);
+    const learningObjectives = formData.get("learningObjectives")?.toString();
+    
+    console.log('📝 Fields extracted:', { title, subject, className, teacher, dueDate });
 
     // Handle file updates
     let updatedAssignmentFiles = [...existingAssignment.assignmentFiles];
     let updatedAttachments = [...existingAssignment.attachments];
     
-    // Remove files if specified
-    const assignmentFilesToRemove = formData.getAll("assignmentFilesToRemove");
-    const attachmentsToRemove = formData.getAll("attachmentsToRemove");
+    // Handle existing files
+    const existingAssignmentFilesStr = formData.get("existingAssignmentFiles");
+    const existingAttachmentsStr = formData.get("existingAttachments");
     
-    if (assignmentFilesToRemove.length > 0) {
-      await FileManager.deleteFiles(assignmentFilesToRemove);
-      updatedAssignmentFiles = updatedAssignmentFiles.filter(file => !assignmentFilesToRemove.includes(file));
+    console.log('📁 File data:', {
+      existingAssignmentFilesStr: existingAssignmentFilesStr?.substring(0, 100),
+      existingAttachmentsStr: existingAttachmentsStr?.substring(0, 100)
+    });
+    
+    // Parse existing files that should remain
+    if (existingAssignmentFilesStr) {
+      try {
+        const existingFiles = JSON.parse(existingAssignmentFilesStr);
+        updatedAssignmentFiles = existingFiles.filter(file => typeof file === 'string' && file.trim() !== '');
+        console.log('✅ Parsed existing assignment files:', updatedAssignmentFiles.length);
+      } catch (error) {
+        console.error('❌ Error parsing existingAssignmentFiles:', error);
+      }
     }
     
-    if (attachmentsToRemove.length > 0) {
-      await FileManager.deleteFiles(attachmentsToRemove);
-      updatedAttachments = updatedAttachments.filter(file => !attachmentsToRemove.includes(file));
+    if (existingAttachmentsStr) {
+      try {
+        const existingFiles = JSON.parse(existingAttachmentsStr);
+        updatedAttachments = existingFiles.filter(file => typeof file === 'string' && file.trim() !== '');
+        console.log('✅ Parsed existing attachments:', updatedAttachments.length);
+      } catch (error) {
+        console.error('❌ Error parsing existingAttachments:', error);
+      }
+    }
+    
+    // Remove files if specified
+    const assignmentFilesToRemoveStr = formData.get("assignmentFilesToRemove");
+    const attachmentsToRemoveStr = formData.get("attachmentsToRemove");
+    
+    console.log('🗑️ Files to remove:', {
+      assignmentFilesToRemoveStr: assignmentFilesToRemoveStr?.substring(0, 100),
+      attachmentsToRemoveStr: attachmentsToRemoveStr?.substring(0, 100)
+    });
+    
+    if (assignmentFilesToRemoveStr) {
+      try {
+        const filesToRemove = JSON.parse(assignmentFilesToRemoveStr);
+        if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+          await FileManager.deleteFiles(filesToRemove);
+          console.log('✅ Removed assignment files from storage:', filesToRemove.length);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing assignmentFilesToRemove:', error);
+      }
+    }
+    
+    if (attachmentsToRemoveStr) {
+      try {
+        const filesToRemove = JSON.parse(attachmentsToRemoveStr);
+        if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+          await FileManager.deleteFiles(filesToRemove);
+          console.log('✅ Removed attachments from storage:', filesToRemove.length);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing attachmentsToRemove:', error);
+      }
     }
     
     // Add new files
     const newAssignmentFiles = formData.getAll("assignmentFiles");
     const newAttachments = formData.getAll("attachments");
     
-    if (newAssignmentFiles.length > 0) {
-      const uploadedFiles = await uploadFilesToSupabase(newAssignmentFiles, "assignment-files");
-      updatedAssignmentFiles = [...updatedAssignmentFiles, ...uploadedFiles.map(f => f.url)];
+    console.log('📤 New files to upload:', {
+      newAssignmentFiles: newAssignmentFiles.length,
+      newAttachments: newAttachments.length
+    });
+    
+    if (newAssignmentFiles.length > 0 && newAssignmentFiles[0].name) {
+      try {
+        const uploadedFiles = await uploadFilesToSupabase(newAssignmentFiles, "assignment-files");
+        const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
+        updatedAssignmentFiles = [...updatedAssignmentFiles, ...newUrls];
+        console.log('✅ Added new assignment files:', newUrls.length);
+      } catch (error) {
+        console.error('❌ Error uploading new assignment files:', error);
+      }
     }
     
-    if (newAttachments.length > 0) {
-      const uploadedFiles = await uploadFilesToSupabase(newAttachments, "attachments");
-      updatedAttachments = [...updatedAttachments, ...uploadedFiles.map(f => f.url)];
+    if (newAttachments.length > 0 && newAttachments[0].name) {
+      try {
+        const uploadedFiles = await uploadFilesToSupabase(newAttachments, "attachments");
+        const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
+        updatedAttachments = [...updatedAttachments, ...newUrls];
+        console.log('✅ Added new attachments:', newUrls.length);
+      } catch (error) {
+        console.error('❌ Error uploading new attachments:', error);
+      }
     }
     
     // Parse learning objectives
     let learningObjectivesArray = existingAssignment.learningObjectives;
-    try {
-      learningObjectivesArray = JSON.parse(learningObjectives);
-    } catch (error) {
-      console.error("Error parsing learning objectives:", error);
+    if (learningObjectives) {
+      try {
+        learningObjectivesArray = JSON.parse(learningObjectives);
+        console.log('✅ Parsed learning objectives:', learningObjectivesArray?.length || 0);
+      } catch (error) {
+        console.error('❌ Error parsing learning objectives:', error);
+      }
     }
     
     // Update assignment
+    console.log('💾 Saving to database...');
     const updatedAssignment = await prisma.assignment.update({
       where: { id: parseInt(id) },
       data: { 
@@ -261,7 +334,7 @@ export async function PUT(request, { params }) {
         subject,
         className,
         teacher,
-        dueDate: new Date(dueDate),
+        dueDate: dueDate ? new Date(dueDate) : existingAssignment.dueDate,
         status,
         description,
         instructions,
@@ -275,6 +348,8 @@ export async function PUT(request, { params }) {
       },
     });
 
+    console.log('✅ Update successful:', updatedAssignment.id);
+    
     return NextResponse.json({ 
       success: true, 
       assignment: updatedAssignment,

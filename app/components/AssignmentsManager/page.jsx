@@ -1765,9 +1765,18 @@ export default function AssignmentsManager() {
     }
   };
 
+  
 const handleSubmit = async (formData, id, assignmentFiles = [], attachments = [], learningObjectives = [], assignmentFilesToRemove = [], attachmentsToRemove = []) => {
   setSaving(true);
   try {
+    console.log('📤 Starting submission...');
+    console.log('Files info:', {
+      assignmentFilesCount: assignmentFiles?.length || 0,
+      attachmentsCount: attachments?.length || 0,
+      filesToRemoveCount: assignmentFilesToRemove?.length || 0,
+      attachmentsToRemoveCount: attachmentsToRemove?.length || 0
+    });
+
     // Create FormData object
     const formDataToSend = new FormData();
     
@@ -1789,78 +1798,112 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
     // Handle learning objectives - MUST be JSON string
     const learningObjectivesString = JSON.stringify(learningObjectives || []);
     formDataToSend.append('learningObjectives', learningObjectivesString);
-    
-    // Add existing assignment files (only URLs for updates)
+    console.log('Learning objectives:', learningObjectivesString.substring(0, 100));
+
+    // Handle assignment files for UPDATE
     if (id && assignmentFiles) {
-      const existingFiles = assignmentFiles
+      // Get existing assignment files (those that weren't removed)
+      const existingAssignmentFiles = assignmentFiles
         .filter(file => file.isExisting && file.url)
         .map(file => file.url);
       
-      if (existingFiles.length > 0) {
-        formDataToSend.append('existingAssignmentFiles', JSON.stringify(existingFiles));
+      if (existingAssignmentFiles.length > 0) {
+        formDataToSend.append('existingAssignmentFiles', JSON.stringify(existingAssignmentFiles));
+        console.log('Existing assignment files:', existingAssignmentFiles.length);
       }
-    }
-    
-    // Add new assignment files (actual file objects)
-    if (assignmentFiles) {
+      
+      // Add new assignment files (actual file objects)
       assignmentFiles.forEach((file) => {
         if (file.file && !file.isExisting) {
           formDataToSend.append('assignmentFiles', file.file);
+          console.log('Adding new assignment file:', file.name);
+        }
+      });
+      
+      // Add assignment files to remove
+      if (assignmentFilesToRemove.length > 0) {
+        formDataToSend.append('assignmentFilesToRemove', JSON.stringify(assignmentFilesToRemove));
+        console.log('Assignment files to remove:', assignmentFilesToRemove.length);
+      }
+    } else if (!id && assignmentFiles) {
+      // For CREATE - add all assignment files
+      assignmentFiles.forEach((file) => {
+        if (file.file) {
+          formDataToSend.append('assignmentFiles', file.file);
+          console.log('Adding new assignment file (create):', file.name);
         }
       });
     }
-    
-    // Add existing attachments (only URLs for updates)
+
+    // Handle attachments for UPDATE
     if (id && attachments) {
+      // Get existing attachments (those that weren't removed)
       const existingAttachments = attachments
         .filter(file => file.isExisting && file.url)
         .map(file => file.url);
       
       if (existingAttachments.length > 0) {
         formDataToSend.append('existingAttachments', JSON.stringify(existingAttachments));
+        console.log('Existing attachments:', existingAttachments.length);
       }
-    }
-    
-    // Add new attachments (actual file objects)
-    if (attachments) {
+      
+      // Add new attachments (actual file objects)
       attachments.forEach((file) => {
         if (file.file && !file.isExisting) {
           formDataToSend.append('attachments', file.file);
+          console.log('Adding new attachment:', file.name);
+        }
+      });
+      
+      // Add attachments to remove
+      if (attachmentsToRemove.length > 0) {
+        formDataToSend.append('attachmentsToRemove', JSON.stringify(attachmentsToRemove));
+        console.log('Attachments to remove:', attachmentsToRemove.length);
+      }
+    } else if (!id && attachments) {
+      // For CREATE - add all attachments
+      attachments.forEach((file) => {
+        if (file.file) {
+          formDataToSend.append('attachments', file.file);
+          console.log('Adding new attachment (create):', file.name);
         }
       });
     }
-    
-    // Add files to remove
-    if (assignmentFilesToRemove.length > 0) {
-      formDataToSend.append('assignmentFilesToRemove', JSON.stringify(assignmentFilesToRemove));
+
+    // Log FormData contents for debugging
+    console.log('FormData entries:');
+    for (let pair of formDataToSend.entries()) {
+      console.log(pair[0] + ':', 
+        pair[1] instanceof File ? `File: ${pair[1].name} (${pair[1].size} bytes)` :
+        typeof pair[1] === 'string' ? pair[1].substring(0, 100) + '...' : pair[1]
+      );
     }
-    
-    if (attachmentsToRemove.length > 0) {
-      formDataToSend.append('attachmentsToRemove', JSON.stringify(attachmentsToRemove));
-    }
-    
+
     let response;
     let url;
     
     if (id) {
-      // Update existing assignment - PUT REQUEST
+      // Update existing assignment
       url = `/api/assignment/${id}`;
+      console.log(`PUT request to: ${url}`);
       response = await fetch(url, {
         method: 'PUT',
         body: formDataToSend,
-        // Note: Don't set Content-Type header for FormData - browser sets it automatically
+        // No Content-Type header for FormData
       });
     } else {
-      // Create new assignment - POST REQUEST
+      // Create new assignment
       url = '/api/assignment';
+      console.log(`POST request to: ${url}`);
       response = await fetch(url, {
         method: 'POST',
         body: formDataToSend,
-        // Note: Don't set Content-Type header for FormData - browser sets it automatically
+        // No Content-Type header for FormData
       });
     }
 
     const result = await response.json();
+    console.log('API Response:', result);
 
     if (result.success) {
       // Refresh the list
@@ -1875,7 +1918,7 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
       throw new Error(result.error || 'Failed to save assignment');
     }
   } catch (error) {
-    console.error('Error saving assignment:', error);
+    console.error('❌ Error saving assignment:', error);
     showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} assignment`);
   } finally {
     setSaving(false);
