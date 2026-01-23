@@ -14,7 +14,7 @@ import {
   FiCheck, FiLoader, FiAlertTriangle, FiInfo,
   FiPrinter, FiCopy, FiLink, FiGlobe,FiPhoneCall, FiArrowRight 
 } from 'react-icons/fi';
-import { IoClose } from "react-icons/io5"; // or /io for v4
+import { IoClose, IoCalendarClearOutline } from "react-icons/io5"; // or /io for v4
 
 import { 
   FaBell, FaBars, FaChartBar, FaFolder, FaComments, 
@@ -1051,7 +1051,7 @@ function EmergencyModal({ student, onClose, onSubmit }) {
     ) : (
       <>
         <FaExclamationCircle />
-        Submit Emergency Request
+        Submit 
       </>
     )}
   </button>

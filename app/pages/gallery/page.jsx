@@ -11,7 +11,8 @@ import {
   FiBookmark, FiExternalLink, FiZap, FiTrendingUp, FiCopy, FiBell,
   FiUserPlus, FiArrowRight, FiPlus, FiRotateCw, FiEdit3, FiTrash2,
   FiSave, FiUpload, FiMapPin, FiAlertTriangle, FiMail, FiPhone, FiFolder, FiLock 
-} from 'react-icons/fi';import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
+} from 'react-icons/fi';
+import { FaWhatsapp, FaFacebookF, FaTwitter, FaCopy } from 'react-icons/fa';
 import { 
   IoClose, IoMenu, IoSparkles
 } from 'react-icons/io5';
@@ -128,7 +129,7 @@ const ModernHeroBanner = ({ stats, onRefresh }) => {
 };
 
 // Modern Gallery Card Component (Matching Counseling Session Card Design)
-const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid' }) => {
+const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid', onShare }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -235,8 +236,20 @@ const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid' }) =
               )}
             </div>
 
-            {/* Favorite Button */}
-            <div className="absolute top-4 right-4">
+            {/* Action Buttons */}
+            <div className="absolute top-4 right-4 flex gap-2">
+              {/* Share Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShare(gallery);
+                }}
+                className="p-2.5 rounded-xl backdrop-blur-md border shadow-sm bg-white/90 border-white/10 text-slate-700 hover:bg-white"
+              >
+                <FiShare2 size={16} />
+              </button>
+              
+              {/* Favorite Button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -370,6 +383,15 @@ const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid' }) =
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    onShare(gallery);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-300 hover:text-slate-500 transition-colors"
+                >
+                  <FiShare2 size={14} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onFavorite(gallery);
                     setIsFavorite(!isFavorite);
                   }}
@@ -457,6 +479,192 @@ const ModernStatCard = ({ stat }) => {
   );
 };
 
+// Share Modal Component
+const ShareModal = ({ isOpen, onClose, gallery }) => {
+  const [copied, setCopied] = useState(false);
+  
+  if (!isOpen || !gallery) return null;
+
+  const shareUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/gallery/${gallery.id}`
+    : '';
+
+  const shareTitle = `Check out this school gallery: ${gallery.title}`;
+  const shareText = `${gallery.title} - ${gallery.description?.substring(0, 100)}...`;
+
+  const shareOptions = [
+    {
+      name: 'Copy Link',
+      icon: FiCopy,
+      color: 'bg-slate-100',
+      iconColor: 'text-slate-600',
+      action: () => {
+        navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        toast.success('Gallery link copied to clipboard!');
+        setTimeout(() => setCopied(false), 2000);
+      }
+    },
+    {
+      name: 'WhatsApp',
+      icon: FaWhatsapp,
+      color: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+      action: () => {
+        const url = `https://wa.me/?text=${encodeURIComponent(`${shareTitle}\n${shareText}\n${shareUrl}`)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    },
+    {
+      name: 'Twitter',
+      icon: FaTwitter,
+      color: 'bg-sky-50',
+      iconColor: 'text-sky-600',
+      action: () => {
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n${shareUrl}`)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    },
+    {
+      name: 'Facebook',
+      icon: FaFacebookF,
+      color: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      action: () => {
+        const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    },
+    {
+      name: 'Email',
+      icon: FiMail,
+      color: 'bg-rose-50',
+      iconColor: 'text-rose-600',
+      action: () => {
+        const subject = encodeURIComponent(shareTitle);
+        const body = encodeURIComponent(`${shareText}\n\n${shareUrl}`);
+        const url = `mailto:?subject=${subject}&body=${body}`;
+        window.location.href = url;
+      }
+    },
+    {
+      name: 'Telegram',
+      icon: FiShare2,
+      color: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+      action: () => {
+        const url = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    }
+  ];
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] transition-opacity duration-300"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <div 
+          className="bg-white rounded-[40px] w-full max-w-md max-h-[90vh] overflow-hidden border border-slate-200 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="p-6 border-b border-slate-100">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold text-slate-900">Share Gallery</h3>
+              <button
+                onClick={onClose}
+                className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <p className="text-slate-500 text-sm">
+              Share "{gallery.title}" with others
+            </p>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            {/* Item Preview */}
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl mb-6">
+              <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                {gallery.files && gallery.files[0] ? (
+                  <img src={gallery.files[0]} alt={gallery.title} className="w-full h-full object-cover" />
+                ) : (
+                  <FiImage className="text-white" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-slate-900 truncate">{gallery.title}</h4>
+                <p className="text-xs text-slate-500 truncate">{gallery.files?.length || 0} files</p>
+              </div>
+            </div>
+
+            {/* Share Options Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              {shareOptions.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={option.action}
+                  className="flex flex-col items-center justify-center p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors"
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 ${option.color}`}>
+                    <option.icon className={`text-lg ${option.iconColor}`} />
+                  </div>
+                  <span className="text-xs font-medium text-slate-700">{option.name}</span>
+                  {option.name === 'Copy Link' && copied && (
+                    <span className="text-[10px] text-emerald-600 font-bold mt-1">Copied!</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* URL Preview */}
+            <div className="mt-6">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Gallery Link
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 truncate"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success('Link copied!');
+                  }}
+                  className="px-4 py-3 bg-slate-900 text-white rounded-xl font-medium text-sm hover:bg-slate-800 transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-slate-100">
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 // Modern Gallery Detail Modal
 const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => {
   const [activeTab, setActiveTab] = useState('preview');
@@ -489,6 +697,52 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
     if (!filename) return false;
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
     return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  };
+
+  // Download all files function
+  const downloadAllFiles = async () => {
+    if (!gallery || !gallery.files || gallery.files.length === 0) {
+      toast.error('No files available to download');
+      return;
+    }
+
+    toast.loading(`Downloading ${gallery.files.length} files...`);
+    
+    try {
+      // Create a zip file
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      
+      // Create a folder for this gallery
+      const folder = zip.folder(gallery.title.replace(/[^a-z0-9]/gi, '_'));
+      
+      // Add all files to the zip
+      for (let i = 0; i < gallery.files.length; i++) {
+        const fileUrl = gallery.files[i];
+        const response = await fetch(fileUrl);
+        const blob = await response.blob();
+        const fileName = fileUrl.split('/').pop() || `file_${i + 1}`;
+        folder.file(fileName, blob);
+      }
+      
+      // Generate and download the zip file
+      const content = await zip.generateAsync({ type: 'blob' });
+      const downloadUrl = URL.createObjectURL(content);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${gallery.title.replace(/[^a-z0-9]/gi, '_')}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(downloadUrl);
+      
+      toast.dismiss();
+      toast.success(`Downloaded ${gallery.files.length} files successfully!`);
+    } catch (error) {
+      console.error('Error downloading files:', error);
+      toast.dismiss();
+      toast.error('Failed to download files');
+    }
   };
 
   return (
@@ -610,7 +864,6 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
             {activeTab === 'preview' && (
               <section className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Gallery Preview</h3>
-              
                 
                 {/* Thumbnail Grid */}
                 {gallery.files && gallery.files.length > 0 && (
@@ -639,8 +892,8 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
                   </div>
                 )}
                 <div className="text-slate-700 leading-snug sm:leading-relaxed text-sm sm:text-base md:text-lg break-words">
-                {gallery.description || 'No description available.'}
-              </div>
+                  {gallery.description || 'No description available.'}
+                </div>
               </section>
             )}
 
@@ -762,29 +1015,23 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
 
         {/* 3. Action Footer - Sticky */}
         <div className="shrink-0 p-6 bg-slate-50/80 backdrop-blur-md border-t border-slate-100">
-<div className="max-w-2xl mx-auto flex flex-row items-center gap-2 px-1 sm:px-0">
-  <button
-    onClick={() => {
-      onDownload(gallery);
-      toast.success('Downloading gallery files...');
-    }}
-    className="flex-[1.5] sm:flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
-  >
-    <FiDownload size={18} className="shrink-0" />
-    <span className="truncate">Download</span>
-  </button>
-  
-  <button
-    onClick={() => {
-      onShare(gallery);
-      toast.success('Share link copied to clipboard');
-    }}
-    className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
-  >
-    <FiShare2 size={18} className="shrink-0" />
-    <span className="truncate">Share</span>
-  </button>
-</div>
+          <div className="max-w-2xl mx-auto flex flex-row items-center gap-2 px-1 sm:px-0">
+            <button
+              onClick={downloadAllFiles}
+              className="flex-[1.5] sm:flex-[2] h-12 sm:h-14 bg-slate-900 text-white rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
+            >
+              <FiDownload size={18} className="shrink-0" />
+              <span className="truncate">Download All ({gallery.files?.length || 0})</span>
+            </button>
+            
+            <button
+              onClick={() => onShare(gallery)}
+              className="flex-1 h-12 sm:h-14 bg-white border-2 border-slate-200 text-slate-900 rounded-xl sm:rounded-2xl font-bold text-[12px] sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all min-w-0"
+            >
+              <FiShare2 size={18} className="shrink-0" />
+              <span className="truncate">Share</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -803,6 +1050,8 @@ export default function ModernGallery() {
   const [selectedYear, setSelectedYear] = useState('all');
   const [showSidebar, setShowSidebar] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [galleryToShare, setGalleryToShare] = useState(null);
 
   // Categories for filtering
   const categoryOptions = [
@@ -815,38 +1064,36 @@ export default function ModernGallery() {
     { id: 'GRADUATION', name: 'Graduation', icon: FiAward, gradient: 'from-rose-500 to-red-500' }
   ];
 
-// ✅ CORRECTED - No comment, proper syntax
-const [stats, setStats] = useState([
-  { 
-    icon: FiImage, 
-    number: '0', 
-    label: 'Media Files', 
-    sublabel: 'Total files',
-    gradient: 'from-blue-500 to-cyan-500'
-  },
-  { 
-    icon: FiFolder, 
-    number: '0', 
-    label: 'Galleries', 
-    sublabel: 'Collections',
-    gradient: 'from-emerald-500 to-green-500'
-  },
-  { 
-    icon: FiGrid, 
-    number: '0', 
-    label: 'Categories', 
-    sublabel: 'Available',
-    gradient: 'from-purple-500 to-pink-500'
-  },
-  { 
-    icon: FiCalendar, 
-    number: new Date().getFullYear().toString(), // ✅ Fixed: Removed comment inline
-    label: 'Latest', 
-    sublabel: 'This year',
-    gradient: 'from-amber-500 to-orange-500'
-  }
-]);
-
+  const [stats, setStats] = useState([
+    { 
+      icon: FiImage, 
+      number: '0', 
+      label: 'Media Files', 
+      sublabel: 'Total files',
+      gradient: 'from-blue-500 to-cyan-500'
+    },
+    { 
+      icon: FiFolder, 
+      number: '0', 
+      label: 'Galleries', 
+      sublabel: 'Collections',
+      gradient: 'from-emerald-500 to-green-500'
+    },
+    { 
+      icon: FiGrid, 
+      number: '0', 
+      label: 'Categories', 
+      sublabel: 'Available',
+      gradient: 'from-purple-500 to-pink-500'
+    },
+    { 
+      icon: FiCalendar, 
+      number: new Date().getFullYear().toString(),
+      label: 'Latest', 
+      sublabel: 'This year',
+      gradient: 'from-amber-500 to-orange-500'
+    }
+  ]);
 
   // Fetch galleries from API
   useEffect(() => {
@@ -967,14 +1214,13 @@ const [stats, setStats] = useState([
   };
 
   const handleDownload = (gallery) => {
-    // Implement download logic
-    toast.info(`Downloading ${gallery.title}...`);
+    // Download all files function will be called from the modal
+    setSelectedGallery(gallery);
   };
 
   const handleShare = (gallery) => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(`${gallery.title} - ${url}`);
-    toast.success('Link copied to clipboard');
+    setGalleryToShare(gallery);
+    setShareModalOpen(true);
   };
 
   const refreshData = async () => {
@@ -1239,6 +1485,7 @@ const [stats, setStats] = useState([
                       gallery={gallery} 
                       onView={handleViewGallery}
                       onFavorite={handleFavorite}
+                      onShare={handleShare}
                       viewMode={viewMode}
                     />
                   ))}
@@ -1441,6 +1688,16 @@ const [stats, setStats] = useState([
           onShare={handleShare}
         />
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => {
+          setShareModalOpen(false);
+          setGalleryToShare(null);
+        }}
+        gallery={galleryToShare}
+      />
     </div>
   );
 }
