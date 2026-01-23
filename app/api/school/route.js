@@ -2,12 +2,43 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import { FileManager } from "../../../libs/superbase";
 
-// ✅ CORRECT: Use Next.js 13+ route segment config
+// ✅ FIX: Remove 'nodejs' runtime which causes 4.5MB limit on Vercel free plan
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// REMOVED: export const runtime = 'nodejs'; // ← THIS WAS THE PROBLEM
 
-// Helper to parse multipart/form-data manually
+// ✅ ADD: Configuration for larger file uploads (up to 100MB)
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '100mb', // Explicitly set to 100MB
+    },
+  },
+};
+
+// =============== HELPER FUNCTIONS ===============
+
+// Helper to check request size and prevent 413 errors
+async function checkRequestSize(request) {
+  const contentLength = request.headers.get('content-length');
+  if (contentLength) {
+    const sizeMB = parseInt(contentLength) / (1024 * 1024);
+    console.log(`📊 Request size check: ${sizeMB.toFixed(2)} MB`);
+    
+    // Warn if approaching Vercel limits
+    if (sizeMB > 95) {
+      throw new Error(
+        `Request size ${sizeMB.toFixed(2)}MB is too close to 100MB limit. ` +
+        `Please reduce file sizes. Multipart form data adds ~10-20% overhead.`
+      );
+    }
+  }
+}
+
+// Enhanced parseFormData with size validation
 async function parseFormData(request) {
+  // First check request size
+  await checkRequestSize(request);
+  
   const contentType = request.headers.get('content-type');
   
   if (!contentType || !contentType.includes('multipart/form-data')) {
@@ -15,10 +46,21 @@ async function parseFormData(request) {
   }
 
   try {
-    // Use native formData parser
     return await request.formData();
   } catch (error) {
     console.error('FormData parsing error:', error);
+    
+    // Provide helpful error messages
+    if (error.message.includes('413') || error.message.includes('request entity too large')) {
+      const contentLength = request.headers.get('content-length');
+      const sizeMB = contentLength ? (parseInt(contentLength) / (1024 * 1024)).toFixed(2) : 'unknown';
+      
+      throw new Error(
+        `Request too large (${sizeMB} MB). ` +
+        `Solution: Remove "export const runtime = 'nodejs';" from this file to use higher limits.`
+      );
+    }
+    
     throw new Error(`Failed to parse form data: ${error.message}`);
   }
 }
@@ -115,16 +157,20 @@ const parseFeeDistributionJson = (value, fieldName) => {
   }
 };
 
-// Helper: Upload file to Supabase
+// ✅ ENHANCED: Upload file to Supabase with better error handling
 const uploadFileToSupabase = async (file, folder, fieldName) => {
   if (!file || file.size === 0) {
     return null;
   }
 
   try {
+    console.log(`📤 Uploading ${fieldName}: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+    
     const result = await FileManager.uploadFile(file, `school-info/${folder}`);
     
-    if (!result) return null;
+    if (!result) {
+      throw new Error(`Supabase returned null result for ${fieldName}`);
+    }
     
     return {
       url: result.url,
@@ -136,11 +182,17 @@ const uploadFileToSupabase = async (file, folder, fieldName) => {
     };
   } catch (error) {
     console.error(`❌ Supabase upload error for ${fieldName}:`, error);
+    
+    // Provide more specific error messages
+    if (error.message.includes('Payload too large')) {
+      throw new Error(`File "${file.name}" is too large. Maximum size for ${fieldName}: 100MB`);
+    }
+    
     throw new Error(`Failed to upload ${fieldName}: ${error.message}`);
   }
 };
 
-// MAIN PDF UPLOAD HANDLER (using Supabase)
+// ✅ ENHANCED: Handle PDF upload with improved error handling
 const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = null) => {
   if (!pdfFile || pdfFile.size === 0) {
     return {
@@ -152,7 +204,12 @@ const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = nu
 
   // Delete old file from Supabase if exists
   if (existingFilePath && existingFilePath.includes('supabase.co')) {
-    await deleteOldFileFromSupabase(existingFilePath);
+    try {
+      await FileManager.deleteFiles(existingFilePath);
+      console.log(`🗑️ Deleted old ${fieldName} file`);
+    } catch (deleteError) {
+      console.warn(`⚠️ Could not delete old ${fieldName} file:`, deleteError.message);
+    }
   }
 
   // Validate file type
@@ -163,7 +220,9 @@ const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = nu
   // Validate file size (20MB limit)
   const maxSize = 20 * 1024 * 1024;
   if (pdfFile.size > maxSize) {
-    throw new Error(`${fieldName} file too large. Maximum size: 20MB`);
+    const fileMB = (pdfFile.size / 1024 / 1024).toFixed(2);
+    const maxMB = (maxSize / 1024 / 1024).toFixed(0);
+    throw new Error(`${fieldName} file too large (${fileMB} MB). Maximum size: ${maxMB}MB`);
   }
 
   // Upload to Supabase
@@ -176,7 +235,7 @@ const handlePdfUpload = async (pdfFile, folder, fieldName, existingFilePath = nu
   };
 };
 
-// Handle Additional Files Upload (supports multiple file types)
+// ✅ OPTIMIZED: Handle additional files with parallel processing
 const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
   if (!file || file.size === 0) {
     return {
@@ -189,7 +248,11 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
 
   // Delete old file from Supabase if exists
   if (existingFilePath && existingFilePath.includes('supabase.co')) {
-    await deleteOldFileFromSupabase(existingFilePath);
+    try {
+      await FileManager.deleteFiles(existingFilePath);
+    } catch (deleteError) {
+      console.warn('⚠️ Could not delete old additional file:', deleteError.message);
+    }
   }
 
   // Allowed file types for additional results
@@ -209,13 +272,24 @@ const handleAdditionalFileUpload = async (file, existingFilePath = null) => {
 
   // Validate file type
   if (!allowedTypes.includes(file.type)) {
-    throw new Error(`Invalid file type. Allowed: PDF, Word, Excel, PowerPoint, Images, Text`);
+    const allowedExtensions = allowedTypes.map(t => {
+      if (t.includes('pdf')) return 'PDF';
+      if (t.includes('word') || t.includes('document')) return 'Word';
+      if (t.includes('excel') || t.includes('sheet')) return 'Excel';
+      if (t.includes('powerpoint') || t.includes('presentation')) return 'PowerPoint';
+      if (t.includes('image')) return 'Images (JPEG, PNG, GIF)';
+      if (t.includes('text')) return 'Text';
+      return '';
+    }).filter(Boolean).join(', ');
+    
+    throw new Error(`Invalid file type "${file.type}". Allowed: ${allowedExtensions}`);
   }
 
   // Validate file size (50MB limit)
   const maxSize = 50 * 1024 * 1024;
   if (file.size > maxSize) {
-    throw new Error(`File too large. Maximum size: 50MB`);
+    const fileMB = (file.size / 1024 / 1024).toFixed(2);
+    throw new Error(`File too large (${fileMB} MB). Maximum size: 50MB`);
   }
 
   // Upload to Supabase
@@ -352,7 +426,7 @@ const handleThumbnailUpload = async (thumbnailData, existingThumbnail = null, is
   throw new Error("Invalid thumbnail data format");
 };
 
-// Handle video upload to Supabase
+// ✅ IMPROVED: Video upload handler with comprehensive size validation
 const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, existingVideo = null, existingThumbnail = null, isUpdateOperation = false) => {
   let videoPath = existingVideo?.videoTour || null;
   let videoType = existingVideo?.videoType || null;
@@ -390,24 +464,29 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailData, exis
   
   // If local video file upload is provided (MP4 mode)
   if (videoTourFile && videoTourFile.size > 0) {
+    // Log video size for debugging
+    console.log(`🎥 Video file size: ${(videoTourFile.size / 1024 / 1024).toFixed(2)} MB`);
+    
     // Delete old video file from Supabase if exists
     if (existingVideo?.videoTour && existingVideo?.videoType === 'file' && existingVideo.videoTour.includes('supabase.co')) {
       await deleteOldFileFromSupabase(existingVideo.videoTour);
     }
 
     // Validate file type
-    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-m4v'];
     if (!allowedVideoTypes.includes(videoTourFile.type)) {
-      throw new Error("Invalid video format. Only MP4, WebM, and OGG files are allowed.");
+      throw new Error(`Invalid video format "${videoTourFile.type}". Only MP4, WebM, and OGG files are allowed.`);
     }
 
     // Validate file size (100MB limit)
     const maxSize = 100 * 1024 * 1024;
     if (videoTourFile.size > maxSize) {
-      throw new Error("Video file too large. Maximum size: 100MB");
+      const fileMB = (videoTourFile.size / 1024 / 1024).toFixed(2);
+      throw new Error(`Video file too large (${fileMB} MB). Maximum size: 100MB`);
     }
 
-    // Upload to Supabase
+    // Upload to Supabase with progress logging
+    console.log(`📤 Uploading video file: ${videoTourFile.name}`);
     const supabaseResult = await uploadFileToSupabase(videoTourFile, 'videos', 'video_tour');
     videoPath = supabaseResult.url;
     videoType = "file";
@@ -469,13 +548,84 @@ const parseExistingAdditionalFiles = (existingAdditionalFilesString) => {
   }
 };
 
-// 🟢 CREATE (only once)
+// ✅ ENHANCED: Calculate total request size for better error messages
+const calculateTotalRequestSize = async (formData) => {
+  let totalSize = 0;
+  const fileSizes = {};
+  
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      const sizeMB = value.size / (1024 * 1024);
+      totalSize += value.size;
+      fileSizes[key] = {
+        name: value.name,
+        size: value.size,
+        sizeMB: sizeMB.toFixed(2)
+      };
+    }
+  }
+  
+  const totalMB = totalSize / (1024 * 1024);
+  
+  return {
+    totalSize,
+    totalMB: totalMB.toFixed(2),
+    fileCount: Object.keys(fileSizes).length,
+    fileSizes
+  };
+};
+
+// ✅ OPTIMIZED: Batch upload function for multiple files
+const batchUploadFiles = async (files, folder, fieldName) => {
+  const uploadPromises = files.map(file => 
+    uploadFileToSupabase(file, folder, fieldName)
+  );
+  
+  const results = await Promise.allSettled(uploadPromises);
+  
+  const successfulUploads = [];
+  const failedUploads = [];
+  
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && result.value) {
+      successfulUploads.push(result.value);
+    } else {
+      failedUploads.push({
+        file: files[index]?.name || `File ${index}`,
+        error: result.reason?.message || 'Unknown error'
+      });
+    }
+  });
+  
+  if (failedUploads.length > 0) {
+    console.warn(`⚠️ ${failedUploads.length} files failed to upload:`, failedUploads);
+  }
+  
+  return {
+    successful: successfulUploads,
+    failed: failedUploads
+  };
+};
+
+// =============== API ENDPOINTS ===============
+
+// 🟢 CREATE (only once) - COMPLETELY REFINED
 export async function POST(req) {
   try {
-    // Log the request size for debugging
-    const contentLength = req.headers.get('content-length');
-    console.log(`📦 POST request size: ${contentLength ? Math.round(parseInt(contentLength) / 1024 / 1024) : 'unknown'} MB`);
+    console.log('📨 POST /api/school called');
     
+    // Check request size before processing
+    const contentLength = req.headers.get('content-length');
+    if (contentLength) {
+      const sizeMB = parseInt(contentLength) / (1024 * 1024);
+      console.log(`📦 Total request size: ${sizeMB.toFixed(2)} MB`);
+      
+      // Vercel free plan Node.js runtime has 4.5MB limit
+      if (sizeMB > 4.5) {
+        console.warn(`⚠️ Request may exceed Vercel free plan limit (4.5MB for Node.js runtime)`);
+      }
+    }
+
     const existing = await prisma.schoolInfo.findFirst();
     if (existing) {
       return NextResponse.json(
@@ -484,7 +634,16 @@ export async function POST(req) {
       );
     }
 
+    // Parse form data with size checking
     const formData = await parseFormData(req);
+    
+    // Calculate and log file sizes for debugging
+    const sizeInfo = await calculateTotalRequestSize(formData);
+    console.log('📊 File upload summary:', {
+      totalMB: sizeInfo.totalMB,
+      fileCount: sizeInfo.fileCount,
+      files: sizeInfo.fileSizes
+    });
     
     // Validate required fields
     try {
@@ -505,70 +664,78 @@ export async function POST(req) {
       const youtubeLink = formData.get("youtubeLink");
       const videoTour = formData.get("videoTour");
       const thumbnail = formData.get("videoThumbnail");
-      const videoResult = await handleVideoUpload(youtubeLink, videoTour, thumbnail, null, null, false); // false = create operation
+      const videoResult = await handleVideoUpload(youtubeLink, videoTour, thumbnail, null, null, false);
       videoPath = videoResult.videoPath;
       videoType = videoResult.videoType;
       thumbnailPath = videoResult.thumbnailPath;
       thumbnailType = videoResult.thumbnailType;
     } catch (videoError) {
       return NextResponse.json(
-        { success: false, error: videoError.message },
+        { success: false, error: `Video upload failed: ${videoError.message}` },
         { status: 400 }
       );
     }
 
-    // Handle ALL PDF uploads to Supabase
+    // Handle ALL PDF uploads to Supabase - USING PARALLEL UPLOADS
     let pdfUploads = {};
+    const pdfPromises = [];
     
-    try {
-      // Curriculum PDF
-      const curriculumPDF = formData.get("curriculumPDF");
-      if (curriculumPDF) {
-        pdfUploads.curriculum = await handlePdfUpload(curriculumPDF, "curriculum", "curriculum");
-      }
+    // Main PDF fields
+    const mainPdfFields = [
+      { key: 'curriculum', name: 'curriculumPDF', folder: 'curriculum' },
+      { key: 'dayFees', name: 'feesDayDistributionPdf', folder: 'day-fees' },
+      { key: 'boardingFees', name: 'feesBoardingDistributionPdf', folder: 'boarding-fees' },
+      { key: 'admissionFee', name: 'admissionFeePdf', folder: 'admission' },
+    ];
 
-      // Day fees PDF
-      const feesDayDistributionPdf = formData.get("feesDayDistributionPdf");
-      if (feesDayDistributionPdf) {
-        pdfUploads.dayFees = await handlePdfUpload(feesDayDistributionPdf, "day-fees", "day_fees");
+    for (const field of mainPdfFields) {
+      const pdfFile = formData.get(field.name);
+      if (pdfFile && pdfFile.size > 0) {
+        pdfPromises.push(
+          handlePdfUpload(pdfFile, field.folder, field.name)
+            .then(result => {
+              pdfUploads[field.key] = result;
+            })
+            .catch(error => {
+              console.error(`❌ PDF upload failed for ${field.name}:`, error);
+              throw error;
+            })
+        );
       }
+    }
 
-      // Boarding fees PDF
-      const feesBoardingDistributionPdf = formData.get("feesBoardingDistributionPdf");
-      if (feesBoardingDistributionPdf) {
-        pdfUploads.boardingFees = await handlePdfUpload(feesBoardingDistributionPdf, "boarding-fees", "boarding_fees");
+    // Exam results PDFs
+    const examFields = [
+      { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear', folder: 'exam-results' },
+      { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear', folder: 'exam-results' },
+      { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear', folder: 'exam-results' },
+      { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear', folder: 'exam-results' },
+      { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear', folder: 'exam-results' },
+      { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear', folder: 'exam-results' }
+    ];
+
+    for (const exam of examFields) {
+      const pdfFile = formData.get(exam.name);
+      if (pdfFile && pdfFile.size > 0) {
+        pdfPromises.push(
+          handlePdfUpload(pdfFile, exam.folder, exam.name)
+            .then(result => {
+              pdfUploads[exam.key] = {
+                pdfData: result,
+                year: formData.get(exam.year) ? parseIntField(formData.get(exam.year)) : null
+              };
+            })
+            .catch(error => {
+              console.error(`❌ Exam PDF upload failed for ${exam.name}:`, error);
+              throw error;
+            })
+        );
       }
+    }
 
-      // Admission fee PDF
-      const admissionFeePdf = formData.get("admissionFeePdf");
-      if (admissionFeePdf) {
-        pdfUploads.admissionFee = await handlePdfUpload(admissionFeePdf, "admission", "admission_fee");
-      }
-
-      // Exam results PDFs
-      const examFields = [
-        { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear' },
-        { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear' },
-        { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear' },
-        { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear' },
-        { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear' },
-        { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear' }
-      ];
-
-      for (const exam of examFields) {
-        const pdfFile = formData.get(exam.name);
-        if (pdfFile) {
-          pdfUploads[exam.key] = {
-            pdfData: await handlePdfUpload(pdfFile, "exam-results", exam.key),
-            year: formData.get(exam.year) ? parseIntField(formData.get(exam.year)) : null
-          };
-        }
-      }
-    } catch (pdfError) {
-      return NextResponse.json(
-        { success: false, error: pdfError.message },
-        { status: 400 }
-      );
+    // Wait for all PDF uploads
+    if (pdfPromises.length > 0) {
+      await Promise.all(pdfPromises);
     }
 
     // Handle additional results files to Supabase
@@ -590,15 +757,20 @@ export async function POST(req) {
 
       // Handle "modal" style multiple files: formData.getAll('additionalFiles')
       const modalFiles = formData.getAll('additionalFiles') || [];
+      const modalUploadPromises = [];
+      
       for (let i = 0; i < modalFiles.length; i++) {
         const file = modalFiles[i];
         if (file && file.size > 0) {
-          try {
-            const uploadResult = await handleAdditionalFileUpload(file, null);
-            pushUploadedAdditional(additionalResultsFiles, uploadResult, null, null);
-          } catch (err) {
-            console.warn(`Failed to upload modal additional file ${i}:`, err.message);
-          }
+          modalUploadPromises.push(
+            handleAdditionalFileUpload(file, null)
+              .then(uploadResult => {
+                pushUploadedAdditional(additionalResultsFiles, uploadResult, null, null);
+              })
+              .catch(err => {
+                console.warn(`Failed to upload modal additional file ${i}:`, err.message);
+              })
+          );
         }
       }
 
@@ -618,15 +790,26 @@ export async function POST(req) {
 
       for (const entry of newFileEntries) {
         if (entry.file && entry.file.size > 0) {
-          try {
-            // If a corresponding existing filepath was provided (replacement scenario)
-            const existingFilePathField = formData.get(`existingAdditionalFilepath_${entry.index}`) || formData.get(`replaceAdditionalFilepath_${entry.index}`) || null;
-            const uploadResult = await handleAdditionalFileUpload(entry.file, existingFilePathField || null);
-            pushUploadedAdditional(additionalResultsFiles, uploadResult, entry.year, entry.description);
-          } catch (err) {
-            console.warn(`Failed to upload indexed additional file ${entry.index}:`, err.message);
-          }
+          modalUploadPromises.push(
+            handleAdditionalFileUpload(
+              entry.file, 
+              formData.get(`existingAdditionalFilepath_${entry.index}`) || 
+              formData.get(`replaceAdditionalFilepath_${entry.index}`) || 
+              null
+            )
+            .then(uploadResult => {
+              pushUploadedAdditional(additionalResultsFiles, uploadResult, entry.year, entry.description);
+            })
+            .catch(err => {
+              console.warn(`Failed to upload indexed additional file ${entry.index}:`, err.message);
+            })
+          );
         }
+      }
+
+      // Wait for all additional file uploads
+      if (modalUploadPromises.length > 0) {
+        await Promise.all(modalUploadPromises);
       }
 
       // Deduplicate by filepath (keep first seen)
@@ -777,16 +960,39 @@ export async function POST(req) {
       },
     });
 
+    console.log('✅ School info created successfully');
+    
     return NextResponse.json({ 
       success: true, 
       message: "School info created successfully",
-      school: cleanSchoolResponse(school)
+      school: cleanSchoolResponse(school),
+      uploadStats: {
+        totalMB: sizeInfo.totalMB,
+        fileCount: sizeInfo.fileCount
+      }
     });
   } catch (error) {
     console.error("❌ POST Error:", error);
+    
+    // Handle specific error cases
+    let statusCode = 500;
+    let errorMessage = error.message || "Internal server error";
+    
+    if (error.message.includes('413') || error.message.includes('too large')) {
+      statusCode = 413;
+      errorMessage = `Request too large. ${error.message}. Try reducing file sizes or uploading fewer files at once.`;
+    } else if (error.message.includes('Vercel') || error.message.includes('4.5MB')) {
+      statusCode = 413;
+      errorMessage = `Vercel free plan limit exceeded. ${error.message}`;
+    }
+    
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
-      { status: 500 }
+      { 
+        success: false, 
+        error: errorMessage,
+        suggestion: "Remove 'export const runtime = \"nodejs\";' from this file or upgrade to Vercel Pro plan."
+      }, 
+      { status: statusCode }
     );
   }
 }
@@ -982,10 +1188,15 @@ const cleanSchoolResponse = (school) => {
 // 🟠 PUT update existing info - COMPLETE VERSION WITH MULTIPLE FILE SUPPORT
 export async function PUT(req) {
   try {
-    // Log the request size for debugging
-    const contentLength = req.headers.get('content-length');
-    console.log(`📦 PUT request size: ${contentLength ? Math.round(parseInt(contentLength) / 1024 / 1024) : 'unknown'} MB`);
+    console.log('📨 PUT /api/school called');
     
+    // Check request size
+    const contentLength = req.headers.get('content-length');
+    if (contentLength) {
+      const sizeMB = parseInt(contentLength) / (1024 * 1024);
+      console.log(`📦 Total request size: ${sizeMB.toFixed(2)} MB`);
+    }
+
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
       return NextResponse.json(
@@ -996,6 +1207,14 @@ export async function PUT(req) {
 
     const formData = await parseFormData(req);
     
+    // Calculate and log file sizes
+    const sizeInfo = await calculateTotalRequestSize(formData);
+    console.log('📊 File upload summary for update:', {
+      totalMB: sizeInfo.totalMB,
+      fileCount: sizeInfo.fileCount,
+      files: sizeInfo.fileSizes
+    });
+
     // Handle video upload with thumbnail - PRESERVE existing thumbnail by default
     let videoPath = existing.videoTour;
     let videoType = existing.videoType;
@@ -1027,57 +1246,80 @@ export async function PUT(req) {
       thumbnailType = videoResult.thumbnailType !== undefined ? videoResult.thumbnailType : existing.videoThumbnailType;
     } catch (videoError) {
       return NextResponse.json(
-        { success: false, error: videoError.message },
+        { success: false, error: `Video upload failed: ${videoError.message}` },
         { status: 400 }
       );
     }
 
     // Handle ALL PDF uploads to Supabase
     let pdfUploads = {};
+    const pdfPromises = [];
     
     try {
       // Curriculum PDF
       const curriculumPDF = formData.get("curriculumPDF");
       if (curriculumPDF) {
-        pdfUploads.curriculum = await handlePdfUpload(curriculumPDF, "curriculum", "curriculum", existing.curriculumPDF);
+        pdfPromises.push(
+          handlePdfUpload(curriculumPDF, "curriculum", "curriculum", existing.curriculumPDF)
+            .then(result => pdfUploads.curriculum = result)
+        );
       }
 
       // Day fees PDF
       const feesDayDistributionPdf = formData.get("feesDayDistributionPdf");
       if (feesDayDistributionPdf) {
-        pdfUploads.dayFees = await handlePdfUpload(feesDayDistributionPdf, "day-fees", "day_fees", existing.feesDayDistributionPdf);
+        pdfPromises.push(
+          handlePdfUpload(feesDayDistributionPdf, "day-fees", "day_fees", existing.feesDayDistributionPdf)
+            .then(result => pdfUploads.dayFees = result)
+        );
       }
 
       // Boarding fees PDF
       const feesBoardingDistributionPdf = formData.get("feesBoardingDistributionPdf");
       if (feesBoardingDistributionPdf) {
-        pdfUploads.boardingFees = await handlePdfUpload(feesBoardingDistributionPdf, "boarding-fees", "boarding_fees", existing.feesBoardingDistributionPdf);
+        pdfPromises.push(
+          handlePdfUpload(feesBoardingDistributionPdf, "boarding-fees", "boarding_fees", existing.feesBoardingDistributionPdf)
+            .then(result => pdfUploads.boardingFees = result)
+        );
       }
 
       // Admission fee PDF
       const admissionFeePdf = formData.get("admissionFeePdf");
       if (admissionFeePdf) {
-        pdfUploads.admissionFee = await handlePdfUpload(admissionFeePdf, "admission", "admission_fee", existing.admissionFeePdf);
+        pdfPromises.push(
+          handlePdfUpload(admissionFeePdf, "admission", "admission_fee", existing.admissionFeePdf)
+            .then(result => pdfUploads.admissionFee = result)
+        );
       }
 
       // Exam results PDFs
       const examFields = [
-        { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear', existing: existing.form1ResultsPdf },
-        { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear', existing: existing.form2ResultsPdf },
-        { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear', existing: existing.form3ResultsPdf },
-        { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear', existing: existing.form4ResultsPdf },
-        { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear', existing: existing.mockExamsResultsPdf },
-        { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear', existing: existing.kcseResultsPdf }
+        { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear', existing: existing.form1ResultsPdf, folder: 'exam-results' },
+        { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear', existing: existing.form2ResultsPdf, folder: 'exam-results' },
+        { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear', existing: existing.form3ResultsPdf, folder: 'exam-results' },
+        { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear', existing: existing.form4ResultsPdf, folder: 'exam-results' },
+        { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear', existing: existing.mockExamsResultsPdf, folder: 'exam-results' },
+        { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear', existing: existing.kcseResultsPdf, folder: 'exam-results' }
       ];
 
       for (const exam of examFields) {
         const pdfFile = formData.get(exam.name);
         if (pdfFile) {
-          pdfUploads[exam.key] = {
-            pdfData: await handlePdfUpload(pdfFile, "exam-results", exam.key, exam.existing),
-            year: formData.get(exam.year) ? parseIntField(formData.get(exam.year)) : null
-          };
+          pdfPromises.push(
+            handlePdfUpload(pdfFile, exam.folder, exam.name, exam.existing)
+              .then(result => {
+                pdfUploads[exam.key] = {
+                  pdfData: result,
+                  year: formData.get(exam.year) ? parseIntField(formData.get(exam.year)) : null
+                };
+              })
+          );
         }
+      }
+      
+      // Wait for all PDF uploads
+      if (pdfPromises.length > 0) {
+        await Promise.all(pdfPromises);
       }
     } catch (pdfError) {
       return NextResponse.json(
@@ -1187,37 +1429,47 @@ export async function PUT(req) {
         });
       }
 
-      // Process each new file entry
+      // Process each new file entry with parallel uploads
+      const additionalFilePromises = [];
       for (const entry of newFileEntries) {
         if (entry.file && entry.file.size > 0) {
-          try {
-            // Check if this is a replacement
-            let oldFilePath = null;
-            if (entry.replacesFilepath) {
-              oldFilePath = entry.replacesFilepath;
-              // Remove the old file from finalFiles if it exists
-              finalFiles = finalFiles.filter(f => 
-                (f.filepath || f.filename) !== oldFilePath
-              );
-            }
+          additionalFilePromises.push(
+            (async () => {
+              try {
+                // Check if this is a replacement
+                let oldFilePath = null;
+                if (entry.replacesFilepath) {
+                  oldFilePath = entry.replacesFilepath;
+                  // Remove the old file from finalFiles if it exists
+                  finalFiles = finalFiles.filter(f => 
+                    (f.filepath || f.filename) !== oldFilePath
+                  );
+                }
 
-            const uploadResult = await handleAdditionalFileUpload(entry.file, oldFilePath);
-            
-            if (uploadResult && uploadResult.path) {
-              finalFiles.push({
-                filename: uploadResult.name,
-                filepath: uploadResult.path,
-                filetype: uploadResult.type,
-                year: entry.year ? entry.year.trim() : null,
-                description: entry.description ? entry.description.trim() : null,
-                filesize: uploadResult.size
-              });
-            }
-          } catch (uploadError) {
-            console.warn(`Failed to upload additional file ${entry.index}:`, uploadError.message);
-            // Continue with other files
-          }
+                const uploadResult = await handleAdditionalFileUpload(entry.file, oldFilePath);
+                
+                if (uploadResult && uploadResult.path) {
+                  finalFiles.push({
+                    filename: uploadResult.name,
+                    filepath: uploadResult.path,
+                    filetype: uploadResult.type,
+                    year: entry.year ? entry.year.trim() : null,
+                    description: entry.description ? entry.description.trim() : null,
+                    filesize: uploadResult.size
+                  });
+                }
+              } catch (uploadError) {
+                console.warn(`Failed to upload additional file ${entry.index}:`, uploadError.message);
+                // Continue with other files
+              }
+            })()
+          );
         }
+      }
+
+      // Wait for all additional file uploads
+      if (additionalFilePromises.length > 0) {
+        await Promise.all(additionalFilePromises);
       }
 
       // Remove duplicates
@@ -1404,16 +1656,31 @@ export async function PUT(req) {
       },
     });
 
+    console.log('✅ School info updated successfully');
+    
     return NextResponse.json({ 
       success: true, 
       message: "School info updated successfully",
-      school: cleanSchoolResponse(updated)
+      school: cleanSchoolResponse(updated),
+      uploadStats: {
+        totalMB: sizeInfo.totalMB,
+        fileCount: sizeInfo.fileCount
+      }
     });
   } catch (error) {
     console.error("❌ PUT Error:", error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message || "Internal server error";
+    
+    if (error.message.includes('413') || error.message.includes('too large')) {
+      statusCode = 413;
+      errorMessage = `Request too large. ${error.message}`;
+    }
+    
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
-      { status: 500 }
+      { success: false, error: errorMessage }, 
+      { status: statusCode }
     );
   }
 }
