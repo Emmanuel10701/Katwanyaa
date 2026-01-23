@@ -672,7 +672,7 @@ function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSe
   return (
     <div className={`bg-white rounded-[2rem] shadow-xl border ${
       selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-100'
-    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer`} onClick={() => onView(resource)}>
+    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl  cursor-pointer`} onClick={() => onView(resource)}>
       
       {/* Header with Type and Selection Checkbox */}
       <div className={`p-6 ${typeColor.bg} border-b ${typeColor.text} border-opacity-20 relative`}>

@@ -689,7 +689,7 @@ function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, 
   return (
     <div className={`bg-white rounded-[2rem] shadow-xl border ${
       selected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-gray-100'
-    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer`} onClick={() => onView(assignment)}>
+    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl  cursor-pointer`} onClick={() => onView(assignment)}>
       
       {/* Header with Status and Selection Checkbox */}
       <div className={`p-6 ${statusColor.bg} border-b ${statusColor.text} border-opacity-20 relative`}>
