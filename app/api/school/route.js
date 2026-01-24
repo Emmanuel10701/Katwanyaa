@@ -6,18 +6,7 @@ import { FileManager } from "../../../libs/superbase";
 export const dynamic = 'force-dynamic';
 // REMOVED: export const runtime = 'nodejs'; // ← THIS WAS THE PROBLEM
 
-// ✅ ADD: Configuration for larger file uploads (up to 100MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '100mb', // Explicitly set to 100MB
-    },
-  },
-};
 
-// =============== HELPER FUNCTIONS ===============
-
-// Helper to check request size and prevent 413 errors
 async function checkRequestSize(request) {
   const contentLength = request.headers.get('content-length');
   if (contentLength) {
@@ -611,6 +600,9 @@ const batchUploadFiles = async (files, folder, fieldName) => {
 
 // 🟢 CREATE (only once) - COMPLETELY REFINED
 export async function POST(req) {
+      const formData = await request.formData();
+
+
   try {
     console.log('📨 POST /api/school called');
     
