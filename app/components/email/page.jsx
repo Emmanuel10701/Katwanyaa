@@ -107,37 +107,137 @@ const parseCampaignAttachments = (attachmentsString) => {
   return [];
 };
 
-// Upload Attachments Component - REFINED
+// Upload Attachments Component - REFINED WITH 4MB TOTAL LIMIT
 const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments = [] }) => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [totalSize, setTotalSize] = useState(0);
   const fileInputRef = useRef(null);
+
+  // Calculate total size of existing attachments
+  const existingAttachmentsSize = existingAttachments.reduce((total, file) => {
+    return total + (file.fileSize || 0);
+  }, 0);
+
+  // MAX TOTAL SIZE: 4MB = 4 * 1024 * 1024 bytes
+  const MAX_TOTAL_SIZE = 4 * 1024 * 1024;
+  const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB per file
 
   const handleFileSelect = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const validFiles = selectedFiles.filter(file => 
-      file.size <= 10 * 1024 * 1024 // 10MB limit
-    );
     
-    if (validFiles.length !== selectedFiles.length) {
-      toast.error('Some files exceed 10MB limit');
+    // Calculate current total size with new files
+    const newFilesSize = selectedFiles.reduce((total, file) => total + file.size, 0);
+    const potentialTotalSize = totalSize + existingAttachmentsSize + newFilesSize;
+    
+    // Check if total exceeds limit
+    if (potentialTotalSize > MAX_TOTAL_SIZE) {
+      const availableSpace = MAX_TOTAL_SIZE - (totalSize + existingAttachmentsSize);
+      toast.error(
+        <div className="flex flex-col">
+          <span className="font-semibold">Total size limit exceeded!</span>
+          <span className="text-sm">Maximum total size: {formatFileSize(MAX_TOTAL_SIZE)}</span>
+          <span className="text-sm">Available space: {formatFileSize(Math.max(0, availableSpace))}</span>
+          <span className="text-sm mt-1">Please reduce file sizes or remove some files.</span>
+        </div>,
+        {
+          duration: 5000,
+          style: {
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b'
+          }
+        }
+      );
+      return;
     }
     
-    setFiles(prev => [...prev, ...validFiles]);
+    // Check individual file sizes
+    const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      toast.error(
+        <div className="flex flex-col">
+          <span className="font-semibold">Oversized files detected!</span>
+          <span className="text-sm">Maximum per file: {formatFileSize(MAX_FILE_SIZE)}</span>
+          <ul className="text-sm mt-1">
+            {oversizedFiles.slice(0, 3).map((file, i) => (
+              <li key={i}>• {file.name} ({formatFileSize(file.size)})</li>
+            ))}
+            {oversizedFiles.length > 3 && <li>...and {oversizedFiles.length - 3} more</li>}
+          </ul>
+        </div>,
+        {
+          duration: 5000,
+          style: {
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b'
+          }
+        }
+      );
+      
+      // Only keep files under the limit
+      const validFiles = selectedFiles.filter(file => file.size <= MAX_FILE_SIZE);
+      if (validFiles.length === 0) return;
+      
+      setFiles(prev => [...prev, ...validFiles]);
+      setTotalSize(prev => prev + validFiles.reduce((sum, file) => sum + file.size, 0));
+    } else {
+      setFiles(prev => [...prev, ...selectedFiles]);
+      setTotalSize(prev => prev + newFilesSize);
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const removeFile = (index) => {
+    const fileToRemove = files[index];
     setFiles(prev => prev.filter((_, i) => i !== index));
+    setTotalSize(prev => prev - fileToRemove.size);
   };
 
   const handleSave = () => {
+    if (totalSize + existingAttachmentsSize > MAX_TOTAL_SIZE) {
+      toast.error(
+        <div className="flex flex-col">
+          <span className="font-semibold">Total size limit exceeded!</span>
+          <span className="text-sm">
+            Current total: {formatFileSize(totalSize + existingAttachmentsSize)} / {formatFileSize(MAX_TOTAL_SIZE)}
+          </span>
+        </div>,
+        {
+          duration: 4000,
+          style: {
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#991b1b'
+          }
+        }
+      );
+      return;
+    }
+    
     // Pass selected files back to parent component
     onFilesSelected(files);
     onClose();
     setFiles([]);
+    setTotalSize(0);
   };
 
   if (!open) return null;
+
+  const currentTotalSize = totalSize + existingAttachmentsSize;
+  const sizePercentage = (currentTotalSize / MAX_TOTAL_SIZE) * 100;
+  
+  // Color coding for size indicator
+  const getSizeBarColor = () => {
+    if (sizePercentage > 90) return 'bg-red-500';
+    if (sizePercentage > 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
@@ -158,6 +258,30 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
               <X className="w-5 h-5" />
             </button>
           </div>
+          
+          {/* Size Indicator */}
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-blue-100/90">Total Size</span>
+              <span className="font-medium">
+                {formatFileSize(currentTotalSize)} / {formatFileSize(MAX_TOTAL_SIZE)}
+              </span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-2">
+              <div 
+                className={`h-full rounded-full transition-all duration-300 ${getSizeBarColor()} ${
+                  sizePercentage > 100 ? 'animate-pulse' : ''
+                }`}
+                style={{ width: `${Math.min(100, sizePercentage)}%` }}
+              />
+            </div>
+            {sizePercentage > 90 && (
+              <p className="text-xs text-yellow-200 mt-1 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Approaching size limit! Consider compressing files.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -165,15 +289,35 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
           {/* Upload Area */}
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
+            className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+              currentTotalSize >= MAX_TOTAL_SIZE 
+                ? 'border-red-300 bg-red-50/30' 
+                : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'
+            }`}
+            title={currentTotalSize >= MAX_TOTAL_SIZE ? "Maximum total size reached" : ""}
           >
             <div className="mb-4">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+              {currentTotalSize >= MAX_TOTAL_SIZE ? (
+                <AlertTriangle className="w-12 h-12 text-red-400 mx-auto" />
+              ) : (
+                <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+              )}
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">Drop files here or click to upload</h3>
-            <p className="text-gray-600 mb-4">Maximum file size: 10MB per file</p>
-            <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium">
-              Select Files
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              {currentTotalSize >= MAX_TOTAL_SIZE ? 'Maximum Size Reached' : 'Drop files here or click to upload'}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Maximum: {formatFileSize(MAX_FILE_SIZE)} per file • Total limit: {formatFileSize(MAX_TOTAL_SIZE)}
+            </p>
+            <button 
+              className={`px-4 py-2 rounded-lg font-medium ${
+                currentTotalSize >= MAX_TOTAL_SIZE
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+              }`}
+              disabled={currentTotalSize >= MAX_TOTAL_SIZE}
+            >
+              {currentTotalSize >= MAX_TOTAL_SIZE ? 'Limit Reached' : 'Select Files'}
             </button>
             <input
               ref={fileInputRef}
@@ -181,13 +325,19 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
               multiple
               onChange={handleFileSelect}
               className="hidden"
+              disabled={currentTotalSize >= MAX_TOTAL_SIZE}
             />
           </div>
 
           {/* Existing Attachments Preview */}
           {existingAttachments.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-bold text-gray-900 mb-3">Current Attachments</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-gray-900">Current Attachments</h3>
+                <span className="text-sm text-gray-600">
+                  {formatFileSize(existingAttachmentsSize)}
+                </span>
+              </div>
               <div className="space-y-2">
                 {existingAttachments.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50/80 rounded-lg border border-gray-200/60">
@@ -212,7 +362,12 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
           {/* New Files to Add */}
           {files.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-bold text-gray-900 mb-3">Files to Add ({files.length})</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-gray-900">Files to Add ({files.length})</h3>
+                <span className="text-sm text-gray-600">
+                  {formatFileSize(totalSize)}
+                </span>
+              </div>
               <div className="space-y-2">
                 {files.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50/50 to-cyan-50/50 rounded-lg border border-blue-200/60">
@@ -222,14 +377,17 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
                         <p className="font-medium text-gray-900">{file.name}</p>
                         <p className="text-sm text-gray-600">
                           {formatFileSize(file.size)}
+                          {file.size > MAX_FILE_SIZE && (
+                            <span className="text-red-500 ml-2 font-medium">(Too large!)</span>
+                          )}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => removeFile(index)}
-                      className="p-1.5 text-gray-400 hover:text-red-500"
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <X className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -245,15 +403,20 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
               onClick={() => {
                 onClose();
                 setFiles([]);
+                setTotalSize(0);
               }}
-              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50"
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              disabled={uploading}
-              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium disabled:opacity-50"
+              disabled={uploading || files.length === 0 || currentTotalSize > MAX_TOTAL_SIZE}
+              className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                currentTotalSize > MAX_TOTAL_SIZE || uploading || files.length === 0
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:shadow-lg'
+              }`}
             >
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -261,15 +424,22 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
                   Processing...
                 </span>
               ) : (
-                'Add Files'
+                `Add ${files.length} File${files.length !== 1 ? 's' : ''}`
               )}
             </button>
           </div>
+          {currentTotalSize > MAX_TOTAL_SIZE && (
+            <p className="text-red-500 text-sm mt-2 text-center">
+              Total size exceeds limit! Please remove some files.
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+
 
 // Confirmation Modal Component
 const ConfirmationModal = ({ 
