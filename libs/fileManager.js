@@ -17,98 +17,97 @@ class FileManager {
     this.bucketName = 'Katwanyaa High';
   }
 
-  // Upload file to Supabase with original name preserved
-  async uploadFile(file, folder = 'uploads') {
-    try {
-      if (!file || !(file instanceof File)) {
-        throw new Error('Invalid file provided');
-      }
-
-      // Preserve original filename but sanitize it
-      const originalFileName = file.name;
-      const fileExtension = originalFileName.slice((originalFileName.lastIndexOf(".") - 1 >>> 0) + 2);
-      const fileNameWithoutExt = originalFileName.slice(0, originalFileName.lastIndexOf('.'));
-      
-      // Sanitize filename (remove special characters, keep only alphanumeric, dots, dashes, underscores)
-      const sanitizedFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9\s\-_]/g, '_');
-      
-      // Add timestamp for uniqueness
-      const timestamp = Date.now();
-      const uniqueFileName = `${sanitizedFileName}_${timestamp}.${fileExtension}`;
-      const filePath = `${folder}/${uniqueFileName}`;
-
-      console.log(`📤 Uploading to Supabase: ${originalFileName} → ${filePath}`);
-
-      // Upload to Supabase
-      const { data, error } = await this.supabase.storage
-        .from(this.bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type
-        });
-
-      if (error) {
-        // Handle file already exists error
-        if (error.message.includes('already exists')) {
-          // Try with a more unique name
-          const moreUniqueFileName = `${sanitizedFileName}_${timestamp}_${Math.random().toString(36).substr(2, 6)}.${fileExtension}`;
-          const newFilePath = `${folder}/${moreUniqueFileName}`;
-          
-          const { data: newData, error: newError } = await this.supabase.storage
-            .from(this.bucketName)
-            .upload(newFilePath, file, {
-              cacheControl: '3600',
-              upsert: false,
-              contentType: file.type
-            });
-            
-          if (newError) throw newError;
-          
-          // Get public URL for the new file
-          const { data: { publicUrl } } = this.supabase.storage
-            .from(this.bucketName)
-            .getPublicUrl(newData.path);
-            
-          console.log('✅ File uploaded to Supabase (with unique name):', publicUrl);
-          
-          return {
-            success: true,
-            url: publicUrl,
-            path: newData.path,
-            originalName: originalFileName,
-            storedName: moreUniqueFileName,
-            size: file.size,
-            type: file.type,
-            folder: folder
-          };
-        }
-        throw error;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = this.supabase.storage
-        .from(this.bucketName)
-        .getPublicUrl(data.path);
-
-      console.log('✅ File uploaded to Supabase:', publicUrl);
-
-      return {
-        success: true,
-        url: publicUrl,
-        path: data.path,
-        originalName: originalFileName,
-        storedName: uniqueFileName,
-        size: file.size,
-        type: file.type,
-        folder: folder
-      };
-
-    } catch (error) {
-      console.error('❌ Supabase upload failed:', error);
-      throw new Error(`File upload failed: ${error.message}`);
+async uploadFile(file, folder = 'uploads') {
+  try {
+    if (!file || !(file instanceof File)) {
+      throw new Error('Invalid file provided');
     }
+
+    // Preserve original filename but sanitize it
+    const originalFileName = file.name;
+    const fileExtension = originalFileName.slice((originalFileName.lastIndexOf(".") - 1 >>> 0) + 2);
+    const fileNameWithoutExt = originalFileName.slice(0, originalFileName.lastIndexOf('.'));
+    
+    // Sanitize filename (remove special characters, keep only alphanumeric, dots, dashes, underscores)
+    const sanitizedFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9\s\-_]/g, '_');
+    
+    // Add timestamp for uniqueness
+    const timestamp = Date.now();
+    const uniqueFileName = `${sanitizedFileName}_${timestamp}.${fileExtension}`;
+    const filePath = `${folder}/${uniqueFileName}`;
+
+    console.log(`📤 Uploading to Supabase: ${originalFileName} → ${filePath}`);
+
+    // Upload to Supabase
+    const { data, error } = await this.supabase.storage
+      .from(this.bucketName)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (error) {
+      // Handle file already exists error
+      if (error.message.includes('already exists')) {
+        // Try with a more unique name
+        const moreUniqueFileName = `${sanitizedFileName}_${timestamp}_${Math.random().toString(36).substr(2, 6)}.${fileExtension}`;
+        const newFilePath = `${folder}/${moreUniqueFileName}`;
+        
+        const { data: newData, error: newError } = await this.supabase.storage
+          .from(this.bucketName)
+          .upload(newFilePath, file, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: file.type
+          });
+          
+        if (newError) throw newError;
+        
+        // Get public URL - IMPORTANT: Properly encode the bucket name
+        const encodedBucketName = encodeURIComponent(this.bucketName);
+        const encodedPath = encodeURIComponent(newData.path);
+        const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${encodedBucketName}/${encodedPath}`;
+        
+        console.log('✅ File uploaded to Supabase (with unique name):', publicUrl);
+        
+        return {
+          success: true,
+          url: publicUrl,
+          path: newData.path,
+          originalName: originalFileName,
+          storedName: moreUniqueFileName,
+          size: file.size,
+          type: file.type,
+          folder: folder
+        };
+      }
+      throw error;
+    }
+
+    // Get public URL - IMPORTANT: Properly encode the bucket name
+    const encodedBucketName = encodeURIComponent(this.bucketName);
+    const encodedPath = encodeURIComponent(data.path);
+    const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${encodedBucketName}/${encodedPath}`;
+
+    console.log('✅ File uploaded to Supabase:', publicUrl);
+
+    return {
+      success: true,
+      url: publicUrl,
+      path: data.path,
+      originalName: originalFileName,
+      storedName: uniqueFileName,
+      size: file.size,
+      type: file.type,
+      folder: folder
+    };
+
+  } catch (error) {
+    console.error('❌ Supabase upload failed:', error);
+    throw new Error(`File upload failed: ${error.message}`);
   }
+}
 
   // Update existing file (delete old, upload new)
   async updateFile(oldFilePath, newFile, folder = 'uploads') {
