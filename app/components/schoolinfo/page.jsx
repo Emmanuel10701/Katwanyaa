@@ -3816,8 +3816,7 @@ const result = await onSave(schoolData);
     
     // SUCCESS
     // ------------------------------------------------------
-    toast.success(schoolInfo ? 'School updated successfully!' : 'School created successfully!');
-    
+toast.success(school ? 'School updated successfully!' : 'School created successfully!');    
     // Clean up
     setShowModal(false);
     
@@ -5573,8 +5572,9 @@ const handleSaveSchool = async (schoolData) => {
     console.log('📨 Sending school data (URLs only) to API...', schoolData);
     
     // Determine if it's an update or create based on the schoolInfo from state
-    const isUpdate = schoolInfo !== null; // Use the schoolInfo from component state
-    
+// Determine if it's an update or create based on existing school data
+const isUpdate = Boolean(schoolData.name && schoolData.description); // Or any other required fields
+// OR use the state if available
     // Send JSON data only (no files - they're already in Supabase)
     const response = await fetch('/api/school', {
       method: isUpdate ? 'PUT' : 'POST',
@@ -6329,16 +6329,14 @@ const handleUpdateExamResults = async (formData) => {
           </button>
         </div>
       )}
-
 {showModal && (
   <ModernSchoolModal 
     onClose={() => setShowModal(false)} 
-    onSave={handleSaveSchool}  // This passes the function correctly
-    school={schoolInfo}
+    onSave={handleSaveSchool}
+    school={schoolInfo}  // This is the prop that becomes "school" in the modal
     loading={actionLoading}
   />
-)}
-      {showDeleteModal && (
+)}      {showDeleteModal && (
         <ModernDeleteModal 
           onClose={() => setShowDeleteModal(false)} 
           onConfirm={handleDeleteSchool} 
