@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import nodemailer from "nodemailer";
-import cloudinary from "../../../libs/cloudinary"; // Changed from supabase import
+import cloudinary from "../../../libs/cloudinary";
 import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
@@ -24,35 +24,35 @@ const transporter = nodemailer.createTransport({
 });
 
 // School Information
-const SCHOOL_NAME = process.env.SCHOOL_NAME || 'Katwanyaa High  School';
+const SCHOOL_NAME = process.env.SCHOOL_NAME || 'Katwanyaa High School';
 const SCHOOL_LOCATION = process.env.SCHOOL_LOCATION || 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = process.env.SCHOOL_MOTTO || 'Education is Light';
 const CONTACT_PHONE = process.env.CONTACT_PHONE || '+254720123456';
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'admissions@katwanyaahighSchool.sc.ke';
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'admissions@katwanyaahighschool.sc.ke';
 const SCHOOL_WEBSITE = process.env.SCHOOL_WEBSITE || 'https://katwanyaa.vercel.app';
 
-// Social Media Configuration (Removed TikTok and Instagram as requested)
+// Social Media Configuration
 const SOCIAL_MEDIA = {
   facebook: {
-    url: process.env.SCHOOL_FACEBOOK || 'https://facebook.com/katwanyaa highSchool',
+    url: process.env.SCHOOL_FACEBOOK || 'https://facebook.com/katwanyaa-highschool',
     color: '#1877F2',
   },
   youtube: {
-    url: process.env.SCHOOL_YOUTUBE || 'https://youtube.com/c/katwanyaa highSchool',
+    url: process.env.SCHOOL_YOUTUBE || 'https://youtube.com/c/katwanyaahighschool',
     color: '#FF0000',
   },
   linkedin: {
-    url: process.env.SCHOOL_LINKEDIN || 'https://linkedin.com/school/Katwanyaa-High',
+    url: process.env.SCHOOL_LINKEDIN || 'https://linkedin.com/school/katwanyaa-high',
     color: '#0A66C2',
   },
   twitter: {
-    url: process.env.SCHOOL_TWITTER || 'https://twitter.com/katwanyaa highSchool',
+    url: process.env.SCHOOL_TWITTER || 'https://twitter.com/katwanyaaschool',
     color: '#1DA1F2',
   }
 };
 
 // ====================================================================
-// CLOUDINARY HELPER FUNCTIONS (REPLACED SUPABASE)
+// CLOUDINARY HELPER FUNCTIONS
 // ====================================================================
 
 // Helper: Upload file to Cloudinary
@@ -111,7 +111,6 @@ const deleteFileFromCloudinary = async (publicId) => {
     await cloudinary.uploader.destroy(publicId);
   } catch (error) {
     console.error("❌ Error deleting file from Cloudinary:", error);
-    // Silent fail - don't block operation if delete fails
   }
 };
 
@@ -131,7 +130,7 @@ const deleteCloudinaryFiles = async (attachments) => {
 };
 
 // ====================================================================
-// HELPER FUNCTIONS (SAME AS BEFORE)
+// HELPER FUNCTIONS
 // ====================================================================
 
 function getRecipientTypeLabel(type) {
@@ -169,15 +168,497 @@ function sanitizeContent(content) {
   return safeContent;
 }
 
-// ... [Rest of the email template function remains exactly the same - it's very long]
+// COMPLETE EMAIL TEMPLATE FUNCTION
 function getModernEmailTemplate({ 
   subject = '', 
   content = '',
   senderName = 'School Administration',
   recipientType = 'all'
 }) {
-  // ... [Keep all the exact same template code]
-  return `...`;
+  const recipientTypeLabel = getRecipientTypeLabel(recipientType);
+  const sanitizedContent = sanitizeContent(content);
+  
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${subject} • ${SCHOOL_NAME}</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8fafc;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+        }
+        
+        .school-logo {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .school-motto {
+            font-size: 15px;
+            opacity: 0.95;
+            margin-bottom: 20px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .email-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Content Styles */
+        .content {
+            padding: 40px 32px;
+        }
+        
+        .subject {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 24px;
+            line-height: 1.4;
+            border-left: 4px solid #4c7cf3;
+            padding-left: 16px;
+        }
+        
+        .message-content {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 28px;
+            margin: 24px 0;
+            border: 1px solid #e2e8f0;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+        
+        .message-content p {
+            margin-bottom: 16px;
+        }
+        
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Recipient Info */
+        .recipient-info {
+            background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            border: 1px solid #dbeafe;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            color: #4c7cf3;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            color: #475569;
+        }
+        
+        /* Attachments Section */
+        .attachments-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 28px 0;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .attachments-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .attachments-list {
+            list-style: none;
+        }
+        
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        
+        .attachment-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+        
+        .attachment-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .attachment-icon {
+            font-size: 20px;
+        }
+        
+        .attachment-name a {
+            color: #1e3c72;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .attachment-name a:hover {
+            text-decoration: underline;
+        }
+        
+        .attachment-name small {
+            color: #64748b;
+            font-size: 12px;
+            display: block;
+            margin-top: 2px;
+        }
+        
+        /* Footer Styles */
+        .footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #cbd5e1;
+            padding: 40px 32px;
+            text-align: center;
+        }
+        
+        .school-info {
+            margin-bottom: 24px;
+        }
+        
+        .school-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 12px;
+        }
+        
+        .contact-details {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .contact-item a {
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+        
+        .contact-item a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        /* Social Media */
+        .social-media {
+            margin-bottom: 28px;
+        }
+        
+        .social-media h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 16px;
+        }
+        
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+        
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Sender Info */
+        .sender-info {
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        .sender-info p {
+            margin-bottom: 4px;
+        }
+        
+        .important-notice {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        
+        .important-notice p {
+            font-size: 13px;
+            color: #92400e;
+            margin: 0;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 32px 16px;
+            }
+            
+            .school-logo {
+                font-size: 26px;
+            }
+            
+            .content {
+                padding: 24px 16px;
+            }
+            
+            .subject {
+                font-size: 20px;
+                padding-left: 12px;
+            }
+            
+            .message-content {
+                padding: 20px;
+            }
+            
+            .contact-details {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .social-icons {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="school-logo">${SCHOOL_NAME}</h1>
+            <p class="school-motto">${SCHOOL_MOTTO}</p>
+            <div class="email-badge">${recipientTypeLabel}</div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <h2 class="subject">${subject}</h2>
+            
+            <!-- Recipient Information -->
+            <div class="recipient-info">
+                <div class="info-item">
+                    <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="info-text">This message is intended for: <strong>${recipientTypeLabel}</strong></span>
+                </div>
+                <div class="info-item">
+                    <svg class="info-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="info-text">Sent: ${new Date().toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    })}</span>
+                </div>
+            </div>
+            
+            <!-- Message Content -->
+            <div class="message-content">
+                ${sanitizedContent}
+            </div>
+            
+            <!-- Important Notice -->
+            <div class="important-notice">
+                <p>📧 This is an official communication from ${SCHOOL_NAME}. Please do not reply directly to this email.</p>
+            </div>
+            
+            <!-- Attachments Section will be inserted here -->
+            <!-- Sender Info -->
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <!-- School Information -->
+            <div class="school-info">
+                <h3>${SCHOOL_NAME}</h3>
+                <p>${SCHOOL_LOCATION}</p>
+            </div>
+            
+            <!-- Contact Details -->
+            <div class="contact-details">
+                <div class="contact-item">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+                    </svg>
+                    <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>
+                </div>
+                <div class="contact-item">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.568 17.568 0 0 0 4.168 6.608 17.569 17.569 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.678.678 0 0 0-.58-.122l-2.19.547a1.745 1.745 0 0 1-1.657-.459L5.482 8.062a1.745 1.745 0 0 1-.46-1.657l.548-2.19a.678.678 0 0 0-.122-.58L3.654 1.328zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/>
+                    </svg>
+                    <a href="tel:${CONTACT_PHONE}">${CONTACT_PHONE}</a>
+                </div>
+                <div class="contact-item">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                    </svg>
+                    <a href="${SCHOOL_WEBSITE}" target="_blank">Visit Website</a>
+                </div>
+            </div>
+            
+            <!-- Social Media -->
+            <div class="social-media">
+                <h4>Stay Connected</h4>
+                <div class="social-icons">
+                    <a href="${SOCIAL_MEDIA.facebook.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.facebook.color}" target="_blank">
+                        Facebook
+                    </a>
+                    <a href="${SOCIAL_MEDIA.youtube.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.youtube.color}" target="_blank">
+                        YouTube
+                    </a>
+                    <a href="${SOCIAL_MEDIA.linkedin.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.linkedin.color}" target="_blank">
+                        LinkedIn
+                    </a>
+                    <a href="${SOCIAL_MEDIA.twitter.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.twitter.color}" target="_blank">
+                        Twitter
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Sender Information -->
+            <div class="sender-info">
+                <p>Sent by: <strong>${senderName}</strong></p>
+                <p>${SCHOOL_NAME} Administration</p>
+                <p>This email was sent to ${recipientTypeLabel.toLowerCase()} of ${SCHOOL_NAME}</p>
+            </div>
+            
+            <!-- Privacy Notice -->
+            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                    <em>Please note: This email and any attachments are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the sender immediately and delete it from your system.</em>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
 }
 
 function getFileIcon(fileType) {
@@ -293,8 +774,8 @@ async function sendModernEmails(campaign) {
         const attachmentsSection = generateAttachmentHTML(attachmentsArray);
         // Insert attachments section before sender info
         htmlContent = htmlContent.replace(
-          '<!-- Sender Info -->',
-          `${attachmentsSection}\n<!-- Sender Info -->`
+          '<!-- Attachments Section will be inserted here -->',
+          `${attachmentsSection}\n<!-- Attachments Section will be inserted here -->`
         );
       }
 
@@ -444,7 +925,7 @@ function validateAttachmentSize(attachmentsArray) {
 }
 
 // ====================================================================
-// API HANDLERS (UPDATED FOR CLOUDINARY)
+// API HANDLERS - POST AND GET ONLY
 // ====================================================================
 
 // 🔹 POST - Create a new email campaign with FormData
@@ -940,299 +1421,5 @@ export async function GET(req) {
       success: false, 
       error: error.message || "Failed to retrieve campaigns"
     }, { status: 500 });
-  }
-}
-
-// 🔹 PUT - Update an existing campaign
-export async function PUT(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Campaign ID is required" 
-      }, { status: 400 });
-    }
-    
-    const contentType = req.headers.get('content-type') || '';
-    
-    if (contentType.includes('multipart/form-data')) {
-      // Handle FormData update with file uploads
-      const formData = await req.formData();
-      
-      // Extract text fields
-      const title = formData.get('title')?.toString();
-      const subject = formData.get('subject')?.toString();
-      const content = formData.get('content')?.toString();
-      const recipients = formData.get('recipients')?.toString();
-      const status = formData.get('status')?.toString();
-      const recipientType = formData.get('recipientType')?.toString();
-      const existingAttachmentsJson = formData.get('existingAttachments')?.toString();
-      
-      // Parse existing attachments if provided
-      let existingAttachments = [];
-      if (existingAttachmentsJson) {
-        try {
-          existingAttachments = JSON.parse(existingAttachmentsJson);
-        } catch (error) {
-          console.error('Error parsing existing attachments:', error);
-        }
-      }
-      
-      // Process new file uploads
-      const newAttachments = [];
-      const attachmentFiles = formData.getAll('attachments');
-      
-      for (const file of attachmentFiles) {
-        if (file && file.size > 0) {
-          const savedFile = await saveUploadedFile(file);
-          if (savedFile) {
-            newAttachments.push(savedFile);
-          }
-        }
-      }
-      
-      // Combine existing and new attachments
-      const allAttachments = [...existingAttachments, ...newAttachments];
-      
-      // Validate attachment size
-      if (allAttachments.length > 0) {
-        validateAttachmentSize(allAttachments);
-      }
-      
-      // Build update data
-      const updateData = {};
-      
-      if (title !== undefined) updateData.title = title;
-      if (subject !== undefined) updateData.subject = subject;
-      if (content !== undefined) {
-        // Validate content length
-        const MAX_CONTENT_LENGTH = 65535;
-        if (content.length > MAX_CONTENT_LENGTH) {
-          return NextResponse.json({ 
-            success: false, 
-            error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
-            currentLength: content.length
-          }, { status: 400 });
-        }
-        updateData.content = content;
-      }
-      if (recipients !== undefined) {
-        // Validate recipients
-        const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
-        if (emailList.length === 0) {
-          return NextResponse.json({ 
-            success: false, 
-            error: "At least one valid email address is required" 
-          }, { status: 400 });
-        }
-        
-        const { validEmails, invalidEmails } = validateEmailList(emailList);
-        if (invalidEmails.length > 0) {
-          return NextResponse.json({ 
-            success: false, 
-            error: "Invalid email addresses detected",
-            invalidEmails 
-          }, { status: 400 });
-        }
-        
-        const uniqueEmails = [...new Set(validEmails)];
-        updateData.recipients = uniqueEmails.join(', ');
-      }
-      if (recipientType !== undefined) updateData.recipientType = recipientType;
-      if (status !== undefined) updateData.status = status;
-      
-      // Optimize and add attachments
-      if (allAttachments.length > 0) {
-        const optimizedAttachments = allAttachments.map(attachment => ({
-          filename: attachment.filename,
-          originalName: attachment.originalName,
-          fileType: attachment.fileType,
-          fileSize: attachment.fileSize,
-          uploadedAt: attachment.uploadedAt,
-          url: attachment.url,
-          publicId: attachment.publicId,
-          storageType: attachment.storageType || 'cloudinary'
-        }));
-        updateData.attachments = JSON.stringify(optimizedAttachments);
-      } else {
-        updateData.attachments = null;
-      }
-      
-      // Update campaign in database
-      const updatedCampaign = await prisma.emailCampaign.update({
-        where: { id },
-        data: updateData,
-      });
-      
-      // Send emails if status changed to published
-      let emailResults = null;
-      if (status === 'published' && updateData.recipients) {
-        try {
-          emailResults = await sendModernEmails(updatedCampaign);
-        } catch (emailError) {
-          console.error(`Email sending failed:`, emailError);
-          emailResults = {
-            error: emailError.message,
-            summary: {
-              successful: 0,
-              failed: updatedCampaign.recipients.split(',').length
-            }
-          };
-        }
-      }
-      
-      const response = {
-        success: true,
-        campaign: updatedCampaign,
-        emailResults,
-        message: status === 'published' 
-          ? `Campaign updated and ${emailResults?.summary?.successful || 0} emails sent successfully`
-          : 'Campaign updated successfully'
-      };
-      
-      return NextResponse.json(response);
-      
-    } else {
-      // Handle JSON update
-      const data = await req.json();
-      const { id: bodyId, ...updateData } = data;
-      
-      const campaignId = id || bodyId;
-      
-      if (!campaignId) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "Campaign ID is required" 
-        }, { status: 400 });
-      }
-      
-      // Validate content length if provided
-      if (updateData.content && updateData.content.length > 65535) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "Content is too long. Maximum 65535 characters allowed." 
-        }, { status: 400 });
-      }
-      
-      // Validate recipients if provided
-      if (updateData.recipients) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const emailList = updateData.recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
-        
-        if (emailList.length === 0) {
-          return NextResponse.json({ 
-            success: false, 
-            error: "At least one valid email address is required" 
-          }, { status: 400 });
-        }
-        
-        const invalidEmails = emailList.filter(email => !emailRegex.test(email));
-        
-        if (invalidEmails.length > 0) {
-          return NextResponse.json({ 
-            success: false, 
-            error: "Invalid email addresses detected",
-            invalidEmails 
-          }, { status: 400 });
-        }
-        
-        // Deduplicate emails
-        const uniqueEmails = [...new Set(emailList)];
-        updateData.recipients = uniqueEmails.join(', ');
-      }
-      
-      // Update campaign
-      const updatedCampaign = await prisma.emailCampaign.update({
-        where: { id: campaignId },
-        data: updateData,
-      });
-      
-      const response = {
-        success: true,
-        campaign: updatedCampaign,
-        message: 'Campaign updated successfully'
-      };
-      
-      return NextResponse.json(response);
-    }
-    
-  } catch (error) {
-    console.error(`PUT Error:`, error);
-    
-    let statusCode = 500;
-    let errorMessage = error.message || "Failed to update campaign";
-    
-    if (error.code === 'P2000') {
-      statusCode = 400;
-      errorMessage = "Data too long for database column. Please shorten your content.";
-    } else if (error.code === 'P2025') {
-      statusCode = 404;
-      errorMessage = "Campaign not found";
-    }
-    
-    return NextResponse.json({ 
-      success: false, 
-      error: errorMessage
-    }, { status: statusCode });
-  }
-}
-
-// 🔹 DELETE - Delete a campaign
-export async function DELETE(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    
-    if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Campaign ID is required" 
-      }, { status: 400 });
-    }
-    
-    // First, get the campaign to check for attachments
-    const campaign = await prisma.emailCampaign.findUnique({
-      where: { id },
-      select: { attachments: true }
-    });
-    
-    // Delete files from Cloudinary if they exist
-    if (campaign?.attachments) {
-      try {
-        const attachments = JSON.parse(campaign.attachments);
-        await deleteCloudinaryFiles(attachments);
-      } catch (error) {
-        console.error('Error deleting files from Cloudinary:', error);
-      }
-    }
-    
-    // Delete campaign from database
-    await prisma.emailCampaign.delete({
-      where: { id },
-    });
-    
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Campaign deleted successfully' 
-    });
-    
-  } catch (error) {
-    console.error(`DELETE Error:`, error);
-    
-    let statusCode = 500;
-    let errorMessage = error.message || "Failed to delete campaign";
-    
-    if (error.code === 'P2025') {
-      statusCode = 404;
-      errorMessage = "Campaign not found";
-    }
-    
-    return NextResponse.json({ 
-      success: false, 
-      error: errorMessage
-    }, { status: statusCode });
   }
 }
