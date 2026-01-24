@@ -1,218 +1,152 @@
-
 import { createClient } from '@supabase/supabase-js';
-// libs/fileManager.js - Enhanced version
-class EnhancedFileManager {
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    this.bucketName = 'Katwanyaa High';
-  }
-  
-  // Upload file with comprehensive metadata
-  async uploadFileWithMetadata(file, folder = 'uploads', metadata = {}) {
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
+
+export const fileManager = {
+  // Upload file to Supabase
+  async uploadFile(file, folder, existingFilePath = null, metadata = {}) {
     try {
       if (!file || !(file instanceof File)) {
         throw new Error('Invalid file provided');
       }
-      
-      // Generate structured filename with metadata hash
-      const originalName = file.name;
+
       const timestamp = Date.now();
-      const uniqueId = Math.random().toString(36).substr(2, 9);
+      const uniqueId = Math.random().toString(36).substring(7);
+      const safeFileName = file.name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9._-]/g, '');
       
-      // Create metadata hash for unique identification
-      const metadataHash = await this.generateMetadataHash({
-        originalName,
-        ...metadata,
-        timestamp
-      });
+      const filePath = existingFilePath || `${folder}/${timestamp}_${uniqueId}_${safeFileName}`;
       
-      // Sanitize filename and create unique path
-      const sanitizedBase = originalName.replace(/[^a-zA-Z0-9\s\-_\.]/g, '_');
-      const fileExt = originalName.slice((originalName.lastIndexOf(".") - 1 >>> 0) + 2);
-      const uniqueFileName = `${sanitizedBase.replace(`.${fileExt}`, '')}_${metadataHash}_${timestamp}_${uniqueId}.${fileExt}`;
-      const filePath = `${folder}/${uniqueFileName}`;
-      
-      // Prepare comprehensive metadata for Supabase
-      const supabaseMetadata = {
-        // File info
-        original_name: originalName,
-        file_type: file.type,
-        file_size: file.size,
-        mime_type: file.type,
-        file_extension: fileExt,
-        
-        // Upload context
-        uploaded_at: new Date().toISOString(),
-        metadata_hash: metadataHash,
-        
-        // Application metadata
-        ...metadata,
-        
-        // System metadata
-        _system: {
-          bucket: this.bucketName,
-          folder: folder,
-          upload_method: 'direct',
-          version: '2.0'
+      const uploadOptions = {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type,
+        metadata: {
+          original_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_at: new Date().toISOString(),
+          ...metadata
         }
       };
       
-      console.log(`📤 Uploading with metadata: ${originalName}`, {
-        path: filePath,
-        metadata: supabaseMetadata
-      });
-      
-      // Upload to Supabase with metadata
-      const { data, error } = await this.supabase.storage
-        .from(this.bucketName)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: file.type,
-          metadata: supabaseMetadata  // ✅ Metadata stored with file in Supabase
-        });
+      const { data, error } = await supabase.storage
+        .from('school-documents')
+        .upload(filePath, file, uploadOptions);
       
       if (error) throw error;
       
-      // Generate public URL
-      const publicUrl = await this.getPublicUrl(filePath);
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('school-documents')
+        .getPublicUrl(filePath);
       
       return {
-        success: true,
-        url: publicUrl,
-        path: data.path,
-        originalName: originalName,
-        storedName: uniqueFileName,
-        size: file.size,
-        type: file.type,
-        folder: folder,
-        metadata: supabaseMetadata,
-        metadataHash: metadataHash
+        url: urlData.publicUrl,
+        path: filePath,
+        originalName: file.name
       };
-      
     } catch (error) {
-      console.error('❌ Upload with metadata failed:', error);
+      console.error('File upload failed:', error);
       throw error;
     }
-  }
-  
-  // Generate hash from metadata for unique identification
-  async generateMetadataHash(metadata) {
-    const metadataString = JSON.stringify(metadata);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(metadataString);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 12);
-  }
-  
-  // Get file metadata from Supabase
+  },
+
+  // Get file metadata
   async getFileMetadata(filePath) {
     try {
-      // List files to get metadata
-      const folderPath = filePath.split('/').slice(0, -1).join('/');
-      const fileName = filePath.split('/').pop();
-      
-      const { data: files, error } = await this.supabase.storage
-        .from(this.bucketName)
-        .list(folderPath, {
-          search: fileName,
-          limit: 1
-        });
-      
-      if (error || !files || files.length === 0) {
-        throw new Error('File not found');
-      }
-      
-      return {
-        ...files[0].metadata,
-        name: files[0].name,
-        id: files[0].id,
-        created_at: files[0].created_at,
-        updated_at: files[0].updated_at
-      };
-      
-    } catch (error) {
-      console.error('❌ Get metadata failed:', error);
-      return null;
-    }
-  }
-  
-  // Get public URL
-  async getPublicUrl(filePath) {
-    const { data } = this.supabase.storage
-      .from(this.bucketName)
-      .getPublicUrl(filePath);
-    return data?.publicUrl;
-  }
-  
-  // Get signed URL for downloads
-  async getSignedUrl(filePath, expiresIn = 3600) {
-    const { data, error } = await this.supabase.storage
-      .from(this.bucketName)
-      .createSignedUrl(filePath, expiresIn);
-    
-    if (error) throw error;
-    return data.signedUrl;
-  }
-  
-  // Delete file
-  async deleteFile(filePath) {
-    const { error } = await this.supabase.storage
-      .from(this.bucketName)
-      .remove([filePath]);
-    
-    if (error) throw error;
-    return { success: true };
-  }
-  
-  // Search files by metadata
-  async searchFilesByMetadata(filters = {}) {
-    try {
-      const { data: files, error } = await this.supabase.storage
-        .from(this.bucketName)
+      const { data, error } = await supabase.storage
+        .from('school-documents')
         .list('', {
-          limit: 1000
+          limit: 1,
+          search: filePath
         });
       
       if (error) throw error;
       
-      // Filter files by metadata
-      return files.filter(file => {
-        if (!file.metadata) return false;
-        
-        return Object.entries(filters).every(([key, value]) => {
-          const fileValue = file.metadata[key];
-          
-          if (typeof value === 'object' && value.operator) {
-            switch (value.operator) {
-              case 'contains':
-                return fileValue?.toLowerCase().includes(value.value.toLowerCase());
-              case 'equals':
-                return fileValue === value.value;
-              default:
-                return fileValue === value;
-            }
-          }
-          
-          return fileValue === value;
-        });
-      });
+      if (data && data.length > 0) {
+        return {
+          file_size: data[0].metadata?.file_size || 0,
+          mime_type: data[0].metadata?.mime_type || '',
+          uploaded_at: data[0].created_at
+        };
+      }
       
+      return null;
     } catch (error) {
-      console.error('❌ Search failed:', error);
+      console.error('Failed to get file metadata:', error);
+      return null;
+    }
+  },
+
+  // Delete file
+  async deleteFile(filePath) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('school-documents')
+        .remove([filePath]);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+      throw error;
+    }
+  },
+
+  // List files in folder
+  async listFiles(folder = '') {
+    try {
+      const { data, error } = await supabase.storage
+        .from('school-documents')
+        .list(folder);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Failed to list files:', error);
+      throw error;
+    }
+  },
+
+  // Get signed URL for private files
+  async getSignedUrl(filePath, expiresIn = 3600) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('school-documents')
+        .createSignedUrl(filePath, expiresIn);
+      
+      if (error) throw error;
+      return data?.signedUrl;
+    } catch (error) {
+      console.error('Failed to get signed URL:', error);
+      throw error;
+    }
+  },
+
+  // Update file metadata
+  async updateFileMetadata(filePath, metadata) {
+    try {
+      const { data, error } = await supabase.storage
+        .from('school-documents')
+        .update(filePath, null, {
+          metadata: metadata
+        });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Failed to update file metadata:', error);
       throw error;
     }
   }
+};
+
+// Make it available globally
+if (typeof window !== 'undefined') {
+  window.fileManager = fileManager;
 }
-
-// Export singleton
-const enhancedFileManager = new EnhancedFileManager();
-export { enhancedFileManager };
-
-// Singleton instance
-const fileManager = new FileManager();
-export { fileManager };
