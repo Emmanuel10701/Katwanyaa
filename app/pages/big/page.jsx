@@ -7,14 +7,15 @@ import {
   FaFileExcel, FaFile, FaDownload, FaExternalLinkAlt, FaEye,
   FaPlay, FaTimes, FaFolder, FaFilter, FaSearch, FaSort,
   FaCalendarAlt, FaUserGraduate, FaMoneyBillWave, FaBook,
-  FaUniversity, FaAward, FaVideo, FaYoutube, FaImage
+  FaUniversity, FaAward, FaVideo, FaYoutube, FaImage,
+  FaSpinner, FaCloudDownload
 } from 'react-icons/fa';
-import { FiDownload, FiEye, FiFile } from 'react-icons/fi';
 
 // 1. File Card Component
 const ModernFileCard = ({ file, onPreview, onDownload }) => {
   const [imageError, setImageError] = useState(false);
   const [hover, setHover] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const getFileIcon = (fileType) => {
     if (!fileType) return <FaFile className="text-gray-400" />;
@@ -51,7 +52,7 @@ const ModernFileCard = ({ file, onPreview, onDownload }) => {
   };
 
   const formatFileSize = (bytes) => {
-    if (!bytes) return '';
+    if (!bytes) return 'Unknown';
     const units = ['B', 'KB', 'MB', 'GB'];
     let size = bytes;
     let unitIndex = 0;
@@ -62,6 +63,12 @@ const ModernFileCard = ({ file, onPreview, onDownload }) => {
     }
     
     return `${size.toFixed(1)} ${units[unitIndex]}`;
+  };
+
+  const handleDownloadClick = async () => {
+    setIsDownloading(true);
+    await onDownload(file);
+    setIsDownloading(false);
   };
 
   const thumbnail = getThumbnail();
@@ -171,11 +178,16 @@ const ModernFileCard = ({ file, onPreview, onDownload }) => {
           )}
           
           <button
-            onClick={() => onDownload(file)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all shadow-sm hover:shadow"
+            onClick={handleDownloadClick}
+            disabled={isDownloading}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-lg transition-all shadow-sm hover:shadow disabled:opacity-70"
           >
-            <FaDownload className="text-sm" />
-            Download
+            {isDownloading ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaDownload className="text-sm" />
+            )}
+            {isDownloading ? 'Downloading...' : 'Download'}
           </button>
         </div>
       </div>
@@ -299,7 +311,7 @@ const FilePreviewModal = ({ file, isOpen, onClose }) => {
   );
 };
 
-// 3. Main File Gallery Component
+// 3. Main File Gallery Component - UPDATED with actual Supabase fetching
 const ModernFileGallery = ({ schoolData }) => {
   const [files, setFiles] = useState([]);
   const [filteredFiles, setFilteredFiles] = useState([]);
@@ -309,129 +321,185 @@ const ModernFileGallery = ({ schoolData }) => {
   const [sortBy, setSortBy] = useState('name');
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
-  // Organize files from school data
+  // Fetch files from Supabase and organize them
   useEffect(() => {
-    if (!schoolData) return;
+    const fetchAndOrganizeFiles = async () => {
+      if (!schoolData) return;
 
-    const organizedFiles = [];
+      setLoading(true);
+      const organizedFiles = [];
 
-    // Curriculum Files
-    if (schoolData.curriculumPDF) {
-      organizedFiles.push({
-        id: 'curriculum',
-        name: schoolData.curriculumPdfName || 'Curriculum.pdf',
-        url: schoolData.curriculumPDF,
-        category: 'curriculum',
-        type: 'pdf',
-        icon: <FaBook />,
-        color: 'purple'
-      });
-    }
-
-    // Fee Structure Files
-    if (schoolData.feesDayDistributionPdf) {
-      organizedFiles.push({
-        id: 'fees-day',
-        name: schoolData.feesDayPdfName || 'Day School Fees.pdf',
-        url: schoolData.feesDayDistributionPdf,
-        category: 'fees',
-        type: 'pdf',
-        icon: <FaMoneyBillWave />,
-        color: 'green'
-      });
-    }
-
-    if (schoolData.feesBoardingDistributionPdf) {
-      organizedFiles.push({
-        id: 'fees-boarding',
-        name: schoolData.feesBoardingPdfName || 'Boarding Fees.pdf',
-        url: schoolData.feesBoardingDistributionPdf,
-        category: 'fees',
-        type: 'pdf',
-        icon: <FaUniversity />,
-        color: 'green'
-      });
-    }
-
-    if (schoolData.admissionFeePdf) {
-      organizedFiles.push({
-        id: 'admission-fees',
-        name: schoolData.admissionFeePdfName || 'Admission Fees.pdf',
-        url: schoolData.admissionFeePdf,
-        category: 'admission',
-        type: 'pdf',
-        icon: <FaUserGraduate />,
-        color: 'blue'
-      });
-    }
-
-    // Video Tour
-    if (schoolData.videoTour && schoolData.videoType === 'file') {
-      organizedFiles.push({
-        id: 'video-tour',
-        name: 'School Video Tour',
-        url: schoolData.videoTour,
-        category: 'video',
-        type: 'video/mp4',
-        videoThumbnail: schoolData.videoThumbnail,
-        icon: <FaVideo />,
-        color: 'red'
-      });
-    }
-
-    // YouTube Video
-    if (schoolData.videoTour && schoolData.videoType === 'youtube') {
-      organizedFiles.push({
-        id: 'youtube-video',
-        name: 'YouTube Tour',
-        url: schoolData.videoTour,
-        category: 'video',
-        type: 'youtube',
-        icon: <FaYoutube />,
-        color: 'red'
-      });
-    }
-
-    // Exam Results
-    if (schoolData.examResults) {
-      Object.entries(schoolData.examResults).forEach(([key, result]) => {
-        if (result.pdf) {
+      try {
+        // 1. Curriculum File
+        if (schoolData.curriculumPDF) {
           organizedFiles.push({
-            id: `exam-${key}`,
-            name: result.name || `${key.replace(/([A-Z])/g, ' $1').trim()} Results.pdf`,
-            url: result.pdf,
-            category: 'exam',
+            id: 'curriculum',
+            name: schoolData.curriculumPdfName || 'Curriculum.pdf',
+            url: fixSupabaseUrl(schoolData.curriculumPDF),
+            category: 'curriculum',
             type: 'pdf',
-            year: result.year,
-            icon: <FaAward />,
-            color: 'orange'
+            icon: <FaBook />,
+            color: 'purple'
           });
         }
-      });
-    }
 
-    // Additional Files
-    if (schoolData.additionalResultsFiles) {
-      schoolData.additionalResultsFiles.forEach((file, index) => {
-        organizedFiles.push({
-          id: `additional-${index}`,
-          name: file.filename || file.name || `Additional File ${index + 1}`,
-          url: file.filepath || file.url,
-          category: 'additional',
-          type: file.filetype || 'file',
-          year: file.year,
-          description: file.description,
-          size: file.filesize,
-          icon: <FaFolder />,
-          color: 'gray'
-        });
-      });
-    }
+        // 2. Fee Structure Files
+        if (schoolData.feesDayDistributionPdf) {
+          organizedFiles.push({
+            id: 'fees-day',
+            name: schoolData.feesDayPdfName || 'Day School Fees.pdf',
+            url: fixSupabaseUrl(schoolData.feesDayDistributionPdf),
+            category: 'fees',
+            type: 'pdf',
+            icon: <FaMoneyBillWave />,
+            color: 'green'
+          });
+        }
 
-    setFiles(organizedFiles);
-    setFilteredFiles(organizedFiles);
+        if (schoolData.feesBoardingDistributionPdf) {
+          organizedFiles.push({
+            id: 'fees-boarding',
+            name: schoolData.feesBoardingPdfName || 'Boarding Fees.pdf',
+            url: fixSupabaseUrl(schoolData.feesBoardingDistributionPdf),
+            category: 'fees',
+            type: 'pdf',
+            icon: <FaUniversity />,
+            color: 'green'
+          });
+        }
+
+        if (schoolData.admissionFeePdf) {
+          organizedFiles.push({
+            id: 'admission-fees',
+            name: schoolData.admissionFeePdfName || 'Admission Fees.pdf',
+            url: fixSupabaseUrl(schoolData.admissionFeePdf),
+            category: 'admission',
+            type: 'pdf',
+            icon: <FaUserGraduate />,
+            color: 'blue'
+          });
+        }
+
+        // 3. Video Tour
+        if (schoolData.videoTour) {
+          if (schoolData.videoType === 'file') {
+            organizedFiles.push({
+              id: 'video-tour',
+              name: 'School Video Tour',
+              url: fixSupabaseUrl(schoolData.videoTour),
+              category: 'video',
+              type: 'video/mp4',
+              videoThumbnail: schoolData.videoThumbnail,
+              icon: <FaVideo />,
+              color: 'red'
+            });
+          } else if (schoolData.videoType === 'youtube') {
+            organizedFiles.push({
+              id: 'youtube-video',
+              name: 'YouTube Tour',
+              url: schoolData.videoTour,
+              category: 'video',
+              type: 'youtube',
+              icon: <FaYoutube />,
+              color: 'red'
+            });
+          }
+        }
+
+        // 4. Exam Results
+        if (schoolData.examResults) {
+          await Promise.all(
+            Object.entries(schoolData.examResults).map(async ([key, result]) => {
+              if (result.pdf) {
+                const fileUrl = fixSupabaseUrl(result.pdf);
+                const fileInfo = await getFileInfoFromSupabase(fileUrl);
+                
+                organizedFiles.push({
+                  id: `exam-${key}`,
+                  name: result.name || `${key.replace(/([A-Z])/g, ' $1').trim()} Results.pdf`,
+                  url: fileUrl,
+                  category: 'exam',
+                  type: 'pdf',
+                  year: result.year,
+                  size: fileInfo?.size,
+                  icon: <FaAward />,
+                  color: 'orange'
+                });
+              }
+            })
+          );
+        }
+
+        // 5. Additional Files
+        if (schoolData.additionalResultsFiles && schoolData.additionalResultsFiles.length > 0) {
+          await Promise.all(
+            schoolData.additionalResultsFiles.map(async (file, index) => {
+              if (file.filepath || file.url) {
+                const fileUrl = fixSupabaseUrl(file.filepath || file.url);
+                const fileInfo = await getFileInfoFromSupabase(fileUrl);
+                
+                organizedFiles.push({
+                  id: `additional-${index}`,
+                  name: file.filename || file.name || `Additional File ${index + 1}`,
+                  url: fileUrl,
+                  category: 'additional',
+                  type: file.filetype || 'file',
+                  year: file.year,
+                  description: file.description,
+                  size: fileInfo?.size || file.filesize,
+                  icon: <FaFolder />,
+                  color: 'gray'
+                });
+              }
+            })
+          );
+        }
+
+        setFiles(organizedFiles);
+        setFilteredFiles(organizedFiles);
+      } catch (error) {
+        console.error('Error organizing files:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAndOrganizeFiles();
   }, [schoolData]);
+
+  // Helper function to fix Supabase URLs
+  const fixSupabaseUrl = (url) => {
+    if (!url) return url;
+    
+    // If it's already a full URL, return it
+    if (url.startsWith('http')) return url;
+    
+    // If it's a path, construct the full URL with proper encoding
+    const bucketName = 'Katwanyaa%20High';
+    const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://pkzsthlhoqwelzbxjyum.supabase.co';
+    return `${baseUrl}/storage/v1/object/public/${bucketName}/${encodeURIComponent(url)}`;
+  };
+
+  // Helper function to get file info from Supabase
+  const getFileInfoFromSupabase = async (fileUrl) => {
+    try {
+      // Make a HEAD request to get file info without downloading
+      const response = await fetch(fileUrl, { method: 'HEAD' });
+      
+      if (response.ok) {
+        return {
+          size: parseInt(response.headers.get('content-length') || '0'),
+          type: response.headers.get('content-type') || 'application/octet-stream',
+          lastModified: response.headers.get('last-modified')
+        };
+      }
+    } catch (error) {
+      console.error('Error getting file info:', error);
+    }
+    return null;
+  };
 
   // Filter and sort files
   useEffect(() => {
@@ -481,16 +549,21 @@ const ModernFileGallery = ({ schoolData }) => {
 
   const handleDownload = async (file) => {
     try {
-      setLoading(true);
-      
-      // Fix Supabase URL encoding for spaces in bucket name
+      // For YouTube videos, just open in new tab
+      if (file.type === 'youtube') {
+        window.open(file.url, '_blank');
+        return;
+      }
+
+      // Fix URL encoding if needed
       let downloadUrl = file.url;
       if (downloadUrl && downloadUrl.includes('Katwanyaa High') && !downloadUrl.includes('Katwanyaa%20High')) {
         downloadUrl = downloadUrl.replace('Katwanyaa High', 'Katwanyaa%20High');
       }
 
+      // Fetch the file
       const response = await fetch(downloadUrl);
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -502,16 +575,17 @@ const ModernFileGallery = ({ schoolData }) => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       
+      // Show success message
+      toast.success(`Downloaded ${file.name}`);
+      
     } catch (error) {
       console.error('Download error:', error);
-      alert('Failed to download file. Please try again.');
-    } finally {
-      setLoading(false);
+      toast.error(`Failed to download ${file.name}`);
     }
   };
 
   const handlePreview = (file) => {
-    if (file.category === 'video' && file.type === 'youtube') {
+    if (file.type === 'youtube') {
       window.open(file.url, '_blank');
       return;
     }
@@ -520,22 +594,57 @@ const ModernFileGallery = ({ schoolData }) => {
   };
 
   const handleDownloadAll = async () => {
+    if (files.length === 0) return;
+    
     try {
-      setLoading(true);
+      setDownloadingAll(true);
       
-      // Download files one by one
-      for (const file of files) {
+      // Download files one by one with delays
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         await handleDownload(file);
-        // Small delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Add delay between downloads to avoid overwhelming
+        if (i < files.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
+      
+      toast.success(`Downloaded all ${files.length} files!`);
       
     } catch (error) {
       console.error('Batch download error:', error);
+      toast.error('Some files failed to download');
     } finally {
-      setLoading(false);
+      setDownloadingAll(false);
     }
   };
+
+  const handleDownloadCategory = async (categoryId) => {
+    const categoryFiles = files.filter(f => f.category === categoryId);
+    if (categoryFiles.length === 0) return;
+    
+    try {
+      for (const file of categoryFiles) {
+        await handleDownload(file);
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      toast.success(`Downloaded ${categoryFiles.length} files from ${categoryId}`);
+    } catch (error) {
+      console.error('Category download error:', error);
+      toast.error('Failed to download category files');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-gray-600">Loading files from Supabase...</p>
+      </div>
+    );
+  }
 
   if (!schoolData) {
     return (
@@ -556,19 +665,43 @@ const ModernFileGallery = ({ schoolData }) => {
           <div>
             <h2 className="text-2xl font-bold mb-2">School Media Gallery</h2>
             <p className="text-blue-100 opacity-90">
-              Browse and download all school documents, videos, and resources
+              Browse and download all school documents, videos, and resources from Supabase
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handleDownloadAll}
-              disabled={loading || files.length === 0}
+              disabled={downloadingAll || files.length === 0}
               className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 font-bold disabled:opacity-50 transition-colors flex items-center gap-2"
             >
-              <FaDownload />
-              Download All ({files.length})
+              {downloadingAll ? (
+                <FaSpinner className="animate-spin" />
+              ) : (
+                <FaCloudDownload />
+              )}
+              {downloadingAll ? 'Downloading...' : `Download All (${files.length})`}
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Category Quick Actions */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <FaFolder className="text-blue-500" />
+          Quick Category Downloads
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {categories.filter(cat => cat.id !== 'all' && cat.count > 0).map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => handleDownloadCategory(cat.id)}
+              className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium flex items-center gap-1.5"
+            >
+              <FaDownload className="text-xs" />
+              {cat.name} ({cat.count})
+            </button>
+          ))}
         </div>
       </div>
 
