@@ -3565,12 +3565,11 @@ const handleFormSubmit = async (e) => {
 
     // 1. Upload Video (if exists)
     if (files.videoFile && files.videoFile.size > 0) {
-      toast.loading('Uploading video to Supabase... (5.47 MB)');
+      toast.loading('Uploading video to Supabase...');
       try {
         const videoResult = await FileManager.uploadFile(files.videoFile, 'videos');
         uploadedFiles.video = videoResult;
         console.log('✅ Video uploaded:', videoResult.url);
-        toast.success('Video uploaded successfully!');
       } catch (videoError) {
         console.error('❌ Video upload failed:', videoError);
         toast.error(`Video upload failed: ${videoError.message}`);
@@ -3585,10 +3584,8 @@ const handleFormSubmit = async (e) => {
         const thumbnailResult = await FileManager.uploadFile(selectedThumbnail, 'thumbnails');
         uploadedFiles.thumbnail = thumbnailResult.url;
         console.log('✅ Thumbnail uploaded:', thumbnailResult.url);
-        toast.success('Thumbnail uploaded!');
       } catch (thumbnailError) {
         console.warn('⚠️ Thumbnail upload failed, continuing without it:', thumbnailError.message);
-        toast.warning('Thumbnail upload failed, continuing without it');
         // Don't fail the whole process if thumbnail fails
       }
     }
@@ -3600,67 +3597,41 @@ const handleFormSubmit = async (e) => {
       'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
     ];
 
-    let pdfCount = 0;
     for (const field of pdfFields) {
       if (files[field] && files[field].size > 0) {
-        pdfCount++;
-      }
-    }
-
-    if (pdfCount > 0) {
-      toast.loading(`Uploading ${pdfCount} PDF(s) to Supabase...`);
-      
-      for (const field of pdfFields) {
-        if (files[field] && files[field].size > 0) {
-          try {
-            const pdfResult = await FileManager.uploadFile(files[field], 'documents');
-            uploadedFiles.pdfs[field] = pdfResult;
-            console.log(`✅ ${field} uploaded:`, pdfResult.url);
-          } catch (pdfError) {
-            console.error(`❌ ${field} upload failed:`, pdfError);
-            toast.error(`${field.replace(/([A-Z])/g, ' $1').trim()} upload failed`);
-            throw new Error(`${field} upload failed: ${pdfError.message}`);
-          }
+        try {
+          const pdfResult = await FileManager.uploadFile(files[field], 'documents');
+          uploadedFiles.pdfs[field] = pdfResult;
+          console.log(`✅ ${field} uploaded:`, pdfResult.url);
+        } catch (pdfError) {
+          console.error(`❌ ${field} upload failed:`, pdfError);
+          toast.error(`${field.replace(/([A-Z])/g, ' $1').trim()} upload failed`);
+          throw new Error(`${field} upload failed: ${pdfError.message}`);
         }
-      }
-      
-      if (pdfCount > 0) {
-        toast.success(`${pdfCount} PDF(s) uploaded successfully!`);
       }
     }
 
     // 4. Upload Additional Files
     const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file && f.file.size > 0);
-    if (newAdditionalFiles.length > 0) {
-      toast.loading(`Uploading ${newAdditionalFiles.length} additional file(s) to Supabase...`);
-      
-      for (const fileObj of newAdditionalFiles) {
-        try {
-          const additionalResult = await FileManager.uploadFile(fileObj.file, 'additional');
-          uploadedFiles.additionalFiles.push({
-            url: additionalResult.url,
-            name: additionalResult.fileName,
-            size: additionalResult.fileSize,
-            type: additionalResult.fileType,
-            year: fileObj.year || '',
-            description: fileObj.description || ''
-          });
-          console.log('✅ Additional file uploaded:', additionalResult.fileName);
-        } catch (additionalError) {
-          console.error('❌ Additional file upload failed:', additionalError);
-          toast.warning('Some additional files failed to upload');
-          // Continue with other files
-        }
-      }
-      
-      if (newAdditionalFiles.length > 0) {
-        toast.success(`${newAdditionalFiles.length} additional file(s) uploaded!`);
+    for (const fileObj of newAdditionalFiles) {
+      try {
+        const additionalResult = await FileManager.uploadFile(fileObj.file, 'additional');
+        uploadedFiles.additionalFiles.push({
+          url: additionalResult.url,
+          name: additionalResult.fileName,
+          size: additionalResult.fileSize,
+          type: additionalResult.fileType,
+          year: fileObj.year || '',
+          description: fileObj.description || ''
+        });
+        console.log('✅ Additional file uploaded:', additionalResult.fileName);
+      } catch (additionalError) {
+        console.error('❌ Additional file upload failed:', additionalError);
+        // Continue with other files
       }
     }
 
-    // ==================== STEP 2: PREPARE JSON DATA WITH URLs ====================
-    toast.loading('Preparing data for submission...');
-    
+    // ==================== STEP 2: PREPARE JSON DATA ====================
     const schoolData = {
       // Basic Info
       name: formData.name,
@@ -3678,52 +3649,20 @@ const handleFormSubmit = async (e) => {
       videoType: formData.youtubeLink ? 'youtube' : (uploadedFiles.video ? 'file' : null),
       videoThumbnail: uploadedFiles.thumbnail || null,
       
-      // PDF URLs
-      curriculumPDF: uploadedFiles.pdfs.curriculumPDF?.url || null,
-      curriculumPdfName: uploadedFiles.pdfs.curriculumPDF?.fileName || null,
-      curriculumPdfSize: uploadedFiles.pdfs.curriculumPDF?.fileSize || null,
+      // PDF URLs (map each field)
+      ...Object.keys(uploadedFiles.pdfs).reduce((acc, field) => ({
+        ...acc,
+        [field]: uploadedFiles.pdfs[field]?.url || null,
+        [`${field}Name`]: uploadedFiles.pdfs[field]?.fileName || null,
+        [`${field}Size`]: uploadedFiles.pdfs[field]?.fileSize || null,
+      }), {}),
       
-      feesDayDistributionPdf: uploadedFiles.pdfs.feesDayDistributionPdf?.url || null,
-      feesDayPdfName: uploadedFiles.pdfs.feesDayDistributionPdf?.fileName || null,
-      feesDayPdfSize: uploadedFiles.pdfs.feesDayDistributionPdf?.fileSize || null,
-      
-      feesBoardingDistributionPdf: uploadedFiles.pdfs.feesBoardingDistributionPdf?.url || null,
-      feesBoardingPdfName: uploadedFiles.pdfs.feesBoardingDistributionPdf?.fileName || null,
-      feesBoardingPdfSize: uploadedFiles.pdfs.feesBoardingDistributionPdf?.fileSize || null,
-      
-      admissionFeePdf: uploadedFiles.pdfs.admissionFeePdf?.url || null,
-      admissionFeePdfName: uploadedFiles.pdfs.admissionFeePdf?.fileName || null,
-      admissionFeePdfSize: uploadedFiles.pdfs.admissionFeePdf?.fileSize || null,
-      
-      // Exam Results with URLs
-      form1ResultsPdf: uploadedFiles.pdfs.form1ResultsPdf?.url || null,
-      form1ResultsPdfName: uploadedFiles.pdfs.form1ResultsPdf?.fileName || null,
-      form1ResultsPdfSize: uploadedFiles.pdfs.form1ResultsPdf?.fileSize || null,
+      // Exam Years
       form1ResultsYear: examYears.form1ResultsYear || null,
-      
-      form2ResultsPdf: uploadedFiles.pdfs.form2ResultsPdf?.url || null,
-      form2ResultsPdfName: uploadedFiles.pdfs.form2ResultsPdf?.fileName || null,
-      form2ResultsPdfSize: uploadedFiles.pdfs.form2ResultsPdf?.fileSize || null,
       form2ResultsYear: examYears.form2ResultsYear || null,
-      
-      form3ResultsPdf: uploadedFiles.pdfs.form3ResultsPdf?.url || null,
-      form3ResultsPdfName: uploadedFiles.pdfs.form3ResultsPdf?.fileName || null,
-      form3ResultsPdfSize: uploadedFiles.pdfs.form3ResultsPdf?.fileSize || null,
       form3ResultsYear: examYears.form3ResultsYear || null,
-      
-      form4ResultsPdf: uploadedFiles.pdfs.form4ResultsPdf?.url || null,
-      form4ResultsPdfName: uploadedFiles.pdfs.form4ResultsPdf?.fileName || null,
-      form4ResultsPdfSize: uploadedFiles.pdfs.form4ResultsPdf?.fileSize || null,
       form4ResultsYear: examYears.form4ResultsYear || null,
-      
-      mockExamsResultsPdf: uploadedFiles.pdfs.mockExamsResultsPdf?.url || null,
-      mockExamsPdfName: uploadedFiles.pdfs.mockExamsResultsPdf?.fileName || null,
-      mockExamsPdfSize: uploadedFiles.pdfs.mockExamsResultsPdf?.fileSize || null,
       mockExamsYear: examYears.mockExamsYear || null,
-      
-      kcseResultsPdf: uploadedFiles.pdfs.kcseResultsPdf?.url || null,
-      kcsePdfName: uploadedFiles.pdfs.kcseResultsPdf?.fileName || null,
-      kcsePdfSize: uploadedFiles.pdfs.kcseResultsPdf?.fileSize || null,
       kcseYear: examYears.kcseYear || null,
       
       // Additional files
@@ -3734,15 +3673,13 @@ const handleFormSubmit = async (e) => {
       departments: formData.departments || [],
       admissionDocumentsRequired: formData.admissionDocumentsRequired || [],
       
-      // Fee distributions as JSON objects
+      // Fee distributions
       feesDayDistributionJson: dayFees.length > 0 
         ? Object.fromEntries(dayFees.map(fee => [fee.name, fee.amount]))
         : {},
-      
       feesBoardingDistributionJson: boardingFees.length > 0
         ? Object.fromEntries(boardingFees.map(fee => [fee.name, fee.amount]))
         : {},
-      
       admissionFeeDistribution: admissionFees.length > 0
         ? Object.fromEntries(admissionFees.map(fee => [fee.name, fee.amount]))
         : {},
@@ -3762,119 +3699,105 @@ const handleFormSubmit = async (e) => {
       admissionWebsite: formData.admissionWebsite || null,
       admissionLocation: formData.admissionLocation || null,
       admissionOfficeHours: formData.admissionOfficeHours || null,
-      
-      // For UPDATE operations only - file removal flags
-      ...(school && {
-        removedVideo: removedVideo,
-        removedPdfs: removedPdfs,
-        removedAdditionalFiles: removedAdditionalFiles.map(f => ({
-          filepath: f.filepath || f.filename,
-          filename: f.filename || f.name
-        }))
-      })
     };
 
-    console.log('📦 Prepared school data (NO FILES):', {
-      totalFields: Object.keys(schoolData).length,
-      fileCount: uploadedFiles.additionalFiles.length + 
-                 Object.keys(uploadedFiles.pdfs).length + 
-                 (uploadedFiles.video ? 1 : 0),
-      dataSize: JSON.stringify(schoolData).length / 1024, // Size in KB
-      hasVideo: !!uploadedFiles.video,
-      hasPDFs: Object.keys(uploadedFiles.pdfs).length > 0
-    });
+    console.log('📦 Prepared data, sending to API...');
 
-    // ==================== STEP 3: SEND JSON TO API (NO FILES!) ====================
+    // ==================== STEP 3: SEND TO API ====================
     toast.loading('Saving school information...');
     
-    const method = school ? 'PUT' : 'POST';
-    console.log(`📨 Sending ${method} request to /api/school`);
+    // Call the parent's onSave function
+    const result = await onSave(schoolData);
     
-    const response = await fetch('/api/school', {
-      method: method,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(schoolData)
-    });
-
-    console.log('📨 API Response status:', response.status);
-
-    if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch (parseError) {
-        // Could not parse error response
-      }
-      
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
+    // ==================== STEP 4: RESET EVERYTHING & CLOSE ====================
+    toast.success(school ? 'Updated successfully!' : 'Created successfully!');
     
-    console.log('✅ API Response successful:', result.success);
+    // Reset all form state
+    resetFormState();
     
-    // ==================== STEP 4: SUCCESS! ====================
-    toast.dismiss();
-    toast.success(
-      school ? 'School information updated successfully!' : 
-               'School information created successfully!'
-    );
-    
-    // Update local state
-    setSchoolInfo(result.school);
-    setShowModal(false);
-    
-    // Clear all files from state
-    setFiles({
-      videoFile: null,
-      curriculumPDF: null,
-      feesDayDistributionPdf: null,
-      feesBoardingDistributionPdf: null,
-      admissionFeePdf: null,
-      form1ResultsPdf: null,
-      form2ResultsPdf: null,
-      form3ResultsPdf: null,
-      form4ResultsPdf: null,
-      mockExamsResultsPdf: null,
-      kcseResultsPdf: null
-    });
-    
-    setAdditionalFiles([]);
-    setSelectedThumbnail(null);
-    setRemovedVideo(false);
-    setRemovedPdfs({});
-    setRemovedAdditionalFiles([]);
+    // Close modal (this will be handled by parent via onClose)
+    // The parent will call setShowModal(false) in onSave
     
   } catch (error) {
     console.error('❌ Form submission error:', error);
-    toast.dismiss();
+    toast.error(error.message || 'Failed to save. Please try again.');
     
-    // User-friendly error messages
-    let userMessage = error.message;
-    
-    if (error.message.includes('413')) {
-      userMessage = 'File upload failed: Your files were too large for upload. Please try smaller files or split them.';
-    } else if (error.message.includes('Network Error')) {
-      userMessage = 'Network error: Please check your internet connection and try again.';
-    } else if (error.message.includes('Failed to fetch')) {
-      userMessage = 'Connection error: Could not reach the server. Please try again.';
-    } else if (error.message.includes('upload failed')) {
-      userMessage = `Upload error: ${error.message}`;
-    }
-    
-    toast.error(userMessage, {
-      duration: 5000,
-      style: { maxWidth: '500px' }
-    });
+    // Don't reset form on error - let user fix and retry
     
   } finally {
     setActionLoading(false);
-    toast.dismiss();
   }
+};
+
+// Helper function to reset form state
+const resetFormState = () => {
+  setCurrentStep(0);
+  setFiles({
+    videoFile: null,
+    curriculumPDF: null,
+    feesDayDistributionPdf: null,
+    feesBoardingDistributionPdf: null,
+    admissionFeePdf: null,
+    form1ResultsPdf: null,
+    form2ResultsPdf: null,
+    form3ResultsPdf: null,
+    form4ResultsPdf: null,
+    mockExamsResultsPdf: null,
+    kcseResultsPdf: null
+  });
+  
+  setAdditionalFiles([]);
+  setSelectedThumbnail(null);
+  setCancelledExistingFiles([]);
+  setCancelledPdfs({});
+  setCancelledVideo(false);
+  setReplacedPdfs({});
+  setRemovedPdfs({});
+  setRemovedVideo(false);
+  setRemovedAdditionalFiles([]);
+  setDayFees([]);
+  setBoardingFees([]);
+  setAdmissionFees([]);
+  
+  setFormData({
+    name: '',
+    description: '',
+    motto: '',
+    vision: '',
+    mission: '',
+    studentCount: '',
+    staffCount: '',
+    openDate: '',
+    closeDate: '',
+    subjects: [],
+    departments: [],
+    youtubeLink: '',
+    feesDay: '',
+    feesDayDistributionJson: '[]',
+    feesBoarding: '',
+    feesBoardingDistributionJson: '[]',
+    admissionOpenDate: '',
+    admissionCloseDate: '',
+    admissionRequirements: '',
+    admissionFee: '',
+    admissionFeeDistribution: '[]',
+    admissionCapacity: '',
+    admissionContactEmail: '',
+    admissionContactPhone: '',
+    admissionWebsite: '',
+    admissionLocation: '',
+    admissionOfficeHours: '',
+    admissionDocumentsRequired: []
+  });
+  
+  setExamYears({
+    form1ResultsYear: '',
+    form2ResultsYear: '',
+    form3ResultsYear: '',
+    form4ResultsYear: '',
+    mockExamsYear: '',
+    kcseYear: ''
+  });
 };
 
 // Helper function: Upload all files to Supabase
@@ -5568,17 +5491,22 @@ export default function ModernSchoolInformation() {
 
 const handleSaveSchool = async (formData) => {
   try {
-    setActionLoading(true)
-    let result
+    setActionLoading(true);
+    let result;
+    
     if (schoolInfo) {
-      result = await schoolApiService.updateSchoolInfo(formData)
-      toast.success('School information updated successfully!')
+      result = await schoolApiService.updateSchoolInfo(formData);
+      toast.success('School information updated successfully!');
     } else {
-      result = await schoolApiService.createSchoolInfo(formData)
-      toast.success('School information created successfully!')
+      result = await schoolApiService.createSchoolInfo(formData);
+      toast.success('School information created successfully!');
     }
-    setSchoolInfo(result.school)
-    setShowModal(false)
+    
+    // Update state and close modal
+    setSchoolInfo(result.school);
+    setShowModal(false);
+    
+    return result;
   } catch (error) {
     if (error.message.includes('413') || error.message.includes('Request Entity Too Large')) {
       toast.error('Total file size is too large. Maximum total size is 100MB. Please reduce file sizes.');
@@ -5587,11 +5515,11 @@ const handleSaveSchool = async (formData) => {
     } else {
       toast.error(error.message || 'Failed to save school information!');
     }
-    throw error
+    throw error;
   } finally {
-    setActionLoading(false)
+    setActionLoading(false);
   }
-}
+};
 
   const handleDeleteSchool = async () => {
     try {
@@ -6297,14 +6225,17 @@ const handleUpdateExamResults = async (formData) => {
         </div>
       )}
 
-      {showModal && (
-        <ModernSchoolModal 
-          onClose={() => setShowModal(false)} 
-          onSave={handleSaveSchool} 
-          school={schoolInfo} 
-          loading={actionLoading} 
-        />
-      )}
+{showModal && (
+  <ModernSchoolModal 
+    onClose={() => setShowModal(false)} 
+    onSave={handleSaveSchool} 
+    school={schoolInfo} 
+    loading={actionLoading}
+    // ADD THESE PROPS:
+    setSchoolInfo={setSchoolInfo}
+    setShowModal={setShowModal}
+  />
+)}
       {showDeleteModal && (
         <ModernDeleteModal 
           onClose={() => setShowDeleteModal(false)} 
