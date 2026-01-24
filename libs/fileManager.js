@@ -8,13 +8,79 @@ const supabase = createClient(
 
 class FileManager {
   constructor() {
-    this.bucketName = 'Katwanyaa High';
+    this.bucketName = 'school-documents';
+    this.initializeBucket();
+  }
+
+  // ==================== INITIALIZE BUCKET ====================
+  async initializeBucket() {
+    try {
+      // Check if bucket exists
+      const { data: buckets, error } = await supabase.storage.listBuckets();
+      
+      if (error) throw error;
+      
+      const bucketExists = buckets.some(bucket => bucket.name === this.bucketName);
+      
+      if (!bucketExists) {
+        console.log(`📦 Creating bucket: ${this.bucketName}`);
+        
+        // Create bucket if it doesn't exist
+        const { data, error: createError } = await supabase.storage.createBucket(this.bucketName, {
+          public: true,
+          allowedMimeTypes: [
+            'image/*',
+            'video/*',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'text/plain'
+          ],
+          fileSizeLimit: 100 * 1024 * 1024 // 100MB
+        });
+        
+        if (createError) {
+          console.warn('Could not create bucket:', createError.message);
+        } else {
+          console.log(`✅ Bucket created: ${this.bucketName}`);
+        }
+      } else {
+        console.log(`✅ Bucket exists: ${this.bucketName}`);
+      }
+    } catch (error) {
+      console.warn('Bucket initialization error:', error.message);
+    }
+  }
+
+  // ==================== ENSURE BUCKET EXISTS ====================
+  async ensureBucketExists() {
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets.some(bucket => bucket.name === this.bucketName);
+      
+      if (!bucketExists) {
+        console.log(`⚠️ Bucket ${this.bucketName} not found. Attempting to create...`);
+        await this.initializeBucket();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to ensure bucket exists:', error);
+      return false;
+    }
   }
 
   // ==================== FILE UPLOAD METHODS ====================
-  
   async uploadFile(file, folder, metadata = {}) {
     try {
+      // Ensure bucket exists first
+      const bucketReady = await this.ensureBucketExists();
+      if (!bucketReady) {
+        throw new Error(`Bucket ${this.bucketName} is not available`);
+      }
+
       if (!file || !(file instanceof File)) {
         throw new Error('Invalid file provided');
       }
@@ -61,12 +127,17 @@ class FileManager {
           metadata: fileMetadata
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+      }
       
       // Get public URL
       const { data: urlData } = supabase.storage
         .from(this.bucketName)
         .getPublicUrl(filePath);
+      
+      console.log(`✅ File uploaded successfully: ${urlData.publicUrl}`);
       
       return {
         success: true,
@@ -84,26 +155,53 @@ class FileManager {
     }
   }
 
-  // ==================== FILE UPDATE METHODS ====================
-  
-  async updateFile(file, filePath, metadata = {}) {
+  // ==================== SIMPLIFIED UPLOAD (for quick testing) ====================
+  async simpleUpload(file, folder) {
     try {
-      const existingMetadata = await this.getFileMetadata(filePath);
+      // First, let's test if bucket exists
+      console.log('Testing bucket access...');
       
-      const updatedMetadata = {
-        ...existingMetadata,
-        ...metadata,
-        updated_at: new Date().toISOString(),
-        updated_by: 'school_portal'
-      };
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      
+      if (listError) {
+        console.error('Cannot list buckets:', listError);
+        throw new Error(`Cannot access storage: ${listError.message}`);
+      }
+      
+      console.log('Available buckets:', buckets);
+      
+      const bucketExists = buckets.some(bucket => bucket.name === this.bucketName);
+      
+      if (!bucketExists) {
+        // Try to create bucket
+        console.log(`Creating bucket: ${this.bucketName}`);
+        const { data, error: createError } = await supabase.storage.createBucket(this.bucketName, {
+          public: true
+        });
+        
+        if (createError) {
+          console.error('Failed to create bucket:', createError);
+          throw new Error(`Please create bucket "${this.bucketName}" in Supabase Storage first.`);
+        }
+      }
+      
+      // Now upload the file
+      const timestamp = Date.now();
+      const uniqueId = Math.random().toString(36).substring(7);
+      const safeFileName = file.name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9._-]/g, '');
+      
+      const filePath = `${folder}/${timestamp}_${uniqueId}_${safeFileName}`;
+      
+      console.log(`Uploading to: ${filePath}`);
       
       const { data, error } = await supabase.storage
         .from(this.bucketName)
-        .update(filePath, file, {
+        .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true,
-          contentType: file.type,
-          metadata: updatedMetadata
+          upsert: false,
+          contentType: file.type
         });
       
       if (error) throw error;
@@ -116,41 +214,28 @@ class FileManager {
       return {
         success: true,
         url: urlData.publicUrl,
-        path: filePath,
-        name: file.name,
-        metadata: updatedMetadata
-      };
-      
-    } catch (error) {
-      console.error('❌ Update failed:', error);
-      throw error;
-    }
-  }
-
-  // ==================== FILE DELETE METHODS ====================
-  
-  async deleteFile(filePath) {
-    try {
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .remove([filePath]);
-      
-      if (error) throw error;
-      
-      return {
-        success: true,
-        message: 'File deleted successfully',
         path: filePath
       };
       
     } catch (error) {
-      console.error('❌ Delete failed:', error);
+      console.error('Simple upload failed:', error);
+      
+      // Provide helpful error message
+      if (error.message.includes('Bucket not found')) {
+        throw new Error(`Storage bucket "${this.bucketName}" not found. Please create it in Supabase Dashboard:
+        1. Go to Supabase Dashboard
+        2. Click "Storage" in sidebar
+        3. Click "Create Bucket"
+        4. Name: "school-documents"
+        5. Set to Public
+        6. Click "Create bucket"`);
+      }
+      
       throw error;
     }
   }
 
-  // ==================== FILE GET METHODS ====================
-  
+  // ==================== OTHER METHODS (keep as before) ====================
   async getFileMetadata(filePath) {
     try {
       const { data, error } = await supabase.storage
@@ -174,6 +259,26 @@ class FileManager {
     }
   }
 
+  async deleteFile(filePath) {
+    try {
+      const { data, error } = await supabase.storage
+        .from(this.bucketName)
+        .remove([filePath]);
+      
+      if (error) throw error;
+      
+      return {
+        success: true,
+        message: 'File deleted successfully',
+        path: filePath
+      };
+      
+    } catch (error) {
+      console.error('❌ Delete failed:', error);
+      throw error;
+    }
+  }
+
   async getFileUrl(filePath) {
     try {
       const { data } = supabase.storage
@@ -186,144 +291,6 @@ class FileManager {
       console.error('❌ Get URL failed:', error);
       return null;
     }
-  }
-
-  async getSignedUrl(filePath, expiresIn = 3600) {
-    try {
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .createSignedUrl(filePath, expiresIn);
-      
-      if (error) throw error;
-      
-      return data.signedUrl;
-      
-    } catch (error) {
-      console.error('❌ Get signed URL failed:', error);
-      return null;
-    }
-  }
-
-  // ==================== BULK OPERATIONS ====================
-  
-  async uploadMultipleFiles(files, folder, metadata = {}) {
-    const results = [];
-    
-    for (const file of files) {
-      try {
-        const result = await this.uploadFile(file, folder, metadata);
-        results.push(result);
-      } catch (error) {
-        results.push({
-          success: false,
-          name: file.name,
-          error: error.message
-        });
-      }
-    }
-    
-    return results;
-  }
-
-  async deleteMultipleFiles(filePaths) {
-    try {
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .remove(filePaths);
-      
-      if (error) throw error;
-      
-      return {
-        success: true,
-        message: `${filePaths.length} files deleted successfully`,
-        deleted: filePaths
-      };
-      
-    } catch (error) {
-      console.error('❌ Bulk delete failed:', error);
-      throw error;
-    }
-  }
-
-  // ==================== HELPER METHODS ====================
-  
-  async listFiles(folder = '') {
-    try {
-      const { data, error } = await supabase.storage
-        .from(this.bucketName)
-        .list(folder);
-      
-      if (error) throw error;
-      
-      return data || [];
-      
-    } catch (error) {
-      console.error('❌ List files failed:', error);
-      throw error;
-    }
-  }
-
-  async getStorageStats() {
-    try {
-      const files = await this.listFiles();
-      
-      let totalSize = 0;
-      let fileCount = 0;
-      const byType = {};
-      
-      for (const file of files) {
-        totalSize += parseInt(file.metadata?.file_size || 0);
-        fileCount++;
-        
-        const type = file.metadata?.file_type?.split('/')[0] || 'other';
-        byType[type] = (byType[type] || 0) + 1;
-      }
-      
-      return {
-        totalFiles: fileCount,
-        totalSizeBytes: totalSize,
-        totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-        byType: byType
-      };
-      
-    } catch (error) {
-      console.error('❌ Get stats failed:', error);
-      throw error;
-    }
-  }
-
-  // ==================== FILE VALIDATION ====================
-  
-  validateFile(file, options = {}) {
-    const {
-      maxSize = 100 * 1024 * 1024, // 100MB default
-      allowedTypes = ['image/*', 'video/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    } = options;
-    
-    const errors = [];
-    
-    // Check size
-    if (file.size > maxSize) {
-      errors.push(`File too large. Max size: ${maxSize / (1024 * 1024)}MB`);
-    }
-    
-    // Check type
-    const isAllowed = allowedTypes.some(allowedType => {
-      if (allowedType.endsWith('/*')) {
-        const category = allowedType.split('/')[0];
-        return file.type.startsWith(category);
-      }
-      return file.type === allowedType;
-    });
-    
-    if (!isAllowed) {
-      errors.push(`File type not allowed. Allowed: ${allowedTypes.join(', ')}`);
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
   }
 }
 
