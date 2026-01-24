@@ -1,273 +1,481 @@
-// app/api/school/enhanced/route.js
+// app/api/school/route.js
 import { NextResponse } from "next/server";
 import { prisma } from "@/libs/prisma";
 import { enhancedFileManager } from "@/libs/fileManager";
 
-// Helper: Create file metadata object
-function createFileMetadata(file, customMetadata = {}, fileType, category) {
+// ==================== HELPER FUNCTIONS ====================
+
+// Helper: Parse JSON fields from database
+function parseJsonFields(school) {
+  if (!school) return school;
+  
+  const jsonFields = [
+    'subjects', 'departments', 'admissionDocumentsRequired',
+    'feesDayDistributionJson', 'feesBoardingDistributionJson', 
+    'admissionFeeDistribution', 'additionalResultsFiles',
+    'additionalFilesMetadata', 'fileStorageSummary',
+    'fileOperationsHistory', 'fileVersions', 'fileAccessLog',
+    'fileMappings', 'fileCategories', 'storageConfig',
+    'fileIntegrityChecks', 'retentionPolicy', 'systemMetadata',
+    'videoMetadata', 'thumbnailMetadata',
+    'curriculumPdfMetadata', 'feesDayPdfMetadata',
+    'feesBoardingPdfMetadata', 'admissionFeePdfMetadata',
+    'form1ResultsMetadata', 'form2ResultsMetadata',
+    'form3ResultsMetadata', 'form4ResultsMetadata',
+    'mockExamsMetadata', 'kcseMetadata'
+  ];
+  
+  const parsed = { ...school };
+  
+  jsonFields.forEach(field => {
+    if (parsed[field] && typeof parsed[field] === 'string') {
+      try {
+        parsed[field] = JSON.parse(parsed[field]);
+      } catch (e) {
+        console.warn(`Failed to parse ${field}:`, e.message);
+        parsed[field] = null;
+      }
+    }
+  });
+  
+  // Convert BigInt to Number for frontend
+  if (parsed.totalFileSizeBytes && typeof parsed.totalFileSizeBytes === 'bigint') {
+    parsed.totalFileSizeBytes = Number(parsed.totalFileSizeBytes);
+    parsed.totalFileSizeMB = Number(parsed.totalFileSizeBytes) / (1024 * 1024);
+  }
+  
+  return parsed;
+}
+
+// Helper: Prepare data for database
+function prepareForDatabase(data) {
+  const prepared = { ...data };
+  
+  // Stringify JSON fields
+  const jsonFields = [
+    'subjects', 'departments', 'admissionDocumentsRequired',
+    'feesDayDistribution', 'feesDayDistributionJson',
+    'feesBoardingDistribution', 'feesBoardingDistributionJson',
+    'admissionFeeDistribution', 'additionalResultsFiles',
+    'additionalFilesMetadata', 'videoMetadata', 'thumbnailMetadata',
+    'curriculumPdfMetadata', 'feesDayPdfMetadata',
+    'feesBoardingPdfMetadata', 'admissionFeePdfMetadata',
+    'form1ResultsMetadata', 'form2ResultsMetadata',
+    'form3ResultsMetadata', 'form4ResultsMetadata',
+    'mockExamsMetadata', 'kcseMetadata'
+  ];
+  
+  jsonFields.forEach(field => {
+    if (prepared[field] && typeof prepared[field] === 'object') {
+      prepared[field] = JSON.stringify(prepared[field]);
+    }
+  });
+  
+  // Convert numeric fields
+  const numericFields = [
+    'studentCount', 'staffCount', 'admissionCapacity',
+    'feesDay', 'feesBoarding', 'admissionFee',
+    'form1ResultsYear', 'form2ResultsYear', 'form3ResultsYear',
+    'form4ResultsYear', 'mockExamsYear', 'kcseYear'
+  ];
+  
+  numericFields.forEach(field => {
+    if (prepared[field] !== undefined) {
+      prepared[field] = prepared[field] ? parseInt(prepared[field]) : null;
+    }
+  });
+  
+  // Convert date fields
+  const dateFields = [
+    'openDate', 'closeDate', 'admissionOpenDate', 'admissionCloseDate'
+  ];
+  
+  dateFields.forEach(field => {
+    if (prepared[field]) {
+      prepared[field] = new Date(prepared[field]);
+    }
+  });
+  
+  return prepared;
+}
+
+// Helper: Calculate total file size from URLs
+async function calculateFileStatsFromUrls(data) {
+  let totalCount = 0;
+  let totalSizeBytes = 0;
+  const fileUrls = [];
+  
+  // Collect all file URLs
+  const urlFields = [
+    'videoTour', 'videoThumbnail', 'curriculumPDF',
+    'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+    'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf',
+    'form3ResultsPdf', 'form4ResultsPdf', 'mockExamsResultsPdf',
+    'kcseResultsPdf'
+  ];
+  
+  urlFields.forEach(field => {
+    if (data[field]) {
+      totalCount++;
+      fileUrls.push(data[field]);
+    }
+  });
+  
+  // Check additional files
+  if (data.additionalResultsFiles && Array.isArray(data.additionalResultsFiles)) {
+    data.additionalResultsFiles.forEach(file => {
+      if (file.url) {
+        totalCount++;
+        fileUrls.push(file.url);
+      }
+    });
+  }
+  
+  // Try to get file sizes from Supabase metadata
+  try {
+    for (const url of fileUrls) {
+      const path = extractPathFromUrl(url);
+      if (path) {
+        const metadata = await enhancedFileManager.getFileMetadata(path);
+        if (metadata?.file_size) {
+          totalSizeBytes += parseInt(metadata.file_size);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Could not fetch file sizes from Supabase:', error.message);
+  }
+  
   return {
-    // Basic file info
-    original_name: file.name,
-    file_type: file.type,
-    file_size: file.size,
-    mime_type: file.type,
-    file_extension: file.name.split('.').pop(),
-    
-    // Upload context
-    uploaded_at: new Date().toISOString(),
-    uploaded_by: 'system', // Get from auth
-    
-    // File categorization
-    file_category: fileType,
-    document_type: category,
-    
-    // School context
-    academic_year: new Date().getFullYear(),
-    is_official: true,
-    version: 1,
-    is_current: true,
-    
-    // Custom metadata
-    ...customMetadata,
-    
-    // System metadata
-    _system: {
-      processing_status: 'complete',
-      storage_provider: 'supabase',
-      metadata_version: '2.0'
-    }
+    totalCount,
+    totalSizeBytes,
+    totalSizeMB: totalSizeBytes / (1024 * 1024)
   };
 }
 
-// Helper: File type to folder mapping
-function getFolderByFileType(fileType) {
-  const mappings = {
-    curriculum: 'documents',
-    fee_day: 'fee-documents',
-    fee_boarding: 'fee-documents',
-    admission_fee: 'admission-documents',
-    video: 'videos',
-    thumbnail: 'thumbnails',
-    exam_result: 'exam-results',
-    additional: 'additional-documents'
-  };
-  return mappings[fileType] || 'uploads';
+// Helper: Extract path from Supabase URL
+function extractPathFromUrl(url) {
+  if (!url) return null;
+  
+  // Handle different Supabase URL formats
+  const patterns = [
+    /storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/,
+    /storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/,
+    /katwanyaa-high\.storage\.supabase\.in\/storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+  }
+  
+  // If no pattern matches, assume it's already a path
+  return url;
 }
 
-// Helper: File type to Prisma field mapping
-function getPrismaFieldByFileType(fileType, category = null) {
-  const mappings = {
-    curriculum: {
-      urlField: 'curriculumPDF',
-      nameField: 'curriculumPdfName',
-      metadataField: 'curriculumPdfMetadata'
-    },
-    fee_day: {
-      urlField: 'feesDayDistributionPdf',
-      nameField: 'feesDayPdfName',
-      metadataField: 'feesDayPdfMetadata'
-    },
-    fee_boarding: {
-      urlField: 'feesBoardingDistributionPdf',
-      nameField: 'feesBoardingPdfName',
-      metadataField: 'feesBoardingPdfMetadata'
-    },
-    admission_fee: {
-      urlField: 'admissionFeePdf',
-      nameField: 'admissionFeePdfName',
-      metadataField: 'admissionFeePdfMetadata'
-    },
-    video: {
-      urlField: 'videoTour',
-      nameField: null,
-      metadataField: 'videoMetadata'
-    },
-    thumbnail: {
-      urlField: 'videoThumbnail',
-      nameField: null,
-      metadataField: 'thumbnailMetadata'
-    },
-    exam_result: {
-      urlField: category ? `${category}ResultsPdf` : null,
-      nameField: category ? `${category}ResultsPdfName` : null,
-      metadataField: category ? `${category}ResultsMetadata` : null
-    }
+// Helper: Create file storage summary
+function createFileStorageSummary(data) {
+  const summary = {
+    videos: 0,
+    pdfs: 0,
+    images: 0,
+    by_category: {},
+    total_count: 0,
+    last_updated: new Date().toISOString()
   };
   
-  return mappings[fileType] || {};
+  // Count files by type
+  if (data.videoTour) summary.videos++;
+  if (data.videoThumbnail) summary.images++;
+  
+  // Count PDFs
+  const pdfFields = [
+    'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+    'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf',
+    'form3ResultsPdf', 'form4ResultsPdf', 'mockExamsResultsPdf',
+    'kcseResultsPdf'
+  ];
+  
+  pdfFields.forEach(field => {
+    if (data[field]) summary.pdfs++;
+  });
+  
+  // Count additional files
+  if (data.additionalResultsFiles && Array.isArray(data.additionalResultsFiles)) {
+    data.additionalResultsFiles.forEach(file => {
+      if (file.url) {
+        if (file.type?.includes('pdf')) summary.pdfs++;
+        else if (file.type?.includes('image')) summary.images++;
+        else if (file.type?.includes('video')) summary.videos++;
+      }
+    });
+  }
+  
+  summary.total_count = summary.videos + summary.pdfs + summary.images;
+  
+  return summary;
 }
 
-// ==================== ENHANCED API ENDPOINTS ====================
+// ==================== API ENDPOINTS ====================
 
-// GET: Fetch school with enhanced file metadata
+// GET: Fetch school information
 export async function GET() {
   try {
-    const school = await prisma.schoolInfo.findFirst();
+    console.log('🔍 Fetching school info...');
+    
+    // Note: Using school_info (lowercase) because of @@map("school_info")
+    const school = await prisma.school_info.findFirst();
     
     if (!school) {
-      return NextResponse.json(
-        { success: false, message: "No school found" },
-        { status: 404 }
-      );
+      console.log('📭 No school found');
+      return NextResponse.json({
+        success: true,
+        school: null,
+        message: "No school information found"
+      });
     }
     
-    // Enhance with file metadata from Supabase
-    const enhancedSchool = await enhanceSchoolWithFileMetadata(school);
+    console.log('✅ School found, parsing JSON fields...');
+    
+    // Parse JSON fields
+    const parsedSchool = parseJsonFields(school);
     
     return NextResponse.json({
       success: true,
-      school: enhancedSchool
+      school: parsedSchool,
+      message: "School information retrieved successfully"
     });
     
   } catch (error) {
     console.error('❌ GET Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { 
+        success: false, 
+        error: error.message,
+        details: "Failed to fetch school information"
+      },
       { status: 500 }
     );
   }
 }
 
-// POST: Create school with file metadata
+// POST: Create new school (receives URLs only)
 export async function POST(request) {
   try {
     const data = await request.json();
+    console.log('📥 POST Data received:', Object.keys(data));
     
-    // Check existing school
-    const existing = await prisma.schoolInfo.findFirst();
+    // Check if school already exists
+    const existing = await prisma.school_info.findFirst();
     if (existing) {
       return NextResponse.json(
-        { success: false, message: "School already exists" },
+        { success: false, message: "School already exists. Use PUT to update." },
         { status: 400 }
       );
     }
     
-    // Process file uploads and metadata
-    const fileUploads = await processFileUploads(data);
+    // Calculate file statistics
+    const fileStats = await calculateFileStatsFromUrls(data);
+    const fileStorageSummary = createFileStorageSummary(data);
     
-    // Create school with metadata
-    const school = await prisma.schoolInfo.create({
-      data: {
-        // Basic info
-        name: data.name,
-        description: data.description || null,
-        motto: data.motto || null,
-        vision: data.vision || null,
-        mission: data.mission || null,
-        
-        // Video info with metadata
-        videoTour: fileUploads.video?.url || data.videoTour,
-        videoType: data.videoType || (fileUploads.video ? 'file' : null),
-        videoThumbnail: fileUploads.thumbnail?.url || data.videoThumbnail,
-        videoMetadata: fileUploads.video?.metadata || null,
-        thumbnailMetadata: fileUploads.thumbnail?.metadata || null,
-        
-        // Basic counts
-        studentCount: parseInt(data.studentCount) || 0,
-        staffCount: parseInt(data.staffCount) || 0,
-        openDate: new Date(data.openDate) || new Date(),
-        closeDate: new Date(data.closeDate) || new Date(),
-        
-        // JSON arrays
-        subjects: JSON.stringify(data.subjects || []),
-        departments: JSON.stringify(data.departments || []),
-        admissionDocumentsRequired: JSON.stringify(data.admissionDocumentsRequired || []),
-        
-        // Fee distributions
-        feesDayDistributionJson: JSON.stringify(data.feesDayDistribution || {}),
-        feesBoardingDistributionJson: JSON.stringify(data.feesBoardingDistribution || {}),
-        admissionFeeDistribution: JSON.stringify(data.admissionFeeDistribution || {}),
-        
-        // Curriculum with metadata
-        curriculumPDF: fileUploads.curriculum?.url || data.curriculumPDF,
-        curriculumPdfName: fileUploads.curriculum?.originalName || data.curriculumPdfName,
-        curriculumPdfMetadata: fileUploads.curriculum?.metadata || null,
-        
-        // Fee documents with metadata
-        feesDayDistributionPdf: fileUploads.fee_day?.url || data.feesDayDistributionPdf,
-        feesDayPdfName: fileUploads.fee_day?.originalName || data.feesDayPdfName,
-        feesDayPdfMetadata: fileUploads.fee_day?.metadata || null,
-        
-        feesBoardingDistributionPdf: fileUploads.fee_boarding?.url || data.feesBoardingDistributionPdf,
-        feesBoardingPdfName: fileUploads.fee_boarding?.originalName || data.feesBoardingPdfName,
-        feesBoardingPdfMetadata: fileUploads.fee_boarding?.metadata || null,
-        
-        // Admission fee with metadata
-        admissionFeePdf: fileUploads.admission_fee?.url || data.admissionFeePdf,
-        admissionFeePdfName: fileUploads.admission_fee?.originalName || data.admissionFeePdfName,
-        admissionFeePdfMetadata: fileUploads.admission_fee?.metadata || null,
-        
-        // Admission info
-        admissionOpenDate: data.admissionOpenDate ? new Date(data.admissionOpenDate) : null,
-        admissionCloseDate: data.admissionCloseDate ? new Date(data.admissionCloseDate) : null,
-        admissionRequirements: data.admissionRequirements || null,
-        admissionFee: parseFloat(data.admissionFee) || null,
-        admissionCapacity: parseInt(data.admissionCapacity) || null,
-        admissionContactEmail: data.admissionContactEmail || null,
-        admissionContactPhone: data.admissionContactPhone || null,
-        admissionWebsite: data.admissionWebsite || null,
-        admissionLocation: data.admissionLocation || null,
-        admissionOfficeHours: data.admissionOfficeHours || null,
-        
-        // Exam results with metadata (process each exam)
-        ...await processExamResults(data, fileUploads),
-        
-        // Additional files
-        additionalResultsFiles: JSON.stringify(fileUploads.additional_files || []),
-        additionalFilesMetadata: JSON.stringify(
-          (fileUploads.additional_files || []).map(f => f.metadata) || []
-        ),
-        
-        // File tracking
-        totalFileCount: calculateTotalFiles(fileUploads),
-        totalFileSizeBytes: calculateTotalFileSize(fileUploads),
-        fileStorageSummary: JSON.stringify(createStorageSummary(fileUploads))
-      }
+    // Prepare data for database
+    const schoolData = {
+      // Basic info
+      name: data.name || '',
+      description: data.description || null,
+      motto: data.motto || null,
+      vision: data.vision || null,
+      mission: data.mission || null,
+      
+      // Video info (URLs only)
+      videoTour: data.videoTour || data.videoUrl || null,
+      videoType: data.videoType || (data.videoTour ? 'file' : (data.youtubeLink ? 'youtube' : null)),
+      videoThumbnail: data.videoThumbnail || null,
+      videoMetadata: data.videoMetadata ? JSON.stringify(data.videoMetadata) : null,
+      thumbnailMetadata: data.thumbnailMetadata ? JSON.stringify(data.thumbnailMetadata) : null,
+      
+      // Academic info
+      studentCount: data.studentCount ? parseInt(data.studentCount) : 0,
+      staffCount: data.staffCount ? parseInt(data.staffCount) : 0,
+      openDate: data.openDate ? new Date(data.openDate) : new Date(),
+      closeDate: data.closeDate ? new Date(data.closeDate) : new Date(),
+      
+      // JSON arrays
+      subjects: JSON.stringify(data.subjects || []),
+      departments: JSON.stringify(data.departments || []),
+      
+      // Fee info
+      feesDay: data.feesDay ? parseFloat(data.feesDay) : null,
+      feesDayDistributionJson: JSON.stringify(data.feesDayDistribution || {}),
+      
+      feesBoarding: data.feesBoarding ? parseFloat(data.feesBoarding) : null,
+      feesBoardingDistributionJson: JSON.stringify(data.feesBoardingDistribution || {}),
+      
+      // Curriculum (URL only)
+      curriculumPDF: data.curriculumPDF || null,
+      curriculumPdfName: data.curriculumPdfName || null,
+      curriculumPdfMetadata: data.curriculumPdfMetadata ? JSON.stringify(data.curriculumPdfMetadata) : null,
+      
+      // Day fees (URL only)
+      feesDayDistributionPdf: data.feesDayDistributionPdf || null,
+      feesDayPdfName: data.feesDayPdfName || null,
+      feesDayPdfMetadata: data.feesDayPdfMetadata ? JSON.stringify(data.feesDayPdfMetadata) : null,
+      
+      // Boarding fees (URL only)
+      feesBoardingDistributionPdf: data.feesBoardingDistributionPdf || null,
+      feesBoardingPdfName: data.feesBoardingPdfName || null,
+      feesBoardingPdfMetadata: data.feesBoardingPdfMetadata ? JSON.stringify(data.feesBoardingPdfMetadata) : null,
+      
+      // Admission info
+      admissionOpenDate: data.admissionOpenDate ? new Date(data.admissionOpenDate) : null,
+      admissionCloseDate: data.admissionCloseDate ? new Date(data.admissionCloseDate) : null,
+      admissionRequirements: data.admissionRequirements || null,
+      admissionFee: data.admissionFee ? parseFloat(data.admissionFee) : null,
+      admissionFeeDistribution: JSON.stringify(data.admissionFeeDistribution || {}),
+      admissionCapacity: data.admissionCapacity ? parseInt(data.admissionCapacity) : null,
+      admissionContactEmail: data.admissionContactEmail || null,
+      admissionContactPhone: data.admissionContactPhone || null,
+      admissionWebsite: data.admissionWebsite || null,
+      admissionLocation: data.admissionLocation || null,
+      admissionOfficeHours: data.admissionOfficeHours || null,
+      admissionDocumentsRequired: JSON.stringify(data.admissionDocumentsRequired || []),
+      
+      // Admission fee PDF (URL only)
+      admissionFeePdf: data.admissionFeePdf || null,
+      admissionFeePdfName: data.admissionFeePdfName || null,
+      admissionFeePdfMetadata: data.admissionFeePdfMetadata ? JSON.stringify(data.admissionFeePdfMetadata) : null,
+      
+      // Exam results (URLs only)
+      form1ResultsPdf: data.form1ResultsPdf || null,
+      form1ResultsPdfName: data.form1ResultsPdfName || null,
+      form1ResultsYear: data.form1ResultsYear ? parseInt(data.form1ResultsYear) : null,
+      form1ResultsMetadata: data.form1ResultsMetadata ? JSON.stringify(data.form1ResultsMetadata) : null,
+      
+      form2ResultsPdf: data.form2ResultsPdf || null,
+      form2ResultsPdfName: data.form2ResultsPdfName || null,
+      form2ResultsYear: data.form2ResultsYear ? parseInt(data.form2ResultsYear) : null,
+      form2ResultsMetadata: data.form2ResultsMetadata ? JSON.stringify(data.form2ResultsMetadata) : null,
+      
+      form3ResultsPdf: data.form3ResultsPdf || null,
+      form3ResultsPdfName: data.form3ResultsPdfName || null,
+      form3ResultsYear: data.form3ResultsYear ? parseInt(data.form3ResultsYear) : null,
+      form3ResultsMetadata: data.form3ResultsMetadata ? JSON.stringify(data.form3ResultsMetadata) : null,
+      
+      form4ResultsPdf: data.form4ResultsPdf || null,
+      form4ResultsPdfName: data.form4ResultsPdfName || null,
+      form4ResultsYear: data.form4ResultsYear ? parseInt(data.form4ResultsYear) : null,
+      form4ResultsMetadata: data.form4ResultsMetadata ? JSON.stringify(data.form4ResultsMetadata) : null,
+      
+      mockExamsResultsPdf: data.mockExamsResultsPdf || null,
+      mockExamsPdfName: data.mockExamsPdfName || null,
+      mockExamsYear: data.mockExamsYear ? parseInt(data.mockExamsYear) : null,
+      mockExamsMetadata: data.mockExamsMetadata ? JSON.stringify(data.mockExamsMetadata) : null,
+      
+      kcseResultsPdf: data.kcseResultsPdf || null,
+      kcsePdfName: data.kcsePdfName || null,
+      kcseYear: data.kcseYear ? parseInt(data.kcseYear) : null,
+      kcseMetadata: data.kcseMetadata ? JSON.stringify(data.kcseMetadata) : null,
+      
+      // Additional files
+      additionalResultsFiles: JSON.stringify(data.additionalResultsFiles || []),
+      additionalFilesMetadata: JSON.stringify(data.additionalFilesMetadata || []),
+      
+      // File statistics
+      totalFileCount: fileStats.totalCount,
+      totalFileSizeBytes: BigInt(fileStats.totalSizeBytes),
+      totalFileSizeMB: fileStats.totalSizeMB,
+      
+      // File storage summary
+      fileStorageSummary: JSON.stringify(fileStorageSummary),
+      fileOperationsHistory: JSON.stringify([{
+        action: 'create',
+        timestamp: new Date().toISOString(),
+        files_count: fileStats.totalCount,
+        total_size_mb: fileStats.totalSizeMB
+      }]),
+      
+      // System metadata
+      systemMetadata: JSON.stringify({
+        schemaVersion: '2.0',
+        hasEnhancedMetadata: true,
+        createdAt: new Date().toISOString()
+      }),
+      
+      // Audit
+      lastFileUpdate: new Date(),
+      lastFileUpdateBy: 'system',
+      
+      // Timestamps
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    console.log('💾 Creating school with data:', {
+      name: schoolData.name,
+      fileCount: schoolData.totalFileCount,
+      totalSizeMB: schoolData.totalFileSizeMB
     });
+    
+    // Create school in database
+    const school = await prisma.school_info.create({
+      data: schoolData
+    });
+    
+    console.log('✅ School created with ID:', school.id);
     
     return NextResponse.json({
       success: true,
-      message: "School created with enhanced metadata",
-      school: await enhanceSchoolWithFileMetadata(school)
+      message: "School information created successfully",
+      school: parseJsonFields(school)
     });
     
   } catch (error) {
     console.error('❌ POST Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { 
+        success: false, 
+        error: error.message,
+        details: "Failed to create school information"
+      },
       { status: 500 }
     );
   }
 }
 
-// PUT: Update school with proper file linking
+// PUT: Update school (receives URLs only)
 export async function PUT(request) {
   try {
     const data = await request.json();
-    const existing = await prisma.schoolInfo.findFirst();
+    console.log('📥 PUT Data received:', Object.keys(data));
     
+    // Check if school exists
+    const existing = await prisma.school_info.findFirst();
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: "School not found" },
+        { success: false, message: "School not found. Use POST to create." },
         { status: 404 }
       );
     }
     
-    // Process file updates with metadata
-    const fileUpdates = await processFileUpdates(data, existing);
+    // Calculate file statistics
+    const fileStats = await calculateFileStatsFromUrls(data);
+    const fileStorageSummary = createFileStorageSummary(data);
     
     // Prepare update data
     const updateData = {
       updatedAt: new Date(),
-      lastFileUpdate: new Date()
+      lastFileUpdate: new Date(),
+      lastFileUpdateBy: 'system'
     };
     
-    // Update basic fields
+    // Update basic fields if provided
     const basicFields = [
       'name', 'description', 'motto', 'vision', 'mission',
-      'studentCount', 'staffCount', 'admissionRequirements',
-      'admissionContactEmail', 'admissionContactPhone',
-      'admissionWebsite', 'admissionLocation', 'admissionOfficeHours'
+      'admissionRequirements', 'admissionContactEmail',
+      'admissionContactPhone', 'admissionWebsite',
+      'admissionLocation', 'admissionOfficeHours'
     ];
     
     basicFields.forEach(field => {
@@ -276,7 +484,19 @@ export async function PUT(request) {
       }
     });
     
-    // Update dates
+    // Update numeric fields
+    const numericFields = [
+      'studentCount', 'staffCount', 'admissionCapacity',
+      'feesDay', 'feesBoarding', 'admissionFee'
+    ];
+    
+    numericFields.forEach(field => {
+      if (data[field] !== undefined) {
+        updateData[field] = data[field] ? parseInt(data[field]) : null;
+      }
+    });
+    
+    // Update date fields
     const dateFields = ['openDate', 'closeDate', 'admissionOpenDate', 'admissionCloseDate'];
     dateFields.forEach(field => {
       if (data[field]) {
@@ -284,10 +504,11 @@ export async function PUT(request) {
       }
     });
     
-    // Update JSON fields
+    // Update JSON string fields
     const jsonFields = [
       'subjects', 'departments', 'admissionDocumentsRequired',
-      'feesDayDistributionJson', 'feesBoardingDistributionJson', 'admissionFeeDistribution'
+      'feesDayDistributionJson', 'feesBoardingDistributionJson',
+      'admissionFeeDistribution'
     ];
     
     jsonFields.forEach(field => {
@@ -296,32 +517,184 @@ export async function PUT(request) {
       }
     });
     
-    // Update numeric fields
-    const numericFields = ['admissionFee', 'admissionCapacity'];
-    numericFields.forEach(field => {
+    // Update file URL fields
+    const fileFields = [
+      { field: 'videoTour', typeField: 'videoType' },
+      { field: 'videoThumbnail' },
+      { field: 'curriculumPDF', nameField: 'curriculumPdfName', metadataField: 'curriculumPdfMetadata' },
+      { field: 'feesDayDistributionPdf', nameField: 'feesDayPdfName', metadataField: 'feesDayPdfMetadata' },
+      { field: 'feesBoardingDistributionPdf', nameField: 'feesBoardingPdfName', metadataField: 'feesBoardingPdfMetadata' },
+      { field: 'admissionFeePdf', nameField: 'admissionFeePdfName', metadataField: 'admissionFeePdfMetadata' }
+    ];
+    
+    fileFields.forEach(({ field, typeField, nameField, metadataField }) => {
       if (data[field] !== undefined) {
-        updateData[field] = data[field] ? parseFloat(data[field]) : null;
-      }
-    });
-    
-    // Update file fields from uploads
-    Object.entries(fileUpdates).forEach(([fileType, uploadResult]) => {
-      if (uploadResult) {
-        const prismaFields = getPrismaFieldByFileType(fileType, uploadResult.category);
+        updateData[field] = data[field];
         
-        if (prismaFields.urlField) {
-          updateData[prismaFields.urlField] = uploadResult.url;
+        if (nameField && data[nameField] !== undefined) {
+          updateData[nameField] = data[nameField];
         }
-        if (prismaFields.nameField && uploadResult.originalName) {
-          updateData[prismaFields.nameField] = uploadResult.originalName;
+        
+        if (metadataField && data[metadataField] !== undefined) {
+          updateData[metadataField] = JSON.stringify(data[metadataField]);
         }
-        if (prismaFields.metadataField && uploadResult.metadata) {
-          updateData[prismaFields.metadataField] = uploadResult.metadata;
+        
+        // Special handling for video type
+        if (field === 'videoTour' && typeField) {
+          if (data[field] && data[field].includes('youtube.com')) {
+            updateData[typeField] = 'youtube';
+          } else if (data[field]) {
+            updateData[typeField] = 'file';
+          } else {
+            updateData[typeField] = null;
+          }
         }
       }
     });
     
-    // Update exam year fields
+    // Update exam results
+    const examFields = [
+      'form1ResultsPdf', 'form1ResultsPdfName', 'form1ResultsYear', 'form1ResultsMetadata',
+      'form2ResultsPdf', 'form2ResultsPdfName', 'form2ResultsYear', 'form2ResultsMetadata',
+      'form3ResultsPdf', 'form3ResultsPdfName', 'form3ResultsYear', 'form3ResultsMetadata',
+      'form4ResultsPdf', 'form4ResultsPdfName', 'form4ResultsYear', 'form4ResultsMetadata',
+      'mockExamsResultsPdf', 'mockExamsPdfName', 'mockExamsYear', 'mockExamsMetadata',
+      'kcseResultsPdf', 'kcsePdfName', 'kcseYear', 'kcseMetadata'
+    ];
+    
+    examFields.forEach(field => {
+      if (data[field] !== undefined) {
+        if (field.includes('Metadata') && data[field]) {
+          updateData[field] = JSON.stringify(data[field]);
+        } else if (field.includes('Year') && data[field]) {
+          updateData[field] = parseInt(data[field]);
+        } else {
+          updateData[field] = data[field];
+        }
+      }
+    });
+    
+    // Update additional files
+    if (data.additionalResultsFiles !== undefined) {
+      updateData.additionalResultsFiles = JSON.stringify(data.additionalResultsFiles || []);
+    }
+    
+    if (data.additionalFilesMetadata !== undefined) {
+      updateData.additionalFilesMetadata = JSON.stringify(data.additionalFilesMetadata || []);
+    }
+    
+    // Update file statistics
+    updateData.totalFileCount = fileStats.totalCount;
+    updateData.totalFileSizeBytes = BigInt(fileStats.totalSizeBytes);
+    updateData.totalFileSizeMB = fileStats.totalSizeMB;
+    updateData.fileStorageSummary = JSON.stringify(fileStorageSummary);
+    
+    // Add to file operations history
+    const existingHistory = existing.fileOperationsHistory ? 
+      JSON.parse(existing.fileOperationsHistory) : [];
+    
+    existingHistory.push({
+      action: 'update',
+      timestamp: new Date().toISOString(),
+      files_count: fileStats.totalCount,
+      total_size_mb: fileStats.totalSizeMB,
+      updated_fields: Object.keys(updateData).filter(k => k !== 'updatedAt' && k !== 'lastFileUpdate')
+    });
+    
+    updateData.fileOperationsHistory = JSON.stringify(existingHistory);
+    
+    console.log('💾 Updating school:', {
+      id: existing.id,
+      updateFields: Object.keys(updateData)
+    });
+    
+    // Update school in database
+    const school = await prisma.school_info.update({
+      where: { id: existing.id },
+      data: updateData
+    });
+    
+    console.log('✅ School updated:', school.id);
+    
+    return NextResponse.json({
+      success: true,
+      message: "School information updated successfully",
+      school: parseJsonFields(school)
+    });
+    
+  } catch (error) {
+    console.error('❌ PUT Error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message,
+        details: "Failed to update school information"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Remove school
+export async function DELETE() {
+  try {
+    const existing = await prisma.school_info.findFirst();
+    
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, message: "No school found to delete" },
+        { status: 404 }
+      );
+    }
+    
+    console.log('🗑️ Deleting school:', existing.id);
+    
+    // Delete from database
+    await prisma.school_info.delete({
+      where: { id: existing.id }
+    });
+    
+    // Note: Files in Supabase remain (you might want to clean them up separately)
+    
+    return NextResponse.json({
+      success: true,
+      message: "School information deleted successfully"
+    });
+    
+  } catch (error) {
+    console.error('❌ DELETE Error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message,
+        details: "Failed to delete school information"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH: Update specific fields (for exam results, etc.)
+export async function PATCH(request) {
+  try {
+    const data = await request.json();
+    console.log('📥 PATCH Data received:', Object.keys(data));
+    
+    const existing = await prisma.school_info.findFirst();
+    
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, message: "School not found" },
+        { status: 404 }
+      );
+    }
+    
+    // Prepare update data
+    const updateData = {
+      updatedAt: new Date()
+    };
+    
+    // Handle exam year updates
     const examYearFields = [
       'form1ResultsYear', 'form2ResultsYear', 'form3ResultsYear',
       'form4ResultsYear', 'mockExamsYear', 'kcseYear'
@@ -333,446 +706,36 @@ export async function PUT(request) {
       }
     });
     
-    // Update additional files if provided
-    if (data.additionalResultsFiles || fileUpdates.additional_files) {
-      const existingAdditional = existing.additionalResultsFiles ? 
-        JSON.parse(existing.additionalResultsFiles) : [];
-      
-      const newAdditional = fileUpdates.additional_files || data.additionalResultsFiles || [];
-      const allAdditional = [...existingAdditional, ...newAdditional];
-      
-      updateData.additionalResultsFiles = JSON.stringify(allAdditional);
-      updateData.additionalFilesMetadata = JSON.stringify(
-        allAdditional.map(f => f.metadata || {})
-      );
+    // Handle additional files updates
+    if (data.additionalResultsFiles !== undefined) {
+      updateData.additionalResultsFiles = JSON.stringify(data.additionalResultsFiles || []);
     }
     
-    // Update file statistics
-    const currentFiles = await getCurrentFiles(existing);
-    const newFiles = Object.values(fileUpdates).filter(f => f);
-    const allFiles = [...currentFiles, ...newFiles];
+    if (data.additionalFilesMetadata !== undefined) {
+      updateData.additionalFilesMetadata = JSON.stringify(data.additionalFilesMetadata || []);
+    }
     
-    updateData.totalFileCount = allFiles.length;
-    updateData.totalFileSizeBytes = allFiles.reduce((sum, f) => sum + (f.size || 0), 0);
-    
-    // Save to database
-    const updatedSchool = await prisma.schoolInfo.update({
+    // Update school
+    const school = await prisma.school_info.update({
       where: { id: existing.id },
       data: updateData
     });
     
     return NextResponse.json({
       success: true,
-      message: "School updated with enhanced file metadata",
-      school: await enhanceSchoolWithFileMetadata(updatedSchool)
+      message: "School information updated successfully",
+      school: parseJsonFields(school)
     });
     
   } catch (error) {
-    console.error('❌ PUT Error:', error);
+    console.error('❌ PATCH Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { 
+        success: false, 
+        error: error.message,
+        details: "Failed to update school information"
+      },
       { status: 500 }
     );
   }
-}
-
-// ==================== HELPER FUNCTIONS ====================
-
-async function processFileUploads(data) {
-  const uploads = {};
-  
-  // Process curriculum PDF
-  if (data.curriculumPDF && data.curriculumPDF instanceof File) {
-    const metadata = createFileMetadata(
-      data.curriculumPDF, 
-      { document_title: 'School Curriculum' },
-      'curriculum',
-      'academic_curriculum'
-    );
-    
-    uploads.curriculum = await enhancedFileManager.uploadFileWithMetadata(
-      data.curriculumPDF,
-      'documents',
-      metadata
-    );
-  }
-  
-  // Process video
-  if (data.videoFile && data.videoFile instanceof File) {
-    const metadata = createFileMetadata(
-      data.videoFile,
-      { media_type: 'school_tour', has_thumbnail: !!data.videoThumbnail },
-      'video',
-      'virtual_tour'
-    );
-    
-    uploads.video = await enhancedFileManager.uploadFileWithMetadata(
-      data.videoFile,
-      'videos',
-      metadata
-    );
-  }
-  
-  // Process thumbnail
-  if (data.videoThumbnail && data.videoThumbnail instanceof File) {
-    const metadata = createFileMetadata(
-      data.videoThumbnail,
-      { parent_video: data.videoFile?.name, is_custom: true },
-      'thumbnail',
-      'video_thumbnail'
-    );
-    
-    uploads.thumbnail = await enhancedFileManager.uploadFileWithMetadata(
-      data.videoThumbnail,
-      'thumbnails',
-      metadata
-    );
-  }
-  
-  // Process exam results
-  const examTypes = ['form1', 'form2', 'form3', 'form4', 'mockExams', 'kcse'];
-  for (const examType of examTypes) {
-    const fileKey = `${examType}ResultsPdf`;
-    if (data[fileKey] && data[fileKey] instanceof File) {
-      const metadata = createFileMetadata(
-        data[fileKey],
-        { 
-          exam_type: examType,
-          exam_year: data[`${examType}Year`] || new Date().getFullYear(),
-          grading_system: 'kcse'
-        },
-        'exam_result',
-        examType
-      );
-      
-      uploads[`exam_${examType}`] = await enhancedFileManager.uploadFileWithMetadata(
-        data[fileKey],
-        'exam-results',
-        metadata
-      );
-    }
-  }
-  
-  // Process additional files
-  if (data.additionalFiles && Array.isArray(data.additionalFiles)) {
-    uploads.additional_files = await Promise.all(
-      data.additionalFiles.map(async (fileObj) => {
-        const metadata = createFileMetadata(
-          fileObj.file,
-          {
-            year: fileObj.year,
-            description: fileObj.description,
-            is_supplementary: true
-          },
-          'additional',
-          'supplementary'
-        );
-        
-        const result = await enhancedFileManager.uploadFileWithMetadata(
-          fileObj.file,
-          'additional-documents',
-          metadata
-        );
-        
-        return {
-          ...result,
-          year: fileObj.year,
-          description: fileObj.description
-        };
-      })
-    );
-  }
-  
-  return uploads;
-}
-
-async function processFileUpdates(data, existingSchool) {
-  const updates = {};
-  
-  // Helper: Update a specific file
-  const updateFile = async (fileKey, fileType, category, customMetadata = {}) => {
-    if (data[fileKey] && data[fileKey] instanceof File) {
-      const existingUrl = existingSchool[getPrismaFieldByFileType(fileType, category)?.urlField];
-      
-      const metadata = createFileMetadata(
-        data[fileKey],
-        {
-          ...customMetadata,
-          previous_version: existingUrl ? extractPathFromUrl(existingUrl) : null,
-          version: (existingUrl ? 2 : 1)
-        },
-        fileType,
-        category
-      );
-      
-      return await enhancedFileManager.uploadFileWithMetadata(
-        data[fileKey],
-        getFolderByFileType(fileType),
-        metadata
-      );
-    }
-    return null;
-  };
-  
-  // Check for file updates
-  updates.curriculum = await updateFile(
-    'curriculumPDF',
-    'curriculum',
-    'academic_curriculum',
-    { document_title: 'School Curriculum' }
-  );
-  
-  updates.video = await updateFile(
-    'videoFile',
-    'video',
-    'virtual_tour',
-    { media_type: 'school_tour' }
-  );
-  
-  // Process exam updates
-  const examTypes = ['form1', 'form2', 'form3', 'form4', 'mockExams', 'kcse'];
-  for (const examType of examTypes) {
-    const fileKey = `${examType}ResultsPdf`;
-    updates[`exam_${examType}`] = await updateFile(
-      fileKey,
-      'exam_result',
-      examType,
-      {
-        exam_type: examType,
-        exam_year: data[`${examType}Year`] || new Date().getFullYear()
-      }
-    );
-  }
-  
-  return updates;
-}
-
-async function enhanceSchoolWithFileMetadata(school) {
-  const enhanced = { ...school };
-  
-  // Helper to enhance a file field with metadata
-  const enhanceFileField = async (urlField, metadataField, fileType) => {
-    if (school[urlField]) {
-      try {
-        const path = extractPathFromUrl(school[urlField]);
-        if (path) {
-          const supabaseMetadata = await enhancedFileManager.getFileMetadata(path);
-          
-          // Combine database metadata with Supabase metadata
-          enhanced[metadataField] = {
-            ...(school[metadataField] || {}),
-            ...supabaseMetadata,
-            signed_url: await enhancedFileManager.getSignedUrl(path, 3600),
-            download_info: {
-              filename: extractFilenameFromUrl(school[urlField]),
-              url: school[urlField],
-              signed_url: await enhancedFileManager.getSignedUrl(path, 3600),
-              expires_at: new Date(Date.now() + 3600000).toISOString()
-            }
-          };
-        }
-      } catch (error) {
-        console.warn(`Could not enhance ${urlField}:`, error.message);
-      }
-    }
-  };
-  
-  // Enhance all file fields
-  await enhanceFileField('curriculumPDF', 'curriculumPdfMetadata', 'curriculum');
-  await enhanceFileField('feesDayDistributionPdf', 'feesDayPdfMetadata', 'fee_day');
-  await enhanceFileField('feesBoardingDistributionPdf', 'feesBoardingPdfMetadata', 'fee_boarding');
-  await enhanceFileField('admissionFeePdf', 'admissionFeePdfMetadata', 'admission_fee');
-  await enhanceFileField('videoTour', 'videoMetadata', 'video');
-  await enhanceFileField('videoThumbnail', 'thumbnailMetadata', 'thumbnail');
-  
-  // Enhance exam results
-  const examTypes = ['form1', 'form2', 'form3', 'form4', 'mockExams', 'kcse'];
-  for (const examType of examTypes) {
-    const urlField = `${examType}ResultsPdf`;
-    const metadataField = `${examType}ResultsMetadata`;
-    await enhanceFileField(urlField, metadataField, 'exam_result');
-  }
-  
-  // Parse JSON fields
-  const jsonFields = [
-    'subjects', 'departments', 'admissionDocumentsRequired',
-    'feesDayDistributionJson', 'feesBoardingDistributionJson', 
-    'admissionFeeDistribution', 'additionalResultsFiles',
-    'additionalFilesMetadata'
-  ];
-  
-  jsonFields.forEach(field => {
-    if (school[field]) {
-      try {
-        enhanced[field] = JSON.parse(school[field]);
-      } catch {
-        enhanced[field] = school[field];
-      }
-    }
-  });
-  
-  // Add file statistics
-  enhanced.fileStatistics = {
-    total_files: school.totalFileCount || 0,
-    total_size_bytes: school.totalFileSizeBytes || 0,
-    total_size_mb: school.totalFileSizeBytes ? (school.totalFileSizeBytes / 1024 / 1024).toFixed(2) : 0,
-    last_updated: school.lastFileUpdate
-  };
-  
-  return enhanced;
-}
-
-function extractPathFromUrl(url) {
-  if (!url) return null;
-  const match = url.match(/storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/);
-  if (match) {
-    return decodeURIComponent(match[1]);
-  }
-  return url; // Assume it's already a path
-}
-
-function extractFilenameFromUrl(url) {
-  if (!url) return null;
-  const path = extractPathFromUrl(url);
-  return path ? path.split('/').pop() : null;
-}
-
-function calculateTotalFiles(uploads) {
-  return Object.values(uploads).reduce((count, upload) => {
-    if (Array.isArray(upload)) {
-      return count + upload.length;
-    }
-    return count + (upload ? 1 : 0);
-  }, 0);
-}
-
-function calculateTotalFileSize(uploads) {
-  return Object.values(uploads).reduce((size, upload) => {
-    if (Array.isArray(upload)) {
-      return size + upload.reduce((sum, file) => sum + (file.size || 0), 0);
-    }
-    return size + (upload?.size || 0);
-  }, 0);
-}
-
-function createStorageSummary(uploads) {
-  const summary = {
-    by_type: {},
-    by_folder: {},
-    total_count: 0,
-    total_size_bytes: 0
-  };
-  
-  Object.entries(uploads).forEach(([type, upload]) => {
-    if (Array.isArray(upload)) {
-      upload.forEach(file => {
-        const folder = file.folder || 'uploads';
-        summary.by_type[type] = (summary.by_type[type] || 0) + 1;
-        summary.by_folder[folder] = (summary.by_folder[folder] || 0) + 1;
-        summary.total_count++;
-        summary.total_size_bytes += file.size || 0;
-      });
-    } else if (upload) {
-      const folder = upload.folder || 'uploads';
-      summary.by_type[type] = (summary.by_type[type] || 0) + 1;
-      summary.by_folder[folder] = (summary.by_folder[folder] || 0) + 1;
-      summary.total_count++;
-      summary.total_size_bytes += upload.size || 0;
-    }
-  });
-  
-  return summary;
-}
-
-async function getCurrentFiles(school) {
-  const files = [];
-  
-  // Helper to add file info
-  const addFile = async (url, type, metadata = {}) => {
-    if (url) {
-      const path = extractPathFromUrl(url);
-      if (path) {
-        try {
-          const fileMetadata = await enhancedFileManager.getFileMetadata(path);
-          files.push({
-            url,
-            path,
-            type,
-            size: fileMetadata?.file_size,
-            metadata: { ...metadata, ...fileMetadata }
-          });
-        } catch (error) {
-          files.push({ url, path, type, metadata });
-        }
-      }
-    }
-  };
-  
-  // Add all file types
-  await addFile(school.curriculumPDF, 'curriculum');
-  await addFile(school.feesDayDistributionPdf, 'fee_day');
-  await addFile(school.feesBoardingDistributionPdf, 'fee_boarding');
-  await addFile(school.admissionFeePdf, 'admission_fee');
-  await addFile(school.videoTour, 'video');
-  await addFile(school.videoThumbnail, 'thumbnail');
-  
-  // Add exam files
-  const examTypes = ['form1', 'form2', 'form3', 'form4', 'mockExams', 'kcse'];
-  examTypes.forEach(async (examType) => {
-    const url = school[`${examType}ResultsPdf`];
-    if (url) {
-      await addFile(url, 'exam_result', { exam_type: examType });
-    }
-  });
-  
-  // Add additional files
-  if (school.additionalResultsFiles) {
-    try {
-      const additionalFiles = JSON.parse(school.additionalResultsFiles);
-      additionalFiles.forEach(file => {
-        if (file.url) {
-          files.push({
-            url: file.url,
-            type: 'additional',
-            size: file.size,
-            metadata: file.metadata || {}
-          });
-        }
-      });
-    } catch (error) {
-      console.warn('Could not parse additional files:', error);
-    }
-  }
-  
-  return files;
-}
-
-async function processExamResults(data, fileUploads) {
-  const result = {};
-  const examTypes = ['form1', 'form2', 'form3', 'form4', 'mockExams', 'kcse'];
-  
-  for (const examType of examTypes) {
-    const fileKey = `${examType}ResultsPdf`;
-    const yearKey = `${examType}Year`;
-    const metadataKey = `${examType}ResultsMetadata`;
-    const nameKey = `${examType}ResultsPdfName`;
-    const sizeKey = `${examType}ResultsPdfSize`;
-    
-    const uploadKey = `exam_${examType}`;
-    
-    if (fileUploads[uploadKey]) {
-      result[fileKey] = fileUploads[uploadKey].url;
-      result[nameKey] = fileUploads[uploadKey].originalName;
-      result[sizeKey] = fileUploads[uploadKey].size;
-      result[metadataKey] = fileUploads[uploadKey].metadata;
-    } else if (data[fileKey]) {
-      result[fileKey] = data[fileKey];
-    }
-    
-    if (data[yearKey] !== undefined) {
-      result[yearKey] = data[yearKey] ? parseInt(data[yearKey]) : null;
-    }
-  }
-  
-  return result;
 }

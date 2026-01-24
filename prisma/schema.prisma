@@ -432,7 +432,7 @@ model SchoolInfo {
   @@index([createdAt])
   @@index([updatedAt])
   
-  @@map("school_info")
+  @@map("SchoolInfo")  // Change to capital "S" and "I"
 }
 
 model AdmissionApplication {
