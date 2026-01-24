@@ -1,197 +1,133 @@
-// libs/superbase.js - UPDATED FOR YOUR DOMAIN
+// /libs/supabaseFileManager.js
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-  global: {
-    headers: {
-      'x-client-info': 'katwanyaa-vercel-app'
+class SupabaseFileManager {
+  constructor() {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('❌ Supabase env vars missing');
+      throw new Error('Supabase configuration missing');
     }
+    
+    this.supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+    
+    this.bucketName = 'Katwanyaa High';
   }
-});
 
-const BUCKET_NAME = 'Katwanyaa High';
-
-export class FileManager {
-  /**
-   * Upload with CORS-friendly settings for your domain
-   */
-  static async uploadFile(file, folder = 'uploads') {
-    if (!file || file.size === 0) return null;
-
+  // Upload single file
+  async uploadFile(file, folder = 'uploads') {
     try {
-      const timestamp = Date.now();
-      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const fileName = `${folder}/${timestamp}-${sanitizedName}`;
-
-      console.log(`📤 Uploading from katwanyaa.vercel.app:`, fileName);
-
-      // CRITICAL: Force correct MIME types for your files
-      let contentType = file.type;
-      
-      if (!contentType || contentType === '') {
-        const extension = file.name.split('.').pop().toLowerCase();
-        const mimeTypes = {
-          // Videos
-          'mp4': 'video/mp4',
-          'mov': 'video/quicktime',
-          'avi': 'video/x-msvideo',
-          'mkv': 'video/x-matroska',
-          'webm': 'video/webm',
-          // Audio
-          'mp3': 'audio/mpeg',
-          'wav': 'audio/wav',
-          'ogg': 'audio/ogg',
-          'm4a': 'audio/mp4',
-          // Images
-          'jpg': 'image/jpeg',
-          'jpeg': 'image/jpeg',
-          'png': 'image/png',
-          'gif': 'image/gif',
-          'webp': 'image/webp',
-          // Documents
-          'pdf': 'application/pdf',
-          'doc': 'application/msword',
-          'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'xls': 'application/vnd.ms-excel',
-          'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'ppt': 'application/vnd.ms-powerpoint',
-          'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-        };
-        contentType = mimeTypes[extension] || 'application/octet-stream';
+      if (!file || !(file instanceof File)) {
+        throw new Error('Invalid file provided');
       }
 
-      // Browser-specific upload (for katwanyaa.vercel.app)
-      const { data, error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, file, {
-          contentType: contentType,
-          cacheControl: 'public, max-age=31536000', // Cache for 1 year
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
+
+      console.log(`📤 Uploading: ${file.name} → ${filePath}`);
+
+      // Upload to Supabase
+      const { data, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
           upsert: false,
+          contentType: file.type
         });
 
-      if (error) {
-        console.error('❌ Supabase upload error for katwanyaa.vercel.app:', error);
-        
-        // Special handling for CORS errors
-        if (error.message.includes('CORS') || error.message.includes('origin')) {
-          throw new Error(
-            'CORS Error: Please check Supabase Storage CORS settings. ' +
-            'Add "https://katwanyaa.vercel.app" to allowed origins.'
-          );
-        }
-        
-        throw new Error(`Upload failed: ${error.message}`);
-      }
+      if (error) throw error;
 
-      // Get URL that works with your domain
-      const { data: { publicUrl } } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName);
-
-      // Test if URL is accessible from your domain
-      const testUrl = await this.testUrlAccessibility(publicUrl);
-      
-      if (!testUrl.accessible) {
-        console.warn('⚠️ File uploaded but may not be accessible:', testUrl.error);
-      }
-
-      console.log('✅ Upload successful for katwanyaa.vercel.app:', {
-        fileName,
-        type: contentType,
-        url: publicUrl,
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`
-      });
+      // Get public URL
+      const { data: { publicUrl } } = this.supabase.storage
+        .from(this.bucketName)
+        .getPublicUrl(data.path);
 
       return {
+        success: true,
         url: publicUrl,
-        key: data.path,
-        fileName: file.name,
-        fileType: contentType,
-        fileSize: file.size,
-        storageType: 'supabase',
-        accessible: testUrl.accessible
+        path: data.path,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        folder: folder
       };
+
     } catch (error) {
-      console.error('Upload error for katwanyaa.vercel.app:', error);
+      console.error('❌ Upload failed:', error);
+      throw new Error(`File upload failed: ${error.message}`);
+    }
+  }
+
+  // Generate thumbnail from video
+  async generateThumbnailFromVideo(videoFile, timeSeconds = 1) {
+    return new Promise((resolve, reject) => {
+      try {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+
+        video.src = URL.createObjectURL(videoFile);
+        
+        video.onloadeddata = () => {
+          video.currentTime = timeSeconds;
+        };
+
+        video.onseeked = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob(async (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to create thumbnail blob'));
+              return;
+            }
+
+            const thumbnailFile = new File(
+              [blob], 
+              `thumbnail_${Date.now()}.jpg`, 
+              { type: 'image/jpeg' }
+            );
+
+            // Upload thumbnail to Supabase
+            const result = await this.uploadFile(thumbnailFile, 'thumbnails');
+            
+            // Clean up
+            URL.revokeObjectURL(video.src);
+            
+            resolve(result);
+          }, 'image/jpeg', 0.8);
+        };
+
+        video.onerror = (err) => {
+          reject(new Error(`Video error: ${err}`));
+        };
+
+      } catch (error) {
+        reject(new Error(`Thumbnail generation failed: ${error.message}`));
+      }
+    });
+  }
+
+  // Delete file from Supabase
+  async deleteFile(filePath) {
+    try {
+      const { error } = await this.supabase.storage
+        .from(this.bucketName)
+        .remove([filePath]);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Delete failed:', error);
       throw error;
     }
   }
-
-  /**
-   * Test if URL is accessible from your domain
-   */
-  static async testUrlAccessibility(url) {
-    try {
-      const response = await fetch(url, {
-        method: 'HEAD',
-        mode: 'cors',
-        headers: {
-          'Origin': 'https://katwanyaa.vercel.app'
-        }
-      });
-      
-      return {
-        accessible: response.ok,
-        status: response.status,
-        contentType: response.headers.get('content-type')
-      };
-    } catch (error) {
-      return {
-        accessible: false,
-        error: error.message,
-        url: url
-      };
-    }
-  }
-
-  /**
-   * Get streaming-friendly URL (for video/audio playback)
-   */
-  static getStreamingUrl(fileUrl) {
-    if (!fileUrl) return null;
-    
-    // Remove any existing query parameters
-    const cleanUrl = fileUrl.split('?')[0];
-    
-    // Add cache busting and streaming headers
-    return `${cleanUrl}?t=${Date.now()}`;
-  }
-
-  /**
-   * Check if file is playable in browser
-   */
-  static async checkMediaPlayability(fileUrl) {
-    try {
-      const response = await fetch(fileUrl, { method: 'HEAD' });
-      const contentType = response.headers.get('content-type');
-      
-      const isPlayable = {
-        video: ['video/mp4', 'video/webm', 'video/ogg'].some(type => 
-          contentType?.includes(type)
-        ),
-        audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4'].some(type => 
-          contentType?.includes(type)
-        ),
-        image: contentType?.startsWith('image/')
-      };
-      
-      return {
-        playable: isPlayable.video || isPlayable.audio,
-        type: contentType,
-        supports: isPlayable
-      };
-    } catch (error) {
-      return {
-        playable: false,
-        error: error.message
-      };
-    }
-  }
 }
+
+// Singleton instance
+export const fileManager = new SupabaseFileManager();
