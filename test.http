@@ -1,486 +1,541 @@
 ### 1. Create School Info (Basic minimal data - no files)
-POST https://katwanyaa.vercel.app/api/school
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+### ==================== BASE URL ====================
+@baseUrl =  https://katwanyaa.vercel.app/api/school
 
---WebAppBoundary
+### ==================== HEALTH CHECK ====================
+GET {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+### ==================== GET SCHOOL INFO ====================
+GET {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+### ==================== CREATE SCHOOL INFO (JSON ONLY - FILES ALREADY UPLOADED TO SUPABASE) ====================
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Clerk Test School",
+  "description": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
+  "motto": "Education is light, knowledge is strength",
+  "vision": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
+  "mission": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
+  
+  "studentCount": 1200,
+  "staffCount": 34,
+  "openDate": "2026-02-06",
+  "closeDate": "2026-05-07",
+  
+  "subjects": ["Mathematics", "English", "Science", "History", "Geography"],
+  "departments": ["Science Department", "Arts Department", "Sports Department"],
+  
+  "videoTour": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/videos/1769253171025_3kbhdg5e4.mp4",
+  "videoType": "file",
+  "videoThumbnail": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/thumbnails/1769253182780_yigsha1ag.jpg",
+  
+  "curriculumPDF": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
+  "curriculumPdfName": "Gospel of Thomas Lambdin.pdf",
+  
+  "feesDayDistribution": {
+    "Tuition": 50000,
+    "Activity Fee": 15000,
+    "Library": 5000,
+    "Laboratory": 10000
+  },
+  "feesDay": 80000,
+  "feesDayDistributionPdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
+  "feesDayPdfName": "Day Fees Breakdown.pdf",
+  
+  "feesBoardingDistribution": {
+    "Tuition": 50000,
+    "Boarding": 40000,
+    "Activity Fee": 15000,
+    "Library": 5000,
+    "Laboratory": 10000
+  },
+  "feesBoarding": 120000,
+  "feesBoardingDistributionPdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
+  "feesBoardingPdfName": "Boarding Fees Breakdown.pdf",
+  
+  "admissionFeeDistribution": {
+    "Registration": 10000,
+    "Processing": 5000,
+    "Admission Kit": 15000
+  },
+  "admissionFee": 30000,
+  "admissionFeePdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
+  "admissionFeePdfName": "Admission Fee Breakdown.pdf",
+  
+  "admissionOpenDate": "2026-01-15",
+  "admissionCloseDate": "2026-02-15",
+  "admissionRequirements": "Original KCPE Certificate, Birth Certificate, 2 Passport Photos, Medical Report",
+  "admissionCapacity": 200,
+  "admissionContactEmail": "admissions@accountsclerkschool.edu",
+  "admissionContactPhone": "+254712345678",
+  "admissionWebsite": "https://accountsclerkschool.edu/admissions",
+  "admissionLocation": "Main Administration Building, Room 101",
+  "admissionOfficeHours": "Monday-Friday: 8:00 AM - 5:00 PM",
+  "admissionDocumentsRequired": ["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report"],
+  
+  "examResults": {
+    "form1": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "Form_1_Results_2024.pdf",
+      "year": 2024
+    },
+    "form2": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "Form_2_Results_2024.pdf",
+      "year": 2024
+    },
+    "form3": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "Form_3_Results_2024.pdf",
+      "year": 2024
+    },
+    "form4": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "Form_4_Results_2024.pdf",
+      "year": 2024
+    },
+    "mockExams": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "Mock_Exams_2024.pdf",
+      "year": 2024
+    },
+    "kcse": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
+      "name": "KCSE_2023.pdf",
+      "year": 2023
+    }
+  },
+  
+  "additionalResultsFiles": [
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/sample.pdf",
+      "name": "Term_1_Report_2024.pdf",
+      "year": 2024,
+      "description": "Term 1 Academic Report",
+      "size": 1024000,
+      "type": "application/pdf"
+    },
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/sample2.pdf",
+      "name": "Sports_Day_Results.pdf",
+      "year": 2024,
+      "description": "Annual Sports Day Results",
+      "size": 512000,
+      "type": "application/pdf"
+    }
+  ]
+}
+
+### ==================== UPDATE SCHOOL INFO (MULTIPART/FORM-DATA) ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="name"
 
-Test School
---WebAppBoundary
+Updated School Name
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="studentCount"
 
-500
---WebAppBoundary
+1500
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="staffCount"
 
-50
---WebAppBoundary
-Content-Disposition: form-data; name="openDate"
-
-2024-01-10
---WebAppBoundary
-Content-Disposition: form-data; name="closeDate"
-
-2024-12-15
---WebAppBoundary
-Content-Disposition: form-data; name="subjects"
-
-["Math", "Science", "English", "History"]
---WebAppBoundary
-Content-Disposition: form-data; name="departments"
-
-["Science", "Languages", "Humanities"]
---WebAppBoundary
-Content-Disposition: form-data; name="description"
-
-This is a test school description
---WebAppBoundary
+45
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="motto"
 
-Excellence in Education
---WebAppBoundary
-Content-Disposition: form-data; name="vision"
-
-To be the leading educational institution
---WebAppBoundary
-Content-Disposition: form-data; name="mission"
-
-To provide quality education to all students
---WebAppBoundary
-Content-Disposition: form-data; name="youtubeLink"
-
-https://www.youtube.com/watch?v=dQw4w9WgXcQ
---WebAppBoundary
-Content-Disposition: form-data; name="feesDay"
-
-15000
---WebAppBoundary
-Content-Disposition: form-data; name="feesDayDistributionJson"
-
-{"tuition": 10000, "books": 3000, "activities": 2000}
---WebAppBoundary
-Content-Disposition: form-data; name="feesBoarding"
-
-35000
---WebAppBoundary
-Content-Disposition: form-data; name="feesBoardingDistributionJson"
-
-{"tuition": 10000, "boarding": 20000, "books": 3000, "activities": 2000}
---WebAppBoundary
-Content-Disposition: form-data; name="admissionFee"
-
-5000
---WebAppBoundary
-Content-Disposition: form-data; name="admissionFeeDistribution"
-
-{"registration": 2000, "testing": 1500, "materials": 1500}
---WebAppBoundary
-Content-Disposition: form-data; name="admissionDocumentsRequired"
-
-["Birth Certificate", "Previous Report Card", "Passport Photos"]
---WebAppBoundary
+Updated Motto: Excellence Through Dedication
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="admissionRequirements"
 
-Students must have completed primary education
---WebAppBoundary
-Content-Disposition: form-data; name="admissionCapacity"
-
-200
---WebAppBoundary
-Content-Disposition: form-data; name="admissionContactEmail"
-
-admissions@testschool.edu
---WebAppBoundary
-Content-Disposition: form-data; name="admissionContactPhone"
-
-+1234567890
---WebAppBoundary
-Content-Disposition: form-data; name="admissionWebsite"
-
-https://testschool.edu
---WebAppBoundary
-Content-Disposition: form-data; name="admissionLocation"
-
-123 Education Street, City
---WebAppBoundary
-Content-Disposition: form-data; name="admissionOfficeHours"
-
-8:00 AM - 5:00 PM Monday to Friday
---WebAppBoundary--
-
-### 2. Create School Info with YouTube Video and PDFs (more comprehensive)
-POST http://localhost:3000/api/school
-Content-Type: multipart/form-data; boundary=SchoolBoundary
-
---SchoolBoundary
-Content-Disposition: form-data; name="name"
-
-Comprehensive Test School
---SchoolBoundary
-Content-Disposition: form-data; name="studentCount"
-
-800
---SchoolBoundary
-Content-Disposition: form-data; name="staffCount"
-
-75
---SchoolBoundary
-Content-Disposition: form-data; name="openDate"
-
-2024-01-15
---SchoolBoundary
-Content-Disposition: form-data; name="closeDate"
-
-2024-12-20
---SchoolBoundary
+Updated requirements: Original KCPE Certificate, Birth Certificate, 3 Passport Photos, Medical Report, Transfer Letter
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="subjects"
 
-["Mathematics", "Physics", "Chemistry", "Biology", "English", "Kiswahili", "History", "Geography", "Business", "Computer"]
---SchoolBoundary
+["Mathematics", "English", "Science", "History", "Geography", "Computer Science", "Business Studies"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="departments"
 
-["Sciences", "Languages", "Humanities", "Technical", "Creative Arts"]
---SchoolBoundary
-Content-Disposition: form-data; name="description"
-
-A comprehensive school with excellent facilities and qualified staff. We offer both day and boarding programs with modern classrooms and laboratories.
---SchoolBoundary
-Content-Disposition: form-data; name="motto"
-
-Knowledge, Discipline, Excellence
---SchoolBoundary
-Content-Disposition: form-data; name="vision"
-
-To nurture holistic individuals for global citizenship
---SchoolBoundary
-Content-Disposition: form-data; name="mission"
-
-To provide transformative education through innovation and character building
---SchoolBoundary
-Content-Disposition: form-data; name="youtubeLink"
-
-https://www.youtube.com/watch?v=9bZkp7q19f0
---SchoolBoundary
-Content-Disposition: form-data; name="feesDay"
-
-25000
---SchoolBoundary
-Content-Disposition: form-data; name="feesDayDistributionJson"
-
-{"tuition": 15000, "books": 5000, "activities": 3000, "laboratory": 2000}
---SchoolBoundary
-Content-Disposition: form-data; name="feesBoarding"
-
-55000
---SchoolBoundary
-Content-Disposition: form-data; name="feesBoardingDistributionJson"
-
-{"tuition": 15000, "boarding": 30000, "meals": 5000, "books": 3000, "activities": 2000}
---SchoolBoundary
-Content-Disposition: form-data; name="admissionOpenDate"
-
-2024-03-01
---SchoolBoundary
-Content-Disposition: form-data; name="admissionCloseDate"
-
-2024-05-31
---SchoolBoundary
-Content-Disposition: form-data; name="admissionFee"
-
-7500
---SchoolBoundary
-Content-Disposition: form-data; name="admissionFeeDistribution"
-
-{"registration": 3000, "entrance_test": 2500, "materials": 1500, "id_card": 500}
---SchoolBoundary
+["Science Department", "Arts Department", "Sports Department", "ICT Department"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="admissionDocumentsRequired"
 
-["Birth Certificate", "KCPE Certificate", "Previous School Report", "4 Passport Photos", "Medical Report", "Parent ID Copy"]
---SchoolBoundary
-Content-Disposition: form-data; name="admissionRequirements"
-
-Minimum KCPE score of 300. Must pass entrance examination and interview. Good conduct required from previous school.
---SchoolBoundary
+["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report", "Transfer Letter"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="admissionCapacity"
 
-150
---SchoolBoundary
-Content-Disposition: form-data; name="admissionContactEmail"
-
-info@comprehensiveschool.edu
---SchoolBoundary
-Content-Disposition: form-data; name="admissionContactPhone"
-
-+254712345678
---SchoolBoundary
-Content-Disposition: form-data; name="admissionWebsite"
-
-https://comprehensiveschool.edu
---SchoolBoundary
-Content-Disposition: form-data; name="admissionLocation"
-
-456 Learning Avenue, Nairobi
---SchoolBoundary
-Content-Disposition: form-data; name="admissionOfficeHours"
-
-8:00 AM - 4:00 PM Weekdays, 9:00 AM - 1:00 PM Saturdays
---SchoolBoundary
+250
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="form1ResultsYear"
 
-2023
---SchoolBoundary
+2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="form2ResultsYear"
 
-2023
---SchoolBoundary
+2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="form3ResultsYear"
 
-2023
---SchoolBoundary
+2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="form4ResultsYear"
 
-2023
---SchoolBoundary
+2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="mockExamsYear"
 
-2023
---SchoolBoundary
+2025
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="kcseYear"
 
-2022
---SchoolBoundary--
+2024
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 
-### 3. Test with file uploads (use in Visual Studio Code REST Client or similar)
-### Note: Replace paths with actual files on your system
+### ==================== UPDATE SCHOOL INFO (JSON ONLY) ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-POST http://localhost:3000/api/school
-Content-Type: multipart/form-data; boundary=FileUploadBoundary
+{
+  "name": "Accounts Clerk Updated School",
+  "description": "Updated description with more details about our educational philosophy and achievements.",
+  "motto": "Education is light, knowledge is strength - Updated",
+  "vision": "To be the leading institution in providing quality education that transforms lives and communities.",
+  "mission": "To empower students through innovative teaching methods and a supportive learning environment.",
+  
+  "studentCount": 1350,
+  "staffCount": 38,
+  "openDate": "2026-02-01",
+  "closeDate": "2026-05-10",
+  
+  "subjects": ["Mathematics", "English", "Science", "History", "Geography", "Computer", "Business"],
+  "departments": ["Science", "Arts", "Sports", "ICT", "Languages"],
+  
+  "feesDayDistribution": {
+    "Tuition": 55000,
+    "Activity Fee": 18000,
+    "Library": 7000,
+    "Laboratory": 12000,
+    "Development": 5000
+  },
+  "feesDay": 97000,
+  
+  "feesBoardingDistribution": {
+    "Tuition": 55000,
+    "Boarding": 45000,
+    "Activity Fee": 18000,
+    "Library": 7000,
+    "Laboratory": 12000,
+    "Development": 5000
+  },
+  "feesBoarding": 142000,
+  
+  "admissionFeeDistribution": {
+    "Registration": 12000,
+    "Processing": 6000,
+    "Admission Kit": 18000,
+    "Medical": 4000
+  },
+  "admissionFee": 40000,
+  
+  "admissionOpenDate": "2026-01-10",
+  "admissionCloseDate": "2026-02-20",
+  "admissionRequirements": "KCPE Certificate (Original), Birth Certificate (Original), 3 Passport Photos, Medical Report, Transfer Letter, Recommendation Letter",
+  "admissionCapacity": 250,
+  "admissionContactEmail": "info@accountsclerkschool.edu",
+  "admissionContactPhone": "+254711223344",
+  "admissionWebsite": "https://accountsclerkschool.edu",
+  "admissionLocation": "New Administration Wing, Ground Floor",
+  "admissionOfficeHours": "Monday-Saturday: 8:00 AM - 6:00 PM",
+  "admissionDocumentsRequired": ["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report", "Transfer Letter", "Recommendation Letter"],
+  
+  "examResults": {
+    "form1": {
+      "year": 2025
+    },
+    "form2": {
+      "year": 2025
+    },
+    "form3": {
+      "year": 2025
+    },
+    "form4": {
+      "year": 2025
+    },
+    "mockExams": {
+      "year": 2025
+    },
+    "kcse": {
+      "year": 2024
+    }
+  }
+}
 
---FileUploadBoundary
-Content-Disposition: form-data; name="name"
+### ==================== UPDATE WITH YOUTUBE VIDEO ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-File Upload Test School
---FileUploadBoundary
-Content-Disposition: form-data; name="studentCount"
+{
+  "name": "Accounts Clerk with YouTube Video",
+  "videoTour": "https://www.youtube.com/watch?v=abcdefghijk",
+  "videoType": "youtube",
+  "removeVideo": false
+}
 
-600
---FileUploadBoundary
-Content-Disposition: form-data; name="staffCount"
+### ==================== UPDATE WITH FILE REMOVAL ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-60
---FileUploadBoundary
-Content-Disposition: form-data; name="openDate"
+{
+  "name": "Accounts Clerk - Remove Files",
+  "removeVideo": true,
+  "removeCurriculumPDF": true,
+  "removeFeesDayDistributionPdf": true,
+  "filesToRemove": [
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/old_file.pdf",
+      "filename": "old_file.pdf"
+    }
+  ]
+}
 
-2024-01-10
---FileUploadBoundary
-Content-Disposition: form-data; name="closeDate"
+### ==================== DELETE SCHOOL INFO ====================
+DELETE {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-2024-12-15
---FileUploadBoundary
-Content-Disposition: form-data; name="subjects"
+### ==================== TEST OPTIONS (HEALTH CHECK) ====================
+OPTIONS {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-["Math", "Science", "English"]
---FileUploadBoundary
-Content-Disposition: form-data; name="departments"
+### ==================== TEST WITH MINIMAL DATA ====================
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-["Science", "Languages"]
---FileUploadBoundary
-Content-Disposition: form-data; name="description"
+{
+  "name": "Minimal Test School",
+  "studentCount": 500,
+  "staffCount": 20,
+  "openDate": "2026-01-15",
+  "closeDate": "2026-04-15",
+  "subjects": ["Math", "English"],
+  "departments": ["Academic"]
+}
 
-Testing file upload capabilities
---FileUploadBoundary
-Content-Disposition: form-data; name="youtubeLink"
+### ==================== TEST WITH INVALID DATA ====================
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-https://youtu.be/dQw4w9WgXcQ
---FileUploadBoundary
-### UNCOMMENT AND REPLACE WITH ACTUAL FILE PATHS ###
-### Content-Disposition: form-data; name="curriculumPDF"; filename="curriculum.pdf"
-### Content-Type: application/pdf
+{
+  "name": "",
+  "studentCount": "not-a-number"
+}
 
-### < ./path/to/your/curriculum.pdf
---FileUploadBoundary
-### Content-Disposition: form-data; name="feesDayDistributionPdf"; filename="fees_day.pdf"
-### Content-Type: application/pdf
+### ==================== TEST UPDATE NON-EXISTENT ====================
+# First delete if exists
+DELETE {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-### < ./path/to/your/fees_day.pdf
---FileUploadBoundary
-### Content-Disposition: form-data; name="feesBoardingDistributionPdf"; filename="fees_boarding.pdf"
-### Content-Type: application/pdf
+###
 
-### < ./path/to/your/fees_boarding.pdf
---FileUploadBoundary
-### Content-Disposition: form-data; name="admissionFeePdf"; filename="admission.pdf"
-### Content-Type: application/pdf
+# Then try to update
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-### < ./path/to/your/admission.pdf
---FileUploadBoundary
-### Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1_results.pdf"
-### Content-Type: application/pdf
+{
+  "name": "Should Fail"
+}
 
-### < ./path/to/your/form1_results.pdf
---FileUploadBoundary
-Content-Disposition: form-data; name="form1ResultsYear"
+### ==================== TEST LARGE SUBJECTS LIST ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-2023
---FileUploadBoundary
-### Content-Disposition: form-data; name="additionalFiles"; filename="additional1.pdf"
-### Content-Type: application/pdf
+{
+  "name": "Large Subjects Test",
+  "subjects": [
+    "Mathematics", "English Language", "Kiswahili", "Biology", "Chemistry", 
+    "Physics", "Geography", "History", "CRE", "IRE", "Home Science", 
+    "Agriculture", "Business Studies", "Computer Studies", "Music", 
+    "Art and Design", "French", "German", "Arabic", "Physical Education",
+    "Life Skills", "Citizenship", "Environmental Education"
+  ],
+  "departments": [
+    "Science Department", "Mathematics Department", "Languages Department",
+    "Humanities Department", "Technical Department", "Sports Department",
+    "Guidance and Counseling", "Examinations Department", "ICT Department"
+  ]
+}
 
-### < ./path/to/your/additional1.pdf
---FileUploadBoundary
-### Content-Disposition: form-data; name="additionalFiles"; filename="additional2.docx"
-### Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+### ==================== TEST ADMISSION UPDATES ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-### < ./path/to/your/additional2.docx
---FileUploadBoundary
-Content-Disposition: form-data; name="additionalResultsYear_0"
+{
+  "admissionOpenDate": "2026-01-01",
+  "admissionCloseDate": "2026-03-31",
+  "admissionRequirements": "1. Original KCPE Certificate\n2. Birth Certificate\n3. 4 Passport Photos\n4. Medical Report from Registered Hospital\n5. Transfer Letter from Previous School\n6. Recommendation Letter from Class Teacher",
+  "admissionFee": 45000,
+  "admissionCapacity": 300,
+  "admissionContactEmail": "admissions2026@accountsclerkschool.edu",
+  "admissionContactPhone": "+254700123456",
+  "admissionWebsite": "https://admissions.accountsclerkschool.edu",
+  "admissionLocation": "Admissions Office, Main Gate Building",
+  "admissionOfficeHours": "Weekdays: 8:00 AM - 5:00 PM | Saturdays: 9:00 AM - 1:00 PM",
+  "admissionDocumentsRequired": [
+    "KCPE Certificate (Original)",
+    "Birth Certificate (Original & Copy)",
+    "Passport Photos (4 copies)",
+    "Medical Report",
+    "Transfer Letter",
+    "Recommendation Letter",
+    "Parents' ID Copies",
+    "Payment Receipt"
+  ],
+  "admissionFeeDistribution": {
+    "Registration Fee": 15000,
+    "Processing Fee": 8000,
+    "Admission Kit": 20000,
+    "Medical Fee": 5000,
+    "ID Card": 2000
+  }
+}
 
-2023
---FileUploadBoundary
-Content-Disposition: form-data; name="additionalResultsDesc_0"
+### ==================== TEST EXAM RESULTS UPDATE ====================
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-School Magazine 2023
---FileUploadBoundary
-### Content-Disposition: form-data; name="additionalResultsFile_0"; filename="magazine.pdf"
-### Content-Type: application/pdf
+{
+  "examResults": {
+    "form1": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form1_2025.pdf",
+      "name": "form1_results_2025.pdf",
+      "year": 2025
+    },
+    "form2": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form2_2025.pdf",
+      "name": "form2_results_2025.pdf",
+      "year": 2025
+    },
+    "form3": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form3_2025.pdf",
+      "name": "form3_results_2025.pdf",
+      "year": 2025
+    },
+    "form4": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form4_2025.pdf",
+      "name": "form4_results_2025.pdf",
+      "year": 2025
+    },
+    "mockExams": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/mock_2025.pdf",
+      "name": "mock_exams_2025.pdf",
+      "year": 2025
+    },
+    "kcse": {
+      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/kcse_2024.pdf",
+      "name": "kcse_2024_results.pdf",
+      "year": 2024
+    }
+  },
+  "additionalResultsFiles": [
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term1_2024.pdf",
+      "name": "term_1_report_2024.pdf",
+      "year": 2024,
+      "description": "Term 1 Comprehensive Report",
+      "size": 2048000,
+      "type": "application/pdf"
+    },
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term2_2024.pdf",
+      "name": "term_2_report_2024.pdf",
+      "year": 2024,
+      "description": "Term 2 Comprehensive Report",
+      "size": 2100000,
+      "type": "application/pdf"
+    },
+    {
+      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term3_2024.pdf",
+      "name": "term_3_report_2024.pdf",
+      "year": 2024,
+      "description": "Term 3 Comprehensive Report",
+      "size": 1985000,
+      "type": "application/pdf"
+    }
+  ]
+}
 
-### < ./path/to/your/magazine.pdf
---FileUploadBoundary--
+### ==================== TEST ERROR SCENARIOS ====================
 
-### 4. Test validation error (missing required fields)
-POST http://localhost:3000/api/school
-Content-Type: multipart/form-data; boundary=ErrorBoundary
+### Test with invalid JSON
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
---ErrorBoundary
-Content-Disposition: form-data; name="name"
+{
+  "name": "Invalid Test",
+  "studentCount": "not a number",
+  "openDate": "invalid-date",
+  "subjects": "not an array"
+}
 
-Incomplete School
---ErrorBoundary
-Content-Disposition: form-data; name="studentCount"
+### Test with missing required fields
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-500
---ErrorBoundary
-### Missing staffCount, openDate, closeDate, subjects, departments
---ErrorBoundary--
+{
+  "name": ""
+}
 
-### 5. Test large file upload (if you have large files to test)
-POST http://localhost:3000/api/school
-Content-Type: multipart/form-data; boundary=LargeFileBoundary
+### Test with very long strings
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
---LargeFileBoundary
-Content-Disposition: form-data; name="name"
+{
+  "name": "A".repeat(1000),
+  "description": "B".repeat(10000),
+  "studentCount": 100,
+  "staffCount": 10,
+  "openDate": "2026-01-01",
+  "closeDate": "2026-12-31"
+}
 
-Large File Test
---LargeFileBoundary
-Content-Disposition: form-data; name="studentCount"
+### ==================== TEST SEQUENTIAL OPERATIONS ====================
 
-500
---LargeFileBoundary
-Content-Disposition: form-data; name="staffCount"
+### 1. Create school
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-50
---LargeFileBoundary
-Content-Disposition: form-data; name="openDate"
+{
+  "name": "Sequential Test School",
+  "studentCount": 800,
+  "staffCount": 30,
+  "openDate": "2026-01-10",
+  "closeDate": "2026-04-10",
+  "subjects": ["Math", "Science"],
+  "departments": ["Academic"]
+}
 
-2024-01-10
---LargeFileBoundary
-Content-Disposition: form-data; name="closeDate"
+### 2. Update school
+PUT {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-2024-12-15
---LargeFileBoundary
-Content-Disposition: form-data; name="subjects"
+{
+  "name": "Updated Sequential School",
+  "studentCount": 850,
+  "motto": "Learning never ends"
+}
 
-["Math", "Science"]
---LargeFileBoundary
-Content-Disposition: form-data; name="departments"
+### 3. Get school (verify update)
+GET {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-["Science"]
---LargeFileBoundary
-### UNCOMMENT TO TEST LARGE FILE UPLOAD ###
-### Content-Disposition: form-data; name="videoTour"; filename="large_video.mp4"
-### Content-Type: video/mp4
+### 4. Delete school
+DELETE {{baseUrl}} HTTP/1.1
+Content-Type: application/json
 
-### < ./path/to/your/large_video.mp4
---LargeFileBoundary--
-
-### 6. Test with multiple additional files
-POST http://localhost:3000/api/school
-Content-Type: multipart/form-data; boundary=MultipleFilesBoundary
-
---MultipleFilesBoundary
-Content-Disposition: form-data; name="name"
-
-Multi-File School
---MultipleFilesBoundary
-Content-Disposition: form-data; name="studentCount"
-
-700
---MultipleFilesBoundary
-Content-Disposition: form-data; name="staffCount"
-
-65
---MultipleFilesBoundary
-Content-Disposition: form-data; name="openDate"
-
-2024-01-10
---MultipleFilesBoundary
-Content-Disposition: form-data; name="closeDate"
-
-2024-12-15
---MultipleFilesBoundary
-Content-Disposition: form-data; name="subjects"
-
-["Math", "Science", "English"]
---MultipleFilesBoundary
-Content-Disposition: form-data; name="departments"
-
-["Science", "Languages"]
---MultipleFilesBoundary
-### UNCOMMENT TO TEST MULTIPLE ADDITIONAL FILES ###
-### Content-Disposition: form-data; name="additionalFiles"; filename="doc1.pdf"
-### Content-Type: application/pdf
-
-### < ./path/to/your/doc1.pdf
---MultipleFilesBoundary
-### Content-Disposition: form-data; name="additionalFiles"; filename="doc2.docx"
-### Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-
-### < ./path/to/your/doc2.docx
---MultipleFilesBoundary
-### Content-Disposition: form-data; name="additionalFiles"; filename="image1.jpg"
-### Content-Type: image/jpeg
-
-### < ./path/to/your/image1.jpg
---MultipleFilesBoundary
-Content-Disposition: form-data; name="additionalResultsYear_0"
-
-2023
---MultipleFilesBoundary
-Content-Disposition: form-data; name="additionalResultsDesc_0"
-
-Annual Report
---MultipleFilesBoundary
-### Content-Disposition: form-data; name="additionalResultsFile_0"; filename="report.pdf"
-### Content-Type: application/pdf
-
-### < ./path/to/your/report.pdf
---MultipleFilesBoundary
-Content-Disposition: form-data; name="additionalResultsYear_1"
-
-2022
---MultipleFilesBoundary
-Content-Disposition: form-data; name="additionalResultsDesc_1"
-
-Sports Day Results
---MultipleFilesBoundary
-### Content-Disposition: form-data; name="additionalResultsFile_1"; filename="sports.xlsx"
-### Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-
-### < ./path/to/your/sports.xlsx
---MultipleFilesBoundary--
-
-### 7. Test GET request to verify POST worked
-GET http://localhost:3000/api/school
-
-### 8. Test DELETE if needed (after testing)
-DELETE http://localhost:3000/api/school
+### 5. Verify deletion
+GET {{baseUrl}} HTTP/1.1
+Content-Type: application/json

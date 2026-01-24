@@ -3173,32 +3173,20 @@ function VideoThumbnail({ videoType, videoPath, videoThumbnail, onClick }) {
 // Update your schoolApiService to handle JSON
 const schoolApiService = {
   async getSchoolInfo() {
-    const response = await fetch('/api/school');
-    if (!response.ok) throw new Error('Failed to fetch school information');
-    return await response.json();
-  },
-
-  async saveSchoolInfo(data, isUpdate = false) {
-    const response = await fetch('/api/school', {
-      method: isUpdate ? 'PUT' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Save failed');
+    try {
+      const response = await fetch('/api/school');
+      if (!response.ok) {
+        throw new Error('Failed to fetch school information');
+      }
+      const data = await response.json();
+      console.log('API Response data:', data); // Debug
+      return data; // This should return { success, message, school }
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
     }
-    
-    return await response.json();
   },
-
-  async deleteSchoolInfo() {
-    const response = await fetch('/api/school', { method: 'DELETE' });
-    if (!response.ok) throw new Error('Delete failed');
-    return await response.json();
-  }
-};
+}
 
 function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) {
   const [currentStep, setCurrentStep] = useState(0)
@@ -5406,19 +5394,34 @@ export default function ModernSchoolInformation() {
   useEffect(() => {
     loadSchoolInfo()
   }, [])
-
-  const loadSchoolInfo = async () => {
-    try {
-      setLoading(true)
-      const data = await schoolApiService.getSchoolInfo()
+const loadSchoolInfo = async () => {
+  try {
+    setLoading(true)
+    const data = await schoolApiService.getSchoolInfo()
+    
+    // If data has school property (nested)
+    if (data.school) {
+      setSchoolInfo(data.school)
+    } 
+    // If data IS the school object
+    else if (data.id && data.name) {
       setSchoolInfo(data)
-    } catch (error) {
-      console.error('Error loading school info:', error)
-      setSchoolInfo(null)
-    } finally {
-      setLoading(false)
     }
+    // If data has data property
+    else if (data.data) {
+      setSchoolInfo(data.data)
+    }
+    else {
+      console.error('Unknown data structure:', data)
+      setSchoolInfo(null)
+    }
+  } catch (error) {
+    console.error('Error loading school info:', error)
+    setSchoolInfo(null)
+  } finally {
+    setLoading(false)
   }
+}
 
 
 const handleSaveSchool = async (schoolData) => {
