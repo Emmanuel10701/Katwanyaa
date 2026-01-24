@@ -1,6 +1,6 @@
 'use client';
 
-import { FileManager } from '../../../libs/manager';
+import { fileManager } from '@/libs/fileManager';
 import { createClient } from '@supabase/supabase-js';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -3529,6 +3529,11 @@ const handleFormSubmit = async (e) => {
     setActionLoading(true);
     toast.loading('Starting upload process...');
     
+    // Initialize fileManager
+    if (!window.fileManager) {
+      window.fileManager = fileManager;
+    }
+    
     // Track all uploaded file URLs
     const uploadedFileUrls = {
       video: null,
@@ -3541,81 +3546,99 @@ const handleFormSubmit = async (e) => {
       additionalFiles: []
     };
 
-    console.log('🚀 Step 1: Uploading files to Supabase Storage...');
+    console.log('🚀 Step 1: Uploading files directly to Supabase Storage...');
 
-    // UPLOAD FILES TO SUPABASE STORAGE
+    // UPLOAD FILES DIRECTLY TO SUPABASE (FRONTEND)
     // ------------------------------------------------------
     
     // 1. Upload Video (if new file selected)
     if (files.videoFile && files.videoFile instanceof File) {
-      toast.loading('Uploading video to cloud...');
       try {
+        toast.loading('Uploading video to Supabase...');
         const result = await fileManager.uploadFile(files.videoFile, 'videos');
         uploadedFileUrls.video = result.url;
-        console.log('✅ Video uploaded:', result.url);
+        console.log('✅ Video uploaded to Supabase:', result.url);
         
         // Generate thumbnail from video if no custom thumbnail
         if (!selectedThumbnail && !formData.youtubeLink) {
-          toast.loading('Generating video thumbnail...');
           try {
+            toast.loading('Generating video thumbnail...');
             const thumbResult = await fileManager.generateThumbnailFromVideo(files.videoFile);
             uploadedFileUrls.thumbnail = thumbResult.url;
-            console.log('✅ Auto-thumbnail generated:', thumbResult.url);
+            console.log('✅ Auto-thumbnail uploaded to Supabase:', thumbResult.url);
           } catch (thumbError) {
             console.warn('Thumbnail generation skipped:', thumbError.message);
+            toast.warning('Could not generate thumbnail');
           }
         }
       } catch (videoError) {
         console.error('❌ Video upload failed:', videoError);
-        toast.error('Video upload failed');
-        // Continue with other files
+        toast.error('Video upload failed. Please try again.');
+        throw videoError;
       }
     }
 
     // 2. Upload custom thumbnail (if provided)
     if (selectedThumbnail && selectedThumbnail instanceof File) {
-      toast.loading('Uploading custom thumbnail...');
       try {
+        toast.loading('Uploading custom thumbnail to Supabase...');
         const result = await fileManager.uploadFile(selectedThumbnail, 'thumbnails');
         uploadedFileUrls.thumbnail = result.url;
-        console.log('✅ Custom thumbnail uploaded:', result.url);
+        console.log('✅ Custom thumbnail uploaded to Supabase:', result.url);
       } catch (thumbError) {
         console.warn('Custom thumbnail upload skipped:', thumbError.message);
+        toast.warning('Thumbnail upload failed');
       }
     }
 
     // 3. Upload Curriculum PDF
     if (files.curriculumPDF) {
-      toast.loading('Uploading curriculum PDF...');
       try {
+        toast.loading('Uploading curriculum PDF to Supabase...');
         const result = await fileManager.uploadFile(files.curriculumPDF, 'documents');
         uploadedFileUrls.curriculumPDF = result.url;
-        console.log('✅ Curriculum PDF uploaded:', result.url);
+        console.log('✅ Curriculum PDF uploaded to Supabase:', result.url);
       } catch (error) {
-        console.error('Curriculum PDF upload failed:', error);
+        console.error('❌ Curriculum PDF upload failed:', error);
+        toast.error('Curriculum PDF upload failed');
       }
     }
 
     // 4. Upload Fee Structure PDFs
     if (files.feesDayDistributionPdf) {
       try {
+        toast.loading('Uploading day fees PDF to Supabase...');
         const result = await fileManager.uploadFile(files.feesDayDistributionPdf, 'documents');
         uploadedFileUrls.feesDayPDF = result.url;
-      } catch (error) { console.error('Day fees PDF upload failed:', error); }
+        console.log('✅ Day fees PDF uploaded to Supabase:', result.url);
+      } catch (error) {
+        console.error('❌ Day fees PDF upload failed:', error);
+        toast.error('Day fees PDF upload failed');
+      }
     }
 
     if (files.feesBoardingDistributionPdf) {
       try {
+        toast.loading('Uploading boarding fees PDF to Supabase...');
         const result = await fileManager.uploadFile(files.feesBoardingDistributionPdf, 'documents');
         uploadedFileUrls.feesBoardingPDF = result.url;
-      } catch (error) { console.error('Boarding fees PDF upload failed:', error); }
+        console.log('✅ Boarding fees PDF uploaded to Supabase:', result.url);
+      } catch (error) {
+        console.error('❌ Boarding fees PDF upload failed:', error);
+        toast.error('Boarding fees PDF upload failed');
+      }
     }
 
     if (files.admissionFeePdf) {
       try {
+        toast.loading('Uploading admission fee PDF to Supabase...');
         const result = await fileManager.uploadFile(files.admissionFeePdf, 'documents');
         uploadedFileUrls.admissionFeePDF = result.url;
-      } catch (error) { console.error('Admission fee PDF upload failed:', error); }
+        console.log('✅ Admission fee PDF uploaded to Supabase:', result.url);
+      } catch (error) {
+        console.error('❌ Admission fee PDF upload failed:', error);
+        toast.error('Admission fee PDF upload failed');
+      }
     }
 
     // 5. Upload Exam Result PDFs
@@ -3631,11 +3654,13 @@ const handleFormSubmit = async (e) => {
     for (const exam of examPDFs) {
       if (files[exam.key]) {
         try {
+          toast.loading(`Uploading ${exam.name} PDF to Supabase...`);
           const result = await fileManager.uploadFile(files[exam.key], 'exam-results');
           uploadedFileUrls.examResultsPDFs[exam.key] = result.url;
-          console.log(`✅ ${exam.name} uploaded:`, result.url);
+          console.log(`✅ ${exam.name} uploaded to Supabase:`, result.url);
         } catch (error) {
-          console.error(`${exam.name} upload failed:`, error);
+          console.error(`❌ ${exam.name} upload failed:`, error);
+          toast.error(`${exam.name} upload failed`);
         }
       }
     }
@@ -3645,22 +3670,27 @@ const handleFormSubmit = async (e) => {
     for (const fileObj of newAdditionalFiles) {
       if (fileObj.file) {
         try {
+          toast.loading(`Uploading ${fileObj.filename || 'additional file'} to Supabase...`);
           const result = await fileManager.uploadFile(fileObj.file, 'additional-documents');
           uploadedFileUrls.additionalFiles.push({
             url: result.url,
             name: fileObj.filename || fileObj.file.name,
             year: fileObj.year || '',
-            description: fileObj.description || ''
+            description: fileObj.description || '',
+            size: fileObj.file.size,
+            type: fileObj.file.type
           });
+          console.log(`✅ Additional file uploaded to Supabase:`, result.url);
         } catch (error) {
-          console.error('Additional file upload failed:', error);
+          console.error('❌ Additional file upload failed:', error);
+          toast.error('Additional file upload failed');
         }
       }
     }
 
-    console.log('📦 All file uploads completed:', uploadedFileUrls);
+    console.log('📦 All files uploaded to Supabase:', uploadedFileUrls);
 
-    // PREPARE JSON DATA FOR DATABASE
+    // PREPARE JSON DATA FOR DATABASE (URLs ONLY - NO FILES)
     // ------------------------------------------------------
     toast.loading('Preparing school data for database...');
     
@@ -3677,7 +3707,7 @@ const handleFormSubmit = async (e) => {
       closeDate: formData.closeDate || null,
       
       // Video Information (URLs from Supabase)
-      videoTour: uploadedFileUrls.video || formData.youtubeLink || null,
+      videoTour: formData.youtubeLink || uploadedFileUrls.video || null,
       videoType: formData.youtubeLink ? 'youtube' : (uploadedFileUrls.video ? 'file' : null),
       videoThumbnail: uploadedFileUrls.thumbnail || null,
       
@@ -3764,26 +3794,31 @@ const handleFormSubmit = async (e) => {
       admissionLocation: formData.admissionLocation || '',
       admissionOfficeHours: formData.admissionOfficeHours || '',
       
-      // Metadata
-      lastUpdated: new Date().toISOString(),
-      filesUploaded: Object.keys(uploadedFileUrls).filter(key => uploadedFileUrls[key] !== null).length
+      // For updating existing files (if editing)
+      ...(school && {
+        removedVideo: removedVideo,
+        removedPdfs: removedPdfs,
+        removedAdditionalFiles: removedAdditionalFiles.map(f => ({
+          filepath: f.filepath || f.filename,
+          filename: f.filename || f.name
+        }))
+      })
     };
 
-    console.log('📊 School data prepared for database:', schoolData);
+    console.log('📊 School data prepared for database (URLs only):', schoolData);
 
-    // SAVE JSON DATA TO DATABASE
+    // SAVE JSON DATA (URLS ONLY) TO DATABASE
     // ------------------------------------------------------
     toast.loading('Saving school information to database...');
     
-    // Call parent's onSave function with the JSON data
-    const result = await onSave(schoolData);
+    // Call the simplified handleSaveSchool function
+    const result = await handleSaveSchool(schoolData);
     
     // SUCCESS
     // ------------------------------------------------------
     toast.success(schoolInfo ? 'School updated successfully!' : 'School created successfully!');
     
     // Clean up
-    resetFormState();
     setShowModal(false);
     
     return result;
@@ -5535,8 +5570,9 @@ const handleSaveSchool = async (schoolData) => {
   try {
     setActionLoading(true);
     
-    console.log('📨 Sending school data to API...', schoolData);
+    console.log('📨 Sending school data (URLs only) to API...', schoolData);
     
+    // Send JSON data only (no files - they're already in Supabase)
     const response = await fetch('/api/school', {
       method: schoolInfo ? 'PUT' : 'POST',
       headers: {
@@ -5547,16 +5583,21 @@ const handleSaveSchool = async (schoolData) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'API request failed');
+      throw new Error(errorData.error || errorData.message || 'API request failed');
     }
 
     const result = await response.json();
     
     // Update local state
-    setSchoolInfo(result.school);
+    if (result.school) {
+      setSchoolInfo(result.school);
+    }
     
     // Show success message
-    toast.success(schoolInfo ? 'Updated successfully!' : 'Created successfully!');
+    toast.success(result.message || (schoolInfo ? 'Updated successfully!' : 'Created successfully!'));
+    
+    // Reload school info to get fresh data
+    await loadSchoolInfo();
     
     return result;
     
@@ -5567,7 +5608,7 @@ const handleSaveSchool = async (schoolData) => {
     if (error.message.includes('Network')) {
       toast.error('Network error. Please check your connection.');
     } else if (error.message.includes('413')) {
-      toast.error('Data too large. Please reduce file sizes.');
+      toast.error('Data too large.');
     } else {
       toast.error(error.message || 'Failed to save school information');
     }

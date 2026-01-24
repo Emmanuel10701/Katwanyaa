@@ -334,10 +334,9 @@ async function handleAdditionalFiles(additionalData, existingAdditionalFiles = [
 
 export const dynamic = 'force-dynamic';
 
-// 🟢 CREATE School Info
 export async function POST(request) {
   try {
-    console.log('📨 POST /api/school - Creating school info');
+    console.log('📨 POST /api/school - Creating school info (JSON only)');
     
     // Check if school already exists
     const existing = await prisma.schoolInfo.findFirst();
@@ -348,159 +347,102 @@ export async function POST(request) {
       );
     }
     
-    // Parse request based on content type
-    let data;
-    const contentType = request.headers.get('content-type') || '';
+    // Parse JSON request (no files - they're already uploaded)
+    const data = await request.json();
     
-    if (contentType.includes('multipart/form-data')) {
-      data = await parseMultipartRequest(request);
-    } else if (contentType.includes('application/json')) {
-      data = await parseJsonRequest(request);
-    } else {
-      throw new Error('Unsupported content type');
-    }
-    
-    // Process files if in multipart
-    let processedData = { ...data };
-    
-    if (data._files) {
-      // Handle video if present
-      if (data._files.videoFile) {
-        const videoResult = await handleVideoData({
-          videoFile: data._files.videoFile,
-          videoThumbnail: data._files.videoThumbnail,
-          youtubeLink: data.youtubeLink
-        }, null);
-        
-        processedData.videoTour = videoResult.videoTour;
-        processedData.videoType = videoResult.videoType;
-        processedData.videoThumbnail = videoResult.videoThumbnail;
-      }
-      
-      // Handle PDFs
-      const pdfFields = [
-        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-      ];
-      
-      for (const field of pdfFields) {
-        if (data._files[field]) {
-          const pdfResult = await handlePdfData(field, data._files[field], null);
-          processedData[field] = pdfResult.pdf;
-          processedData[`${field}Name`] = pdfResult.name;
-          processedData[`${field}Size`] = pdfResult.size;
-        }
-      }
-      
-      // Handle additional files
-      if (data._files.additionalFiles) {
-        const files = data._files.additionalFiles instanceof File ? 
-          [data._files.additionalFiles] : 
-          data._files.additionalFiles;
-        
-        const additionalResult = await handleAdditionalFiles({
-          newFiles: files
-        }, []);
-        
-        processedData.additionalResultsFiles = additionalResult;
-      }
-      
-      delete processedData._files;
-    }
-    
-    // Create school in database
-    const school = await prisma.schoolInfo.create({
-      data: {
-        name: processedData.name,
-        description: processedData.description || null,
-        motto: processedData.motto || null,
-        vision: processedData.vision || null,
-        mission: processedData.mission || null,
-        videoTour: processedData.videoTour || null,
-        videoType: processedData.videoType || null,
-        videoThumbnail: processedData.videoThumbnail || null,
-        studentCount: parseInt(processedData.studentCount) || 0,
-        staffCount: parseInt(processedData.staffCount) || 0,
-        openDate: new Date(processedData.openDate) || new Date(),
-        closeDate: new Date(processedData.closeDate) || new Date(),
-        
-        // JSON fields
-        subjects: JSON.stringify(processedData.subjects || []),
-        departments: JSON.stringify(processedData.departments || []),
-        admissionDocumentsRequired: JSON.stringify(processedData.admissionDocumentsRequired || []),
-        feesDayDistributionJson: JSON.stringify(processedData.feesDayDistributionJson || {}),
-        feesBoardingDistributionJson: JSON.stringify(processedData.feesBoardingDistributionJson || {}),
-        admissionFeeDistribution: JSON.stringify(processedData.admissionFeeDistribution || {}),
-        
-        // Day School Fees
-        feesDay: parseFloat(processedData.feesDay) || null,
-        feesDayDistributionPdf: processedData.feesDayDistributionPdf || null,
-        feesDayPdfName: processedData.feesDayPdfName || null,
-        feesDayPdfSize: processedData.feesDayPdfSize || null,
-        
-        // Boarding School Fees
-        feesBoarding: parseFloat(processedData.feesBoarding) || null,
-        feesBoardingDistributionPdf: processedData.feesBoardingDistributionPdf || null,
-        feesBoardingPdfName: processedData.feesBoardingPdfName || null,
-        feesBoardingPdfSize: processedData.feesBoardingPdfSize || null,
-        
-        // Curriculum
-        curriculumPDF: processedData.curriculumPDF || null,
-        curriculumPdfName: processedData.curriculumPdfName || null,
-        curriculumPdfSize: processedData.curriculumPdfSize || null,
-        
-        // Admission Information
-        admissionOpenDate: processedData.admissionOpenDate ? new Date(processedData.admissionOpenDate) : null,
-        admissionCloseDate: processedData.admissionCloseDate ? new Date(processedData.admissionCloseDate) : null,
-        admissionRequirements: processedData.admissionRequirements || null,
-        admissionFee: parseFloat(processedData.admissionFee) || null,
-        admissionCapacity: parseInt(processedData.admissionCapacity) || null,
-        admissionContactEmail: processedData.admissionContactEmail || null,
-        admissionContactPhone: processedData.admissionContactPhone || null,
-        admissionWebsite: processedData.admissionWebsite || null,
-        admissionLocation: processedData.admissionLocation || null,
-        admissionOfficeHours: processedData.admissionOfficeHours || null,
-        admissionFeePdf: processedData.admissionFeePdf || null,
-        admissionFeePdfName: processedData.admissionFeePdfName || null,
-        
-        // Exam Results
-        form1ResultsPdf: processedData.form1ResultsPdf || null,
-        form1ResultsPdfName: processedData.form1ResultsPdfName || null,
-        form1ResultsPdfSize: processedData.form1ResultsPdfSize || null,
-        form1ResultsYear: parseInt(processedData.form1ResultsYear) || null,
-        
-        form2ResultsPdf: processedData.form2ResultsPdf || null,
-        form2ResultsPdfName: processedData.form2ResultsPdfName || null,
-        form2ResultsPdfSize: processedData.form2ResultsPdfSize || null,
-        form2ResultsYear: parseInt(processedData.form2ResultsYear) || null,
-        
-        form3ResultsPdf: processedData.form3ResultsPdf || null,
-        form3ResultsPdfName: processedData.form3ResultsPdfName || null,
-        form3ResultsPdfSize: processedData.form3ResultsPdfSize || null,
-        form3ResultsYear: parseInt(processedData.form3ResultsYear) || null,
-        
-        form4ResultsPdf: processedData.form4ResultsPdf || null,
-        form4ResultsPdfName: processedData.form4ResultsPdfName || null,
-        form4ResultsPdfSize: processedData.form4ResultsPdfSize || null,
-        form4ResultsYear: parseInt(processedData.form4ResultsYear) || null,
-        
-        mockExamsResultsPdf: processedData.mockExamsResultsPdf || null,
-        mockExamsPdfName: processedData.mockExamsPdfName || null,
-        mockExamsPdfSize: processedData.mockExamsPdfSize || null,
-        mockExamsYear: parseInt(processedData.mockExamsYear) || null,
-        
-        kcseResultsPdf: processedData.kcseResultsPdf || null,
-        kcsePdfName: processedData.kcsePdfName || null,
-        kcsePdfSize: processedData.kcsePdfSize || null,
-        kcseYear: parseInt(processedData.kcseYear) || null,
-        
-        // Additional Results
-        additionalResultsFiles: JSON.stringify(processedData.additionalResultsFiles || [])
+    console.log('📊 Creating school with URLs:', {
+      video: data.videoTour,
+      pdfs: {
+        curriculum: data.curriculumPDF,
+        dayFees: data.feesDayDistributionPdf,
+        boardingFees: data.feesBoardingDistributionPdf,
+        admissionFee: data.admissionFeePdf
       }
     });
     
-    console.log('✅ School created successfully:', school.id);
+    // Create school in database (URLs only - files already in Supabase)
+    const school = await prisma.schoolInfo.create({
+      data: {
+        name: data.name,
+        description: data.description || null,
+        motto: data.motto || null,
+        vision: data.vision || null,
+        mission: data.mission || null,
+        
+        // Video (already uploaded to Supabase)
+        videoTour: data.videoTour || null,
+        videoType: data.videoType || null,
+        videoThumbnail: data.videoThumbnail || null,
+        
+        studentCount: parseInt(data.studentCount) || 0,
+        staffCount: parseInt(data.staffCount) || 0,
+        openDate: new Date(data.openDate) || new Date(),
+        closeDate: new Date(data.closeDate) || new Date(),
+        
+        // JSON fields
+        subjects: JSON.stringify(data.subjects || []),
+        departments: JSON.stringify(data.departments || []),
+        admissionDocumentsRequired: JSON.stringify(data.admissionDocumentsRequired || []),
+        feesDayDistributionJson: JSON.stringify(data.feesDayDistribution || {}),
+        feesBoardingDistributionJson: JSON.stringify(data.feesBoardingDistribution || {}),
+        admissionFeeDistribution: JSON.stringify(data.admissionFeeDistribution || {}),
+        
+        // PDFs (already uploaded to Supabase - URLs only)
+        curriculumPDF: data.curriculumPDF || null,
+        curriculumPdfName: data.curriculumPdfName || null,
+        
+        feesDayDistributionPdf: data.feesDayDistributionPdf || null,
+        feesDayPdfName: data.feesDayPdfName || null,
+        
+        feesBoardingDistributionPdf: data.feesBoardingDistributionPdf || null,
+        feesBoardingPdfName: data.feesBoardingPdfName || null,
+        
+        admissionFeePdf: data.admissionFeePdf || null,
+        admissionFeePdfName: data.admissionFeePdfName || null,
+        
+        // Admission Information
+        admissionOpenDate: data.admissionOpenDate ? new Date(data.admissionOpenDate) : null,
+        admissionCloseDate: data.admissionCloseDate ? new Date(data.admissionCloseDate) : null,
+        admissionRequirements: data.admissionRequirements || null,
+        admissionFee: parseFloat(data.admissionFee) || null,
+        admissionCapacity: parseInt(data.admissionCapacity) || null,
+        admissionContactEmail: data.admissionContactEmail || null,
+        admissionContactPhone: data.admissionContactPhone || null,
+        admissionWebsite: data.admissionWebsite || null,
+        admissionLocation: data.admissionLocation || null,
+        admissionOfficeHours: data.admissionOfficeHours || null,
+        
+        // Exam Results (URLs from Supabase)
+        form1ResultsPdf: data.examResults?.form1?.pdf || null,
+        form1ResultsPdfName: data.examResults?.form1?.name || null,
+        form1ResultsYear: data.examResults?.form1?.year ? parseInt(data.examResults.form1.year) : null,
+        
+        form2ResultsPdf: data.examResults?.form2?.pdf || null,
+        form2ResultsPdfName: data.examResults?.form2?.name || null,
+        form2ResultsYear: data.examResults?.form2?.year ? parseInt(data.examResults.form2.year) : null,
+        
+        form3ResultsPdf: data.examResults?.form3?.pdf || null,
+        form3ResultsPdfName: data.examResults?.form3?.name || null,
+        form3ResultsYear: data.examResults?.form3?.year ? parseInt(data.examResults.form3.year) : null,
+        
+        form4ResultsPdf: data.examResults?.form4?.pdf || null,
+        form4ResultsPdfName: data.examResults?.form4?.name || null,
+        form4ResultsYear: data.examResults?.form4?.year ? parseInt(data.examResults.form4.year) : null,
+        
+        mockExamsResultsPdf: data.examResults?.mockExams?.pdf || null,
+        mockExamsPdfName: data.examResults?.mockExams?.name || null,
+        mockExamsYear: data.examResults?.mockExams?.year ? parseInt(data.examResults.mockExams.year) : null,
+        
+        kcseResultsPdf: data.examResults?.kcse?.pdf || null,
+        kcsePdfName: data.examResults?.kcse?.name || null,
+        kcseYear: data.examResults?.kcse?.year ? parseInt(data.examResults.kcse.year) : null,
+        
+        // Additional Results (URLs from Supabase)
+        additionalResultsFiles: JSON.stringify(data.additionalResultsFiles || [])
+      }
+    });
+    
+    console.log('✅ School created successfully with Supabase URLs:', school.id);
     
     return NextResponse.json({
       success: true,
@@ -511,7 +453,11 @@ export async function POST(request) {
   } catch (error) {
     console.error('❌ POST Error:', error);
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" },
+      { 
+        success: false, 
+        error: error.message || "Internal server error",
+        message: "Failed to create school information"
+      },
       { status: 500 }
     );
   }
