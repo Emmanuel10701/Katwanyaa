@@ -5572,9 +5572,12 @@ const handleSaveSchool = async (schoolData) => {
     
     console.log('📨 Sending school data (URLs only) to API...', schoolData);
     
+    // Determine if it's an update or create based on the schoolInfo from state
+    const isUpdate = schoolInfo !== null; // Use the schoolInfo from component state
+    
     // Send JSON data only (no files - they're already in Supabase)
     const response = await fetch('/api/school', {
-      method: schoolInfo ? 'PUT' : 'POST',
+      method: isUpdate ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -5594,7 +5597,7 @@ const handleSaveSchool = async (schoolData) => {
     }
     
     // Show success message
-    toast.success(result.message || (schoolInfo ? 'Updated successfully!' : 'Created successfully!'));
+    toast.success(result.message || (isUpdate ? 'Updated successfully!' : 'Created successfully!'));
     
     // Reload school info to get fresh data
     await loadSchoolInfo();
@@ -5621,6 +5624,7 @@ const handleSaveSchool = async (schoolData) => {
     setActionLoading(false);
   }
 };
+
 
   const handleDeleteSchool = async () => {
     try {
