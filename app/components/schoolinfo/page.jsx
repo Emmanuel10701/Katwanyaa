@@ -1,6 +1,6 @@
 'use client';
 
-import { fileManager } from '@/libs/fileManager';
+import { fileManager } from '../../../libs/fileManager';
 import { createClient } from '@supabase/supabase-js';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
