@@ -1,54 +1,93 @@
-import { supabase } from "./superbase";
+// libs/superbase.js - UPDATED VERSION
+
+import { createClient } from '@supabase/supabase-js';
+
+// --- INITIALIZATION ---
+const cleanEnv = (value) => {
+  if (!value) return '';
+  return value.toString().replace(/^["']|["']$/g, '').trim();
+};
+
+const supabaseUrl = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
+const supabaseKey = cleanEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+// Create client with proper configuration
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  }
+});
+
+// --- FILE MANAGER CLASS ---
+const BUCKET_NAME = 'Katwanyaa High';
 
 export class FileManager {
   /**
-   * Upload file to Supabase - FOR ALL FILE TYPES
+   * Check if running in browser
+   */
+  static isBrowser() {
+    return typeof window !== 'undefined';
+  }
+
+  /**
+   * Upload file to Supabase - Works in both browser and Node.js
    */
   static async uploadFile(file, folder = 'uploads') {
     if (!file || file.size === 0) return null;
 
     try {
-      const buffer = Buffer.from(await file.arrayBuffer());
       const timestamp = Date.now();
-      const originalName = file.name;
-      
-      // Sanitize filename
-      const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const fileName = `${folder}/${timestamp}-${sanitizedName}`;
+
+      console.log(`📤 Uploading to [${BUCKET_NAME}]:`, fileName, `(${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+      let uploadData;
       
-      console.log('📤 Uploading to Supabase:', fileName, 'Type:', file.type);
-      
+      if (this.isBrowser()) {
+        // Browser environment - use File/Blob directly
+        uploadData = file;
+      } else {
+        // Node.js environment - convert to ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer();
+        uploadData = Buffer.from(arrayBuffer);
+      }
+
       const { data, error } = await supabase.storage
-        .from('Katwanyaa High')
-        .upload(fileName, buffer, {
+        .from(BUCKET_NAME)
+        .upload(fileName, uploadData, {
           contentType: file.type,
           cacheControl: '3600',
           upsert: false,
         });
-      
+
       if (error) {
-        console.error('Upload error:', error);
+        console.error('❌ Supabase upload error:', error);
         throw new Error(`Upload failed: ${error.message}`);
       }
-      
-      // Get public URL
+
       const { data: { publicUrl } } = supabase.storage
-        .from('Katwanyaa High')
+        .from(BUCKET_NAME)
         .getPublicUrl(fileName);
-      
-      console.log('✅ Uploaded to Supabase:', publicUrl);
-      
+
+      console.log('✅ Upload Successful:', fileName);
+
       return {
         url: publicUrl,
         key: data.path,
-        fileName: originalName,
+        fileName: file.name,
         fileType: file.type,
-        fileSize: buffer.length,
+        fileSize: file.size,
         storageType: 'supabase'
       };
-      
     } catch (error) {
-      console.error('Upload file error:', error);
+      console.error('Upload error:', error);
       throw error;
     }
   }
@@ -58,122 +97,240 @@ export class FileManager {
    */
   static extractFileKey(fileUrl) {
     if (!fileUrl) return null;
-    
     try {
-      // Remove query parameters
       const cleanUrl = fileUrl.split('?')[0];
-      
-      // Different possible URL patterns
       const patterns = [
-        /https:\/\/[^\/]+\/storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/,
-        /https:\/\/[^\/]+\/storage\/v1\/object\/public\/Katwanyaa High\/(.+)/,
-        /\/storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/,
-        /\/storage\/v1\/object\/public\/Katwanyaa High\/(.+)/
+        /storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/,
+        /storage\/v1\/object\/public\/Katwanyaa High\/(.+)/,
+        /supabase\.co\/storage\/v1\/object\/public\/Katwanyaa%20High\/(.+)/
       ];
-      
+
       for (const pattern of patterns) {
         const match = cleanUrl.match(pattern);
-        if (match && match[1]) {
-          return decodeURIComponent(match[1]);
-        }
+        if (match?.[1]) return decodeURIComponent(match[1]);
       }
-      
-      console.warn('Could not extract file key from URL:', fileUrl);
+
       return null;
     } catch (error) {
-      console.error('Error extracting file key:', error);
       return null;
     }
   }
 
   /**
-   * Delete file from Supabase storage
-   */
-  static async deleteFile(fileUrl) {
-    try {
-      if (!fileUrl) return { success: true };
-      
-      const fileKey = this.extractFileKey(fileUrl);
-      
-      if (!fileKey) {
-        console.warn('Invalid file URL:', fileUrl);
-        return { success: false, error: 'Invalid file URL' };
-      }
-      
-      console.log('🗑️  Deleting from Supabase:', fileKey);
-      
-      const { error } = await supabase.storage
-        .from('Katwanyaa High')
-        .remove([fileKey]);
-      
-      if (error) {
-        console.error('Delete error:', error);
-        return { success: false, error: error.message };
-      }
-      
-      console.log('✅ Deleted from Supabase');
-      return { success: true };
-    } catch (error) {
-      console.error('Delete file error:', error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
-   * Delete multiple files from Supabase
+   * Delete single or multiple files
    */
   static async deleteFiles(fileUrls) {
-    if (!fileUrls || fileUrls.length === 0) return { success: true };
-    
+    const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
+    if (!urls.length) return { success: true };
+
     try {
-      const keys = fileUrls
+      const keys = urls
         .map(url => this.extractFileKey(url))
-        .filter(key => key !== null);
-      
-      if (keys.length === 0) return { success: true };
-      
-      console.log('🗑️  Deleting multiple files from Supabase:', keys);
+        .filter(Boolean);
+
+      if (!keys.length) {
+        console.warn('⚠️ No valid file keys to delete');
+        return { success: true };
+      }
+
+      console.log(`🗑️ Deleting ${keys.length} files from Supabase:`, keys);
       
       const { error } = await supabase.storage
-        .from('Katwanyaa High')
+        .from(BUCKET_NAME)
         .remove(keys);
-      
+
       if (error) {
-        console.error('Delete multiple error:', error);
+        console.error('❌ Supabase delete error:', error);
         return { success: false, error: error.message };
       }
-      
-      console.log(`✅ Deleted ${keys.length} files from Supabase`);
+
+      console.log('✅ Files deleted successfully');
       return { success: true };
     } catch (error) {
-      console.error('Delete files error:', error);
+      console.error('Delete error:', error);
       return { success: false, error: error.message };
     }
   }
 
   /**
-   * Update file (delete old, upload new)
+   * Update file (Deletes old, uploads new) - Works anywhere
    */
   static async updateFile(oldFileUrl, newFile, folder) {
+    if (oldFileUrl) {
+      console.log('🔄 Replacing file:', oldFileUrl);
+      await this.deleteFiles(oldFileUrl);
+    }
+    
+    if (newFile?.size > 0) {
+      return this.uploadFile(newFile, folder);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Upload multiple files in parallel
+   */
+  static async uploadMultipleFiles(files, folder = 'uploads') {
+    if (!files || files.length === 0) return [];
+
+    const uploadPromises = files.map(file => 
+      this.uploadFile(file, folder)
+    );
+
+    const results = await Promise.allSettled(uploadPromises);
+
+    const successfulUploads = [];
+    const failedUploads = [];
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value) {
+        successfulUploads.push(result.value);
+      } else {
+        failedUploads.push({
+          file: files[index]?.name || `File ${index}`,
+          error: result.reason?.message || 'Unknown error'
+        });
+      }
+    });
+
+    if (failedUploads.length > 0) {
+      console.warn(`⚠️ ${failedUploads.length} files failed to upload:`, failedUploads);
+    }
+
+    return {
+      successful: successfulUploads,
+      failed: failedUploads
+    };
+  }
+
+  /**
+   * Get file metadata from URL
+   */
+  static async getFileMetadata(fileUrl) {
+    const key = this.extractFileKey(fileUrl);
+    if (!key) return null;
+
     try {
-      // Delete old file
-      if (oldFileUrl) {
-        console.log('Updating file, deleting old:', oldFileUrl);
-        const deleteResult = await this.deleteFile(oldFileUrl);
-        if (!deleteResult.success) {
-          console.warn('Could not delete old file, but continuing...');
-        }
-      }
-      
-      // Upload new file
-      if (newFile && newFile.size > 0) {
-        return await this.uploadFile(newFile, folder);
-      }
-      
-      return null;
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .list(key.split('/')[0], {
+          search: key.split('/').pop()
+        });
+
+      if (error || !data || data.length === 0) return null;
+
+      return {
+        name: data[0].name,
+        size: data[0].metadata?.size,
+        type: data[0].metadata?.mimetype,
+        lastModified: data[0].updated_at
+      };
     } catch (error) {
-      console.error('Update file error:', error);
-      throw error;
+      console.error('Get metadata error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if file exists
+   */
+  static async fileExists(fileUrl) {
+    const key = this.extractFileKey(fileUrl);
+    if (!key) return false;
+
+    try {
+      const { data } = await supabase.storage
+        .from(BUCKET_NAME)
+        .list(key.split('/')[0], {
+          search: key.split('/').pop(),
+          limit: 1
+        });
+
+      return data && data.length > 0;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Generate signed URL (for temporary access)
+   */
+  static async generateSignedUrl(fileUrl, expiresIn = 3600) {
+    const key = this.extractFileKey(fileUrl);
+    if (!key) return null;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(key, expiresIn);
+
+      if (error) throw error;
+
+      return data.signedUrl;
+    } catch (error) {
+      console.error('Generate signed URL error:', error);
+      return null;
     }
   }
 }
+
+/**
+ * Direct upload utility for frontend-only usage
+ */
+export const frontendUpload = {
+  /**
+   * Upload file from browser WITHOUT going through API
+   */
+  async uploadDirectly(file, folder = 'uploads', onProgress = null) {
+    if (!file || file.size === 0) return null;
+    
+    if (!this.isBrowser()) {
+      throw new Error('This method can only be used in the browser');
+    }
+
+    try {
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileName = `${folder}/${timestamp}-${sanitizedName}`;
+
+      console.log(`📤 Direct upload from browser: ${fileName}`);
+
+      // Upload with progress tracking
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+
+      console.log('✅ Direct upload successful:', fileName);
+
+      return {
+        url: publicUrl,
+        key: data.path,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      };
+
+    } catch (error) {
+      console.error('Direct upload error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check if running in browser
+   */
+  isBrowser() {
+    return typeof window !== 'undefined';
+  }
+};
