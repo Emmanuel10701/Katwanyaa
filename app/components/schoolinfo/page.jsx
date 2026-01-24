@@ -3167,66 +3167,58 @@ function VideoThumbnail({ videoType, videoPath, videoThumbnail, onClick }) {
   );
 }
 
-// School API Service
+// Update your schoolApiService to handle JSON
 const schoolApiService = {
   async getSchoolInfo() {
-    const response = await fetch('/api/school')
-    if (!response.ok) throw new Error('Failed to fetch school information')
-    const data = await response.json()
-    return data.school
+    const response = await fetch('/api/school');
+    if (!response.ok) throw new Error('Failed to fetch school information');
+    const data = await response.json();
+    return data.school;
   },
 
-async createSchoolInfo(formData) {
-  try {
+  async createSchoolInfo(jsonData) {
     const response = await fetch('/api/school', {
       method: 'POST',
-      body: formData,
-    })
-    
-    if (response.status === 413) {
-      throw new Error('413: Request Entity Too Large - File size exceeds limit');
-    }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jsonData)
+    });
     
     if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-        throw new Error(errorData.error || `Failed to create school information (${response.status})`);
-      } catch (parseError) {
-        throw new Error(`Failed to create school information (${response.status})`);
-      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create school information');
     }
     
     return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
-  }
-},
+  },
 
-  async updateSchoolInfo(formData) {
+  async updateSchoolInfo(jsonData) {
     const response = await fetch('/api/school', {
       method: 'PUT',
-      body: formData,
-    })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(jsonData)
+    });
+    
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to update school information')
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update school information');
     }
-    return await response.json()
+    
+    return await response.json();
   },
 
   async deleteSchoolInfo() {
     const response = await fetch('/api/school', {
       method: 'DELETE',
-    })
+    });
+    
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || 'Failed to delete school information')
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete school information');
     }
-    return await response.json()
+    
+    return await response.json();
   }
-}
+};
 
 // Modern School Info Modal with 3 steps
 // Modern School Info Modal with 3 steps - COMPLETE VERSION
@@ -3545,184 +3537,264 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
     }
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (currentStep < steps.length - 1) {
-      return
-    }
+// Updated handleFormSubmit function in ModernSchoolModal
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (currentStep < steps.length - 1) {
+    return;
+  }
 
-    try {
-      // Calculate total file size BEFORE creating FormData
-      const fileSizeInfo = calculateTotalFileSize();
-      const MAX_TOTAL_SIZE = 100 * 1024 * 1024; // 100MB total limit
-      
-      // Check total file size
-      if (fileSizeInfo.totalSize > MAX_TOTAL_SIZE) {
-        toast.error(`Total file size (${fileSizeInfo.totalMB} MB) exceeds 100MB limit. Please reduce file sizes before uploading.`);
-        return;
-      }
-      
-      // Also check individual video file size (server will reject >100MB)
-      if (files.videoFile && files.videoFile.size > 100 * 1024 * 1024) {
-        const videoMB = (files.videoFile.size / (1024 * 1024)).toFixed(2);
-        toast.error(`Video file (${videoMB} MB) exceeds 100MB limit. Please compress the video or use YouTube link instead.`);
-        return;
-      }
-      
-      // Log file sizes for debugging
-      console.log('📊 File size summary before upload:');
-      if (files.videoFile) {
-        console.log(`  Video: ${(files.videoFile.size / (1024 * 1024)).toFixed(2)} MB`);
-      }
-      
-      const pdfFields = [
-        'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
-        'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
-        'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
-      ];
-      
-      pdfFields.forEach(field => {
-        if (files[field]) {
-          console.log(`  ${field}: ${(files[field].size / (1024 * 1024)).toFixed(2)} MB`);
-        }
-      });
-      
-      console.log(`  Total: ${fileSizeInfo.totalMB} MB / 100 MB`);
-      
-      // Add a warning toast for large uploads
-      if (fileSizeInfo.totalSize > 80 * 1024 * 1024) {
-        toast.warning('Total file size is large (>80MB). Upload may take several minutes...', {
-          duration: 5000,
-        });
-      }
-      
-      // Show loading state
-      toast.loading(`Uploading ${fileSizeInfo.totalMB} MB of files, please wait...`);
-      
-      // Create FormData for API submission
-      const formDataObj = new FormData();
-      
-      // Add basic fields
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
-          if (Array.isArray(formData[key])) {
-            formDataObj.append(key, JSON.stringify(formData[key]));
-          } else {
-            formDataObj.append(key, formData[key]);
-          }
-        }
-      });
-      
-      // Add fee breakdowns
-      if (dayFees.length > 0) {
-        const dayFeesDistribution = {};
-        dayFees.forEach(fee => {
-          if (fee.name && fee.amount) {
-            dayFeesDistribution[fee.name] = fee.amount;
-          }
-        });
-        formDataObj.append('feesDayDistributionJson', JSON.stringify(dayFeesDistribution));
-      }
-      
-      if (boardingFees.length > 0) {
-        const boardingFeesDistribution = {};
-        boardingFees.forEach(fee => {
-          if (fee.name && fee.amount) {
-            boardingFeesDistribution[fee.name] = fee.amount;
-          }
-        });
-        formDataObj.append('feesBoardingDistributionJson', JSON.stringify(boardingFeesDistribution));
-      }
-      
-      if (admissionFees.length > 0) {
-        const admissionFeesDistribution = {};
-        admissionFees.forEach(fee => {
-          if (fee.name && fee.amount) {
-            admissionFeesDistribution[fee.name] = fee.amount;
-          }
-        });
-        formDataObj.append('admissionFeeDistribution', JSON.stringify(admissionFeesDistribution));
-      }
-      
-      // Add video
-      if (files.videoFile) {
-        formDataObj.append('videoTour', files.videoFile);
-      }
-      
-      // Add YouTube link if provided
-      if (formData.youtubeLink && formData.youtubeLink.trim() !== '') {
-        formDataObj.append('youtubeLink', formData.youtubeLink.trim());
-      }
-      
-      // Add thumbnail
-      if (selectedThumbnail) {
-        formDataObj.append('videoThumbnail', selectedThumbnail);
-      }
-      
-      // Add PDF files
- 
-      
-      pdfFields.forEach(field => {
-        if (files[field]) {
-          formDataObj.append(field, files[field]);
-        }
-      });
-      
-      // Add exam years
-      Object.entries(examYears).forEach(([key, value]) => {
-        if (value && value.trim() !== '') {
-          formDataObj.append(key, value);
-        }
-      });
-      
-      // Add additional files
-      additionalFiles.forEach((file, index) => {
-        if (file.isNew && file.file) {
-          formDataObj.append(`additionalResultsFile_${index}`, file.file);
-          formDataObj.append(`additionalResultsYear_${index}`, file.year || '');
-          formDataObj.append(`additionalResultsDesc_${index}`, file.description || '');
-        }
-      });
-      
-      // Add removed files info
-      if (removedAdditionalFiles.length > 0) {
-        formDataObj.append('removedAdditionalFiles', JSON.stringify(
-          removedAdditionalFiles.map(f => ({
-            filepath: f.filepath || f.filename,
-            filename: f.filename || f.name
-          }))
-        ));
-      }
-      
-      if (removedVideo) {
-        formDataObj.append('removeVideo', 'true');
-      }
-      
-      Object.entries(removedPdfs).forEach(([field, isRemoved]) => {
-        if (isRemoved) {
-          formDataObj.append(`remove${field.charAt(0).toUpperCase() + field.slice(1)}`, 'true');
-        }
-      });
-      
-      // Call the parent onSave function
-      await onSave(formDataObj);
-      
-      // Clear loading toast
-      toast.dismiss();
-      toast.success('School information saved successfully!');
-      
-    } catch (error) {
-      console.error('Form submission error:', error);
-      toast.dismiss();
-      
-      if (error.message === 'File size too large' || error.message.includes('413')) {
-        toast.error('Total upload size exceeds server limit (100MB). Please reduce file sizes or split into smaller uploads.');
-      } else {
-        toast.error('Failed to submit form. Please check file sizes and try again.');
-      }
+  try {
+    setActionLoading(true);
+    
+    // Step 1: Upload ALL files directly to Supabase FIRST
+    const uploadedFiles = await uploadAllFilesToSupabase();
+    
+    // Step 2: Prepare JSON data with URLs
+    const schoolData = prepareSchoolData(uploadedFiles);
+    
+    // Step 3: Send JSON to API (NO FILES)
+    const method = school ? 'PUT' : 'POST';
+    const response = await fetch('/api/school', {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(schoolData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to save');
     }
+    
+    const result = await response.json();
+    setSchoolInfo(result.school);
+    setShowModal(false);
+    toast.success(school ? 'Updated successfully!' : 'Created successfully!');
+    
+  } catch (error) {
+    console.error('Save error:', error);
+    toast.error(error.message || 'Failed to save school information');
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+// Helper function: Upload all files to Supabase
+const uploadAllFilesToSupabase = async () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  
+  const uploadPromises = [];
+  const results = {
+    video: null,
+    pdfs: {},
+    additionalFiles: []
   };
+
+  // Upload video file
+  if (files.videoFile && files.videoFile.size > 0) {
+    uploadPromises.push(
+      supabase.storage
+        .from('Katwanyaa High')
+        .upload(`videos/${Date.now()}-${files.videoFile.name}`, files.videoFile)
+        .then(({ data, error }) => {
+          if (error) throw error;
+          const { data: { publicUrl } } = supabase.storage
+            .from('Katwanyaa High')
+            .getPublicUrl(data.path);
+          results.video = {
+            url: publicUrl,
+            name: files.videoFile.name,
+            size: files.videoFile.size
+          };
+        })
+    );
+  }
+
+  // Upload thumbnail if exists
+  if (selectedThumbnail && selectedThumbnail instanceof File) {
+    uploadPromises.push(
+      supabase.storage
+        .from('Katwanyaa High')
+        .upload(`thumbnails/${Date.now()}-thumbnail.jpg`, selectedThumbnail)
+        .then(({ data, error }) => {
+          if (error) throw error;
+          const { data: { publicUrl } } = supabase.storage
+            .from('Katwanyaa High')
+            .getPublicUrl(data.path);
+          results.thumbnail = publicUrl;
+        })
+    );
+  }
+
+  // Upload all PDFs
+  const pdfFields = [
+    'curriculumPDF', 'feesDayDistributionPdf', 'feesBoardingDistributionPdf',
+    'admissionFeePdf', 'form1ResultsPdf', 'form2ResultsPdf', 'form3ResultsPdf',
+    'form4ResultsPdf', 'mockExamsResultsPdf', 'kcseResultsPdf'
+  ];
+
+  pdfFields.forEach(field => {
+    if (files[field] && files[field].size > 0) {
+      uploadPromises.push(
+        supabase.storage
+          .from('Katwanyaa High')
+          .upload(`documents/${Date.now()}-${files[field].name}`, files[field])
+          .then(({ data, error }) => {
+            if (error) throw error;
+            const { data: { publicUrl } } = supabase.storage
+              .from('Katwanyaa High')
+              .getPublicUrl(data.path);
+            results.pdfs[field] = {
+              url: publicUrl,
+              name: files[field].name,
+              size: files[field].size
+            };
+          })
+      );
+    }
+  });
+
+  // Upload additional files
+  const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file);
+  newAdditionalFiles.forEach((fileObj, index) => {
+    if (fileObj.file && fileObj.file.size > 0) {
+      uploadPromises.push(
+        supabase.storage
+          .from('Katwanyaa High')
+          .upload(`additional/${Date.now()}-${index}-${fileObj.filename}`, fileObj.file)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            const { data: { publicUrl } } = supabase.storage
+              .from('Katwanyaa High')
+              .getPublicUrl(data.path);
+            results.additionalFiles.push({
+              url: publicUrl,
+              name: fileObj.filename,
+              size: fileObj.file.size,
+              year: fileObj.year,
+              description: fileObj.description,
+              filetype: fileObj.filetype
+            });
+          })
+      );
+    }
+  });
+
+  // Wait for all uploads to complete
+  await Promise.all(uploadPromises);
+  return results;
+};
+
+// Helper function: Prepare school data with URLs
+const prepareSchoolData = (uploadedFiles) => {
+  return {
+    // Basic Info
+    name: formData.name,
+    description: formData.description,
+    motto: formData.motto,
+    vision: formData.vision,
+    mission: formData.mission,
+    studentCount: parseInt(formData.studentCount) || 0,
+    staffCount: parseInt(formData.staffCount) || 0,
+    openDate: formData.openDate,
+    closeDate: formData.closeDate,
+    
+    // Video & Thumbnail URLs
+    videoTour: formData.youtubeLink || uploadedFiles.video?.url || null,
+    videoType: formData.youtubeLink ? 'youtube' : (uploadedFiles.video ? 'file' : null),
+    videoThumbnail: uploadedFiles.thumbnail || null,
+    
+    // PDF URLs
+    curriculumPDF: uploadedFiles.pdfs.curriculumPDF?.url || null,
+    curriculumPdfName: uploadedFiles.pdfs.curriculumPDF?.name || null,
+    
+    feesDayDistributionPdf: uploadedFiles.pdfs.feesDayDistributionPdf?.url || null,
+    feesDayPdfName: uploadedFiles.pdfs.feesDayDistributionPdf?.name || null,
+    
+    feesBoardingDistributionPdf: uploadedFiles.pdfs.feesBoardingDistributionPdf?.url || null,
+    feesBoardingPdfName: uploadedFiles.pdfs.feesBoardingDistributionPdf?.name || null,
+    
+    admissionFeePdf: uploadedFiles.pdfs.admissionFeePdf?.url || null,
+    admissionFeePdfName: uploadedFiles.pdfs.admissionFeePdf?.name || null,
+    
+    // Exam Results with URLs
+    form1ResultsPdf: uploadedFiles.pdfs.form1ResultsPdf?.url || null,
+    form1ResultsPdfName: uploadedFiles.pdfs.form1ResultsPdf?.name || null,
+    form1ResultsYear: examYears.form1ResultsYear || null,
+    
+    form2ResultsPdf: uploadedFiles.pdfs.form2ResultsPdf?.url || null,
+    form2ResultsPdfName: uploadedFiles.pdfs.form2ResultsPdf?.name || null,
+    form2ResultsYear: examYears.form2ResultsYear || null,
+    
+    form3ResultsPdf: uploadedFiles.pdfs.form3ResultsPdf?.url || null,
+    form3ResultsPdfName: uploadedFiles.pdfs.form3ResultsPdf?.name || null,
+    form3ResultsYear: examYears.form3ResultsYear || null,
+    
+    form4ResultsPdf: uploadedFiles.pdfs.form4ResultsPdf?.url || null,
+    form4ResultsPdfName: uploadedFiles.pdfs.form4ResultsPdf?.name || null,
+    form4ResultsYear: examYears.form4ResultsYear || null,
+    
+    mockExamsResultsPdf: uploadedFiles.pdfs.mockExamsResultsPdf?.url || null,
+    mockExamsPdfName: uploadedFiles.pdfs.mockExamsResultsPdf?.name || null,
+    mockExamsYear: examYears.mockExamsYear || null,
+    
+    kcseResultsPdf: uploadedFiles.pdfs.kcseResultsPdf?.url || null,
+    kcsePdfName: uploadedFiles.pdfs.kcseResultsPdf?.name || null,
+    kcseYear: examYears.kcseYear || null,
+    
+    // Additional files
+    additionalResultsFiles: uploadedFiles.additionalFiles,
+    
+    // JSON distributions
+    subjects: formData.subjects || [],
+    departments: formData.departments || [],
+    admissionDocumentsRequired: formData.admissionDocumentsRequired || [],
+    
+    // Fee distributions as JSON
+    feesDayDistributionJson: dayFees.length > 0 
+      ? JSON.stringify(dayFees.reduce((obj, fee) => ({...obj, [fee.name]: fee.amount}), {}))
+      : '{}',
+    
+    feesBoardingDistributionJson: boardingFees.length > 0
+      ? JSON.stringify(boardingFees.reduce((obj, fee) => ({...obj, [fee.name]: fee.amount}), {}))
+      : '{}',
+    
+    admissionFeeDistribution: admissionFees.length > 0
+      ? JSON.stringify(admissionFees.reduce((obj, fee) => ({...obj, [fee.name]: fee.amount}), {}))
+      : '{}',
+    
+    // Fee totals
+    feesDay: parseFloat(formData.feesDay) || null,
+    feesBoarding: parseFloat(formData.feesBoarding) || null,
+    admissionFee: parseFloat(formData.admissionFee) || null,
+    
+    // Admission info
+    admissionOpenDate: formData.admissionOpenDate || null,
+    admissionCloseDate: formData.admissionCloseDate || null,
+    admissionRequirements: formData.admissionRequirements || null,
+    admissionCapacity: parseInt(formData.admissionCapacity) || null,
+    admissionContactEmail: formData.admissionContactEmail || null,
+    admissionContactPhone: formData.admissionContactPhone || null,
+    admissionWebsite: formData.admissionWebsite || null,
+    admissionLocation: formData.admissionLocation || null,
+    admissionOfficeHours: formData.admissionOfficeHours || null,
+    
+    // File removal flags (for updates)
+    ...(school && {
+      removedVideo: removedVideo,
+      removedPdfs: removedPdfs,
+      removedAdditionalFiles: removedAdditionalFiles.map(f => ({
+        filepath: f.filepath || f.filename,
+        filename: f.filename || f.name
+      }))
+    })
+  };
+};
+
 
   const handleNextStep = (e) => {
     e.preventDefault()
