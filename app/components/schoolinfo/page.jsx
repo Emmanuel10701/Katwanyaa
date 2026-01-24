@@ -5565,16 +5565,15 @@ export default function ModernSchoolInformation() {
     }
   }
 
+
 const handleSaveSchool = async (schoolData) => {
   try {
     setActionLoading(true);
     
     console.log('📨 Sending school data (URLs only) to API...', schoolData);
     
-    // Determine if it's an update or create based on the schoolInfo from state
-// Determine if it's an update or create based on existing school data
-const isUpdate = Boolean(schoolData.name && schoolData.description); // Or any other required fields
-// OR use the state if available
+    const isUpdate = schoolInfo !== null; // Use the schoolInfo from component state
+    
     // Send JSON data only (no files - they're already in Supabase)
     const response = await fetch('/api/school', {
       method: isUpdate ? 'PUT' : 'POST',
@@ -5624,7 +5623,6 @@ const isUpdate = Boolean(schoolData.name && schoolData.description); // Or any o
     setActionLoading(false);
   }
 };
-
 
   const handleDeleteSchool = async () => {
     try {
