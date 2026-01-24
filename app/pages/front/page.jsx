@@ -26,7 +26,7 @@ export default function FileManager() {
   const fetchFiles = async (folder = selectedFolder) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/files?folder=${folder}`);
+      const response = await fetch(`/api/admin?folder=${folder}`);
       const data = await response.json();
       
       if (data.success) {
@@ -49,7 +49,7 @@ export default function FileManager() {
     if (!confirm('Are you sure you want to delete this file?')) return;
     
     try {
-      const response = await fetch('/api/files', {
+      const response = await fetch('/api/admin', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: filePath })
