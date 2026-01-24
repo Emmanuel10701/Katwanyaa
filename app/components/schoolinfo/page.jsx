@@ -1,5 +1,5 @@
 'use client';
-import { fileManager } from '../../../libs/fileManager.js'; 
+import fileManager, { supabase } from '../../../libs/fileManager';
 import { createClient } from '@supabase/supabase-js';
 
 
