@@ -8,7 +8,7 @@ const supabase = createClient(
 
 class FileManager {
   constructor() {
-    this.bucketName = 'school-documents';
+    this.bucketName = 'Katwanyaa High';
   }
 
   // ==================== FILE UPLOAD METHODS ====================
