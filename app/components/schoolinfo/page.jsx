@@ -3224,8 +3224,7 @@ const schoolApiService = {
 };
 
 // Modern School Info Modal with 3 steps
-// Modern School Info Modal with 3 steps - COMPLETE VERSION
-function ModernSchoolModal({ onClose, onSave, school, loading }) {
+function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     name: school?.name || '',
@@ -3281,6 +3280,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading }) {
   const [replacedPdfs, setReplacedPdfs] = useState({});
   const [removedPdfs, setRemovedPdfs] = useState({});
   const [removedVideo, setRemovedVideo] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
   const [removedAdditionalFiles, setRemovedAdditionalFiles] = useState([]);
 
   const [examYears, setExamYears] = useState({
@@ -5345,23 +5346,23 @@ const prepareSchoolData = (uploadedFiles) => {
                     Continue →
                   </button>
                 ) : (
-                  <button 
-                    type="submit"
-                    disabled={loading || !isStepValid()}
-                    className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
-                  >
-                    {loading ? (
-                      <>
-                        <CircularProgress size={16} className="text-white" />
-                        <span>{school ? 'Updating...' : 'Creating...'}</span>
-                      </>
-                    ) : (
-                      <>
-                        <FaSave className="text-sm" />
-                        <span>{school ? 'Update School Info' : 'Create School Info'}</span>
-                      </>
-                    )}
-                  </button>
+<button 
+  type="submit"
+  disabled={actionLoading || !isStepValid()}
+  className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+>
+  {actionLoading ? (
+    <>
+      <CircularProgress size={16} className="text-white" />
+      <span>{school ? 'Updating...' : 'Creating...'}</span>
+    </>
+  ) : (
+    <>
+      <FaSave className="text-sm" />
+      <span>{school ? 'Update School Info' : 'Create School Info'}</span>
+    </>
+  )}
+</button>
                 )}
               </div>
             </div>
