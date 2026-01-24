@@ -5599,6 +5599,9 @@ const handleSaveSchool = async (schoolData) => {
     // Reload school info to get fresh data
     await loadSchoolInfo();
     
+    // Close modal
+    setShowModal(false);
+    
     return result;
     
   } catch (error) {
@@ -6326,7 +6329,7 @@ const handleUpdateExamResults = async (formData) => {
 {showModal && (
   <ModernSchoolModal 
     onClose={() => setShowModal(false)} 
-    onSave={handleSaveSchool}  // <-- This is important!
+    onSave={handleSaveSchool}  // This passes the function correctly
     school={schoolInfo}
     loading={actionLoading}
   />
