@@ -1,216 +1,218 @@
 'use client';
 
 import { createClient } from '@supabase/supabase-js';
-
-class FileManager {
+// libs/fileManager.js - Enhanced version
+class EnhancedFileManager {
   constructor() {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('❌ Supabase environment variables are not set');
-      throw new Error('Supabase configuration is missing');
-    }
-    
     this.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
-    
     this.bucketName = 'Katwanyaa High';
   }
-
-async uploadFile(file, folder = 'uploads') {
-  try {
-    if (!file || !(file instanceof File)) {
-      throw new Error('Invalid file provided');
-    }
-
-    // Preserve original filename but sanitize it
-    const originalFileName = file.name;
-    const fileExtension = originalFileName.slice((originalFileName.lastIndexOf(".") - 1 >>> 0) + 2);
-    const fileNameWithoutExt = originalFileName.slice(0, originalFileName.lastIndexOf('.'));
-    
-    // Sanitize filename (remove special characters, keep only alphanumeric, dots, dashes, underscores)
-    const sanitizedFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9\s\-_]/g, '_');
-    
-    // Add timestamp for uniqueness
-    const timestamp = Date.now();
-    const uniqueFileName = `${sanitizedFileName}_${timestamp}.${fileExtension}`;
-    const filePath = `${folder}/${uniqueFileName}`;
-
-    console.log(`📤 Uploading to Supabase: ${originalFileName} → ${filePath}`);
-
-    // Upload to Supabase
-    const { data, error } = await this.supabase.storage
-      .from(this.bucketName)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: file.type
-      });
-
-    if (error) {
-      // Handle file already exists error
-      if (error.message.includes('already exists')) {
-        // Try with a more unique name
-        const moreUniqueFileName = `${sanitizedFileName}_${timestamp}_${Math.random().toString(36).substr(2, 6)}.${fileExtension}`;
-        const newFilePath = `${folder}/${moreUniqueFileName}`;
-        
-        const { data: newData, error: newError } = await this.supabase.storage
-          .from(this.bucketName)
-          .upload(newFilePath, file, {
-            cacheControl: '3600',
-            upsert: false,
-            contentType: file.type
-          });
-          
-        if (newError) throw newError;
-        
-        // Get public URL - IMPORTANT: Properly encode the bucket name
-        const encodedBucketName = encodeURIComponent(this.bucketName);
-        const encodedPath = encodeURIComponent(newData.path);
-        const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${encodedBucketName}/${encodedPath}`;
-        
-        console.log('✅ File uploaded to Supabase (with unique name):', publicUrl);
-        
-        return {
-          success: true,
-          url: publicUrl,
-          path: newData.path,
-          originalName: originalFileName,
-          storedName: moreUniqueFileName,
-          size: file.size,
-          type: file.type,
-          folder: folder
-        };
-      }
-      throw error;
-    }
-
-    // Get public URL - IMPORTANT: Properly encode the bucket name
-    const encodedBucketName = encodeURIComponent(this.bucketName);
-    const encodedPath = encodeURIComponent(data.path);
-    const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${encodedBucketName}/${encodedPath}`;
-
-    console.log('✅ File uploaded to Supabase:', publicUrl);
-
-    return {
-      success: true,
-      url: publicUrl,
-      path: data.path,
-      originalName: originalFileName,
-      storedName: uniqueFileName,
-      size: file.size,
-      type: file.type,
-      folder: folder
-    };
-
-  } catch (error) {
-    console.error('❌ Supabase upload failed:', error);
-    throw new Error(`File upload failed: ${error.message}`);
-  }
-}
-
-  // Update existing file (delete old, upload new)
-  async updateFile(oldFilePath, newFile, folder = 'uploads') {
+  
+  // Upload file with comprehensive metadata
+  async uploadFileWithMetadata(file, folder = 'uploads', metadata = {}) {
     try {
-      // Delete old file if exists
-      if (oldFilePath) {
-        await this.deleteFile(oldFilePath);
+      if (!file || !(file instanceof File)) {
+        throw new Error('Invalid file provided');
       }
       
-      // Upload new file with preserved name
-      return await this.uploadFile(newFile, folder);
-    } catch (error) {
-      console.error('Update failed:', error);
-      throw error;
-    }
-  }
-
-  // Delete file from Supabase
-  async deleteFile(filePath) {
-    try {
-      const { error } = await this.supabase.storage
-        .from(this.bucketName)
-        .remove([filePath]);
-
-      if (error) throw error;
-      console.log('✅ File deleted from Supabase:', filePath);
-      return { success: true };
-    } catch (error) {
-      console.error('Delete failed:', error);
-      throw error;
-    }
-  }
-
-  // Generate thumbnail from video
-  async generateThumbnailFromVideo(videoFile, timeSeconds = 1) {
-    return new Promise((resolve, reject) => {
-      try {
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-
-        video.src = URL.createObjectURL(videoFile);
+      // Generate structured filename with metadata hash
+      const originalName = file.name;
+      const timestamp = Date.now();
+      const uniqueId = Math.random().toString(36).substr(2, 9);
+      
+      // Create metadata hash for unique identification
+      const metadataHash = await this.generateMetadataHash({
+        originalName,
+        ...metadata,
+        timestamp
+      });
+      
+      // Sanitize filename and create unique path
+      const sanitizedBase = originalName.replace(/[^a-zA-Z0-9\s\-_\.]/g, '_');
+      const fileExt = originalName.slice((originalName.lastIndexOf(".") - 1 >>> 0) + 2);
+      const uniqueFileName = `${sanitizedBase.replace(`.${fileExt}`, '')}_${metadataHash}_${timestamp}_${uniqueId}.${fileExt}`;
+      const filePath = `${folder}/${uniqueFileName}`;
+      
+      // Prepare comprehensive metadata for Supabase
+      const supabaseMetadata = {
+        // File info
+        original_name: originalName,
+        file_type: file.type,
+        file_size: file.size,
+        mime_type: file.type,
+        file_extension: fileExt,
         
-        video.onloadeddata = () => {
-          video.currentTime = timeSeconds;
-        };
-
-        video.onseeked = () => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob(async (blob) => {
-            if (!blob) {
-              reject(new Error('Failed to create thumbnail blob'));
-              return;
-            }
-
-            // Generate thumbnail filename based on video filename
-            const videoName = videoFile.name.replace(/\.[^/.]+$/, "");
-            const thumbnailFile = new File(
-              [blob], 
-              `${videoName}_thumbnail_${Date.now()}.jpg`, 
-              { type: 'image/jpeg' }
-            );
-
-            // Upload thumbnail to Supabase
-            const result = await this.uploadFile(thumbnailFile, 'thumbnails');
-            
-            // Clean up
-            URL.revokeObjectURL(video.src);
-            
-            resolve(result);
-          }, 'image/jpeg', 0.8);
-        };
-
-        video.onerror = (err) => {
-          reject(new Error(`Video error: ${err}`));
-        };
-
-      } catch (error) {
-        reject(new Error(`Thumbnail generation failed: ${error.message}`));
-      }
-    });
-  }
-
-  // Get file info from path
-  async getFileInfo(filePath) {
-    try {
+        // Upload context
+        uploaded_at: new Date().toISOString(),
+        metadata_hash: metadataHash,
+        
+        // Application metadata
+        ...metadata,
+        
+        // System metadata
+        _system: {
+          bucket: this.bucketName,
+          folder: folder,
+          upload_method: 'direct',
+          version: '2.0'
+        }
+      };
+      
+      console.log(`📤 Uploading with metadata: ${originalName}`, {
+        path: filePath,
+        metadata: supabaseMetadata
+      });
+      
+      // Upload to Supabase with metadata
       const { data, error } = await this.supabase.storage
         .from(this.bucketName)
-        .list(filePath.split('/').slice(0, -1).join('/'), {
-          search: filePath.split('/').pop()
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+          metadata: supabaseMetadata  // ✅ Metadata stored with file in Supabase
         });
-
+      
       if (error) throw error;
-      return data[0] || null;
+      
+      // Generate public URL
+      const publicUrl = await this.getPublicUrl(filePath);
+      
+      return {
+        success: true,
+        url: publicUrl,
+        path: data.path,
+        originalName: originalName,
+        storedName: uniqueFileName,
+        size: file.size,
+        type: file.type,
+        folder: folder,
+        metadata: supabaseMetadata,
+        metadataHash: metadataHash
+      };
+      
     } catch (error) {
-      console.error('Get file info failed:', error);
+      console.error('❌ Upload with metadata failed:', error);
+      throw error;
+    }
+  }
+  
+  // Generate hash from metadata for unique identification
+  async generateMetadataHash(metadata) {
+    const metadataString = JSON.stringify(metadata);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(metadataString);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 12);
+  }
+  
+  // Get file metadata from Supabase
+  async getFileMetadata(filePath) {
+    try {
+      // List files to get metadata
+      const folderPath = filePath.split('/').slice(0, -1).join('/');
+      const fileName = filePath.split('/').pop();
+      
+      const { data: files, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .list(folderPath, {
+          search: fileName,
+          limit: 1
+        });
+      
+      if (error || !files || files.length === 0) {
+        throw new Error('File not found');
+      }
+      
+      return {
+        ...files[0].metadata,
+        name: files[0].name,
+        id: files[0].id,
+        created_at: files[0].created_at,
+        updated_at: files[0].updated_at
+      };
+      
+    } catch (error) {
+      console.error('❌ Get metadata failed:', error);
+      return null;
+    }
+  }
+  
+  // Get public URL
+  async getPublicUrl(filePath) {
+    const { data } = this.supabase.storage
+      .from(this.bucketName)
+      .getPublicUrl(filePath);
+    return data?.publicUrl;
+  }
+  
+  // Get signed URL for downloads
+  async getSignedUrl(filePath, expiresIn = 3600) {
+    const { data, error } = await this.supabase.storage
+      .from(this.bucketName)
+      .createSignedUrl(filePath, expiresIn);
+    
+    if (error) throw error;
+    return data.signedUrl;
+  }
+  
+  // Delete file
+  async deleteFile(filePath) {
+    const { error } = await this.supabase.storage
+      .from(this.bucketName)
+      .remove([filePath]);
+    
+    if (error) throw error;
+    return { success: true };
+  }
+  
+  // Search files by metadata
+  async searchFilesByMetadata(filters = {}) {
+    try {
+      const { data: files, error } = await this.supabase.storage
+        .from(this.bucketName)
+        .list('', {
+          limit: 1000
+        });
+      
+      if (error) throw error;
+      
+      // Filter files by metadata
+      return files.filter(file => {
+        if (!file.metadata) return false;
+        
+        return Object.entries(filters).every(([key, value]) => {
+          const fileValue = file.metadata[key];
+          
+          if (typeof value === 'object' && value.operator) {
+            switch (value.operator) {
+              case 'contains':
+                return fileValue?.toLowerCase().includes(value.value.toLowerCase());
+              case 'equals':
+                return fileValue === value.value;
+              default:
+                return fileValue === value;
+            }
+          }
+          
+          return fileValue === value;
+        });
+      });
+      
+    } catch (error) {
+      console.error('❌ Search failed:', error);
       throw error;
     }
   }
 }
+
+// Export singleton
+const enhancedFileManager = new EnhancedFileManager();
+export { enhancedFileManager };
 
 // Singleton instance
 const fileManager = new FileManager();

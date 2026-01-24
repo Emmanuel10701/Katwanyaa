@@ -3339,16 +3339,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       }
     });
     
-    // Add thumbnail
-    if (selectedThumbnail && selectedThumbnail instanceof File) {
-      totalSize += selectedThumbnail.size;
-      allFiles.push({
-        name: selectedThumbnail.name,
-        size: selectedThumbnail.size,
-        type: 'thumbnail'
-      });
-    }
-    
+
+
     // Add additional files
     const newAdditionalFiles = additionalFiles.filter(file => file.isNew && file.file);
     newAdditionalFiles.forEach(fileObj => {
@@ -3567,179 +3559,587 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
 
     // UPLOAD FILES DIRECTLY TO SUPABASE (FRONTEND)
     // ------------------------------------------------------
-    
-    // Helper function to upload files with proper naming
-    const uploadFileWithProperNaming = async (file, folder, existingFilePath = null) => {
-      try {
+// In your ModernSchoolModal component, enhance the uploadFileWithProperNaming function:
+const uploadFileWithProperNaming = async (file, folder, existingFilePath = null, customMetadata = {}) => {
+    try {
         if (!file || !(file instanceof File)) {
-          return null;
+            return null;
         }
 
         const originalFileName = file.name;
+        const schoolId = school?.id || 'new-school';
+        const schoolName = school?.name || formData.name || 'New School';
         
-        // If updating an existing file, use the updateFile method
+        // Base metadata for all files
+        const baseMetadata = {
+            // Basic file info
+            original_name: originalFileName,
+            file_type: file.type,
+            file_size: file.size,
+            mime_type: file.type,
+            file_extension: originalFileName.split('.').pop().toLowerCase(),
+            
+            // School identification
+            school_id: schoolId,
+            school_name: schoolName,
+            
+            // Upload info
+            uploaded_at: new Date().toISOString(),
+            uploaded_by: (await supabase.auth.getUser()).data.user?.email || 'admin',
+            
+            // System info
+            _system: {
+                uploaded_via: 'school_portal',
+                client_timestamp: Date.now(),
+                processing_status: 'complete'
+            },
+            
+            // Custom metadata passed from each upload function
+            ...customMetadata
+        };
+        
         if (existingFilePath) {
-          toast.loading(`Updating ${originalFileName} in Supabase...`);
-          const result = await fileManager.updateFile(existingFilePath, file, folder);
-          console.log(`✅ ${originalFileName} updated in Supabase:`, result.url);
-          return result;
+            // Update existing file with metadata
+            toast.loading(`Updating ${originalFileName} in Supabase...`);
+            
+            const { data: storageData, error: uploadError } = await supabase.storage
+                .from('school-documents')
+                .update(existingFilePath, file, {
+                    cacheControl: '3600',
+                    upsert: true,
+                    contentType: file.type,
+                    metadata: baseMetadata  // Add metadata here
+                });
+            
+            if (uploadError) throw uploadError;
+            console.log(`✅ ${originalFileName} updated with metadata:`, baseMetadata);
+            return { 
+                url: await getSignedUrl(existingFilePath),
+                path: existingFilePath,
+                metadata: baseMetadata,
+                originalName: originalFileName
+            };
         } else {
-          // For new files, upload with preserved name
-          toast.loading(`Uploading ${originalFileName} to Supabase...`);
-          const result = await fileManager.uploadFile(file, folder);
-          console.log(`✅ ${originalFileName} uploaded to Supabase:`, result.url);
-          return result;
+            // Upload new file with metadata
+            const timestamp = Date.now();
+            const uniqueId = Math.random().toString(36).substring(7);
+            const safeFileName = originalFileName
+                .replace(/\s+/g, '_')
+                .replace(/[^a-zA-Z0-9._-]/g, '');
+            
+            const filePath = `${folder}/${timestamp}_${uniqueId}_${safeFileName}`;
+            
+            toast.loading(`Uploading ${originalFileName} to Supabase...`);
+            const { data: storageData, error: uploadError } = await supabase.storage
+                .from('school-documents')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false,
+                    contentType: file.type,
+                    metadata: baseMetadata  // Add metadata here
+                });
+            
+            if (uploadError) throw uploadError;
+            console.log(`✅ ${originalFileName} uploaded with metadata:`, baseMetadata);
+            return { 
+                url: await getSignedUrl(filePath),
+                path: filePath,
+                metadata: baseMetadata,
+                originalName: originalFileName
+            };
         }
-      } catch (error) {
-        console.error(`❌ Upload failed for ${file.name}:`, error);
+    } catch (error) {
+        console.error(`❌ Upload failed for ${file?.name}:`, error);
         throw error;
-      }
-    };
+    }
+};
 
-    // 1. Upload Video (if new file selected)
-    if (files.videoFile && files.videoFile instanceof File) {
-      try {
+// Helper function for signed URLs
+const getSignedUrl = async (filePath, expiresIn = 3600) => {
+    const { data } = await supabase.storage
+        .from('school-documents')
+        .createSignedUrl(filePath, expiresIn);
+    return data?.signedUrl;
+};
+
+// Helper function to determine upload purpose
+const getUploadPurposeByFolder = (folder) => {
+    const purposes = {
+        'videos': 'school_video_tour',
+        'thumbnails': 'video_thumbnail',
+        'documents': 'school_document',
+        'exam-results': 'exam_results',
+        'additional-documents': 'additional_resources'
+    };
+    return purposes[folder] || 'general_document';
+};
+
+// Helper to get document type
+const getDocumentType = (filename) => {
+    const ext = filename.split('.').pop().toLowerCase();
+    const types = {
+        'pdf': 'pdf_document',
+        'jpg': 'image',
+        'jpeg': 'image',
+        'png': 'image',
+        'mp4': 'video',
+        'webm': 'video',
+        'mov': 'video',
+        'doc': 'word_document',
+        'docx': 'word_document',
+        'xls': 'excel_document',
+        'xlsx': 'excel_document'
+    };
+    return types[ext] || 'unknown';
+};
+
+// 1. Upload Video (if new file selected)
+if (files.videoFile && files.videoFile instanceof File) {
+    try {
         const existingVideoPath = school?.videoTour && !removedVideo ? school.videoTour : null;
-        const result = await uploadFileWithProperNaming(files.videoFile, 'videos', existingVideoPath);
+        
+        const videoMetadata = {
+            category: 'media',
+            document_type: 'video_content',
+            document_title: 'School Virtual Tour',
+            description: 'Official school virtual tour video',
+            media_type: 'school_promotional',
+            video_type: 'virtual_tour',
+            language: 'en',
+            duration: null, // You can extract this if possible
+            resolution: null,
+            aspect_ratio: '16:9',
+            has_thumbnail: !!selectedThumbnail,
+            is_streamable: true,
+            is_public: true,
+            approval_status: 'approved',
+            tags: ['video', 'tour', 'promotional', 'school_media', 'virtual'],
+            production_year: new Date().getFullYear(),
+            production_type: 'in_house',
+            target_audience: 'prospective_students',
+            can_be_downloaded: false,
+            is_featured: true,
+            video_quality: 'hd'
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            files.videoFile, 
+            'videos', 
+            existingVideoPath,
+            videoMetadata
+        );
         uploadedFileUrls.video = result?.url || null;
         
-        // Generate thumbnail from video if no custom thumbnail
-        if (!selectedThumbnail && !formData.youtubeLink && result) {
-          try {
-            toast.loading('Generating video thumbnail...');
-            const thumbResult = await fileManager.generateThumbnailFromVideo(files.videoFile);
-            uploadedFileUrls.thumbnail = thumbResult.url;
-            console.log('✅ Auto-thumbnail uploaded to Supabase:', thumbResult.url);
-          } catch (thumbError) {
-            console.warn('Thumbnail generation skipped:', thumbError.message);
-            toast.warning('Could not generate thumbnail');
-          }
-        }
-      } catch (videoError) {
+        // Store metadata
+        schoolData.videoMetadata = {
+            ...videoMetadata,
+            file_path: result?.path,
+            thumbnail_path: uploadedFileUrls.thumbnail
+        };
+        
+    } catch (videoError) {
         console.error('❌ Video upload failed:', videoError);
         toast.error(`Video upload failed: ${videoError.message}`);
         throw videoError;
-      }
     }
-
-    // 2. Upload custom thumbnail (if provided)
-    if (selectedThumbnail && selectedThumbnail instanceof File) {
-      try {
+}
+// 2. Upload custom thumbnail (if provided)
+if (selectedThumbnail && selectedThumbnail instanceof File) {
+    try {
         const existingThumbnailPath = school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null;
-        const result = await uploadFileWithProperNaming(selectedThumbnail, 'thumbnails', existingThumbnailPath);
+        
+        const thumbnailMetadata = {
+            category: 'media',
+            document_type: 'image_content',
+            document_title: 'Video Thumbnail',
+            description: 'Custom thumbnail for school virtual tour video',
+            media_type: 'thumbnail',
+            image_type: 'video_thumbnail',
+            parent_video: files.videoFile?.name || 'school_video_tour.mp4',
+            aspect_ratio: '16:9',
+            resolution: null,
+            is_custom: true,
+            is_public: true,
+            approval_status: 'approved',
+            tags: ['thumbnail', 'image', 'video_cover', 'preview'],
+            generated_from: 'manual_selection',
+            color_profile: 'RGB',
+            dpi: 72,
+            file_purpose: 'video_preview'
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            selectedThumbnail, 
+            'thumbnails', 
+            existingThumbnailPath,
+            thumbnailMetadata
+        );
         uploadedFileUrls.thumbnail = result?.url || null;
-      } catch (thumbError) {
+        
+        schoolData.thumbnailMetadata = {
+            ...thumbnailMetadata,
+            file_path: result?.path
+        };
+        
+    } catch (thumbError) {
         console.warn('Custom thumbnail upload skipped:', thumbError.message);
         toast.warning('Thumbnail upload failed');
-      }
     }
+}
 
-    // 3. Upload Curriculum PDF
-    if (files.curriculumPDF) {
-      try {
+// 3. Upload Curriculum PDF
+if (files.curriculumPDF) {
+    try {
         const existingPdfPath = school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null;
-        const result = await uploadFileWithProperNaming(files.curriculumPDF, 'documents', existingPdfPath);
+        
+        const curriculumMetadata = {
+            category: 'curriculum',
+            document_type: 'academic_curriculum',
+            document_title: 'School Curriculum Document',
+            description: 'Official academic curriculum for the school',
+            academic_year: new Date().getFullYear(),
+            is_official: true,
+            required_for_teachers: true,
+            required_for_students: true,
+            version: '2025.1.0',
+            tags: ['curriculum', 'academic', 'official', 'mandatory'],
+            approval_status: 'approved',
+            published_date: new Date().toISOString().split('T')[0],
+            file_purpose: 'academic_guidance'
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            files.curriculumPDF, 
+            'documents', 
+            existingPdfPath,
+            curriculumMetadata
+        );
         uploadedFileUrls.curriculumPDF = result?.url || null;
-      } catch (error) {
+        
+        // Store metadata in schoolData for database
+        schoolData.curriculumMetadata = {
+            ...curriculumMetadata,
+            file_path: result?.path
+        };
+    } catch (error) {
         console.error('❌ Curriculum PDF upload failed:', error);
         toast.error('Curriculum PDF upload failed');
-      }
     }
+}
 
-    // 4. Upload Fee Structure PDFs
-    if (files.feesDayDistributionPdf) {
-      try {
+// 4. Upload Fee Structure PDFs
+if (files.feesDayDistributionPdf) {
+    try {
         const existingPdfPath = school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null;
-        const result = await uploadFileWithProperNaming(files.feesDayDistributionPdf, 'documents', existingPdfPath);
+        
+        const dayFeeMetadata = {
+            category: 'fee_structure',
+            document_type: 'day_school_fees',
+            document_title: 'Day School Fee Structure',
+            description: 'Annual fee breakdown for day scholars',
+            fee_type: 'day_school',
+            academic_year: new Date().getFullYear(),
+            total_amount: formData.feesDay || 0,
+            currency: 'KES',
+            is_official: true,
+            approval_status: 'approved',
+            valid_from: formData.openDate || new Date().toISOString().split('T')[0],
+            valid_until: formData.closeDate || null,
+            tags: ['fees', 'day_school', 'financial', 'official'],
+            payment_terms: 'annual',
+            includes_breakdown: dayFees.length > 0,
+            breakdown_items: dayFees.map(fee => fee.name)
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            files.feesDayDistributionPdf, 
+            'documents', 
+            existingPdfPath,
+            dayFeeMetadata
+        );
         uploadedFileUrls.feesDayPDF = result?.url || null;
-      } catch (error) {
+        
+        schoolData.feesDayMetadata = {
+            ...dayFeeMetadata,
+            file_path: result?.path
+        };
+    } catch (error) {
         console.error('❌ Day fees PDF upload failed:', error);
         toast.error('Day fees PDF upload failed');
-      }
     }
+}
 
-    if (files.feesBoardingDistributionPdf) {
-      try {
+if (files.feesBoardingDistributionPdf) {
+    try {
         const existingPdfPath = school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null;
-        const result = await uploadFileWithProperNaming(files.feesBoardingDistributionPdf, 'documents', existingPdfPath);
+        
+        const boardingFeeMetadata = {
+            category: 'fee_structure',
+            document_type: 'boarding_school_fees',
+            document_title: 'Boarding School Fee Structure',
+            description: 'Annual fee breakdown for boarding students',
+            fee_type: 'boarding',
+            academic_year: new Date().getFullYear(),
+            total_amount: formData.feesBoarding || 0,
+            currency: 'KES',
+            is_official: true,
+            approval_status: 'approved',
+            valid_from: formData.openDate || new Date().toISOString().split('T')[0],
+            valid_until: formData.closeDate || null,
+            tags: ['fees', 'boarding', 'residential', 'financial', 'official'],
+            payment_terms: 'annual',
+            includes_boarding_charges: true,
+            includes_hostel_fees: true,
+            includes_meals: true,
+            breakdown_items: boardingFees.map(fee => fee.name)
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            files.feesBoardingDistributionPdf, 
+            'documents', 
+            existingPdfPath,
+            boardingFeeMetadata
+        );
         uploadedFileUrls.feesBoardingPDF = result?.url || null;
-      } catch (error) {
+        
+        schoolData.feesBoardingMetadata = {
+            ...boardingFeeMetadata,
+            file_path: result?.path
+        };
+    } catch (error) {
         console.error('❌ Boarding fees PDF upload failed:', error);
         toast.error('Boarding fees PDF upload failed');
-      }
     }
+}
 
-    if (files.admissionFeePdf) {
-      try {
+if (files.admissionFeePdf) {
+    try {
         const existingPdfPath = school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null;
-        const result = await uploadFileWithProperNaming(files.admissionFeePdf, 'documents', existingPdfPath);
+        
+        const admissionFeeMetadata = {
+            category: 'admission_documents',
+            document_type: 'admission_fee_structure',
+            document_title: 'Admission Fee Structure',
+            description: 'One-time admission and registration fees',
+            fee_type: 'admission',
+            academic_year: formData.admissionOpenDate ? 
+                new Date(formData.admissionOpenDate).getFullYear() : new Date().getFullYear(),
+            total_amount: formData.admissionFee || 0,
+            currency: 'KES',
+            is_official: true,
+            approval_status: 'approved',
+            valid_from: formData.admissionOpenDate || new Date().toISOString().split('T')[0],
+            valid_until: formData.admissionCloseDate || null,
+            tags: ['admission', 'fees', 'registration', 'official'],
+            is_one_time_payment: true,
+            is_refundable: false,
+            payment_deadline: formData.admissionCloseDate || null,
+            breakdown_items: admissionFees.map(fee => fee.name),
+            required_documents: formData.admissionDocumentsRequired || []
+        };
+        
+        const result = await uploadFileWithProperNaming(
+            files.admissionFeePdf, 
+            'documents', 
+            existingPdfPath,
+            admissionFeeMetadata
+        );
         uploadedFileUrls.admissionFeePDF = result?.url || null;
-      } catch (error) {
+        
+        schoolData.admissionFeeMetadata = {
+            ...admissionFeeMetadata,
+            file_path: result?.path
+        };
+    } catch (error) {
         console.error('❌ Admission fee PDF upload failed:', error);
         toast.error('Admission fee PDF upload failed');
-      }
     }
+}
+
 
     // 5. Upload Exam Result PDFs
-    const examPDFs = [
-      { key: 'form1ResultsPdf', name: 'Form 1 Results', existingKey: 'form1ResultsPdf' },
-      { key: 'form2ResultsPdf', name: 'Form 2 Results', existingKey: 'form2ResultsPdf' },
-      { key: 'form3ResultsPdf', name: 'Form 3 Results', existingKey: 'form3ResultsPdf' },
-      { key: 'form4ResultsPdf', name: 'Form 4 Results', existingKey: 'form4ResultsPdf' },
-      { key: 'mockExamsResultsPdf', name: 'Mock Exams', existingKey: 'mockExamsResultsPdf' },
-      { key: 'kcseResultsPdf', name: 'KCSE Results', existingKey: 'kcseResultsPdf' }
-    ];
-
-    for (const exam of examPDFs) {
-      if (files[exam.key]) {
-        try {
-          let existingPdfPath = null;
-          if (school?.examResults?.[exam.existingKey]?.pdf && !removedPdfs[exam.existingKey]) {
-            existingPdfPath = school.examResults[exam.existingKey].pdf;
-          }
-          
-          const result = await uploadFileWithProperNaming(files[exam.key], 'exam-results', existingPdfPath);
-          uploadedFileUrls.examResultsPDFs[exam.key] = {
-            url: result?.url || null,
-            originalName: result?.originalName || files[exam.key].name
-          };
-        } catch (error) {
-          console.error(`❌ ${exam.name} upload failed:`, error);
-          toast.error(`${exam.name} upload failed`);
-        }
-      }
+// 5. Upload Exam Result PDFs
+const examPDFs = [
+    { 
+        key: 'form1ResultsPdf', 
+        name: 'Form 1 Results', 
+        existingKey: 'form1',
+        examType: 'form1',
+        examLevel: 'secondary_1'
+    },
+    { 
+        key: 'form2ResultsPdf', 
+        name: 'Form 2 Results', 
+        existingKey: 'form2',
+        examType: 'form2',
+        examLevel: 'secondary_2'
+    },
+    { 
+        key: 'form3ResultsPdf', 
+        name: 'Form 3 Results', 
+        existingKey: 'form3',
+        examType: 'form3',
+        examLevel: 'secondary_3'
+    },
+    { 
+        key: 'form4ResultsPdf', 
+        name: 'Form 4 Results', 
+        existingKey: 'form4',
+        examType: 'form4',
+        examLevel: 'secondary_4'
+    },
+    { 
+        key: 'mockExamsResultsPdf', 
+        name: 'Mock Exams', 
+        existingKey: 'mockExams',
+        examType: 'mock',
+        examLevel: 'preparation'
+    },
+    { 
+        key: 'kcseResultsPdf', 
+        name: 'KCSE Results', 
+        existingKey: 'kcse',
+        examType: 'kcse',
+        examLevel: 'national'
     }
+];
 
-    // 6. Upload Additional Files
-    const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file);
-    for (const fileObj of newAdditionalFiles) {
-      if (fileObj.file) {
+for (const exam of examPDFs) {
+    if (files[exam.key]) {
         try {
-          let existingFilePath = null;
-          if (fileObj.isExisting && !fileObj.isRemoved && !fileObj.isReplaced) {
-            existingFilePath = fileObj.filepath || fileObj.filename;
-          }
-          
-          const result = await uploadFileWithProperNaming(fileObj.file, 'additional-documents', existingFilePath);
-          
-          if (result) {
-            uploadedFileUrls.additionalFiles.push({
-              url: result.url,
-              originalName: result.originalName || fileObj.filename || fileObj.file.name,
-              storedName: result.storedName,
-              path: result.path,
-              year: fileObj.year || '',
-              description: fileObj.description || '',
-              size: fileObj.file.size,
-              type: fileObj.file.type
-            });
-          }
+            let existingPdfPath = null;
+            if (school?.examResults?.[exam.existingKey]?.pdf && !removedPdfs[exam.existingKey]) {
+                existingPdfPath = school.examResults[exam.existingKey].pdf;
+            }
+            
+            const examYear = examYears[`${exam.existingKey}Year`] || 
+                            school?.examResults?.[exam.existingKey]?.year || 
+                            new Date().getFullYear();
+            
+            const examMetadata = {
+                category: 'exam_results',
+                document_type: 'academic_results',
+                document_title: `${exam.name} - ${examYear}`,
+                description: `Official ${exam.name} document`,
+                exam_type: exam.examType,
+                exam_level: exam.examLevel,
+                exam_year: examYear.toString(),
+                grading_system: 'kcse', // Kenya Certificate of Secondary Education
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'academic', 'performance'],
+                student_count: schoolInfo?.studentCount || 0,
+                mean_score: null,
+                mean_grade: null,
+                top_student_score: null,
+                national_ranking: null,
+                county_ranking: null,
+                school_ranking: null,
+                retention_period_years: 10,
+                can_be_shared: false,
+                for_internal_use_only: true
+            };
+            
+            const result = await uploadFileWithProperNaming(
+                files[exam.key], 
+                'exam-results', 
+                existingPdfPath,
+                examMetadata
+            );
+            
+            uploadedFileUrls.examResultsPDFs[exam.key] = {
+                url: result?.url || null,
+                originalName: result?.originalName || files[exam.key].name,
+                metadata: examMetadata,
+                file_path: result?.path
+            };
+            
+            // Store in schoolData for database
+            if (!schoolData.examResultsMetadata) {
+                schoolData.examResultsMetadata = {};
+            }
+            schoolData.examResultsMetadata[exam.existingKey] = {
+                ...examMetadata,
+                file_path: result?.path
+            };
+            
         } catch (error) {
-          console.error('❌ Additional file upload failed:', error);
-          toast.error('Additional file upload failed');
+            console.error(`❌ ${exam.name} upload failed:`, error);
+            toast.error(`${exam.name} upload failed`);
         }
-      }
     }
+}
+// 6. Upload Additional Files
+const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file);
+for (const fileObj of newAdditionalFiles) {
+    if (fileObj.file) {
+        try {
+            let existingFilePath = null;
+            if (fileObj.isExisting && !fileObj.isRemoved && !fileObj.isReplaced) {
+                existingFilePath = fileObj.filepath || fileObj.filename;
+            }
+            
+            const additionalFileMetadata = {
+                category: 'additional_documents',
+                document_type: 'supplementary',
+                document_title: fileObj.filename || fileObj.file.name,
+                description: fileObj.description || 'Additional school document',
+                year: fileObj.year || new Date().getFullYear().toString(),
+                academic_year: fileObj.year || new Date().getFullYear().toString(),
+                is_optional: true,
+                is_supplementary: true,
+                approval_status: 'pending',
+                tags: ['additional', 'supplementary', 'extra'],
+                file_purpose: 'reference',
+                can_be_shared: true,
+                for_internal_use_only: false,
+                custom_fields: {
+                    uploaded_by: (await supabase.auth.getUser()).data.user?.email || 'admin',
+                    upload_date: new Date().toISOString(),
+                    file_category: fileObj.category || 'general',
+                    notes: fileObj.notes || ''
+                }
+            };
+            
+            const result = await uploadFileWithProperNaming(
+                fileObj.file, 
+                'additional-documents', 
+                existingFilePath,
+                additionalFileMetadata
+            );
+            
+            if (result) {
+                uploadedFileUrls.additionalFiles.push({
+                    url: result.url,
+                    originalName: result.originalName || fileObj.filename || fileObj.file.name,
+                    storedName: result.storedName,
+                    path: result.path,
+                    year: fileObj.year || '',
+                    description: fileObj.description || '',
+                    size: fileObj.file.size,
+                    type: fileObj.file.type,
+                    metadata: additionalFileMetadata
+                });
+                
+                // Store in schoolData for database
+                if (!schoolData.additionalFilesMetadata) {
+                    schoolData.additionalFilesMetadata = [];
+                }
+                schoolData.additionalFilesMetadata.push({
+                    ...additionalFileMetadata,
+                    file_path: result.path,
+                    file_size: fileObj.file.size,
+                    file_type: fileObj.file.type
+                });
+            }
+        } catch (error) {
+            console.error('❌ Additional file upload failed:', error);
+            toast.error('Additional file upload failed');
+        }
+    }
+}
 
     console.log('📦 All files uploaded to Supabase:', uploadedFileUrls);
 
@@ -3754,141 +4154,518 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       return urlParts[urlParts.length - 1];
     };
 
-    const schoolData = {
-      // Basic Information
-      name: formData.name,
-      description: formData.description || '',
-      motto: formData.motto || '',
-      vision: formData.vision || '',
-      mission: formData.mission || '',
-      studentCount: parseInt(formData.studentCount) || 0,
-      staffCount: parseInt(formData.staffCount) || 0,
-      openDate: formData.openDate || null,
-      closeDate: formData.closeDate || null,
-      
-      // Video Information (URLs from Supabase)
-      videoTour: formData.youtubeLink || uploadedFileUrls.video || (school?.videoTour && !removedVideo ? school.videoTour : null),
-      videoType: formData.youtubeLink ? 'youtube' : (uploadedFileUrls.video ? 'file' : (school?.videoType && !removedVideo ? school.videoType : null)),
-      videoThumbnail: uploadedFileUrls.thumbnail || (school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null),
-      
-      // Curriculum PDF (URL from Supabase)
-      curriculumPDF: uploadedFileUrls.curriculumPDF || (school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null),
-      curriculumPdfName: files.curriculumPDF?.name || (school?.curriculumPdfName && !removedPdfs.curriculumPDF ? school.curriculumPdfName : null),
-      
-      // Fee Structure PDFs (URLs from Supabase)
-      feesDayDistributionPdf: uploadedFileUrls.feesDayPDF || (school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null),
-      feesDayPdfName: files.feesDayDistributionPdf?.name || (school?.feesDayPdfName && !removedPdfs.feesDayDistributionPdf ? school.feesDayPdfName : null),
-      
-      feesBoardingDistributionPdf: uploadedFileUrls.feesBoardingPDF || (school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null),
-      feesBoardingPdfName: files.feesBoardingDistributionPdf?.name || (school?.feesBoardingPdfName && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingPdfName : null),
-      
-      admissionFeePdf: uploadedFileUrls.admissionFeePDF || (school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null),
-      admissionFeePdfName: files.admissionFeePdf?.name || (school?.admissionFeePdfName && !removedPdfs.admissionFeePdf ? school.admissionFeePdfName : null),
-      
-      // Exam Results (URLs from Supabase)
-      examResults: {
-        form1: {
-          pdf: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.url || (school?.examResults?.form1?.pdf && !removedPdfs.form1ResultsPdf ? school.examResults.form1.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.originalName || files.form1ResultsPdf?.name || (school?.examResults?.form1?.name && !removedPdfs.form1ResultsPdf ? school.examResults.form1.name : null),
-          year: examYears.form1ResultsYear || (school?.examResults?.form1?.year ? school.examResults.form1.year.toString() : null)
+
+   const schoolData = {
+    // ==================== BASIC SCHOOL INFORMATION ====================
+    basic_info: {
+        name: formData.name?.trim() || '',
+        description: formData.description?.trim() || '',
+        motto: formData.motto?.trim() || '',
+        vision: formData.vision?.trim() || '',
+        mission: formData.mission?.trim() || '',
+        studentCount: parseInt(formData.studentCount) || 0,
+        staffCount: parseInt(formData.staffCount) || 0,
+        openDate: formData.openDate || null,
+        closeDate: formData.closeDate || null,
+        academic_year: new Date().getFullYear(),
+        status: 'active',
+        last_updated: new Date().toISOString()
+    },
+
+    // ==================== VIDEO INFORMATION ====================
+    video_info: {
+        videoTour: formData.youtubeLink || uploadedFileUrls.video || (school?.videoTour && !removedVideo ? school.videoTour : null),
+        videoType: formData.youtubeLink ? 'youtube' : (uploadedFileUrls.video ? 'file' : (school?.videoType && !removedVideo ? school.videoType : null)),
+        videoThumbnail: uploadedFileUrls.thumbnail || (school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null),
+        
+        // Video metadata from upload
+        video_metadata: uploadedFileUrls.video ? {
+            ...(uploadedFileUrls.videoMetadata || {}),
+            file_path: uploadedFileUrls.videoMetadata?.file_path,
+            uploaded_at: new Date().toISOString(),
+            file_size: files.videoFile?.size,
+            duration: null, // Could be extracted from video
+            resolution: null,
+            aspect_ratio: '16:9'
+        } : (school?.video_metadata || null),
+        
+        // Thumbnail metadata
+        thumbnail_metadata: uploadedFileUrls.thumbnail ? {
+            ...(uploadedFileUrls.thumbnailMetadata || {}),
+            file_path: uploadedFileUrls.thumbnailMetadata?.file_path,
+            uploaded_at: new Date().toISOString(),
+            file_size: selectedThumbnail?.size,
+            dimensions: null,
+            is_custom: true
+        } : (school?.thumbnail_metadata || null)
+    },
+
+    // ==================== CURRICULUM DOCUMENTS ====================
+    curriculum: {
+        curriculumPDF: uploadedFileUrls.curriculumPDF || (school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null),
+        curriculumPdfName: files.curriculumPDF?.name || (school?.curriculumPdfName && !removedPdfs.curriculumPDF ? school.curriculumPdfName : null),
+        
+        // Comprehensive curriculum metadata
+        curriculum_metadata: uploadedFileUrls.curriculumPDF ? {
+            document_title: 'School Curriculum Document',
+            description: 'Official academic curriculum for the school',
+            category: 'curriculum',
+            document_type: 'academic_curriculum',
+            academic_year: new Date().getFullYear(),
+            version: '2025.1.0',
+            is_official: true,
+            required_for_teachers: true,
+            required_for_students: true,
+            approval_status: 'approved',
+            published_date: new Date().toISOString().split('T')[0],
+            tags: ['curriculum', 'academic', 'official', 'mandatory'],
+            file_purpose: 'academic_guidance',
+            file_path: uploadedFileUrls.curriculumPDF,
+            file_size: files.curriculumPDF?.size,
+            uploaded_at: new Date().toISOString(),
+            uploaded_by: (await supabase.auth.getUser()).data.user?.email || 'admin'
+        } : (school?.curriculum_metadata || null)
+    },
+
+    // ==================== FEE STRUCTURE DOCUMENTS ====================
+    fee_structures: {
+        // Day School Fees
+        day_school: {
+            pdf: uploadedFileUrls.feesDayPDF || (school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null),
+            pdf_name: files.feesDayDistributionPdf?.name || (school?.feesDayPdfName && !removedPdfs.feesDayDistributionPdf ? school.feesDayPdfName : null),
+            total_amount: parseFloat(formData.feesDay) || (school?.feesDay || null),
+            distribution: dayFees.length > 0 
+                ? Object.fromEntries(dayFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+                : (school?.feesDayDistribution || {}),
+            
+            // Metadata
+            metadata: uploadedFileUrls.feesDayPDF ? {
+                document_title: 'Day School Fee Structure',
+                description: 'Annual fee breakdown for day scholars',
+                category: 'fee_structure',
+                document_type: 'day_school_fees',
+                fee_type: 'day_school',
+                academic_year: new Date().getFullYear(),
+                currency: 'KES',
+                is_official: true,
+                approval_status: 'approved',
+                valid_from: formData.openDate || new Date().toISOString().split('T')[0],
+                valid_until: formData.closeDate || null,
+                tags: ['fees', 'day_school', 'financial', 'official'],
+                payment_terms: 'annual',
+                includes_breakdown: dayFees.length > 0,
+                breakdown_items: dayFees.map(fee => fee.name),
+                file_path: uploadedFileUrls.feesDayPDF,
+                file_size: files.feesDayDistributionPdf?.size,
+                uploaded_at: new Date().toISOString()
+            } : (school?.fee_structures?.day_school?.metadata || null)
         },
-        form2: {
-          pdf: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.url || (school?.examResults?.form2?.pdf && !removedPdfs.form2ResultsPdf ? school.examResults.form2.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.originalName || files.form2ResultsPdf?.name || (school?.examResults?.form2?.name && !removedPdfs.form2ResultsPdf ? school.examResults.form2.name : null),
-          year: examYears.form2ResultsYear || (school?.examResults?.form2?.year ? school.examResults.form2.year.toString() : null)
-        },
-        form3: {
-          pdf: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.url || (school?.examResults?.form3?.pdf && !removedPdfs.form3ResultsPdf ? school.examResults.form3.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.originalName || files.form3ResultsPdf?.name || (school?.examResults?.form3?.name && !removedPdfs.form3ResultsPdf ? school.examResults.form3.name : null),
-          year: examYears.form3ResultsYear || (school?.examResults?.form3?.year ? school.examResults.form3.year.toString() : null)
-        },
-        form4: {
-          pdf: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.url || (school?.examResults?.form4?.pdf && !removedPdfs.form4ResultsPdf ? school.examResults.form4.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.originalName || files.form4ResultsPdf?.name || (school?.examResults?.form4?.name && !removedPdfs.form4ResultsPdf ? school.examResults.form4.name : null),
-          year: examYears.form4ResultsYear || (school?.examResults?.form4?.year ? school.examResults.form4.year.toString() : null)
-        },
-        mockExams: {
-          pdf: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.url || (school?.examResults?.mockExams?.pdf && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.originalName || files.mockExamsResultsPdf?.name || (school?.examResults?.mockExams?.name && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.name : null),
-          year: examYears.mockExamsYear || (school?.examResults?.mockExams?.year ? school.examResults.mockExams.year.toString() : null)
-        },
-        kcse: {
-          pdf: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.url || (school?.examResults?.kcse?.pdf && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.pdf : null),
-          name: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.originalName || files.kcseResultsPdf?.name || (school?.examResults?.kcse?.name && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.name : null),
-          year: examYears.kcseYear || (school?.examResults?.kcse?.year ? school.examResults.kcse.year.toString() : null)
+
+        // Boarding School Fees
+        boarding_school: {
+            pdf: uploadedFileUrls.feesBoardingPDF || (school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null),
+            pdf_name: files.feesBoardingDistributionPdf?.name || (school?.feesBoardingPdfName && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingPdfName : null),
+            total_amount: parseFloat(formData.feesBoarding) || (school?.feesBoarding || null),
+            distribution: boardingFees.length > 0
+                ? Object.fromEntries(boardingFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+                : (school?.feesBoardingDistribution || {}),
+            
+            // Metadata
+            metadata: uploadedFileUrls.feesBoardingPDF ? {
+                document_title: 'Boarding School Fee Structure',
+                description: 'Annual fee breakdown for boarding students',
+                category: 'fee_structure',
+                document_type: 'boarding_school_fees',
+                fee_type: 'boarding',
+                academic_year: new Date().getFullYear(),
+                currency: 'KES',
+                is_official: true,
+                approval_status: 'approved',
+                valid_from: formData.openDate || new Date().toISOString().split('T')[0],
+                valid_until: formData.closeDate || null,
+                tags: ['fees', 'boarding', 'residential', 'financial', 'official'],
+                payment_terms: 'annual',
+                includes_boarding_charges: true,
+                includes_hostel_fees: true,
+                includes_meals: true,
+                breakdown_items: boardingFees.map(fee => fee.name),
+                file_path: uploadedFileUrls.feesBoardingPDF,
+                file_size: files.feesBoardingDistributionPdf?.size,
+                uploaded_at: new Date().toISOString()
+            } : (school?.fee_structures?.boarding_school?.metadata || null)
         }
-      },
-      
-      // Additional Files (URLs from Supabase)
-      additionalResultsFiles: [
-        ...uploadedFileUrls.additionalFiles.map(f => ({
-          url: f.url,
-          filepath: f.path,
-          filename: f.originalName,
-          name: f.originalName,
-          storedName: f.storedName,
-          year: f.year || '',
-          description: f.description || '',
-          size: f.size,
-          type: f.type
-        })),
-        ...additionalFiles
-          .filter(f => f.isExisting && !f.isRemoved && !f.isReplaced && !removedAdditionalFiles.some(rf => rf.filepath === f.filepath))
-          .map(f => ({
-            url: f.filepath || f.filename,
-            filepath: f.filepath || f.filename,
-            filename: f.filename || f.name,
-            name: f.filename || f.name,
-            year: f.year || '',
-            description: f.description || '',
-            size: f.filesize || f.size,
-            type: f.filetype || 'file'
-          }))
-      ],
-      
-      // Arrays/Lists
-      subjects: formData.subjects || [],
-      departments: formData.departments || [],
-      admissionDocumentsRequired: formData.admissionDocumentsRequired || [],
-      
-      // Fee Structures (JSON data)
-      feesDayDistribution: dayFees.length > 0 
-        ? Object.fromEntries(dayFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-        : (school?.feesDayDistribution || {}),
-      feesBoardingDistribution: boardingFees.length > 0
-        ? Object.fromEntries(boardingFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-        : (school?.feesBoardingDistribution || {}),
-      admissionFeeDistribution: admissionFees.length > 0
-        ? Object.fromEntries(admissionFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-        : (school?.admissionFeeDistribution || {}),
-      
-      // Totals
-      feesDay: parseFloat(formData.feesDay) || (school?.feesDay || null),
-      feesBoarding: parseFloat(formData.feesBoarding) || (school?.feesBoarding || null),
-      admissionFee: parseFloat(formData.admissionFee) || (school?.admissionFee || null),
-      
-      // Admission Information
-      admissionOpenDate: formData.admissionOpenDate || (school?.admissionOpenDate || null),
-      admissionCloseDate: formData.admissionCloseDate || (school?.admissionCloseDate || null),
-      admissionRequirements: formData.admissionRequirements || (school?.admissionRequirements || ''),
-      admissionCapacity: parseInt(formData.admissionCapacity) || (school?.admissionCapacity || null),
-      admissionContactEmail: formData.admissionContactEmail || (school?.admissionContactEmail || ''),
-      admissionContactPhone: formData.admissionContactPhone || (school?.admissionContactPhone || ''),
-      admissionWebsite: formData.admissionWebsite || (school?.admissionWebsite || ''),
-      admissionLocation: formData.admissionLocation || (school?.admissionLocation || ''),
-      admissionOfficeHours: formData.admissionOfficeHours || (school?.admissionOfficeHours || ''),
-      
-      // For updating existing files (if editing)
-      ...(school && {
+    },
+
+    // ==================== ADMISSION INFORMATION ====================
+    admission: {
+        // Admission Fee Structure
+        fee_structure: {
+            pdf: uploadedFileUrls.admissionFeePDF || (school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null),
+            pdf_name: files.admissionFeePdf?.name || (school?.admissionFeePdfName && !removedPdfs.admissionFeePdf ? school.admissionFeePdfName : null),
+            total_amount: parseFloat(formData.admissionFee) || (school?.admissionFee || null),
+            distribution: admissionFees.length > 0
+                ? Object.fromEntries(admissionFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+                : (school?.admissionFeeDistribution || {}),
+            
+            // Metadata
+            metadata: uploadedFileUrls.admissionFeePDF ? {
+                document_title: 'Admission Fee Structure',
+                description: 'One-time admission and registration fees',
+                category: 'admission_documents',
+                document_type: 'admission_fee_structure',
+                fee_type: 'admission',
+                academic_year: formData.admissionOpenDate ? 
+                    new Date(formData.admissionOpenDate).getFullYear() : new Date().getFullYear(),
+                currency: 'KES',
+                is_official: true,
+                approval_status: 'approved',
+                valid_from: formData.admissionOpenDate || new Date().toISOString().split('T')[0],
+                valid_until: formData.admissionCloseDate || null,
+                tags: ['admission', 'fees', 'registration', 'official'],
+                is_one_time_payment: true,
+                is_refundable: false,
+                payment_deadline: formData.admissionCloseDate || null,
+                breakdown_items: admissionFees.map(fee => fee.name),
+                file_path: uploadedFileUrls.admissionFeePDF,
+                file_size: files.admissionFeePdf?.size,
+                uploaded_at: new Date().toISOString()
+            } : (school?.admission?.fee_structure?.metadata || null)
+        },
+
+        // Admission Details
+        details: {
+            openDate: formData.admissionOpenDate || (school?.admissionOpenDate || null),
+            closeDate: formData.admissionCloseDate || (school?.admissionCloseDate || null),
+            requirements: formData.admissionRequirements || (school?.admissionRequirements || ''),
+            capacity: parseInt(formData.admissionCapacity) || (school?.admissionCapacity || null),
+            documents_required: formData.admissionDocumentsRequired || [],
+            contact_email: formData.admissionContactEmail || (school?.admissionContactEmail || ''),
+            contact_phone: formData.admissionContactPhone || (school?.admissionContactPhone || ''),
+            website: formData.admissionWebsite || (school?.admissionWebsite || ''),
+            location: formData.admissionLocation || (school?.admissionLocation || ''),
+            office_hours: formData.admissionOfficeHours || (school?.admissionOfficeHours || ''),
+            status: formData.admissionOpenDate ? 'open' : 'closed'
+        }
+    },
+
+    // ==================== EXAM RESULTS ====================
+    exam_results: {
+        form1: {
+            pdf: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.url || (school?.examResults?.form1?.pdf && !removedPdfs.form1ResultsPdf ? school.examResults.form1.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.originalName || files.form1ResultsPdf?.name || (school?.examResults?.form1?.name && !removedPdfs.form1ResultsPdf ? school.examResults.form1.name : null),
+            year: examYears.form1ResultsYear || (school?.examResults?.form1?.year ? school.examResults.form1.year.toString() : null),
+            
+            // Metadata
+            metadata: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.metadata || {
+                document_title: 'Form 1 Results',
+                description: 'Official Form 1 examination results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'form1',
+                exam_level: 'secondary_1',
+                exam_year: examYears.form1ResultsYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'form1', 'secondary'],
+                file_path: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        form2: {
+            pdf: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.url || (school?.examResults?.form2?.pdf && !removedPdfs.form2ResultsPdf ? school.examResults.form2.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.originalName || files.form2ResultsPdf?.name || (school?.examResults?.form2?.name && !removedPdfs.form2ResultsPdf ? school.examResults.form2.name : null),
+            year: examYears.form2ResultsYear || (school?.examResults?.form2?.year ? school.examResults.form2.year.toString() : null),
+            
+            metadata: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.metadata || {
+                document_title: 'Form 2 Results',
+                description: 'Official Form 2 examination results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'form2',
+                exam_level: 'secondary_2',
+                exam_year: examYears.form2ResultsYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'form2', 'secondary'],
+                file_path: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        form3: {
+            pdf: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.url || (school?.examResults?.form3?.pdf && !removedPdfs.form3ResultsPdf ? school.examResults.form3.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.originalName || files.form3ResultsPdf?.name || (school?.examResults?.form3?.name && !removedPdfs.form3ResultsPdf ? school.examResults.form3.name : null),
+            year: examYears.form3ResultsYear || (school?.examResults?.form3?.year ? school.examResults.form3.year.toString() : null),
+            
+            metadata: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.metadata || {
+                document_title: 'Form 3 Results',
+                description: 'Official Form 3 examination results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'form3',
+                exam_level: 'secondary_3',
+                exam_year: examYears.form3ResultsYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'form3', 'secondary'],
+                file_path: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        form4: {
+            pdf: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.url || (school?.examResults?.form4?.pdf && !removedPdfs.form4ResultsPdf ? school.examResults.form4.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.originalName || files.form4ResultsPdf?.name || (school?.examResults?.form4?.name && !removedPdfs.form4ResultsPdf ? school.examResults.form4.name : null),
+            year: examYears.form4ResultsYear || (school?.examResults?.form4?.year ? school.examResults.form4.year.toString() : null),
+            
+            metadata: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.metadata || {
+                document_title: 'Form 4 Results',
+                description: 'Official Form 4 examination results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'form4',
+                exam_level: 'secondary_4',
+                exam_year: examYears.form4ResultsYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'form4', 'kcse_prep'],
+                file_path: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        mock_exams: {
+            pdf: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.url || (school?.examResults?.mockExams?.pdf && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.originalName || files.mockExamsResultsPdf?.name || (school?.examResults?.mockExams?.name && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.name : null),
+            year: examYears.mockExamsYear || (school?.examResults?.mockExams?.year ? school.examResults.mockExams.year.toString() : null),
+            
+            metadata: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.metadata || {
+                document_title: 'Mock Examination Results',
+                description: 'Preparatory mock examination results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'mock',
+                exam_level: 'preparation',
+                exam_year: examYears.mockExamsYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'mock', 'preparation'],
+                file_path: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        kcse: {
+            pdf: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.url || (school?.examResults?.kcse?.pdf && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.pdf : null),
+            name: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.originalName || files.kcseResultsPdf?.name || (school?.examResults?.kcse?.name && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.name : null),
+            year: examYears.kcseYear || (school?.examResults?.kcse?.year ? school.examResults.kcse.year.toString() : null),
+            
+            metadata: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.metadata || {
+                document_title: 'KCSE Results',
+                description: 'Kenya Certificate of Secondary Education Results',
+                category: 'exam_results',
+                document_type: 'academic_results',
+                exam_type: 'kcse',
+                exam_level: 'national',
+                exam_year: examYears.kcseYear || new Date().getFullYear().toString(),
+                grading_system: 'kcse',
+                is_official: true,
+                is_confidential: true,
+                requires_authentication: true,
+                approval_status: 'verified',
+                tags: ['exam', 'results', 'kcse', 'national', 'certificate'],
+                file_path: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.url,
+                uploaded_at: new Date().toISOString()
+            }
+        },
+
+        // Summary statistics
+        summary: {
+            total_exam_results: Object.keys(uploadedFileUrls.examResultsPDFs || {}).length,
+            latest_year: Math.max(
+                ...Object.values(examYears).filter(y => y).map(y => parseInt(y)),
+                new Date().getFullYear()
+            ),
+            has_all_forms: Object.keys(uploadedFileUrls.examResultsPDFs || {}).length >= 4
+        }
+    },
+
+    // ==================== ADDITIONAL FILES ====================
+    additional_files: {
+        documents: [
+            ...uploadedFileUrls.additionalFiles.map(f => ({
+                url: f.url,
+                filepath: f.path,
+                filename: f.originalName,
+                name: f.originalName,
+                storedName: f.storedName,
+                year: f.year || '',
+                description: f.description || '',
+                size: f.size,
+                type: f.type,
+                
+                // Metadata
+                metadata: f.metadata || {
+                    category: 'additional_documents',
+                    document_type: 'supplementary',
+                    document_title: f.originalName || f.name,
+                    description: f.description || 'Additional school document',
+                    academic_year: f.year || new Date().getFullYear().toString(),
+                    is_optional: true,
+                    is_supplementary: true,
+                    approval_status: 'pending',
+                    tags: ['additional', 'supplementary', 'extra'],
+                    file_purpose: 'reference',
+                    uploaded_at: new Date().toISOString(),
+                    file_size: f.size
+                }
+            })),
+            ...additionalFiles
+                .filter(f => f.isExisting && !f.isRemoved && !f.isReplaced && !removedAdditionalFiles.some(rf => rf.filepath === f.filepath))
+                .map(f => ({
+                    url: f.filepath || f.filename,
+                    filepath: f.filepath || f.filename,
+                    filename: f.filename || f.name,
+                    name: f.filename || f.name,
+                    year: f.year || '',
+                    description: f.description || '',
+                    size: f.filesize || f.size,
+                    type: f.filetype || 'file',
+                    
+                    // Preserve existing metadata
+                    metadata: f.metadata || {
+                        category: 'additional_documents',
+                        document_type: 'supplementary',
+                        document_title: f.filename || f.name,
+                        description: f.description || 'Additional school document',
+                        academic_year: f.year || new Date().getFullYear().toString(),
+                        is_optional: true,
+                        uploaded_at: new Date().toISOString()
+                    }
+                }))
+        ],
+        
+        // Summary
+        summary: {
+            total_files: uploadedFileUrls.additionalFiles.length + 
+                additionalFiles.filter(f => f.isExisting && !f.isRemoved && !f.isReplaced).length,
+            by_year: uploadedFileUrls.additionalFiles.reduce((acc, file) => {
+                const year = file.year || new Date().getFullYear().toString();
+                acc[year] = (acc[year] || 0) + 1;
+                return acc;
+            }, {}),
+            total_size_bytes: uploadedFileUrls.additionalFiles.reduce((sum, file) => sum + (file.size || 0), 0)
+        }
+    },
+
+    // ==================== ACADEMIC PROGRAMS ====================
+    academic_programs: {
+        subjects: formData.subjects || [],
+        departments: formData.departments || [],
+        
+        // Metadata for categorization
+        categories: {
+            core_subjects: formData.subjects?.filter(sub => 
+                ['Mathematics', 'English', 'Kiswahili', 'Science'].some(core => 
+                    sub.toLowerCase().includes(core.toLowerCase())
+                )
+            ) || [],
+            elective_subjects: formData.subjects?.filter(sub => 
+                !['Mathematics', 'English', 'Kiswahili', 'Science'].some(core => 
+                    sub.toLowerCase().includes(core.toLowerCase())
+                )
+            ) || [],
+            technical_departments: formData.departments?.filter(dept => 
+                ['Technical', 'Vocational', 'Engineering', 'Technology'].some(tech => 
+                    dept.toLowerCase().includes(tech.toLowerCase())
+                )
+            ) || []
+        }
+    },
+
+    // ==================== FILE MANAGEMENT METADATA ====================
+    file_management: {
+        // File operations tracking
+        removed_files: {
+            video: removedVideo,
+            pdfs: removedPdfs,
+            additional_files: removedAdditionalFiles.map(f => ({
+                filepath: f.filepath || f.filename,
+                filename: f.filename || f.name,
+                removed_at: new Date().toISOString(),
+                reason: 'user_request'
+            }))
+        },
+        
+        // Storage summary
+        storage_summary: {
+            total_files: Object.values(uploadedFileUrls).filter(url => url !== null).length +
+                uploadedFileUrls.additionalFiles.length +
+                Object.keys(uploadedFileUrls.examResultsPDFs || {}).length,
+            total_size_bytes: calculateTotalFileSize().totalSize,
+            by_category: {
+                curriculum: uploadedFileUrls.curriculumPDF ? 1 : 0,
+                fee_documents: [uploadedFileUrls.feesDayPDF, uploadedFileUrls.feesBoardingPDF, uploadedFileUrls.admissionFeePDF].filter(Boolean).length,
+                exam_results: Object.keys(uploadedFileUrls.examResultsPDFs || {}).length,
+                media: [uploadedFileUrls.video, uploadedFileUrls.thumbnail].filter(Boolean).length,
+                additional: uploadedFileUrls.additionalFiles.length
+            }
+        },
+        
+        // Upload session info
+        upload_session: {
+            timestamp: new Date().toISOString(),
+            user: (await supabase.auth.getUser()).data.user?.email || 'anonymous',
+            action_type: school ? 'update' : 'create',
+            total_upload_time_ms: Date.now() - uploadStartTime, // Track upload start time
+            files_uploaded: Object.keys(files).filter(key => files[key]).length
+        }
+    },
+
+    // ==================== SYSTEM METADATA ====================
+    system_metadata: {
+        created_at: school?.system_metadata?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        version: '2.0',
+        data_structure: 'enhanced_with_metadata',
+        
+        // Backward compatibility flags
+        compatibility: {
+            has_legacy_format: true,
+            has_enhanced_metadata: true,
+            supports_file_search: true,
+            supports_metadata_filtering: true
+        }
+    },
+
+    // ==================== BACKWARD COMPATIBILITY FIELDS ====================
+    // These maintain compatibility with existing code
+    ...(school ? {
+        // Preserve removed files info for cleanup
         removedVideo: removedVideo,
         removedPdfs: removedPdfs,
         removedAdditionalFiles: removedAdditionalFiles.map(f => ({
-          filepath: f.filepath || f.filename,
-          filename: f.filename || f.name
+            filepath: f.filepath || f.filename,
+            filename: f.filename || f.name
         }))
-      })
-    };
-
+    } : {})
+};
     console.log('📊 School data prepared for database (URLs only):', schoolData);
 
     // SAVE JSON DATA (URLS ONLY) TO DATABASE
