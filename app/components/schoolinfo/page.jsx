@@ -3812,7 +3812,7 @@ const handleFormSubmit = async (e) => {
     toast.loading('Saving school information to database...');
     
     // Call the simplified handleSaveSchool function
-    const result = await handleSaveSchool(schoolData);
+const result = await onSave(schoolData);
     
     // SUCCESS
     // ------------------------------------------------------
@@ -6326,7 +6326,7 @@ const handleUpdateExamResults = async (formData) => {
 {showModal && (
   <ModernSchoolModal 
     onClose={() => setShowModal(false)} 
-    onSave={handleSaveSchool} 
+    onSave={handleSaveSchool}  // <-- This is important!
     school={schoolInfo}
     loading={actionLoading}
   />
