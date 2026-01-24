@@ -3535,330 +3535,385 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     }
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+ const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (currentStep < steps.length - 1) {
+    return;
+  }
+
+  try {
+    setActionLoading(true);
+    toast.loading('Starting upload process...');
     
-    if (currentStep < steps.length - 1) {
-      return;
+    // Initialize fileManager
+    if (!window.fileManager) {
+      window.fileManager = fileManager;
+    }
+    
+    // Track all uploaded file URLs with proper naming
+    const uploadedFileUrls = {
+      video: null,
+      thumbnail: null,
+      curriculumPDF: null,
+      feesDayPDF: null,
+      feesBoardingPDF: null,
+      admissionFeePDF: null,
+      examResultsPDFs: {},
+      additionalFiles: []
+    };
+
+    console.log('🚀 Step 1: Uploading files directly to Supabase Storage...');
+
+    // UPLOAD FILES DIRECTLY TO SUPABASE (FRONTEND)
+    // ------------------------------------------------------
+    
+    // Helper function to upload files with proper naming
+    const uploadFileWithProperNaming = async (file, folder, existingFilePath = null) => {
+      try {
+        if (!file || !(file instanceof File)) {
+          return null;
+        }
+
+        const originalFileName = file.name;
+        
+        // If updating an existing file, use the updateFile method
+        if (existingFilePath) {
+          toast.loading(`Updating ${originalFileName} in Supabase...`);
+          const result = await fileManager.updateFile(existingFilePath, file, folder);
+          console.log(`✅ ${originalFileName} updated in Supabase:`, result.url);
+          return result;
+        } else {
+          // For new files, upload with preserved name
+          toast.loading(`Uploading ${originalFileName} to Supabase...`);
+          const result = await fileManager.uploadFile(file, folder);
+          console.log(`✅ ${originalFileName} uploaded to Supabase:`, result.url);
+          return result;
+        }
+      } catch (error) {
+        console.error(`❌ Upload failed for ${file.name}:`, error);
+        throw error;
+      }
+    };
+
+    // 1. Upload Video (if new file selected)
+    if (files.videoFile && files.videoFile instanceof File) {
+      try {
+        const existingVideoPath = school?.videoTour && !removedVideo ? school.videoTour : null;
+        const result = await uploadFileWithProperNaming(files.videoFile, 'videos', existingVideoPath);
+        uploadedFileUrls.video = result?.url || null;
+        
+        // Generate thumbnail from video if no custom thumbnail
+        if (!selectedThumbnail && !formData.youtubeLink && result) {
+          try {
+            toast.loading('Generating video thumbnail...');
+            const thumbResult = await fileManager.generateThumbnailFromVideo(files.videoFile);
+            uploadedFileUrls.thumbnail = thumbResult.url;
+            console.log('✅ Auto-thumbnail uploaded to Supabase:', thumbResult.url);
+          } catch (thumbError) {
+            console.warn('Thumbnail generation skipped:', thumbError.message);
+            toast.warning('Could not generate thumbnail');
+          }
+        }
+      } catch (videoError) {
+        console.error('❌ Video upload failed:', videoError);
+        toast.error(`Video upload failed: ${videoError.message}`);
+        throw videoError;
+      }
     }
 
-    try {
-      setActionLoading(true);
-      toast.loading('Starting upload process...');
-      
-      // Initialize fileManager
-      if (!window.fileManager) {
-        window.fileManager = fileManager;
+    // 2. Upload custom thumbnail (if provided)
+    if (selectedThumbnail && selectedThumbnail instanceof File) {
+      try {
+        const existingThumbnailPath = school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null;
+        const result = await uploadFileWithProperNaming(selectedThumbnail, 'thumbnails', existingThumbnailPath);
+        uploadedFileUrls.thumbnail = result?.url || null;
+      } catch (thumbError) {
+        console.warn('Custom thumbnail upload skipped:', thumbError.message);
+        toast.warning('Thumbnail upload failed');
       }
-      
-      // Track all uploaded file URLs
-      const uploadedFileUrls = {
-        video: null,
-        thumbnail: null,
-        curriculumPDF: null,
-        feesDayPDF: null,
-        feesBoardingPDF: null,
-        admissionFeePDF: null,
-        examResultsPDFs: {},
-        additionalFiles: []
-      };
+    }
 
-      console.log('🚀 Step 1: Uploading files directly to Supabase Storage...');
+    // 3. Upload Curriculum PDF
+    if (files.curriculumPDF) {
+      try {
+        const existingPdfPath = school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null;
+        const result = await uploadFileWithProperNaming(files.curriculumPDF, 'documents', existingPdfPath);
+        uploadedFileUrls.curriculumPDF = result?.url || null;
+      } catch (error) {
+        console.error('❌ Curriculum PDF upload failed:', error);
+        toast.error('Curriculum PDF upload failed');
+      }
+    }
 
-      // UPLOAD FILES DIRECTLY TO SUPABASE (FRONTEND)
-      // ------------------------------------------------------
-      
-      // 1. Upload Video (if new file selected)
-      if (files.videoFile && files.videoFile instanceof File) {
+    // 4. Upload Fee Structure PDFs
+    if (files.feesDayDistributionPdf) {
+      try {
+        const existingPdfPath = school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null;
+        const result = await uploadFileWithProperNaming(files.feesDayDistributionPdf, 'documents', existingPdfPath);
+        uploadedFileUrls.feesDayPDF = result?.url || null;
+      } catch (error) {
+        console.error('❌ Day fees PDF upload failed:', error);
+        toast.error('Day fees PDF upload failed');
+      }
+    }
+
+    if (files.feesBoardingDistributionPdf) {
+      try {
+        const existingPdfPath = school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null;
+        const result = await uploadFileWithProperNaming(files.feesBoardingDistributionPdf, 'documents', existingPdfPath);
+        uploadedFileUrls.feesBoardingPDF = result?.url || null;
+      } catch (error) {
+        console.error('❌ Boarding fees PDF upload failed:', error);
+        toast.error('Boarding fees PDF upload failed');
+      }
+    }
+
+    if (files.admissionFeePdf) {
+      try {
+        const existingPdfPath = school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null;
+        const result = await uploadFileWithProperNaming(files.admissionFeePdf, 'documents', existingPdfPath);
+        uploadedFileUrls.admissionFeePDF = result?.url || null;
+      } catch (error) {
+        console.error('❌ Admission fee PDF upload failed:', error);
+        toast.error('Admission fee PDF upload failed');
+      }
+    }
+
+    // 5. Upload Exam Result PDFs
+    const examPDFs = [
+      { key: 'form1ResultsPdf', name: 'Form 1 Results', existingKey: 'form1ResultsPdf' },
+      { key: 'form2ResultsPdf', name: 'Form 2 Results', existingKey: 'form2ResultsPdf' },
+      { key: 'form3ResultsPdf', name: 'Form 3 Results', existingKey: 'form3ResultsPdf' },
+      { key: 'form4ResultsPdf', name: 'Form 4 Results', existingKey: 'form4ResultsPdf' },
+      { key: 'mockExamsResultsPdf', name: 'Mock Exams', existingKey: 'mockExamsResultsPdf' },
+      { key: 'kcseResultsPdf', name: 'KCSE Results', existingKey: 'kcseResultsPdf' }
+    ];
+
+    for (const exam of examPDFs) {
+      if (files[exam.key]) {
         try {
-          toast.loading('Uploading video to Supabase...');
-          const result = await fileManager.uploadFile(files.videoFile, 'videos');
-          uploadedFileUrls.video = result.url;
-          console.log('✅ Video uploaded to Supabase:', result.url);
+          let existingPdfPath = null;
+          if (school?.examResults?.[exam.existingKey]?.pdf && !removedPdfs[exam.existingKey]) {
+            existingPdfPath = school.examResults[exam.existingKey].pdf;
+          }
           
-          // Generate thumbnail from video if no custom thumbnail
-          if (!selectedThumbnail && !formData.youtubeLink) {
-            try {
-              toast.loading('Generating video thumbnail...');
-              const thumbResult = await fileManager.generateThumbnailFromVideo(files.videoFile);
-              uploadedFileUrls.thumbnail = thumbResult.url;
-              console.log('✅ Auto-thumbnail uploaded to Supabase:', thumbResult.url);
-            } catch (thumbError) {
-              console.warn('Thumbnail generation skipped:', thumbError.message);
-              toast.warning('Could not generate thumbnail');
-            }
+          const result = await uploadFileWithProperNaming(files[exam.key], 'exam-results', existingPdfPath);
+          uploadedFileUrls.examResultsPDFs[exam.key] = {
+            url: result?.url || null,
+            originalName: result?.originalName || files[exam.key].name
+          };
+        } catch (error) {
+          console.error(`❌ ${exam.name} upload failed:`, error);
+          toast.error(`${exam.name} upload failed`);
+        }
+      }
+    }
+
+    // 6. Upload Additional Files
+    const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file);
+    for (const fileObj of newAdditionalFiles) {
+      if (fileObj.file) {
+        try {
+          let existingFilePath = null;
+          if (fileObj.isExisting && !fileObj.isRemoved && !fileObj.isReplaced) {
+            existingFilePath = fileObj.filepath || fileObj.filename;
           }
-        } catch (videoError) {
-          console.error('❌ Video upload failed:', videoError);
-          toast.error('Video upload failed. Please try again.');
-          throw videoError;
-        }
-      }
-
-      // 2. Upload custom thumbnail (if provided)
-      if (selectedThumbnail && selectedThumbnail instanceof File) {
-        try {
-          toast.loading('Uploading custom thumbnail to Supabase...');
-          const result = await fileManager.uploadFile(selectedThumbnail, 'thumbnails');
-          uploadedFileUrls.thumbnail = result.url;
-          console.log('✅ Custom thumbnail uploaded to Supabase:', result.url);
-        } catch (thumbError) {
-          console.warn('Custom thumbnail upload skipped:', thumbError.message);
-          toast.warning('Thumbnail upload failed');
-        }
-      }
-
-      // 3. Upload Curriculum PDF
-      if (files.curriculumPDF) {
-        try {
-          toast.loading('Uploading curriculum PDF to Supabase...');
-          const result = await fileManager.uploadFile(files.curriculumPDF, 'documents');
-          uploadedFileUrls.curriculumPDF = result.url;
-          console.log('✅ Curriculum PDF uploaded to Supabase:', result.url);
-        } catch (error) {
-          console.error('❌ Curriculum PDF upload failed:', error);
-          toast.error('Curriculum PDF upload failed');
-        }
-      }
-
-      // 4. Upload Fee Structure PDFs
-      if (files.feesDayDistributionPdf) {
-        try {
-          toast.loading('Uploading day fees PDF to Supabase...');
-          const result = await fileManager.uploadFile(files.feesDayDistributionPdf, 'documents');
-          uploadedFileUrls.feesDayPDF = result.url;
-          console.log('✅ Day fees PDF uploaded to Supabase:', result.url);
-        } catch (error) {
-          console.error('❌ Day fees PDF upload failed:', error);
-          toast.error('Day fees PDF upload failed');
-        }
-      }
-
-      if (files.feesBoardingDistributionPdf) {
-        try {
-          toast.loading('Uploading boarding fees PDF to Supabase...');
-          const result = await fileManager.uploadFile(files.feesBoardingDistributionPdf, 'documents');
-          uploadedFileUrls.feesBoardingPDF = result.url;
-          console.log('✅ Boarding fees PDF uploaded to Supabase:', result.url);
-        } catch (error) {
-          console.error('❌ Boarding fees PDF upload failed:', error);
-          toast.error('Boarding fees PDF upload failed');
-        }
-      }
-
-      if (files.admissionFeePdf) {
-        try {
-          toast.loading('Uploading admission fee PDF to Supabase...');
-          const result = await fileManager.uploadFile(files.admissionFeePdf, 'documents');
-          uploadedFileUrls.admissionFeePDF = result.url;
-          console.log('✅ Admission fee PDF uploaded to Supabase:', result.url);
-        } catch (error) {
-          console.error('❌ Admission fee PDF upload failed:', error);
-          toast.error('Admission fee PDF upload failed');
-        }
-      }
-
-      // 5. Upload Exam Result PDFs
-      const examPDFs = [
-        { key: 'form1ResultsPdf', name: 'Form 1 Results' },
-        { key: 'form2ResultsPdf', name: 'Form 2 Results' },
-        { key: 'form3ResultsPdf', name: 'Form 3 Results' },
-        { key: 'form4ResultsPdf', name: 'Form 4 Results' },
-        { key: 'mockExamsResultsPdf', name: 'Mock Exams' },
-        { key: 'kcseResultsPdf', name: 'KCSE Results' }
-      ];
-
-      for (const exam of examPDFs) {
-        if (files[exam.key]) {
-          try {
-            toast.loading(`Uploading ${exam.name} PDF to Supabase...`);
-            const result = await fileManager.uploadFile(files[exam.key], 'exam-results');
-            uploadedFileUrls.examResultsPDFs[exam.key] = result.url;
-            console.log(`✅ ${exam.name} uploaded to Supabase:`, result.url);
-          } catch (error) {
-            console.error(`❌ ${exam.name} upload failed:`, error);
-            toast.error(`${exam.name} upload failed`);
-          }
-        }
-      }
-
-      // 6. Upload Additional Files
-      const newAdditionalFiles = additionalFiles.filter(f => f.isNew && f.file);
-      for (const fileObj of newAdditionalFiles) {
-        if (fileObj.file) {
-          try {
-            toast.loading(`Uploading ${fileObj.filename || 'additional file'} to Supabase...`);
-            const result = await fileManager.uploadFile(fileObj.file, 'additional-documents');
+          
+          const result = await uploadFileWithProperNaming(fileObj.file, 'additional-documents', existingFilePath);
+          
+          if (result) {
             uploadedFileUrls.additionalFiles.push({
               url: result.url,
-              name: fileObj.filename || fileObj.file.name,
+              originalName: result.originalName || fileObj.filename || fileObj.file.name,
+              storedName: result.storedName,
+              path: result.path,
               year: fileObj.year || '',
               description: fileObj.description || '',
               size: fileObj.file.size,
               type: fileObj.file.type
             });
-            console.log(`✅ Additional file uploaded to Supabase:`, result.url);
-          } catch (error) {
-            console.error('❌ Additional file upload failed:', error);
-            toast.error('Additional file upload failed');
           }
+        } catch (error) {
+          console.error('❌ Additional file upload failed:', error);
+          toast.error('Additional file upload failed');
         }
       }
-
-      console.log('📦 All files uploaded to Supabase:', uploadedFileUrls);
-
-      // PREPARE JSON DATA FOR DATABASE (URLs ONLY - NO FILES)
-      // ------------------------------------------------------
-      toast.loading('Preparing school data for database...');
-      
-      const schoolData = {
-        // Basic Information
-        name: formData.name,
-        description: formData.description || '',
-        motto: formData.motto || '',
-        vision: formData.vision || '',
-        mission: formData.mission || '',
-        studentCount: parseInt(formData.studentCount) || 0,
-        staffCount: parseInt(formData.staffCount) || 0,
-        openDate: formData.openDate || null,
-        closeDate: formData.closeDate || null,
-        
-        // Video Information (URLs from Supabase)
-        videoTour: formData.youtubeLink || uploadedFileUrls.video || (school?.videoTour && !removedVideo ? school.videoTour : null),
-        videoType: formData.youtubeLink ? 'youtube' : (uploadedFileUrls.video ? 'file' : (school?.videoType && !removedVideo ? school.videoType : null)),
-        videoThumbnail: uploadedFileUrls.thumbnail || (school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null),
-        
-        // Curriculum PDF (URL from Supabase)
-        curriculumPDF: uploadedFileUrls.curriculumPDF || (school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null),
-        curriculumPdfName: files.curriculumPDF?.name || (school?.curriculumPdfName && !removedPdfs.curriculumPDF ? school.curriculumPdfName : null),
-        
-        // Fee Structure PDFs (URLs from Supabase)
-        feesDayDistributionPdf: uploadedFileUrls.feesDayPDF || (school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null),
-        feesDayPdfName: files.feesDayDistributionPdf?.name || (school?.feesDayPdfName && !removedPdfs.feesDayDistributionPdf ? school.feesDayPdfName : null),
-        
-        feesBoardingDistributionPdf: uploadedFileUrls.feesBoardingPDF || (school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null),
-        feesBoardingPdfName: files.feesBoardingDistributionPdf?.name || (school?.feesBoardingPdfName && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingPdfName : null),
-        
-        admissionFeePdf: uploadedFileUrls.admissionFeePDF || (school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null),
-        admissionFeePdfName: files.admissionFeePdf?.name || (school?.admissionFeePdfName && !removedPdfs.admissionFeePdf ? school.admissionFeePdfName : null),
-        
-        // Exam Results (URLs from Supabase)
-        examResults: {
-          form1: {
-            pdf: uploadedFileUrls.examResultsPDFs.form1ResultsPdf || (school?.examResults?.form1?.pdf && !removedPdfs.form1ResultsPdf ? school.examResults.form1.pdf : null),
-            name: files.form1ResultsPdf?.name || (school?.examResults?.form1?.name && !removedPdfs.form1ResultsPdf ? school.examResults.form1.name : null),
-            year: examYears.form1ResultsYear || (school?.examResults?.form1?.year ? school.examResults.form1.year.toString() : null)
-          },
-          form2: {
-            pdf: uploadedFileUrls.examResultsPDFs.form2ResultsPdf || (school?.examResults?.form2?.pdf && !removedPdfs.form2ResultsPdf ? school.examResults.form2.pdf : null),
-            name: files.form2ResultsPdf?.name || (school?.examResults?.form2?.name && !removedPdfs.form2ResultsPdf ? school.examResults.form2.name : null),
-            year: examYears.form2ResultsYear || (school?.examResults?.form2?.year ? school.examResults.form2.year.toString() : null)
-          },
-          form3: {
-            pdf: uploadedFileUrls.examResultsPDFs.form3ResultsPdf || (school?.examResults?.form3?.pdf && !removedPdfs.form3ResultsPdf ? school.examResults.form3.pdf : null),
-            name: files.form3ResultsPdf?.name || (school?.examResults?.form3?.name && !removedPdfs.form3ResultsPdf ? school.examResults.form3.name : null),
-            year: examYears.form3ResultsYear || (school?.examResults?.form3?.year ? school.examResults.form3.year.toString() : null)
-          },
-          form4: {
-            pdf: uploadedFileUrls.examResultsPDFs.form4ResultsPdf || (school?.examResults?.form4?.pdf && !removedPdfs.form4ResultsPdf ? school.examResults.form4.pdf : null),
-            name: files.form4ResultsPdf?.name || (school?.examResults?.form4?.name && !removedPdfs.form4ResultsPdf ? school.examResults.form4.name : null),
-            year: examYears.form4ResultsYear || (school?.examResults?.form4?.year ? school.examResults.form4.year.toString() : null)
-          },
-          mockExams: {
-            pdf: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf || (school?.examResults?.mockExams?.pdf && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.pdf : null),
-            name: files.mockExamsResultsPdf?.name || (school?.examResults?.mockExams?.name && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.name : null),
-            year: examYears.mockExamsYear || (school?.examResults?.mockExams?.year ? school.examResults.mockExams.year.toString() : null)
-          },
-          kcse: {
-            pdf: uploadedFileUrls.examResultsPDFs.kcseResultsPdf || (school?.examResults?.kcse?.pdf && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.pdf : null),
-            name: files.kcseResultsPdf?.name || (school?.examResults?.kcse?.name && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.name : null),
-            year: examYears.kcseYear || (school?.examResults?.kcse?.year ? school.examResults.kcse.year.toString() : null)
-          }
-        },
-        
-        // Additional Files (URLs from Supabase)
-        additionalResultsFiles: [
-          ...uploadedFileUrls.additionalFiles,
-          ...additionalFiles
-            .filter(f => f.isExisting && !f.isRemoved && !f.isReplaced && !removedAdditionalFiles.some(rf => rf.filepath === f.filepath))
-            .map(f => ({
-              url: f.filepath || f.filename,
-              name: f.filename || f.name,
-              year: f.year || '',
-              description: f.description || '',
-              size: f.filesize || f.size,
-              type: f.filetype || 'file'
-            }))
-        ],
-        
-        // Arrays/Lists
-        subjects: formData.subjects || [],
-        departments: formData.departments || [],
-        admissionDocumentsRequired: formData.admissionDocumentsRequired || [],
-        
-        // Fee Structures (JSON data)
-        feesDayDistribution: dayFees.length > 0 
-          ? Object.fromEntries(dayFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-          : (school?.feesDayDistribution || {}),
-        feesBoardingDistribution: boardingFees.length > 0
-          ? Object.fromEntries(boardingFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-          : (school?.feesBoardingDistribution || {}),
-        admissionFeeDistribution: admissionFees.length > 0
-          ? Object.fromEntries(admissionFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
-          : (school?.admissionFeeDistribution || {}),
-        
-        // Totals
-        feesDay: parseFloat(formData.feesDay) || (school?.feesDay || null),
-        feesBoarding: parseFloat(formData.feesBoarding) || (school?.feesBoarding || null),
-        admissionFee: parseFloat(formData.admissionFee) || (school?.admissionFee || null),
-        
-        // Admission Information
-        admissionOpenDate: formData.admissionOpenDate || (school?.admissionOpenDate || null),
-        admissionCloseDate: formData.admissionCloseDate || (school?.admissionCloseDate || null),
-        admissionRequirements: formData.admissionRequirements || (school?.admissionRequirements || ''),
-        admissionCapacity: parseInt(formData.admissionCapacity) || (school?.admissionCapacity || null),
-        admissionContactEmail: formData.admissionContactEmail || (school?.admissionContactEmail || ''),
-        admissionContactPhone: formData.admissionContactPhone || (school?.admissionContactPhone || ''),
-        admissionWebsite: formData.admissionWebsite || (school?.admissionWebsite || ''),
-        admissionLocation: formData.admissionLocation || (school?.admissionLocation || ''),
-        admissionOfficeHours: formData.admissionOfficeHours || (school?.admissionOfficeHours || ''),
-        
-        // For updating existing files (if editing)
-        ...(school && {
-          removedVideo: removedVideo,
-          removedPdfs: removedPdfs,
-          removedAdditionalFiles: removedAdditionalFiles.map(f => ({
-            filepath: f.filepath || f.filename,
-            filename: f.filename || f.name
-          }))
-        })
-      };
-
-      console.log('📊 School data prepared for database (URLs only):', schoolData);
-
-      // SAVE JSON DATA (URLS ONLY) TO DATABASE
-      // ------------------------------------------------------
-      toast.loading('Saving school information to database...');
-      
-      // Call the parent onSave function with the schoolData
-      const result = await onSave(schoolData);
-      
-      // SUCCESS
-      // ------------------------------------------------------
-      toast.success(school ? 'School updated successfully!' : 'School created successfully!');    
-      // Clean up
-      onClose();
-      
-      return result;
-      
-    } catch (error) {
-      console.error('❌ Form submission failed:', error);
-      toast.error(error.message || 'Failed to save school information');
-      throw error;
-    } finally {
-      setActionLoading(false);
     }
-  };
+
+    console.log('📦 All files uploaded to Supabase:', uploadedFileUrls);
+
+    // PREPARE JSON DATA FOR DATABASE (URLs ONLY - NO FILES)
+    // ------------------------------------------------------
+    toast.loading('Preparing school data for database...');
+    
+    // Helper function to get file name from URL
+    const getFileNameFromUrl = (url) => {
+      if (!url) return null;
+      const urlParts = url.split('/');
+      return urlParts[urlParts.length - 1];
+    };
+
+    const schoolData = {
+      // Basic Information
+      name: formData.name,
+      description: formData.description || '',
+      motto: formData.motto || '',
+      vision: formData.vision || '',
+      mission: formData.mission || '',
+      studentCount: parseInt(formData.studentCount) || 0,
+      staffCount: parseInt(formData.staffCount) || 0,
+      openDate: formData.openDate || null,
+      closeDate: formData.closeDate || null,
+      
+      // Video Information (URLs from Supabase)
+      videoTour: formData.youtubeLink || uploadedFileUrls.video || (school?.videoTour && !removedVideo ? school.videoTour : null),
+      videoType: formData.youtubeLink ? 'youtube' : (uploadedFileUrls.video ? 'file' : (school?.videoType && !removedVideo ? school.videoType : null)),
+      videoThumbnail: uploadedFileUrls.thumbnail || (school?.videoThumbnail && !removedVideo ? school.videoThumbnail : null),
+      
+      // Curriculum PDF (URL from Supabase)
+      curriculumPDF: uploadedFileUrls.curriculumPDF || (school?.curriculumPDF && !removedPdfs.curriculumPDF ? school.curriculumPDF : null),
+      curriculumPdfName: files.curriculumPDF?.name || (school?.curriculumPdfName && !removedPdfs.curriculumPDF ? school.curriculumPdfName : null),
+      
+      // Fee Structure PDFs (URLs from Supabase)
+      feesDayDistributionPdf: uploadedFileUrls.feesDayPDF || (school?.feesDayDistributionPdf && !removedPdfs.feesDayDistributionPdf ? school.feesDayDistributionPdf : null),
+      feesDayPdfName: files.feesDayDistributionPdf?.name || (school?.feesDayPdfName && !removedPdfs.feesDayDistributionPdf ? school.feesDayPdfName : null),
+      
+      feesBoardingDistributionPdf: uploadedFileUrls.feesBoardingPDF || (school?.feesBoardingDistributionPdf && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingDistributionPdf : null),
+      feesBoardingPdfName: files.feesBoardingDistributionPdf?.name || (school?.feesBoardingPdfName && !removedPdfs.feesBoardingDistributionPdf ? school.feesBoardingPdfName : null),
+      
+      admissionFeePdf: uploadedFileUrls.admissionFeePDF || (school?.admissionFeePdf && !removedPdfs.admissionFeePdf ? school.admissionFeePdf : null),
+      admissionFeePdfName: files.admissionFeePdf?.name || (school?.admissionFeePdfName && !removedPdfs.admissionFeePdf ? school.admissionFeePdfName : null),
+      
+      // Exam Results (URLs from Supabase)
+      examResults: {
+        form1: {
+          pdf: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.url || (school?.examResults?.form1?.pdf && !removedPdfs.form1ResultsPdf ? school.examResults.form1.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.form1ResultsPdf?.originalName || files.form1ResultsPdf?.name || (school?.examResults?.form1?.name && !removedPdfs.form1ResultsPdf ? school.examResults.form1.name : null),
+          year: examYears.form1ResultsYear || (school?.examResults?.form1?.year ? school.examResults.form1.year.toString() : null)
+        },
+        form2: {
+          pdf: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.url || (school?.examResults?.form2?.pdf && !removedPdfs.form2ResultsPdf ? school.examResults.form2.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.form2ResultsPdf?.originalName || files.form2ResultsPdf?.name || (school?.examResults?.form2?.name && !removedPdfs.form2ResultsPdf ? school.examResults.form2.name : null),
+          year: examYears.form2ResultsYear || (school?.examResults?.form2?.year ? school.examResults.form2.year.toString() : null)
+        },
+        form3: {
+          pdf: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.url || (school?.examResults?.form3?.pdf && !removedPdfs.form3ResultsPdf ? school.examResults.form3.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.form3ResultsPdf?.originalName || files.form3ResultsPdf?.name || (school?.examResults?.form3?.name && !removedPdfs.form3ResultsPdf ? school.examResults.form3.name : null),
+          year: examYears.form3ResultsYear || (school?.examResults?.form3?.year ? school.examResults.form3.year.toString() : null)
+        },
+        form4: {
+          pdf: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.url || (school?.examResults?.form4?.pdf && !removedPdfs.form4ResultsPdf ? school.examResults.form4.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.form4ResultsPdf?.originalName || files.form4ResultsPdf?.name || (school?.examResults?.form4?.name && !removedPdfs.form4ResultsPdf ? school.examResults.form4.name : null),
+          year: examYears.form4ResultsYear || (school?.examResults?.form4?.year ? school.examResults.form4.year.toString() : null)
+        },
+        mockExams: {
+          pdf: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.url || (school?.examResults?.mockExams?.pdf && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.mockExamsResultsPdf?.originalName || files.mockExamsResultsPdf?.name || (school?.examResults?.mockExams?.name && !removedPdfs.mockExamsResultsPdf ? school.examResults.mockExams.name : null),
+          year: examYears.mockExamsYear || (school?.examResults?.mockExams?.year ? school.examResults.mockExams.year.toString() : null)
+        },
+        kcse: {
+          pdf: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.url || (school?.examResults?.kcse?.pdf && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.pdf : null),
+          name: uploadedFileUrls.examResultsPDFs.kcseResultsPdf?.originalName || files.kcseResultsPdf?.name || (school?.examResults?.kcse?.name && !removedPdfs.kcseResultsPdf ? school.examResults.kcse.name : null),
+          year: examYears.kcseYear || (school?.examResults?.kcse?.year ? school.examResults.kcse.year.toString() : null)
+        }
+      },
+      
+      // Additional Files (URLs from Supabase)
+      additionalResultsFiles: [
+        ...uploadedFileUrls.additionalFiles.map(f => ({
+          url: f.url,
+          filepath: f.path,
+          filename: f.originalName,
+          name: f.originalName,
+          storedName: f.storedName,
+          year: f.year || '',
+          description: f.description || '',
+          size: f.size,
+          type: f.type
+        })),
+        ...additionalFiles
+          .filter(f => f.isExisting && !f.isRemoved && !f.isReplaced && !removedAdditionalFiles.some(rf => rf.filepath === f.filepath))
+          .map(f => ({
+            url: f.filepath || f.filename,
+            filepath: f.filepath || f.filename,
+            filename: f.filename || f.name,
+            name: f.filename || f.name,
+            year: f.year || '',
+            description: f.description || '',
+            size: f.filesize || f.size,
+            type: f.filetype || 'file'
+          }))
+      ],
+      
+      // Arrays/Lists
+      subjects: formData.subjects || [],
+      departments: formData.departments || [],
+      admissionDocumentsRequired: formData.admissionDocumentsRequired || [],
+      
+      // Fee Structures (JSON data)
+      feesDayDistribution: dayFees.length > 0 
+        ? Object.fromEntries(dayFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+        : (school?.feesDayDistribution || {}),
+      feesBoardingDistribution: boardingFees.length > 0
+        ? Object.fromEntries(boardingFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+        : (school?.feesBoardingDistribution || {}),
+      admissionFeeDistribution: admissionFees.length > 0
+        ? Object.fromEntries(admissionFees.map(fee => [fee.name, parseFloat(fee.amount) || 0]))
+        : (school?.admissionFeeDistribution || {}),
+      
+      // Totals
+      feesDay: parseFloat(formData.feesDay) || (school?.feesDay || null),
+      feesBoarding: parseFloat(formData.feesBoarding) || (school?.feesBoarding || null),
+      admissionFee: parseFloat(formData.admissionFee) || (school?.admissionFee || null),
+      
+      // Admission Information
+      admissionOpenDate: formData.admissionOpenDate || (school?.admissionOpenDate || null),
+      admissionCloseDate: formData.admissionCloseDate || (school?.admissionCloseDate || null),
+      admissionRequirements: formData.admissionRequirements || (school?.admissionRequirements || ''),
+      admissionCapacity: parseInt(formData.admissionCapacity) || (school?.admissionCapacity || null),
+      admissionContactEmail: formData.admissionContactEmail || (school?.admissionContactEmail || ''),
+      admissionContactPhone: formData.admissionContactPhone || (school?.admissionContactPhone || ''),
+      admissionWebsite: formData.admissionWebsite || (school?.admissionWebsite || ''),
+      admissionLocation: formData.admissionLocation || (school?.admissionLocation || ''),
+      admissionOfficeHours: formData.admissionOfficeHours || (school?.admissionOfficeHours || ''),
+      
+      // For updating existing files (if editing)
+      ...(school && {
+        removedVideo: removedVideo,
+        removedPdfs: removedPdfs,
+        removedAdditionalFiles: removedAdditionalFiles.map(f => ({
+          filepath: f.filepath || f.filename,
+          filename: f.filename || f.name
+        }))
+      })
+    };
+
+    console.log('📊 School data prepared for database (URLs only):', schoolData);
+
+    // SAVE JSON DATA (URLS ONLY) TO DATABASE
+    // ------------------------------------------------------
+    toast.loading('Saving school information to database...');
+    
+    // Call the parent onSave function with the schoolData
+    const result = await onSave(schoolData);
+    
+    // SUCCESS
+    // ------------------------------------------------------
+    toast.success(school ? 'School updated successfully!' : 'School created successfully!');    
+    // Clean up
+    onClose();
+    
+    return result;
+    
+  } catch (error) {
+    console.error('❌ Form submission failed:', error);
+    toast.error(error.message || 'Failed to save school information');
+    throw error;
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   // Helper function to reset form state
   const resetFormState = () => {
