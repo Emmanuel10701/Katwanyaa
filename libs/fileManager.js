@@ -1,4 +1,3 @@
-'use client';
 
 import { createClient } from '@supabase/supabase-js';
 // libs/fileManager.js - Enhanced version
