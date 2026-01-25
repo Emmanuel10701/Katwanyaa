@@ -1069,7 +1069,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       }
       
       // Call API
-      const response = await fetch('/api/school-info', {
+      const response = await fetch('/api/school', {
         method: school ? 'PUT' : 'POST',
         body: data
       });
@@ -1612,7 +1612,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
 const schoolApiService = {
   async getSchoolInfo() {
     try {
-      const response = await fetch('/api/school-info');
+      const response = await fetch('/api/school');
       if (!response.ok) {
         throw new Error('Failed to fetch school information');
       }
@@ -1625,7 +1625,7 @@ const schoolApiService = {
 
   async deleteSchoolInfo() {
     try {
-      const response = await fetch('/api/school-info', {
+      const response = await fetch('/api/school', {
         method: 'DELETE'
       });
       if (!response.ok) {
@@ -1669,7 +1669,7 @@ export default function SchoolInfoPage() {
       setActionLoading(true);
       const isUpdate = schoolInfo !== null;
       
-      const response = await fetch('/api/school-info', {
+      const response = await fetch('/api/school', {
         method: isUpdate ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
