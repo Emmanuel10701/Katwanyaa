@@ -16,10 +16,10 @@ import {
   FaPercentage, FaTasks, FaClipboardList, FaUser,
   FaTag, FaCogs, FaBlackTie, FaPlay, FaPlayCircle,
   FaCamera, FaImage, FaHourglassHalf, FaBookOpen,
-  FaUsersCog, FaRocket
+  FaUsersCog, FaRocket, FaArrowLeft, FaEyeDropper
 } from 'react-icons/fa';
 
-import { CircularProgress } from '@mui/material';
+import { CircularProgress, Modal, Box } from '@mui/material';
 
 // Modern Loading Spinner Component
 function ModernLoadingSpinner({ message = "Loading school documents...", size = "medium" }) {
@@ -27,9 +27,9 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
     small: { outer: 48, inner: 24 },
     medium: { outer: 64, inner: 32 },
     large: { outer: 80, inner: 40 }
-  }
+  };
 
-  const { outer, inner } = sizes[size]
+  const { outer, inner } = sizes[size];
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50">
@@ -50,7 +50,7 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
         </div>
         
         <div className="mt-6 space-y-3">
-          <span className="block text-lg font-semibold text-gray-800">
+          <span className="block text-lg font-bold text-gray-800">
             {message}
           </span>
           
@@ -67,10 +67,10 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-// Modern PDF Upload Component
+// Modern PDF Upload Component (MODERNIZED)
 function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
@@ -81,129 +81,129 @@ function ModernPdfUpload({
   onCancelExisting = null,
   onRemoveExisting = null
 }) {
-  const [previewName, setPreviewName] = useState('')
-  const [dragOver, setDragOver] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [isReplacing, setIsReplacing] = useState(false)
-  const fileInputRef = useRef(null)
+  const [previewName, setPreviewName] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isReplacing, setIsReplacing] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (pdfFile && typeof pdfFile === 'object') {
-      setPreviewName(pdfFile.name)
+      setPreviewName(pdfFile.name);
     } else if (existingPdf) {
-      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF')
+      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
     } else {
-      setPreviewName('')
+      setPreviewName('');
     }
-  }, [pdfFile, existingPdf])
+  }, [pdfFile, existingPdf]);
 
   const simulateUpload = () => {
-    setUploadProgress(0)
+    setUploadProgress(0);
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
-          clearInterval(interval)
-          return 100
+          clearInterval(interval);
+          return 100;
         }
-        return prev + 20
-      })
-    }, 100)
-  }
+        return prev + 20;
+      });
+    }, 100);
+  };
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 1)
+    const files = Array.from(e.target.files).slice(0, 1);
     
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setUploadProgress(0)
+    setUploadProgress(0);
 
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
-          clearInterval(progressInterval)
-          return 100
+          clearInterval(progressInterval);
+          return 100;
         }
-        return prev + 20
-      })
-    }, 100)
+        return prev + 20;
+      });
+    }, 100);
 
     if (files.length > 0) {
-      const file = files[0]
+      const file = files[0];
       
       if (file.type !== 'application/pdf') {
-        toast.error('Only PDF files are allowed')
-        setUploadProgress(0)
-        return
+        toast.error('Only PDF files are allowed');
+        setUploadProgress(0);
+        return;
       }
 
       if (file.size > 20 * 1024 * 1024) {
-        toast.error('PDF file too large. Maximum size: 20MB')
-        setUploadProgress(0)
-        return
+        toast.error('PDF file too large. Maximum size: 20MB');
+        setUploadProgress(0);
+        return;
       }
 
-      simulateUpload()
-      onPdfChange(file)
-      setPreviewName(file.name)
-      setUploadProgress(100)
-      setIsReplacing(false)
+      simulateUpload();
+      onPdfChange(file);
+      setPreviewName(file.name);
+      setUploadProgress(100);
+      setIsReplacing(false);
       
-      setTimeout(() => setUploadProgress(0), 1000)
+      setTimeout(() => setUploadProgress(0), 1000);
     }
-  }
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
-    setDragOver(false)
-    const files = Array.from(e.dataTransfer.files).slice(0, 1)
-    if (files.length > 0) handleFileChange({ target: { files } })
-  }
+    e.preventDefault();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).slice(0, 1);
+    if (files.length > 0) handleFileChange({ target: { files } });
+  };
 
   const handleRemove = () => {
-    setPreviewName('')
-    setUploadProgress(0)
+    setPreviewName('');
+    setUploadProgress(0);
     if (onRemove) {
-      onRemove()
+      onRemove();
     }
-  }
+  };
 
   const handleReplaceExisting = () => {
-    setIsReplacing(true)
+    setIsReplacing(true);
     
     if (pdfFile && typeof pdfFile === 'object' && onRemove) {
-      onRemove()
+      onRemove();
     }
     
     if (existingPdf && onCancelExisting) {
-      onCancelExisting()
+      onCancelExisting();
     }
     
-    setPreviewName('')
-    setUploadProgress(0)
+    setPreviewName('');
+    setUploadProgress(0);
     
     setTimeout(() => {
       if (fileInputRef.current) {
-        fileInputRef.current.click()
+        fileInputRef.current.click();
       }
-    }, 100)
-  }
+    }, 100);
+  };
 
   const handleRemoveExisting = () => {
     if (existingPdf && onRemoveExisting) {
-      onRemoveExisting()
+      onRemoveExisting();
     }
     
-    setPreviewName('')
-    setUploadProgress(0)
+    setPreviewName('');
+    setUploadProgress(0);
     
-    toast.success('Existing PDF marked for removal. Save changes to confirm.')
-  }
+    toast.success('Existing PDF marked for removal. Save changes to confirm.');
+  };
 
-  const hasExistingPdf = existingPdf && !pdfFile
-  const hasNewPdf = pdfFile && typeof pdfFile === 'object'
+  const hasExistingPdf = existingPdf && !pdfFile;
+  const hasNewPdf = pdfFile && typeof pdfFile === 'object';
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
         <FaFilePdf className="text-red-500" />
         <span>{label}</span>
@@ -212,17 +212,17 @@ function ModernPdfUpload({
       
       {(hasNewPdf || hasExistingPdf) ? (
         <div className="relative group">
-          <div className="relative overflow-hidden rounded-xl border-2 border-gray-300 shadow-sm transition-all duration-300 bg-gradient-to-br from-red-50 to-orange-50 p-4">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-red-200 shadow-lg transition-all duration-300 bg-gradient-to-br from-red-50 to-orange-50 p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <FaFilePdf className="text-red-600" />
+                <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl text-white">
+                  <FaFilePdf className="text-lg" />
                 </div>
                 <div>
                   <p className="font-bold text-gray-900 text-sm truncate max-w-[180px]">
                     {hasNewPdf ? pdfFile.name : (existingPdf.name || existingPdf.filename || 'Existing PDF')}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 font-medium">
                     {hasNewPdf ? 'New PDF Document' : 'Existing PDF Document'}
                     {existingPdf?.size && ` • ${(existingPdf.size / 1024).toFixed(0)} KB`}
                   </p>
@@ -234,7 +234,7 @@ function ModernPdfUpload({
                     <button
                       type="button"
                       onClick={handleReplaceExisting}
-                      className="bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:bg-blue-600 flex items-center gap-1 text-sm"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
                     >
                       <FaUpload className="text-xs" />
                       Replace
@@ -242,7 +242,7 @@ function ModernPdfUpload({
                     <button
                       type="button"
                       onClick={handleRemoveExisting}
-                      className="bg-red-500 text-white px-3 py-1.5 rounded-lg transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:bg-red-600 flex items-center gap-1 text-sm"
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
                     >
                       <FaTrash className="text-xs" />
                       Remove
@@ -253,7 +253,7 @@ function ModernPdfUpload({
                   <button
                     type="button"
                     onClick={handleRemove}
-                    className="bg-red-500 text-white p-1.5 rounded-lg transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:bg-red-600"
+                    className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-xl transition-all duration-300 shadow hover:shadow-md cursor-pointer hover:from-red-600 hover:to-red-700"
                     title="Remove PDF"
                   >
                     <FaTimes className="text-xs" />
@@ -263,17 +263,23 @@ function ModernPdfUpload({
             </div>
             
             {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gray-200 h-1">
-                <div 
-                  className="bg-gradient-to-r from-red-500 to-orange-600 h-1 transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
+              <div className="mt-4">
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Uploading...</span>
+                  <span className="text-xs font-bold text-red-600">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-red-500 to-orange-500 h-full transition-all duration-500"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
               </div>
             )}
             
             {hasExistingPdf && (
-              <div className="mt-2 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                <FaInfoCircle className="inline mr-1" />
+              <div className="mt-3 text-xs text-blue-700 bg-blue-50/50 px-3 py-2 rounded-lg border border-blue-200 font-medium">
+                <FaInfoCircle className="inline mr-1.5" />
                 Click "Replace" to upload a new PDF or "Remove" to delete this file
               </div>
             )}
@@ -281,10 +287,10 @@ function ModernPdfUpload({
         </div>
       ) : (
         <div
-          className={`border-2 border-dashed rounded-xl p-4 text-center transition-all duration-300 cursor-pointer group ${
+          className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group ${
             dragOver 
-              ? 'border-red-400 bg-gradient-to-br from-red-50 to-red-100' 
-              : 'border-gray-300 hover:border-red-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-sm'
+              ? 'border-red-400 bg-gradient-to-br from-red-50 to-red-100 ring-4 ring-red-50' 
+              : 'border-gray-200 hover:border-red-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
           }`}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -292,14 +298,14 @@ function ModernPdfUpload({
           onClick={() => fileInputRef.current?.click()}
         >
           <div className="relative">
-            <FaUpload className={`mx-auto text-2xl mb-2 transition-all duration-300 ${
+            <FaUpload className={`mx-auto text-2xl mb-3 transition-all duration-300 ${
               dragOver ? 'text-red-500 scale-110' : 'text-gray-400 group-hover:text-red-500'
             }`} />
           </div>
-          <p className="text-gray-700 mb-1 font-medium transition-colors duration-300 group-hover:text-gray-800 text-sm">
+          <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-sm">
             {dragOver ? '📄 Drop PDF here!' : isReplacing ? 'Select new PDF file' : 'Click to upload PDF'}
           </p>
-          <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700">
+          <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-medium">
             Max: 20MB • PDF only
           </p>
           <input 
@@ -313,10 +319,10 @@ function ModernPdfUpload({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-// Additional Results Upload Component
+// Additional Results Upload Component (MODERNIZED)
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
@@ -523,26 +529,26 @@ function AdditionalResultsUpload({
   const displayFiles = localFiles.filter(file => !file.isRemoved);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-          <FaFile className="text-gray-500" />
+          <FaFile className="text-gray-600" />
           <span>{label}</span>
         </label>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1.5 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow cursor-pointer text-xs"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg cursor-pointer text-sm"
         >
-          <FaPlus className="text-xs" /> Add File
+          <FaPlus className="text-sm" /> Add File
         </button>
       </div>
 
       <div
-        className={`border-2 border-dashed rounded-xl p-4 text-center transition-all duration-300 cursor-pointer group ${
+        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group ${
           dragOver 
-            ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100' 
-            : 'border-gray-300 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-sm'
+            ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
+            : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
         }`}
         onDrop={handleDrop}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -550,14 +556,14 @@ function AdditionalResultsUpload({
         onClick={() => fileInputRef.current?.click()}
       >
         <div className="relative">
-          <FaUpload className={`mx-auto text-2xl mb-2 transition-all duration-300 ${
+          <FaUpload className={`mx-auto text-2xl mb-3 transition-all duration-300 ${
             dragOver ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-500'
           }`} />
         </div>
-        <p className="text-gray-700 mb-1 font-medium transition-colors duration-300 group-hover:text-gray-800 text-sm">
+        <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-sm">
           {dragOver ? '📁 Drop files here!' : 'Drag & drop or click to upload additional files'}
         </p>
-        <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700">
+        <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-medium">
           PDF, Images, Documents • Max 50MB each
         </p>
         <input 
@@ -571,31 +577,31 @@ function AdditionalResultsUpload({
       </div>
 
       {displayFiles.length > 0 && (
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+        <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
           {displayFiles.map((file) => (
-            <div key={file.id} className={`bg-white rounded-lg p-3 border ${file.isReplaced ? 'border-amber-100 bg-amber-50/30' : file.isNew ? 'border-emerald-100 bg-emerald-50/30' : 'border-gray-100'}`}>
+            <div key={file.id} className={`bg-white rounded-2xl p-4 border-2 ${file.isReplaced ? 'border-amber-200 bg-amber-50/30' : file.isNew ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200'}`}>
               <div className="flex items-start gap-3 mb-3">
-                <div className="p-2.5 bg-gray-50 border border-gray-100 rounded-xl">
+                <div className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl">
                   {getFileIcon(file.filetype)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-gray-900 text-sm truncate">
                     {file.filename || file.name || 'Document'}
-                    {file.isReplaced && <span className="ml-2 text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded font-bold uppercase">Replaced</span>}
-                    {file.isNew && !file.isReplacement && <span className="ml-2 text-xs text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded font-bold uppercase">New</span>}
+                    {file.isReplaced && <span className="ml-2 text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded font-bold uppercase">Replaced</span>}
+                    {file.isNew && !file.isReplacement && <span className="ml-2 text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded font-bold uppercase">New</span>}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-500 mt-0.5 font-medium">
                     {formatFileSize(file.filesize || file.size)} • 
                     {file.isExisting ? ' Existing' : ' New'}
                   </p>
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex gap-2">
                   {file.isExisting && !file.isReplaced ? (
                     <>
                       <button
                         type="button"
                         onClick={() => handleReplaceExisting(file.id)}
-                        className="p-2 text-blue-600 bg-blue-50 rounded-lg"
+                        className="p-2 text-blue-600 bg-blue-50 rounded-xl border border-blue-200"
                         title="Replace file"
                       >
                         <FaUpload size={12} />
@@ -603,7 +609,7 @@ function AdditionalResultsUpload({
                       <button
                         type="button"
                         onClick={() => handleRemoveExisting(file.id)}
-                        className="p-2 text-red-600 bg-red-50 rounded-lg"
+                        className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200"
                         title="Delete file"
                       >
                         <FaTrash size={12} />
@@ -613,7 +619,7 @@ function AdditionalResultsUpload({
                     <button
                       type="button"
                       onClick={() => handleRemoveNewFile(file.id)}
-                      className="p-2 text-gray-400 bg-gray-100 rounded-lg"
+                      className="p-2 text-gray-500 bg-gray-100 rounded-xl border border-gray-300"
                       title="Remove file"
                     >
                       <FaTimes size={12} />
@@ -622,10 +628,10 @@ function AdditionalResultsUpload({
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-1">Year</label>
+                    <label className="block text-xs font-bold text-gray-600 mb-2">Year</label>
                     <input
                       type="number"
                       min="2000"
@@ -633,17 +639,17 @@ function AdditionalResultsUpload({
                       value={file.year || ''}
                       onChange={(e) => handleYearChange(file.id, e.target.value)}
                       placeholder="Enter Year"
-                      className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-1">Description</label>
+                    <label className="block text-xs font-bold text-gray-600 mb-2">Description</label>
                     <input
                       type="text"
                       value={file.description || ''}
                       onChange={(e) => handleDescriptionChange(file.id, e.target.value)}
                       placeholder="Brief description..."
-                      className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold"
                     />
                   </div>
                 </div>
@@ -668,17 +674,17 @@ function ModernDocumentCard({
   existing = false
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all">
-      <div className="flex items-start justify-between mb-3">
+    <div className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-300">
+      <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-50 rounded-lg">
-            <FaFilePdf className="text-red-500" />
+          <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl text-white">
+            <FaFilePdf className="text-lg" />
           </div>
           <div>
             <h4 className="text-sm font-bold text-gray-900">{title}</h4>
-            <p className="text-xs text-gray-600">{description}</p>
+            <p className="text-xs text-gray-600 font-medium mt-1">{description}</p>
             {year && (
-              <span className="text-xs font-medium text-blue-600 mt-1 inline-block">
+              <span className="text-xs font-bold text-blue-600 mt-2 inline-block bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                 Year: {year}
               </span>
             )}
@@ -686,11 +692,11 @@ function ModernDocumentCard({
         </div>
         
         {existing && (onReplace || onRemove) && (
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             {onReplace && (
               <button
                 onClick={onReplace}
-                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-blue-200"
                 title="Replace PDF"
               >
                 <FaUpload size={14} />
@@ -699,7 +705,7 @@ function ModernDocumentCard({
             {onRemove && (
               <button
                 onClick={onRemove}
-                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-red-200"
                 title="Remove PDF"
               >
                 <FaTrash size={14} />
@@ -710,19 +716,19 @@ function ModernDocumentCard({
       </div>
       
       {pdfUrl && (
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 mt-4">
           <a
             href={pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-medium bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors border border-gray-300"
           >
             <FaEye /> Preview
           </a>
           <a
             href={pdfUrl}
             download={pdfName || `${title}.pdf`}
-            className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-colors shadow-lg"
           >
             <FaDownload /> Download
           </a>
@@ -732,9 +738,9 @@ function ModernDocumentCard({
   );
 }
 
-// Documents Modal Component
+// Documents Modal Component (COMPLETELY MODERNIZED)
 function DocumentsModal({ onClose, onSave, documents, loading }) {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     curriculumPDF: null,
     feesDayDistributionPdf: null,
@@ -746,7 +752,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     form4ResultsPdf: null,
     mockExamsResultsPdf: null,
     kcseResultsPdf: null
-  })
+  });
   
   const [examYears, setExamYears] = useState({
     form1ResultsYear: documents?.examResults?.form1?.year?.toString() || '',
@@ -755,10 +761,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     form4ResultsYear: documents?.examResults?.form4?.year?.toString() || '',
     mockExamsYear: documents?.examResults?.mockExams?.year?.toString() || '',
     kcseYear: documents?.examResults?.kcse?.year?.toString() || ''
-  })
+  });
 
-  const [additionalFiles, setAdditionalFiles] = useState([])
-  const [actionLoading, setActionLoading] = useState(false)
+  const [additionalFiles, setAdditionalFiles] = useState([]);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const steps = [
     { 
@@ -791,7 +797,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       icon: FaFile, 
       description: 'Additional documents' 
     }
-  ]
+  ];
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -867,15 +873,15 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
   const handleNextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1)
+      setCurrentStep(prev => prev + 1);
     }
-  }
+  };
 
   const handlePrevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1)
+      setCurrentStep(prev => prev - 1);
     }
-  }
+  };
 
   const getExistingPdfData = (field) => {
     if (!documents) return null;
@@ -911,114 +917,145 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
+    <Modal open={true} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: '1200px',
+        maxHeight: '95vh',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+      }}>
+        {/* MODERN HEADER */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white bg-opacity-20 rounded-xl">
+              <div className="p-2 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
                 <FaFilePdf className="text-lg" />
               </div>
               <div>
-                <h2 className="text-lg font-bold">Manage School Documents</h2>
-                <p className="text-blue-100 text-sm">
+                <h2 className="text-lg md:text-xl font-bold">Manage School Documents</h2>
+                <p className="text-blue-100 opacity-90 text-xs mt-0.5">
                   Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg">
+            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200 cursor-pointer">
               <FaTimes className="text-lg" />
             </button>
           </div>
         </div>
 
-        <div className="p-3 border-b">
-          <div className="flex flex-wrap gap-2">
+        {/* MODERN STEP INDICATOR */}
+        <div className="bg-white border-b border-gray-200 p-3">
+          <div className="flex flex-wrap justify-center items-center gap-2 md:space-x-3">
             {steps.map((step, index) => (
-              <button
-                key={step.id}
-                onClick={() => setCurrentStep(index)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
-                  index === currentStep 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <step.icon className="text-xs" />
-                {step.label}
-              </button>
+              <div key={step.id} className="flex items-center">
+                <button
+                  onClick={() => setCurrentStep(index)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm font-bold ${
+                    index === currentStep 
+                      ? 'bg-blue-500 text-white shadow-lg' 
+                      : index < currentStep
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  <step.icon className="text-xs" />
+                  <span className="font-bold">{step.label}</span>
+                </button>
+                {index < steps.length - 1 && (
+                  <div className={`w-4 h-0.5 mx-1.5 md:w-6 ${
+                    index < currentStep ? 'bg-green-500' : 'bg-gray-300'
+                  }`} />
+                )}
+              </div>
             ))}
           </div>
         </div>
 
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
-          <form onSubmit={handleFormSubmit}>
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom p-4 md:p-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {currentStep === 0 && (
-              <div className="space-y-4">
-                <ModernPdfUpload 
-                  pdfFile={formData.curriculumPDF}
-                  onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
-                  onRemove={() => handleFileRemove('curriculumPDF')}
-                  label="Curriculum PDF"
-                  existingPdf={getExistingPdfData('curriculumPDF')}
-                />
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border border-red-200">
+                  <ModernPdfUpload 
+                    pdfFile={formData.curriculumPDF}
+                    onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
+                    onRemove={() => handleFileRemove('curriculumPDF')}
+                    label="Curriculum PDF"
+                    existingPdf={getExistingPdfData('curriculumPDF')}
+                  />
+                </div>
               </div>
             )}
 
             {currentStep === 1 && (
               <div className="space-y-6">
-                <ModernPdfUpload 
-                  pdfFile={formData.feesDayDistributionPdf}
-                  onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
-                  onRemove={() => handleFileRemove('feesDayDistributionPdf')}
-                  label="Day School Fees PDF"
-                  existingPdf={getExistingPdfData('feesDayDistributionPdf')}
-                />
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
+                  <ModernPdfUpload 
+                    pdfFile={formData.feesDayDistributionPdf}
+                    onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
+                    onRemove={() => handleFileRemove('feesDayDistributionPdf')}
+                    label="Day School Fees PDF"
+                    existingPdf={getExistingPdfData('feesDayDistributionPdf')}
+                  />
+                </div>
                 
-                <ModernPdfUpload 
-                  pdfFile={formData.feesBoardingDistributionPdf}
-                  onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
-                  onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
-                  label="Boarding School Fees PDF"
-                  existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
-                />
+                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
+                  <ModernPdfUpload 
+                    pdfFile={formData.feesBoardingDistributionPdf}
+                    onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
+                    onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
+                    label="Boarding School Fees PDF"
+                    existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
+                  />
+                </div>
               </div>
             )}
 
             {currentStep === 2 && (
-              <div className="space-y-4">
-                <ModernPdfUpload 
-                  pdfFile={formData.admissionFeePdf}
-                  onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
-                  onRemove={() => handleFileRemove('admissionFeePdf')}
-                  label="Admission Fee PDF"
-                  existingPdf={getExistingPdfData('admissionFeePdf')}
-                />
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
+                  <ModernPdfUpload 
+                    pdfFile={formData.admissionFeePdf}
+                    onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
+                    onRemove={() => handleFileRemove('admissionFeePdf')}
+                    label="Admission Fee PDF"
+                    existingPdf={getExistingPdfData('admissionFeePdf')}
+                  />
+                </div>
               </div>
             )}
 
             {currentStep === 3 && (
               <div className="space-y-6">
                 {[
-                  { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', existing: documents?.form1ResultsPdf },
-                  { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', existing: documents?.form2ResultsPdf },
-                  { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', existing: documents?.form3ResultsPdf },
-                  { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', existing: documents?.form4ResultsPdf },
-                  { key: 'mockExamsResultsPdf', label: 'Mock Exams', yearKey: 'mockExamsYear', existing: documents?.mockExamsResultsPdf },
-                  { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', existing: documents?.kcseResultsPdf }
+                  { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', existing: documents?.form1ResultsPdf, color: 'blue' },
+                  { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', existing: documents?.form2ResultsPdf, color: 'green' },
+                  { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', existing: documents?.form3ResultsPdf, color: 'purple' },
+                  { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', existing: documents?.form4ResultsPdf, color: 'orange' },
+                  { key: 'mockExamsResultsPdf', label: 'Mock Exams', yearKey: 'mockExamsYear', existing: documents?.mockExamsResultsPdf, color: 'red' },
+                  { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', existing: documents?.kcseResultsPdf, color: 'indigo' }
                 ].map((exam) => (
-                  <div key={exam.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700">{exam.label}</label>
-                      <div className="w-24">
+                  <div key={exam.key} className={`bg-gradient-to-br from-${exam.color}-50 to-${exam.color}-100 rounded-2xl p-5 border border-${exam.color}-200`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                        <FaAward className={`text-${exam.color}-600`} />
+                        {exam.label}
+                      </label>
+                      <div className="w-28">
                         <input
                           type="number"
                           min="2000"
                           max="2100"
                           value={examYears[exam.yearKey]}
                           onChange={(e) => handleExamYearChange(exam.yearKey, e.target.value)}
-                          placeholder="Year"
-                          className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm"
+                          placeholder="Enter Year"
+                          className="w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-bold"
                         />
                       </div>
                     </div>
@@ -1034,61 +1071,83 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
             )}
 
             {currentStep === 4 && (
-              <div className="space-y-4">
-                <AdditionalResultsUpload 
-                  files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-                  onFilesChange={(newFiles) => {
-                    const newFileObjects = newFiles.filter(newFile => 
-                      !additionalFiles.some(f => f.file === newFile)
-                    ).map(file => ({
-                      file,
-                      filename: file.name,
-                      year: '',
-                      description: '',
-                      isNew: true,
-                      isModified: true
-                    }));
-                    
-                    setAdditionalFiles(prev => [...prev, ...newFileObjects]);
-                  }}
-                  label="Additional Results Files"
-                  existingFiles={documents?.additionalResultsFiles || []}
-                />
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
+                  <AdditionalResultsUpload 
+                    files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
+                    onFilesChange={(newFiles) => {
+                      const newFileObjects = newFiles.filter(newFile => 
+                        !additionalFiles.some(f => f.file === newFile)
+                      ).map(file => ({
+                        file,
+                        filename: file.name,
+                        year: '',
+                        description: '',
+                        isNew: true,
+                        isModified: true
+                      }));
+                      
+                      setAdditionalFiles(prev => [...prev, ...newFileObjects]);
+                    }}
+                    label="Additional Results Files"
+                    existingFiles={documents?.additionalResultsFiles || []}
+                  />
+                </div>
               </div>
             )}
 
-            <div className="flex justify-between pt-6 border-t mt-6">
-              <button
-                type="button"
-                onClick={handlePrevStep}
-                disabled={currentStep === 0}
-                className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
-              >
-                Previous
-              </button>
-              
-              {currentStep < steps.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50"
-                >
-                  {actionLoading ? 'Saving...' : 'Save All Documents'}
-                </button>
-              )}
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-3">
+              <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="font-bold">Step {currentStep + 1} of {steps.length}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                {currentStep > 0 && (
+                  <button 
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer text-sm w-full sm:w-auto"
+                  >
+                    ← Previous
+                  </button>
+                )}
+                
+                {currentStep < steps.length - 1 ? (
+                  <button 
+                    type="button"
+                    onClick={handleNextStep}
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+                  >
+                    Continue →
+                  </button>
+                ) : (
+                  <button 
+                    type="submit"
+                    disabled={actionLoading}
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <CircularProgress size={16} className="text-white" />
+                        <span>Saving Documents...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaSave className="text-sm" />
+                        <span>Save All Documents</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>
-      </div>
-    </div>
+      </Box>
+    </Modal>
   );
 }
 
@@ -1121,42 +1180,42 @@ const documentsApiService = {
       throw error;
     }
   }
-}
+};
 
 export default function SchoolDocumentsPage() {
-  const [documents, setDocuments] = useState(null)
-  const [schoolInfo, setSchoolInfo] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showModal, setShowModal] = useState(false)
+  const [documents, setDocuments] = useState(null);
+  const [schoolInfo, setSchoolInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       
       // First get school info to get school ID
-      const schoolResponse = await fetch('/api/schooldocuments')
+      const schoolResponse = await fetch('/api/schooldocuments');
       if (schoolResponse.ok) {
-        const schoolData = await schoolResponse.json()
-        setSchoolInfo(schoolData.school || schoolData)
+        const schoolData = await schoolResponse.json();
+        setSchoolInfo(schoolData.school || schoolData);
         
         // Then get documents for this school
         if (schoolData.school?.id || schoolData.id) {
-          const schoolId = schoolData.school?.id || schoolData.id
-          const docsResponse = await documentsApiService.getSchoolDocuments(schoolId)
-          setDocuments(docsResponse.document || docsResponse)
+          const schoolId = schoolData.school?.id || schoolData.id;
+          const docsResponse = await documentsApiService.getSchoolDocuments(schoolId);
+          setDocuments(docsResponse.document || docsResponse);
         }
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('Error loading data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSaveDocuments = async (documentData) => {
     try {
@@ -1173,13 +1232,14 @@ export default function SchoolDocumentsPage() {
   };
 
   if (loading) {
-    return <ModernLoadingSpinner message="Loading school documents..." size="medium" />
+    return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
       <Toaster position="top-right" richColors />
 
+      {/* MODERN HEADER */}
       <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
         <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
@@ -1204,7 +1264,7 @@ export default function SchoolDocumentsPage() {
               </div>
             </div>
             
-            <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+            <p className="text-blue-50/80 text-sm md:text-lg font-bold max-w-2xl leading-relaxed">
               Manage all school documents including curriculum, fee structures, admission forms, and exam results.
             </p>
           </div>
@@ -1214,24 +1274,24 @@ export default function SchoolDocumentsPage() {
             <button 
               onClick={loadData} 
               disabled={loading}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? (
                 <CircularProgress size={16} color="inherit" thickness={6} />
               ) : (
                 <FaSync className="text-sm" /> 
               )}
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap font-bold">
                 {loading ? 'Syncing...' : 'Refresh'}
               </span>
             </button>
             
             <button 
               onClick={() => setShowModal(true)} 
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
             >
               <FaUpload className="text-sm" />
-              <span className="whitespace-nowrap">Manage Documents</span>
+              <span className="whitespace-nowrap font-bold">Manage Documents</span>
             </button>
           </div>
         </div>
@@ -1239,7 +1299,7 @@ export default function SchoolDocumentsPage() {
 
       {documents || schoolInfo ? (
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow border border-gray-200 p-4 md:p-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Curriculum Document */}
               {documents?.curriculumPDF && (
@@ -1351,49 +1411,53 @@ export default function SchoolDocumentsPage() {
                   existing={true}
                 />
               )}
-
-              {/* Additional Files */}
-              {documents?.additionalResultsFiles && documents.additionalResultsFiles.length > 0 && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Files</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {documents.additionalResultsFiles.map((file, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <FaFileAlt className="text-gray-500" />
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {file.filename || file.name}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-600 space-y-1">
-                          {file.year && <div>Year: {file.year}</div>}
-                          {file.description && <div>{file.description}</div>}
-                        </div>
-                        {file.filepath && (
-                          <div className="flex gap-2 mt-3">
-                            <a
-                              href={file.filepath}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              View
-                            </a>
-                            <a
-                              href={file.filepath}
-                              download
-                              className="text-xs text-green-600 hover:text-green-800"
-                            >
-                              Download
-                            </a>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Additional Files Section */}
+            {documents?.additionalResultsFiles && documents.additionalResultsFiles.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Files</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {documents.additionalResultsFiles.map((file, index) => (
+                    <div key={index} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-gray-100 rounded-xl">
+                          <FaFileAlt className="text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">
+                            {file.filename || file.name}
+                          </p>
+                          <div className="text-xs text-gray-600 space-y-1 mt-1">
+                            {file.year && <div className="font-medium">Year: {file.year}</div>}
+                            {file.description && <div className="font-medium">{file.description}</div>}
+                          </div>
+                        </div>
+                      </div>
+                      {file.filepath && (
+                        <div className="flex gap-2 mt-3">
+                          <a
+                            href={file.filepath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                          >
+                            View
+                          </a>
+                          <a
+                            href={file.filepath}
+                            download
+                            className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {(!documents || Object.keys(documents).length === 0) && (
               <div className="text-center py-12">
@@ -1401,12 +1465,12 @@ export default function SchoolDocumentsPage() {
                   <FaFilePdf className="w-8 h-8 text-blue-600" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">No Documents Found</h3>
-                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
+                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
                   Upload school documents including curriculum, fee structures, and exam results.
                 </p>
                 <button 
                   onClick={() => setShowModal(true)} 
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-1 mx-auto text-sm cursor-pointer"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg flex items-center gap-2 mx-auto text-sm cursor-pointer"
                 >
                   <FaUpload /> Upload Documents
                 </button>
@@ -1415,12 +1479,12 @@ export default function SchoolDocumentsPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow border border-gray-200 p-6 text-center">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
           <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
             <FaFilePdf className="w-8 h-8 text-blue-600" />
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">No School Information Found</h3>
-          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
+          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
             Please set up school information first before managing documents.
           </p>
         </div>
@@ -1435,5 +1499,5 @@ export default function SchoolDocumentsPage() {
         />
       )}
     </div>
-  )
+  );
 }

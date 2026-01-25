@@ -60,10 +60,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   const [loading, setLoading] = useState(true);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [realStats, setRealStats] = useState({
-    totalStudents: 0,
     totalStaff: 0,
     totalSubscribers: 0,
-    studentCouncil: 0,
     upcomingEvents: 0,
     totalNews: 0,
     activeAssignments: 0,
@@ -184,10 +182,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   const fetchRealCounts = async () => {
     try {
       const [
-        studentsRes,
         staffRes,
         subscribersRes,
-        councilRes,
         eventsRes,
         newsRes,
         assignmentsRes,
@@ -200,10 +196,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         resultsRes,
         studentRes
       ] = await Promise.allSettled([
-        fetch('/api/student'),
         fetch('/api/staff'),
         fetch('/api/subscriber'),
-        fetch('/api/studentCouncil'),
         fetch('/api/events'),
         fetch('/api/news'),
         fetch('/api/assignment'),
@@ -219,10 +213,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       ]);
 
       // Process responses and get actual counts
-      const students = studentsRes.status === 'fulfilled' ? await studentsRes.value.json() : { students: [] };
       const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
       const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
-      const council = councilRes.status === 'fulfilled' ? await councilRes.value.json() : { councilMembers: [] };
       const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
       const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
@@ -271,10 +263,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       setRealStats({
         totalStudents: students.students?.length || 0,
 
-        activeStudents,
         totalStaff: staff.staff?.length || 0,
         totalSubscribers: subscribers.subscribers?.length || 0,
-        studentCouncil: activeCouncil,
         upcomingEvents,
         totalNews: news.news?.length || 0,
         activeAssignments,
@@ -401,12 +391,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       icon: FiMessageCircle,
       badge: 'purple'
     },
-    { 
-      id: 'students', 
-      label: 'Student Management', 
-      icon: FiUsers,
-      badge: 'blue'
-    },
+   
     {
       id: 'results',
       label: 'Exam Results',

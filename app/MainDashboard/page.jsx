@@ -21,7 +21,8 @@ import {
   FiClipboard,
   FiMonitor,
   FiSmartphone,
-FiArrowLeft 
+FiArrowLeft,
+FiArchive
 } from 'react-icons/fi';
 import { 
   IoStatsChart,
@@ -38,11 +39,9 @@ import DashboardOverview from '../components/dashbaord/page';
 import AssignmentsManager from '../components/AssignmentsManager/page';
 import NewsEventsManager from '../components/eventsandnews/page';
 import StaffManager from '../components/staff/page';
-import StudentManager from '../components/students/page';
 import SubscriberManager from '../components/subscriber/page';
 import EmailManager from '../components/email/page';
 import GalleryManager from '../components/gallery/page';
-import StudentCouncil from '../components/studentCouncil/page';
 import AdminManager from '../components/adminsandprofile/page';
 import GuidanceCounselingTab from '../components/guidance/page';
 import SchoolInfoTab from '../components/schoolinfo/page';
@@ -62,10 +61,8 @@ export default function AdminDashboard() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileWarning, setShowMobileWarning] = useState(false);
   const [realStats, setRealStats] = useState({
-    totalStudents: 0,
     totalStaff: 0,
     totalSubscribers: 0,
-    studentCouncil: 0,
     upcomingEvents: 0,
     totalNews: 0,
     activeAssignments: 0,
@@ -78,6 +75,7 @@ export default function AdminDashboard() {
     totalStudent: 0,
     totalFees: 0,
     totalResults: 0
+    
   });
 
   // Check screen size on mount and resize
@@ -359,7 +357,6 @@ const router =useRouter()
       const [
         staffRes,
         subscribersRes,
-        councilRes,
         eventsRes,
         newsRes,
         assignmentsRes,
@@ -370,12 +367,11 @@ const router =useRouter()
         careersRes,
         studentRes,
         feesRes,
-        schoolDocsRes, // Added this
+        schooldocumentsRes, // Added this
         resultsRes
       ] = await Promise.allSettled([
         fetch('/api/staff'),
         fetch('/api/subscriber'),
-        fetch('/api/studentCouncil'),
         fetch('/api/events'),
         fetch('/api/news'),
         fetch('/api/assignment'),
@@ -394,7 +390,6 @@ const router =useRouter()
       // Process responses and get actual counts
       const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
       const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
-      const council = councilRes.status === 'fulfilled' ? await councilRes.value.json() : { councilMembers: [] };
       const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
       const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
       const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
@@ -407,7 +402,7 @@ const router =useRouter()
       const fees = feesRes.status === 'fulfilled' ? await feesRes.value.json() : { feebalances: [] };
       const results = resultsRes.status === 'fulfilled' ? await resultsRes.value.json() : { results: [] };
 
-      const schoolDocs = schoolDocsRes.status === 'fulfilled' ? await schoolDocsRes.value.json() : { documents: [] };
+      const schoolDocs = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
 
 
       // Calculate real counts
@@ -424,10 +419,8 @@ const router =useRouter()
       const pendingApps = admissionsData.filter(app => app.status === 'PENDING').length || 0;
 
       setRealStats({
-        totalStudents: studentCount,
         totalStaff: staff.staff?.length || 0,
         totalSubscribers: subscribers.subscribers?.length || 0,
-        studentCouncil: activeCouncil,
         upcomingEvents,
         totalNews: news.news?.length || 0,
         activeAssignments,
@@ -440,7 +433,7 @@ const router =useRouter()
         totalStudent: student.students?.length || 0,
         totalFees: fees.feebalances?.length || 0,
         totalResults: results.results?.length || 0,
-       schooldocuments: schoolDocs.documents?.length || 0 // Added this
+        schooldocuments: schoolDocs.documents?.length || 0 // Added this
 
       });
 
@@ -568,14 +561,12 @@ const router =useRouter()
         return <DashboardOverview />;
       case 'school-info':
         return <SchoolInfoTab />;
+
+     case 'schooldocuments': // Added this case
+         return <SchoolDocs />;
       case 'guidance-counseling':
         return <GuidanceCounselingTab />;
-      case 'students':
-        return <StudentManager />;
-      case 'student-council':
-        return <StudentCouncil />;
-            case 'schooldocuments': // Added this case
-      return <SchoolDocs />;
+      
       case 'staff':
         return <StaffManager />;
       case 'assignments':
@@ -627,18 +618,13 @@ const router =useRouter()
       icon: FiMessageCircle,
       badge: 'purple'
     },
-    { 
-      id: 'students', 
-      label: 'Student Management', 
-      icon: FiUsers,
-      badge: 'blue'
-    },
-    { 
-      id: 'student-council', 
-      label: 'Student Council', 
-      icon: FiUsers,
-      badge: 'green'
-    },
+
+{
+    id: 'schooldocuments',
+    label: 'School Documents',
+    icon: FiArchive, 
+    badge: 'indigo'
+  },
     { 
       id: 'staff', 
       label: 'Staff & BOM', 
