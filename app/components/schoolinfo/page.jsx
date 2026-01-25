@@ -127,7 +127,6 @@ function TagInput({ label, tags, onTagsChange, placeholder = "Type and press Ent
 }
 
 // Modern Video Upload Component
-// Modern Video Upload Component with Thumbnail Generation
 function ModernVideoUpload({ 
   videoType, 
   videoPath, 
@@ -148,113 +147,30 @@ function ModernVideoUpload({
   const [videoPreview, setVideoPreview] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [customThumbnail, setCustomThumbnail] = useState(null);
+  const [showThumbnailUpload, setShowThumbnailUpload] = useState(false);
   
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
-  const canvasRef = useRef(document.createElement('canvas'));
-
+  const thumbnailInputRef = useRef(null);
+  
   // Maximum video size: 4.25 MB
   const MAX_VIDEO_SIZE = 4.25 * 1024 * 1024;
+  const MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024; // 2MB for thumbnails
   
   const allowedVideoTypes = [
     'video/mp4', 'video/x-m4v', 'video/quicktime',
     'video/webm', 'video/ogg'
+  ];
+  
+  const allowedImageTypes = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'
   ];
 
   const isValidYouTubeUrl = (url) => {
     if (!url || url.trim() === '') return false;
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     return youtubeRegex.test(url.trim());
-  };
-
-  // Generate thumbnail from video file
-  const generateThumbnail = (videoFile) => {
-    return new Promise((resolve, reject) => {
-      if (!videoFile || !videoFile.type.startsWith('video/')) {
-        resolve(null);
-        return;
-      }
-
-      const video = document.createElement('video');
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      
-      video.crossOrigin = 'anonymous';
-      video.preload = 'metadata';
-      
-      video.onloadeddata = () => {
-        try {
-          // Set canvas dimensions
-          const width = video.videoWidth || 640;
-          const height = video.videoHeight || 360;
-          canvas.width = width;
-          canvas.height = height;
-          
-          // Calculate aspect ratio and resize if needed
-          const maxDimension = 400;
-          let newWidth = width;
-          let newHeight = height;
-          
-          if (width > height && width > maxDimension) {
-            newWidth = maxDimension;
-            newHeight = (height * maxDimension) / width;
-          } else if (height > maxDimension) {
-            newHeight = maxDimension;
-            newWidth = (width * maxDimension) / height;
-          }
-          
-          canvas.width = newWidth;
-          canvas.height = newHeight;
-          
-          // Capture frame at 1 second or 25% of duration
-          const captureTime = Math.min(1, video.duration * 0.25);
-          video.currentTime = captureTime;
-        } catch (err) {
-          console.warn('Error setting video properties:', err);
-          // Fallback to default dimensions
-          canvas.width = 320;
-          canvas.height = 180;
-          video.currentTime = 0;
-        }
-      };
-      
-      video.onseeked = () => {
-        try {
-          const context = canvas.getContext('2d');
-          context.clearRect(0, 0, canvas.width, canvas.height);
-          context.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          // Convert to data URL with quality optimization
-          const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-          resolve(thumbnailDataUrl);
-          
-          // Cleanup
-          URL.revokeObjectURL(video.src);
-          video.remove();
-          canvas.remove();
-        } catch (error) {
-          console.error('Thumbnail generation failed:', error);
-          resolve(null);
-        }
-      };
-      
-      video.onerror = (err) => {
-        console.error('Video error during thumbnail generation:', err);
-        resolve(null);
-        if (video.src) URL.revokeObjectURL(video.src);
-        video.remove();
-        canvas.remove();
-      };
-      
-      try {
-        const objectUrl = URL.createObjectURL(videoFile);
-        video.src = objectUrl;
-        video.load();
-      } catch (err) {
-        console.error('Error creating object URL:', err);
-        resolve(null);
-      }
-    });
   };
 
   const showErrorToast = (message, type = 'error') => {
@@ -324,13 +240,17 @@ function ModernVideoUpload({
       }
       setVideoThumbnail(null);
       setVideoPreview(null);
+      setCustomThumbnail(null);
       if (onVideoChange) {
         onVideoChange(null);
+      }
+      if (onThumbnailSelect) {
+        onThumbnailSelect(null);
       }
     }
   };
 
-  const handleFileChange = async (e) => {
+  const handleVideoFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
@@ -383,20 +303,9 @@ function ModernVideoUpload({
     }, 200);
 
     try {
-      // Generate thumbnail from video
-      const thumbnail = await generateThumbnail(file);
-      setVideoThumbnail(thumbnail);
-      
       // Set the file and trigger the parent callback
       if (onVideoChange) {
         onVideoChange(file);
-      }
-      
-      if (onThumbnailSelect && thumbnail) {
-        // Convert data URL to Blob/File for thumbnail
-        const blob = dataURLtoBlob(thumbnail);
-        const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-        onThumbnailSelect(thumbnailFile);
       }
       
       // Clear YouTube link when uploading local video
@@ -410,6 +319,9 @@ function ModernVideoUpload({
         `Video uploaded successfully! (${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
         'success'
       );
+      
+      // Show thumbnail upload option
+      setShowThumbnailUpload(true);
       
     } catch (error) {
       console.error('Video processing error:', error);
@@ -428,17 +340,65 @@ function ModernVideoUpload({
     }
   };
 
-  // Helper to convert data URL to Blob
-  const dataURLtoBlob = (dataURL) => {
-    const arr = dataURL.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+  const handleThumbnailUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    const file = files[0];
+    
+    // Check file size (2MB limit)
+    if (file.size > MAX_THUMBNAIL_SIZE) {
+      showErrorToast(
+        `Thumbnail image too large! Maximum size: 2MB. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+        'error'
+      );
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = '';
+      }
+      return;
     }
-    return new Blob([u8arr], { type: mime });
+
+    // Validate file type
+    if (!allowedImageTypes.includes(file.type)) {
+      showErrorToast(
+        `Invalid image format! Allowed formats: JPG, JPEG, PNG, GIF, WebP. Your file: ${file.type || 'unknown type'}`,
+        'error'
+      );
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Create preview
+    const previewUrl = URL.createObjectURL(file);
+    setCustomThumbnail(previewUrl);
+    setVideoThumbnail(previewUrl);
+    
+    // Pass thumbnail file to parent
+    if (onThumbnailSelect) {
+      onThumbnailSelect(file);
+    }
+    
+    showErrorToast('Thumbnail uploaded successfully!', 'success');
+  };
+
+  const handleRemoveThumbnail = () => {
+    if (customThumbnail) {
+      URL.revokeObjectURL(customThumbnail);
+    }
+    setCustomThumbnail(null);
+    setVideoThumbnail(null);
+    
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = '';
+    }
+    
+    if (onThumbnailSelect) {
+      onThumbnailSelect(null);
+    }
+    
+    showErrorToast('Thumbnail removed', 'warning');
   };
 
   const handleDrop = async (e) => {
@@ -447,7 +407,9 @@ function ModernVideoUpload({
     setDragOver(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
-      await handleFileChange({ target: { files: [file] } });
+      if (file.type.startsWith('video/')) {
+        await handleVideoFileChange({ target: { files: [file] } });
+      }
     }
   };
 
@@ -455,10 +417,15 @@ function ModernVideoUpload({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = '';
+    }
     
     setVideoThumbnail(null);
     setVideoPreview(null);
+    setCustomThumbnail(null);
     setLocalYoutubeLink('');
+    setShowThumbnailUpload(false);
     
     if (onRemove) {
       onRemove();
@@ -513,7 +480,7 @@ function ModernVideoUpload({
     if (videoType === 'youtube' && videoPath) {
       return getYouTubeThumbnail(videoPath);
     } else if (videoType === 'file' && existingVideo) {
-      // If we have an existing video file, return a generic video icon or actual thumbnail
+      // Return existing video thumbnail or generic
       return '/cumpus.jpg'; // Fallback thumbnail
     }
     return null;
@@ -597,13 +564,13 @@ function ModernVideoUpload({
                   MP4, MOV, M4V, WebM, OGG (Max 4.25MB)
                 </p>
                 <p className="text-xs text-gray-500">
-                  Video will be automatically processed and thumbnail generated
+                  Upload a thumbnail image separately
                 </p>
                 <input 
                   ref={fileInputRef}
                   type="file" 
                   accept="video/mp4,video/x-m4v,video/*,video/quicktime,video/webm,video/ogg" 
-                  onChange={handleFileChange} 
+                  onChange={handleVideoFileChange} 
                   className="hidden" 
                   id="video-upload"
                   disabled={localYoutubeLink || isProcessing}
@@ -627,25 +594,36 @@ function ModernVideoUpload({
                   </div>
                   {isProcessing && (
                     <p className="text-xs text-gray-500 mt-2">
-                      Generating thumbnail and processing video...
+                      Processing video file...
                     </p>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Thumbnail Preview Area */}
+            {/* Thumbnail Preview & Upload Area */}
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">
-                Thumbnail Preview
-              </label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
+                  Video Thumbnail
+                </label>
+                {customThumbnail && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveThumbnail}
+                    className="text-xs text-red-600 hover:text-red-800 font-bold flex items-center gap-1"
+                  >
+                    <FaTrash className="text-xs" /> Remove
+                  </button>
+                )}
+              </div>
               
               <div className="border-2 border-gray-200 rounded-xl p-4 bg-gray-50/50 h-full">
-                {videoThumbnail || existingThumbnail || videoPreview ? (
+                {videoThumbnail || existingThumbnail ? (
                   <div className="space-y-4">
                     <div className="relative overflow-hidden rounded-lg border border-gray-300">
                       <img 
-                        src={videoThumbnail || existingThumbnail || videoPreview} 
+                        src={videoThumbnail || existingThumbnail} 
                         alt="Video Thumbnail" 
                         className="w-full h-48 object-cover"
                       />
@@ -656,30 +634,24 @@ function ModernVideoUpload({
                     
                     <div className="text-center">
                       <p className="text-sm font-bold text-gray-700">
-                        {videoThumbnail ? 'Generated Thumbnail' : 
-                         existingThumbnail ? 'Existing Thumbnail' : 'Video Preview'}
+                        {customThumbnail ? 'Custom Thumbnail' : 
+                         existingThumbnail ? 'Existing Thumbnail' : 'Thumbnail Preview'}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Thumbnail will be saved with your video
+                        Upload a custom image for better preview
                       </p>
                     </div>
                     
-                    {videoThumbnail && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            // Regenerate thumbnail if needed
-                            if (fileInputRef.current?.files?.[0]) {
-                              // You could trigger thumbnail regeneration here
-                              toast.info('Thumbnail generation complete');
-                            }
-                          }}
-                          className="flex-1 bg-green-100 text-green-700 hover:bg-green-200 px-3 py-2 rounded-lg text-sm font-bold transition-colors"
-                        >
-                          <FaCheckCircle className="inline mr-2" />
-                          Thumbnail Generated
-                        </button>
-                      </div>
+                    {/* Thumbnail Upload Button */}
+                    {(videoPreview || localYoutubeLink) && !customThumbnail && (
+                      <button
+                        type="button"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                        className="w-full mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-bold flex items-center justify-center gap-2"
+                      >
+                        <FaEdit className="text-sm" />
+                        Upload Custom Thumbnail
+                      </button>
                     )}
                   </div>
                 ) : (
@@ -690,18 +662,49 @@ function ModernVideoUpload({
                     <p className="text-gray-600 font-bold mb-1">
                       No thumbnail available
                     </p>
-                    <p className="text-sm text-gray-500">
-                      Upload a video to generate a thumbnail
+                    <p className="text-sm text-gray-500 mb-4">
+                      {videoPreview || localYoutubeLink 
+                        ? "Upload a custom thumbnail image" 
+                        : "Upload a video first to add thumbnail"}
                     </p>
+                    
+                    {(videoPreview || localYoutubeLink) && (
+                      <button
+                        type="button"
+                        onClick={() => thumbnailInputRef.current?.click()}
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-bold flex items-center gap-2"
+                      >
+                        <FaEdit className="text-sm" />
+                        Upload Thumbnail Image
+                      </button>
+                    )}
                   </div>
                 )}
+                
+                <input 
+                  ref={thumbnailInputRef}
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                  onChange={handleThumbnailUpload}
+                  className="hidden"
+                />
+                
+                <div className="mt-4 text-xs text-gray-500">
+                  <p className="font-bold">Recommended:</p>
+                  <ul className="list-disc pl-4 mt-1 space-y-1">
+                    <li>Image size: 1280x720 pixels (16:9 ratio)</li>
+                    <li>Max file size: 2MB</li>
+                    <li>Formats: JPG, PNG, GIF, WebP</li>
+                    <li>Choose an engaging image that represents your school</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Existing Video Management */}
-        {existingVideo && videoType && !videoThumbnail && !localYoutubeLink && (
+        {existingVideo && videoType && !videoPreview && !localYoutubeLink && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -736,7 +739,7 @@ function ModernVideoUpload({
         )}
 
         {/* Action Buttons */}
-        {(videoThumbnail || localYoutubeLink || videoPreview) && (
+        {(videoPreview || localYoutubeLink) && (
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
@@ -754,7 +757,7 @@ function ModernVideoUpload({
 }
 
 // Video Modal Component
-function VideoModal({ open, onClose, videoType, videoPath }) {
+function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
   const extractYouTubeId = (url) => {
     if (!url || typeof url !== 'string') return null;
     
@@ -784,28 +787,50 @@ function VideoModal({ open, onClose, videoType, videoPath }) {
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-4xl bg-black rounded-lg overflow-hidden relative"
+        className="w-full max-w-6xl bg-black rounded-xl overflow-hidden relative shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 bg-black bg-opacity-70 text-white rounded-full w-8 h-8 flex items-center justify-center z-10 hover:bg-opacity-100 transition"
+          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 hover:bg-opacity-100 transition hover:scale-110"
         >
           ✕
         </button>
         
+        {/* Loading Placeholder with Thumbnail */}
+        {(!videoId && videoType === 'youtube') && (
+          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            {thumbnail ? (
+              <img 
+                src={thumbnail} 
+                alt="Video Thumbnail" 
+                className="absolute top-0 left-0 w-full h-full object-cover"
+              />
+            ) : (
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center">
+                <FaVideo className="text-gray-600 text-6xl mb-4" />
+                <p className="text-gray-400 text-lg font-bold">Video unavailable</p>
+                <p className="text-gray-500 text-sm mt-2">Please check the video link</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* YouTube Video */}
         {videoType === 'youtube' && videoId && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0`}
               className="absolute top-0 left-0 w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               title="School Video Tour"
             />
           </div>
         )}
         
+        {/* Local Video File */}
         {videoType === 'file' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <video
@@ -813,18 +838,33 @@ function VideoModal({ open, onClose, videoType, videoPath }) {
               autoPlay
               className="absolute top-0 left-0 w-full h-full"
               src={videoPath}
+              poster={thumbnail}
             >
               Your browser does not support the video tag.
             </video>
           </div>
         )}
         
-        {(!videoPath || !videoId) && videoType === 'youtube' && (
-          <div className="p-8 text-center text-white">
-            <FaVideo className="text-4xl mx-auto mb-4 text-gray-500" />
-            <p className="text-gray-400">No video available</p>
+        {/* Video Info Footer */}
+        <div className="bg-gradient-to-r from-gray-900 to-black p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FaVideo className="text-red-500" />
+              <div>
+                <p className="text-sm font-bold">School Video Tour</p>
+                <p className="text-xs text-gray-400">
+                  {videoType === 'youtube' ? 'YouTube Video' : 'Local Video'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Close
+            </button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -1749,6 +1789,8 @@ export default function SchoolInfoPage() {
           onClose={() => setShowVideoModal(false)}
           videoType={schoolInfo.videoType}
           videoPath={schoolInfo.videoTour}
+         thumbnail={schoolInfo.videoThumbnail} // Pass thumbnail here too
+
         />
       )}
 
@@ -1940,7 +1982,8 @@ export default function SchoolInfoPage() {
                   <VideoThumbnail
                     videoType={schoolInfo.videoType}
                     videoPath={schoolInfo.videoTour}
-                    onClick={() => setShowVideoModal(true)}
+thumbnail={videoInfo.videoThumbnail} // Pass the custom thumbnail
+        onClick={() => setShowVideoModal(true)}        
                   />
                 </div>
               </div>
