@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react'; // Added useRef import
+import { useState, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'sonner';
 import { 
   FaSchool, FaEdit, FaTrash, FaPlus, FaChartBar,
@@ -11,11 +11,10 @@ import {
   FaArrowRight, FaBuilding, FaQuoteLeft, FaPlay,
   FaShieldAlt, FaAward, FaUserCheck, FaHourglassHalf,
   FaBookOpen, FaUsersCog, FaFileAlt, FaCalendarAlt,
-  FaBriefcase, FaStethoscope, FaLaptopCode, FaCalculator,
-  FaFlask, FaTools
+  FaImage
 } from 'react-icons/fa';
 
-import { CircularProgress, Modal, Box, TextField, TextareaAutosize } from '@mui/material';
+import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
 
 // Modern Loading Spinner Component
 function ModernLoadingSpinner({ message = "Loading school information...", size = "medium" }) {
@@ -136,27 +135,20 @@ function ModernVideoUpload({
   onRemove, 
   onThumbnailSelect, 
   label = "School Video Tour",
-  existingVideo = null,
-  onCancelExisting = null,
-  onRemoveExisting = null
+  existingVideo = null
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [localYoutubeLink, setLocalYoutubeLink] = useState(youtubeLink || '');
-  const [videoThumbnail, setVideoThumbnail] = useState(null);
+  const [customThumbnail, setCustomThumbnail] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState(null);
-  const [customThumbnail, setCustomThumbnail] = useState(null);
-  const [showThumbnailUpload, setShowThumbnailUpload] = useState(false);
   
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
   const thumbnailInputRef = useRef(null);
   
-  // Maximum video size: 4.25 MB
   const MAX_VIDEO_SIZE = 4.25 * 1024 * 1024;
-  const MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024; // 2MB for thumbnails
+  const MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024;
   
   const allowedVideoTypes = [
     'video/mp4', 'video/x-m4v', 'video/quicktime',
@@ -173,55 +165,9 @@ function ModernVideoUpload({
     return youtubeRegex.test(url.trim());
   };
 
-  const showErrorToast = (message, type = 'error') => {
-    const config = {
-      error: {
-        style: {
-          background: 'linear-gradient(to right, #ef4444, #dc2626)',
-          color: 'white',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          padding: '16px',
-          borderRadius: '12px',
-          border: '2px solid #fee2e2',
-          boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)'
-        },
-        icon: '❌'
-      },
-      warning: {
-        style: {
-          background: 'linear-gradient(to right, #f97316, #ea580c)',
-          color: 'white',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          padding: '16px',
-          borderRadius: '12px',
-          border: '2px solid #fed7aa',
-          boxShadow: '0 10px 25px rgba(249, 115, 22, 0.3)'
-        },
-        icon: '⚠️'
-      },
-      success: {
-        style: {
-          background: 'linear-gradient(to right, #10b981, #059669)',
-          color: 'white',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          padding: '16px',
-          borderRadius: '12px',
-          border: '2px solid #d1fae5',
-          boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)'
-        },
-        icon: '✅'
-      }
-    };
-
-    const toastConfig = config[type];
-    
-    toast[type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success'](message, {
+  const showToast = (message, type = 'success') => {
+    toast[type](message, {
       duration: 5000,
-      style: toastConfig.style,
-      icon: toastConfig.icon
     });
   };
 
@@ -233,12 +179,13 @@ function ModernVideoUpload({
       onYoutubeLinkChange(url);
     }
     
-    // Clear video file and thumbnail when YouTube link is entered
     if (url.trim() !== '') {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      setVideoThumbnail(null);
+      if (videoPreview) {
+        URL.revokeObjectURL(videoPreview);
+      }
       setVideoPreview(null);
       setCustomThumbnail(null);
       if (onVideoChange) {
@@ -255,43 +202,24 @@ function ModernVideoUpload({
     if (files.length === 0) return;
 
     const file = files[0];
-    setError(null);
     setIsProcessing(true);
     
-    // Check file size (4.25MB limit)
     if (file.size > MAX_VIDEO_SIZE) {
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      showErrorToast(
-        `Video file too large! Maximum size: 4.25MB. Your file: ${fileSizeMB}MB. Please reduce the file size and try again.`,
-        'error'
-      );
-      
-      setUploadProgress(0);
+      showToast('Video file too large! Maximum size: 4.25MB', 'error');
       setIsProcessing(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
       return;
     }
 
-    // Validate file type
     if (!allowedVideoTypes.includes(file.type)) {
-      showErrorToast(
-        `Invalid video format! Allowed formats: MP4, M4V, MOV, WebM, OGG. Your file: ${file.type || 'unknown type'}`,
-        'error'
-      );
-      setUploadProgress(0);
+      showToast('Invalid video format! Allowed: MP4, MOV, M4V, WebM, OGG', 'error');
       setIsProcessing(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
       return;
     }
 
     setUploadProgress(0);
-    setVideoPreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    setVideoPreview(previewUrl);
     
-    // Show upload progress simulation
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
@@ -303,33 +231,20 @@ function ModernVideoUpload({
     }, 200);
 
     try {
-      // Set the file and trigger the parent callback
       if (onVideoChange) {
         onVideoChange(file);
       }
       
-      // Clear YouTube link when uploading local video
       setLocalYoutubeLink('');
       if (onYoutubeLinkChange) {
         onYoutubeLinkChange('');
       }
       
-      // Show success toast
-      showErrorToast(
-        `Video uploaded successfully! (${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
-        'success'
-      );
-      
-      // Show thumbnail upload option
-      setShowThumbnailUpload(true);
+      showToast('Video uploaded successfully!', 'success');
       
     } catch (error) {
       console.error('Video processing error:', error);
-      showErrorToast(
-        'Failed to process video file. Please try again with a different video.',
-        'error'
-      );
-      setVideoThumbnail(null);
+      showToast('Failed to process video file', 'error');
       setVideoPreview(null);
     } finally {
       clearInterval(progressInterval);
@@ -346,41 +261,24 @@ function ModernVideoUpload({
 
     const file = files[0];
     
-    // Check file size (2MB limit)
     if (file.size > MAX_THUMBNAIL_SIZE) {
-      showErrorToast(
-        `Thumbnail image too large! Maximum size: 2MB. Your file: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-        'error'
-      );
-      if (thumbnailInputRef.current) {
-        thumbnailInputRef.current.value = '';
-      }
+      showToast('Thumbnail image too large! Maximum size: 2MB', 'error');
       return;
     }
 
-    // Validate file type
     if (!allowedImageTypes.includes(file.type)) {
-      showErrorToast(
-        `Invalid image format! Allowed formats: JPG, JPEG, PNG, GIF, WebP. Your file: ${file.type || 'unknown type'}`,
-        'error'
-      );
-      if (thumbnailInputRef.current) {
-        thumbnailInputRef.current.value = '';
-      }
+      showToast('Invalid image format! Allowed: JPG, PNG, GIF, WebP', 'error');
       return;
     }
 
-    // Create preview
     const previewUrl = URL.createObjectURL(file);
     setCustomThumbnail(previewUrl);
-    setVideoThumbnail(previewUrl);
     
-    // Pass thumbnail file to parent
     if (onThumbnailSelect) {
       onThumbnailSelect(file);
     }
     
-    showErrorToast('Thumbnail uploaded successfully!', 'success');
+    showToast('Thumbnail uploaded successfully!', 'success');
   };
 
   const handleRemoveThumbnail = () => {
@@ -388,7 +286,6 @@ function ModernVideoUpload({
       URL.revokeObjectURL(customThumbnail);
     }
     setCustomThumbnail(null);
-    setVideoThumbnail(null);
     
     if (thumbnailInputRef.current) {
       thumbnailInputRef.current.value = '';
@@ -398,19 +295,7 @@ function ModernVideoUpload({
       onThumbnailSelect(null);
     }
     
-    showErrorToast('Thumbnail removed', 'warning');
-  };
-
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith('video/')) {
-        await handleVideoFileChange({ target: { files: [file] } });
-      }
-    }
+    showToast('Thumbnail removed', 'warning');
   };
 
   const handleRemove = () => {
@@ -421,11 +306,16 @@ function ModernVideoUpload({
       thumbnailInputRef.current.value = '';
     }
     
-    setVideoThumbnail(null);
+    if (videoPreview) {
+      URL.revokeObjectURL(videoPreview);
+    }
+    if (customThumbnail) {
+      URL.revokeObjectURL(customThumbnail);
+    }
+    
     setVideoPreview(null);
     setCustomThumbnail(null);
     setLocalYoutubeLink('');
-    setShowThumbnailUpload(false);
     
     if (onRemove) {
       onRemove();
@@ -439,21 +329,7 @@ function ModernVideoUpload({
       onThumbnailSelect(null);
     }
     
-    showErrorToast('Video removed successfully!', 'success');
-  };
-
-  const handleCancelExisting = () => {
-    if (onCancelExisting) {
-      onCancelExisting();
-    }
-    showErrorToast('Existing video marked for replacement', 'warning');
-  };
-
-  const handleRemoveExisting = () => {
-    if (onRemoveExisting) {
-      onRemoveExisting();
-    }
-    showErrorToast('Existing video marked for removal', 'warning');
+    showToast('Video removed successfully!', 'success');
   };
 
   const getYouTubeThumbnail = (url) => {
@@ -475,28 +351,23 @@ function ModernVideoUpload({
     return null;
   };
 
-  // Get existing thumbnail URL
-  const getExistingThumbnail = () => {
-    if (videoType === 'youtube' && videoPath) {
-      return getYouTubeThumbnail(videoPath);
-    } else if (videoType === 'file' && existingVideo) {
-      // Return existing video thumbnail or generic
-      return '/cumpus.jpg'; // Fallback thumbnail
-    }
-    return null;
-  };
+  const existingThumbnail = videoType === 'youtube' && videoPath 
+    ? getYouTubeThumbnail(videoPath) 
+    : null;
 
-  const existingThumbnail = getExistingThumbnail();
+  const displayThumbnail = customThumbnail || existingThumbnail;
 
   return (
     <div className="space-y-6">
-      <label className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-3">
-        <FaVideo className="text-purple-600 text-xl" />
-        <span className="text-xl">{label}</span>
+      <div className="flex items-center justify-between">
+        <label className="text-lg font-bold text-gray-900 flex items-center gap-3">
+          <FaVideo className="text-purple-600 text-xl" />
+          <span className="text-xl">{label}</span>
+        </label>
         <span className="text-xs font-bold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
           Max 4.25MB
         </span>
-      </label>
+      </div>
       
       <div className="space-y-6">
         {/* YouTube URL Section */}
@@ -532,215 +403,164 @@ function ModernVideoUpload({
           </div>
         </div>
 
-        {/* Local Video Upload */}
-        <div>
-          <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">
-            Upload Local Video
-          </label>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Video Upload Area */}
-            <div>
-              <div
-                className={`border-3 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer group ${
-                  dragOver 
-                    ? 'border-blue-500 bg-blue-50 ring-4 ring-blue-100' 
-                    : 'border-gray-300 hover:border-blue-400 bg-gray-50/50'
-                } ${localYoutubeLink ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                onDrop={!localYoutubeLink ? handleDrop : undefined}
-                onDragOver={!localYoutubeLink ? (e) => { e.preventDefault(); e.stopPropagation(); setDragOver(true); } : undefined}
-                onDragLeave={!localYoutubeLink ? () => setDragOver(false) : undefined}
-                onClick={!localYoutubeLink ? () => fileInputRef.current?.click() : undefined}
-              >
-                <div className="relative">
-                  <FaVideo className={`mx-auto text-4xl mb-4 transition-all duration-300 ${
-                    dragOver ? 'text-blue-600 scale-110' : 'text-gray-500 group-hover:text-blue-500'
-                  }`} />
+        {/* Video and Thumbnail in Flex Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Video Upload Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <FaVideo className="text-blue-600" />
+              Upload Video
+            </h3>
+            
+            <div
+              className={`border-3 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer group ${
+                dragOver 
+                  ? 'border-blue-500 bg-blue-50 ring-4 ring-blue-100' 
+                  : 'border-gray-300 hover:border-blue-400 bg-gray-50/50'
+              } ${localYoutubeLink ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              onDrop={!localYoutubeLink ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOver(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  const file = e.dataTransfer.files[0];
+                  handleVideoFileChange({ target: { files: [file] } });
+                }
+              } : undefined}
+              onDragOver={!localYoutubeLink ? (e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                setDragOver(true); 
+              } : undefined}
+              onDragLeave={!localYoutubeLink ? () => setDragOver(false) : undefined}
+              onClick={!localYoutubeLink ? () => fileInputRef.current?.click() : undefined}
+            >
+              <div className="relative">
+                <FaVideo className={`mx-auto text-4xl mb-4 transition-all duration-300 ${
+                  dragOver ? 'text-blue-600 scale-110' : 'text-gray-500 group-hover:text-blue-500'
+                }`} />
+              </div>
+              <p className="text-gray-800 mb-2 font-bold">
+                {localYoutubeLink ? 'YouTube link selected' : dragOver ? 'Drop Video Now' : 'Click to Upload Video'}
+              </p>
+              <p className="text-sm text-gray-600 mb-1">
+                MP4, MOV, M4V, WebM, OGG (Max 4.25MB)
+              </p>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="video/mp4,video/x-m4v,video/*,video/quicktime,video/webm,video/ogg" 
+                onChange={handleVideoFileChange} 
+                className="hidden" 
+                disabled={localYoutubeLink || isProcessing}
+              />
+            </div>
+            
+            {/* Upload Progress */}
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="mt-4">
+                <div className="flex justify-between text-sm font-bold mb-2">
+                  <span>{isProcessing ? 'Processing...' : 'Uploading...'}</span>
+                  <span>{uploadProgress}%</span>
                 </div>
-                <p className="text-gray-800 mb-2 font-bold text-base uppercase">
-                  {localYoutubeLink ? 'YouTube link selected' : dragOver ? 'Drop Video Now' : 'Click to Upload Video'}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  MP4, MOV, M4V, WebM, OGG (Max 4.25MB)
-                </p>
-                <p className="text-xs text-gray-500">
-                  Upload a thumbnail image separately
-                </p>
-                <input 
-                  ref={fileInputRef}
-                  type="file" 
-                  accept="video/mp4,video/x-m4v,video/*,video/quicktime,video/webm,video/ogg" 
-                  onChange={handleVideoFileChange} 
-                  className="hidden" 
-                  id="video-upload"
-                  disabled={localYoutubeLink || isProcessing}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+            
+            {/* Video Preview */}
+            {videoPreview && (
+              <div className="mt-4">
+                <p className="text-sm font-bold text-gray-700 mb-2">Video Preview:</p>
+                <video 
+                  src={videoPreview} 
+                  className="w-full rounded-lg max-h-48 object-contain"
+                  controls
                 />
               </div>
-              
-              {/* Upload Progress */}
-              {uploadProgress > 0 && uploadProgress < 100 && (
-                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm mt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold text-gray-700 uppercase tracking-wider">
-                      {isProcessing ? 'Processing...' : 'Uploading...'}
-                    </span>
-                    <span className="text-base font-bold text-purple-600">{uploadProgress}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                    <div 
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-full transition-all duration-500"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
-                  {isProcessing && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      Processing video file...
-                    </p>
-                  )}
-                </div>
+            )}
+          </div>
+
+          {/* Thumbnail Upload Card */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <FaImage className="text-purple-600" />
+                Video Thumbnail
+              </h3>
+              {displayThumbnail && (
+                <button
+                  type="button"
+                  onClick={handleRemoveThumbnail}
+                  className="text-xs text-red-600 hover:text-red-800 font-bold flex items-center gap-1"
+                >
+                  <FaTrash className="text-xs" /> Remove
+                </button>
               )}
             </div>
-
-            {/* Thumbnail Preview & Upload Area */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider">
-                  Video Thumbnail
-                </label>
-                {customThumbnail && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveThumbnail}
-                    className="text-xs text-red-600 hover:text-red-800 font-bold flex items-center gap-1"
-                  >
-                    <FaTrash className="text-xs" /> Remove
-                  </button>
+            
+            <div className="space-y-4">
+              {/* Thumbnail Preview */}
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 min-h-[200px] flex flex-col items-center justify-center">
+                {displayThumbnail ? (
+                  <>
+                    <img 
+                      src={displayThumbnail} 
+                      alt="Thumbnail Preview" 
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                    <p className="text-sm font-bold text-gray-700">
+                      {customThumbnail ? 'Custom Thumbnail' : 'YouTube Thumbnail'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <FaImage className="text-gray-400 text-4xl mb-4" />
+                    <p className="text-gray-600 font-bold mb-2">No thumbnail available</p>
+                    <p className="text-sm text-gray-500 text-center">
+                      Upload a custom image or use YouTube thumbnail
+                    </p>
+                  </>
                 )}
               </div>
               
-              <div className="border-2 border-gray-200 rounded-xl p-4 bg-gray-50/50 h-full">
-                {videoThumbnail || existingThumbnail ? (
-                  <div className="space-y-4">
-                    <div className="relative overflow-hidden rounded-lg border border-gray-300">
-                      <img 
-                        src={videoThumbnail || existingThumbnail} 
-                        alt="Video Thumbnail" 
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                        <FaPlay className="text-white text-3xl" />
-                      </div>
-                    </div>
-                    
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-gray-700">
-                        {customThumbnail ? 'Custom Thumbnail' : 
-                         existingThumbnail ? 'Existing Thumbnail' : 'Thumbnail Preview'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Upload a custom image for better preview
-                      </p>
-                    </div>
-                    
-                    {/* Thumbnail Upload Button */}
-                    {(videoPreview || localYoutubeLink) && !customThumbnail && (
-                      <button
-                        type="button"
-                        onClick={() => thumbnailInputRef.current?.click()}
-                        className="w-full mt-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-bold flex items-center justify-center gap-2"
-                      >
-                        <FaEdit className="text-sm" />
-                        Upload Custom Thumbnail
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-4">
-                      <FaVideo className="text-gray-400 text-2xl" />
-                    </div>
-                    <p className="text-gray-600 font-bold mb-1">
-                      No thumbnail available
-                    </p>
-                    <p className="text-sm text-gray-500 mb-4">
-                      {videoPreview || localYoutubeLink 
-                        ? "Upload a custom thumbnail image" 
-                        : "Upload a video first to add thumbnail"}
-                    </p>
-                    
-                    {(videoPreview || localYoutubeLink) && (
-                      <button
-                        type="button"
-                        onClick={() => thumbnailInputRef.current?.click()}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-bold flex items-center gap-2"
-                      >
-                        <FaEdit className="text-sm" />
-                        Upload Thumbnail Image
-                      </button>
-                    )}
-                  </div>
-                )}
-                
-                <input 
-                  ref={thumbnailInputRef}
-                  type="file" 
-                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
-                  onChange={handleThumbnailUpload}
-                  className="hidden"
-                />
-                
-                <div className="mt-4 text-xs text-gray-500">
-                  <p className="font-bold">Recommended:</p>
-                  <ul className="list-disc pl-4 mt-1 space-y-1">
-                    <li>Image size: 1280x720 pixels (16:9 ratio)</li>
-                    <li>Max file size: 2MB</li>
-                    <li>Formats: JPG, PNG, GIF, WebP</li>
-                    <li>Choose an engaging image that represents your school</li>
-                  </ul>
-                </div>
+              {/* Upload Custom Thumbnail Button */}
+              <button
+                type="button"
+                onClick={() => thumbnailInputRef.current?.click()}
+                className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white py-3 rounded-xl hover:from-purple-600 hover:to-blue-700 transition-all duration-300 font-bold flex items-center justify-center gap-2"
+              >
+                <FaEdit className="text-sm" />
+                Upload Custom Thumbnail
+              </button>
+              
+              <input 
+                ref={thumbnailInputRef}
+                type="file" 
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+                onChange={handleThumbnailUpload}
+                className="hidden"
+              />
+              
+              <div className="text-xs text-gray-500">
+                <p className="font-bold mb-1">Recommended:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Size: 1280x720 pixels (16:9 ratio)</li>
+                  <li>Max file size: 2MB</li>
+                  <li>Formats: JPG, PNG, GIF, WebP</li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Existing Video Management */}
-        {existingVideo && videoType && !videoPreview && !localYoutubeLink && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <FaExclamationTriangle className="text-yellow-600 text-xl" />
-                <div>
-                  <h4 className="font-bold text-gray-900">Existing Video Found</h4>
-                  <p className="text-sm text-gray-600">
-                    {videoType === 'youtube' ? 'YouTube video linked' : 'Video file uploaded'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {onCancelExisting && (
-                  <button
-                    onClick={handleCancelExisting}
-                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-bold"
-                  >
-                    Replace
-                  </button>
-                )}
-                {onRemoveExisting && (
-                  <button
-                    onClick={handleRemoveExisting}
-                    className="px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
+        {/* Remove Button */}
         {(videoPreview || localYoutubeLink) && (
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={handleRemove}
@@ -759,7 +579,7 @@ function ModernVideoUpload({
 // Video Modal Component
 function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
   const extractYouTubeId = (url) => {
-    if (!url || typeof url !== 'string') return null;
+    if (!url) return null;
     
     const patterns = [
       /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
@@ -777,8 +597,6 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
     return null;
   };
 
-  const videoId = videoType === 'youtube' ? extractYouTubeId(videoPath) : null;
-
   if (!open) return null;
 
   return (
@@ -787,50 +605,28 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-6xl bg-black rounded-xl overflow-hidden relative shadow-2xl"
+        className="w-full max-w-6xl bg-black rounded-xl overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 hover:bg-opacity-100 transition hover:scale-110"
+          className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 hover:bg-opacity-100 transition"
         >
           ✕
         </button>
         
-        {/* Loading Placeholder with Thumbnail */}
-        {(!videoId && videoType === 'youtube') && (
-          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-            {thumbnail ? (
-              <img 
-                src={thumbnail} 
-                alt="Video Thumbnail" 
-                className="absolute top-0 left-0 w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center">
-                <FaVideo className="text-gray-600 text-6xl mb-4" />
-                <p className="text-gray-400 text-lg font-bold">Video unavailable</p>
-                <p className="text-gray-500 text-sm mt-2">Please check the video link</p>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* YouTube Video */}
-        {videoType === 'youtube' && videoId && (
+        {videoType === 'youtube' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0`}
+              src={`https://www.youtube.com/embed/${extractYouTubeId(videoPath)}?autoplay=1`}
               className="absolute top-0 left-0 w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               title="School Video Tour"
             />
           </div>
         )}
         
-        {/* Local Video File */}
         {videoType === 'file' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <video
@@ -839,32 +635,9 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
               className="absolute top-0 left-0 w-full h-full"
               src={videoPath}
               poster={thumbnail}
-            >
-              Your browser does not support the video tag.
-            </video>
+            />
           </div>
         )}
-        
-        {/* Video Info Footer */}
-        <div className="bg-gradient-to-r from-gray-900 to-black p-4 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FaVideo className="text-red-500" />
-              <div>
-                <p className="text-sm font-bold">School Video Tour</p>
-                <p className="text-xs text-gray-400">
-                  {videoType === 'youtube' ? 'YouTube Video' : 'Local Video'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-sm text-gray-400 hover:text-white transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -951,7 +724,7 @@ function ModernDeleteModal({ onClose, onConfirm, loading }) {
 }
 
 // Video Thumbnail Component
-function VideoThumbnail({ videoType, videoPath, onClick }) {
+function VideoThumbnail({ videoType, videoPath, thumbnail, onClick }) {
   const getYouTubeThumbnail = (url) => {
     if (!url) return null;
     
@@ -971,9 +744,9 @@ function VideoThumbnail({ videoType, videoPath, onClick }) {
     return null;
   };
 
-  const thumbnail = videoType === 'youtube' 
-    ? getYouTubeThumbnail(videoPath) 
-    : '/cumpus.jpg';
+  const displayThumbnail = thumbnail || 
+    (videoType === 'youtube' ? getYouTubeThumbnail(videoPath) : null) || 
+    '/cumpus.jpg';
 
   return (
     <div 
@@ -981,17 +754,11 @@ function VideoThumbnail({ videoType, videoPath, onClick }) {
       onClick={onClick}
     >
       <div className="relative pb-[56.25%]">
-        {thumbnail ? (
-          <img 
-            src={thumbnail}
-            alt="Video Thumbnail" 
-            className="absolute top-0 left-0 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <FaVideo className={`text-4xl ${videoType === 'youtube' ? 'text-red-500' : 'text-blue-500'}`} />
-          </div>
-        )}
+        <img 
+          src={displayThumbnail}
+          alt="Video Thumbnail" 
+          className="absolute top-0 left-0 w-full h-full object-cover"
+        />
         
         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center hover:bg-opacity-20 transition">
           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${videoType === 'youtube' ? 'bg-red-600' : 'bg-blue-600'}`}>
@@ -1022,11 +789,9 @@ function VideoThumbnail({ videoType, videoPath, onClick }) {
   );
 }
 
-// School Info Modal Component (MODERNIZED)
-// Updated ModernSchoolModal component with thumbnail support
+// School Info Modal Component
 function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) {
   const [currentStep, setCurrentStep] = useState(0);
-  
   const [formData, setFormData] = useState(() => ({
     name: school?.name || '',
     description: school?.description || '',
@@ -1040,8 +805,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     subjects: school?.subjects || [],
     departments: school?.departments || [],
     youtubeLink: school?.videoType === 'youtube' ? school.videoTour : '',
-    feesDay: school?.feesDay?.toString() || '',
-    feesBoarding: school?.feesBoarding?.toString() || '',
     admissionOpenDate: school?.admissionOpenDate ? new Date(school.admissionOpenDate).toISOString().split('T')[0] : '',
     admissionCloseDate: school?.admissionCloseDate ? new Date(school.admissionCloseDate).toISOString().split('T')[0] : '',
     admissionRequirements: school?.admissionRequirements || '',
@@ -1060,24 +823,9 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
   const [actionLoading, setActionLoading] = useState(false);
 
   const steps = [
-    { 
-      id: 'basic', 
-      label: 'Basic Info', 
-      icon: FaBuilding, 
-      description: 'School identity and values' 
-    },
-    { 
-      id: 'academic', 
-      label: 'Academic', 
-      icon: FaGraduationCap, 
-      description: 'Academic calendar and media' 
-    },
-    { 
-      id: 'admission', 
-      label: 'Admission', 
-      icon: FaUserCheck, 
-      description: 'Admission details' 
-    }
+    { id: 'basic', label: 'Basic Info', icon: FaBuilding },
+    { id: 'academic', label: 'Academic', icon: FaGraduationCap },
+    { id: 'admission', label: 'Admission', icon: FaUserCheck }
   ];
 
   const handleFormSubmit = async (e) => {
@@ -1086,61 +834,45 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     try {
       setActionLoading(true);
       
-      // Prepare form data
-      const data = new FormData();
+      const formDataObj = new FormData();
       
-      // Add basic info
+      // Add form data
       Object.keys(formData).forEach(key => {
         if (Array.isArray(formData[key])) {
-          data.append(key, JSON.stringify(formData[key]));
+          formDataObj.append(key, JSON.stringify(formData[key]));
         } else {
-          data.append(key, formData[key] || '');
+          formDataObj.append(key, formData[key] || '');
         }
       });
       
       // Add video file if present
       if (videoFile) {
-        data.append('videoTour', videoFile);
+        formDataObj.append('videoTour', videoFile);
       }
       
       // Add thumbnail if present
       if (videoThumbnail) {
-        data.append('videoThumbnail', videoThumbnail);
+        formDataObj.append('videoThumbnail', videoThumbnail);
       }
       
-      // Call API
       const response = await fetch('/api/school', {
         method: school ? 'PUT' : 'POST',
-        body: data
+        body: formDataObj
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Failed to save school information');
       }
 
       const result = await response.json();
-      
       toast.success(result.message || (school ? 'Updated successfully!' : 'Created successfully!'));
       onSave(result.school);
       onClose();
       
     } catch (error) {
       console.error('Save failed:', error);
-      
-      // Show error toast with better styling
-      toast.error(error.message || 'Failed to save school information', {
-        duration: 5000,
-        style: {
-          background: 'linear-gradient(to right, #ef4444, #dc2626)',
-          color: 'white',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          padding: '16px',
-          borderRadius: '12px',
-          border: '2px solid #fee2e2'
-        }
-      });
+      toast.error(error.message || 'Failed to save school information');
     } finally {
       setActionLoading(false);
     }
@@ -1194,7 +926,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '95vw',
-        maxWidth: '1080px',
+        maxWidth: '1200px',
         maxHeight: '95vh',
         bgcolor: 'background.paper',
         borderRadius: 2,
@@ -1202,7 +934,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        {/* MODERN HEADER */}
         <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1212,17 +943,17 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
               <div>
                 <h2 className="text-lg md:text-xl font-bold">{school ? 'Update School Information' : 'Create School Information'}</h2>
                 <p className="text-blue-100 opacity-90 text-xs mt-0.5">
-                  Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
+                  Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200 cursor-pointer">
+            <button onClick={onClose} className="p-1.5 hover:bg-white hover:bg-opacity-20 rounded-lg transition">
               <FaTimes className="text-lg" />
             </button>
           </div>
         </div>
 
-        {/* MODERN STEP INDICATOR */}
+        {/* Step Indicator */}
         <div className="bg-white border-b border-gray-200 p-3">
           <div className="flex flex-wrap justify-center items-center gap-2 md:space-x-3">
             {steps.map((step, index) => (
@@ -1250,7 +981,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom p-4 md:p-6">
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto p-4 md:p-6">
           <form onSubmit={handleFormSubmit} className="space-y-6">
             {currentStep === 0 && (
               <div className="space-y-6">
@@ -1421,7 +1152,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
+                  <div>
                     <ModernVideoUpload 
                       videoType={school?.videoType}
                       videoPath={school?.videoTour}
@@ -1433,7 +1164,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                         setVideoFile(null);
                         setVideoThumbnail(null);
                       }}
-                      label="School Video Tour"
                       existingVideo={school?.videoTour}
                     />
                   </div>
@@ -1578,7 +1308,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 </div>
                 
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
-                  <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <FaFileAlt className="text-gray-600" /> Admission Requirements
                   </label>
                   <TextareaAutosize
@@ -1648,41 +1378,9 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
   );
 }
 
-// API Service for School Info
-const schoolApiService = {
-  async getSchoolInfo() {
-    try {
-      const response = await fetch('/api/school');
-      if (!response.ok) {
-        throw new Error('Failed to fetch school information');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
-  },
-
-  async deleteSchoolInfo() {
-    try {
-      const response = await fetch('/api/school', {
-        method: 'DELETE'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete school information');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
-  }
-};
-
 export default function SchoolInfoPage() {
   const [schoolInfo, setSchoolInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -1694,7 +1392,9 @@ export default function SchoolInfoPage() {
   const loadSchoolInfo = async () => {
     try {
       setLoading(true);
-      const data = await schoolApiService.getSchoolInfo();
+      const response = await fetch('/api/school');
+      if (!response.ok) throw new Error('Failed to fetch school information');
+      const data = await response.json();
       setSchoolInfo(data.school || data);
     } catch (error) {
       console.error('Error loading school info:', error);
@@ -1706,47 +1406,24 @@ export default function SchoolInfoPage() {
 
   const handleSaveSchool = async (schoolData) => {
     try {
-      setActionLoading(true);
-      const isUpdate = schoolInfo !== null;
-      
-      const response = await fetch('/api/school', {
-        method: isUpdate ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(schoolData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save school information');
-      }
-
-      const result = await response.json();
-      setSchoolInfo(result.school);
-      toast.success(result.message || (isUpdate ? 'Updated successfully!' : 'Created successfully!'));
-      setShowModal(false);
-      
       await loadSchoolInfo();
-      
+      setShowModal(false);
+      toast.success('School information saved successfully!');
     } catch (error) {
       console.error('Save failed:', error);
-      toast.error(error.message || 'Failed to save school information');
-    } finally {
-      setActionLoading(false);
+      toast.error('Failed to save school information');
     }
   };
 
   const handleDeleteSchool = async () => {
     try {
-      setActionLoading(true);
-      await schoolApiService.deleteSchoolInfo();
+      const response = await fetch('/api/school', { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete');
       setSchoolInfo(null);
       setShowDeleteModal(false);
       toast.success('School information deleted successfully!');
     } catch (error) {
-      toast.error(error.message || 'Failed to delete school information!');
-    } finally {
-      setActionLoading(false);
+      toast.error('Failed to delete school information!');
     }
   };
 
@@ -1789,8 +1466,7 @@ export default function SchoolInfoPage() {
           onClose={() => setShowVideoModal(false)}
           videoType={schoolInfo.videoType}
           videoPath={schoolInfo.videoTour}
-         thumbnail={schoolInfo.videoThumbnail} // Pass thumbnail here too
-
+          thumbnail={schoolInfo.videoThumbnail}
         />
       )}
 
@@ -1982,8 +1658,8 @@ export default function SchoolInfoPage() {
                   <VideoThumbnail
                     videoType={schoolInfo.videoType}
                     videoPath={schoolInfo.videoTour}
-thumbnail={videoInfo.videoThumbnail} // Pass the custom thumbnail
-        onClick={() => setShowVideoModal(true)}        
+                    thumbnail={schoolInfo.videoThumbnail}
+                    onClick={() => setShowVideoModal(true)}
                   />
                 </div>
               </div>
@@ -2233,7 +1909,6 @@ thumbnail={videoInfo.videoThumbnail} // Pass the custom thumbnail
           onClose={() => setShowModal(false)} 
           onSave={handleSaveSchool}
           school={schoolInfo}
-          loading={actionLoading}
         />
       )}
 
@@ -2241,7 +1916,7 @@ thumbnail={videoInfo.videoThumbnail} // Pass the custom thumbnail
         <ModernDeleteModal 
           onClose={() => setShowDeleteModal(false)} 
           onConfirm={handleDeleteSchool} 
-          loading={actionLoading} 
+          loading={false}
         />
       )}
     </div>
