@@ -41,7 +41,7 @@ const parseIntField = (value) => {
 // Parse JSON fields
 const parseJsonField = (value, fieldName) => {
   if (!value || value.trim() === '') {
-    return fieldName === 'subjects' || fieldName === 'departments' ? [] : null;
+    return fieldName === 'subjects' || fieldName === 'departments' || fieldName === 'admissionDocumentsRequired' ? [] : null;
   }
   try {
     return JSON.parse(value);
@@ -208,9 +208,6 @@ const cleanSchoolResponse = (school) => {
     let subjects = [];
     let departments = [];
     let admissionDocumentsRequired = [];
-    let feesDayDistributionJson = {};
-    let feesBoardingDistributionJson = {};
-    let admissionFeeDistribution = {};
     
     try {
       subjects = typeof school.subjects === 'string' 
@@ -235,30 +232,6 @@ const cleanSchoolResponse = (school) => {
     } catch (e) {
       console.warn("Error parsing admission documents:", e);
     }
-    
-    try {
-      feesDayDistributionJson = typeof school.feesDayDistributionJson === 'string'
-        ? JSON.parse(school.feesDayDistributionJson || '{}')
-        : (school.feesDayDistributionJson || {});
-    } catch (e) {
-      console.warn("Error parsing fees day distribution:", e);
-    }
-    
-    try {
-      feesBoardingDistributionJson = typeof school.feesBoardingDistributionJson === 'string'
-        ? JSON.parse(school.feesBoardingDistributionJson || '{}')
-        : (school.feesBoardingDistributionJson || {});
-    } catch (e) {
-      console.warn("Error parsing fees boarding distribution:", e);
-    }
-    
-    try {
-      admissionFeeDistribution = typeof school.admissionFeeDistribution === 'string'
-        ? JSON.parse(school.admissionFeeDistribution || '{}')
-        : (school.admissionFeeDistribution || {});
-    } catch (e) {
-      console.warn("Error parsing admission fee distribution:", e);
-    }
 
     return {
       id: school.id,
@@ -277,9 +250,6 @@ const cleanSchoolResponse = (school) => {
       feesDay: school.feesDay,
       feesBoarding: school.feesBoarding,
       admissionFee: school.admissionFee,
-      feesDayDistributionJson,
-      feesBoardingDistributionJson,
-      admissionFeeDistribution,
       
       // Academic Calendar
       openDate: school.openDate,
@@ -433,8 +403,6 @@ export async function POST(req) {
     let subjects = [];
     let departments = [];
     let admissionDocumentsRequired = [];
-    let feesBoardingDistributionJson = {};
-    let admissionFeeDistribution = {};
     
     try {
       // Parse academic JSON fields
@@ -443,25 +411,6 @@ export async function POST(req) {
       
       const admissionDocsStr = formData.get("admissionDocumentsRequired");
       admissionDocumentsRequired = admissionDocsStr ? parseJsonField(admissionDocsStr, "admissionDocumentsRequired") : [];
-      
-      // Parse fee distribution JSON fields
-      const boardingDistributionStr = formData.get("feesBoardingDistributionJson");
-      if (boardingDistributionStr) {
-        try {
-          feesBoardingDistributionJson = JSON.parse(boardingDistributionStr);
-        } catch (e) {
-          console.warn("Error parsing feesBoardingDistributionJson:", e);
-        }
-      }
-      
-      const admissionFeeDistributionStr = formData.get("admissionFeeDistribution");
-      if (admissionFeeDistributionStr) {
-        try {
-          admissionFeeDistribution = JSON.parse(admissionFeeDistributionStr);
-        } catch (e) {
-          console.warn("Error parsing admissionFeeDistribution:", e);
-        }
-      }
       
     } catch (parseError) {
       return NextResponse.json(
@@ -492,8 +441,6 @@ export async function POST(req) {
         feesDay: parseNumber(formData.get("feesDay")),
         feesBoarding: parseNumber(formData.get("feesBoarding")),
         admissionFee: parseNumber(formData.get("admissionFee")),
-        feesBoardingDistributionJson: feesBoardingDistributionJson,
-        admissionFeeDistribution: admissionFeeDistribution,
         
         // Academic Calendar
         openDate: parseDate(formData.get("openDate")) || new Date(),
@@ -603,8 +550,6 @@ export async function PUT(req) {
     let subjects = existing.subjects;
     let departments = existing.departments;
     let admissionDocumentsRequired = existing.admissionDocumentsRequired;
-    let feesBoardingDistributionJson = existing.feesBoardingDistributionJson;
-    let admissionFeeDistribution = existing.admissionFeeDistribution;
 
     // Parse subjects
     if (formData.get("subjects")) {
@@ -633,27 +578,6 @@ export async function PUT(req) {
       }
     }
 
-    // Parse fee distribution JSON fields
-    try {
-      if (formData.get("feesBoardingDistributionJson")) {
-        try {
-          feesBoardingDistributionJson = JSON.parse(formData.get("feesBoardingDistributionJson"));
-        } catch (e) {
-          console.warn("Error parsing feesBoardingDistributionJson:", e);
-        }
-      }
-      
-      if (formData.get("admissionFeeDistribution")) {
-        try {
-          admissionFeeDistribution = JSON.parse(formData.get("admissionFeeDistribution"));
-        } catch (e) {
-          console.warn("Error parsing admissionFeeDistribution:", e);
-        }
-      }
-    } catch (parseError) {
-      console.warn("Parse error:", parseError);
-    }
-
     console.log("💾 Updating school in database...");
     
     // Update school with all fields
@@ -675,8 +599,6 @@ export async function PUT(req) {
         feesDay: formData.get("feesDay") ? parseNumber(formData.get("feesDay")) : existing.feesDay,
         feesBoarding: formData.get("feesBoarding") ? parseNumber(formData.get("feesBoarding")) : existing.feesBoarding,
         admissionFee: formData.get("admissionFee") ? parseNumber(formData.get("admissionFee")) : existing.admissionFee,
-        feesBoardingDistributionJson: feesBoardingDistributionJson !== undefined ? feesBoardingDistributionJson : existing.feesBoardingDistributionJson,
-        admissionFeeDistribution: admissionFeeDistribution !== undefined ? admissionFeeDistribution : existing.admissionFeeDistribution,
         
         // Academic Calendar
         openDate: formData.get("openDate") ? parseDate(formData.get("openDate")) : existing.openDate,
