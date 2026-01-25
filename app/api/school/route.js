@@ -2,27 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
 
-// Helper function to validate required fields
-const validateRequiredFields = (formData) => {
-  const required = [
-    'name', 'studentCount', 'staffCount', 
-    'openDate', 'closeDate', 'subjects', 'departments'
-  ];
-  
-  const missing = required.filter(field => !formData.get(field));
-  if (missing.length > 0) {
-    throw new Error(`Missing required fields: ${missing.join(', ')}`);
-  }
-};
+// ============ HELPER FUNCTIONS ============
 
-// Helper to validate YouTube URL
+// Validate YouTube URL
 const isValidYouTubeUrl = (url) => {
   if (!url || url.trim() === '') return false;
   const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   return youtubeRegex.test(url.trim());
 };
 
-// Helper function to parse and validate date
+// Parse and validate date
 const parseDate = (dateString) => {
   if (!dateString || dateString.trim() === '') {
     return null;
@@ -31,7 +20,7 @@ const parseDate = (dateString) => {
   return isNaN(date.getTime()) ? null : date;
 };
 
-// Helper function to parse numeric fields
+// Parse numeric fields
 const parseNumber = (value) => {
   if (!value || value.trim() === '') {
     return null;
@@ -40,7 +29,7 @@ const parseNumber = (value) => {
   return isNaN(num) ? null : num;
 };
 
-// Helper function to parse integer fields
+// Parse integer fields
 const parseIntField = (value) => {
   if (!value || value.trim() === '') {
     return null;
@@ -49,7 +38,7 @@ const parseIntField = (value) => {
   return isNaN(num) ? null : num;
 };
 
-// Helper function to parse JSON fields
+// Parse JSON fields
 const parseJsonField = (value, fieldName) => {
   if (!value || value.trim() === '') {
     return fieldName === 'subjects' || fieldName === 'departments' ? [] : null;
@@ -61,21 +50,7 @@ const parseJsonField = (value, fieldName) => {
   }
 };
 
-// Helper to parse fee distribution JSON specifically
-const parseFeeDistributionJson = (value, fieldName) => {
-  if (!value || value.trim() === '') {
-    return null;
-  }
-  try {
-    const parsed = JSON.parse(value);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      throw new Error(`${fieldName} must be a JSON object`);
-    }
-    return parsed;
-  } catch (parseError) {
-    throw new Error(`Invalid JSON format in ${fieldName}: ${parseError.message}`);
-  }
-};
+// ============ CLOUDINARY FUNCTIONS ============
 
 // Upload file to Cloudinary
 const uploadToCloudinary = async (file, folder, resourceType = 'auto') => {
@@ -176,10 +151,10 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailFile, exis
       throw new Error("Invalid video format. Only MP4, WebM, and OGG files are allowed.");
     }
 
-    // Validate file size (100MB limit)
-    const maxSize = 100 * 1024 * 1024;
+    // Validate file size (4.25MB limit)
+    const maxSize = 4.25 * 1024 * 1024;
     if (videoTourFile.size > maxSize) {
-      throw new Error("Video file too large. Maximum size: 100MB");
+      throw new Error("Video file too large. Maximum size: 4.25MB");
     }
 
     // Upload video to Cloudinary
@@ -196,6 +171,12 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailFile, exis
       
       const thumbnailResult = await uploadToCloudinary(thumbnailFile, 'thumbnails', 'image');
       thumbnailUrl = thumbnailResult.url;
+    } else {
+      // If no thumbnail provided, delete existing one
+      if (thumbnailUrl) {
+        await deleteFromCloudinary(thumbnailUrl);
+        thumbnailUrl = null;
+      }
     }
     
     return { videoUrl, videoType, thumbnailUrl };
@@ -220,69 +201,183 @@ const handleVideoUpload = async (youtubeLink, videoTourFile, thumbnailFile, exis
   return { videoUrl, videoType, thumbnailUrl };
 };
 
-// Helper to clean school response
+// Clean school response for frontend
 const cleanSchoolResponse = (school) => {
-  // Parse JSON fields
-  const subjects = typeof school.subjects === 'object' ? school.subjects : JSON.parse(school.subjects || '[]');
-  const departments = typeof school.departments === 'object' ? school.departments : JSON.parse(school.departments || '[]');
-  const feesBoardingDistributionJson = typeof school.feesBoardingDistributionJson === 'object' ? school.feesBoardingDistributionJson : JSON.parse(school.feesBoardingDistributionJson || '{}');
-  const admissionFeeDistribution = typeof school.admissionFeeDistribution === 'object' ? school.admissionFeeDistribution : JSON.parse(school.admissionFeeDistribution || '{}');
-  const admissionDocumentsRequired = typeof school.admissionDocumentsRequired === 'object' ? school.admissionDocumentsRequired : JSON.parse(school.admissionDocumentsRequired || '[]');
+  try {
+    // Parse JSON fields safely
+    let subjects = [];
+    let departments = [];
+    let admissionDocumentsRequired = [];
+    let feesDayDistributionJson = {};
+    let feesBoardingDistributionJson = {};
+    let admissionFeeDistribution = {};
+    
+    try {
+      subjects = typeof school.subjects === 'string' 
+        ? JSON.parse(school.subjects || '[]') 
+        : (school.subjects || []);
+    } catch (e) {
+      console.warn("Error parsing subjects:", e);
+    }
+    
+    try {
+      departments = typeof school.departments === 'string' 
+        ? JSON.parse(school.departments || '[]') 
+        : (school.departments || []);
+    } catch (e) {
+      console.warn("Error parsing departments:", e);
+    }
+    
+    try {
+      admissionDocumentsRequired = typeof school.admissionDocumentsRequired === 'string'
+        ? JSON.parse(school.admissionDocumentsRequired || '[]')
+        : (school.admissionDocumentsRequired || []);
+    } catch (e) {
+      console.warn("Error parsing admission documents:", e);
+    }
+    
+    try {
+      feesDayDistributionJson = typeof school.feesDayDistributionJson === 'string'
+        ? JSON.parse(school.feesDayDistributionJson || '{}')
+        : (school.feesDayDistributionJson || {});
+    } catch (e) {
+      console.warn("Error parsing fees day distribution:", e);
+    }
+    
+    try {
+      feesBoardingDistributionJson = typeof school.feesBoardingDistributionJson === 'string'
+        ? JSON.parse(school.feesBoardingDistributionJson || '{}')
+        : (school.feesBoardingDistributionJson || {});
+    } catch (e) {
+      console.warn("Error parsing fees boarding distribution:", e);
+    }
+    
+    try {
+      admissionFeeDistribution = typeof school.admissionFeeDistribution === 'string'
+        ? JSON.parse(school.admissionFeeDistribution || '{}')
+        : (school.admissionFeeDistribution || {});
+    } catch (e) {
+      console.warn("Error parsing admission fee distribution:", e);
+    }
 
-  return {
-    id: school.id,
-    name: school.name,
-    description: school.description,
-    motto: school.motto,
-    vision: school.vision,
-    mission: school.mission,
-    videoTour: school.videoTour,
-    videoType: school.videoType,
-    videoThumbnail: school.videoThumbnail,
-    studentCount: school.studentCount,
-    staffCount: school.staffCount,
-    
-    // Fees
-    feesDay: school.feesDay,
-    feesBoarding: school.feesBoarding,
-    admissionFee: school.admissionFee,
-    feesDayDistributionJson: feesBoardingDistributionJson,
-    feesBoardingDistributionJson: feesBoardingDistributionJson,
-    admissionFeeDistribution: admissionFeeDistribution,
-    
-    // Academic Calendar
-    openDate: school.openDate,
-    closeDate: school.closeDate,
-    
-    // Academic Information
-    subjects,
-    departments,
-    
-    // Admission Information
-    admissionOpenDate: school.admissionOpenDate,
-    admissionCloseDate: school.admissionCloseDate,
-    admissionRequirements: school.admissionRequirements,
-    admissionCapacity: school.admissionCapacity,
-    admissionContactEmail: school.admissionContactEmail,
-    admissionContactPhone: school.admissionContactPhone,
-    admissionWebsite: school.admissionWebsite,
-    admissionLocation: school.admissionLocation,
-    admissionOfficeHours: school.admissionOfficeHours,
-    admissionDocumentsRequired,
-    
-    // Timestamps
-    createdAt: school.createdAt,
-    updatedAt: school.updatedAt
-  };
+    return {
+      id: school.id,
+      name: school.name,
+      description: school.description,
+      motto: school.motto,
+      vision: school.vision,
+      mission: school.mission,
+      videoTour: school.videoTour,
+      videoType: school.videoType,
+      videoThumbnail: school.videoThumbnail,
+      studentCount: school.studentCount,
+      staffCount: school.staffCount,
+      
+      // Fees
+      feesDay: school.feesDay,
+      feesBoarding: school.feesBoarding,
+      admissionFee: school.admissionFee,
+      feesDayDistributionJson,
+      feesBoardingDistributionJson,
+      admissionFeeDistribution,
+      
+      // Academic Calendar
+      openDate: school.openDate,
+      closeDate: school.closeDate,
+      
+      // Academic Information
+      subjects,
+      departments,
+      
+      // Admission Information
+      admissionOpenDate: school.admissionOpenDate,
+      admissionCloseDate: school.admissionCloseDate,
+      admissionRequirements: school.admissionRequirements,
+      admissionCapacity: school.admissionCapacity,
+      admissionContactEmail: school.admissionContactEmail,
+      admissionContactPhone: school.admissionContactPhone,
+      admissionWebsite: school.admissionWebsite,
+      admissionLocation: school.admissionLocation,
+      admissionOfficeHours: school.admissionOfficeHours,
+      admissionDocumentsRequired,
+      
+      // Timestamps
+      createdAt: school.createdAt,
+      updatedAt: school.updatedAt
+    };
+  } catch (error) {
+    console.error("Error cleaning school response:", error);
+    return school;
+  }
 };
+
+// Validate required fields
+const validateRequiredFields = (formData) => {
+  const required = [
+    'name', 'studentCount', 'staffCount', 
+    'openDate', 'closeDate'
+  ];
+  
+  const missing = required.filter(field => !formData.get(field));
+  if (missing.length > 0) {
+    throw new Error(`Missing required fields: ${missing.join(', ')}`);
+  }
+};
+
+// ============ API ROUTES ============
+
+// 🟡 GET school info
+export async function GET() {
+  try {
+    console.log("🔍 GET /api/school - Fetching school info");
+    
+    const school = await prisma.schoolInfo.findFirst();
+    
+    if (!school) {
+      console.log("📭 No school found in database");
+      return NextResponse.json(
+        { 
+          success: true, 
+          message: "No school information found",
+          school: null 
+        }, 
+        { status: 200 }
+      );
+    }
+
+    console.log("✅ School found:", school.name);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: "School information retrieved successfully",
+      school: cleanSchoolResponse(school)
+    });
+
+  } catch (error) {
+    console.error("❌ GET Error:", error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message || "Internal server error",
+        message: "Failed to fetch school information"
+      }, 
+      { status: 500 }
+    );
+  }
+}
 
 // 🟢 CREATE School Info
 export async function POST(req) {
   try {
+    console.log("📝 POST /api/school - Creating school info");
+    
     const existing = await prisma.schoolInfo.findFirst();
     if (existing) {
       return NextResponse.json(
-        { success: false, message: "School info already exists. Please update instead." },
+        { 
+          success: false, 
+          message: "School info already exists. Please update instead." 
+        },
         { status: 400 }
       );
     }
@@ -294,7 +389,10 @@ export async function POST(req) {
       validateRequiredFields(formData);
     } catch (validationError) {
       return NextResponse.json(
-        { success: false, error: validationError.message },
+        { 
+          success: false, 
+          error: validationError.message 
+        },
         { status: 400 }
       );
     }
@@ -308,20 +406,35 @@ export async function POST(req) {
       const youtubeLink = formData.get("youtubeLink");
       const videoTour = formData.get("videoTour");
       const thumbnail = formData.get("videoThumbnail");
+      
+      console.log("📹 Processing video upload...");
+      console.log("- YouTube Link:", youtubeLink ? "Provided" : "Not provided");
+      console.log("- Video File:", videoTour ? `Yes (${videoTour.size} bytes)` : "Not provided");
+      console.log("- Thumbnail:", thumbnail ? `Yes (${thumbnail.size} bytes)` : "Not provided");
+      
       const videoResult = await handleVideoUpload(youtubeLink, videoTour, thumbnail, null, false);
       videoUrl = videoResult.videoUrl;
       videoType = videoResult.videoType;
       thumbnailUrl = videoResult.thumbnailUrl;
+      
+      console.log("✅ Video processed:", { videoType, videoUrl: videoUrl ? "Set" : "Not set", thumbnailUrl: thumbnailUrl ? "Set" : "Not set" });
     } catch (videoError) {
+      console.error("❌ Video upload error:", videoError);
       return NextResponse.json(
-        { success: false, error: videoError.message },
+        { 
+          success: false, 
+          error: videoError.message 
+        },
         { status: 400 }
       );
     }
 
     // Parse JSON fields
-    let subjects, departments, admissionDocumentsRequired;
-    let feesBoardingDistributionJson, admissionFeeDistribution;
+    let subjects = [];
+    let departments = [];
+    let admissionDocumentsRequired = [];
+    let feesBoardingDistributionJson = {};
+    let admissionFeeDistribution = {};
     
     try {
       // Parse academic JSON fields
@@ -334,21 +447,34 @@ export async function POST(req) {
       // Parse fee distribution JSON fields
       const boardingDistributionStr = formData.get("feesBoardingDistributionJson");
       if (boardingDistributionStr) {
-        feesBoardingDistributionJson = parseFeeDistributionJson(boardingDistributionStr, "feesBoardingDistributionJson");
+        try {
+          feesBoardingDistributionJson = JSON.parse(boardingDistributionStr);
+        } catch (e) {
+          console.warn("Error parsing feesBoardingDistributionJson:", e);
+        }
       }
       
       const admissionFeeDistributionStr = formData.get("admissionFeeDistribution");
       if (admissionFeeDistributionStr) {
-        admissionFeeDistribution = parseFeeDistributionJson(admissionFeeDistributionStr, "admissionFeeDistribution");
+        try {
+          admissionFeeDistribution = JSON.parse(admissionFeeDistributionStr);
+        } catch (e) {
+          console.warn("Error parsing admissionFeeDistribution:", e);
+        }
       }
       
     } catch (parseError) {
       return NextResponse.json(
-        { success: false, error: parseError.message },
+        { 
+          success: false, 
+          error: parseError.message 
+        },
         { status: 400 }
       );
     }
 
+    console.log("💾 Saving school to database...");
+    
     const school = await prisma.schoolInfo.create({
       data: {
         name: formData.get("name"),
@@ -366,8 +492,8 @@ export async function POST(req) {
         feesDay: parseNumber(formData.get("feesDay")),
         feesBoarding: parseNumber(formData.get("feesBoarding")),
         admissionFee: parseNumber(formData.get("admissionFee")),
-        feesBoardingDistributionJson: feesBoardingDistributionJson || {},
-        admissionFeeDistribution: admissionFeeDistribution || {},
+        feesBoardingDistributionJson: feesBoardingDistributionJson,
+        admissionFeeDistribution: admissionFeeDistribution,
         
         // Academic Calendar
         openDate: parseDate(formData.get("openDate")) || new Date(),
@@ -391,39 +517,22 @@ export async function POST(req) {
       },
     });
 
+    console.log("✅ School created successfully:", school.name);
+    
     return NextResponse.json({ 
       success: true, 
       message: "School info created successfully",
       school: cleanSchoolResponse(school)
     });
+    
   } catch (error) {
     console.error("❌ POST Error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
-      { status: 500 }
-    );
-  }
-}
-
-// 🟡 GET school info
-export async function GET() {
-  try {
-    const school = await prisma.schoolInfo.findFirst();
-    if (!school) {
-      return NextResponse.json(
-        { success: false, message: "No school info found" }, 
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ 
-      success: true, 
-      school: cleanSchoolResponse(school)
-    });
-  } catch (error) {
-    console.error("❌ GET Error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
+      { 
+        success: false, 
+        error: error.message || "Internal server error",
+        message: "Failed to create school information"
+      }, 
       { status: 500 }
     );
   }
@@ -432,10 +541,15 @@ export async function GET() {
 // 🟠 PUT update existing info
 export async function PUT(req) {
   try {
+    console.log("✏️ PUT /api/school - Updating school info");
+    
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: "No school info to update." }, 
+        { 
+          success: false, 
+          message: "No school info to update." 
+        }, 
         { status: 404 }
       );
     }
@@ -452,6 +566,11 @@ export async function PUT(req) {
       const videoTour = formData.get("videoTour");
       const thumbnail = formData.get("videoThumbnail");
       
+      console.log("📹 Processing video update...");
+      console.log("- YouTube Link:", youtubeLink ? "Provided" : "Not provided");
+      console.log("- Video File:", videoTour ? `Yes (${videoTour.size} bytes)` : "Not provided");
+      console.log("- Thumbnail:", thumbnail ? `Yes (${thumbnail.size} bytes)` : "Not provided");
+      
       const videoResult = await handleVideoUpload(
         youtubeLink, 
         videoTour, 
@@ -463,9 +582,19 @@ export async function PUT(req) {
       videoUrl = videoResult.videoUrl !== undefined ? videoResult.videoUrl : existing.videoTour;
       videoType = videoResult.videoType !== undefined ? videoResult.videoType : existing.videoType;
       thumbnailUrl = videoResult.thumbnailUrl !== undefined ? videoResult.thumbnailUrl : existing.videoThumbnail;
+      
+      console.log("✅ Video update processed:", { 
+        videoType, 
+        videoUrl: videoUrl ? "Set" : "Not set", 
+        thumbnailUrl: thumbnailUrl ? "Set" : "Not set" 
+      });
     } catch (videoError) {
+      console.error("❌ Video update error:", videoError);
       return NextResponse.json(
-        { success: false, error: videoError.message },
+        { 
+          success: false, 
+          error: videoError.message 
+        },
         { status: 400 }
       );
     }
@@ -482,10 +611,7 @@ export async function PUT(req) {
       try {
         subjects = parseJsonField(formData.get("subjects"), "subjects");
       } catch (parseError) {
-        return NextResponse.json(
-          { success: false, error: parseError.message },
-          { status: 400 }
-        );
+        console.warn("Error parsing subjects:", parseError);
       }
     }
 
@@ -494,10 +620,7 @@ export async function PUT(req) {
       try {
         departments = parseJsonField(formData.get("departments"), "departments");
       } catch (parseError) {
-        return NextResponse.json(
-          { success: false, error: parseError.message },
-          { status: 400 }
-        );
+        console.warn("Error parsing departments:", parseError);
       }
     }
 
@@ -506,29 +629,33 @@ export async function PUT(req) {
       try {
         admissionDocumentsRequired = parseJsonField(formData.get("admissionDocumentsRequired"), "admissionDocumentsRequired");
       } catch (parseError) {
-        return NextResponse.json(
-          { success: false, error: parseError.message },
-          { status: 400 }
-        );
+        console.warn("Error parsing admission documents:", parseError);
       }
     }
 
     // Parse fee distribution JSON fields
     try {
       if (formData.get("feesBoardingDistributionJson")) {
-        feesBoardingDistributionJson = parseFeeDistributionJson(formData.get("feesBoardingDistributionJson"), "feesBoardingDistributionJson");
+        try {
+          feesBoardingDistributionJson = JSON.parse(formData.get("feesBoardingDistributionJson"));
+        } catch (e) {
+          console.warn("Error parsing feesBoardingDistributionJson:", e);
+        }
       }
       
       if (formData.get("admissionFeeDistribution")) {
-        admissionFeeDistribution = parseFeeDistributionJson(formData.get("admissionFeeDistribution"), "admissionFeeDistribution");
+        try {
+          admissionFeeDistribution = JSON.parse(formData.get("admissionFeeDistribution"));
+        } catch (e) {
+          console.warn("Error parsing admissionFeeDistribution:", e);
+        }
       }
     } catch (parseError) {
-      return NextResponse.json(
-        { success: false, error: parseError.message },
-        { status: 400 }
-      );
+      console.warn("Parse error:", parseError);
     }
 
+    console.log("💾 Updating school in database...");
+    
     // Update school with all fields
     const updated = await prisma.schoolInfo.update({
       where: { id: existing.id },
@@ -576,15 +703,22 @@ export async function PUT(req) {
       },
     });
 
+    console.log("✅ School updated successfully:", updated.name);
+    
     return NextResponse.json({ 
       success: true, 
       message: "School info updated successfully",
       school: cleanSchoolResponse(updated)
     });
+    
   } catch (error) {
     console.error("❌ PUT Error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
+      { 
+        success: false, 
+        error: error.message || "Internal server error",
+        message: "Failed to update school information"
+      }, 
       { status: 500 }
     );
   }
@@ -593,31 +727,46 @@ export async function PUT(req) {
 // 🔴 DELETE all info
 export async function DELETE() {
   try {
+    console.log("🗑️ DELETE /api/school - Deleting school info");
+    
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
       return NextResponse.json(
-        { success: false, message: "No school info to delete" }, 
+        { 
+          success: false, 
+          message: "No school info to delete" 
+        }, 
         { status: 404 }
       );
     }
 
     // Delete files from Cloudinary
     if (existing.videoType === 'file' && existing.videoTour) {
+      console.log("Deleting video from Cloudinary:", existing.videoTour);
       await deleteFromCloudinary(existing.videoTour);
     }
     if (existing.videoThumbnail) {
+      console.log("Deleting thumbnail from Cloudinary:", existing.videoThumbnail);
       await deleteFromCloudinary(existing.videoThumbnail);
     }
 
     await prisma.schoolInfo.deleteMany();
+    
+    console.log("✅ School deleted successfully");
+    
     return NextResponse.json({ 
       success: true, 
       message: "School info deleted successfully" 
     });
+    
   } catch (error) {
     console.error("❌ DELETE Error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" }, 
+      { 
+        success: false, 
+        error: error.message || "Internal server error",
+        message: "Failed to delete school information"
+      }, 
       { status: 500 }
     );
   }
