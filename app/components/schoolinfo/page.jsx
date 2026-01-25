@@ -535,7 +535,7 @@ function ModernVideoUpload({
                 className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white py-3 rounded-xl hover:from-purple-600 hover:to-blue-700 transition-all duration-300 font-bold flex items-center justify-center gap-2"
               >
                 <FaEdit className="text-sm" />
-                Upload Custom Thumbnail
+                 Thumbnail
               </button>
               
               <input 
