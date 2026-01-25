@@ -52,6 +52,7 @@ import Careers from "../components/career/page";
 import Student from "../components/student/page";
 import Fees from "../components/fees/page";
 import Results from "../components/resultsUpload/page";
+import SchoolDocs from "../components/schooldocuments/page"; // Added import for School Documents
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -369,6 +370,7 @@ const router =useRouter()
         careersRes,
         studentRes,
         feesRes,
+        schoolDocsRes, // Added this
         resultsRes
       ] = await Promise.allSettled([
         fetch('/api/staff'),
@@ -384,7 +386,9 @@ const router =useRouter()
         fetch('/api/career'),
         fetch('/api/student'),
         fetch('/api/feebalances'),
-        fetch('/api/results')
+        fetch('/api/results'),
+        fetch('/api/schooldocuments') // Added this
+
       ]);
 
       // Process responses and get actual counts
@@ -402,6 +406,9 @@ const router =useRouter()
       const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
       const fees = feesRes.status === 'fulfilled' ? await feesRes.value.json() : { feebalances: [] };
       const results = resultsRes.status === 'fulfilled' ? await resultsRes.value.json() : { results: [] };
+
+      const schoolDocs = schoolDocsRes.status === 'fulfilled' ? await schoolDocsRes.value.json() : { documents: [] };
+
 
       // Calculate real counts
       const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
@@ -432,7 +439,9 @@ const router =useRouter()
         Careers: careers.careers?.length || 0,
         totalStudent: student.students?.length || 0,
         totalFees: fees.feebalances?.length || 0,
-        totalResults: results.results?.length || 0
+        totalResults: results.results?.length || 0,
+       schooldocuments: schoolDocs.documents?.length || 0 // Added this
+
       });
 
     } catch (error) {
@@ -565,6 +574,8 @@ const router =useRouter()
         return <StudentManager />;
       case 'student-council':
         return <StudentCouncil />;
+            case 'schooldocuments': // Added this case
+      return <SchoolDocs />;
       case 'staff':
         return <StaffManager />;
       case 'assignments':

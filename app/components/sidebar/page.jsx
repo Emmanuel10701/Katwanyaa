@@ -80,6 +80,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     totalResults:0,
     activeResources: 0,
     totalCareers: 0,
+    schooldocuments: 0,
     resourcesByType: {
       documents: 0,
       videos: 0,
@@ -195,6 +196,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         admissionsRes,
         resourcesRes,
         careersRes,
+        schooldocumentsRes,
         resultsRes,
         studentRes
       ] = await Promise.allSettled([
@@ -211,6 +213,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         fetch('/api/resources?accessLevel=admin&limit=100'),
         fetch('/api/career'),
         fetch('/api/student'),
+        fetch('api/schooldocuments'),
         fetch('/api/feebalances'),
         fetch('/api/results')
       ]);
@@ -228,6 +231,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
       const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
+    const schooldocuments = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
 
       const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
       const fees = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { feebalances: [] };
@@ -283,7 +287,9 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
         totalResources: resourcesData.length || 0,
         recentResources,
         activeResources,
-        resourcesByType,
+        resourcesByType,     
+         schooldocuments: schooldocuments.documents?.length || 0,
+
         totalCareers: careers.careers?.length || 0
       });
 
@@ -407,18 +413,12 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       icon: FiClipboard,
       badge: 'teal'
     },
-    { 
-      id: 'student-council', 
-      label: 'Student Council', 
-      icon: FiUsers,
-      badge: 'green'
-    },
-    { 
-      id: 'staff', 
-      label: 'Staff Management', 
-      icon: FiUserCheck,
-      badge: 'orange'
-    },
+{
+    id: 'schooldocuments',
+    label: 'School Documents',
+    icon: FiArchive, 
+    badge: 'indigo'
+  },
     { 
       id: 'assignments', 
       label: 'Assignments', 

@@ -175,7 +175,7 @@ model EmailCampaign {
   title         String
   subject       String
   content       String    @db.Text
-  recipients    String   @db.Text
+  recipients    String    @db.Text
   recipientType String    @default("all")
   status        String    @default("draft")
   sentAt        DateTime?
@@ -191,7 +191,7 @@ model EmailCampaign {
 model GalleryImage {
   id          Int      @id @default(autoincrement())
   title       String
-  description   String?   @db.Text
+  description String?  @db.Text
   category    Category
   files       Json
   createdAt   DateTime @default(now())
@@ -265,174 +265,130 @@ model PromotionHistory {
   @@index([promotedAt])
 }
 
-
-
-
-
 model SchoolInfo {
-  id                           Int       @id @default(autoincrement())
-  name                         String    @db.VarChar(255)
-  description                  String?   @db.Text
-  motto                        String?   @db.Text
-  vision                       String?   @db.Text
-  mission                      String?   @db.Text
-  studentCount                 Int       @default(0)
-  staffCount                   Int       @default(0)
-  openDate                     DateTime
-  closeDate                    DateTime
-  
-  subjects                     Json      @default("[]")
-  departments                  Json      @default("[]")
-  
-  videoTour                    String?   @db.Text
-  videoType                    String?   @db.VarChar(20)
-  videoThumbnail               String?   @db.Text
-  
-  feesDay                      Float?
-  feesBoarding                 Float?
-  admissionFee                 Float?
-  
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(255)
+  description  String?  @db.Text
+  motto        String?  @db.Text
+  vision       String?  @db.Text
+  mission      String?  @db.Text
+  studentCount Int      @default(0)
+  staffCount   Int      @default(0)
+  openDate     DateTime
+  closeDate    DateTime
+
+  subjects    Json @default("[]")
+  departments Json @default("[]")
+
+  videoTour      String? @db.Text
+  videoType      String? @db.VarChar(20)
+  videoThumbnail String? @db.Text
+
+  feesDay      Float?
+  feesBoarding Float?
+  admissionFee Float?
+
   feesDayDistributionJson      Json?
   feesBoardingDistributionJson Json?
   admissionFeeDistribution     Json?
-  
-  admissionOpenDate            DateTime?
-  admissionCloseDate           DateTime?
-  admissionRequirements        String?   @db.Text
-  admissionCapacity            Int?
-  admissionContactEmail        String?   @db.VarChar(255)
-  admissionContactPhone        String?   @db.VarChar(50)
-  admissionWebsite             String?   @db.VarChar(255)
-  admissionLocation            String?   @db.Text
-  admissionOfficeHours         String?   @db.VarChar(100)
-  admissionDocumentsRequired   Json      @default("[]")
-  
-  createdAt                    DateTime  @default(now())
-  updatedAt                    DateTime  @updatedAt
-  lastFileUpdate               DateTime?
-  
-  // Curriculum
-  curriculumPDF                String?   @db.Text
-  curriculumPdfName            String?   @db.VarChar(255)
-  curriculumPdfSize            Int?
-  curriculumPdfUploadDate      DateTime?
-  curriculumPdfMetadata        Json?
-  
-  // Day School Fees
-  feesDayDistributionPdf       String?   @db.Text
-  feesDayPdfName               String?   @db.VarChar(255)
-  feesDayPdfSize               Int?
-  feesDayPdfUploadDate         DateTime?
-  feesDayPdfMetadata           Json?
-  
-  // Boarding School Fees
-  feesBoardingDistributionPdf  String?   @db.Text
-  feesBoardingPdfName          String?   @db.VarChar(255)
-  feesBoardingPdfSize          Int?
-  feesBoardingPdfUploadDate    DateTime?
-  feesBoardingPdfMetadata      Json?
-  
-  // Admission Fee
-  admissionFeePdf              String?   @db.Text
-  admissionFeePdfName          String?   @db.VarChar(255)
-  admissionFeePdfSize          Int?
-  admissionFeePdfUploadDate    DateTime?
-  admissionFeePdfMetadata      Json?
-  
-  // Video Metadata
-  videoMetadata                Json?
-  thumbnailMetadata            Json?
-  
-  // Form 1 Results
-  form1ResultsPdf              String?   @db.Text
-  form1ResultsPdfName          String?   @db.VarChar(255)
-  form1ResultsPdfSize          Int?
-  form1ResultsYear             Int?
-  form1ResultsUploadDate       DateTime?
-  form1ResultsMetadata         Json?
-  
-  // Form 2 Results
-  form2ResultsPdf              String?   @db.Text
-  form2ResultsPdfName          String?   @db.VarChar(255)
-  form2ResultsPdfSize          Int?
-  form2ResultsYear             Int?
-  form2ResultsUploadDate       DateTime?
-  form2ResultsMetadata         Json?
-  
-  // Form 3 Results
-  form3ResultsPdf              String?   @db.Text
-  form3ResultsPdfName          String?   @db.VarChar(255)
-  form3ResultsPdfSize          Int?
-  form3ResultsYear             Int?
-  form3ResultsUploadDate       DateTime?
-  form3ResultsMetadata         Json?
-  
-  // Form 4 Results
-  form4ResultsPdf              String?   @db.Text
-  form4ResultsPdfName          String?   @db.VarChar(255)
-  form4ResultsPdfSize          Int?
-  form4ResultsYear             Int?
-  form4ResultsUploadDate       DateTime?
-  form4ResultsMetadata         Json?
-  
-  // Mock Exams
-  mockExamsResultsPdf          String?   @db.Text
-  mockExamsPdfName             String?   @db.VarChar(255)
-  mockExamsPdfSize             Int?
-  mockExamsYear                Int?
-  mockExamsUploadDate          DateTime?
-  mockExamsMetadata            Json?
-  
-  // KCSE Results
-  kcseResultsPdf               String?   @db.Text
-  kcsePdfName                  String?   @db.VarChar(255)
-  kcsePdfSize                  Int?
-  kcseYear                     Int?
-  kcseUploadDate               DateTime?
-  kcseMetadata                 Json?
-  
-  // Additional Files
-  additionalResultsFiles       Json?     @default("[]")
-  additionalFilesMetadata      Json?     @default("[]")
-  additionalFilesUploadDate    DateTime?
-  
-  // File Tracking & Statistics
-  totalFileCount               Int       @default(0)
-  totalFileSizeBytes           BigInt    @default(0)
-  totalFileSizeMB              Float?    @default(0)
-  
-  fileStorageSummary           Json?     @default("{}")
-  fileOperationsHistory        Json?     @default("[]")
-  fileVersions                 Json?     @default("{}")
-  fileAccessLog                Json?     @default("[]")
-  
-  // Centralized File Mapping
-  fileMappings                 Json?     @default("{}")
-  
-  // File Categorization
-  fileCategories               Json?     @default("{}")
-  
-  // Storage Configuration
-  storageConfig                Json?     @default("{\"bucket\": \"Katwanyaa High\", \"provider\": \"supabase\"}")
-  
-  // Audit & Security
-  lastFileUpdateBy             String?   @db.VarChar(255)
-  fileIntegrityChecks          Json?     @default("{}")
-  retentionPolicy              Json?     @default("{\"examResults\": 10, \"financialDocs\": 7, \"general\": 5}")
-  
-  // System Metadata
-  systemMetadata               Json?     @default("{\"schemaVersion\": \"2.0\", \"hasEnhancedMetadata\": true}")
-  
-  // Indexes
+
+  admissionOpenDate          DateTime?
+  admissionCloseDate         DateTime?
+  admissionRequirements      String?   @db.Text
+  admissionCapacity          Int?
+  admissionContactEmail      String?   @db.VarChar(255)
+  admissionContactPhone      String?   @db.VarChar(50)
+  admissionWebsite           String?   @db.VarChar(255)
+  admissionLocation          String?   @db.Text
+  admissionOfficeHours       String?   @db.VarChar(100)
+  admissionDocumentsRequired Json      @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([name])
   @@index([admissionOpenDate, admissionCloseDate])
+  @@map("SchoolInfo")
+}
+
+model SchoolDocument {
+  id       Int @id @default(autoincrement())
+
+  // Curriculum PDF
+  curriculumPDF           String?   @db.Text
+  curriculumPdfName       String?   @db.VarChar(255)
+  curriculumPdfSize       Int?
+  curriculumPdfUploadDate DateTime?
+
+  // Day School Fees PDF
+  feesDayDistributionPdf String?   @db.Text
+  feesDayPdfName         String?   @db.VarChar(255)
+  feesDayPdfSize         Int?
+  feesDayPdfUploadDate   DateTime?
+
+  // Boarding School Fees PDF
+  feesBoardingDistributionPdf String?   @db.Text
+  feesBoardingPdfName         String?   @db.VarChar(255)
+  feesBoardingPdfSize         Int?
+  feesBoardingPdfUploadDate   DateTime?
+
+  // Admission Fee PDF
+  admissionFeePdf           String?   @db.Text
+  admissionFeePdfName       String?   @db.VarChar(255)
+  admissionFeePdfSize       Int?
+  admissionFeePdfUploadDate DateTime?
+
+  // Form 1 Results PDF
+  form1ResultsPdf        String?   @db.Text
+  form1ResultsPdfName    String?   @db.VarChar(255)
+  form1ResultsPdfSize    Int?
+  form1ResultsYear       Int?
+  form1ResultsUploadDate DateTime?
+
+  // Form 2 Results PDF
+  form2ResultsPdf        String?   @db.Text
+  form2ResultsPdfName    String?   @db.VarChar(255)
+  form2ResultsPdfSize    Int?
+  form2ResultsYear       Int?
+  form2ResultsUploadDate DateTime?
+
+  // Form 3 Results PDF
+  form3ResultsPdf        String?   @db.Text
+  form3ResultsPdfName    String?   @db.VarChar(255)
+  form3ResultsPdfSize    Int?
+  form3ResultsYear       Int?
+  form3ResultsUploadDate DateTime?
+
+  // Form 4 Results PDF
+  form4ResultsPdf        String?   @db.Text
+  form4ResultsPdfName    String?   @db.VarChar(255)
+  form4ResultsPdfSize    Int?
+  form4ResultsYear       Int?
+  form4ResultsUploadDate DateTime?
+
+  // Mock Exams PDF
+  mockExamsResultsPdf String?   @db.Text
+  mockExamsPdfName    String?   @db.VarChar(255)
+  mockExamsPdfSize    Int?
+  mockExamsYear       Int?
+  mockExamsUploadDate DateTime?
+
+  // KCSE Results PDF
+  kcseResultsPdf String?   @db.Text
+  kcsePdfName    String?   @db.VarChar(255)
+  kcsePdfSize    Int?
+  kcseYear       Int?
+  kcseUploadDate DateTime?
+
+  // Additional Files
+  additionalResultsFiles    Json?     @default("[]")
+  additionalFilesUploadDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([kcseYear])
-  @@index([totalFileCount])
-  @@index([lastFileUpdate])
-  @@index([createdAt])
-  @@index([updatedAt])
-  
-  @@map("SchoolInfo")  // Change to capital "S" and "I"
+  @@map("SchoolDocument")
 }
 
 model AdmissionApplication {
@@ -449,7 +405,7 @@ model AdmissionApplication {
   ward                   String
   village                String?
   email                  String    @unique
-  phone                  String?   // Changed to optional
+  phone                  String? // Changed to optional
   alternativePhone       String?
   postalAddress          String
   postalCode             String?
@@ -472,14 +428,14 @@ model AdmissionApplication {
   kcpeMarks              Int?
   meanGrade              String?
   // Removed preferredStream field
-  medicalCondition       String?  @db.Text
-  allergies              String? @db.Text
-  bloodGroup             String?   // Still kept but not in form
-  sportsInterests        String? @db.Text
-  clubsInterests         String? @db.Text
-  talents                String? @db.Text
+  medicalCondition       String?   @db.Text
+  allergies              String?   @db.Text
+  bloodGroup             String? // Still kept but not in form
+  sportsInterests        String?   @db.Text
+  clubsInterests         String?   @db.Text
+  talents                String?   @db.Text
   status                 String?   @default("PENDING")
-  decisionNotes          String? @db.Text
+  decisionNotes          String?   @db.Text
   admissionOfficer       String?
   decisionDate           DateTime?
   admissionDate          DateTime?
@@ -490,12 +446,12 @@ model AdmissionApplication {
   rejectionReason        String?
   alternativeSuggestions String?
   waitlistPosition       Int?
-  waitlistNotes          String? @db.Text
+  waitlistNotes          String?   @db.Text
   interviewDate          DateTime?
   interviewTime          String?
   interviewVenue         String?
-  interviewNotes         String? @db.Text
-  conditions             String? @db.Text
+  interviewNotes         String?   @db.Text
+  conditions             String?   @db.Text
   conditionDeadline      DateTime?
   houseAssigned          String?
   admissionClass         String?
