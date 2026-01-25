@@ -182,16 +182,12 @@ const parseIntField = (value) => {
   return isNaN(num) ? null : num;
 };
 
-// Helper function to parse JSON fields
-const parseJsonField = (value, fieldName) => {
+// Helper function to parse description fields
+const parseDescriptionField = (value) => {
   if (!value || value.trim() === '') {
-    return [];
+    return null;
   }
-  try {
-    return JSON.parse(value);
-  } catch (parseError) {
-    throw new Error(`Invalid JSON format in ${fieldName}: ${parseError.message}`);
-  }
+  return value.trim();
 };
 
 // Clean document response
@@ -240,45 +236,53 @@ const cleanDocumentResponse = (document) => {
     admissionFeePdfSize: document.admissionFeePdfSize,
     admissionFeePdfUploadDate: document.admissionFeePdfUploadDate,
     
-    // Exam Results PDFs
+    // Exam Results PDFs with description and year
     form1ResultsPdf: document.form1ResultsPdf,
     form1ResultsPdfName: document.form1ResultsPdfName,
     form1ResultsPdfSize: document.form1ResultsPdfSize,
+    form1ResultsDescription: document.form1ResultsDescription,
     form1ResultsYear: document.form1ResultsYear,
     form1ResultsUploadDate: document.form1ResultsUploadDate,
     
     form2ResultsPdf: document.form2ResultsPdf,
     form2ResultsPdfName: document.form2ResultsPdfName,
     form2ResultsPdfSize: document.form2ResultsPdfSize,
+    form2ResultsDescription: document.form2ResultsDescription,
     form2ResultsYear: document.form2ResultsYear,
     form2ResultsUploadDate: document.form2ResultsUploadDate,
     
     form3ResultsPdf: document.form3ResultsPdf,
     form3ResultsPdfName: document.form3ResultsPdfName,
     form3ResultsPdfSize: document.form3ResultsPdfSize,
+    form3ResultsDescription: document.form3ResultsDescription,
     form3ResultsYear: document.form3ResultsYear,
     form3ResultsUploadDate: document.form3ResultsUploadDate,
     
     form4ResultsPdf: document.form4ResultsPdf,
     form4ResultsPdfName: document.form4ResultsPdfName,
     form4ResultsPdfSize: document.form4ResultsPdfSize,
+    form4ResultsDescription: document.form4ResultsDescription,
     form4ResultsYear: document.form4ResultsYear,
     form4ResultsUploadDate: document.form4ResultsUploadDate,
     
     mockExamsResultsPdf: document.mockExamsResultsPdf,
     mockExamsPdfName: document.mockExamsPdfName,
     mockExamsPdfSize: document.mockExamsPdfSize,
+    mockExamsDescription: document.mockExamsDescription,
     mockExamsYear: document.mockExamsYear,
     mockExamsUploadDate: document.mockExamsUploadDate,
     
     kcseResultsPdf: document.kcseResultsPdf,
     kcsePdfName: document.kcsePdfName,
     kcsePdfSize: document.kcsePdfSize,
+    kcseDescription: document.kcseDescription,
     kcseYear: document.kcseYear,
     kcseUploadDate: document.kcseUploadDate,
     
     // Additional Files
     additionalResultsFiles: additionalResultsFiles,
+    additionalResultsFilesDescription: document.additionalResultsFilesDescription,
+    additionalResultsFilesYear: document.additionalResultsFilesYear,
     additionalFilesUploadDate: document.additionalFilesUploadDate,
     
     // Timestamps
@@ -345,14 +349,14 @@ export async function POST(req) {
       uploadPromises.admissionFee = uploadPdfToCloudinary(admissionFeePdf, "admission");
     }
 
-    // Exam Results PDFs with years
+    // Exam Results PDFs with years and descriptions
     const examFields = [
-      { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear' },
-      { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear' },
-      { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear' },
-      { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear' },
-      { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear' },
-      { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear' }
+      { key: 'form1', name: 'form1ResultsPdf', year: 'form1ResultsYear', description: 'form1ResultsDescription' },
+      { key: 'form2', name: 'form2ResultsPdf', year: 'form2ResultsYear', description: 'form2ResultsDescription' },
+      { key: 'form3', name: 'form3ResultsPdf', year: 'form3ResultsYear', description: 'form3ResultsDescription' },
+      { key: 'form4', name: 'form4ResultsPdf', year: 'form4ResultsYear', description: 'form4ResultsDescription' },
+      { key: 'mockExams', name: 'mockExamsResultsPdf', year: 'mockExamsYear', description: 'mockExamsDescription' },
+      { key: 'kcse', name: 'kcseResultsPdf', year: 'kcseYear', description: 'kcseDescription' }
     ];
 
     for (const exam of examFields) {
@@ -389,8 +393,8 @@ export async function POST(req) {
       
       additionalResults.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value) {
-          const description = formData.get(`additionalFileDesc_${index}`) || '';
-          const year = formData.get(`additionalFileYear_${index}`) || '';
+          const description = formData.get(`additionalFilesDesc[${index}]`) || '';
+          const year = formData.get(`additionalFilesYear[${index}]`) || '';
           
           additionalResultsFiles.push({
             filename: result.value.original_name,
@@ -403,6 +407,67 @@ export async function POST(req) {
           });
         }
       });
+    }
+
+    // Prepare update data
+    const updateData = {
+      // Update only fields that have new uploads
+      curriculumPDF: uploadResults.curriculum?.url || existingDocument?.curriculumPDF,
+      curriculumPdfName: uploadResults.curriculum?.original_name || existingDocument?.curriculumPdfName,
+      curriculumPdfSize: uploadResults.curriculum?.bytes || existingDocument?.curriculumPdfSize,
+      curriculumPdfUploadDate: uploadResults.curriculum ? new Date() : existingDocument?.curriculumPdfUploadDate,
+      
+      feesDayDistributionPdf: uploadResults.feesDay?.url || existingDocument?.feesDayDistributionPdf,
+      feesDayPdfName: uploadResults.feesDay?.original_name || existingDocument?.feesDayPdfName,
+      feesDayPdfSize: uploadResults.feesDay?.bytes || existingDocument?.feesDayPdfSize,
+      feesDayPdfUploadDate: uploadResults.feesDay ? new Date() : existingDocument?.feesDayPdfUploadDate,
+      
+      feesBoardingDistributionPdf: uploadResults.feesBoarding?.url || existingDocument?.feesBoardingDistributionPdf,
+      feesBoardingPdfName: uploadResults.feesBoarding?.original_name || existingDocument?.feesBoardingPdfName,
+      feesBoardingPdfSize: uploadResults.feesBoarding?.bytes || existingDocument?.feesBoardingPdfSize,
+      feesBoardingPdfUploadDate: uploadResults.feesBoarding ? new Date() : existingDocument?.feesBoardingPdfUploadDate,
+      
+      admissionFeePdf: uploadResults.admissionFee?.url || existingDocument?.admissionFeePdf,
+      admissionFeePdfName: uploadResults.admissionFee?.original_name || existingDocument?.admissionFeePdfName,
+      admissionFeePdfSize: uploadResults.admissionFee?.bytes || existingDocument?.admissionFeePdfSize,
+      admissionFeePdfUploadDate: uploadResults.admissionFee ? new Date() : existingDocument?.admissionFeePdfUploadDate,
+      
+      // Additional Files description and year
+      additionalResultsFilesDescription: parseDescriptionField(formData.get("additionalResultsFilesDescription")),
+      additionalResultsFilesYear: parseIntField(formData.get("additionalResultsFilesYear")),
+      additionalFilesUploadDate: additionalResultsFiles.length > 0 ? new Date() : existingDocument?.additionalFilesUploadDate,
+      
+      updatedAt: new Date()
+    };
+
+    // Add exam results data only if files were uploaded
+    for (const exam of examFields) {
+      if (uploadResults[exam.key]) {
+        updateData[`${exam.key}ResultsPdf`] = uploadResults[exam.key].url;
+        updateData[`${exam.key}ResultsPdfName`] = uploadResults[exam.key].original_name;
+        updateData[`${exam.key}ResultsPdfSize`] = uploadResults[exam.key].bytes;
+        updateData[`${exam.key}ResultsYear`] = parseIntField(formData.get(exam.year));
+        updateData[`${exam.key}ResultsDescription`] = parseDescriptionField(formData.get(exam.description));
+        updateData[`${exam.key}ResultsUploadDate`] = new Date();
+      } else if (formData.get(exam.description)) {
+        // Allow updating description even without new file upload
+        updateData[`${exam.key}ResultsDescription`] = parseDescriptionField(formData.get(exam.description));
+      }
+      if (formData.get(exam.year)) {
+        // Allow updating year even without new file upload
+        updateData[`${exam.key}ResultsYear`] = parseIntField(formData.get(exam.year));
+      }
+    }
+
+    // Handle additional results files
+    if (additionalResultsFiles.length > 0) {
+      let existingAdditionalFiles = [];
+      if (existingDocument) {
+        existingAdditionalFiles = parseExistingAdditionalFiles(existingDocument.additionalResultsFiles);
+      }
+      const finalAdditionalFiles = [...existingAdditionalFiles, ...additionalResultsFiles];
+      updateData.additionalResultsFiles = JSON.stringify(finalAdditionalFiles);
+      updateData.additionalFilesUploadDate = new Date();
     }
 
     // If document exists, update it
@@ -421,87 +486,10 @@ export async function POST(req) {
         await deleteFromCloudinary(existingDocument.admissionFeePdf);
       }
 
-      // Merge existing additional files with new ones
-      let existingAdditionalFiles = parseExistingAdditionalFiles(existingDocument.additionalResultsFiles);
-      const finalAdditionalFiles = [...existingAdditionalFiles, ...additionalResultsFiles];
-
       // Update document
       const updatedDocument = await prisma.schoolDocument.update({
         where: { id: existingDocument.id },
-        data: {
-          // Update only fields that have new uploads
-          curriculumPDF: uploadResults.curriculum?.url || existingDocument.curriculumPDF,
-          curriculumPdfName: uploadResults.curriculum?.original_name || existingDocument.curriculumPdfName,
-          curriculumPdfSize: uploadResults.curriculum?.bytes || existingDocument.curriculumPdfSize,
-          curriculumPdfUploadDate: uploadResults.curriculum ? new Date() : existingDocument.curriculumPdfUploadDate,
-          
-          feesDayDistributionPdf: uploadResults.feesDay?.url || existingDocument.feesDayDistributionPdf,
-          feesDayPdfName: uploadResults.feesDay?.original_name || existingDocument.feesDayPdfName,
-          feesDayPdfSize: uploadResults.feesDay?.bytes || existingDocument.feesDayPdfSize,
-          feesDayPdfUploadDate: uploadResults.feesDay ? new Date() : existingDocument.feesDayPdfUploadDate,
-          
-          feesBoardingDistributionPdf: uploadResults.feesBoarding?.url || existingDocument.feesBoardingDistributionPdf,
-          feesBoardingPdfName: uploadResults.feesBoarding?.original_name || existingDocument.feesBoardingPdfName,
-          feesBoardingPdfSize: uploadResults.feesBoarding?.bytes || existingDocument.feesBoardingPdfSize,
-          feesBoardingPdfUploadDate: uploadResults.feesBoarding ? new Date() : existingDocument.feesBoardingPdfUploadDate,
-          
-          admissionFeePdf: uploadResults.admissionFee?.url || existingDocument.admissionFeePdf,
-          admissionFeePdfName: uploadResults.admissionFee?.original_name || existingDocument.admissionFeePdfName,
-          admissionFeePdfSize: uploadResults.admissionFee?.bytes || existingDocument.admissionFeePdfSize,
-          admissionFeePdfUploadDate: uploadResults.admissionFee ? new Date() : existingDocument.admissionFeePdfUploadDate,
-          
-          // Exam Results
-          ...(uploadResults.form1 && {
-            form1ResultsPdf: uploadResults.form1.url,
-            form1ResultsPdfName: uploadResults.form1.original_name,
-            form1ResultsPdfSize: uploadResults.form1.bytes,
-            form1ResultsYear: parseIntField(formData.get("form1ResultsYear")),
-            form1ResultsUploadDate: new Date()
-          }),
-          ...(uploadResults.form2 && {
-            form2ResultsPdf: uploadResults.form2.url,
-            form2ResultsPdfName: uploadResults.form2.original_name,
-            form2ResultsPdfSize: uploadResults.form2.bytes,
-            form2ResultsYear: parseIntField(formData.get("form2ResultsYear")),
-            form2ResultsUploadDate: new Date()
-          }),
-          ...(uploadResults.form3 && {
-            form3ResultsPdf: uploadResults.form3.url,
-            form3ResultsPdfName: uploadResults.form3.original_name,
-            form3ResultsPdfSize: uploadResults.form3.bytes,
-            form3ResultsYear: parseIntField(formData.get("form3ResultsYear")),
-            form3ResultsUploadDate: new Date()
-          }),
-          ...(uploadResults.form4 && {
-            form4ResultsPdf: uploadResults.form4.url,
-            form4ResultsPdfName: uploadResults.form4.original_name,
-            form4ResultsPdfSize: uploadResults.form4.bytes,
-            form4ResultsYear: parseIntField(formData.get("form4ResultsYear")),
-            form4ResultsUploadDate: new Date()
-          }),
-          ...(uploadResults.mockExams && {
-            mockExamsResultsPdf: uploadResults.mockExams.url,
-            mockExamsPdfName: uploadResults.mockExams.original_name,
-            mockExamsPdfSize: uploadResults.mockExams.bytes,
-            mockExamsYear: parseIntField(formData.get("mockExamsYear")),
-            mockExamsUploadDate: new Date()
-          }),
-          ...(uploadResults.kcse && {
-            kcseResultsPdf: uploadResults.kcse.url,
-            kcsePdfName: uploadResults.kcse.original_name,
-            kcsePdfSize: uploadResults.kcse.bytes,
-            kcseYear: parseIntField(formData.get("kcseYear")),
-            kcseUploadDate: new Date()
-          }),
-          
-          // Additional Files
-          ...(additionalResultsFiles.length > 0 && {
-            additionalResultsFiles: JSON.stringify(finalAdditionalFiles),
-            additionalFilesUploadDate: new Date()
-          }),
-          
-          updatedAt: new Date()
-        }
+        data: updateData
       });
 
       return NextResponse.json({
@@ -512,75 +500,14 @@ export async function POST(req) {
 
     } else {
       // Create new document
+      const createData = {
+        schoolId,
+        ...updateData
+      };
+
+      // Add empty fields for new documents
       const newDocument = await prisma.schoolDocument.create({
-        data: {
-          schoolId,
-          
-          // Curriculum
-          curriculumPDF: uploadResults.curriculum?.url || null,
-          curriculumPdfName: uploadResults.curriculum?.original_name || null,
-          curriculumPdfSize: uploadResults.curriculum?.bytes || null,
-          curriculumPdfUploadDate: uploadResults.curriculum ? new Date() : null,
-          
-          // Day Fees
-          feesDayDistributionPdf: uploadResults.feesDay?.url || null,
-          feesDayPdfName: uploadResults.feesDay?.original_name || null,
-          feesDayPdfSize: uploadResults.feesDay?.bytes || null,
-          feesDayPdfUploadDate: uploadResults.feesDay ? new Date() : null,
-          
-          // Boarding Fees
-          feesBoardingDistributionPdf: uploadResults.feesBoarding?.url || null,
-          feesBoardingPdfName: uploadResults.feesBoarding?.original_name || null,
-          feesBoardingPdfSize: uploadResults.feesBoarding?.bytes || null,
-          feesBoardingPdfUploadDate: uploadResults.feesBoarding ? new Date() : null,
-          
-          // Admission Fee
-          admissionFeePdf: uploadResults.admissionFee?.url || null,
-          admissionFeePdfName: uploadResults.admissionFee?.original_name || null,
-          admissionFeePdfSize: uploadResults.admissionFee?.bytes || null,
-          admissionFeePdfUploadDate: uploadResults.admissionFee ? new Date() : null,
-          
-          // Exam Results
-          form1ResultsPdf: uploadResults.form1?.url || null,
-          form1ResultsPdfName: uploadResults.form1?.original_name || null,
-          form1ResultsPdfSize: uploadResults.form1?.bytes || null,
-          form1ResultsYear: uploadResults.form1 ? parseIntField(formData.get("form1ResultsYear")) : null,
-          form1ResultsUploadDate: uploadResults.form1 ? new Date() : null,
-          
-          form2ResultsPdf: uploadResults.form2?.url || null,
-          form2ResultsPdfName: uploadResults.form2?.original_name || null,
-          form2ResultsPdfSize: uploadResults.form2?.bytes || null,
-          form2ResultsYear: uploadResults.form2 ? parseIntField(formData.get("form2ResultsYear")) : null,
-          form2ResultsUploadDate: uploadResults.form2 ? new Date() : null,
-          
-          form3ResultsPdf: uploadResults.form3?.url || null,
-          form3ResultsPdfName: uploadResults.form3?.original_name || null,
-          form3ResultsPdfSize: uploadResults.form3?.bytes || null,
-          form3ResultsYear: uploadResults.form3 ? parseIntField(formData.get("form3ResultsYear")) : null,
-          form3ResultsUploadDate: uploadResults.form3 ? new Date() : null,
-          
-          form4ResultsPdf: uploadResults.form4?.url || null,
-          form4ResultsPdfName: uploadResults.form4?.original_name || null,
-          form4ResultsPdfSize: uploadResults.form4?.bytes || null,
-          form4ResultsYear: uploadResults.form4 ? parseIntField(formData.get("form4ResultsYear")) : null,
-          form4ResultsUploadDate: uploadResults.form4 ? new Date() : null,
-          
-          mockExamsResultsPdf: uploadResults.mockExams?.url || null,
-          mockExamsPdfName: uploadResults.mockExams?.original_name || null,
-          mockExamsPdfSize: uploadResults.mockExams?.bytes || null,
-          mockExamsYear: uploadResults.mockExams ? parseIntField(formData.get("mockExamsYear")) : null,
-          mockExamsUploadDate: uploadResults.mockExams ? new Date() : null,
-          
-          kcseResultsPdf: uploadResults.kcse?.url || null,
-          kcsePdfName: uploadResults.kcse?.original_name || null,
-          kcsePdfSize: uploadResults.kcse?.bytes || null,
-          kcseYear: uploadResults.kcse ? parseIntField(formData.get("kcseYear")) : null,
-          kcseUploadDate: uploadResults.kcse ? new Date() : null,
-          
-          // Additional Files
-          additionalResultsFiles: additionalResultsFiles.length > 0 ? JSON.stringify(additionalResultsFiles) : '[]',
-          additionalFilesUploadDate: additionalResultsFiles.length > 0 ? new Date() : null,
-        }
+        data: createData
       });
 
       return NextResponse.json({
