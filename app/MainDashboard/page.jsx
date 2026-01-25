@@ -75,7 +75,7 @@ export default function AdminDashboard() {
     totalStudent: 0,
     totalFees: 0,
     totalResults: 0
-    
+
   });
 
   // Check screen size on mount and resize
@@ -120,7 +120,7 @@ const router =useRouter()
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Mobile Access Detected</h3>
-                <p className="text-gray-400 text-sm">Limited Experience</p>
+                <p className="text-gray-400 text-sm">Limited Space</p>
               </div>
             </div>
           </div>
