@@ -288,9 +288,6 @@ model SchoolInfo {
   feesBoarding Float?
   admissionFee Float?
 
-  feesDayDistributionJson      Json?
-  feesBoardingDistributionJson Json?
-  admissionFeeDistribution     Json?
 
   admissionOpenDate          DateTime?
   admissionCloseDate         DateTime?
@@ -319,6 +316,11 @@ model SchoolDocument {
   curriculumPdfName       String?   @db.VarChar(255)
   curriculumPdfSize       Int?
   curriculumPdfUploadDate DateTime?
+
+  
+  feesDayDistributionJson      Json?
+  feesBoardingDistributionJson Json?
+  admissionFeeDistribution     Json?
 
   // Day School Fees PDF
   feesDayDistributionPdf String?   @db.Text
