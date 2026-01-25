@@ -394,10 +394,7 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
               </div>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-100">
+              <div className="p-4 border-t border-gray-100 mb-[4%]">
           <div className="flex gap-3">
             <button
               onClick={() => {
@@ -434,6 +431,10 @@ const UploadAttachments = ({ open, onClose, onFilesSelected, existingAttachments
             </p>
           )}
         </div>
+        </div>
+
+        {/* Footer */}
+    
       </div>
     </div>
   );
