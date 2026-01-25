@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useRef import
 import { Toaster, toast } from 'sonner';
 import { 
   FaSchool, FaEdit, FaTrash, FaPlus, FaChartBar,
@@ -8,9 +8,11 @@ import {
   FaChevronLeft, FaExclamationTriangle, FaCheckCircle, 
   FaTimesCircle, FaSave, FaTimes, FaEye, FaCalendar, 
   FaUsers, FaChalkboardTeacher, FaBook, FaRocket,
-  FaArrowRight, FaBuilding, FaQuoteLeft,
+  FaArrowRight, FaBuilding, FaQuoteLeft, FaPlay,
   FaShieldAlt, FaAward, FaUserCheck, FaHourglassHalf,
-  FaBookOpen, FaUsersCog
+  FaBookOpen, FaUsersCog, FaFileAlt, FaCalendarAlt,
+  FaBriefcase, FaStethoscope, FaLaptopCode, FaCalculator,
+  FaFlask, FaTools
 } from 'react-icons/fa';
 
 import { CircularProgress, Modal, Box, TextField, TextareaAutosize } from '@mui/material';
@@ -21,9 +23,9 @@ function ModernLoadingSpinner({ message = "Loading school information...", size 
     small: { outer: 48, inner: 24 },
     medium: { outer: 64, inner: 32 },
     large: { outer: 80, inner: 40 }
-  }
+  };
 
-  const { outer, inner } = sizes[size]
+  const { outer, inner } = sizes[size];
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 flex items-center justify-center z-50">
@@ -44,7 +46,7 @@ function ModernLoadingSpinner({ message = "Loading school information...", size 
         </div>
         
         <div className="mt-6 space-y-3">
-          <span className="block text-lg font-semibold text-gray-800">
+          <span className="block text-lg font-bold text-gray-800">
             {message}
           </span>
           
@@ -61,26 +63,26 @@ function ModernLoadingSpinner({ message = "Loading school information...", size 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Tag Input Component
 function TagInput({ label, tags, onTagsChange, placeholder = "Type and press Enter..." }) {
-  const [inputValue, setInputValue] = useState('')
+  const [inputValue, setInputValue] = useState('');
 
   const handleInputKeyDown = (e) => {
     if (e.key === 'Enter' && inputValue.trim()) {
-      e.preventDefault()
-      const newTags = [...tags, inputValue.trim()]
-      onTagsChange(newTags)
-      setInputValue('')
+      e.preventDefault();
+      const newTags = [...tags, inputValue.trim()];
+      onTagsChange(newTags);
+      setInputValue('');
     }
-  }
+  };
 
   const handleRemoveTag = (indexToRemove) => {
-    const newTags = tags.filter((_, index) => index !== indexToRemove)
-    onTagsChange(newTags)
-  }
+    const newTags = tags.filter((_, index) => index !== indexToRemove);
+    onTagsChange(newTags);
+  };
 
   return (
     <div className="space-y-3">
@@ -94,7 +96,7 @@ function TagInput({ label, tags, onTagsChange, placeholder = "Type and press Ent
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleInputKeyDown}
           placeholder={placeholder}
-          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm"
+          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white text-sm font-bold"
         />
         <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
           Press Enter to add
@@ -106,7 +108,7 @@ function TagInput({ label, tags, onTagsChange, placeholder = "Type and press Ent
           {tags.map((tag, index) => (
             <div
               key={index}
-              className="inline-flex items-center gap-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 text-sm font-medium"
+              className="inline-flex items-center gap-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 px-3 py-2 rounded-lg border border-blue-200 text-sm font-bold"
             >
               {tag}
               <button
@@ -121,10 +123,10 @@ function TagInput({ label, tags, onTagsChange, placeholder = "Type and press Ent
         </div>
       )}
     </div>
-  )
+  );
 }
 
-// Modern Video Upload Component (Simplified - no PDF handling)
+// Modern Video Upload Component
 function ModernVideoUpload({ 
   videoType, 
   videoPath, 
@@ -132,19 +134,18 @@ function ModernVideoUpload({
   onVideoChange, 
   onYoutubeLinkChange, 
   onRemove, 
-  onThumbnailSelect, 
   label = "Video Tour"
 }) {
-  const [dragOver, setDragOver] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [localYoutubeLink, setLocalYoutubeLink] = useState(youtubeLink || '')
-  const fileInputRef = useRef(null)
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [localYoutubeLink, setLocalYoutubeLink] = useState(youtubeLink || '');
+  const fileInputRef = useRef(null);
 
   const isValidYouTubeUrl = (url) => {
-    if (!url || url.trim() === '') return false
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-    return youtubeRegex.test(url.trim())
-  }
+    if (!url || url.trim() === '') return false;
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    return youtubeRegex.test(url.trim());
+  };
 
   const handleYoutubeLinkChange = (e) => {
     const url = e.target.value;
@@ -234,23 +235,23 @@ function ModernVideoUpload({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
         <FaVideo className="text-purple-500" />
         <span>{label}</span>
       </label>
       
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">YouTube URL</label>
+          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">YouTube URL</label>
           <div className="relative">
-            <FaVideo className="absolute left-3 top-1/2 transform -translate-y-1/2 text-red-500" />
+            <FaVideo className="absolute left-4 top-1/2 transform -translate-y-1/2 text-red-500" />
             <input
               type="url"
               value={localYoutubeLink}
               onChange={handleYoutubeLinkChange}
               placeholder="https://youtube.com/watch?v=..."
-              className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-100 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-white text-sm"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 bg-white text-sm font-bold"
             />
           </div>
           {localYoutubeLink && !isValidYouTubeUrl(localYoutubeLink) && (
@@ -261,7 +262,7 @@ function ModernVideoUpload({
         <div className="text-center text-gray-300 text-[10px] font-bold">OR</div>
 
         <div>
-          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Local Video File (MP4)</label>
+          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Local Video File (MP4)</label>
           
           <div
             className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer group ${
@@ -311,7 +312,7 @@ function ModernVideoUpload({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // Video Modal Component
@@ -393,15 +394,15 @@ function VideoModal({ open, onClose, videoType, videoPath }) {
 
 // Modern Delete Confirmation Modal
 function ModernDeleteModal({ onClose, onConfirm, loading }) {
-  const [confirmText, setConfirmText] = useState('')
+  const [confirmText, setConfirmText] = useState('');
 
   const handleConfirm = () => {
     if (confirmText === "DELETE SCHOOL INFO") {
-      onConfirm()
+      onConfirm();
     } else {
-      toast.error('Please type "DELETE SCHOOL INFO" exactly to confirm deletion')
+      toast.error('Please type "DELETE SCHOOL INFO" exactly to confirm deletion');
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -436,7 +437,7 @@ function ModernDeleteModal({ onClose, onConfirm, loading }) {
               value={confirmText} 
               onChange={(e) => setConfirmText(e.target.value)} 
               placeholder='Type "DELETE SCHOOL INFO" here'
-              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 text-sm"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 text-sm font-bold"
             />
           </div>
         </div>
@@ -445,14 +446,14 @@ function ModernDeleteModal({ onClose, onConfirm, loading }) {
           <button 
             onClick={onClose} 
             disabled={loading}
-            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg transition-all duration-300 font-bold disabled:opacity-50 cursor-pointer text-sm"
+            className="flex-1 flex items-center justify-center gap-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg transition-all duration-300 font-bold disabled:opacity-50 cursor-pointer text-sm"
           >
             <FaTimesCircle className="text-sm" /> Cancel
           </button>
           <button 
             onClick={handleConfirm} 
             disabled={loading || confirmText !== "DELETE SCHOOL INFO"}
-            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 to-orange-600 text-white px-3 py-2 rounded-lg transition-all duration-300 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
+            className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 to-orange-600 text-white px-4 py-3 rounded-lg transition-all duration-300 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
           >
             {loading ? (
               <>
@@ -468,7 +469,7 @@ function ModernDeleteModal({ onClose, onConfirm, loading }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // Video Thumbnail Component
@@ -526,16 +527,16 @@ function VideoThumbnail({ videoType, videoPath, onClick }) {
           {videoType === 'youtube' ? (
             <>
               <FaVideo className="text-red-500" />
-              <span className="text-sm font-medium text-gray-700">YouTube Video</span>
+              <span className="text-sm font-bold text-gray-700">YouTube Video</span>
             </>
           ) : (
             <>
               <FaVideo className="text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">School Video</span>
+              <span className="text-sm font-bold text-gray-700">School Video</span>
             </>
           )}
         </div>
-        <span className="text-sm text-blue-600 font-medium hover:text-blue-800 transition">
+        <span className="text-sm text-blue-600 font-bold hover:text-blue-800 transition">
           Watch Now
         </span>
       </div>
@@ -543,9 +544,9 @@ function VideoThumbnail({ videoType, videoPath, onClick }) {
   );
 }
 
-// School Info Modal Component
+// School Info Modal Component (MODERNIZED)
 function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
   
   const [formData, setFormData] = useState(() => ({
     name: school?.name || '',
@@ -573,10 +574,10 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     admissionLocation: school?.admissionLocation || '',
     admissionOfficeHours: school?.admissionOfficeHours || '',
     admissionDocumentsRequired: school?.admissionDocumentsRequired || []
-  }))
+  }));
 
-  const [videoFile, setVideoFile] = useState(null)
-  const [actionLoading, setActionLoading] = useState(false)
+  const [videoFile, setVideoFile] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const steps = [
     { 
@@ -597,7 +598,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       icon: FaUserCheck, 
       description: 'Admission details' 
     }
-  ]
+  ];
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -647,39 +648,39 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
   };
 
   const handleNextStep = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1)
+      setCurrentStep(prev => prev + 1);
     }
-  }
+  };
 
   const handlePrevStep = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1)
+      setCurrentStep(prev => prev - 1);
     }
-  }
+  };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleTagsChange = (field, tags) => {
-    setFormData(prev => ({ ...prev, [field]: tags }))
-  }
+    setFormData(prev => ({ ...prev, [field]: tags }));
+  };
 
   const isStepValid = () => {
     switch (currentStep) {
       case 0:
-        return formData.name.trim() && formData.studentCount.trim() && formData.staffCount.trim()
+        return formData.name.trim() && formData.studentCount.trim() && formData.staffCount.trim();
       case 1:
-        return formData.openDate.trim() && formData.closeDate.trim()
+        return formData.openDate.trim() && formData.closeDate.trim();
       case 2:
-        return true
+        return true;
       default:
-        return true
+        return true;
     }
-  }
+  };
 
   return (
     <Modal open={true} onClose={onClose}>
@@ -694,6 +695,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
+        {/* MODERN HEADER */}
         <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -713,15 +715,16 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
           </div>
         </div>
 
+        {/* MODERN STEP INDICATOR */}
         <div className="bg-white border-b border-gray-200 p-3">
           <div className="flex flex-wrap justify-center items-center gap-2 md:space-x-3">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
                 <button
                   onClick={() => setCurrentStep(index)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 text-sm ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm font-bold ${
                     index === currentStep 
-                      ? 'bg-blue-500 text-white shadow' 
+                      ? 'bg-blue-500 text-white shadow-lg' 
                       : index < currentStep
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -740,158 +743,160 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom p-2 md:p-4">
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto scrollbar-custom p-4 md:p-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {currentStep === 0 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        School Name <span className="text-red-500">*</span>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaBuilding className="text-blue-600" /> School Name <span className="text-red-500">*</span>
                       </label>
-                      <TextField
-                        fullWidth
+                      <input
+                        type="text"
                         value={formData.name}
                         onChange={(e) => handleChange('name', e.target.value)}
                         placeholder="Enter school name..."
+                        className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-bold"
                         required
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Student Count <span className="text-red-500">*</span>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaUsers className="text-green-600" /> Student Count <span className="text-red-500">*</span>
                       </label>
-                      <TextField
-                        fullWidth
+                      <input
                         type="number"
-                        inputProps={{ min: 1 }}
+                        min="1"
                         value={formData.studentCount}
                         onChange={(e) => handleChange('studentCount', e.target.value)}
                         placeholder="Enter number of students..."
+                        className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-sm font-bold"
                         required
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Staff Count <span className="text-red-500">*</span>
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border border-orange-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaChalkboardTeacher className="text-orange-600" /> Staff Count <span className="text-red-500">*</span>
                       </label>
-                      <TextField
-                        fullWidth
+                      <input
                         type="number"
-                        inputProps={{ min: 1 }}
+                        min="1"
                         value={formData.staffCount}
                         onChange={(e) => handleChange('staffCount', e.target.value)}
                         placeholder="Enter number of staff..."
+                        className="w-full px-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-sm font-bold"
                         required
                       />
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        School Motto
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaQuoteLeft className="text-purple-600" /> School Motto
                       </label>
-                      <TextField
-                        fullWidth
+                      <input
+                        type="text"
                         value={formData.motto}
                         onChange={(e) => handleChange('motto', e.target.value)}
                         placeholder="Enter school motto..."
+                        className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Vision Statement
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 border border-indigo-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaEye className="text-indigo-600" /> Vision Statement
                       </label>
                       <TextareaAutosize
-                        minRows={2}
+                        minRows={3}
                         value={formData.vision}
                         onChange={(e) => handleChange('vision', e.target.value)}
                         placeholder="Enter vision statement..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-3 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Mission Statement
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaRocket className="text-emerald-600" /> Mission Statement
                       </label>
                       <TextareaAutosize
-                        minRows={2}
+                        minRows={3}
                         value={formData.mission}
                         onChange={(e) => handleChange('mission', e.target.value)}
                         placeholder="Enter mission statement..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none bg-white text-sm font-bold"
                       />
                     </div>
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                    School Description
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
+                  <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <FaFileAlt className="text-gray-600" /> School Description
                   </label>
                   <TextareaAutosize
-                    minRows={3}
+                    minRows={4}
                     value={formData.description}
                     onChange={(e) => handleChange('description', e.target.value)}
                     placeholder="Describe your school..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 resize-none bg-white text-sm font-bold"
                   />
                 </div>
               </div>
             )}
 
             {currentStep === 1 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-                      <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
+                      <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaCalendar className="text-blue-600" />
                         Academic Calendar
                       </h3>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                          <label className="block text-xs font-bold text-gray-600 mb-2">
                             Opening Date <span className="text-red-500">*</span>
                           </label>
-                          <TextField 
-                            fullWidth 
+                          <input
                             type="date"
-                            value={formData.openDate} 
+                            value={formData.openDate}
                             onChange={(e) => handleChange('openDate', e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-bold"
                             required
                           />
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-bold text-gray-600 mb-1.5">
+                          <label className="block text-xs font-bold text-gray-600 mb-2">
                             Closing Date <span className="text-red-500">*</span>
                           </label>
-                          <TextField 
-                            fullWidth 
+                          <input
                             type="date"
-                            value={formData.closeDate} 
+                            value={formData.closeDate}
                             onChange={(e) => handleChange('closeDate', e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-bold"
                             required
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                      <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
+                      <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <FaBook className="text-purple-600" />
                         Academic Programs
                       </h3>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <TagInput 
                           label="Subjects"
                           tags={formData.subjects}
@@ -925,156 +930,161 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
             )}
 
             {currentStep === 2 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Opening Date
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaCalendarAlt className="text-blue-600" /> Admission Opening Date
                       </label>
-                      <TextField 
-                        fullWidth 
+                      <input
                         type="date"
-                        value={formData.admissionOpenDate} 
+                        value={formData.admissionOpenDate}
                         onChange={(e) => handleChange('admissionOpenDate', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Closing Date
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border border-red-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaHourglassHalf className="text-red-600" /> Admission Closing Date
                       </label>
-                      <TextField 
-                        fullWidth 
+                      <input
                         type="date"
-                        value={formData.admissionCloseDate} 
+                        value={formData.admissionCloseDate}
                         onChange={(e) => handleChange('admissionCloseDate', e.target.value)}
+                        className="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Requirements
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaCheckCircle className="text-green-600" /> Admission Fee (KES)
                       </label>
-                      <TextareaAutosize
-                        minRows={3}
-                        value={formData.admissionRequirements}
-                        onChange={(e) => handleChange('admissionRequirements', e.target.value)}
-                        placeholder="Describe admission requirements..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Fee (KES)
-                      </label>
-                      <TextField 
-                        fullWidth 
+                      <input
                         type="number"
                         min="0"
-                        value={formData.admissionFee} 
+                        value={formData.admissionFee}
                         onChange={(e) => handleChange('admissionFee', e.target.value)}
                         placeholder="Enter admission fee"
+                        className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-sm font-bold"
+                      />
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-5 border border-cyan-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaUsers className="text-cyan-600" /> Admission Capacity
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.admissionCapacity}
+                        onChange={(e) => handleChange('admissionCapacity', e.target.value)}
+                        placeholder="Number of available slots"
+                        className="w-full px-4 py-3 border-2 border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white text-sm font-bold"
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Capacity
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 border border-indigo-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaEnvelope className="text-indigo-600" /> Admission Contact Email
                       </label>
-                      <TextField 
-                        fullWidth 
-                        type="number"
-                        min="1"
-                        value={formData.admissionCapacity} 
-                        onChange={(e) => handleChange('admissionCapacity', e.target.value)}
-                        placeholder="Number of available slots"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Contact Email
-                      </label>
-                      <TextField 
-                        fullWidth 
+                      <input
                         type="email"
-                        value={formData.admissionContactEmail} 
+                        value={formData.admissionContactEmail}
                         onChange={(e) => handleChange('admissionContactEmail', e.target.value)}
                         placeholder="admissions@school.edu"
+                        className="w-full px-4 py-3 border-2 border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Contact Phone
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaPhone className="text-purple-600" /> Admission Contact Phone
                       </label>
-                      <TextField 
-                        fullWidth 
-                        value={formData.admissionContactPhone} 
+                      <input
+                        type="tel"
+                        value={formData.admissionContactPhone}
                         onChange={(e) => handleChange('admissionContactPhone', e.target.value)}
                         placeholder="+254 XXX XXX XXX"
+                        className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white text-sm font-bold"
                       />
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                        Admission Website
+                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border border-teal-200">
+                      <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <FaGlobe className="text-teal-600" /> Admission Website
                       </label>
-                      <TextField 
-                        fullWidth 
+                      <input
                         type="url"
-                        value={formData.admissionWebsite} 
+                        value={formData.admissionWebsite}
                         onChange={(e) => handleChange('admissionWebsite', e.target.value)}
                         placeholder="https://school.edu/admissions"
+                        className="w-full px-4 py-3 border-2 border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white text-sm font-bold"
                       />
                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                      Admission Location
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border border-orange-200">
+                    <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      <FaMapMarkerAlt className="text-orange-600" /> Admission Location
                     </label>
-                    <TextField 
-                      fullWidth 
-                      value={formData.admissionLocation} 
+                    <input
+                      type="text"
+                      value={formData.admissionLocation}
                       onChange={(e) => handleChange('admissionLocation', e.target.value)}
                       placeholder="Admission office location"
+                      className="w-full px-4 py-3 border-2 border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-sm font-bold"
                     />
                   </div>
                   
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-1.5">
-                      Admission Office Hours
+                  <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-5 border border-pink-200">
+                    <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                      <FaClock className="text-pink-600" /> Admission Office Hours
                     </label>
-                    <TextField 
-                      fullWidth 
-                      value={formData.admissionOfficeHours} 
+                    <input
+                      type="text"
+                      value={formData.admissionOfficeHours}
                       onChange={(e) => handleChange('admissionOfficeHours', e.target.value)}
                       placeholder="e.g., 8:00 AM - 5:00 PM"
+                      className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 bg-white text-sm font-bold"
                     />
                   </div>
                 </div>
                 
-                <TagInput 
-                  label="Required Documents for Admission"
-                  tags={formData.admissionDocumentsRequired}
-                  onTagsChange={(tags) => handleTagsChange('admissionDocumentsRequired', tags)}
-                  placeholder="Type document name and press Enter..."
-                />
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-5 border border-yellow-200">
+                  <TagInput 
+                    label="Required Documents for Admission"
+                    tags={formData.admissionDocumentsRequired}
+                    onTagsChange={(tags) => handleTagsChange('admissionDocumentsRequired', tags)}
+                    placeholder="Type document name and press Enter..."
+                  />
+                </div>
+                
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
+                  <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <FaFileAlt className="text-gray-600" /> Admission Requirements
+                  </label>
+                  <TextareaAutosize
+                    minRows={4}
+                    value={formData.admissionRequirements}
+                    onChange={(e) => handleChange('admissionRequirements', e.target.value)}
+                    placeholder="Describe admission requirements..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 resize-none bg-white text-sm font-bold"
+                  />
+                </div>
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-3">
-              <div className="flex items-center gap-2 text-sm text-gray-600 font-medium">
+              <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
                 <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                  <span className="font-semibold">Step {currentStep + 1} of {steps.length}</span>
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <span className="font-bold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
               </div>
 
@@ -1083,7 +1093,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                   <button 
                     type="button"
                     onClick={handlePrevStep}
-                    className="px-5 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer text-sm w-full sm:w-auto"
+                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer text-sm w-full sm:w-auto"
                   >
                     ← Previous
                   </button>
@@ -1094,7 +1104,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     type="button"
                     onClick={handleNextStep}
                     disabled={!isStepValid()}
-                    className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
                   >
                     Continue →
                   </button>
@@ -1102,7 +1112,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                   <button 
                     type="submit"
                     disabled={actionLoading || !isStepValid()}
-                    className="px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
                   >
                     {actionLoading ? (
                       <>
@@ -1123,7 +1133,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
         </div>
       </Box>
     </Modal>
-  )
+  );
 }
 
 // API Service for School Info
@@ -1155,32 +1165,32 @@ const schoolApiService = {
       throw error;
     }
   }
-}
+};
 
 export default function SchoolInfoPage() {
-  const [schoolInfo, setSchoolInfo] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [showVideoModal, setShowVideoModal] = useState(false)
+  const [schoolInfo, setSchoolInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
-    loadSchoolInfo()
-  }, [])
+    loadSchoolInfo();
+  }, []);
 
   const loadSchoolInfo = async () => {
     try {
-      setLoading(true)
-      const data = await schoolApiService.getSchoolInfo()
-      setSchoolInfo(data.school || data)
+      setLoading(true);
+      const data = await schoolApiService.getSchoolInfo();
+      setSchoolInfo(data.school || data);
     } catch (error) {
-      console.error('Error loading school info:', error)
-      setSchoolInfo(null)
+      console.error('Error loading school info:', error);
+      setSchoolInfo(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSaveSchool = async (schoolData) => {
     try {
@@ -1216,20 +1226,20 @@ export default function SchoolInfoPage() {
 
   const handleDeleteSchool = async () => {
     try {
-      setActionLoading(true)
-      await schoolApiService.deleteSchoolInfo()
-      setSchoolInfo(null)
-      setShowDeleteModal(false)
-      toast.success('School information deleted successfully!')
+      setActionLoading(true);
+      await schoolApiService.deleteSchoolInfo();
+      setSchoolInfo(null);
+      setShowDeleteModal(false);
+      toast.success('School information deleted successfully!');
     } catch (error) {
-      toast.error(error.message || 'Failed to delete school information!')
+      toast.error(error.message || 'Failed to delete school information!');
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   if (loading && !schoolInfo) {
-    return <ModernLoadingSpinner message="Loading school information..." size="medium" />
+    return <ModernLoadingSpinner message="Loading school information..." size="medium" />;
   }
 
   return (
@@ -1270,6 +1280,7 @@ export default function SchoolInfoPage() {
         />
       )}
 
+      {/* MODERN HEADER */}
       <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
         <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
@@ -1294,7 +1305,7 @@ export default function SchoolInfoPage() {
               </div>
             </div>
             
-            <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+            <p className="text-blue-50/80 text-sm md:text-lg font-bold max-w-2xl leading-relaxed">
               Manage school identity, academic calendar, admission details, and institutional information.
             </p>
           </div>
@@ -1304,14 +1315,14 @@ export default function SchoolInfoPage() {
             <button 
               onClick={loadSchoolInfo} 
               disabled={loading}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? (
                 <CircularProgress size={16} color="inherit" thickness={6} />
               ) : (
                 <FaChartBar className="text-sm" /> 
               )}
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap font-bold">
                 {loading ? 'Syncing...' : 'Refresh Info'}
               </span>
             </button>
@@ -1319,26 +1330,26 @@ export default function SchoolInfoPage() {
             {schoolInfo && (
               <button 
                 onClick={() => setShowDeleteModal(true)} 
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-5 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-semibold text-sm active:scale-[0.98]"
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-bold text-sm active:scale-[0.98]"
               >
                 <FaTrash className="text-sm" /> 
-                <span className="whitespace-nowrap">Delete</span>
+                <span className="whitespace-nowrap font-bold">Delete</span>
               </button>
             )}
             
             <button 
               onClick={() => setShowModal(true)} 
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-semibold text-sm shadow-lg active:scale-[0.98]"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
             >
               {schoolInfo ? (
                 <>
                   <FaEdit className="text-sm" />
-                  <span className="whitespace-nowrap">Update Profile</span>
+                  <span className="whitespace-nowrap font-bold">Update Profile</span>
                 </>
               ) : (
                 <>
                   <FaPlus className="text-sm" />
-                  <span className="whitespace-nowrap">Initialize</span>
+                  <span className="whitespace-nowrap font-bold">Initialize</span>
                 </>
               )}
             </button>
@@ -1352,26 +1363,26 @@ export default function SchoolInfoPage() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5 px-4 py-2 bg-white border-2 border-blue-50 rounded-xl shadow-sm hover:border-blue-200 transition-colors">
-                    <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-2 border-blue-50 rounded-xl shadow-sm hover:border-blue-200 transition-colors">
+                    <div className="p-2 bg-blue-100 rounded-lg">
                       <FaGraduationCap className="text-blue-600 text-lg" />
                     </div>
                     <span className="text-slate-800 text-[15px] font-bold tracking-tight">
-                      {schoolInfo.studentCount?.toLocaleString()} <span className="text-slate-500 font-semibold">Students</span>
+                      {schoolInfo.studentCount?.toLocaleString()} <span className="text-slate-500 font-bold">Students</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2.5 px-4 py-2 bg-white border-2 border-green-50 rounded-xl shadow-sm hover:border-green-200 transition-colors">
-                    <div className="p-1.5 bg-green-100 rounded-lg">
+                  <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-2 border-green-50 rounded-xl shadow-sm hover:border-green-200 transition-colors">
+                    <div className="p-2 bg-green-100 rounded-lg">
                       <FaChalkboardTeacher className="text-green-600 text-lg" />
                     </div>
                     <span className="text-slate-800 text-[15px] font-bold tracking-tight">
-                      {schoolInfo.staffCount?.toLocaleString()} <span className="text-slate-500 font-semibold">Staff</span>
+                      {schoolInfo.staffCount?.toLocaleString()} <span className="text-slate-500 font-bold">Staff</span>
                     </span>
                   </div>
 
                   {schoolInfo.motto && (
-                    <div className="flex items-center gap-2.5 px-4 py-2 bg-amber-50/40 border-2 border-amber-100/50 rounded-xl shadow-sm">
+                    <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50/40 border-2 border-amber-100/50 rounded-xl shadow-sm">
                       <FaQuoteLeft className="text-amber-500 text-sm" />
                       <span className="text-amber-900 text-[15px] font-bold italic tracking-wide">
                         "{schoolInfo.motto}"
@@ -1389,7 +1400,7 @@ export default function SchoolInfoPage() {
                   <h3 className="text-base font-bold text-gray-900">School Overview</h3>
                 </div>
                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-                  <p className="text-gray-700 text-base leading-relaxed tracking-tight">{schoolInfo.description}</p>
+                  <p className="text-gray-700 text-base leading-relaxed tracking-tight font-bold">{schoolInfo.description}</p>
                 </div>
               </div>
             )}
@@ -1415,7 +1426,7 @@ export default function SchoolInfoPage() {
                           <h4 className="text-base font-bold text-gray-900">Our Vision</h4>
                           <div className="w-8 h-0.5 bg-blue-200 rounded-full"></div>
                         </div>
-                        <p className="text-gray-700 text-base leading-relaxed pl-0.5">{schoolInfo.vision}</p>
+                        <p className="text-gray-700 text-base leading-relaxed pl-0.5 font-bold">{schoolInfo.vision}</p>
                       </div>
                     </div>
                     
@@ -1437,7 +1448,7 @@ export default function SchoolInfoPage() {
                           <h4 className="text-base font-bold text-gray-900">Our Mission</h4>
                           <div className="w-8 h-0.5 bg-emerald-200 rounded-full"></div>
                         </div>
-                        <p className="text-gray-700 text-base leading-relaxed pl-0.5">{schoolInfo.mission}</p>
+                        <p className="text-gray-700 text-base leading-relaxed pl-0.5 font-bold">{schoolInfo.mission}</p>
                       </div>
                     </div>
                     
@@ -1470,7 +1481,7 @@ export default function SchoolInfoPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-slate-900 tracking-tight">Academic Information</h3>
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Institutional Milestones & Curriculum</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Milestones & Curriculum</p>
                 </div>
               </div>
 
@@ -1488,9 +1499,9 @@ export default function SchoolInfoPage() {
                       <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
                         <div className="flex items-center gap-2">
                           <FaClock className="text-[10px] text-emerald-500" />
-                          <span className="text-[11px] font-black text-slate-400 uppercase">Opening</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">Opening</span>
                         </div>
-                        <span className="text-sm font-black text-slate-900">
+                        <span className="text-sm font-bold text-slate-900">
                           {new Date(schoolInfo.openDate).toLocaleDateString('en-US', {
                             month: 'short', day: 'numeric', year: 'numeric'
                           })}
@@ -1500,9 +1511,9 @@ export default function SchoolInfoPage() {
                       <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
                         <div className="flex items-center gap-2">
                           <FaClock className="text-[10px] text-rose-500" />
-                          <span className="text-[11px] font-black text-slate-400 uppercase">Closing</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase">Closing</span>
                         </div>
-                        <span className="text-sm font-black text-slate-900">
+                        <span className="text-sm font-bold text-slate-900">
                           {new Date(schoolInfo.closeDate).toLocaleDateString('en-US', {
                             month: 'short', day: 'numeric', year: 'numeric'
                           })}
@@ -1526,7 +1537,7 @@ export default function SchoolInfoPage() {
                         {schoolInfo.subjects.map((subject, index) => (
                           <span 
                             key={index} 
-                            className="bg-white hover:bg-purple-600 hover:text-white border border-purple-100 text-purple-700 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-default shadow-sm"
+                            className="bg-white hover:bg-purple-600 hover:text-white border border-purple-100 text-purple-700 px-3 py-2 rounded-xl text-[11px] font-bold transition-all cursor-default shadow-sm"
                           >
                             {subject}
                           </span>
@@ -1550,7 +1561,7 @@ export default function SchoolInfoPage() {
                         {schoolInfo.departments.map((dept, index) => (
                           <span 
                             key={index} 
-                            className="bg-slate-900 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-orange-500 transition-colors shadow-lg shadow-slate-200"
+                            className="bg-slate-900 text-white px-3 py-2 rounded-xl text-[11px] font-bold hover:bg-orange-500 transition-colors shadow-lg shadow-slate-200"
                           >
                             {dept}
                           </span>
@@ -1581,7 +1592,7 @@ export default function SchoolInfoPage() {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                       </span>
-                      <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">Admissions Active</span>
+                      <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-tighter">Admissions Active</span>
                     </div>
                   )}
                 </div>
@@ -1593,7 +1604,7 @@ export default function SchoolInfoPage() {
                     </div>
                     
                     <div className="relative z-10">
-                      <h4 className="text-xs font-black text-orange-400 uppercase tracking-[0.2em] mb-6">Timeline</h4>
+                      <h4 className="text-xs font-bold text-orange-400 uppercase tracking-[0.2em] mb-6">Timeline</h4>
                       
                       <div className="space-y-6">
                         <div className="flex items-center gap-4">
@@ -1602,7 +1613,7 @@ export default function SchoolInfoPage() {
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase">Registration Opens</p>
-                            <p className="text-lg font-black text-white">
+                            <p className="text-lg font-bold text-white">
                               {new Date(schoolInfo.admissionOpenDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
@@ -1614,7 +1625,7 @@ export default function SchoolInfoPage() {
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase">Closing Deadline</p>
-                            <p className="text-lg font-black text-white">
+                            <p className="text-lg font-bold text-white">
                               {new Date(schoolInfo.admissionCloseDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
@@ -1626,11 +1637,11 @@ export default function SchoolInfoPage() {
                   <div className="lg:col-span-3 bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-6">
-                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Inquiry Suite</h4>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Inquiry Suite</h4>
                         {schoolInfo.admissionCapacity && (
-                          <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-100">
+                          <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
                             <FaUsers className="text-slate-400 text-xs" />
-                            <span className="text-[11px] font-black text-slate-700">{schoolInfo.admissionCapacity.toLocaleString()} Slots</span>
+                            <span className="text-[11px] font-bold text-slate-700">{schoolInfo.admissionCapacity.toLocaleString()} Slots</span>
                           </div>
                         )}
                       </div>
@@ -1642,7 +1653,7 @@ export default function SchoolInfoPage() {
                               <FaEnvelope size={12} />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[9px] font-black text-slate-400 uppercase">Email Registry</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase">Email Registry</p>
                               <p className="text-xs font-bold text-slate-700 truncate">{schoolInfo.admissionContactEmail}</p>
                             </div>
                           </a>
@@ -1654,7 +1665,7 @@ export default function SchoolInfoPage() {
                               <FaPhone size={12} />
                             </div>
                             <div>
-                              <p className="text-[9px] font-black text-slate-400 uppercase">Direct Line</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase">Direct Line</p>
                               <p className="text-xs font-bold text-slate-700">{schoolInfo.admissionContactPhone}</p>
                             </div>
                           </a>
@@ -1672,7 +1683,7 @@ export default function SchoolInfoPage() {
                         >
                           <div className="flex items-center gap-3">
                             <FaGlobe className="text-blue-400" />
-                            <span className="text-xs font-black uppercase tracking-widest">Portal Access</span>
+                            <span className="text-xs font-bold uppercase tracking-widest">Portal Access</span>
                           </div>
                           <FaArrowRight className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                         </a>
@@ -1690,12 +1701,12 @@ export default function SchoolInfoPage() {
             <FaSchool className="w-8 h-8 text-blue-600" />
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-2">No School Information Found</h3>
-          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
+          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
             Set up your school information to showcase your institution to students and parents.
           </p>
           <button 
             onClick={() => setShowModal(true)} 
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-5 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-1 mx-auto text-sm cursor-pointer"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-2 mx-auto text-sm cursor-pointer"
           >
             <FaPlus /> Create School Information
           </button>
@@ -1719,5 +1730,5 @@ export default function SchoolInfoPage() {
         />
       )}
     </div>
-  )
+  );
 }
