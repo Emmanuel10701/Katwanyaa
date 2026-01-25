@@ -595,52 +595,195 @@ function getModernEmailTemplate({
         <!-- Footer -->
         <div class="footer">
             <!-- School Information -->
-            <div class="school-info">
-                <h3>${SCHOOL_NAME}</h3>
-                <p>${SCHOOL_LOCATION}</p>
-            </div>
-            
-            <!-- Contact Details -->
-            <div class="contact-details">
-                <div class="contact-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
-                    </svg>
-                    <a href="mailto:${CONTACT_EMAIL}">${CONTACT_EMAIL}</a>
-                </div>
-                <div class="contact-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M3.654 1.328a.678.678 0 0 0-1.015-.063L1.605 2.3c-.483.484-.661 1.169-.45 1.77a17.568 17.568 0 0 0 4.168 6.608 17.569 17.569 0 0 0 6.608 4.168c.601.211 1.286.033 1.77-.45l1.034-1.034a.678.678 0 0 0-.063-1.015l-2.307-1.794a.678.678 0 0 0-.58-.122l-2.19.547a1.745 1.745 0 0 1-1.657-.459L5.482 8.062a1.745 1.745 0 0 1-.46-1.657l.548-2.19a.678.678 0 0 0-.122-.58L3.654 1.328zM1.884.511a1.745 1.745 0 0 1 2.612.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"/>
-                    </svg>
-                    <a href="tel:${CONTACT_PHONE}">${CONTACT_PHONE}</a>
-                </div>
-                <div class="contact-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                    </svg>
-                    <a href="${SCHOOL_WEBSITE}" target="_blank">Visit Website</a>
-                </div>
-            </div>
-            
-            <!-- Social Media -->
-            <div class="social-media">
-                <h4>Stay Connected</h4>
-                <div class="social-icons">
-                    <a href="${SOCIAL_MEDIA.facebook.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.facebook.color}" target="_blank">
-                        Facebook
-                    </a>
-                    <a href="${SOCIAL_MEDIA.youtube.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.youtube.color}" target="_blank">
-                        YouTube
-                    </a>
-                    <a href="${SOCIAL_MEDIA.linkedin.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.linkedin.color}" target="_blank">
-                        LinkedIn
-                    </a>
-                    <a href="${SOCIAL_MEDIA.twitter.url}" class="social-icon" style="background: ${SOCIAL_MEDIA.twitter.color}" target="_blank">
-                        Twitter
-                    </a>
-                </div>
-            </div>
+     <div class="school-header" style="
+    text-align: center; 
+    margin-bottom: 32px; 
+    padding: 0 20px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+">
+    <h3 style="
+        font-size: 28px; 
+        font-weight: 900; 
+        color: #0f172a; 
+        margin: 0 0 8px 0; 
+        letter-spacing: -0.025em;
+    ">
+        ${SCHOOL_NAME}
+    </h3>
+    <div style="
+        display: inline-flex; 
+        align-items: center; 
+        gap: 6px; 
+        color: #64748b; 
+        font-size: 14px; 
+        font-weight: 500;
+    ">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${SCHOOL_LOCATION}
+    </div>
+</div>
+
+<div class="contact-details" style="
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 16px; 
+    padding: 0 20px; 
+    max-width: 900px; 
+    margin: 0 auto;
+">
+    <a href="mailto:${CONTACT_EMAIL}" class="contact-card" style="
+        text-decoration: none;
+        flex: 1 1 280px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+    ">
+        <div style="background: #e0f2fe; p-3; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="20" height="20" style="color: #0ea5e9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div style="min-width: 0;">
+            <p style="margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Email Us</p>
+            <p style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${CONTACT_EMAIL}</p>
+        </div>
+    </a>
+
+    <a href="tel:${CONTACT_PHONE}" class="contact-card" style="
+        text-decoration: none;
+        flex: 1 1 280px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+    ">
+        <div style="background: #f0fdf4; p-3; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="20" height="20" style="color: #22c55e" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div style="min-width: 0;">
+            <p style="margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Call Support</p>
+            <p style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b;">${CONTACT_PHONE}</p>
+        </div>
+    </a>
+
+    <a href="${SCHOOL_WEBSITE}" target="_blank" class="contact-card" style="
+        text-decoration: none;
+        flex: 1 1 280px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: #fdf2f8;
+        border: 2px solid #fbcfe8;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+    ">
+        <div style="background: #fce7f3; p-3; border-radius: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="20" height="20" style="color: #db2777" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <div style="min-width: 0;">
+            <p style="margin: 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #db2777; letter-spacing: 0.05em;">Web Portal</p>
+            <p style="margin: 0; font-size: 15px; font-weight: 700; color: #1e293b;">Visit Website</p>
+        </div>
+    </a>
+</div>
+       <div class="social-media" style="
+    text-align: center; 
+    padding: 20px; 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+">
+    <h4 style="
+        color: #64748b; 
+        font-size: 12px; 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em; 
+        margin-bottom: 16px; 
+        font-weight: 700;
+    ">Stay Connected</h4>
+    
+    <div class="social-icons" style="
+        display: flex; 
+        justify-content: center; 
+        gap: 12px; 
+        flex-wrap: wrap;
+    ">
+        <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #1877F2;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+
+        <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #FF0000;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+
+        <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #0A66C2;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+
+        <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #000000;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z"/></svg>
+        </a>
+    </div>
+</div>
             
             <!-- Sender Information -->
             <div class="sender-info">
@@ -661,64 +804,8 @@ function getModernEmailTemplate({
 </html>`;
 }
 
-function getFileIcon(fileType) {
-  const icons = {
-    'pdf': '📄',
-    'doc': '📝',
-    'docx': '📝',
-    'xls': '📊',
-    'xlsx': '📊',
-    'ppt': '📽️',
-    'pptx': '📽️',
-    'jpg': '🖼️',
-    'jpeg': '🖼️',
-    'png': '🖼️',
-    'gif': '🖼️',
-    'txt': '📃',
-    'zip': '🗜️',
-    'rar': '🗜️',
-    'mp3': '🎵',
-    'mp4': '🎬',
-    'avi': '🎬',
-    'mov': '🎬',
-    'webp': '🖼️',
-    'svg': '🖼️'
-  };
-  
-  const ext = fileType.toLowerCase();
-  return icons[ext] || '📎';
-}
 
-function generateAttachmentHTML(attachments) {
-  if (!attachments || attachments.length === 0) return '';
-  
-  try {
-    const attachmentsArray = Array.isArray(attachments) ? attachments : JSON.parse(attachments);
-    if (!Array.isArray(attachmentsArray) || attachmentsArray.length === 0) return '';
-    
-    return `
-      <div class="attachments-section">
-        <h3 class="attachments-title">📎 Attachments</h3>
-        <ul class="attachments-list">
-          ${attachmentsArray.map(attachment => `
-            <li class="attachment-item">
-              <span class="attachment-icon">${getFileIcon(attachment.fileType)}</span>
-              <span class="attachment-name">
-                <a href="${attachment.url || '#'}" target="_blank" style="color: #1e3c72; text-decoration: none;">
-                  ${attachment.originalName || attachment.filename}
-                </a>
-                ${attachment.fileSize ? `<br><small>${formatFileSize(attachment.fileSize)}</small>` : ''}
-              </span>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  } catch (error) {
-    console.error('Error parsing attachments:', error);
-    return '';
-  }
-}
+
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
@@ -770,14 +857,7 @@ async function sendModernEmails(campaign) {
       });
 
       // Add attachments section if there are attachments
-      if (attachmentsArray.length > 0) {
-        const attachmentsSection = generateAttachmentHTML(attachmentsArray);
-        // Insert attachments section before sender info
-        htmlContent = htmlContent.replace(
-          '<!-- Attachments Section will be inserted here -->',
-          `${attachmentsSection}\n<!-- Attachments Section will be inserted here -->`
-        );
-      }
+
 
       const mailOptions = {
         from: `"${SCHOOL_NAME} Administration" <${process.env.EMAIL_USER}>`,
