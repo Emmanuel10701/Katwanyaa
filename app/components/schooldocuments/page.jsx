@@ -18,7 +18,8 @@ import {
   FaCamera, FaImage, FaHourglassHalf, FaBookOpen,
   FaUsersCog, FaRocket, FaArrowLeft, FaEyeDropper,
   FaEdit, FaList, FaCaretDown, FaCaretUp,
-  FaSort, FaSortUp, FaSortDown, FaCalculator
+  FaSort, FaSortUp, FaSortDown, FaCalculator,
+  FaInfo, FaQuestionCircle
 } from 'react-icons/fa';
 
 import { 
@@ -80,29 +81,29 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
 }
 
 // Dynamic Fee Category Component
-function DynamicFeeCategory({ category, index, onChange, onRemove }) {
+function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border-2 border-blue-200 mb-3">
+    <div className={`bg-gradient-to-br from-${type === 'boarding' ? 'blue' : 'green'}-50 to-${type === 'boarding' ? 'blue' : 'green'}-100 rounded-2xl p-4 border-2 border-${type === 'boarding' ? 'blue' : 'green'}-200 mb-3`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 hover:bg-blue-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/50 rounded-lg transition-colors"
           >
             {isExpanded ? <FaCaretUp /> : <FaCaretDown />}
           </button>
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-500 text-white rounded-xl">
+            <div className={`p-2 ${type === 'boarding' ? 'bg-blue-500' : 'bg-green-500'} text-white rounded-xl`}>
               <FaMoneyBillWave className="text-sm" />
             </div>
             <div>
               <h4 className="text-sm font-bold text-gray-900">
                 {category.name || `Fee Category ${index + 1}`}
               </h4>
-              <p className="text-xs text-gray-600 font-medium">
+              <p className="text-xs text-gray-600 font-bold">
                 Amount: KES {category.amount?.toLocaleString() || '0'}
               </p>
             </div>
@@ -113,7 +114,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="px-3 py-1.5 text-xs font-bold bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            className="px-3 py-1.5 text-xs font-bold bg-white/80 text-gray-700 rounded-lg hover:bg-white transition-colors border border-gray-200"
           >
             {isExpanded ? 'Collapse' : 'Edit'}
           </button>
@@ -129,7 +130,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
       </div>
       
       <Collapse in={isExpanded}>
-        <div className="mt-4 space-y-4 pt-4 border-t border-blue-200">
+        <div className="mt-4 space-y-4 pt-4 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-2">
@@ -140,7 +141,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
                 value={category.name || ''}
                 onChange={(e) => onChange(index, 'name', e.target.value)}
                 placeholder="e.g., Tuition, Uniform, Books, etc."
-                className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all"
               />
             </div>
             
@@ -155,7 +156,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
                 value={category.amount || ''}
                 onChange={(e) => onChange(index, 'amount', parseFloat(e.target.value) || 0)}
                 placeholder="Enter amount"
-                className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all"
               />
             </div>
           </div>
@@ -169,7 +170,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
               onChange={(e) => onChange(index, 'description', e.target.value)}
               placeholder="Brief description of this fee category..."
               rows="2"
-              className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all resize-none"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold transition-all resize-none"
             />
           </div>
           
@@ -186,17 +187,19 @@ function DynamicFeeCategory({ category, index, onChange, onRemove }) {
               </label>
             </div>
             
-            <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={category.boardingOnly || false}
-                  onChange={(e) => onChange(index, 'boardingOnly', e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-                Boarding Only
-              </label>
-            </div>
+            {type === 'boarding' && (
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={category.boardingOnly || false}
+                    onChange={(e) => onChange(index, 'boardingOnly', e.target.checked)}
+                    className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                  />
+                  Boarding Specific
+                </label>
+              </div>
+            )}
           </div>
         </div>
       </Collapse>
@@ -211,7 +214,7 @@ function FeeBreakdownModal({
   onSave, 
   title = "Fee Structure Breakdown",
   existingBreakdown = [],
-  type = 'day' // 'day' or 'boarding' or 'admission'
+  type = 'day' // 'day' or 'boarding'
 }) {
   const [categories, setCategories] = useState(existingBreakdown || []);
   const [totalAmount, setTotalAmount] = useState(0);
@@ -230,7 +233,7 @@ function FeeBreakdownModal({
       amount: 0,
       description: '',
       optional: false,
-      boardingOnly: false,
+      boardingOnly: type === 'boarding',
       order: categories.length
     };
     setCategories([...categories, newCategory]);
@@ -286,13 +289,20 @@ function FeeBreakdownModal({
     onClose();
   };
 
-  const presetCategories = [
+  const presetCategories = type === 'day' ? [
     { name: 'Tuition', amount: 0, description: 'Academic tuition fees' },
     { name: 'Uniform', amount: 0, description: 'School uniform costs' },
     { name: 'Books', amount: 0, description: 'Textbooks and stationery' },
     { name: 'Activity Fee', amount: 0, description: 'Extra-curricular activities' },
     { name: 'Development Levy', amount: 0, description: 'School development fund' },
+  ] : [
+    { name: 'Tuition', amount: 0, description: 'Academic tuition fees' },
     { name: 'Boarding Fee', amount: 0, description: 'Accommodation and meals', boardingOnly: true },
+    { name: 'Uniform', amount: 0, description: 'School uniform costs' },
+    { name: 'Books', amount: 0, description: 'Textbooks and stationery' },
+    { name: 'Medical Fee', amount: 0, description: 'Medical services for boarders', boardingOnly: true },
+    { name: 'Activity Fee', amount: 0, description: 'Extra-curricular activities' },
+    { name: 'Development Levy', amount: 0, description: 'School development fund' },
   ];
 
   const loadPreset = (preset) => {
@@ -310,15 +320,15 @@ function FeeBreakdownModal({
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '95vw',
-        maxWidth: '800px',
-        maxHeight: '90vh',
+        maxWidth: '700px',
+        maxHeight: '85vh',
         bgcolor: 'background.paper',
         borderRadius: 2,
         boxShadow: 24,
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white">
+        <div className={`bg-gradient-to-r ${type === 'boarding' ? 'from-blue-600 via-blue-700 to-indigo-700' : 'from-green-600 via-green-700 to-emerald-700'} p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
@@ -326,9 +336,8 @@ function FeeBreakdownModal({
               </div>
               <div>
                 <h2 className="text-xl font-bold">{title}</h2>
-                <p className="text-blue-100 opacity-90 text-sm mt-1">
-                  {type === 'admission' ? 'Admission Fee Breakdown' : 
-                   `${type.charAt(0).toUpperCase() + type.slice(1)} School Fee Structure`}
+                <p className="text-white/90 text-sm mt-1 font-bold">
+                  {type === 'day' ? 'Day School' : 'Boarding School'} Fee Structure Breakdown
                 </p>
               </div>
             </div>
@@ -341,7 +350,7 @@ function FeeBreakdownModal({
           </div>
         </div>
 
-        <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-6">
+        <div className="max-h-[calc(85vh-180px)] overflow-y-auto p-6">
           {errors.length > 0 && (
             <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -350,7 +359,7 @@ function FeeBreakdownModal({
               </div>
               <ul className="space-y-1">
                 {errors.map((error, index) => (
-                  <li key={index} className="text-xs text-red-600 font-medium">• {error}</li>
+                  <li key={index} className="text-xs text-red-600 font-bold">• {error}</li>
                 ))}
               </ul>
             </div>
@@ -381,7 +390,7 @@ function FeeBreakdownModal({
               <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-300">
                 <FaMoneyBillWave className="mx-auto text-4xl text-gray-400 mb-4" />
                 <h4 className="text-lg font-bold text-gray-700 mb-2">No Fee Categories</h4>
-                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto">
+                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
                   Start by adding fee categories or load a preset to get started.
                 </p>
                 <button
@@ -421,6 +430,7 @@ function FeeBreakdownModal({
                                   index={index}
                                   onChange={handleCategoryChange}
                                   onRemove={() => handleRemoveCategory(index)}
+                                  type={type}
                                 />
                               </div>
                             </div>
@@ -444,7 +454,7 @@ function FeeBreakdownModal({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Fee Summary</h3>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="text-sm text-gray-600 font-bold">
                     {categories.length} categories defined
                   </p>
                 </div>
@@ -453,7 +463,7 @@ function FeeBreakdownModal({
                 <div className="text-3xl font-bold text-emerald-700">
                   KES {totalAmount.toLocaleString()}
                 </div>
-                <p className="text-xs text-gray-600 font-medium mt-1">
+                <p className="text-xs text-gray-600 font-bold mt-1">
                   Total Amount
                 </p>
               </div>
@@ -465,7 +475,7 @@ function FeeBreakdownModal({
                 <p className="text-lg font-bold text-gray-900">
                   KES {categories.filter(c => !c.optional).reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1 font-bold">
                   {categories.filter(c => !c.optional).length} categories
                 </p>
               </div>
@@ -474,7 +484,7 @@ function FeeBreakdownModal({
                 <p className="text-lg font-bold text-gray-900">
                   KES {categories.filter(c => c.optional).reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1 font-bold">
                   {categories.filter(c => c.optional).length} categories
                 </p>
               </div>
@@ -486,7 +496,7 @@ function FeeBreakdownModal({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total: <span className="text-emerald-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1">{categories.length} fee categories configured</p>
+              <p className="text-xs mt-1 font-bold">{categories.length} fee categories configured</p>
             </div>
             
             <div className="flex gap-3 w-full sm:w-auto">
@@ -513,8 +523,436 @@ function FeeBreakdownModal({
   );
 }
 
-// Enhanced Modern PDF Upload with Fee Breakdown
-function ModernPdfUploadWithBreakdown({ 
+// Admission Fee Breakdown Modal
+function AdmissionFeeBreakdownModal({ 
+  open, 
+  onClose, 
+  onSave, 
+  existingBreakdown = []
+}) {
+  const [categories, setCategories] = useState(existingBreakdown || []);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [errors, setErrors] = useState([]);
+
+  useEffect(() => {
+    const total = categories.reduce((sum, cat) => sum + (cat.amount || 0), 0);
+    setTotalAmount(total);
+  }, [categories]);
+
+  const handleAddCategory = () => {
+    const newCategory = {
+      id: `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: '',
+      amount: 0,
+      description: '',
+      optional: false,
+      order: categories.length
+    };
+    setCategories([...categories, newCategory]);
+  };
+
+  const handleCategoryChange = (index, field, value) => {
+    const updated = [...categories];
+    updated[index] = { ...updated[index], [field]: value };
+    setCategories(updated);
+  };
+
+  const handleRemoveCategory = (index) => {
+    if (categories.length <= 1) {
+      toast.warning('At least one fee category is required');
+      return;
+    }
+    const updated = categories.filter((_, i) => i !== index);
+    setCategories(updated);
+  };
+
+  const handleSave = () => {
+    const validationErrors = [];
+    categories.forEach((cat, index) => {
+      if (!cat.name?.trim()) {
+        validationErrors.push(`Category ${index + 1} requires a name`);
+      }
+      if (!cat.amount || cat.amount <= 0) {
+        validationErrors.push(`Category "${cat.name || index + 1}" requires a valid amount`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix all validation errors');
+      return;
+    }
+
+    setErrors([]);
+    onSave(categories);
+    onClose();
+  };
+
+  const presetCategories = [
+    { name: 'Application Fee', amount: 0, description: 'Non-refundable application processing fee' },
+    { name: 'Registration Fee', amount: 0, description: 'Student registration fee' },
+    { name: 'Acceptance Fee', amount: 0, description: 'Fee to secure admission spot' },
+    { name: 'Uniform Deposit', amount: 0, description: 'Uniform purchase deposit' },
+    { name: 'Medical Fee', amount: 0, description: 'Medical examination and records' },
+    { name: 'Development Fee', amount: 0, description: 'School infrastructure development' },
+  ];
+
+  const loadPreset = (preset) => {
+    const loaded = preset.map((cat, index) => ({
+      ...cat,
+      id: `preset_${Date.now()}_${index}`,
+      order: index
+    }));
+    setCategories(loaded);
+    toast.success('Preset categories loaded. Update amounts as needed.');
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: '600px',
+        maxHeight: '80vh',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+      }}>
+        <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+                <FaUserCheck className="text-lg" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Admission Fee Breakdown</h2>
+                <p className="text-white/90 text-sm mt-1 font-bold">
+                  Define admission-related fees and charges
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200"
+            >
+              <FaTimes className="text-lg" />
+            </button>
+          </div>
+        </div>
+
+        <div className="max-h-[calc(80vh-180px)] overflow-y-auto p-6">
+          {errors.length > 0 && (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaExclamationTriangle className="text-red-600" />
+                <h4 className="text-sm font-bold text-red-700">Validation Errors</h4>
+              </div>
+              <ul className="space-y-1">
+                {errors.map((error, index) => (
+                  <li key={index} className="text-xs text-red-600 font-bold">• {error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Admission Fee Categories</h3>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => loadPreset(presetCategories)}
+                  className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Load Preset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-colors flex items-center gap-2"
+                >
+                  <FaPlus /> Add Category
+                </button>
+              </div>
+            </div>
+
+            {categories.length === 0 ? (
+              <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-dashed border-purple-300">
+                <FaUserCheck className="mx-auto text-4xl text-purple-400 mb-4" />
+                <h4 className="text-lg font-bold text-gray-700 mb-2">No Admission Fees</h4>
+                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
+                  Define the admission fees that new students need to pay.
+                </p>
+                <button
+                  onClick={handleAddCategory}
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-colors font-bold shadow-lg flex items-center gap-2 mx-auto"
+                >
+                  <FaPlus /> Add First Category
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {categories.map((category, index) => (
+                  <div key={category.id} className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border-2 border-purple-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-purple-500 text-white rounded-xl">
+                          <FaMoneyBillWave className="text-sm" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900">{category.name}</h4>
+                          <p className="text-xs text-gray-600 font-bold">
+                            KES {category.amount?.toLocaleString() || '0'}
+                            {category.optional && <span className="text-gray-500 ml-2">(Optional)</span>}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCategory(index)}
+                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">Category Name *</label>
+                        <input
+                          type="text"
+                          value={category.name || ''}
+                          onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
+                          placeholder="e.g., Application Fee"
+                          className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-2">Amount (KES) *</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="100"
+                          value={category.amount || ''}
+                          onChange={(e) => handleCategoryChange(index, 'amount', parseFloat(e.target.value) || 0)}
+                          placeholder="Enter amount"
+                          className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3">
+                      <label className="block text-xs font-bold text-gray-700 mb-2">Description</label>
+                      <input
+                        type="text"
+                        value={category.description || ''}
+                        onChange={(e) => handleCategoryChange(index, 'description', e.target.value)}
+                        placeholder="Description of this fee..."
+                        className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
+                      />
+                    </div>
+                    
+                    <div className="mt-3">
+                      <label className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={category.optional || false}
+                          onChange={(e) => handleCategoryChange(index, 'optional', e.target.checked)}
+                          className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                        />
+                        Optional Fee (Not required for admission)
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Summary Card */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-purple-500 text-white rounded-xl">
+                  <FaCalculator className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Admission Fee Summary</h3>
+                  <p className="text-sm text-gray-600 font-bold">
+                    {categories.length} admission fee categories
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-purple-700">
+                  KES {totalAmount.toLocaleString()}
+                </div>
+                <p className="text-xs text-gray-600 font-bold mt-1">
+                  Total Admission Fees
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 p-6 bg-white">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 font-bold">
+              <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
+              <p className="text-xs mt-1 font-bold">{categories.length} categories configured</p>
+            </div>
+            
+            <div className="flex gap-3 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold w-full sm:w-auto"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={categories.length === 0}
+                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+              >
+                Save Admission Fees
+              </button>
+            </div>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
+// Document Metadata Modal for Additional Files
+function DocumentMetadataModal({ 
+  open, 
+  onClose, 
+  onSave, 
+  fileName,
+  existingData = {}
+}) {
+  const [year, setYear] = useState(existingData.year || '');
+  const [description, setDescription] = useState(existingData.description || '');
+
+  const handleSave = () => {
+    if (!year || !description) {
+      toast.error('Please fill in both year and description');
+      return;
+    }
+
+    onSave({ year, description });
+    onClose();
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: '500px',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
+      }}>
+        <div className="bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+                <FaFileAlt className="text-lg" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Document Metadata</h2>
+                <p className="text-white/90 text-sm mt-1 font-bold">
+                  {fileName}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200"
+            >
+              <FaTimes className="text-lg" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Year *
+              </label>
+              <input
+                type="number"
+                min="2000"
+                max="2100"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                placeholder="Enter year (e.g., 2024)"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">
+                Description *
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe what this document contains..."
+                rows="4"
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold resize-none"
+                required
+              />
+            </div>
+            
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FaInfoCircle className="text-blue-600" />
+                <h4 className="text-sm font-bold text-gray-900">Why this information is important</h4>
+              </div>
+              <p className="text-xs text-gray-600 font-bold">
+                Adding year and description helps organize and search documents easily. 
+                This metadata ensures proper categorization and makes document management more efficient.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 p-6 bg-white">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow"
+            >
+              Save Metadata
+            </button>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
+// Enhanced Modern PDF Upload with Description and Specific Fee Breakdowns
+function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
   onRemove,
@@ -524,15 +962,17 @@ function ModernPdfUploadWithBreakdown({
   required = false,
   existingPdf = null,
   existingFeeBreakdown = null,
-  type = 'day', // 'day', 'boarding', 'admission'
+  type = 'curriculum', // 'curriculum', 'day', 'boarding', 'admission', 'results'
   onCancelExisting = null,
-  onRemoveExisting = null
+  onRemoveExisting = null,
+  description = ""
 }) {
   const [previewName, setPreviewName] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isReplacing, setIsReplacing] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showAdmissionFeeModal, setShowAdmissionFeeModal] = useState(false);
   const [localFeeBreakdown, setLocalFeeBreakdown] = useState(feeBreakdown || existingFeeBreakdown || []);
   const fileInputRef = useRef(null);
 
@@ -593,6 +1033,14 @@ function ModernPdfUploadWithBreakdown({
     toast.success('Fee breakdown saved successfully');
   };
 
+  const handleAdmissionFeeSave = (breakdown) => {
+    setLocalFeeBreakdown(breakdown);
+    if (onFeeBreakdownChange) {
+      onFeeBreakdownChange(breakdown);
+    }
+    toast.success('Admission fees saved successfully');
+  };
+
   const calculateTotal = (breakdown) => {
     if (!breakdown || !Array.isArray(breakdown)) return 0;
     return breakdown.reduce((sum, item) => sum + (item.amount || 0), 0);
@@ -603,213 +1051,287 @@ function ModernPdfUploadWithBreakdown({
   const hasNewPdf = pdfFile && typeof pdfFile === 'object';
   const hasFeeBreakdown = localFeeBreakdown && localFeeBreakdown.length > 0;
 
+  const getDescription = () => {
+    switch(type) {
+      case 'curriculum':
+        return "Upload the official school curriculum document outlining all subjects, courses, and academic programs offered.";
+      case 'day':
+        return "Upload the fee structure for day scholars. This document should detail all applicable fees for students who don't board at the school.";
+      case 'boarding':
+        return "Upload the fee structure for boarding students. This document should include accommodation, meals, and all boarding-related charges.";
+      case 'admission':
+        return "Upload the admission fee document outlining all charges new students need to pay upon admission.";
+      case 'results':
+        return "Upload the examination results document. Ensure it includes proper grading, subject scores, and student performance data.";
+      default:
+        return description;
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-          <FaFilePdf className="text-red-500" />
-          <span>{label}</span>
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
-        
-        <button
-          type="button"
-          onClick={() => setShowFeeModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition duration-200 font-bold text-sm shadow-lg"
-        >
-          <FaCalculator className="text-xs" />
-          {hasFeeBreakdown ? 'Edit Breakdown' : 'Add Fee Breakdown'}
-        </button>
-      </div>
-      
-      {/* Fee Breakdown Preview */}
-      {hasFeeBreakdown && (
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border-2 border-purple-200">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FaMoneyBillWave className="text-purple-600" />
-              <h4 className="text-sm font-bold text-gray-900">Fee Breakdown Preview</h4>
-            </div>
-            <span className="text-lg font-bold text-purple-700">
-              KES {totalAmount.toLocaleString()}
-            </span>
-          </div>
+      {/* Upload Section with Half Width */}
+      <div className="w-full max-w-2xl">
+        <div className="flex items-center justify-between mb-3">
+          <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            {type === 'curriculum' && <FaBook className="text-red-500" />}
+            {type === 'day' && <FaMoneyBillWave className="text-green-500" />}
+            {type === 'boarding' && <FaBuilding className="text-blue-500" />}
+            {type === 'admission' && <FaUserCheck className="text-purple-500" />}
+            {type === 'results' && <FaAward className="text-orange-500" />}
+            <span className="text-base">{label}</span>
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
           
-          <div className="space-y-2">
-            {localFeeBreakdown.slice(0, 3).map((item, index) => (
-              <div key={index} className="flex items-center justify-between bg-white p-3 rounded-xl border border-purple-100">
-                <span className="text-sm font-bold text-gray-800">{item.name}</span>
-                <span className="text-sm font-bold text-purple-700">
-                  KES {item.amount?.toLocaleString()}
-                  {item.optional && <span className="text-xs text-gray-500 ml-2">(Optional)</span>}
-                </span>
-              </div>
-            ))}
-            
-            {localFeeBreakdown.length > 3 && (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowFeeModal(true)}
-                  className="text-sm font-bold text-purple-600 hover:text-purple-700"
-                >
-                  + {localFeeBreakdown.length - 3} more categories
-                </button>
-              </div>
-            )}
+          {/* Only show fee breakdown buttons for day and boarding fees */}
+          {(type === 'day' || type === 'boarding') && (
+            <button
+              type="button"
+              onClick={() => setShowFeeModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold text-sm shadow-lg"
+            >
+              <FaCalculator className="text-xs" />
+              {hasFeeBreakdown ? 'Edit Breakdown' : 'Add Fee Breakdown'}
+            </button>
+          )}
+          
+          {/* Show admission fee button for admission type */}
+          {type === 'admission' && (
+            <button
+              type="button"
+              onClick={() => setShowAdmissionFeeModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition duration-200 font-bold text-sm shadow-lg"
+            >
+              <FaMoneyBillWave className="text-xs" />
+              {hasFeeBreakdown ? 'Edit Fees' : 'Add Admission Fees'}
+            </button>
+          )}
+        </div>
+        
+        {/* Description Box */}
+        <div className="mb-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
+          <div className="flex items-start gap-3">
+            <FaInfoCircle className="text-blue-600 mt-1 flex-shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 mb-1">Why upload this document?</h4>
+              <p className="text-xs text-gray-700 font-bold leading-relaxed">
+                {getDescription()}
+              </p>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* File Upload Section */}
-      {(hasNewPdf || hasExistingPdf) ? (
-        <div className="relative group">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-red-200 shadow-lg transition-all duration-300 bg-gradient-to-br from-red-50 to-orange-50 p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl text-white">
-                  <FaFilePdf className="text-lg" />
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900 text-sm truncate max-w-[180px]">
-                    {hasNewPdf ? pdfFile.name : (existingPdf.name || existingPdf.filename || 'Existing PDF')}
-                  </p>
-                  <p className="text-xs text-gray-600 font-medium">
-                    {hasNewPdf ? 'New PDF Document' : 'Existing PDF Document'}
-                    {existingPdf?.size && ` • ${(existingPdf.size / 1024).toFixed(0)} KB`}
-                    {hasFeeBreakdown && ` • ${localFeeBreakdown.length} fee categories`}
-                  </p>
-                </div>
-              </div>
+        {/* Fee Breakdown Preview */}
+        {hasFeeBreakdown && (type === 'day' || type === 'boarding' || type === 'admission') && (
+          <div className={`mb-4 bg-gradient-to-br ${type === 'admission' ? 'from-purple-50 to-purple-100 border-purple-200' : type === 'boarding' ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-green-50 to-green-100 border-green-200'} rounded-2xl p-4 border-2`}>
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                {hasExistingPdf && (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsReplacing(true);
-                        setPreviewName('');
-                        setUploadProgress(0);
-                        if (onCancelExisting) onCancelExisting();
-                        setTimeout(() => fileInputRef.current?.click(), 100);
-                      }}
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
-                    >
-                      <FaUpload className="text-xs" />
-                      Replace
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onRemoveExisting) onRemoveExisting();
-                        setPreviewName('');
-                        setUploadProgress(0);
-                        toast.success('Existing PDF marked for removal');
-                      }}
-                      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
-                    >
-                      <FaTrash className="text-xs" />
-                      Remove
-                    </button>
+                <FaMoneyBillWave className={type === 'admission' ? 'text-purple-600' : type === 'boarding' ? 'text-blue-600' : 'text-green-600'} />
+                <h4 className="text-sm font-bold text-gray-900">
+                  {type === 'admission' ? 'Admission Fees' : `${type.charAt(0).toUpperCase() + type.slice(1)} School Fees`}
+                </h4>
+              </div>
+              <span className={`text-lg font-bold ${type === 'admission' ? 'text-purple-700' : type === 'boarding' ? 'text-blue-700' : 'text-green-700'}`}>
+                KES {totalAmount.toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="space-y-2">
+              {localFeeBreakdown.slice(0, 3).map((item, index) => (
+                <div key={index} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100">
+                  <div className="flex-1">
+                    <span className="text-sm font-bold text-gray-800">{item.name}</span>
+                    {item.optional && (
+                      <span className="text-xs text-gray-500 ml-2 font-bold">(Optional)</span>
+                    )}
+                    {item.boardingOnly && (
+                      <span className="text-xs text-green-600 ml-2 font-bold">(Boarding)</span>
+                    )}
                   </div>
-                )}
-                {hasNewPdf && (
+                  <span className="text-sm font-bold text-gray-700">
+                    KES {item.amount?.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+              
+              {localFeeBreakdown.length > 3 && (
+                <div className="text-center pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      onRemove();
-                      setPreviewName('');
-                      setUploadProgress(0);
-                    }}
-                    className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700"
-                    title="Remove PDF"
+                    onClick={type === 'admission' ? () => setShowAdmissionFeeModal(true) : () => setShowFeeModal(true)}
+                    className={`text-sm font-bold ${type === 'admission' ? 'text-purple-600 hover:text-purple-700' : type === 'boarding' ? 'text-blue-600 hover:text-blue-700' : 'text-green-600 hover:text-green-700'}`}
                   >
-                    <FaTimes className="text-xs" />
+                    + {localFeeBreakdown.length - 3} more categories
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-            
-            {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="mt-4">
-                <div className="flex justify-between mb-1.5">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Uploading...</span>
-                  <span className="text-xs font-bold text-red-600">{uploadProgress}%</span>
+          </div>
+        )}
+      </div>
+
+      {/* File Upload Section - Half Width */}
+      <div className="w-full max-w-2xl">
+        {(hasNewPdf || hasExistingPdf) ? (
+          <div className="relative group">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 shadow-lg transition-all duration-300 bg-gradient-to-br from-gray-50 to-gray-100 p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 ${type === 'curriculum' ? 'bg-red-500' : type === 'day' ? 'bg-green-500' : type === 'boarding' ? 'bg-blue-500' : type === 'admission' ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
+                    <FaFilePdf className="text-lg" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm truncate max-w-[180px]">
+                      {hasNewPdf ? pdfFile.name : (existingPdf.name || existingPdf.filename || 'Existing PDF')}
+                    </p>
+                    <p className="text-xs text-gray-600 font-bold">
+                      {hasNewPdf ? 'New PDF Document' : 'Existing PDF Document'}
+                      {existingPdf?.size && ` • ${(existingPdf.size / 1024).toFixed(0)} KB`}
+                      {hasFeeBreakdown && ` • ${localFeeBreakdown.length} categories`}
+                    </p>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-red-500 to-orange-500 h-full transition-all duration-500"
-                    style={{ width: `${uploadProgress}%` }}
-                  ></div>
+                <div className="flex items-center gap-2">
+                  {hasExistingPdf && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsReplacing(true);
+                          setPreviewName('');
+                          setUploadProgress(0);
+                          if (onCancelExisting) onCancelExisting();
+                          setTimeout(() => fileInputRef.current?.click(), 100);
+                        }}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
+                      >
+                        <FaUpload className="text-xs" />
+                        Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onRemoveExisting) onRemoveExisting();
+                          setPreviewName('');
+                          setUploadProgress(0);
+                          toast.success('Existing PDF marked for removal');
+                        }}
+                        className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
+                      >
+                        <FaTrash className="text-xs" />
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  {hasNewPdf && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onRemove();
+                        setPreviewName('');
+                        setUploadProgress(0);
+                      }}
+                      className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700"
+                      title="Remove PDF"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                  )}
                 </div>
               </div>
-            )}
+              
+              {uploadProgress > 0 && uploadProgress < 100 && (
+                <div className="mt-4">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Uploading...</span>
+                    <span className="text-xs font-bold text-red-600">{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-red-500 to-orange-500 h-full transition-all duration-500"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div
-          className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group ${
-            dragOver 
-              ? 'border-red-400 bg-gradient-to-br from-red-50 to-red-100 ring-4 ring-red-50' 
-              : 'border-gray-200 hover:border-red-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
-          }`}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const files = Array.from(e.dataTransfer.files).slice(0, 1);
-            if (files.length > 0) handleFileChange({ target: { files } });
-          }}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <div className="relative">
-            <FaUpload className={`mx-auto text-2xl mb-3 transition-all duration-300 ${
-              dragOver ? 'text-red-500 scale-110' : 'text-gray-400 group-hover:text-red-500'
-            }`} />
+        ) : (
+          <div
+            className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group w-full max-w-2xl ${
+              dragOver 
+                ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
+                : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
+            }`}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              const files = Array.from(e.dataTransfer.files).slice(0, 1);
+              if (files.length > 0) handleFileChange({ target: { files } });
+            }}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="relative">
+              <FaUpload className={`mx-auto text-2xl mb-3 transition-all duration-300 ${
+                dragOver ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-500'
+              }`} />
+            </div>
+            <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-base">
+              {dragOver ? '📄 Drop PDF here!' : isReplacing ? 'Select new PDF file' : 'Click to upload PDF'}
+            </p>
+            <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
+              Max: 20MB • PDF only
+            </p>
+            <input 
+              ref={fileInputRef}
+              type="file" 
+              accept=".pdf" 
+              onChange={handleFileChange} 
+              className="hidden" 
+            />
           </div>
-          <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-sm">
-            {dragOver ? '📄 Drop PDF here!' : isReplacing ? 'Select new PDF file' : 'Click to upload PDF'}
-          </p>
-          <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-medium">
-            Max: 20MB • PDF only
-          </p>
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            accept=".pdf" 
-            onChange={handleFileChange} 
-            className="hidden" 
-          />
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Fee Breakdown Modal */}
-      {showFeeModal && (
+      {/* Modals */}
+      {(type === 'day' || type === 'boarding') && showFeeModal && (
         <FeeBreakdownModal
           open={showFeeModal}
           onClose={() => setShowFeeModal(false)}
           onSave={handleFeeBreakdownSave}
-          title={`${type === 'admission' ? 'Admission Fee' : type.charAt(0).toUpperCase() + type.slice(1) + ' School Fees'} Breakdown`}
+          title={`${type === 'day' ? 'Day School' : 'Boarding School'} Fee Breakdown`}
           existingBreakdown={localFeeBreakdown}
           type={type}
+        />
+      )}
+
+      {type === 'admission' && showAdmissionFeeModal && (
+        <AdmissionFeeBreakdownModal
+          open={showAdmissionFeeModal}
+          onClose={() => setShowAdmissionFeeModal(false)}
+          onSave={handleAdmissionFeeSave}
+          existingBreakdown={localFeeBreakdown}
         />
       )}
     </div>
   );
 }
 
-// Additional Results Upload Component (with metadata)
+// Enhanced Additional Results Upload with Metadata Modal
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
-  label = "Additional Results Files",
+  label = "Additional Documents",
   existingFiles = [],
   onCancelExisting = null,
   onRemoveExisting = null
 }) {
   const [dragOver, setDragOver] = useState(false);
   const [localFiles, setLocalFiles] = useState([]);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -820,7 +1342,9 @@ function AdditionalResultsUpload({
       isModified: false,
       isRemoved: false,
       isReplaced: false,
-      originalFilePath: file.filepath || file.filename
+      originalFilePath: file.filepath || file.filename,
+      year: file.year || '',
+      description: file.description || ''
     }));
     
     const newFileObjects = (files || []).filter(file => {
@@ -832,10 +1356,10 @@ function AdditionalResultsUpload({
       id: `new_${Date.now()}_${index}`,
       file: file,
       filename: file.name,
-      year: file.year || '',
-      description: file.description || '',
+      year: '',
+      description: '',
       isNew: true,
-      isModified: true,
+      isModified: false,
       filetype: file.type?.split('/')[1] || 'file',
       filesize: file.size || file.filesize || 0
     }));
@@ -857,43 +1381,33 @@ function AdditionalResultsUpload({
   const handleFileChange = (e) => {
     const newFileList = Array.from(e.target.files);
     if (newFileList.length > 0) {
-      addNewFiles(newFileList, false);
+      const newFile = newFileList[0];
+      setSelectedFile({
+        file: newFile,
+        id: `new_${Date.now()}`,
+        filename: newFile.name
+      });
+      setShowMetadataModal(true);
     }
   };
 
-  const addNewFiles = (fileList, isReplacement = false, replaceFileId = null) => {
-    const newFileObjects = fileList.map((file, index) => {
-      const fileId = `new_${Date.now()}_${index}`;
-      return {
-        id: fileId,
-        file: file,
-        filename: file.name,
-        year: '',
-        description: '',
+  const handleMetadataSave = (metadata) => {
+    if (selectedFile) {
+      const newFileObject = {
+        ...selectedFile,
+        year: metadata.year,
+        description: metadata.description,
         isNew: true,
-        isModified: true,
-        isReplacement: isReplacement,
-        replacesFileId: replaceFileId,
-        filetype: file.type.split('/')[1] || 'file',
-        filesize: file.size
+        isModified: true
       };
-    });
-    
-    if (isReplacement && replaceFileId) {
-      setLocalFiles(prev => {
-        const updated = prev.map(file => 
-          file.id === replaceFileId ? { ...file, isReplaced: true } : file
-        );
-        return [...updated, ...newFileObjects];
-      });
-    } else {
-      setLocalFiles(prev => [...prev, ...newFileObjects]);
+      
+      setLocalFiles(prev => [...prev, newFileObject]);
+      onFilesChange([...files, selectedFile.file]);
+      toast.success('Document added with metadata');
+      
+      setSelectedFile(null);
+      setShowMetadataModal(false);
     }
-    
-    const newFilesForParent = newFileObjects.map(f => f.file);
-    onFilesChange([...files, ...newFilesForParent]);
-    
-    toast.success(`${fileList.length} file(s) ${isReplacement ? 'replaced' : 'added'}. Fill in metadata.`);
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -906,28 +1420,14 @@ function AdditionalResultsUpload({
     setDragOver(false);
     const newFiles = Array.from(e.dataTransfer.files);
     if (newFiles.length > 0) {
-      addNewFiles(newFiles, false);
+      const newFile = newFiles[0];
+      setSelectedFile({
+        file: newFile,
+        id: `new_${Date.now()}`,
+        filename: newFile.name
+      });
+      setShowMetadataModal(true);
     }
-  };
-
-  const handleYearChange = (id, year) => {
-    setLocalFiles(prev => prev.map(file => 
-      file.id === id ? { 
-        ...file, 
-        year,
-        isModified: true
-      } : file
-    ));
-  };
-
-  const handleDescriptionChange = (id, description) => {
-    setLocalFiles(prev => prev.map(file => 
-      file.id === id ? { 
-        ...file, 
-        description,
-        isModified: true
-      } : file
-    ));
   };
 
   const handleReplaceExisting = (id) => {
@@ -940,7 +1440,13 @@ function AdditionalResultsUpload({
       input.onchange = (e) => {
         const replacementFile = e.target.files[0];
         if (replacementFile) {
-          addNewFiles([replacementFile], true, id);
+          setSelectedFile({
+            file: replacementFile,
+            id: `replacement_${Date.now()}`,
+            filename: replacementFile.name,
+            replacesFileId: id
+          });
+          setShowMetadataModal(true);
           
           if (onCancelExisting) {
             onCancelExisting(fileToReplace);
@@ -1006,23 +1512,38 @@ function AdditionalResultsUpload({
   const displayFiles = localFiles.filter(file => !file.isRemoved);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-2xl">
       <div className="flex justify-between items-center">
         <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
           <FaFile className="text-gray-600" />
-          <span>{label}</span>
+          <span className="text-base">{label}</span>
         </label>
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg text-sm"
         >
-          <FaPlus className="text-sm" /> Add File
+          <FaPlus className="text-sm" /> Add Document
         </button>
       </div>
 
+      {/* Description Box */}
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
+        <div className="flex items-start gap-3">
+          <FaInfoCircle className="text-blue-600 mt-1 flex-shrink-0" />
+          <div>
+            <h4 className="text-sm font-bold text-gray-900 mb-1">Why upload additional documents?</h4>
+            <p className="text-xs text-gray-700 font-bold leading-relaxed">
+              Upload supplementary documents like school policies, extra-curricular activity information, 
+              special programs, or any other relevant school documentation. Each document requires year 
+              and description for proper organization.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div
-        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group ${
+        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group w-full max-w-2xl ${
           dragOver 
             ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
             : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
@@ -1037,16 +1558,15 @@ function AdditionalResultsUpload({
             dragOver ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-500'
           }`} />
         </div>
-        <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-sm">
-          {dragOver ? '📁 Drop files here!' : 'Drag & drop or click to upload additional files'}
+        <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-base">
+          {dragOver ? '📁 Drop files here!' : 'Drag & drop or click to upload documents'}
         </p>
-        <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-medium">
+        <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
           PDF, Images, Documents • Max 50MB each
         </p>
         <input 
           ref={fileInputRef}
           type="file" 
-          multiple
           onChange={handleFileChange} 
           className="hidden" 
           id="additional-files-upload" 
@@ -1067,7 +1587,11 @@ function AdditionalResultsUpload({
                     {file.isReplaced && <span className="ml-2 text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded font-bold uppercase">Replaced</span>}
                     {file.isNew && !file.isReplacement && <span className="ml-2 text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded font-bold uppercase">New</span>}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5 font-medium">
+                  <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
+                    {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
+                    {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5 font-bold">
                     {formatFileSize(file.filesize || file.size)} • 
                     {file.isExisting ? ' Existing' : ' New'}
                   </p>
@@ -1104,36 +1628,22 @@ function AdditionalResultsUpload({
                   ) : null}
                 </div>
               </div>
-              
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-2">Year</label>
-                    <input
-                      type="number"
-                      min="2000"
-                      max="2100"
-                      value={file.year || ''}
-                      onChange={(e) => handleYearChange(file.id, e.target.value)}
-                      placeholder="Enter Year"
-                      className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-2">Description</label>
-                    <input
-                      type="text"
-                      value={file.description || ''}
-                      onChange={(e) => handleDescriptionChange(file.id, e.target.value)}
-                      placeholder="Brief description..."
-                      className="w-full px-3 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Metadata Modal */}
+      {showMetadataModal && selectedFile && (
+        <DocumentMetadataModal
+          open={showMetadataModal}
+          onClose={() => {
+            setShowMetadataModal(false);
+            setSelectedFile(null);
+          }}
+          onSave={handleMetadataSave}
+          fileName={selectedFile.filename}
+        />
       )}
     </div>
   );
@@ -1147,37 +1657,40 @@ function ModernDocumentCard({
   pdfName, 
   year = null,
   feeBreakdown = null,
+  admissionBreakdown = null,
   onReplace = null,
   onRemove = null,
-  existing = false
+  existing = false,
+  type = 'default'
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   
-  const totalAmount = feeBreakdown?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
-  const categoriesCount = feeBreakdown?.length || 0;
+  const breakdown = feeBreakdown || admissionBreakdown;
+  const totalAmount = breakdown?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+  const categoriesCount = breakdown?.length || 0;
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-300">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl text-white">
+          <div className={`p-3 ${type.includes('curriculum') ? 'bg-red-500' : type.includes('day') ? 'bg-green-500' : type.includes('boarding') ? 'bg-blue-500' : type.includes('admission') ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
             <FaFilePdf className="text-lg" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-bold text-gray-900">{title}</h4>
-            <p className="text-xs text-gray-600 font-medium mt-1">{description}</p>
+            <p className="text-xs text-gray-600 font-bold mt-1">{description}</p>
             {year && (
               <span className="text-xs font-bold text-blue-600 mt-2 inline-block bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
                 Year: {year}
               </span>
             )}
-            {feeBreakdown && categoriesCount > 0 && (
+            {breakdown && categoriesCount > 0 && (
               <button
                 onClick={() => setShowBreakdown(!showBreakdown)}
                 className="mt-2 flex items-center gap-2 text-xs font-bold text-purple-600 hover:text-purple-700"
               >
                 <FaCalculator className="text-xs" />
-                {showBreakdown ? 'Hide' : 'Show'} Fee Breakdown ({categoriesCount} categories)
+                {showBreakdown ? 'Hide' : 'Show'} {type.includes('admission') ? 'Admission Fees' : 'Fee Breakdown'} ({categoriesCount} categories)
               </button>
             )}
           </div>
@@ -1208,34 +1721,45 @@ function ModernDocumentCard({
       </div>
       
       {/* Fee Breakdown Details */}
-      {showBreakdown && feeBreakdown && categoriesCount > 0 && (
-        <div className="mb-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+      {showBreakdown && breakdown && categoriesCount > 0 && (
+        <div className={`mb-4 bg-gradient-to-br ${type.includes('admission') ? 'from-purple-50 to-purple-100 border-purple-200' : type.includes('boarding') ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-green-50 to-green-100 border-green-200'} rounded-xl p-4 border`}>
           <div className="flex items-center justify-between mb-3">
-            <h5 className="text-sm font-bold text-gray-900">Fee Breakdown</h5>
-            <span className="text-lg font-bold text-purple-700">KES {totalAmount.toLocaleString()}</span>
+            <h5 className="text-sm font-bold text-gray-900">
+              {type.includes('admission') ? 'Admission Fee' : 'Fee'} Breakdown
+            </h5>
+            <span className={`text-lg font-bold ${type.includes('admission') ? 'text-purple-700' : type.includes('boarding') ? 'text-blue-700' : 'text-green-700'}`}>
+              KES {totalAmount.toLocaleString()}
+            </span>
           </div>
           <div className="space-y-2">
-            {feeBreakdown.map((item, index) => (
-              <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-purple-100">
+            {breakdown.slice(0, 5).map((item, index) => (
+              <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-gray-800">{item.name}</span>
                     {item.optional && (
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Optional</span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-bold">Optional</span>
                     )}
                     {item.boardingOnly && (
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded">Boarding Only</span>
+                      <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded font-bold">Boarding</span>
                     )}
                   </div>
                   {item.description && (
-                    <p className="text-xs text-gray-600 mt-1">{item.description}</p>
+                    <p className="text-xs text-gray-600 mt-1 font-bold">{item.description}</p>
                   )}
                 </div>
-                <span className="text-sm font-bold text-purple-700">
+                <span className="text-sm font-bold text-gray-700">
                   KES {item.amount?.toLocaleString()}
                 </span>
               </div>
             ))}
+            {breakdown.length > 5 && (
+              <div className="text-center pt-2">
+                <p className="text-xs text-gray-600 font-bold">
+                  + {breakdown.length - 5} more categories
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1337,7 +1861,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       setActionLoading(true);
       
       const data = new FormData();
-      data.append('schoolId', '1'); // You'll need to get the actual school ID
+      data.append('schoolId', '1');
       
       // Add PDF files
       Object.keys(formData).forEach(key => {
@@ -1371,7 +1895,6 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         }
       });
       
-      // Call API
       const response = await fetch('/api/schooldocuments', {
         method: 'POST',
         body: data
@@ -1456,27 +1979,12 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   };
 
-  const getExistingFeeBreakdown = (type) => {
-    if (!documents) return null;
-    
-    switch (type) {
-      case 'feesDay':
-        return documents.feesDayDistributionJson ? JSON.parse(documents.feesDayDistributionJson) : null;
-      case 'feesBoarding':
-        return documents.feesBoardingDistributionJson ? JSON.parse(documents.feesBoardingDistributionJson) : null;
-      case 'admissionFee':
-        return documents.admissionFeeDistribution ? JSON.parse(documents.admissionFeeDistribution) : null;
-      default:
-        return null;
-    }
-  };
-
   return (
     <Modal open={true} onClose={onClose}>
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '95vw',
-        maxWidth: '1200px',
+        maxWidth: '1000px',
         maxHeight: '95vh',
         bgcolor: 'background.paper',
         borderRadius: 2,
@@ -1493,7 +2001,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Manage School Documents</h2>
-                <p className="text-blue-100 opacity-90 text-sm mt-1">
+                <p className="text-white/90 text-sm mt-1 font-bold">
                   Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
                 </p>
               </div>
@@ -1533,11 +2041,11 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         </div>
 
         <div className="max-h-[calc(95vh-180px)] overflow-y-auto scrollbar-custom p-6">
-          <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-8">
             {currentStep === 0 && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-6 border border-red-200">
-                  <ModernPdfUploadWithBreakdown 
+                <div className="w-full max-w-2xl">
+                  <ModernPdfUpload
                     pdfFile={formData.curriculumPDF}
                     onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
                     onRemove={() => handleFileRemove('curriculumPDF')}
@@ -1550,9 +2058,9 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
             )}
 
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-                  <ModernPdfUploadWithBreakdown 
+              <div className="space-y-8">
+                <div className="w-full max-w-2xl">
+                  <ModernPdfUpload
                     pdfFile={formData.feesDayDistributionPdf}
                     onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
                     onRemove={() => handleFileRemove('feesDayDistributionPdf')}
@@ -1564,8 +2072,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   />
                 </div>
                 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">
-                  <ModernPdfUploadWithBreakdown 
+                <div className="w-full max-w-2xl">
+                  <ModernPdfUpload
                     pdfFile={formData.feesBoardingDistributionPdf}
                     onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
                     onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
@@ -1581,8 +2089,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
             {currentStep === 2 && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border border-purple-200">
-                  <ModernPdfUploadWithBreakdown 
+                <div className="w-full max-w-2xl">
+                  <ModernPdfUpload
                     pdfFile={formData.admissionFeePdf}
                     onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
                     onRemove={() => handleFileRemove('admissionFeePdf')}
@@ -1597,20 +2105,20 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
             )}
 
             {currentStep === 3 && (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {[
-                  { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', existing: documents?.form1ResultsPdf, color: 'blue' },
-                  { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', existing: documents?.form2ResultsPdf, color: 'green' },
-                  { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', existing: documents?.form3ResultsPdf, color: 'purple' },
-                  { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', existing: documents?.form4ResultsPdf, color: 'orange' },
-                  { key: 'mockExamsResultsPdf', label: 'Mock Exams', yearKey: 'mockExamsYear', existing: documents?.mockExamsResultsPdf, color: 'red' },
-                  { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', existing: documents?.kcseResultsPdf, color: 'indigo' }
+                  { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', color: 'orange' },
+                  { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', color: 'orange' },
+                  { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', color: 'orange' },
+                  { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', color: 'orange' },
+                  { key: 'mockExamsResultsPdf', label: 'Mock Exams Results', yearKey: 'mockExamsYear', color: 'orange' },
+                  { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', color: 'orange' }
                 ].map((exam) => (
-                  <div key={exam.key} className={`bg-gradient-to-br from-${exam.color}-50 to-${exam.color}-100 rounded-2xl p-6 border border-${exam.color}-200`}>
+                  <div key={exam.key} className="w-full max-w-2xl">
                     <div className="flex items-center justify-between mb-4">
                       <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
                         <FaAward className={`text-${exam.color}-600`} />
-                        {exam.label}
+                        <span className="text-base">{exam.label}</span>
                       </label>
                       <div className="w-32">
                         <input
@@ -1624,7 +2132,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                         />
                       </div>
                     </div>
-                    <ModernPdfUploadWithBreakdown 
+                    <ModernPdfUpload
                       pdfFile={formData[exam.key]}
                       onPdfChange={(file) => handleFileChange(exam.key, file)}
                       onRemove={() => handleFileRemove(exam.key)}
@@ -1638,7 +2146,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
             {currentStep === 4 && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
+                <div className="w-full max-w-2xl">
                   <AdditionalResultsUpload 
                     files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
                     onFilesChange={(newFiles) => {
@@ -1655,7 +2163,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                       
                       setAdditionalFiles(prev => [...prev, ...newFileObjects]);
                     }}
-                    label="Additional Results Files"
+                    label="Additional Documents"
                     existingFiles={documents?.additionalResultsFiles || []}
                   />
                 </div>
@@ -1717,37 +2225,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   );
 }
 
-// API Service for Documents
-const documentsApiService = {
-  async getSchoolDocuments(schoolId) {
-    try {
-      const response = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch school documents');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
-  },
-
-  async deleteSchoolDocument(documentId) {
-    try {
-      const response = await fetch(`/api/schooldocuments?documentId=${documentId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete document');
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API Error:', error);
-      throw error;
-    }
-  }
-};
-
+// Main School Documents Page Component
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
   const [schoolInfo, setSchoolInfo] = useState(null);
@@ -1763,17 +2241,18 @@ export default function SchoolDocumentsPage() {
     try {
       setLoading(true);
       
-      // First get school info to get school ID
       const schoolResponse = await fetch('/api/schooldocuments');
       if (schoolResponse.ok) {
         const schoolData = await schoolResponse.json();
         setSchoolInfo(schoolData.school || schoolData);
         
-        // Then get documents for this school
         if (schoolData.school?.id || schoolData.id) {
           const schoolId = schoolData.school?.id || schoolData.id;
-          const docsResponse = await documentsApiService.getSchoolDocuments(schoolId);
-          setDocuments(docsResponse.document || docsResponse);
+          const docsResponse = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
+          if (docsResponse.ok) {
+            const docsData = await docsResponse.json();
+            setDocuments(docsData.document || docsData);
+          }
         }
       }
     } catch (error) {
@@ -1786,7 +2265,6 @@ export default function SchoolDocumentsPage() {
   const handleSaveDocuments = async (documentData) => {
     try {
       setActionLoading(true);
-      // Logic to save documents
       toast.success('Documents saved successfully!');
       setShowModal(false);
       await loadData();
@@ -1819,12 +2297,12 @@ export default function SchoolDocumentsPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
+                  <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
                     Document Management
                   </span>
                   <FaShieldAlt className="text-blue-300 text-[10px]" />
                 </div>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
+                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
                   {schoolInfo?.name || 'School'} Documents
                 </h1>
               </div>
@@ -1875,6 +2353,7 @@ export default function SchoolDocumentsPage() {
                   pdfUrl={documents.curriculumPDF}
                   pdfName={documents.curriculumPdfName}
                   existing={true}
+                  type="curriculum"
                 />
               )}
 
@@ -1887,6 +2366,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.feesDayPdfName}
                   feeBreakdown={documents.feesDayDistributionJson ? JSON.parse(documents.feesDayDistributionJson) : null}
                   existing={true}
+                  type="day"
                 />
               )}
 
@@ -1899,6 +2379,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.feesBoardingPdfName}
                   feeBreakdown={documents.feesBoardingDistributionJson ? JSON.parse(documents.feesBoardingDistributionJson) : null}
                   existing={true}
+                  type="boarding"
                 />
               )}
 
@@ -1909,8 +2390,9 @@ export default function SchoolDocumentsPage() {
                   description="Admission fee structure"
                   pdfUrl={documents.admissionFeePdf}
                   pdfName={documents.admissionFeePdfName}
-                  feeBreakdown={documents.admissionFeeDistribution ? JSON.parse(documents.admissionFeeDistribution) : null}
+                  admissionBreakdown={documents.admissionFeeDistribution ? JSON.parse(documents.admissionFeeDistribution) : null}
                   existing={true}
+                  type="admission"
                 />
               )}
 
@@ -1923,6 +2405,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.form1ResultsPdfName}
                   year={documents.form1ResultsYear}
                   existing={true}
+                  type="results"
                 />
               )}
 
@@ -1934,6 +2417,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.form2ResultsPdfName}
                   year={documents.form2ResultsYear}
                   existing={true}
+                  type="results"
                 />
               )}
 
@@ -1945,6 +2429,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.form3ResultsPdfName}
                   year={documents.form3ResultsYear}
                   existing={true}
+                  type="results"
                 />
               )}
 
@@ -1956,6 +2441,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.form4ResultsPdfName}
                   year={documents.form4ResultsYear}
                   existing={true}
+                  type="results"
                 />
               )}
 
@@ -1967,6 +2453,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.mockExamsPdfName}
                   year={documents.mockExamsYear}
                   existing={true}
+                  type="results"
                 />
               )}
 
@@ -1978,6 +2465,7 @@ export default function SchoolDocumentsPage() {
                   pdfName={documents.kcsePdfName}
                   year={documents.kcseYear}
                   existing={true}
+                  type="results"
                 />
               )}
             </div>
@@ -1985,7 +2473,7 @@ export default function SchoolDocumentsPage() {
             {/* Additional Files Section */}
             {documents?.additionalResultsFiles && documents.additionalResultsFiles.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Files</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {documents.additionalResultsFiles.map((file, index) => (
                     <div key={index} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
@@ -1997,9 +2485,9 @@ export default function SchoolDocumentsPage() {
                           <p className="text-sm font-bold text-gray-900 truncate">
                             {file.filename || file.name}
                           </p>
-                          <div className="text-xs text-gray-600 space-y-1 mt-1">
-                            {file.year && <div className="font-medium">Year: {file.year}</div>}
-                            {file.description && <div className="font-medium">{file.description}</div>}
+                          <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
+                            {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
+                            {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
                           </div>
                         </div>
                       </div>
