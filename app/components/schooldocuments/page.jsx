@@ -16,7 +16,7 @@ import {
   FaPercentage, FaTasks, FaClipboardList, FaUser,
   FaTag, FaCogs, FaBlackTie, FaPlay, FaPlayCircle,
   FaCamera, FaImage, FaHourglassHalf, FaBookOpen,
-  FaUsersCog, FaRocket, FaEye
+  FaUsersCog, FaRocket
 } from 'react-icons/fa';
 
 import { CircularProgress } from '@mui/material';
