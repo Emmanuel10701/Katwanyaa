@@ -8,7 +8,7 @@ import {
   FaChevronLeft, FaExclamationTriangle, FaCheckCircle, 
   FaTimesCircle, FaSave, FaTimes, FaEye, FaCalendar, 
   FaUsers, FaChalkboardTeacher, FaBook, FaRocket,
-  FaArrowRight, FaBuilding, FaEye, FaQuoteLeft,
+  FaArrowRight, FaBuilding, FaQuoteLeft,
   FaShieldAlt, FaAward, FaUserCheck, FaHourglassHalf,
   FaBookOpen, FaUsersCog
 } from 'react-icons/fa';
