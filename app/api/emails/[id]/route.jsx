@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import nodemailer from "nodemailer";
 import cloudinary from "../../../../libs/cloudinary";
-import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
 // CONFIGURATION
 // ====================================================================
-const isProduction = process.env.NODE_ENV === 'production';
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -52,84 +50,6 @@ const SOCIAL_MEDIA = {
 };
 
 // ====================================================================
-// CLOUDINARY HELPER FUNCTIONS
-// ====================================================================
-
-// Helper: Upload file to Cloudinary
-const uploadFileToCloudinary = async (file) => {
-  if (!file?.name || file.size === 0) return null;
-
-  try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
-    const originalName = file.name;
-    const fileExtension = originalName.substring(originalName.lastIndexOf('.'));
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const uniqueFileName = `${timestamp}-${sanitizedFileName}`;
-    
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "auto",
-          folder: "school/email-campaigns/attachments",
-          public_id: uniqueFileName,
-          use_filename: true,
-          unique_filename: false,
-          overwrite: false,
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
-    });
-    
-    return {
-      filename: result.public_id,
-      originalName: originalName,
-      fileType: fileExtension.substring(1),
-      fileSize: file.size,
-      uploadedAt: new Date().toISOString(),
-      url: result.secure_url,
-      publicId: result.public_id,
-      format: result.format,
-      storageType: 'cloudinary'
-    };
-  } catch (error) {
-    console.error("❌ Cloudinary upload error:", error);
-    return null;
-  }
-};
-
-// Helper: Delete file from Cloudinary
-const deleteFileFromCloudinary = async (publicId) => {
-  if (!publicId) return;
-
-  try {
-    await cloudinary.uploader.destroy(publicId);
-  } catch (error) {
-    console.error("❌ Error deleting file from Cloudinary:", error);
-  }
-};
-
-// Helper to delete files from Cloudinary based on attachments data
-const deleteCloudinaryFiles = async (attachments) => {
-  if (!attachments || !Array.isArray(attachments)) return;
-
-  try {
-    const deletePromises = attachments
-      .filter(attachment => attachment.storageType === 'cloudinary' && attachment.publicId)
-      .map(attachment => deleteFileFromCloudinary(attachment.publicId));
-    
-    await Promise.all(deletePromises);
-  } catch (error) {
-    console.error("❌ Error deleting Cloudinary files:", error);
-  }
-};
-
-// ====================================================================
 // HELPER FUNCTIONS
 // ====================================================================
 
@@ -164,7 +84,65 @@ function sanitizeContent(content) {
   return safeContent;
 }
 
-// FULLY MOBILE-RESPONSIVE EMAIL TEMPLATE FUNCTION
+function getFileIcon(fileType) {
+  const icons = {
+    'pdf': '📄',
+    'doc': '📝',
+    'docx': '📝',
+    'xls': '📊',
+    'xlsx': '📊',
+    'ppt': '📽️',
+    'pptx': '📽️',
+    'jpg': '🖼️',
+    'jpeg': '🖼️',
+    'png': '🖼️',
+    'gif': '🖼️',
+    'txt': '📃',
+    'zip': '📦',
+    'rar': '📦',
+    'mp3': '🎵',
+    'mp4': '🎬',
+    'webp': '🖼️',
+    'svg': '🖼️'
+  };
+  
+  return icons[fileType?.toLowerCase()] || '📎';
+}
+
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getContentType(fileType) {
+  const mimeTypes = {
+    'pdf': 'application/pdf',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'ppt': 'application/vnd.ms-powerpoint',
+    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'png': 'image/png',
+    'gif': 'image/gif',
+    'txt': 'text/plain',
+    'zip': 'application/zip',
+    'rar': 'application/x-rar-compressed',
+    'mp3': 'audio/mpeg',
+    'mp4': 'video/mp4',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml'
+  };
+  
+  return mimeTypes[fileType?.toLowerCase()] || 'application/octet-stream';
+}
+
+// FULL MOBILE-RESPONSIVE EMAIL TEMPLATE FUNCTION
 function getModernEmailTemplate({ 
   subject = '', 
   content = '',
@@ -260,75 +238,51 @@ function getModernEmailTemplate({
     <meta name="x-apple-disable-message-reformatting">
     <title>${subject} • ${SCHOOL_NAME}</title>
     <style>
-        /* RESET & BASE STYLES */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
-            mso-line-height-rule: exactly;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333333;
+            color: #333;
             background-color: #f8fafc;
-            padding: 0;
+            padding: 20px;
             margin: 0;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            width: 100% !important;
-            min-height: 100vh;
         }
         
-        img {
-            border: 0;
-            height: auto;
-            line-height: 100%;
-            outline: none;
-            text-decoration: none;
-            max-width: 100%;
-        }
-        
-        table {
-            border-collapse: collapse !important;
-            mso-table-lspace: 0pt;
-            mso-table-rspace: 0pt;
-        }
-        
-        /* EMAIL CONTAINER */
         .email-container {
             max-width: 600px;
-            width: 100%;
             margin: 0 auto;
-            background: #ffffff;
+            background: white;
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             border: 1px solid #e2e8f0;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+            
             .email-container {
                 border-radius: 12px;
-                margin: 8px;
-                width: calc(100% - 16px) !important;
             }
         }
         
-        /* HEADER STYLES */
         .header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #ffffff;
+            color: white;
             padding: 40px 20px;
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .header {
                 padding: 32px 16px;
             }
@@ -338,17 +292,15 @@ function getModernEmailTemplate({
             font-size: 32px;
             font-weight: 800;
             margin-bottom: 8px;
-            letter-spacing: 0.5px;
-            line-height: 1.2;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .school-logo {
                 font-size: 26px;
             }
         }
         
-        @media only screen and (max-width: 480px) {
+        @media (max-width: 480px) {
             .school-logo {
                 font-size: 22px;
             }
@@ -358,35 +310,24 @@ function getModernEmailTemplate({
             font-size: 15px;
             opacity: 0.95;
             margin-bottom: 20px;
-            font-weight: 500;
-            line-height: 1.4;
-        }
-        
-        @media only screen and (max-width: 480px) {
-            .school-motto {
-                font-size: 14px;
-            }
         }
         
         .email-badge {
             display: inline-block;
             background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
             padding: 8px 20px;
             border-radius: 24px;
             font-size: 12px;
             font-weight: 600;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        /* CONTENT AREA */
         .content {
             padding: 40px 32px;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .content {
                 padding: 24px 16px;
             }
@@ -397,39 +338,23 @@ function getModernEmailTemplate({
             font-weight: 700;
             color: #1e3c72;
             margin-bottom: 24px;
-            line-height: 1.4;
             border-left: 4px solid #4c7cf3;
             padding-left: 16px;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .subject {
                 font-size: 20px;
                 padding-left: 12px;
-                margin-bottom: 20px;
             }
         }
         
-        @media only screen and (max-width: 480px) {
-            .subject {
-                font-size: 18px;
-            }
-        }
-        
-        /* RECIPIENT INFO */
         .recipient-info {
-            background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
+            background: #f0f7ff;
             border-radius: 12px;
             padding: 20px;
             margin: 24px 0;
             border: 1px solid #dbeafe;
-        }
-        
-        @media only screen and (max-width: 640px) {
-            .recipient-info {
-                padding: 16px;
-                margin: 20px 0;
-            }
         }
         
         .info-item {
@@ -439,25 +364,18 @@ function getModernEmailTemplate({
             margin-bottom: 12px;
         }
         
-        .info-item:last-child {
-            margin-bottom: 0;
-        }
-        
         .info-icon {
             width: 20px;
             height: 20px;
             color: #4c7cf3;
             flex-shrink: 0;
-            margin-top: 2px;
         }
         
         .info-text {
             font-size: 14px;
             color: #475569;
-            line-height: 1.5;
         }
         
-        /* MESSAGE CONTENT */
         .message-content {
             background: #f8fafc;
             border-radius: 12px;
@@ -468,38 +386,12 @@ function getModernEmailTemplate({
             font-size: 15px;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .message-content {
                 padding: 20px;
-                font-size: 14px;
             }
         }
         
-        .message-content p {
-            margin-bottom: 16px;
-        }
-        
-        .message-content p:last-child {
-            margin-bottom: 0;
-        }
-        
-        .message-content img {
-            max-width: 100% !important;
-            height: auto !important;
-            border-radius: 8px;
-            margin: 16px 0;
-        }
-        
-        .message-content a {
-            color: #4c7cf3;
-            text-decoration: none;
-        }
-        
-        .message-content a:hover {
-            text-decoration: underline;
-        }
-        
-        /* IMPORTANT NOTICE */
         .important-notice {
             background: rgba(234, 179, 8, 0.1);
             border: 1px solid rgba(234, 179, 8, 0.3);
@@ -513,25 +405,47 @@ function getModernEmailTemplate({
             font-size: 13px;
             color: #92400e;
             margin: 0;
-            line-height: 1.5;
         }
         
-        /* CONTACT CARDS */
+        .footer {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #cbd5e1;
+            padding: 40px 32px;
+            text-align: center;
+        }
+        
+        @media (max-width: 640px) {
+            .footer {
+                padding: 32px 16px;
+            }
+        }
+        
+        .school-header {
+            margin-bottom: 32px;
+        }
+        
+        .school-name {
+            font-size: 28px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .school-location {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
         .contact-cards {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 16px;
-            padding: 0 20px;
-            max-width: 900px;
             margin: 0 auto 32px;
-        }
-        
-        @media only screen and (max-width: 768px) {
-            .contact-cards {
-                padding: 0 16px;
-                gap: 12px;
-            }
+            max-width: 900px;
         }
         
         .contact-card {
@@ -544,25 +458,15 @@ function getModernEmailTemplate({
             background: #f8fafc;
             border: 2px solid #e2e8f0;
             border-radius: 16px;
-            transition: all 0.2s ease;
-            min-width: 0;
         }
         
-        @media only screen and (max-width: 640px) {
+        @media (max-width: 640px) {
             .contact-card {
                 flex: 1 1 100%;
-                min-width: 100%;
             }
         }
         
-        .contact-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #cbd5e1;
-        }
-        
         .contact-icon {
-            background: #e0f2fe;
             border-radius: 12px;
             width: 44px;
             height: 44px;
@@ -594,7 +498,6 @@ function getModernEmailTemplate({
             font-weight: 800;
             text-transform: uppercase;
             color: #94a3b8;
-            letter-spacing: 0.05em;
         }
         
         .contact-value {
@@ -602,14 +505,9 @@ function getModernEmailTemplate({
             font-size: 15px;
             font-weight: 700;
             color: #1e293b;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
         }
         
-        /* SOCIAL MEDIA */
         .social-media {
-            text-align: center;
             padding: 20px;
         }
         
@@ -617,7 +515,6 @@ function getModernEmailTemplate({
             color: #64748b;
             font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
             margin-bottom: 16px;
             font-weight: 700;
         }
@@ -639,76 +536,15 @@ function getModernEmailTemplate({
             border-radius: 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
-        .social-icon:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        /* FOOTER STYLES */
-        .footer {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: #cbd5e1;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        @media only screen and (max-width: 640px) {
-            .footer {
-                padding: 32px 16px;
-            }
-        }
-        
-        .school-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .school-name {
-            font-size: 28px;
-            font-weight: 900;
-            color: #ffffff;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.025em;
-            line-height: 1.2;
-        }
-        
-        @media only screen and (max-width: 640px) {
-            .school-name {
-                font-size: 24px;
-            }
-        }
-        
-        .school-location {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #94a3b8;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        /* SENDER INFO */
         .sender-info {
             padding-top: 24px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 13px;
             color: #94a3b8;
-            line-height: 1.5;
         }
         
-        .sender-info p {
-            margin-bottom: 4px;
-        }
-        
-        .sender-info p:last-child {
-            margin-bottom: 0;
-        }
-        
-        /* PRIVACY NOTICE */
         .privacy-notice {
             margin-top: 20px;
             padding-top: 16px;
@@ -719,98 +555,11 @@ function getModernEmailTemplate({
             font-size: 12px;
             color: #94a3b8;
             margin: 0;
-            line-height: 1.6;
             font-style: italic;
         }
-        
-        /* UTILITY CLASSES FOR MOBILE */
-        .mobile-block {
-            display: block;
-            width: 100%;
-        }
-        
-        .mobile-center {
-            text-align: center !important;
-        }
-        
-        .mobile-padding {
-            padding: 16px !important;
-        }
-        
-        .mobile-hide {
-            display: none !important;
-        }
-        
-        .mobile-show {
-            display: block !important;
-        }
-        
-        /* iOS SPECIFIC FIXES */
-        @media screen and (max-width: 480px) {
-            u + .body .gmail {
-                display: none !important;
-            }
-            
-            /* Prevent font boosting on mobile */
-            * {
-                -webkit-text-size-adjust: none !important;
-            }
-            
-            /* Better spacing on small screens */
-            .message-content p {
-                margin-bottom: 12px;
-            }
-        }
-        
-        /* ANDROID FIXES */
-        @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            /* Fix for some Android devices */
-            .contact-card {
-                -webkit-text-size-adjust: 100%;
-            }
-        }
-        
-        /* OUTLOOK FIXES */
-        [owa] .email-container {
-            width: 600px !important;
-        }
     </style>
-    
-    <!--[if mso]>
-    <style type="text/css">
-        .email-container {
-            width: 600px !important;
-        }
-        table {
-            font-family: Arial, sans-serif !important;
-        }
-        .contact-cards {
-            display: table !important;
-            width: 100% !important;
-        }
-        .contact-card {
-            display: table-cell !important;
-            vertical-align: top !important;
-        }
-    </style>
-    <![endif]-->
-    
-    <!--[if IE]>
-    <style>
-        .email-container {
-            width: 600px;
-        }
-    </style>
-    <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; background-color: #f8fafc;">
-    <!--[if mso]>
-    <div style="background-color: #f8fafc;">
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-            <td align="center" style="padding: 20px;">
-    <![endif]-->
-    
+<body>
     <div class="email-container">
         <!-- HEADER -->
         <div class="header">
@@ -959,48 +708,24 @@ function getModernEmailTemplate({
             </div>
         </div>
     </div>
-    
-    <!--[if mso]>
-            </td>
-        </tr>
-    </table>
-    </div>
-    <![endif]-->
 </body>
 </html>`;
 }
 
-function getFileIcon(fileType) {
-  const icons = {
-    'pdf': '📄',
-    'doc': '📝',
-    'docx': '📝',
-    'xls': '📊',
-    'xlsx': '📊',
-    'ppt': '📽️',
-    'pptx': '📽️',
-    'jpg': '🖼️',
-    'jpeg': '🖼️',
-    'png': '🖼️',
-    'gif': '🖼️',
-    'txt': '📃',
-    'zip': '📦',
-    'rar': '📦',
-    'mp3': '🎵',
-    'mp4': '🎬',
-    'webp': '🖼️',
-    'svg': '🖼️'
-  };
+function validateEmailList(emailList) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validEmails = [];
+  const invalidEmails = [];
   
-  return icons[fileType.toLowerCase()] || '📎';
-}
-
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  emailList.forEach(email => {
+    if (emailRegex.test(email.trim())) {
+      validEmails.push(email.trim());
+    } else {
+      invalidEmails.push(email);
+    }
+  });
+  
+  return { validEmails, invalidEmails };
 }
 
 async function sendModernEmails(campaign) {
@@ -1025,13 +750,11 @@ async function sendModernEmails(campaign) {
   }
   
   // Prepare email attachments for nodemailer
-  const emailAttachments = attachmentsArray.map(attachment => {
-    return {
-      filename: attachment.originalName || attachment.filename,
-      path: attachment.url,
-      contentType: getContentType(attachment.fileType)
-    };
-  });
+  const emailAttachments = attachmentsArray.map(attachment => ({
+    filename: attachment.originalName || attachment.filename,
+    path: attachment.url,
+    contentType: getContentType(attachment.fileType)
+  }));
 
   // Sequential processing with rate limiting
   for (const recipient of recipients) {
@@ -1087,20 +810,6 @@ async function sendModernEmails(campaign) {
     }
   }
 
-  try {
-    await prisma.emailCampaign.update({
-      where: { id: campaign.id },
-      data: { 
-        sentAt: new Date(),
-        sentCount: sentRecipients.length,
-        failedCount: failedRecipients.length,
-        status: 'published',
-      },
-    });
-  } catch (dbError) {
-    console.error(`Failed to update campaign statistics:`, dbError);
-  }
-
   const processingTime = Date.now() - startTime;
   const summary = {
     total: recipients.length,
@@ -1118,144 +827,116 @@ async function sendModernEmails(campaign) {
   };
 }
 
-function getContentType(fileType) {
-  const mimeTypes = {
-    'pdf': 'application/pdf',
-    'doc': 'application/msword',
-    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'xls': 'application/vnd.ms-excel',
-    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'ppt': 'application/vnd.ms-powerpoint',
-    'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'gif': 'image/gif',
-    'txt': 'text/plain',
-    'zip': 'application/zip',
-    'rar': 'application/x-rar-compressed',
-    'mp3': 'audio/mpeg',
-    'mp4': 'video/mp4',
-    'webp': 'image/webp',
-    'svg': 'image/svg+xml'
-  };
-  
-  return mimeTypes[fileType.toLowerCase()] || 'application/octet-stream';
-}
-
-// Helper to validate email addresses
-function validateEmailList(emailList) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const validEmails = [];
-  const invalidEmails = [];
-  
-  emailList.forEach(email => {
-    if (emailRegex.test(email.trim())) {
-      validEmails.push(email.trim());
-    } else {
-      invalidEmails.push(email);
-    }
-  });
-  
-  return { validEmails, invalidEmails };
-}
-
-// Helper to save uploaded file to Cloudinary
-async function saveUploadedFile(file) {
-  if (!file || file.size === 0) return null;
-  
-  // Validate file size (max 20MB for Cloudinary)
-  const maxSize = 20 * 1024 * 1024; // 20MB
-  if (file.size > maxSize) {
-    throw new Error(`File ${file.name} is too large. Maximum size is 20MB.`);
-  }
-  
-  // Upload to Cloudinary
-  const cloudinaryResult = await uploadFileToCloudinary(file);
-  
-  if (!cloudinaryResult) {
-    throw new Error(`Failed to upload file ${file.name} to Cloudinary`);
-  }
-  
-  return cloudinaryResult;
-}
-
-// Validate attachment size before saving
-function validateAttachmentSize(attachmentsArray) {
-  const MAX_ATTACHMENTS_SIZE = 50000; // 50KB max for metadata
-  
-  const jsonString = JSON.stringify(attachmentsArray);
-  if (jsonString.length > MAX_ATTACHMENTS_SIZE) {
-    throw new Error(`Attachments metadata is too large (${jsonString.length} bytes). Maximum allowed is ${MAX_ATTACHMENTS_SIZE} bytes.`);
-  }
-  return true;
-}
-
 // ====================================================================
-// API HANDLERS - POST AND GET ONLY
+// DYNAMIC ROUTE HANDLERS
 // ====================================================================
 
-// 🔹 POST - Create a new email campaign with FormData
-export async function POST(req) {
-  let campaign = null;
-  
+// 🔹 GET - Get a specific campaign by ID
+export async function GET(req, { params }) {
   try {
-    // Check if request is FormData (for file uploads)
-    const contentType = req.headers.get('content-type') || '';
+    const { id } = await params;
     
-    if (contentType.includes('multipart/form-data')) {
-      // Handle FormData with file uploads
-      const formData = await req.formData();
-      
-      // Extract text fields
-      const title = formData.get('title')?.toString() || '';
-      const subject = formData.get('subject')?.toString() || '';
-      const content = formData.get('content')?.toString() || '';
-      const recipients = formData.get('recipients')?.toString() || '';
-      const status = formData.get('status')?.toString() || 'draft';
-      const recipientType = formData.get('recipientType')?.toString() || 'all';
-      const existingAttachmentsJson = formData.get('existingAttachments')?.toString();
-      
-      // Parse existing attachments if provided
-      let existingAttachments = [];
-      if (existingAttachmentsJson) {
-        try {
-          existingAttachments = JSON.parse(existingAttachmentsJson);
-        } catch (error) {
-          console.error('Error parsing existing attachments:', error);
-        }
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
+    }
+    
+    const campaign = await prisma.emailCampaign.findUnique({
+      where: { id },
+    });
+    
+    if (!campaign) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign not found" 
+      }, { status: 404 });
+    }
+    
+    // Parse attachments
+    let attachments = [];
+    try {
+      if (campaign.attachments) {
+        attachments = JSON.parse(campaign.attachments);
       }
-      
-      // Process new file uploads
-      const newAttachments = [];
-      const attachmentFiles = formData.getAll('attachments');
-      
-      for (const file of attachmentFiles) {
-        if (file && file.size > 0) {
-          const savedFile = await saveUploadedFile(file);
-          if (savedFile) {
-            newAttachments.push(savedFile);
-          }
-        }
-      }
-      
-      // Combine existing and new attachments
-      const allAttachments = [...existingAttachments, ...newAttachments];
-      
-      // Validate attachment size
-      if (allAttachments.length > 0) {
-        validateAttachmentSize(allAttachments);
-      }
-      
-      // Validate required fields
-      if (!title || !subject || !content || !recipients) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "All fields are required: title, subject, content, and recipients" 
-        }, { status: 400 });
-      }
-      
-      // Validate content length
+    } catch (error) {
+      console.error('Error parsing attachments:', error);
+    }
+    
+    const recipientCount = campaign.recipients.split(',').length;
+    const recipientType = campaign.recipientType || 'all';
+    
+    const responseData = {
+      id: campaign.id,
+      title: campaign.title,
+      subject: campaign.subject,
+      content: campaign.content,
+      recipients: campaign.recipients,
+      recipientCount,
+      recipientType,
+      recipientTypeLabel: getRecipientTypeLabel(recipientType),
+      status: campaign.status,
+      sentAt: campaign.sentAt,
+      sentCount: campaign.sentCount,
+      failedCount: campaign.failedCount,
+      attachments,
+      hasAttachments: attachments.length > 0,
+      createdAt: campaign.createdAt,
+      updatedAt: campaign.updatedAt,
+      successRate: campaign.sentCount && recipientCount > 0 
+        ? Math.round((campaign.sentCount / recipientCount) * 100)
+        : 0
+    };
+    
+    return NextResponse.json({
+      success: true,
+      campaign: responseData
+    });
+    
+  } catch (error) {
+    console.error(`GET [id] Error:`, error);
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || "Failed to retrieve campaign"
+    }, { status: 500 });
+  }
+}
+
+// 🔹 PUT - Update an existing campaign
+export async function PUT(req, { params }) {
+  try {
+    const { id } = await params;
+    
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
+    }
+    
+    const data = await req.json();
+    const { title, subject, content, recipients, status, recipientType, attachments } = data;
+    
+    // Check if campaign exists
+    const existingCampaign = await prisma.emailCampaign.findUnique({
+      where: { id }
+    });
+    
+    if (!existingCampaign) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign not found" 
+      }, { status: 404 });
+    }
+    
+    // Build update data
+    const updateData = {};
+    
+    if (title !== undefined) updateData.title = title;
+    if (subject !== undefined) updateData.subject = subject;
+    if (content !== undefined) {
       const MAX_CONTENT_LENGTH = 65535;
       if (content.length > MAX_CONTENT_LENGTH) {
         return NextResponse.json({ 
@@ -1264,8 +945,10 @@ export async function POST(req) {
           currentLength: content.length
         }, { status: 400 });
       }
-      
-      // Validate recipients
+      updateData.content = content;
+    }
+    
+    if (recipients !== undefined) {
       const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
       if (emailList.length === 0) {
         return NextResponse.json({ 
@@ -1283,410 +966,315 @@ export async function POST(req) {
         }, { status: 400 });
       }
       
-      // Deduplicate emails
       const uniqueEmails = [...new Set(validEmails)];
-      
-      // Optimize attachment data to reduce size
-      const optimizedAttachments = allAttachments.map(attachment => ({
-        filename: attachment.filename,
-        originalName: attachment.originalName,
-        fileType: attachment.fileType,
-        fileSize: attachment.fileSize,
-        uploadedAt: attachment.uploadedAt,
-        url: attachment.url,
-        publicId: attachment.publicId,
-        storageType: attachment.storageType || 'cloudinary'
-      }));
-      
-      // Create campaign in database
-      campaign = await prisma.emailCampaign.create({
-        data: { 
-          title, 
-          subject, 
-          content, 
-          recipients: uniqueEmails.join(', '),
-          recipientType,
-          status,
-          attachments: optimizedAttachments.length > 0 ? JSON.stringify(optimizedAttachments) : null,
-          ...(status === 'published' && { sentAt: new Date() })
-        },
-      });
-      
-      let emailResults = null;
-      
-      // Send emails immediately if published
-      if (status === "published") {
-        try {
-          emailResults = await sendModernEmails(campaign);
-          
-          // Update campaign with email results
-          await prisma.emailCampaign.update({
-            where: { id: campaign.id },
-            data: { 
-              sentCount: emailResults.summary.successful,
-              failedCount: emailResults.summary.failed
-            },
-          });
-        } catch (emailError) {
-          console.error(`Email sending failed:`, emailError);
-          
-          // Update campaign to reflect failure
-          await prisma.emailCampaign.update({
-            where: { id: campaign.id },
-            data: { 
-              failedCount: uniqueEmails.length,
-              status: 'draft',
-            },
-          });
-          
-          emailResults = {
-            error: emailError.message,
-            sentRecipients: [],
-            failedRecipients: uniqueEmails.map(email => ({ 
-              recipient: email, 
-              error: emailError.message 
-            })),
-            summary: {
-              total: uniqueEmails.length,
-              successful: 0,
-              failed: uniqueEmails.length,
-              successRate: 0
-            }
-          };
-        }
-      }
-      
-      // Format response
-      const responseData = {
-        id: campaign.id,
-        title: campaign.title,
-        subject: campaign.subject,
-        content: campaign.content,
-        recipients: campaign.recipients,
-        recipientCount: uniqueEmails.length,
-        recipientType: campaign.recipientType || 'all',
-        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-        status: campaign.status,
-        sentAt: campaign.sentAt,
-        sentCount: campaign.sentCount,
-        failedCount: campaign.failedCount,
-        attachments: optimizedAttachments,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-      };
-      
-      const response = {
-        success: true, 
-        campaign: responseData,
-        emailResults,
-        message: status === "published" 
-          ? `Campaign created and ${emailResults?.summary?.successful || 0} emails sent successfully` 
-          : `Campaign saved as draft successfully`
-      };
-      
-      return NextResponse.json(response, { 
-        status: 201,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        }
-      });
-      
-    } else {
-      // Handle JSON request (for backwards compatibility)
-      const { title, subject, content, recipients, status = "draft", recipientType = "all", attachments = null } = await req.json();
-      
-      // Validate required fields
-      if (!title || !subject || !content || !recipients) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "All fields are required: title, subject, content, and recipients" 
-        }, { status: 400 });
-      }
-      
-      // Validate content length
-      const MAX_CONTENT_LENGTH = 65535;
-      if (content.length > MAX_CONTENT_LENGTH) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `Content is too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`,
-          currentLength: content.length
-        }, { status: 400 });
-      }
-      
-      // Validate recipients format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const emailList = recipients.split(",").map(r => r.trim()).filter(r => r.length > 0);
-      
-      if (emailList.length === 0) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "At least one valid email address is required" 
-        }, { status: 400 });
-      }
-      
-      const invalidEmails = emailList.filter(email => !emailRegex.test(email));
-      
-      if (invalidEmails.length > 0) {
-        return NextResponse.json({ 
-          success: false, 
-          error: "Invalid email addresses detected",
-          invalidEmails 
-        }, { status: 400 });
-      }
-      
-      // Deduplicate emails
-      const uniqueEmails = [...new Set(emailList)];
-      
-      // Create campaign in database
-      campaign = await prisma.emailCampaign.create({
-        data: { 
-          title, 
-          subject, 
-          content, 
-          recipients: uniqueEmails.join(', '),
-          recipientType,
-          status: status || "draft",
-          attachments: attachments,
-        },
-      });
-      
-      let emailResults = null;
-      
-      // Send emails immediately if published
-      if (status === "published") {
-        try {
-          emailResults = await sendModernEmails(campaign);
-        } catch (emailError) {
-          console.error(`Email sending failed:`, emailError);
-          
-          // Update campaign to reflect failure
-          await prisma.emailCampaign.update({
-            where: { id: campaign.id },
-            data: { 
-              failedCount: uniqueEmails.length,
-              status: 'draft',
-            },
-          });
-          
-          emailResults = {
-            error: emailError.message,
-            sentRecipients: [],
-            failedRecipients: uniqueEmails.map(email => ({ 
-              recipient: email, 
-              error: emailError.message 
-            })),
-            summary: {
-              total: uniqueEmails.length,
-              successful: 0,
-              failed: uniqueEmails.length,
-              successRate: 0
-            }
-          };
-        }
-      }
-      
-      // Format response
-      const responseData = {
-        id: campaign.id,
-        title: campaign.title,
-        subject: campaign.subject,
-        content: campaign.content.substring(0, 200) + (campaign.content.length > 200 ? '...' : ''),
-        recipients: campaign.recipients,
-        recipientCount: uniqueEmails.length,
-        recipientType: campaign.recipientType || 'all',
-        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-        status: campaign.status,
-        sentAt: campaign.sentAt,
-        sentCount: campaign.sentCount,
-        failedCount: campaign.failedCount,
-        attachments: campaign.attachments ? JSON.parse(campaign.attachments) : [],
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-      };
-      
-      const response = {
-        success: true, 
-        campaign: responseData,
-        emailResults,
-        message: status === "published" 
-          ? `Campaign created and ${emailResults?.summary?.successful || 0} emails sent successfully` 
-          : `Campaign saved as draft successfully`
-      };
-      
-      return NextResponse.json(response, { 
-        status: 201,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        }
-      });
+      updateData.recipients = uniqueEmails.join(', ');
     }
     
+    if (recipientType !== undefined) updateData.recipientType = recipientType;
+    if (status !== undefined) updateData.status = status;
+    if (attachments !== undefined) {
+      updateData.attachments = attachments ? JSON.stringify(attachments) : null;
+    }
+    
+    // Update campaign in database
+    const updatedCampaign = await prisma.emailCampaign.update({
+      where: { id },
+      data: updateData,
+    });
+    
+    // Send emails if status changed to published
+    let emailResults = null;
+    if (status === 'published' && existingCampaign.status !== 'published') {
+      try {
+        emailResults = await sendModernEmails(updatedCampaign);
+        
+        // Update campaign with email results
+        await prisma.emailCampaign.update({
+          where: { id },
+          data: { 
+            sentAt: new Date(),
+            sentCount: emailResults.summary.successful,
+            failedCount: emailResults.summary.failed
+          },
+        });
+        
+        // Refresh the updated campaign
+        const refreshedCampaign = await prisma.emailCampaign.findUnique({
+          where: { id }
+        });
+        
+        updatedCampaign.sentAt = refreshedCampaign.sentAt;
+        updatedCampaign.sentCount = refreshedCampaign.sentCount;
+        updatedCampaign.failedCount = refreshedCampaign.failedCount;
+        
+      } catch (emailError) {
+        console.error(`Email sending failed:`, emailError);
+        emailResults = {
+          error: emailError.message,
+          summary: {
+            successful: 0,
+            failed: updatedCampaign.recipients ? updatedCampaign.recipients.split(',').length : 0
+          }
+        };
+      }
+    }
+    
+    // Parse attachments for response
+    let responseAttachments = [];
+    try {
+      if (updatedCampaign.attachments) {
+        responseAttachments = JSON.parse(updatedCampaign.attachments);
+      }
+    } catch (error) {
+      console.error('Error parsing attachments:', error);
+    }
+    
+    const recipientCount = updatedCampaign.recipients.split(',').length;
+    
+    const response = {
+      success: true,
+      campaign: {
+        id: updatedCampaign.id,
+        title: updatedCampaign.title,
+        subject: updatedCampaign.subject,
+        content: updatedCampaign.content,
+        recipients: updatedCampaign.recipients,
+        recipientCount,
+        recipientType: updatedCampaign.recipientType || 'all',
+        recipientTypeLabel: getRecipientTypeLabel(updatedCampaign.recipientType || 'all'),
+        status: updatedCampaign.status,
+        sentAt: updatedCampaign.sentAt,
+        sentCount: updatedCampaign.sentCount,
+        failedCount: updatedCampaign.failedCount,
+        attachments: responseAttachments,
+        hasAttachments: responseAttachments.length > 0,
+        createdAt: updatedCampaign.createdAt,
+        updatedAt: updatedCampaign.updatedAt
+      },
+      emailResults,
+      message: status === 'published' && existingCampaign.status !== 'published'
+        ? `Campaign updated and ${emailResults?.summary?.successful || 0} emails sent successfully`
+        : 'Campaign updated successfully'
+    };
+    
+    return NextResponse.json(response);
+    
   } catch (error) {
-    console.error(`POST Error:`, error);
+    console.error(`PUT Error:`, error);
     
     let statusCode = 500;
-    let errorMessage = error.message || "Failed to create campaign";
+    let errorMessage = error.message || "Failed to update campaign";
     
     if (error.code === 'P2000') {
       statusCode = 400;
-      errorMessage = "Data too long for database column. Please shorten your content or attachments metadata.";
-    } else if (error.code === 'P2002') {
-      statusCode = 409;
-      errorMessage = "A campaign with similar data already exists";
-    } else if (error.code === 'P2021' || error.code === 'P1001') {
-      errorMessage = "Database connection error. Please try again later.";
+      errorMessage = "Data too long for database column. Please shorten your content.";
+    } else if (error.code === 'P2025') {
+      statusCode = 404;
+      errorMessage = "Campaign not found";
     }
     
     return NextResponse.json({ 
       success: false, 
-      error: errorMessage,
-      details: error.message
+      error: errorMessage
     }, { status: statusCode });
   }
 }
 
-// 🔹 GET - Get all campaigns with filtering and pagination
-export async function GET(req) {
+// 🔹 DELETE - Delete a campaign
+export async function DELETE(req, { params }) {
   try {
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
+    const { id } = await params;
     
-    // Build filter conditions
-    const where = {};
-    
-    if (searchParams.has('status')) {
-      where.status = searchParams.get('status');
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
     }
     
-    if (searchParams.has('recipientType')) {
-      where.recipientType = searchParams.get('recipientType');
-    }
-    
-    if (searchParams.has('search')) {
-      const searchTerm = searchParams.get('search');
-      where.OR = [
-        { title: { contains: searchTerm, mode: 'insensitive' } },
-        { subject: { contains: searchTerm, mode: 'insensitive' } },
-        { content: { contains: searchTerm, mode: 'insensitive' } },
-      ];
-    }
-    
-    // Pagination
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
-    const skip = (page - 1) * limit;
-    
-    // Get total count and campaigns
-    const [totalCount, campaigns] = await Promise.all([
-      prisma.emailCampaign.count({ where }),
-      prisma.emailCampaign.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          title: true,
-          subject: true,
-          content: true,
-          recipients: true,
-          recipientType: true,
-          status: true,
-          sentAt: true,
-          sentCount: true,
-          failedCount: true,
-          attachments: true,
-          createdAt: true,
-          updatedAt: true,
-        }
-      })
-    ]);
-    
-    // Format response
-    const formattedCampaigns = campaigns.map(campaign => {
-      const recipientCount = campaign.recipients.split(',').length;
-      const recipientType = campaign.recipientType || 'all';
-      
-      // Parse attachments
-      let attachments = [];
-      try {
-        if (campaign.attachments) {
-          attachments = JSON.parse(campaign.attachments);
-        }
-      } catch (error) {
-        console.error('Error parsing attachments:', error);
-      }
-      
-      return {
-        id: campaign.id,
-        title: campaign.title,
-        subject: campaign.subject,
-        content: campaign.content.length > 500 
-          ? campaign.content.substring(0, 500) + '...' 
-          : campaign.content,
-        recipients: campaign.recipients,
-        recipientCount,
-        recipientType,
-        recipientTypeLabel: getRecipientTypeLabel(recipientType),
-        status: campaign.status,
-        sentAt: campaign.sentAt,
-        sentCount: campaign.sentCount,
-        failedCount: campaign.failedCount,
-        attachments,
-        hasAttachments: attachments.length > 0,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-        successRate: campaign.sentCount && recipientCount > 0 
-          ? Math.round((campaign.sentCount / recipientCount) * 100)
-          : 0
-      };
+    // First, get the campaign to check for attachments
+    const campaign = await prisma.emailCampaign.findUnique({
+      where: { id },
+      select: { attachments: true }
     });
     
-    // Calculate summary statistics
-    const summary = {
-      totalCampaigns: totalCount,
-      sentEmails: formattedCampaigns.reduce((sum, c) => sum + (c.sentCount || 0), 0),
-      failedEmails: formattedCampaigns.reduce((sum, c) => sum + (c.failedCount || 0), 0),
-      totalRecipients: formattedCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
-      draftCampaigns: formattedCampaigns.filter(c => c.status === 'draft').length,
-      publishedCampaigns: formattedCampaigns.filter(c => c.status === 'published').length,
-      campaignsWithAttachments: formattedCampaigns.filter(c => c.hasAttachments).length,
-      averageSuccessRate: formattedCampaigns.length > 0
-        ? Math.round(formattedCampaigns.reduce((sum, c) => sum + c.successRate, 0) / formattedCampaigns.length)
-        : 0
-    };
+    if (!campaign) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign not found" 
+      }, { status: 404 });
+    }
     
-    const response = {
-      success: true,
-      campaigns: formattedCampaigns,
-      summary,
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNextPage: page * limit < totalCount,
-        hasPreviousPage: page > 1
-      }
-    };
+    // Delete campaign from database
+    await prisma.emailCampaign.delete({
+      where: { id },
+    });
     
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'public, max-age=60, stale-while-revalidate=30',
-        'CDN-Cache-Control': 'public, max-age=60',
-      }
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Campaign deleted successfully' 
     });
     
   } catch (error) {
-    console.error(`GET Error:`, error);
+    console.error(`DELETE Error:`, error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message || "Failed to delete campaign";
+    
+    if (error.code === 'P2025') {
+      statusCode = 404;
+      errorMessage = "Campaign not found";
+    }
     
     return NextResponse.json({ 
       success: false, 
-      error: error.message || "Failed to retrieve campaigns"
-    }, { status: 500 });
+      error: errorMessage
+    }, { status: statusCode });
+  }
+}
+
+// 🔹 PATCH - Partial update (e.g., update status only)
+export async function PATCH(req, { params }) {
+  try {
+    const { id } = await params;
+    
+    if (!id) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign ID is required" 
+      }, { status: 400 });
+    }
+    
+    const data = await req.json();
+    const { status, ...otherUpdates } = data;
+    
+    // Check if campaign exists
+    const existingCampaign = await prisma.emailCampaign.findUnique({
+      where: { id }
+    });
+    
+    if (!existingCampaign) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Campaign not found" 
+      }, { status: 404 });
+    }
+    
+    // Build update data
+    const updateData = {};
+    
+    if (status !== undefined) {
+      if (status === 'published' && existingCampaign.status !== 'published') {
+        updateData.status = status;
+      } else if (status !== 'published') {
+        updateData.status = status;
+      }
+    }
+    
+    // Add any other partial updates
+    Object.keys(otherUpdates).forEach(key => {
+      if (otherUpdates[key] !== undefined) {
+        updateData[key] = otherUpdates[key];
+      }
+    });
+    
+    // Update campaign
+    const updatedCampaign = await prisma.emailCampaign.update({
+      where: { id },
+      data: updateData,
+    });
+    
+    // Send emails if status changed to published
+    let emailResults = null;
+    if (status === 'published' && existingCampaign.status !== 'published') {
+      try {
+        emailResults = await sendModernEmails(updatedCampaign);
+        
+        // Update campaign with email results
+        await prisma.emailCampaign.update({
+          where: { id },
+          data: { 
+            sentAt: new Date(),
+            sentCount: emailResults.summary.successful,
+            failedCount: emailResults.summary.failed
+          },
+        });
+        
+        // Refresh the updated campaign
+        const refreshedCampaign = await prisma.emailCampaign.findUnique({
+          where: { id }
+        });
+        
+        updatedCampaign.sentAt = refreshedCampaign.sentAt;
+        updatedCampaign.sentCount = refreshedCampaign.sentCount;
+        updatedCampaign.failedCount = refreshedCampaign.failedCount;
+        
+      } catch (emailError) {
+        console.error(`Email sending failed:`, emailError);
+        emailResults = {
+          error: emailError.message,
+          summary: {
+            successful: 0,
+            failed: updatedCampaign.recipients ? updatedCampaign.recipients.split(',').length : 0
+          }
+        };
+      }
+    }
+    
+    // Parse attachments for response
+    let responseAttachments = [];
+    try {
+      if (updatedCampaign.attachments) {
+        responseAttachments = JSON.parse(updatedCampaign.attachments);
+      }
+    } catch (error) {
+      console.error('Error parsing attachments:', error);
+    }
+    
+    const recipientCount = updatedCampaign.recipients.split(',').length;
+    
+    const response = {
+      success: true,
+      campaign: {
+        id: updatedCampaign.id,
+        title: updatedCampaign.title,
+        subject: updatedCampaign.subject,
+        content: updatedCampaign.content,
+        recipients: updatedCampaign.recipients,
+        recipientCount,
+        recipientType: updatedCampaign.recipientType || 'all',
+        recipientTypeLabel: getRecipientTypeLabel(updatedCampaign.recipientType || 'all'),
+        status: updatedCampaign.status,
+        sentAt: updatedCampaign.sentAt,
+        sentCount: updatedCampaign.sentCount,
+        failedCount: updatedCampaign.failedCount,
+        attachments: responseAttachments,
+        hasAttachments: responseAttachments.length > 0,
+        createdAt: updatedCampaign.createdAt,
+        updatedAt: updatedCampaign.updatedAt
+      },
+      emailResults,
+      message: status === 'published' && existingCampaign.status !== 'published'
+        ? `Campaign sent to ${emailResults?.summary?.successful || 0} recipients successfully`
+        : 'Campaign updated successfully'
+    };
+    
+    return NextResponse.json(response);
+    
+  } catch (error) {
+    console.error(`PATCH Error:`, error);
+    
+    let statusCode = 500;
+    let errorMessage = error.message || "Failed to update campaign";
+    
+    if (error.code === 'P2025') {
+      statusCode = 404;
+      errorMessage = "Campaign not found";
+    }
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: errorMessage
+    }, { status: statusCode });
   }
 }
