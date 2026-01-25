@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../libs/prisma";
+import { prisma } from "../../../../libs/prisma";
 import nodemailer from "nodemailer";
-import cloudinary from "../../../libs/cloudinary";
+import cloudinary from "../../../../libs/cloudinary";
 import { v4 as uuidv4 } from "uuid";
 
 // ====================================================================
