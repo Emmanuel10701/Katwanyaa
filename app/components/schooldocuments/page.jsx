@@ -3553,12 +3553,12 @@ export default function SchoolDocumentsPage() {
         onClick={() => setShowModal(true)} 
         className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95"
       >
-        {documents ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
-        <span>{documents ? 'Edit Documents' : 'Upload Documents'}</span>
+        {hasDocuments ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
+        <span>{hasDocuments ? 'Edit Documents' : 'Upload Documents'}</span>
       </button>
 
       {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
-      {documents && (
+      {hasDocuments && (
         <button 
           onClick={() => setDeleteDialogOpen(true)} 
           className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
