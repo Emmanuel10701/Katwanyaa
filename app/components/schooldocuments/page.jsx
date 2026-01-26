@@ -3084,7 +3084,7 @@ export default function SchoolDocumentsPage() {
           </div>
         ) : (
           // NO DOCUMENTS FOUND - USER-FRIENDLY MESSAGE
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white rounded-2xl h-10 shadow-lg border border-gray-200 p-6 text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
               <FaFilePdf className="w-10 h-10 text-blue-600" />
             </div>

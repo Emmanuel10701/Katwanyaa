@@ -317,42 +317,43 @@ model SchoolInfo {
 
 model SchoolDocument {
   id       Int @id @default(autoincrement())
-  // Curriculum PDF
+  
+  // Curriculum PDF - NOTE: field names must match exactly
   curriculumPDF           String?   @db.Text
-  curriculumPdfName       String?   @db.VarChar(255)
+  curriculumPdfName       String?   @db.VarChar(255)  // Note: PdfName not PDFName
   curriculumPdfSize       Int?
   curriculumPdfUploadDate DateTime?
   curriculumDescription   String?   @db.Text
   curriculumYear          Int?
 
-  // Fee Breakdown JSON Fields
-  feesDayDistributionJson      Json?
-  feesBoardingDistributionJson Json?
-  admissionFeeDistribution     Json?
-
   // Day School Fees PDF
-  feesDayDistributionPdf String?   @db.Text
-  feesDayPdfName         String?   @db.VarChar(255)
-  feesDayPdfSize         Int?
-  feesDayPdfUploadDate   DateTime?
-  feesDayDescription     String?   @db.Text
-  feesDayYear            Int?
+  feesDayDistributionPdf      String?   @db.Text
+  feesDayPdfName              String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  feesDayPdfSize              Int?
+  feesDayPdfUploadDate        DateTime?
+  feesDayDescription          String?   @db.Text
+  feesDayYear                 Int?
 
   // Boarding School Fees PDF
-  feesBoardingDistributionPdf String?   @db.Text
-  feesBoardingPdfName         String?   @db.VarChar(255)
-  feesBoardingPdfSize         Int?
-  feesBoardingPdfUploadDate   DateTime?
-  feesBoardingDescription     String?   @db.Text
-  feesBoardingYear            Int?
+  feesBoardingDistributionPdf      String?   @db.Text
+  feesBoardingPdfName              String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  feesBoardingPdfSize              Int?
+  feesBoardingPdfUploadDate        DateTime?
+  feesBoardingDescription          String?   @db.Text
+  feesBoardingYear                 Int?
 
   // Admission Fee PDF
   admissionFeePdf           String?   @db.Text
-  admissionFeePdfName       String?   @db.VarChar(255)
+  admissionFeePdfName       String?   @db.VarChar(255)  // Note: PdfName not PDFName
   admissionFeePdfSize       Int?
   admissionFeePdfUploadDate DateTime?
   admissionFeeDescription   String?   @db.Text
   admissionFeeYear          Int?
+
+  // Fee breakdown JSON fields
+  feesDayDistributionJson      Json?
+  feesBoardingDistributionJson Json?
+  admissionFeeDistribution     Json?
 
   // Form 1 Results PDF
   form1ResultsPdf           String?   @db.Text
@@ -360,6 +361,7 @@ model SchoolDocument {
   form1ResultsPdfSize       Int?
   form1ResultsDescription   String?   @db.Text
   form1ResultsYear          Int?
+  form1ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
   form1ResultsUploadDate    DateTime?
 
   // Form 2 Results PDF
@@ -368,6 +370,7 @@ model SchoolDocument {
   form2ResultsPdfSize       Int?
   form2ResultsDescription   String?   @db.Text
   form2ResultsYear          Int?
+  form2ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
   form2ResultsUploadDate    DateTime?
 
   // Form 3 Results PDF
@@ -376,6 +379,7 @@ model SchoolDocument {
   form3ResultsPdfSize       Int?
   form3ResultsDescription   String?   @db.Text
   form3ResultsYear          Int?
+  form3ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
   form3ResultsUploadDate    DateTime?
 
   // Form 4 Results PDF
@@ -384,6 +388,7 @@ model SchoolDocument {
   form4ResultsPdfSize       Int?
   form4ResultsDescription   String?   @db.Text
   form4ResultsYear          Int?
+  form4ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
   form4ResultsUploadDate    DateTime?
 
   // Mock Exams PDF
@@ -392,6 +397,7 @@ model SchoolDocument {
   mockExamsPdfSize          Int?
   mockExamsDescription      String?   @db.Text
   mockExamsYear             Int?
+  mockExamsTerm             String?   @db.VarChar(50)  // ADD THIS FIELD
   mockExamsUploadDate       DateTime?
 
   // KCSE Results PDF
@@ -400,6 +406,7 @@ model SchoolDocument {
   kcsePdfSize               Int?
   kcseDescription           String?   @db.Text
   kcseYear                  Int?
+  kcseTerm                  String?   @db.VarChar(50)  // ADD THIS FIELD
   kcseUploadDate            DateTime?
 
   createdAt DateTime @default(now())
@@ -426,9 +433,10 @@ model AdditionalDocument {
   schoolDocumentId  Int
   filename          String   @db.VarChar(255)
   filepath          String   @db.Text
-  filetype          String   @db.VarChar(50)  // pdf, doc, xls, ppt, image, text
+  filetype          String   @db.VarChar(50)
   description       String?  @db.Text
   year              Int?
+  term              String?  @db.VarChar(50)  // ADD THIS FIELD
   filesize          Int?
   uploadedAt        DateTime @default(now())
   
@@ -440,7 +448,6 @@ model AdditionalDocument {
   @@index([filetype])
   @@map("AdditionalDocument")
 }
-
 model AdmissionApplication {
   id                     String    @id @default(cuid())
   applicationNumber      String    @unique
