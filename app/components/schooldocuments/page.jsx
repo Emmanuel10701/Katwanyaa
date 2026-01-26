@@ -2292,7 +2292,7 @@ function AdditionalResultsUpload({
   );
 }
 
-// Modern Document Card Component
+// Updated ModernDocumentCard Component with View Details
 function ModernDocumentCard({ 
   title, 
   description, 
@@ -2305,53 +2305,71 @@ function ModernDocumentCard({
   onReplace = null,
   onRemove = null,
   existing = false,
-  type = 'default'
+  type = 'default',
+  fileSize = null,
+  uploadDate = null
 }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   
   const breakdown = feeBreakdown || admissionBreakdown;
   const totalAmount = breakdown?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
   const categoriesCount = breakdown?.length || 0;
 
+  // Prepare document data for the details modal
+  const documentData = {
+    title,
+    description,
+    pdfUrl,
+    pdfName,
+    year,
+    term,
+    feeBreakdown,
+    admissionBreakdown,
+    type,
+    fileSize,
+    uploadDate
+  };
+
   return (
-    <div className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-300">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-3 ${type.includes('curriculum') ? 'bg-red-500' : type.includes('day') ? 'bg-green-500' : type.includes('boarding') ? 'bg-blue-500' : type.includes('admission') ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
-            <FaFilePdf className="text-lg" />
+    <>
+      <div className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-300">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-3 ${type.includes('curriculum') ? 'bg-red-500' : type.includes('day') ? 'bg-green-500' : type.includes('boarding') ? 'bg-blue-500' : type.includes('admission') ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
+              <FaFilePdf className="text-lg" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-gray-900">{title}</h4>
+              <p className="text-xs text-gray-600 font-bold mt-1">{description}</p>
+              {(year || term) && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {year && (
+                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                      Year: {year}
+                    </span>
+                  )}
+                  {term && (
+                    <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                      Term: {term}
+                    </span>
+                  )}
+                </div>
+              )}
+              {breakdown && categoriesCount > 0 && (
+                <button
+                  onClick={() => setShowBreakdown(!showBreakdown)}
+                  className="mt-2 flex items-center gap-2 text-xs font-bold text-purple-600 hover:text-purple-700"
+                >
+                  <FaCalculator className="text-xs" />
+                  {showBreakdown ? 'Hide' : 'Show'} {type.includes('admission') ? 'Admission Fees' : 'Fee Breakdown'} ({categoriesCount} categories)
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-bold text-gray-900">{title}</h4>
-            <p className="text-xs text-gray-600 font-bold mt-1">{description}</p>
-            {(year || term) && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {year && (
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-                    Year: {year}
-                  </span>
-                )}
-                {term && (
-                  <span className="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-                    Term: {term}
-                  </span>
-                )}
-              </div>
-            )}
-            {breakdown && categoriesCount > 0 && (
-              <button
-                onClick={() => setShowBreakdown(!showBreakdown)}
-                className="mt-2 flex items-center gap-2 text-xs font-bold text-purple-600 hover:text-purple-700"
-              >
-                <FaCalculator className="text-xs" />
-                {showBreakdown ? 'Hide' : 'Show'} {type.includes('admission') ? 'Admission Fees' : 'Fee Breakdown'} ({categoriesCount} categories)
-              </button>
-            )}
-          </div>
-        </div>
-        
-        {existing && (onReplace || onRemove) && (
-          <div className="flex gap-2">
-            {onReplace && (
+          
+          {existing && (onReplace || onRemove) && (
+            <div className="flex gap-2">
               <button
                 onClick={onReplace}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-blue-200"
@@ -2359,8 +2377,6 @@ function ModernDocumentCard({
               >
                 <FaUpload size={14} />
               </button>
-            )}
-            {onRemove && (
               <button
                 onClick={onRemove}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-red-200"
@@ -2368,76 +2384,83 @@ function ModernDocumentCard({
               >
                 <FaTrash size={14} />
               </button>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {showBreakdown && breakdown && categoriesCount > 0 && (
-        <div className={`mb-4 bg-gradient-to-br ${type.includes('admission') ? 'from-purple-50 to-purple-100 border-purple-200' : type.includes('boarding') ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-green-50 to-green-100 border-green-200'} rounded-xl p-4 border`}>
-          <div className="flex items-center justify-between mb-3">
-            <h5 className="text-sm font-bold text-gray-900">
-              {type.includes('admission') ? 'Admission Fee' : 'Fee'} Breakdown
-            </h5>
-            <span className={`text-lg font-bold ${type.includes('admission') ? 'text-purple-700' : type.includes('boarding') ? 'text-blue-700' : 'text-green-700'}`}>
-              KES {totalAmount.toLocaleString()}
-            </span>
-          </div>
-          <div className="space-y-2">
-            {breakdown.slice(0, 5).map((item, index) => (
-              <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-gray-800">{item.name}</span>
-                    {item.optional && (
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-bold">Optional</span>
-                    )}
-                    {item.boardingOnly && (
-                      <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded font-bold">Boarding</span>
+            </div>
+          )}
+        </div>
+        
+        {showBreakdown && breakdown && categoriesCount > 0 && (
+          <div className={`mb-4 bg-gradient-to-br ${type.includes('admission') ? 'from-purple-50 to-purple-100 border-purple-200' : type.includes('boarding') ? 'from-blue-50 to-blue-100 border-blue-200' : 'from-green-50 to-green-100 border-green-200'} rounded-xl p-4 border`}>
+            <div className="flex items-center justify-between mb-3">
+              <h5 className="text-sm font-bold text-gray-900">
+                {type.includes('admission') ? 'Admission Fee' : 'Fee'} Breakdown
+              </h5>
+              <span className={`text-lg font-bold ${type.includes('admission') ? 'text-purple-700' : type.includes('boarding') ? 'text-blue-700' : 'text-green-700'}`}>
+                KES {totalAmount.toLocaleString()}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {breakdown.slice(0, 3).map((item, index) => (
+                <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-gray-800">{item.name}</span>
+                      {item.optional && (
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-bold">Optional</span>
+                      )}
+                      {item.boardingOnly && (
+                        <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded font-bold">Boarding</span>
+                      )}
+                    </div>
+                    {item.description && (
+                      <p className="text-xs text-gray-600 mt-1 font-bold">{item.description}</p>
                     )}
                   </div>
-                  {item.description && (
-                    <p className="text-xs text-gray-600 mt-1 font-bold">{item.description}</p>
-                  )}
+                  <span className="text-sm font-bold text-gray-700">
+                    KES {item.amount?.toLocaleString()}
+                  </span>
                 </div>
-                <span className="text-sm font-bold text-gray-700">
-                  KES {item.amount?.toLocaleString()}
-                </span>
-              </div>
-            ))}
-            {breakdown.length > 5 && (
-              <div className="text-center pt-2">
-                <p className="text-xs text-gray-600 font-bold">
-                  + {breakdown.length - 5} more categories
-                </p>
-              </div>
-            )}
+              ))}
+              {breakdown.length > 3 && (
+                <div className="text-center pt-2">
+                  <button
+                    onClick={() => setShowDetailsModal(true)}
+                    className="text-xs text-purple-600 hover:text-purple-700 font-bold"
+                  >
+                    + {breakdown.length - 3} more categories (View all)
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-      
-      {pdfUrl && (
+        )}
+        
         <div className="flex gap-2 mt-4">
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors border border-gray-300"
+          <button
+            onClick={() => setShowDetailsModal(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-colors shadow-lg"
           >
-            <FaEye /> Preview
-          </a>
+            <FaEye /> View Details
+          </button>
           <a
             href={pdfUrl}
             download={pdfName || `${title}.pdf`}
-            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-colors shadow-lg"
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors shadow-lg"
           >
             <FaDownload /> Download
           </a>
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Document Details Modal */}
+      <DocumentDetailsModal
+        open={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        documentData={documentData}
+      />
+    </>
   );
 }
+
 
 // Documents Modal Component
 function DocumentsModal({ onClose, onSave, documents, loading }) {
@@ -3110,6 +3133,288 @@ export default function SchoolDocumentsPage() {
     }
   };
 
+
+  // Document Details Modal Component
+function DocumentDetailsModal({ 
+  open, 
+  onClose, 
+  documentData 
+}) {
+  if (!documentData) return null;
+  
+  const { 
+    title, 
+    description, 
+    pdfUrl, 
+    pdfName, 
+    year, 
+    term,
+    feeBreakdown,
+    admissionBreakdown,
+    type,
+    fileSize,
+    uploadDate
+  } = documentData;
+
+  const breakdown = feeBreakdown || admissionBreakdown;
+  const categoriesCount = breakdown?.length || 0;
+  const totalAmount = breakdown?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+
+  const getDocumentTypeIcon = () => {
+    switch(type) {
+      case 'curriculum': return <FaBook className="text-red-500" />;
+      case 'day': return <FaMoneyBillWave className="text-green-500" />;
+      case 'boarding': return <FaBuilding className="text-blue-500" />;
+      case 'admission': return <FaUserCheck className="text-purple-500" />;
+      case 'results': return <FaAward className="text-orange-500" />;
+      default: return <FaFilePdf className="text-gray-500" />;
+    }
+  };
+
+  const getDocumentTypeLabel = () => {
+    switch(type) {
+      case 'curriculum': return 'Curriculum Document';
+      case 'day': return 'Day School Fees';
+      case 'boarding': return 'Boarding School Fees';
+      case 'admission': return 'Admission Fees';
+      case 'results': return 'Examination Results';
+      default: return 'Document';
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return 'N/A';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: '800px',
+        maxHeight: '90vh',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
+                {getDocumentTypeIcon()}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Document Details</h2>
+                <p className="text-white/90 text-sm mt-1 font-bold">
+                  {getDocumentTypeLabel()}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg"
+            >
+              <FaTimes className="text-lg" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="max-h-[calc(90vh-180px)] overflow-y-auto p-6">
+          {/* Basic Information */}
+          <div className="mb-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+                <p className="text-gray-600 text-sm font-bold mt-1">{description}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-bold text-blue-600">
+                  {pdfName || 'Document'}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  {formatFileSize(fileSize)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              {year && (
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-500 font-bold">Year</p>
+                  <p className="text-sm font-bold text-gray-900">{year}</p>
+                </div>
+              )}
+              
+              {term && (
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-500 font-bold">Term</p>
+                  <p className="text-sm font-bold text-gray-900">{term}</p>
+                </div>
+              )}
+              
+              <div className="bg-white p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-500 font-bold">File Type</p>
+                <p className="text-sm font-bold text-gray-900">PDF Document</p>
+              </div>
+              
+              {uploadDate && (
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-500 font-bold">Upload Date</p>
+                  <p className="text-sm font-bold text-gray-900">{formatDate(uploadDate)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Fee Breakdown Section (if available) */}
+          {breakdown && categoriesCount > 0 && (
+            <div className={`mb-6 bg-gradient-to-br ${
+              type === 'admission' ? 'from-purple-50 to-purple-100 border-purple-200' : 
+              type === 'boarding' ? 'from-blue-50 to-blue-100 border-blue-200' : 
+              type === 'day' ? 'from-green-50 to-green-100 border-green-200' : 
+              'from-gray-50 to-gray-100 border-gray-200'
+            } rounded-xl p-5 border`}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">
+                  {type === 'admission' ? 'Admission Fee Breakdown' : 'Fee Structure Breakdown'}
+                </h3>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${
+                    type === 'admission' ? 'text-purple-700' : 
+                    type === 'boarding' ? 'text-blue-700' : 
+                    'text-green-700'
+                  }`}>
+                    KES {totalAmount.toLocaleString()}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1 font-bold">
+                    {categoriesCount} categories • {breakdown.filter(c => !c.optional).length} required
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {breakdown.map((item, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-gray-900">{item.name}</span>
+                        {item.optional && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full font-bold">
+                            Optional
+                          </span>
+                        )}
+                        {item.boardingOnly && (
+                          <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-bold">
+                            Boarding Only
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-lg font-bold text-gray-900">
+                        KES {item.amount?.toLocaleString()}
+                      </span>
+                    </div>
+                    {item.description && (
+                      <p className="text-sm text-gray-600 mt-2 font-bold">{item.description}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* File Information */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-500 text-white rounded-lg">
+                <FaFilePdf className="text-lg" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">File Information</h3>
+                <p className="text-sm text-gray-600 font-bold">Access and download options</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {pdfUrl && (
+                <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-blue-200">
+                  <div>
+                    <p className="text-sm font-bold text-gray-900">Document URL</p>
+                    <p className="text-xs text-gray-600 font-bold truncate max-w-md">
+                      {pdfUrl}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => window.open(pdfUrl, '_blank')}
+                    className="text-blue-600 hover:text-blue-700 text-sm font-bold flex items-center gap-2"
+                  >
+                    <FaExternalLinkAlt /> Open in new tab
+                  </button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => window.open(pdfUrl, '_blank')}
+                  className="bg-white text-gray-700 p-4 rounded-lg border border-gray-300 hover:border-blue-300 hover:bg-blue-50 transition-colors flex items-center justify-center gap-3 font-bold"
+                >
+                  <FaEye className="text-blue-500" />
+                  Preview Document
+                </button>
+                <a
+                  href={pdfUrl}
+                  download={pdfName || `${title}.pdf`}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors flex items-center justify-center gap-3 font-bold text-center"
+                >
+                  <FaDownload />
+                  Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-gray-200 p-6 bg-white">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold"
+            >
+              Close Details
+            </button>
+            <a
+              href={pdfUrl}
+              download={pdfName || `${title}.pdf`}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-2"
+            >
+              <FaDownload /> Download Document
+            </a>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
   const handleUpdateField = async (field, value) => {
     try {
       if (!documents?.id) {
@@ -3237,27 +3542,34 @@ export default function SchoolDocumentsPage() {
           </div>
         </div>
 
-        {/* Actions Menu */}
-        {documents && anchorEl && (
-          <div className="absolute right-4 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-            <div className="py-1">
-              <button
-                onClick={() => { handleClose(); setShowModal(true); }}
-                className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <FaPencilAlt className="text-blue-500" />
-                Edit Documents
-              </button>
-              <button
-                onClick={() => { handleClose(); setDeleteDialogOpen(true); }}
-                className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <FaTrash className="text-red-500" />
-                Delete All Documents
-              </button>
-            </div>
-          </div>
-        )}
+    {/* Modernized Actions Menu */}
+{documents && anchorEl && (
+  <div className="absolute right-4 mt-3 w-56 overflow-hidden bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 z-50 animate-in fade-in zoom-in duration-200">
+    <div className="p-1.5">
+      <button
+        onClick={() => { handleClose(); setShowModal(true); }}
+        className="group flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-xl transition-all duration-200"
+      >
+        <div className="p-2 bg-blue-50 group-hover:bg-white rounded-lg transition-colors">
+          <FaPencilAlt className="text-blue-600" />
+        </div>
+        Edit Documents
+      </button>
+
+      <div className="h-px bg-gray-100 my-1 mx-2" />
+
+      <button
+        onClick={() => { handleClose(); setDeleteDialogOpen(true); }}
+        className="group flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+      >
+        <div className="p-2 bg-red-50 group-hover:bg-white rounded-lg transition-colors">
+          <FaTrash className="text-red-500" />
+        </div>
+        Delete All Documents
+      </button>
+    </div>
+  </div>
+)}
 
         {documents ? (
           <div className="space-y-6">
@@ -3518,49 +3830,72 @@ export default function SchoolDocumentsPage() {
           </div>
         )}
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle className="text-red-600 font-bold">
-            <div className="flex items-center gap-2">
-              <FaExclamationCircle />
-              Confirm Deletion
-            </div>
-          </DialogTitle>
-          <DialogContent>
-            <div className="py-4">
-              <p className="text-gray-700 font-bold mb-2">
-                Are you sure you want to delete this entire document?
-              </p>
-              <p className="text-sm text-gray-600">
-                This action will permanently delete:
-              </p>
-              <ul className="text-sm text-gray-600 mt-2 space-y-1">
-                <li>• All uploaded PDFs</li>
-                <li>• Fee breakdown data</li>
-                <li>• Exam results metadata</li>
-                <li>• Additional documents</li>
-              </ul>
-              <Alert severity="warning" className="mt-4">
-                This action cannot be undone!
-              </Alert>
-            </div>
-          </DialogContent>
-          <DialogActions className="p-4">
-            <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleDeleteDocument} 
-              variant="contained" 
-              color="error"
-              startIcon={actionLoading ? <CircularProgress size={16} color="inherit" /> : <FaTrash />}
-              disabled={actionLoading}
-            >
-              {actionLoading ? 'Deleting...' : 'Delete Permanently'}
-            </Button>
-          </DialogActions>
-        </Dialog>
+      {/* Modernized Delete Confirmation Dialog */}
+<Dialog 
+  open={deleteDialogOpen} 
+  onClose={() => setDeleteDialogOpen(false)}
+  PaperProps={{
+    className: "rounded-3xl p-2 max-w-md shadow-2xl" 
+  }}
+>
+  <div className="p-6">
+    {/* Header & Icon Area */}
+    <div className="flex flex-col items-center text-center mb-6">
+      <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+        <FaExclamationCircle className="text-red-500 text-3xl animate-pulse" />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-900">Confirm Deletion</h2>
+      <p className="text-gray-500 mt-2">
+        Are you sure you want to delete this document? This process is irreversible.
+      </p>
+    </div>
 
+    {/* Impact Details Box */}
+    <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+        The following data will be lost:
+      </p>
+      <div className="grid grid-cols-1 gap-2">
+        {['All uploaded PDFs', 'Fee breakdown data', 'Exam results metadata', 'Additional documents'].map((item) => (
+          <div key={item} className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Critical Warning Banner */}
+    <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800 text-sm mb-8">
+      <span className="text-lg">⚠️</span>
+      <p className="font-medium">Warning: This action cannot be undone!</p>
+    </div>
+
+    {/* Modern Action Buttons */}
+    <div className="flex flex-col sm:flex-row gap-3">
+      <button 
+        onClick={() => setDeleteDialogOpen(false)}
+        className="flex-1 px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
+      >
+        Keep Everything
+      </button>
+      <button 
+        onClick={handleDeleteDocument} 
+        disabled={actionLoading}
+        className="flex-2 px-8 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2"
+      >
+        {actionLoading ? (
+          <CircularProgress size={18} color="inherit" />
+        ) : (
+          <>
+            <FaTrash className="text-xs" />
+            Delete Permanently
+          </>
+        )}
+      </button>
+    </div>
+  </div>
+</Dialog>
         {/* Update Field Modal */}
         {updateFieldModal.open && (
           <UpdateFieldModal
