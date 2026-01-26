@@ -3574,7 +3574,6 @@ export default function SchoolDocumentsPage() {
 
 
 
-{/* NO DOCUMENT SECTION */}
 {!hasDocuments ? (
   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
     <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
@@ -3593,82 +3592,259 @@ export default function SchoolDocumentsPage() {
     </button>
   </div>
 ) : (
-  // SIMPLE DOCUMENTS DISPLAY (if you want to show minimal info)
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">School Documents</h2>
-        <p className="text-gray-600 mt-1 font-bold">
-          {documents.curriculumPdfName || 'Manage your school documents'}
-        </p>
-      </div>
-      <div className="flex items-center gap-4">
-        {documents.curriculumPDF && (
-          <div className="bg-blue-50 px-4 py-2 rounded-lg">
-            <p className="text-sm text-gray-600 font-bold">Curriculum</p>
-            <p className="text-lg font-bold text-blue-700">✓ Uploaded</p>
-          </div>
-        )}
-        {documents.feesDayDistributionPdf && (
-          <div className="bg-green-50 px-4 py-2 rounded-lg">
-            <p className="text-sm text-gray-600 font-bold">Day Fees</p>
-            <p className="text-lg font-bold text-green-700">✓ Uploaded</p>
-          </div>
-        )}
-        {documents.feesBoardingDistributionPdf && (
-          <div className="bg-purple-50 px-4 py-2 rounded-lg">
-            <p className="text-sm text-gray-600 font-bold">Boarding Fees</p>
-            <p className="text-lg font-bold text-purple-700">✓ Uploaded</p>
-          </div>
-        )}
-      </div>
-    </div>
+  // MODERN DOCUMENT CARDS DISPLAY
+  <div className="space-y-6">
+    {/* CURRICULUM DOCUMENT */}
+    {documents.curriculumPDF && (
+      <ModernDocumentCard
+        title="Curriculum Document"
+        description="Official school curriculum and syllabus"
+        pdfUrl={documents.curriculumPDF}
+        pdfName={documents.curriculumPdfName || "curriculum.pdf"}
+        year={documents.curriculumYear}
+        type="curriculum"
+        fileSize={documents.curriculumPdfSize}
+        uploadDate={documents.curriculumUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove curriculum document?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
     
-    <div className="mb-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-2">Available Documents</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {documents.curriculumPDF && (
-          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-            <FaBook className="text-red-500" />
-            <span className="text-sm font-bold text-gray-700">Curriculum Document</span>
-          </div>
-        )}
-        {documents.feesDayDistributionPdf && (
-          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-            <FaMoneyBillWave className="text-green-500" />
-            <span className="text-sm font-bold text-gray-700">Day School Fees</span>
-          </div>
-        )}
-        {documents.feesBoardingDistributionPdf && (
-          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-            <FaBuilding className="text-blue-500" />
-            <span className="text-sm font-bold text-gray-700">Boarding School Fees</span>
-          </div>
-        )}
-        {documents.admissionFeePdf && (
-          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
-            <FaUserCheck className="text-purple-500" />
-            <span className="text-sm font-bold text-gray-700">Admission Fees</span>
-          </div>
-        )}
-      </div>
-    </div>
+    {/* DAY SCHOOL FEES DOCUMENT */}
+    {documents.feesDayDistributionPdf && (
+      <ModernDocumentCard
+        title="Day School Fee Structure"
+        description="Day school fees breakdown and payment terms"
+        pdfUrl={documents.feesDayDistributionPdf}
+        pdfName={documents.feesDayPdfName || "day-fees.pdf"}
+        year={documents.feesDayYear}
+        term={documents.feesDayTerm}
+        feeBreakdown={documents.feesDayDistributionJson || []}
+        type="day"
+        fileSize={documents.feesDayPdfSize}
+        uploadDate={documents.feesDayUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove day school fees document?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
     
-    <div className="flex gap-3">
-      <button 
-        onClick={() => setShowModal(true)}
-        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold flex items-center gap-2"
-      >
-        <FaEdit /> Manage Documents
-      </button>
-      <button 
-        onClick={() => setDeleteDialogOpen(true)}
-        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-200 font-bold flex items-center gap-2"
-      >
-        <FaTrash /> Delete All
+    {/* BOARDING SCHOOL FEES DOCUMENT */}
+    {documents.feesBoardingDistributionPdf && (
+      <ModernDocumentCard
+        title="Boarding School Fee Structure"
+        description="Boarding school fees including accommodation"
+        pdfUrl={documents.feesBoardingDistributionPdf}
+        pdfName={documents.feesBoardingPdfName || "boarding-fees.pdf"}
+        year={documents.feesBoardingYear}
+        term={documents.feesBoardingTerm}
+        feeBreakdown={documents.feesBoardingDistributionJson || []}
+        type="boarding"
+        fileSize={documents.feesBoardingPdfSize}
+        uploadDate={documents.feesBoardingUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove boarding fees document?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* ADMISSION FEES DOCUMENT */}
+    {documents.admissionFeePdf && (
+      <ModernDocumentCard
+        title="Admission Fees"
+        description="Admission and registration fees structure"
+        pdfUrl={documents.admissionFeePdf}
+        pdfName={documents.admissionFeePdfName || "admission-fees.pdf"}
+        year={documents.admissionFeeYear}
+        term={documents.admissionFeeTerm}
+        admissionBreakdown={documents.admissionFeeDistribution || []}
+        type="admission"
+        fileSize={documents.admissionFeePdfSize}
+        uploadDate={documents.admissionFeeUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove admission fees document?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* EXAM RESULTS DOCUMENTS */}
+    {/* Form 1 Results */}
+    {documents.form1ResultsPdf && (
+      <ModernDocumentCard
+        title="Form 1 Results"
+        description={documents.form1ResultsDescription || "Form 1 examination results"}
+        pdfUrl={documents.form1ResultsPdf}
+        pdfName={documents.form1ResultsPdfName || "form1-results.pdf"}
+        year={documents.form1ResultsYear}
+        term={documents.form1ResultsTerm}
+        type="results"
+        fileSize={documents.form1ResultsPdfSize}
+        uploadDate={documents.form1ResultsUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove Form 1 results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* Form 2 Results */}
+    {documents.form2ResultsPdf && (
+      <ModernDocumentCard
+        title="Form 2 Results"
+        description={documents.form2ResultsDescription || "Form 2 examination results"}
+        pdfUrl={documents.form2ResultsPdf}
+        pdfName={documents.form2ResultsPdfName || "form2-results.pdf"}
+        year={documents.form2ResultsYear}
+        term={documents.form2ResultsTerm}
+        type="results"
+        fileSize={documents.form2ResultsPdfSize}
+        uploadDate={documents.form2ResultsUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove Form 2 results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* Form 3 Results */}
+    {documents.form3ResultsPdf && (
+      <ModernDocumentCard
+        title="Form 3 Results"
+        description={documents.form3ResultsDescription || "Form 3 examination results"}
+        pdfUrl={documents.form3ResultsPdf}
+        pdfName={documents.form3ResultsPdfName || "form3-results.pdf"}
+        year={documents.form3ResultsYear}
+        term={documents.form3ResultsTerm}
+        type="results"
+        fileSize={documents.form3ResultsPdfSize}
+        uploadDate={documents.form3ResultsUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove Form 3 results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* Form 4 Results */}
+    {documents.form4ResultsPdf && (
+      <ModernDocumentCard
+        title="Form 4 Results"
+        description={documents.form4ResultsDescription || "Form 4 examination results"}
+        pdfUrl={documents.form4ResultsPdf}
+        pdfName={documents.form4ResultsPdfName || "form4-results.pdf"}
+        year={documents.form4ResultsYear}
+        term={documents.form4ResultsTerm}
+        type="results"
+        fileSize={documents.form4ResultsPdfSize}
+        uploadDate={documents.form4ResultsUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove Form 4 results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* Mock Exams Results */}
+    {documents.mockExamsResultsPdf && (
+      <ModernDocumentCard
+        title="Mock Exams Results"
+        description={documents.mockExamsDescription || "Mock examination results"}
+        pdfUrl={documents.mockExamsResultsPdf}
+        pdfName={documents.mockExamsPdfName || "mock-exams-results.pdf"}
+        year={documents.mockExamsYear}
+        term={documents.mockExamsTerm}
+        type="results"
+        fileSize={documents.mockExamsPdfSize}
+        uploadDate={documents.mockExamsUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove mock exams results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* KCSE Results */}
+    {documents.kcseResultsPdf && (
+      <ModernDocumentCard
+        title="KCSE Results"
+        description={documents.kcseDescription || "KCSE examination results"}
+        pdfUrl={documents.kcseResultsPdf}
+        pdfName={documents.kcsePdfName || "kcse-results.pdf"}
+        year={documents.kcseYear}
+        term={documents.kcseTerm}
+        type="results"
+        fileSize={documents.kcsePdfSize}
+        uploadDate={documents.kcseUploadDate}
+        existing={true}
+        onReplace={() => setShowModal(true)}
+        onRemove={() => {
+          if (confirm("Remove KCSE results?")) {
+            // Handle removal
+          }
+        }}
+      />
+    )}
+    
+    {/* ADDITIONAL DOCUMENTS */}
+    {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
+        {documents.additionalDocuments.map((doc, index) => (
+          <ModernDocumentCard
+            key={doc.id || index}
+            title={doc.filename || `Document ${index + 1}`}
+            description={doc.description || "Additional school document"}
+            pdfUrl={doc.filepath}
+            pdfName={doc.filename}
+            year={doc.year}
+            term={doc.term}
+            type="additional"
+            fileSize={doc.filesize}
+            uploadDate={doc.uploadDate}
+            existing={true}
+            onReplace={() => setShowModal(true)}
+            onRemove={() => {
+              if (confirm("Remove this document?")) {
+                // Handle removal
+              }
+            }}
+          />
+        ))}
+      </div>
+    )}
 
-      </button>
-    </div>
   </div>
 )}
 
