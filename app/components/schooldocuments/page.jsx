@@ -206,7 +206,7 @@ function DocumentActionsMenu({ documentId, onEdit, onDelete, onView }) {
   const handleDeleteConfirm = async () => {
     try {
       setDeleteLoading(true);
-      const response = await fetch(`/api/schooldocuments?id=${documentId}`, {
+      const response = await fetch(`/api/schooldocuments`, {
         method: 'DELETE',
       });
 
@@ -3070,7 +3070,7 @@ export default function SchoolDocumentsPage() {
         return;
       }
 
-      const response = await fetch(`/api/schooldocuments?id=${documents.id}`, {
+      const response = await fetch(`/api/schooldocuments`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
