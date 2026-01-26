@@ -206,7 +206,7 @@ function DocumentActionsMenu({ documentId, onEdit, onDelete, onView }) {
   const handleDeleteConfirm = async () => {
     try {
       setDeleteLoading(true);
-      const response = await fetch(`/api/schooldocuments`, {
+      const response = await fetch(`/api/schooldocuments?id=${documentId}`, {
         method: 'DELETE',
       });
 
@@ -420,7 +420,7 @@ function UpdateFieldModal({
   );
 }
 
-// Dynamic Fee Category Component (keep existing)
+// Dynamic Fee Category Component
 function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -547,7 +547,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' 
   );
 }
 
-// Fee Breakdown Modal Component (keep existing)
+// Fee Breakdown Modal Component
 function FeeBreakdownModal({ 
   open, 
   onClose, 
@@ -859,7 +859,7 @@ function FeeBreakdownModal({
   );
 }
 
-// Admission Fee Breakdown Modal (keep existing)
+// Admission Fee Breakdown Modal
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
@@ -1163,7 +1163,7 @@ function AdmissionFeeBreakdownModal({
   );
 }
 
-// Document Metadata Modal for Exam Results and Additional Files with Term Field (keep existing)
+// Document Metadata Modal for Exam Results and Additional Files with Term Field
 function DocumentMetadataModal({ 
   open, 
   onClose, 
@@ -1307,7 +1307,7 @@ function DocumentMetadataModal({
   );
 }
 
-// Enhanced Modern PDF Upload with all fixes (keep existing)
+// Enhanced Modern PDF Upload with all fixes
 function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
@@ -1883,7 +1883,7 @@ function ModernPdfUpload({
   );
 }
 
-// Enhanced Additional Results Upload with Metadata Modal (keep existing)
+// Enhanced Additional Results Upload with Metadata Modal
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
@@ -2292,7 +2292,7 @@ function AdditionalResultsUpload({
   );
 }
 
-// Modern Document Card Component (keep existing)
+// Modern Document Card Component
 function ModernDocumentCard({ 
   title, 
   description, 
@@ -2439,7 +2439,7 @@ function ModernDocumentCard({
   );
 }
 
-// Documents Modal Component (keep existing with minor adjustments for delete functionality)
+// Documents Modal Component
 function DocumentsModal({ onClose, onSave, documents, loading }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
@@ -2456,10 +2456,11 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseResultsPdf: null
   });
   
+  // FIXED: Removed JSON.parse since API returns already parsed arrays
   const [feeBreakdowns, setFeeBreakdowns] = useState({
-    feesDay: documents?.feesDayDistributionJson ? JSON.parse(documents.feesDayDistributionJson) : [],
-    feesBoarding: documents?.feesBoardingDistributionJson ? JSON.parse(documents.feesBoardingDistributionJson) : [],
-    admissionFee: documents?.admissionFeeDistribution ? JSON.parse(documents.admissionFeeDistribution) : []
+    feesDay: documents?.feesDayDistributionJson || [],
+    feesBoarding: documents?.feesBoardingDistributionJson || [],
+    admissionFee: documents?.admissionFeeDistribution || []
   });
   
   const [examMetadata, setExamMetadata] = useState({
@@ -3007,6 +3008,42 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   );
 }
 
+// Helper functions for file display
+const getFileIcon = (fileType) => {
+  if (!fileType) return <FaFile className="text-gray-500" />;
+  const type = fileType.toLowerCase();
+  if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
+  if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
+  if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
+  if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
+  return <FaFile className="text-gray-500" />;
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Helper function to safely parse JSON fields
+const parseJsonField = (field) => {
+  if (!field) return [];
+  try {
+    // If it's already an array, return it
+    if (Array.isArray(field)) return field;
+    // If it's a string, parse it
+    if (typeof field === 'string') {
+      return JSON.parse(field);
+    }
+    return [];
+  } catch (error) {
+    console.error('Error parsing JSON field:', error);
+    return [];
+  }
+};
+
 // Main School Documents Page Component with Complete CRUD
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
@@ -3028,7 +3065,17 @@ export default function SchoolDocumentsPage() {
       
       if (docsResponse.ok) {
         const docsData = await docsResponse.json();
-        setDocuments(docsData.document || docsData);
+        console.log("API Response:", docsData); // Debug log
+        
+        // FIXED: Properly extract document data from API response
+        if (docsData.success && docsData.document) {
+          setDocuments(docsData.document);
+        } else if (docsData.success && docsData) {
+          // If the API returns data directly (not nested in document property)
+          setDocuments(docsData);
+        } else {
+          setDocuments(null);
+        }
       } else {
         setDocuments(null);
       }
@@ -3054,7 +3101,7 @@ export default function SchoolDocumentsPage() {
       const result = await response.json();
       toast.success(result.message || 'Document deleted successfully');
       setDeleteDialogOpen(false);
-      await loadData(); // This will set documents to null and show the empty state
+      await loadData();
     } catch (error) {
       console.error('Delete failed:', error);
       toast.error(error.message || 'Failed to delete document');
@@ -3070,7 +3117,7 @@ export default function SchoolDocumentsPage() {
         return;
       }
 
-      const response = await fetch(`/api/schooldocuments`, {
+      const response = await fetch(`/api/schooldocuments?id=${documents.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -3093,24 +3140,6 @@ export default function SchoolDocumentsPage() {
       console.error('Update failed:', error);
       toast.error(error.message || 'Failed to update field');
     }
-  };
-
-  const getFileIcon = (fileType) => {
-    if (!fileType) return <FaFile className="text-gray-500" />;
-    const type = fileType.toLowerCase();
-    if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
-    if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-    if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-    if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
-    return <FaFile className="text-gray-500" />;
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const handleSaveDocuments = async (documentData) => {
@@ -3253,7 +3282,7 @@ export default function SchoolDocumentsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Curriculum Document */}
-                {documents?.curriculumPDF && (
+                {documents.curriculumPDF && (
                   <ModernDocumentCard
                     title="Curriculum"
                     description="Academic curriculum document"
@@ -3266,52 +3295,52 @@ export default function SchoolDocumentsPage() {
                 )}
 
                 {/* Day School Fees */}
-                {documents?.feesDayDistributionPdf && (
+                {documents.feesDayDistributionPdf && (
                   <ModernDocumentCard
                     title="Day School Fees"
                     description="Day school fee structure"
                     pdfUrl={documents.feesDayDistributionPdf}
                     pdfName={documents.feesDayPdfName}
                     year={documents.feesDayYear}
-                    feeBreakdown={documents.feesDayDistributionJson ? JSON.parse(documents.feesDayDistributionJson) : null}
+                    feeBreakdown={parseJsonField(documents.feesDayDistributionJson)}
                     existing={true}
                     type="day"
                   />
                 )}
 
                 {/* Boarding School Fees */}
-                {documents?.feesBoardingDistributionPdf && (
+                {documents.feesBoardingDistributionPdf && (
                   <ModernDocumentCard
                     title="Boarding School Fees"
                     description="Boarding school fee structure"
                     pdfUrl={documents.feesBoardingDistributionPdf}
                     pdfName={documents.feesBoardingPdfName}
                     year={documents.feesBoardingYear}
-                    feeBreakdown={documents.feesBoardingDistributionJson ? JSON.parse(documents.feesBoardingDistributionJson) : null}
+                    feeBreakdown={parseJsonField(documents.feesBoardingDistributionJson)}
                     existing={true}
                     type="boarding"
                   />
                 )}
 
                 {/* Admission Fee */}
-                {documents?.admissionFeePdf && (
+                {documents.admissionFeePdf && (
                   <ModernDocumentCard
                     title="Admission Fee"
                     description="Admission fee structure"
                     pdfUrl={documents.admissionFeePdf}
                     pdfName={documents.admissionFeePdfName}
                     year={documents.admissionFeeYear}
-                    admissionBreakdown={documents.admissionFeeDistribution ? JSON.parse(documents.admissionFeeDistribution) : null}
+                    admissionBreakdown={parseJsonField(documents.admissionFeeDistribution)}
                     existing={true}
                     type="admission"
                   />
                 )}
 
-                {/* Exam Results */}
-                {documents?.form1ResultsPdf && (
+                {/* Exam Results - Fixed mapping */}
+                {documents.form1ResultsPdf && (
                   <ModernDocumentCard
                     title="Form 1 Results"
-                    description={documents.form1ResultsDescription || `Form 1 examination results`}
+                    description={documents.form1ResultsDescription || "Form 1 examination results"}
                     pdfUrl={documents.form1ResultsPdf}
                     pdfName={documents.form1ResultsPdfName}
                     year={documents.form1ResultsYear}
@@ -3321,10 +3350,10 @@ export default function SchoolDocumentsPage() {
                   />
                 )}
 
-                {documents?.form2ResultsPdf && (
+                {documents.form2ResultsPdf && (
                   <ModernDocumentCard
                     title="Form 2 Results"
-                    description={documents.form2ResultsDescription || `Form 2 examination results`}
+                    description={documents.form2ResultsDescription || "Form 2 examination results"}
                     pdfUrl={documents.form2ResultsPdf}
                     pdfName={documents.form2ResultsPdfName}
                     year={documents.form2ResultsYear}
@@ -3334,10 +3363,10 @@ export default function SchoolDocumentsPage() {
                   />
                 )}
 
-                {documents?.form3ResultsPdf && (
+                {documents.form3ResultsPdf && (
                   <ModernDocumentCard
                     title="Form 3 Results"
-                    description={documents.form3ResultsDescription || `Form 3 examination results`}
+                    description={documents.form3ResultsDescription || "Form 3 examination results"}
                     pdfUrl={documents.form3ResultsPdf}
                     pdfName={documents.form3ResultsPdfName}
                     year={documents.form3ResultsYear}
@@ -3347,10 +3376,10 @@ export default function SchoolDocumentsPage() {
                   />
                 )}
 
-                {documents?.form4ResultsPdf && (
+                {documents.form4ResultsPdf && (
                   <ModernDocumentCard
                     title="Form 4 Results"
-                    description={documents.form4ResultsDescription || `Form 4 examination results`}
+                    description={documents.form4ResultsDescription || "Form 4 examination results"}
                     pdfUrl={documents.form4ResultsPdf}
                     pdfName={documents.form4ResultsPdfName}
                     year={documents.form4ResultsYear}
@@ -3360,10 +3389,10 @@ export default function SchoolDocumentsPage() {
                   />
                 )}
 
-                {documents?.mockExamsResultsPdf && (
+                {documents.mockExamsResultsPdf && (
                   <ModernDocumentCard
                     title="Mock Exams"
-                    description={documents.mockExamsDescription || `Mock examination results`}
+                    description={documents.mockExamsDescription || "Mock examination results"}
                     pdfUrl={documents.mockExamsResultsPdf}
                     pdfName={documents.mockExamsPdfName}
                     year={documents.mockExamsYear}
@@ -3373,10 +3402,10 @@ export default function SchoolDocumentsPage() {
                   />
                 )}
 
-                {documents?.kcseResultsPdf && (
+                {documents.kcseResultsPdf && (
                   <ModernDocumentCard
                     title="KCSE Results"
-                    description={documents.kcseDescription || `KCSE examination results`}
+                    description={documents.kcseDescription || "KCSE examination results"}
                     pdfUrl={documents.kcseResultsPdf}
                     pdfName={documents.kcsePdfName}
                     year={documents.kcseYear}
@@ -3388,7 +3417,7 @@ export default function SchoolDocumentsPage() {
               </div>
 
               {/* Additional Documents Section */}
-              {documents?.additionalDocuments && documents.additionalDocuments.length > 0 && (
+              {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
                 <div className="mt-8">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-gray-900">Additional Documents</h3>
@@ -3397,15 +3426,15 @@ export default function SchoolDocumentsPage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {documents.additionalDocuments.map((file) => (
-                      <div key={file.id} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
+                    {documents.additionalDocuments.map((file, index) => (
+                      <div key={file.id || index} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
                         <div className="flex items-center gap-2 mb-3">
                           <div className="p-2 bg-gray-100 rounded-xl">
                             {getFileIcon(file.filetype)}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-gray-900 truncate">
-                              {file.filename}
+                              {file.filename || file.name}
                             </p>
                             <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
                               {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
@@ -3413,14 +3442,14 @@ export default function SchoolDocumentsPage() {
                               {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
                             </div>
                             <p className="text-xs text-gray-500 mt-0.5 font-bold">
-                              {formatFileSize(file.filesize)} • {file.filetype?.toUpperCase() || 'Document'}
+                              {formatFileSize(file.filesize || file.size)} • {file.filetype?.toUpperCase() || 'Document'}
                             </p>
                           </div>
                         </div>
-                        {file.filepath && (
+                        {(file.filepath || file.url) && (
                           <div className="flex gap-2 mt-3">
                             <a
-                              href={file.filepath}
+                              href={file.filepath || file.url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
@@ -3428,8 +3457,8 @@ export default function SchoolDocumentsPage() {
                               View
                             </a>
                             <a
-                              href={file.filepath}
-                              download={file.filename}
+                              href={file.filepath || file.url}
+                              download={file.filename || file.name}
                               className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
                             >
                               Download
@@ -3445,7 +3474,7 @@ export default function SchoolDocumentsPage() {
           </div>
         ) : (
           // NO DOCUMENTS FOUND - USER-FRIENDLY MESSAGE
-          <div className="bg-white rounded-2xl h-10 shadow-lg border border-gray-200 p-6 text-center">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
               <FaFilePdf className="w-10 h-10 text-blue-600" />
             </div>
