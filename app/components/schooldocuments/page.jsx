@@ -984,6 +984,7 @@ const [documentDescription, setDocumentDescription] = useState('');
 
 
 // Update handleMetadataSave function:
+// Update handleMetadataSave function:
 const handleMetadataSave = (metadata) => {
   if (selectedFileForMetadata) {
     setUploadProgress(0);
@@ -998,8 +999,8 @@ const handleMetadataSave = (metadata) => {
     }, 100);
 
     setTimeout(() => {
-      // Pass file along with metadata
-      onPdfChange(selectedFileForMetadata, metadata.year, metadata.description);
+      // Pass file along with metadata - use documentYear and documentDescription
+      onPdfChange(selectedFileForMetadata, documentYear, documentDescription);
       setPreviewName(selectedFileForMetadata.name);
       setUploadProgress(100);
       setIsReplacing(false);
