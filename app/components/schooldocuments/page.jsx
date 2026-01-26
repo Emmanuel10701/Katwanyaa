@@ -20,7 +20,7 @@ import {
   FaEdit, FaList, FaCaretDown, FaCaretUp,
   FaSort, FaSortUp, FaSortDown, FaCalculator,
   FaInfo, FaQuestionCircle, FaDatabase,
-  FaPencilAlt, FaEllipsisV, FaExclamationCircle
+  FaPencilAlt, FaEllipsisV, FaExclamationCircle, FaAlignLeft 
 } from 'react-icons/fa';
 
 import { 
