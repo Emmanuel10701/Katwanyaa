@@ -1637,13 +1637,17 @@ function ModernPdfUpload({
 }
 
 // Enhanced Additional Results Upload with Metadata Modal and Preview Section
+// First, update the AdditionalResultsUpload component to properly pass data to parent
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
   label = "Additional Documents",
   existingFiles = [],
   onCancelExisting = null,
-  onRemoveExisting = null
+  onRemoveExisting = null,
+  // NEW PROPS for direct state management
+  additionalFilesState = [],
+  onAdditionalFilesStateChange = null
 }) {
   const fileSizeManager = useFileSize();
   const [dragOver, setDragOver] = useState(false);
@@ -1660,6 +1664,7 @@ function AdditionalResultsUpload({
   // Allowed file types for additional documents
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
+  // Initialize localFiles from props
   useEffect(() => {
     const existingFileObjects = (existingFiles || []).map((file, index) => ({
       ...file,
@@ -1708,7 +1713,19 @@ function AdditionalResultsUpload({
     });
     
     setLocalFiles(uniqueFiles);
+    
+    // NEW: Update parent state if prop is provided
+    if (onAdditionalFilesStateChange) {
+      onAdditionalFilesStateChange(uniqueFiles);
+    }
   }, [existingFiles, files]);
+
+  // NEW: Effect to sync with parent state when provided
+  useEffect(() => {
+    if (additionalFilesState && additionalFilesState.length > 0) {
+      setLocalFiles(additionalFilesState);
+    }
+  }, [additionalFilesState]);
 
   const validateFile = (file) => {
     // Check file type by extension
@@ -1801,8 +1818,17 @@ function AdditionalResultsUpload({
         uploadDate: new Date().toISOString()
       };
       
-      setLocalFiles(prev => [...prev, newFileObject]);
+      const updatedFiles = [...localFiles, newFileObject];
+      setLocalFiles(updatedFiles);
+      
+      // Update parent states
       onFilesChange([...files, selectedFile.file]);
+      
+      // NEW: Update parent state via callback
+      if (onAdditionalFilesStateChange) {
+        onAdditionalFilesStateChange(updatedFiles);
+      }
+      
       toast.success('Document added with metadata');
       
       setSelectedFile(null);
@@ -1880,9 +1906,16 @@ function AdditionalResultsUpload({
     const fileToRemove = localFiles.find(f => f.id === id);
     
     if (fileToRemove && fileToRemove.isExisting) {
-      setLocalFiles(prev => prev.map(file => 
+      const updatedFiles = localFiles.map(file => 
         file.id === id ? { ...file, isRemoved: true, status: 'removed' } : file
-      ));
+      );
+      
+      setLocalFiles(updatedFiles);
+      
+      // NEW: Update parent state via callback
+      if (onAdditionalFilesStateChange) {
+        onAdditionalFilesStateChange(updatedFiles);
+      }
       
       if (onRemoveExisting) {
         onRemoveExisting(fileToRemove);
@@ -1899,14 +1932,20 @@ function AdditionalResultsUpload({
       // Remove from size manager
       fileSizeManager.removeFile(id);
       
-      setLocalFiles(prev => prev.filter(file => file.id !== id));
+      const updatedFiles = localFiles.filter(file => file.id !== id);
+      setLocalFiles(updatedFiles);
+      
+      // NEW: Update parent state via callback
+      if (onAdditionalFilesStateChange) {
+        onAdditionalFilesStateChange(updatedFiles);
+      }
       
       if (fileToRemove.file) {
-        const updatedFiles = files.filter(f => 
+        const updatedFilesList = files.filter(f => 
           f !== fileToRemove.file && 
           f.name !== fileToRemove.filename
         );
-        onFilesChange(updatedFiles);
+        onFilesChange(updatedFilesList);
       }
       
       toast.info('New file removed from list.');
@@ -1990,7 +2029,7 @@ function AdditionalResultsUpload({
         </div>
       </div>
 
-      {/* PREVIEW SECTION - SIMILAR TO ModernPdfUpload */}
+      {/* PREVIEW SECTION */}
       {hasFiles && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -2140,7 +2179,7 @@ function AdditionalResultsUpload({
         </div>
       )}
 
-      {/* UPLOAD AREA - ONLY SHOW WHEN NO FILES OR ALWAYS VISIBLE? */}
+      {/* UPLOAD AREA */}
       <div
         className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group w-full max-w-2xl ${
           dragOver 
@@ -2205,6 +2244,7 @@ function AdditionalResultsUpload({
     </div>
   );
 }
+
 
 // Updated ModernDocumentCard Component with View Details
 function ModernDocumentCard({ 
@@ -3116,35 +3156,110 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
           </div>
         );
       
-      case 4: // Additional Documents
-        return (
-          <div className="space-y-6">
-            <div className="w-full max-w-2xl">
-              <AdditionalResultsUpload 
-                files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-                onFilesChange={(newFiles) => {
-                  const newFileObjects = newFiles.filter(newFile => 
-                    !additionalFiles.some(f => f.file === newFile)
-                  ).map(file => ({
-                    file,
-                    filename: file.name,
-                    year: '',
-                    term: '',
-                    description: '',
-                    isNew: true,
-                    isModified: true
-                  }));
-                  
-                  setAdditionalFiles(prev => [...prev, ...newFileObjects]);
-                }}
-                label="Additional Documents"
-                existingFiles={documents?.additionalDocuments || []}
-              />
-            </div>
+ case 4: // Review Step
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-blue-500 text-white rounded-xl">
+            <FaClipboardList className="text-lg" />
           </div>
-        );
-      
-      case 5: // Review Step
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
+            <p className="text-sm text-gray-600 font-bold">
+              Review all selected documents before submission
+            </p>
+          </div>
+        </div>
+        
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
+            <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
+            <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Additional Files</p>
+            <p className="text-xl font-bold text-blue-700">{additionalFiles.filter(f => !f.isRemoved).length}</p>
+          </div>
+        </div>
+        
+        {/* Document Summary */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <FaList className="text-blue-600" />
+            Document Summary
+          </h4>
+          
+          {/* Additional Documents - SHOW THEM HERE */}
+          {additionalFiles.filter(f => !f.isRemoved).length > 0 && (
+            <div className="bg-white rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FaFile className="text-gray-600" />
+                  <span className="font-bold text-gray-900">Additional Documents</span>
+                </div>
+                <span className="text-xs font-bold text-blue-600">
+                  {additionalFiles.filter(f => !f.isRemoved).length} files
+                </span>
+              </div>
+              <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                {additionalFiles.filter(f => !f.isRemoved).map((file, index) => (
+                  <div key={file.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-900 truncate">{file.filename || 'Document'}</p>
+                      <div className="flex gap-2 mt-1">
+                        {file.year && (
+                          <span className="text-xs text-blue-600">Year: {file.year}</span>
+                        )}
+                        {file.term && (
+                          <span className="text-xs text-green-600">Term: {file.term}</span>
+                        )}
+                        {file.isNew && (
+                          <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">New</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-600">
+                        {formatFileSize(file.filesize || file.size || 0)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Confirmation Checkbox */}
+          <div className="mt-6">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+              />
+              <div>
+                <p className="text-sm font-bold text-gray-900 mb-1">
+                  I confirm that I have reviewed all documents and they are accurate
+                </p>
+                <p className="text-xs text-gray-600">
+                  By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+     
+ case 5: // Review Step
         return (
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
