@@ -405,12 +405,7 @@ const router =useRouter()
       const schoolDocs = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
 
 
-      // Calculate real counts
-      const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
-      const upcomingEvents = events.events?.filter(e => {
-        if (!e.date) return false;
-        return new Date(e.date) > new Date();
-      }).length || 0;
+  
       
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
       

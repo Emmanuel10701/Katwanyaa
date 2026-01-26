@@ -198,72 +198,7 @@ model GalleryImage {
   updatedAt   DateTime @updatedAt
 }
 
-model Student {
-  id                  Int                @id @default(autoincrement())
-  admissionNumber     String             @unique
-  name                String
-  form                String
-  stream              String
-  gender              String
-  dateOfBirth         DateTime
-  enrollmentDate      DateTime
-  kcpeMarks           Int?
-  previousSchool      String?
-  parentName          String
-  parentEmail         String?
-  parentPhone         String
-  emergencyContact    String
-  address             String
-  medicalInfo         String?
-  hobbies             String?
-  academicPerformance String
-  attendance          String
-  disciplineRecord    String
-  status              String             @default("Active")
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  isClassPrefect      Boolean            @default(false)
-  isClassAssistant    Boolean            @default(false)
-  isBellRinger        Boolean            @default(false)
-  promotionHistory    PromotionHistory[]
-  councilPositions    StudentCouncil[]   @relation("StudentToStudentCouncil")
-}
 
-model StudentCouncil {
-  id               String             @id @default(cuid())
-  position         CouncilPosition
-  department       CouncilDepartment?
-  studentId        Int
-  form             String?
-  stream           String?
-  startDate        DateTime
-  endDate          DateTime?
-  status           CouncilStatus      @default(Active)
-  image            String?
-  achievements     String?
-  responsibilities String
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  student          Student            @relation("StudentToStudentCouncil", fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@unique([studentId, position, department, form, stream])
-  @@map("student_councils")
-}
-
-model PromotionHistory {
-  id         Int      @id @default(autoincrement())
-  studentId  Int
-  fromForm   String
-  toForm     String
-  fromStream String
-  toStream   String
-  promotedAt DateTime @default(now())
-  promotedBy String   @default("System")
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  @@index([studentId])
-  @@index([promotedAt])
-}
 
 model SchoolInfo {
   id           Int      @id @default(autoincrement())
@@ -651,51 +586,9 @@ enum Category {
   OTHER
 }
 
-enum CouncilStatus {
-  Active
-  Inactive
-  Graduated
-}
 
-enum CouncilPosition {
-  President
-  DeputyPresident
-  SchoolCaptain
-  DeputyCaptain
-  AcademicsSecretary
-  SportsSecretary
-  EntertainmentSecretary
-  CleaningSecretary
-  MealsSecretary
-  BellRinger
-  DisciplineSecretary
-  HealthSecretary
-  LibrarySecretary
-  TransportSecretary
-  EnvironmentSecretary
-  SpiritualSecretary
-  TechnologySecretary
-  Assistant
-  ClassRepresentative
-  ClassAssistant
-}
 
-enum CouncilDepartment {
-  Presidency
-  Academics
-  Sports
-  Entertainment
-  Cleaning
-  Meals
-  Discipline
-  Health
-  Library
-  Transport
-  Environment
-  Spiritual
-  Technology
-  General
-}
+
 
 model StudentSession {
   id              String   @id @default(cuid())

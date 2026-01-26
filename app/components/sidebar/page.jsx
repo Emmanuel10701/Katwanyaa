@@ -231,7 +231,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
 
 
       const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
-      const activeCouncil = council.councilMembers?.filter(c => c.status === 'Active').length || 0;
       const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
       
