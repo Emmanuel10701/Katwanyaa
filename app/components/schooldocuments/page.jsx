@@ -3504,67 +3504,72 @@ export default function SchoolDocumentsPage() {
     <FileSizeProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
         <Toaster position="top-right" richColors />
-
-        {/* MODERN HEADER WITH ACTIONS MENU */}
-        <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
-          <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
-          
-          <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-4 mb-4">
-                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-                  <FaFilePdf className="text-white text-3xl group-hover:scale-100 transition-transform" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-                      Document Management
-                    </span>
-                    <FaShieldAlt className="text-blue-300 text-[10px]" />
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
-                    School Documents
-                  </h1>
-                </div>
-              </div>
-              
-              <p className="text-blue-50/80 text-sm md:text-lg font-bold max-w-2xl leading-relaxed">
-                Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-4 sm:p-0 rounded-[2rem] sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none">
-              
-              <button 
-                onClick={loadData} 
-                disabled={loading}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
-              >
-                {loading ? (
-                  <CircularProgress size={16} color="inherit" thickness={6} />
-                ) : (
-                  <FaSync className="text-sm" /> 
-                )}
-                <span className="whitespace-nowrap font-bold">
-                  {loading ? 'Syncing...' : 'Refresh'}
-                </span>
-              </button>
-              
-              <button 
-                onClick={handleManageClick} 
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
-              >
-                <FaUpload className="text-sm" />
-                <span className="whitespace-nowrap font-bold">
-                  {documents ? 'Manage Documents' : 'Upload Documents'}
-                </span>
-                {documents && <FaCaretDown className="ml-1" />}
-              </button>
-            </div>
-          </div>
+{/* MODERN HEADER WITH INTEGRATED ACTIONS */}
+<div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
+  {/* Decorative Background Elements */}
+  <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+  
+  <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+    
+    <div className="flex-1 min-w-0">
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
+          <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
         </div>
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
+              Document Management
+            </span>
+            <FaShieldAlt className="text-blue-300 text-[10px]" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
+            School Documents
+          </h1>
+        </div>
+      </div>
+      
+      <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+        Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
+      </p>
+    </div>
+
+    {/* ACTION BUTTON GROUP */}
+    <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+      
+      {/* 1. REFRESH BUTTON (Always Visible) */}
+      <button 
+        onClick={loadData} 
+        disabled={loading}
+        className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
+      >
+        {loading ? <CircularProgress size={14} color="inherit" /> : <FaSync className="text-xs" />}
+        <span>{loading ? 'Syncing...' : 'Refresh'}</span>
+      </button>
+
+      {/* 2. UPLOAD/EDIT BUTTON (Conditional Style) */}
+      <button 
+        onClick={() => setShowModal(true)} 
+        className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95"
+      >
+        {documents ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
+        <span>{documents ? 'Edit Documents' : 'Upload Documents'}</span>
+      </button>
+
+      {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
+      {documents && (
+        <button 
+          onClick={() => setDeleteDialogOpen(true)} 
+          className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
+        >
+          <FaTrash className="text-xs group-hover:animate-bounce" />
+          <span>Delete All</span>
+        </button>
+      )}
+    </div>
+  </div>
+</div>
 
 
 
@@ -3661,7 +3666,7 @@ export default function SchoolDocumentsPage() {
         className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-200 font-bold flex items-center gap-2"
       >
         <FaTrash /> Delete All
-        
+
       </button>
     </div>
   </div>
