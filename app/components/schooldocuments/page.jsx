@@ -2699,7 +2699,7 @@ function DocumentDetailsModal({
   );
 }
 
-// Documents Modal Component
+// Documents Modal Component - UPDATED VERSION
 function DocumentsModal({ onClose, onSave, documents, loading }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
@@ -2748,9 +2748,29 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
-  const [additionalFiles, setAdditionalFiles] = useState([]);
+  // Initialize additionalFiles state
+  const [additionalFiles, setAdditionalFiles] = useState(() => {
+    if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
+      return documents.additionalDocuments.map((doc) => ({
+        ...doc,
+        id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}`,
+        isExisting: true,
+        isModified: false,
+        isRemoved: false,
+        isReplaced: false,
+        originalFilePath: doc.filepath,
+        year: doc.year || '',
+        description: doc.description || '',
+        term: doc.term || '',
+        filesize: doc.filesize || 0,
+        filetype: doc.filetype || 'document',
+        status: 'existing'
+      }));
+    }
+    return [];
+  });
+  
   const [actionLoading, setActionLoading] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
   const steps = [
@@ -2799,8 +2819,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    // Show review modal instead of directly submitting
-    setShowReviewModal(true);
+    await handleSubmitAfterReview();
   };
 
   const handleSubmitAfterReview = async () => {
@@ -2813,6 +2832,9 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       setActionLoading(true);
       
       const data = new FormData();
+      
+      // Debug: Log all additional files
+      console.log('All additional files:', additionalFiles);
       
       // Add PDF files
       Object.keys(formData).forEach(key => {
@@ -2846,9 +2868,15 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       });
       
       // Add fee breakdowns as JSON
-      data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
-      data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
-      data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+      if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
+        data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
+      }
+      if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
+        data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
+      }
+      if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
+        data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+      }
       
       // Add exam metadata (for existing documents without new uploads)
       Object.keys(examMetadata).forEach(key => {
@@ -2857,10 +2885,19 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         }
       });
       
-      // Add additional files with metadata
-      additionalFiles.forEach((file, index) => {
-        if (file.file && !file.isRemoved) {
-          data.append(`additionalFiles[${index}]`, file.file);
+      // ✅ CRITICAL FIX: Add additional files in CORRECT format for backend
+      const newAdditionalFiles = additionalFiles.filter(file => 
+        file.isNew && file.file && !file.isRemoved
+      );
+      
+      console.log('New additional files to upload:', newAdditionalFiles.length);
+      
+      newAdditionalFiles.forEach((file, index) => {
+        if (file.file) {
+          // ✅ Use EXACT format backend expects: additionalFiles[] for file array
+          data.append('additionalFiles[]', file.file);
+          
+          // ✅ Use EXACT format backend expects: indexed metadata
           if (file.year) {
             data.append(`additionalFilesYear[${index}]`, file.year);
           }
@@ -2873,14 +2910,35 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         }
       });
       
-      // Add additional document IDs to delete
+      // ✅ CRITICAL FIX: Add additional document IDs to delete
       const additionalDocsToDelete = additionalFiles
-        .filter(file => file.isRemoved && file.id && file.id.toString().startsWith('existing_'))
-        .map(file => file.id.replace('existing_', ''));
+        .filter(file => file.isRemoved && file.isExisting && file.id)
+        .map(file => {
+          // Extract the numeric ID from "existing_X"
+          const match = file.id.toString().match(/existing_(\d+)/);
+          return match ? match[1] : null;
+        })
+        .filter(id => id !== null && !isNaN(parseInt(id)));
+      
+      console.log('Additional docs to delete IDs:', additionalDocsToDelete);
       
       additionalDocsToDelete.forEach(id => {
+        // ✅ Use EXACT format backend expects: additionalDocsToDelete[]
         data.append('additionalDocsToDelete[]', id);
       });
+      
+      // Debug: Log what's being sent
+      console.log('=== FORM DATA BEING SENT TO BACKEND ===');
+      console.log('Total additional files:', newAdditionalFiles.length);
+      console.log('Files to delete:', additionalDocsToDelete.length);
+      
+      for (let [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
       
       const response = await fetch('/api/schooldocuments', {
         method: 'POST',
@@ -2888,21 +2946,30 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save documents');
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to save documents: ${response.status}`);
       }
 
       const result = await response.json();
       
-      toast.success(result.message || 'Documents saved successfully!');
-      onSave(result.document);
-      onClose();
+      console.log('Save API response:', result);
+      
+      if (result.success) {
+        toast.success(result.message || 'Documents saved successfully!');
+        if (onSave && result.document) {
+          onSave(result.document);
+        }
+        onClose();
+      } else {
+        toast.error(result.error || 'Failed to save documents');
+      }
       
     } catch (error) {
       console.error('Save failed:', error);
       toast.error(error.message || 'Failed to save documents');
     } finally {
       setActionLoading(false);
-      setShowReviewModal(false);
     }
   };
 
@@ -2985,7 +3052,6 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   };
 
-  // Calculate total documents for review
   const countTotalDocuments = () => {
     let count = 0;
     
@@ -2997,16 +3063,20 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
           count++;
         }
+      } else if (documents && documents[key]) {
+        // Count existing documents that haven't been replaced
+        count++;
       }
     });
     
-    // Additional files
-    count += additionalFiles.filter(file => file.file && !file.isRemoved).length;
+    // Additional files (only active ones)
+    count += additionalFiles.filter(file => 
+      !file.isRemoved && (file.file || (file.isExisting && !file.isReplaced))
+    ).length;
     
     return count;
   };
 
-  // Get document status for review
   const getDocumentStatus = (field) => {
     const existing = getExistingPdfData(field);
     const newFile = formData[field];
@@ -3022,292 +3092,292 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     return { status: 'none', name: 'No file' };
   };
 
-const renderStepContent = () => {
-  switch(currentStep) {
-    case 0: // Curriculum
-      return (
-        <div className="space-y-6">
-          <div className="w-full max-w-2xl">
-            <ModernPdfUpload
-              pdfFile={formData.curriculumPDF}
-              onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
-              onRemove={() => handleFileRemove('curriculumPDF')}
-              label="Curriculum PDF"
-              existingPdf={getExistingPdfData('curriculumPDF')}
-              type="curriculum"
-            />
-          </div>
-        </div>
-      );
-    
-    case 1: // Fee Structures
-      return (
-        <div className="space-y-8">
-          <div className="w-full max-w-2xl">
-            <ModernPdfUpload
-              pdfFile={formData.feesDayDistributionPdf}
-              onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
-              onRemove={() => handleFileRemove('feesDayDistributionPdf')}
-              label="Day School Fees PDF"
-              existingPdf={getExistingPdfData('feesDayDistributionPdf')}
-              feeBreakdown={feeBreakdowns.feesDay}
-              onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
-              type="day"
-            />
-          </div>
-          
-          <div className="w-full max-w-2xl">
-            <ModernPdfUpload
-              pdfFile={formData.feesBoardingDistributionPdf}
-              onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
-              onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
-              label="Boarding School Fees PDF"
-              existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
-              feeBreakdown={feeBreakdowns.feesBoarding}
-              onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
-              type="boarding"
-            />
-          </div>
-        </div>
-      );
-    
-    case 2: // Admission
-      return (
-        <div className="space-y-6">
-          <div className="w-full max-w-2xl">
-            <ModernPdfUpload
-              pdfFile={formData.admissionFeePdf}
-              onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
-              onRemove={() => handleFileRemove('admissionFeePdf')}
-              label="Admission Fee PDF"
-              existingPdf={getExistingPdfData('admissionFeePdf')}
-              feeBreakdown={feeBreakdowns.admissionFee}
-              onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
-              type="admission"
-            />
-          </div>
-        </div>
-      );
-    
-    case 3: // Exam Results
-      return (
-        <div className="space-y-8">
-          {[
-            { key: 'form1Results', label: 'Form 1 Results', color: 'orange' },
-            { key: 'form2Results', label: 'Form 2 Results', color: 'orange' },
-            { key: 'form3Results', label: 'Form 3 Results', color: 'orange' },
-            { key: 'form4Results', label: 'Form 4 Results', color: 'orange' },
-            { key: 'mockExams', label: 'Mock Exams Results', color: 'orange' },
-            { key: 'kcse', label: 'KCSE Results', color: 'orange' }
-          ].map((exam) => (
-            <div key={exam.key} className="w-full max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <FaAward className="text-orange-600" />
-                  <span className="text-base">{exam.label}</span>
-                </label>
-                <div className="flex gap-2">
-                  <div className="w-24">
-                    <input
-                      type="number"
-                      min="2000"
-                      max="2100"
-                      value={examMetadata[`${exam.key}Year`]}
-                      onChange={(e) => handleExamMetadataChange(`${exam.key}Year`, e.target.value)}
-                      placeholder="Year"
-                      className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                    />
-                  </div>
-                  <div className="w-32">
-                    <select
-                      value={examMetadata[`${exam.key}Term`]}
-                      onChange={(e) => handleExamMetadataChange(`${exam.key}Term`, e.target.value)}
-                      className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                    >
-                      <option value="">Select Term</option>
-                      <option value="Term 1">Term 1</option>
-                      <option value="Term 2">Term 2</option>
-                      <option value="Term 3">Term 3</option>
-                      <option value="Annual">Annual</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              <div className="mb-3">
-                <input
-                  type="text"
-                  value={examMetadata[`${exam.key}Description`]}
-                  onChange={(e) => handleExamMetadataChange(`${exam.key}Description`, e.target.value)}
-                  placeholder="Description of these results..."
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                />
-              </div>
+  const renderStepContent = () => {
+    switch(currentStep) {
+      case 0: // Curriculum
+        return (
+          <div className="space-y-6">
+            <div className="w-full max-w-2xl">
               <ModernPdfUpload
-                pdfFile={formData[`${exam.key}Pdf`]}
-                onPdfChange={(file, year, description, term) => {
-                  handleFileChange(`${exam.key}Pdf`, file, year, description, term);
-                }}
-                onRemove={() => handleFileRemove(`${exam.key}Pdf`)}
-                label={`${exam.label} PDF`}
-                type="results"
+                pdfFile={formData.curriculumPDF}
+                onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
+                onRemove={() => handleFileRemove('curriculumPDF')}
+                label="Curriculum PDF"
+                existingPdf={getExistingPdfData('curriculumPDF')}
+                type="curriculum"
               />
             </div>
-          ))}
-        </div>
-      );
-    
-    case 4: // Additional Files
-      return (
-        <div className="w-full max-w-2xl">
-          <AdditionalResultsUpload
-            files={additionalFiles}
-            onFilesChange={setAdditionalFiles}
-            label="Additional Documents"
-            existingFiles={documents?.additionalDocuments || []}
-            onCancelExisting={(file) => {
-              console.log('Cancel replacement for:', file);
-            }}
-            onRemoveExisting={(file) => {
-              console.log('Remove existing file:', file);
-            }}
-            additionalFilesState={additionalFiles}
-            onAdditionalFilesStateChange={setAdditionalFiles}
-          />
-        </div>
-      );
-    
-    case 5: // Review Step (LAST STEP)
-      return (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-blue-500 text-white rounded-xl">
-                <FaClipboardList className="text-lg" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
-                <p className="text-sm text-gray-600 font-bold">
-                  Review all selected documents before submission
-                </p>
-              </div>
+          </div>
+        );
+      
+      case 1: // Fee Structures
+        return (
+          <div className="space-y-8">
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.feesDayDistributionPdf}
+                onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
+                onRemove={() => handleFileRemove('feesDayDistributionPdf')}
+                label="Day School Fees PDF"
+                existingPdf={getExistingPdfData('feesDayDistributionPdf')}
+                feeBreakdown={feeBreakdowns.feesDay}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
+                type="day"
+              />
             </div>
             
-            {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-xl border border-blue-200">
-                <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
-                <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-blue-200">
-                <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
-                <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
-              </div>
-              <div className="bg-white p-4 rounded-xl border border-blue-200">
-                <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Storage Used</p>
-                <p className="text-xl font-bold text-blue-700">{fileSizeManager.getPercentage().toFixed(1)}%</p>
-              </div>
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.feesBoardingDistributionPdf}
+                onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
+                onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
+                label="Boarding School Fees PDF"
+                existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
+                feeBreakdown={feeBreakdowns.feesBoarding}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
+                type="boarding"
+              />
             </div>
-            
-            {/* Document Summary */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <FaList className="text-blue-600" />
-                Document Summary
-              </h4>
-              
-              {/* Curriculum */}
-              <div className="bg-white rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FaBook className="text-red-500" />
-                    <span className="font-bold text-gray-900">Curriculum Document</span>
+          </div>
+        );
+      
+      case 2: // Admission
+        return (
+          <div className="space-y-6">
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.admissionFeePdf}
+                onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
+                onRemove={() => handleFileRemove('admissionFeePdf')}
+                label="Admission Fee PDF"
+                existingPdf={getExistingPdfData('admissionFeePdf')}
+                feeBreakdown={feeBreakdowns.admissionFee}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
+                type="admission"
+              />
+            </div>
+          </div>
+        );
+      
+      case 3: // Exam Results
+        return (
+          <div className="space-y-8">
+            {[
+              { key: 'form1Results', label: 'Form 1 Results', color: 'orange' },
+              { key: 'form2Results', label: 'Form 2 Results', color: 'orange' },
+              { key: 'form3Results', label: 'Form 3 Results', color: 'orange' },
+              { key: 'form4Results', label: 'Form 4 Results', color: 'orange' },
+              { key: 'mockExams', label: 'Mock Exams Results', color: 'orange' },
+              { key: 'kcse', label: 'KCSE Results', color: 'orange' }
+            ].map((exam) => (
+              <div key={exam.key} className="w-full max-w-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <FaAward className="text-orange-600" />
+                    <span className="text-base">{exam.label}</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="w-24">
+                      <input
+                        type="number"
+                        min="2000"
+                        max="2100"
+                        value={examMetadata[`${exam.key}Year`]}
+                        onChange={(e) => handleExamMetadataChange(`${exam.key}Year`, e.target.value)}
+                        placeholder="Year"
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="w-32">
+                      <select
+                        value={examMetadata[`${exam.key}Term`]}
+                        onChange={(e) => handleExamMetadataChange(`${exam.key}Term`, e.target.value)}
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                      >
+                        <option value="">Select Term</option>
+                        <option value="Term 1">Term 1</option>
+                        <option value="Term 2">Term 2</option>
+                        <option value="Term 3">Term 3</option>
+                        <option value="Annual">Annual</option>
+                      </select>
+                    </div>
                   </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    getDocumentStatus('curriculumPDF').status === 'new' 
-                      ? 'bg-green-100 text-green-800' 
-                      : getDocumentStatus('curriculumPDF').status === 'existing'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {getDocumentStatus('curriculumPDF').status === 'new' ? 'NEW' : 
-                     getDocumentStatus('curriculumPDF').status === 'existing' ? 'EXISTING' : 'NOT SELECTED'}
-                  </span>
                 </div>
-                {getDocumentStatus('curriculumPDF').status !== 'none' && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {getDocumentStatus('curriculumPDF').name}
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    value={examMetadata[`${exam.key}Description`]}
+                    onChange={(e) => handleExamMetadataChange(`${exam.key}Description`, e.target.value)}
+                    placeholder="Description of these results..."
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                  />
+                </div>
+                <ModernPdfUpload
+                  pdfFile={formData[`${exam.key}Pdf`]}
+                  onPdfChange={(file, year, description, term) => {
+                    handleFileChange(`${exam.key}Pdf`, file, year, description, term);
+                  }}
+                  onRemove={() => handleFileRemove(`${exam.key}Pdf`)}
+                  label={`${exam.label} PDF`}
+                  type="results"
+                />
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 4: // Additional Files
+        return (
+          <div className="w-full max-w-2xl">
+            <AdditionalResultsUpload
+              files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
+              onFilesChange={(newFiles) => {
+                // Add new files to the state
+                const existingFiles = additionalFiles.filter(f => f.isExisting && !f.isRemoved);
+                const newFileObjects = newFiles.map((file, index) => ({
+                  id: `new_${Date.now()}_${index}`,
+                  file: file,
+                  filename: file.name,
+                  year: '',
+                  description: '',
+                  term: '',
+                  isNew: true,
+                  isModified: true,
+                  filetype: file.type?.split('/')[1] || 'file',
+                  filesize: file.size || 0,
+                  status: 'uploaded'
+                }));
+                setAdditionalFiles([...existingFiles, ...newFileObjects]);
+              }}
+              label="Additional Documents"
+              existingFiles={documents?.additionalDocuments || []}
+              onCancelExisting={(file) => {
+                console.log('Cancel replacement for:', file);
+              }}
+              onRemoveExisting={(file) => {
+                setAdditionalFiles(prev => 
+                  prev.map(f => 
+                    f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
+                  )
+                );
+              }}
+              additionalFilesState={additionalFiles}
+              onAdditionalFilesStateChange={setAdditionalFiles}
+            />
+          </div>
+        );
+      
+      case 5: // Review Step
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-500 text-white rounded-xl">
+                  <FaClipboardList className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
+                  <p className="text-sm text-gray-600 font-bold">
+                    Review all selected documents before submission
                   </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
+                  <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
+                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Additional Files</p>
+                  <p className="text-xl font-bold text-blue-700">
+                    {additionalFiles.filter(f => !f.isRemoved && (f.isNew || f.isExisting)).length}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <FaList className="text-blue-600" />
+                  Document Summary
+                </h4>
+                
+                {/* Additional Documents */}
+                {additionalFiles.filter(f => !f.isRemoved).length > 0 && (
+                  <div className="bg-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <FaFile className="text-gray-600" />
+                        <span className="font-bold text-gray-900">Additional Documents</span>
+                      </div>
+                      <span className="text-xs font-bold text-blue-600">
+                        {additionalFiles.filter(f => !f.isRemoved).length} files
+                      </span>
+                    </div>
+                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+                      {additionalFiles.filter(f => !f.isRemoved).map((file, index) => (
+                        <div key={file.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900 truncate">
+                              {file.filename || file.name || 'Document'}
+                            </p>
+                            <div className="flex gap-2 mt-1">
+                              {file.year && (
+                                <span className="text-xs text-blue-600">Year: {file.year}</span>
+                              )}
+                              {file.term && (
+                                <span className="text-xs text-green-600">Term: {file.term}</span>
+                              )}
+                              {file.isNew && (
+                                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">New</span>
+                              )}
+                              {file.isExisting && (
+                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Existing</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-600">
+                              {formatFileSize(file.filesize || file.size || 0)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
               
-              {/* Additional Documents - SHOW THEM HERE */}
-              {additionalFiles.filter(f => !f.isRemoved).length > 0 && (
-                <div className="bg-white rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <FaFile className="text-gray-600" />
-                      <span className="font-bold text-gray-900">Additional Documents</span>
-                    </div>
-                    <span className="text-xs font-bold text-blue-600">
-                      {additionalFiles.filter(f => !f.isRemoved).length} files
-                    </span>
+              <div className="mt-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 mb-1">
+                      I confirm that I have reviewed all documents and they are accurate
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+                    </p>
                   </div>
-                  <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                    {additionalFiles.filter(f => !f.isRemoved).map((file, index) => (
-                      <div key={file.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-gray-900 truncate">{file.filename || 'Document'}</p>
-                          <div className="flex gap-2 mt-1">
-                            {file.year && (
-                              <span className="text-xs text-blue-600">Year: {file.year}</span>
-                            )}
-                            {file.term && (
-                              <span className="text-xs text-green-600">Term: {file.term}</span>
-                            )}
-                            {file.isNew && (
-                              <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">New</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-gray-600">
-                            {formatFileSize(file.filesize || file.size || 0)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Confirmation Checkbox */}
-            <div className="mt-6">
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  onChange={(e) => setConfirmed(e.target.checked)}
-                  className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <div>
-                  <p className="text-sm font-bold text-gray-900 mb-1">
-                    I confirm that I have reviewed all documents and they are accurate
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
-                  </p>
-                </div>
-              </label>
+                </label>
+              </div>
             </div>
           </div>
-        </div>
-      );
-    
-    default:
-      return null;
-  }
-};
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
     <Modal open={true} onClose={onClose}>
@@ -3430,8 +3500,7 @@ const renderStepContent = () => {
                   </button>
                 ) : (
                   <button 
-                    type="button"
-                    onClick={handleSubmitAfterReview}
+                    type="submit"
                     disabled={actionLoading || !confirmed}
                     className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
