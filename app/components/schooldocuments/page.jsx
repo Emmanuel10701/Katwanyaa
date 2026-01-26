@@ -1886,6 +1886,7 @@ function ModernPdfUpload({
 }
 
 // Enhanced Additional Results Upload with Metadata Modal
+// Enhanced Additional Results Upload with Metadata Modal and Preview Section
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
@@ -1899,6 +1900,8 @@ function AdditionalResultsUpload({
   const [localFiles, setLocalFiles] = useState([]);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   // File size limit (4.5 MB individual file limit)
@@ -1920,7 +1923,8 @@ function AdditionalResultsUpload({
       description: file.description || '',
       term: file.term || '',
       filesize: file.filesize || file.size || 0,
-      filetype: file.filetype || 'document'
+      filetype: file.filetype || 'document',
+      status: 'existing'
     }));
     
     const newFileObjects = (files || []).filter(file => {
@@ -1932,13 +1936,14 @@ function AdditionalResultsUpload({
       id: `new_${Date.now()}_${index}`,
       file: file,
       filename: file.name,
-      year: '',
-      description: '',
-      term: '',
+      year: file.year || '',
+      description: file.description || '',
+      term: file.term || '',
       isNew: true,
       isModified: false,
       filetype: file.type?.split('/')[1] || 'file',
-      filesize: file.size || 0
+      filesize: file.size || 0,
+      status: 'uploaded'
     }));
     
     const allFiles = [...existingFileObjects, ...newFileObjects];
@@ -1972,7 +1977,32 @@ function AdditionalResultsUpload({
     return true;
   };
 
-  const handleFileChange = (e) => {
+  const simulateUpload = (file) => {
+    return new Promise((resolve) => {
+      setIsUploading(true);
+      setUploadProgress(0);
+      
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(() => {
+              setUploadProgress(0);
+              setIsUploading(false);
+            }, 1000);
+            return 100;
+          }
+          return prev + 20;
+        });
+      }, 100);
+      
+      setTimeout(() => {
+        resolve(file);
+      }, 600);
+    });
+  };
+
+  const handleFileChange = async (e) => {
     const newFileList = Array.from(e.target.files);
     if (newFileList.length > 0) {
       const newFile = newFileList[0];
@@ -1984,6 +2014,8 @@ function AdditionalResultsUpload({
         return;
       }
       
+      await simulateUpload(newFile);
+      
       setSelectedFile({
         file: newFile,
         id: `new_${Date.now()}`,
@@ -1993,7 +2025,7 @@ function AdditionalResultsUpload({
     }
   };
 
-  const handleMetadataSave = (metadata) => {
+  const handleMetadataSave = async (metadata) => {
     if (selectedFile) {
       // Check total size
       const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
@@ -2006,13 +2038,17 @@ function AdditionalResultsUpload({
         return;
       }
 
+      await simulateUpload(selectedFile.file);
+
       const newFileObject = {
         ...selectedFile,
         year: metadata.year,
         term: metadata.term,
         description: metadata.description,
         isNew: true,
-        isModified: true
+        isModified: true,
+        status: 'uploaded',
+        uploadDate: new Date().toISOString()
       };
       
       setLocalFiles(prev => [...prev, newFileObject]);
@@ -2028,7 +2064,7 @@ function AdditionalResultsUpload({
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragOver(false);
@@ -2039,6 +2075,8 @@ function AdditionalResultsUpload({
       if (!validateFile(newFile)) {
         return;
       }
+      
+      await simulateUpload(newFile);
       
       setSelectedFile({
         file: newFile,
@@ -2056,12 +2094,14 @@ function AdditionalResultsUpload({
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = '.pdf,.doc,.docx';
-      input.onchange = (e) => {
+      input.onchange = async (e) => {
         const replacementFile = e.target.files[0];
         if (replacementFile) {
           if (!validateFile(replacementFile)) {
             return;
           }
+          
+          await simulateUpload(replacementFile);
           
           // Check total size for replacement
           const success = fileSizeManager.replaceFile(id, replacementFile);
@@ -2091,7 +2131,7 @@ function AdditionalResultsUpload({
     
     if (fileToRemove && fileToRemove.isExisting) {
       setLocalFiles(prev => prev.map(file => 
-        file.id === id ? { ...file, isRemoved: true } : file
+        file.id === id ? { ...file, isRemoved: true, status: 'removed' } : file
       ));
       
       if (onRemoveExisting) {
@@ -2123,13 +2163,24 @@ function AdditionalResultsUpload({
     }
   };
 
+  const handleViewFile = (file) => {
+    if (file.file) {
+      // For new files, create object URL for preview
+      const url = URL.createObjectURL(file.file);
+      window.open(url, '_blank');
+    } else if (file.filepath) {
+      // For existing files, open from server path
+      window.open(file.filepath, '_blank');
+    }
+  };
+
   const getFileIcon = (fileType) => {
     if (!fileType) return <FaFile className="text-gray-500" />;
     const type = fileType.toLowerCase();
     if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
     if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-    if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-    if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
+    if (type.includes('word') || type.includes('doc')) return <FaFileWord className="text-blue-500" />;
+    if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileExcel className="text-green-600" />;
     return <FaFile className="text-gray-500" />;
   };
 
@@ -2142,6 +2193,7 @@ function AdditionalResultsUpload({
   };
 
   const displayFiles = localFiles.filter(file => !file.isRemoved);
+  const hasFiles = displayFiles.length > 0;
 
   return (
     <div className="space-y-4 w-full max-w-2xl">
@@ -2159,6 +2211,12 @@ function AdditionalResultsUpload({
         <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
           <FaFile className="text-gray-600" />
           <span className="text-base">{label}</span>
+          {hasFiles && (
+            <span className="flex items-center gap-1 text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
+              <FaCheck className="text-xs" />
+              {displayFiles.length} document{displayFiles.length !== 1 ? 's' : ''} selected
+            </span>
+          )}
         </label>
         <button
           type="button"
@@ -2183,12 +2241,163 @@ function AdditionalResultsUpload({
         </div>
       </div>
 
+      {/* PREVIEW SECTION - SIMILAR TO ModernPdfUpload */}
+      {hasFiles && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+              <FaEye className="text-blue-500" />
+              Preview Selected Documents ({displayFiles.length})
+            </h3>
+            <span className="text-xs text-gray-500 font-bold">
+              {localFiles.filter(f => f.isNew).length} new, {localFiles.filter(f => f.isExisting).length} existing
+            </span>
+          </div>
+          
+          <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+            {displayFiles.map((file) => (
+              <div key={file.id} className={`bg-white rounded-2xl p-4 border-2 ${
+                file.isReplaced ? 'border-amber-200 bg-amber-50/30' : 
+                file.isNew ? 'border-emerald-200 bg-emerald-50/30' : 
+                'border-gray-200 hover:border-blue-200'
+              } transition-all duration-300`}>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl cursor-pointer"
+                       onClick={() => handleViewFile(file)}>
+                    {getFileIcon(file.filetype)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-bold text-gray-900 text-sm truncate cursor-pointer hover:text-blue-600"
+                         onClick={() => handleViewFile(file)}>
+                        {file.filename || file.name || 'Document'}
+                      </p>
+                      <div className="flex gap-1">
+                        {file.isReplaced && (
+                          <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded font-bold uppercase">
+                            Replaced
+                          </span>
+                        )}
+                        {file.isNew && !file.isReplacement && (
+                          <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded font-bold uppercase">
+                            New
+                          </span>
+                        )}
+                        {file.isExisting && (
+                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded font-bold uppercase">
+                            Existing
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
+                      {file.year && (
+                        <div className="flex items-center gap-1">
+                          <FaCalendar className="text-gray-400" />
+                          Year: <span className="text-blue-600">{file.year}</span>
+                        </div>
+                      )}
+                      {file.term && (
+                        <div className="flex items-center gap-1">
+                          <FaClock className="text-gray-400" />
+                          Term: <span className="text-green-600">{file.term}</span>
+                        </div>
+                      )}
+                      {file.description && (
+                        <div className="flex items-start gap-1 mt-1">
+                          <FaAlignLeft className="text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-600">{file.description}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <p className="text-xs text-gray-500 font-bold">
+                        {formatFileSize(file.filesize || file.size)}
+                      </p>
+                      <p className="text-xs text-gray-400 font-bold">
+                        •
+                      </p>
+                      <p className="text-xs text-gray-500 font-bold">
+                        {file.filetype?.toUpperCase() || 'DOCUMENT'}
+                      </p>
+                      {file.uploadDate && (
+                        <>
+                          <p className="text-xs text-gray-400 font-bold">•</p>
+                          <p className="text-xs text-gray-500 font-bold">
+                            Uploaded: {new Date(file.uploadDate).toLocaleDateString()}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleViewFile(file)}
+                      className="p-2 text-blue-600 bg-blue-50 rounded-xl border border-blue-200 hover:bg-blue-100 transition-colors"
+                      title="View document"
+                    >
+                      <FaEye size={12} />
+                    </button>
+                    {file.isExisting && !file.isReplaced ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleReplaceExisting(file.id)}
+                          className="p-2 text-amber-600 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors"
+                          title="Replace file"
+                        >
+                          <FaUpload size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExisting(file.id)}
+                          className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200 hover:bg-red-100 transition-colors"
+                          title="Delete file"
+                        >
+                          <FaTrash size={12} />
+                        </button>
+                      </>
+                    ) : file.isNew ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewFile(file.id)}
+                        className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200 hover:bg-red-100 transition-colors"
+                        title="Remove file"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                
+                {isUploading && file.id === selectedFile?.id && (
+                  <div className="mt-2">
+                    <div className="flex justify-between mb-1.5">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Uploading...</span>
+                      <span className="text-xs font-bold text-blue-600">{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* UPLOAD AREA - ONLY SHOW WHEN NO FILES OR ALWAYS VISIBLE? */}
       <div
         className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group w-full max-w-2xl ${
           dragOver 
             ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
             : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
-        }`}
+        } ${hasFiles ? 'mt-4' : ''}`}
         onDrop={handleDrop}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
@@ -2212,68 +2421,22 @@ function AdditionalResultsUpload({
           className="hidden" 
           id="additional-files-upload" 
         />
-      </div>
-
-      {displayFiles.length > 0 && (
-        <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
-          {displayFiles.map((file) => (
-            <div key={file.id} className={`bg-white rounded-2xl p-4 border-2 ${file.isReplaced ? 'border-amber-200 bg-amber-50/30' : file.isNew ? 'border-emerald-200 bg-emerald-50/30' : 'border-gray-200'}`}>
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl">
-                  {getFileIcon(file.filetype)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-sm truncate">
-                    {file.filename || file.name || 'Document'}
-                    {file.isReplaced && <span className="ml-2 text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded font-bold uppercase">Replaced</span>}
-                    {file.isNew && !file.isReplacement && <span className="ml-2 text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded font-bold uppercase">New</span>}
-                  </p>
-                  <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
-                    {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
-                    {file.term && <div>Term: <span className="text-green-600">{file.term}</span></div>}
-                    {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5 font-bold">
-                    {formatFileSize(file.filesize || file.size)} • 
-                    {file.isExisting ? ' Existing' : ' New'}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {file.isExisting && !file.isReplaced ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => handleReplaceExisting(file.id)}
-                        className="p-2 text-blue-600 bg-blue-50 rounded-xl border border-blue-200"
-                        title="Replace file"
-                      >
-                        <FaUpload size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExisting(file.id)}
-                        className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200"
-                        title="Delete file"
-                      >
-                        <FaTrash size={12} />
-                      </button>
-                    </>
-                  ) : file.isNew ? (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveNewFile(file.id)}
-                      className="p-2 text-gray-500 bg-gray-100 rounded-xl border border-gray-300"
-                      title="Remove file"
-                    >
-                      <FaTimes size={12} />
-                    </button>
-                  ) : null}
-                </div>
-              </div>
+        
+        {isUploading && (
+          <div className="mt-4">
+            <div className="flex justify-between mb-1.5">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Preparing...</span>
+              <span className="text-xs font-bold text-blue-600">{uploadProgress}%</span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Metadata Modal */}
       {showMetadataModal && selectedFile && (
