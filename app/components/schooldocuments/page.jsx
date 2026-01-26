@@ -1923,7 +1923,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   ];
 
-// In DocumentsModal component, update handleFormSubmit:
+
+
 const handleFormSubmit = async (e) => {
   e.preventDefault();
   
@@ -1931,8 +1932,8 @@ const handleFormSubmit = async (e) => {
     setActionLoading(true);
     
     const data = new FormData();
-    const schoolId = 1; // You should get this from props or context
-    data.append('schoolId', schoolId);
+    // REMOVE THIS LINE - no longer need schoolId
+    // data.append('schoolId', schoolId);
     
     // Add PDF files
     Object.keys(formData).forEach(key => {
@@ -2350,7 +2351,6 @@ const handleFileChange = (field, file, year, description) => {
 // Main School Documents Page Component
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
-  const [schoolInfo, setSchoolInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -2359,24 +2359,20 @@ export default function SchoolDocumentsPage() {
     loadData();
   }, []);
 
+
 const loadData = async () => {
   try {
     setLoading(true);
     
-    const schoolId = 1; // You should get this from your app state
-    const docsResponse = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
+    // Remove schoolId parameter from the fetch call
+    const docsResponse = await fetch(`/api/schooldocuments`);
     
     if (docsResponse.ok) {
       const docsData = await docsResponse.json();
       setDocuments(docsData.document || docsData);
     }
     
-    // If you need school info separately:
-    const schoolResponse = await fetch('/api/school'); // Adjust to your actual API
-    if (schoolResponse.ok) {
-      const schoolData = await schoolResponse.json();
-      setSchoolInfo(schoolData);
-    }
+
   } catch (error) {
     console.error('Error loading data:', error);
   } finally {
@@ -2483,7 +2479,7 @@ const formatFileSize = (bytes) => {
         </div>
       </div>
 
-      {documents || schoolInfo ? (
+{documents ? (
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2682,17 +2678,23 @@ const formatFileSize = (bytes) => {
             )}
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
-            <FaFilePdf className="w-8 h-8 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">No School Information Found</h3>
-          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-            Please set up school information first before managing documents.
-          </p>
-        </div>
-      )}
+) : (
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
+    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
+      <FaFilePdf className="w-8 h-8 text-blue-600" />
+    </div>
+    <h3 className="text-lg font-bold text-gray-900 mb-2">No Documents Found</h3>
+    <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
+      Click "Manage Documents" to upload school documents.
+    </p>
+    <button 
+      onClick={() => setShowModal(true)} 
+      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg"
+    >
+      <FaUpload /> Upload Documents
+    </button>
+  </div>
+)}
 
       {showModal && (
         <DocumentsModal 
