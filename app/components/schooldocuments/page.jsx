@@ -1336,6 +1336,7 @@ function ModernPdfUpload({
   const fileInputRef = useRef(null);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // File size limit (4.5 MB individual file limit)
   const MAX_INDIVIDUAL_SIZE = 4.5 * 1024 * 1024;
@@ -3134,7 +3135,7 @@ export default function SchoolDocumentsPage() {
   };
 
 
-  // Document Details Modal Component
+// Document Details Modal Component
 function DocumentDetailsModal({ 
   open, 
   onClose, 
@@ -3591,142 +3592,166 @@ function DocumentDetailsModal({
                   onView={loadData}
                 />
               </div>
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {/* Curriculum Document */}
+  {documents.curriculumPDF && (
+    <ModernDocumentCard
+      title="Curriculum"
+      description="Academic curriculum document"
+      pdfUrl={documents.curriculumPDF}
+      pdfName={documents.curriculumPdfName}
+      year={documents.curriculumYear}
+      fileSize={documents.curriculumPdfSize}
+      uploadDate={documents.curriculumPdfUploadDate}
+      existing={true}
+      type="curriculum"
+    />
+  )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Curriculum Document */}
-                {documents.curriculumPDF && (
-                  <ModernDocumentCard
-                    title="Curriculum"
-                    description="Academic curriculum document"
-                    pdfUrl={documents.curriculumPDF}
-                    pdfName={documents.curriculumPdfName}
-                    year={documents.curriculumYear}
-                    existing={true}
-                    type="curriculum"
-                  />
-                )}
+  {/* Day School Fees */}
+  {documents.feesDayDistributionPdf && (
+    <ModernDocumentCard
+      title="Day School Fees"
+      description="Day school fee structure"
+      pdfUrl={documents.feesDayDistributionPdf}
+      pdfName={documents.feesDayPdfName}
+      year={documents.feesDayYear}
+      fileSize={documents.feesDayPdfSize}
+      uploadDate={documents.feesDayPdfUploadDate}
+      feeBreakdown={parseJsonField(documents.feesDayDistributionJson)}
+      existing={true}
+      type="day"
+    />
+  )}
 
-                {/* Day School Fees */}
-                {documents.feesDayDistributionPdf && (
-                  <ModernDocumentCard
-                    title="Day School Fees"
-                    description="Day school fee structure"
-                    pdfUrl={documents.feesDayDistributionPdf}
-                    pdfName={documents.feesDayPdfName}
-                    year={documents.feesDayYear}
-                    feeBreakdown={parseJsonField(documents.feesDayDistributionJson)}
-                    existing={true}
-                    type="day"
-                  />
-                )}
+  {/* Boarding School Fees */}
+  {documents.feesBoardingDistributionPdf && (
+    <ModernDocumentCard
+      title="Boarding School Fees"
+      description="Boarding school fee structure"
+      pdfUrl={documents.feesBoardingDistributionPdf}
+      pdfName={documents.feesBoardingPdfName}
+      year={documents.feesBoardingYear}
+      fileSize={documents.feesBoardingPdfSize}
+      uploadDate={documents.feesBoardingPdfUploadDate}
+      feeBreakdown={parseJsonField(documents.feesBoardingDistributionJson)}
+      existing={true}
+      type="boarding"
+    />
+  )}
 
-                {/* Boarding School Fees */}
-                {documents.feesBoardingDistributionPdf && (
-                  <ModernDocumentCard
-                    title="Boarding School Fees"
-                    description="Boarding school fee structure"
-                    pdfUrl={documents.feesBoardingDistributionPdf}
-                    pdfName={documents.feesBoardingPdfName}
-                    year={documents.feesBoardingYear}
-                    feeBreakdown={parseJsonField(documents.feesBoardingDistributionJson)}
-                    existing={true}
-                    type="boarding"
-                  />
-                )}
+  {/* Admission Fee */}
+  {documents.admissionFeePdf && (
+    <ModernDocumentCard
+      title="Admission Fee"
+      description="Admission fee structure"
+      pdfUrl={documents.admissionFeePdf}
+      pdfName={documents.admissionFeePdfName}
+      year={documents.admissionFeeYear}
+      fileSize={documents.admissionFeePdfSize}
+      uploadDate={documents.admissionFeePdfUploadDate}
+      admissionBreakdown={parseJsonField(documents.admissionFeeDistribution)}
+      existing={true}
+      type="admission"
+    />
+  )}
 
-                {/* Admission Fee */}
-                {documents.admissionFeePdf && (
-                  <ModernDocumentCard
-                    title="Admission Fee"
-                    description="Admission fee structure"
-                    pdfUrl={documents.admissionFeePdf}
-                    pdfName={documents.admissionFeePdfName}
-                    year={documents.admissionFeeYear}
-                    admissionBreakdown={parseJsonField(documents.admissionFeeDistribution)}
-                    existing={true}
-                    type="admission"
-                  />
-                )}
+  {/* Form 1 Results */}
+  {documents.form1ResultsPdf && (
+    <ModernDocumentCard
+      title="Form 1 Results"
+      description={documents.form1ResultsDescription || "Form 1 examination results"}
+      pdfUrl={documents.form1ResultsPdf}
+      pdfName={documents.form1ResultsPdfName}
+      year={documents.form1ResultsYear}
+      term={documents.form1ResultsTerm}
+      fileSize={documents.form1ResultsPdfSize}
+      uploadDate={documents.form1ResultsUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
 
-                {/* Exam Results - Fixed mapping */}
-                {documents.form1ResultsPdf && (
-                  <ModernDocumentCard
-                    title="Form 1 Results"
-                    description={documents.form1ResultsDescription || "Form 1 examination results"}
-                    pdfUrl={documents.form1ResultsPdf}
-                    pdfName={documents.form1ResultsPdfName}
-                    year={documents.form1ResultsYear}
-                    term={documents.form1ResultsTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
+  {/* Form 2 Results */}
+  {documents.form2ResultsPdf && (
+    <ModernDocumentCard
+      title="Form 2 Results"
+      description={documents.form2ResultsDescription || "Form 2 examination results"}
+      pdfUrl={documents.form2ResultsPdf}
+      pdfName={documents.form2ResultsPdfName}
+      year={documents.form2ResultsYear}
+      term={documents.form2ResultsTerm}
+      fileSize={documents.form2ResultsPdfSize}
+      uploadDate={documents.form2ResultsUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
 
-                {documents.form2ResultsPdf && (
-                  <ModernDocumentCard
-                    title="Form 2 Results"
-                    description={documents.form2ResultsDescription || "Form 2 examination results"}
-                    pdfUrl={documents.form2ResultsPdf}
-                    pdfName={documents.form2ResultsPdfName}
-                    year={documents.form2ResultsYear}
-                    term={documents.form2ResultsTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
+  {/* Form 3 Results */}
+  {documents.form3ResultsPdf && (
+    <ModernDocumentCard
+      title="Form 3 Results"
+      description={documents.form3ResultsDescription || "Form 3 examination results"}
+      pdfUrl={documents.form3ResultsPdf}
+      pdfName={documents.form3ResultsPdfName}
+      year={documents.form3ResultsYear}
+      term={documents.form3ResultsTerm}
+      fileSize={documents.form3ResultsPdfSize}
+      uploadDate={documents.form3ResultsUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
 
-                {documents.form3ResultsPdf && (
-                  <ModernDocumentCard
-                    title="Form 3 Results"
-                    description={documents.form3ResultsDescription || "Form 3 examination results"}
-                    pdfUrl={documents.form3ResultsPdf}
-                    pdfName={documents.form3ResultsPdfName}
-                    year={documents.form3ResultsYear}
-                    term={documents.form3ResultsTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
+  {/* Form 4 Results */}
+  {documents.form4ResultsPdf && (
+    <ModernDocumentCard
+      title="Form 4 Results"
+      description={documents.form4ResultsDescription || "Form 4 examination results"}
+      pdfUrl={documents.form4ResultsPdf}
+      pdfName={documents.form4ResultsPdfName}
+      year={documents.form4ResultsYear}
+      term={documents.form4ResultsTerm}
+      fileSize={documents.form4ResultsPdfSize}
+      uploadDate={documents.form4ResultsUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
 
-                {documents.form4ResultsPdf && (
-                  <ModernDocumentCard
-                    title="Form 4 Results"
-                    description={documents.form4ResultsDescription || "Form 4 examination results"}
-                    pdfUrl={documents.form4ResultsPdf}
-                    pdfName={documents.form4ResultsPdfName}
-                    year={documents.form4ResultsYear}
-                    term={documents.form4ResultsTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
+  {/* Mock Exams Results */}
+  {documents.mockExamsResultsPdf && (
+    <ModernDocumentCard
+      title="Mock Exams"
+      description={documents.mockExamsDescription || "Mock examination results"}
+      pdfUrl={documents.mockExamsResultsPdf}
+      pdfName={documents.mockExamsPdfName}
+      year={documents.mockExamsYear}
+      term={documents.mockExamsTerm}
+      fileSize={documents.mockExamsPdfSize}
+      uploadDate={documents.mockExamsUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
 
-                {documents.mockExamsResultsPdf && (
-                  <ModernDocumentCard
-                    title="Mock Exams"
-                    description={documents.mockExamsDescription || "Mock examination results"}
-                    pdfUrl={documents.mockExamsResultsPdf}
-                    pdfName={documents.mockExamsPdfName}
-                    year={documents.mockExamsYear}
-                    term={documents.mockExamsTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
-
-                {documents.kcseResultsPdf && (
-                  <ModernDocumentCard
-                    title="KCSE Results"
-                    description={documents.kcseDescription || "KCSE examination results"}
-                    pdfUrl={documents.kcseResultsPdf}
-                    pdfName={documents.kcsePdfName}
-                    year={documents.kcseYear}
-                    term={documents.kcseTerm}
-                    existing={true}
-                    type="results"
-                  />
-                )}
-              </div>
+  {/* KCSE Results */}
+  {documents.kcseResultsPdf && (
+    <ModernDocumentCard
+      title="KCSE Results"
+      description={documents.kcseDescription || "KCSE examination results"}
+      pdfUrl={documents.kcseResultsPdf}
+      pdfName={documents.kcsePdfName}
+      year={documents.kcseYear}
+      term={documents.kcseTerm}
+      fileSize={documents.kcsePdfSize}
+      uploadDate={documents.kcseUploadDate}
+      existing={true}
+      type="results"
+    />
+  )}
+</div>
 
               {/* Additional Documents Section */}
               {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
@@ -3896,6 +3921,9 @@ function DocumentDetailsModal({
     </div>
   </div>
 </Dialog>
+
+
+
         {/* Update Field Modal */}
         {updateFieldModal.open && (
           <UpdateFieldModal
