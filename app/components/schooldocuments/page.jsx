@@ -3356,6 +3356,8 @@ export default function SchoolDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+   const [confirmText, setConfirmText] = useState(''); // ← Add this line
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [updateFieldModal, setUpdateFieldModal] = useState({ open: false, field: '', value: '', label: '' });
@@ -3593,7 +3595,6 @@ export default function SchoolDocumentsPage() {
   </div>
 )}
 
-{/* Modernized Delete Confirmation Dialog */}
 <Dialog 
   open={deleteDialogOpen} 
   onClose={() => setDeleteDialogOpen(false)}
