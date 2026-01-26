@@ -179,246 +179,6 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
   );
 }
 
-function DocumentActionsMenu({ documentId, onEdit, onDelete, onView }) {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleEdit = () => {
-    handleClose();
-    onEdit();
-  };
-
-  const handleDeleteClick = () => {
-    handleClose();
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      setDeleteLoading(true);
-      const response = await fetch(`/api/schooldocuments?id=${documentId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete document');
-      }
-
-      const result = await response.json();
-      toast.success(result.message || 'Document deleted successfully');
-      onDelete();
-    } catch (error) {
-      console.error('Delete failed:', error);
-      toast.error(error.message || 'Failed to delete document');
-    } finally {
-      setDeleteLoading(false);
-      setDeleteDialogOpen(false);
-    }
-  };
-
-  return (
-    <>
-      <div className="relative">
-        <button
-          onClick={handleClick}
-          className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <FaEllipsisV />
-        </button>
-        
-        {anchorEl && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-10">
-            <div className="py-1">
-              <button
-                onClick={handleEdit}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <FaPencilAlt className="text-blue-500" />
-                Edit Document
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <FaTrash className="text-red-500" />
-                Delete Document
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle className="text-red-600 font-bold">
-          <div className="flex items-center gap-2">
-            <FaExclamationCircle />
-            Confirm Deletion
-          </div>
-        </DialogTitle>
-        <DialogContent>
-          <div className="py-4">
-            <p className="text-gray-700 font-bold mb-2">
-              Are you sure you want to delete this entire document?
-            </p>
-            <p className="text-sm text-gray-600">
-              This action will permanently delete:
-            </p>
-            <ul className="text-sm text-gray-600 mt-2 space-y-1">
-              <li>• All uploaded PDFs</li>
-              <li>• Fee breakdown data</li>
-              <li>• Exam results metadata</li>
-              <li>• Additional documents</li>
-            </ul>
-            <Alert severity="warning" className="mt-4">
-              This action cannot be undone!
-            </Alert>
-          </div>
-        </DialogContent>
-        <DialogActions className="p-4">
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)} 
-            variant="outlined"
-            disabled={deleteLoading}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            variant="contained" 
-            color="error"
-            startIcon={deleteLoading ? <CircularProgress size={16} color="inherit" /> : <FaTrash />}
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-}
-
-// Update Specific Field Modal
-function UpdateFieldModal({ 
-  open, 
-  onClose, 
-  onSave, 
-  field,
-  currentValue,
-  fieldLabel
-}) {
-  const [value, setValue] = useState(currentValue || '');
-  const [loading, setLoading] = useState(false);
-
-  const handleSave = async () => {
-    if (!value.trim()) {
-      toast.error('Please enter a value');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onSave(value);
-      onClose();
-    } catch (error) {
-      console.error('Update failed:', error);
-      toast.error('Failed to update field');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Modal open={open} onClose={onClose}>
-      <Box sx={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '95vw',
-        maxWidth: '500px',
-        bgcolor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: 24,
-        overflow: 'hidden',
-      }}>
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
-                <FaPencilAlt className="text-lg" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Update Field</h2>
-                <p className="text-white/90 text-sm mt-1 font-bold">
-                  {fieldLabel}
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg"
-            >
-              <FaTimes className="text-lg" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              New Value
-            </label>
-            <textarea
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              rows="4"
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold resize-none"
-              placeholder={`Enter ${fieldLabel.toLowerCase()}...`}
-            />
-          </div>
-
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <FaInfoCircle className="text-blue-600" />
-              <h4 className="text-sm font-bold text-gray-900">Field Information</h4>
-            </div>
-            <p className="text-xs text-gray-600 font-bold">
-              This will update only the {fieldLabel} field without affecting other document data.
-            </p>
-          </div>
-        </div>
-
-        <div className="border-t border-gray-200 p-6 bg-white">
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={loading || !value.trim()}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </div>
-      </Box>
-    </Modal>
-  );
-}
-
 // Dynamic Fee Category Component
 function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1335,20 +1095,11 @@ function ModernPdfUpload({
   const fileInputRef = useRef(null);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-
-
 
   // File size limit (4.5 MB individual file limit)
   const MAX_INDIVIDUAL_SIZE = 4.5 * 1024 * 1024;
   
   // Allowed file types
-  const ALLOWED_TYPES = {
-    'application/pdf': '.pdf',
-    'application/msword': '.doc',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
-  };
-
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
   useEffect(() => {
@@ -1885,7 +1636,6 @@ function ModernPdfUpload({
   );
 }
 
-// Enhanced Additional Results Upload with Metadata Modal
 // Enhanced Additional Results Upload with Metadata Modal and Preview Section
 function AdditionalResultsUpload({ 
   files = [], 
@@ -2179,8 +1929,7 @@ function AdditionalResultsUpload({
     const type = fileType.toLowerCase();
     if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
     if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-    if (type.includes('word') || type.includes('doc')) return <FaFileWord className="text-blue-500" />;
-    if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileExcel className="text-green-600" />;
+    if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
     return <FaFile className="text-gray-500" />;
   };
 
@@ -2625,8 +2374,6 @@ function ModernDocumentCard({
   );
 }
 
-
-  
 // Document Details Modal Component
 function DocumentDetailsModal({ 
   open, 
@@ -2867,46 +2614,46 @@ function DocumentDetailsModal({
           </div>
         </div>
 
-  {/* Footer */}
-<div className="border-t border-gray-100 p-4 sm:p-6 bg-gray-50/50 backdrop-blur-sm sticky bottom-0">
-  <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3">
-    
-    {/* Close Button - Secondary Style */}
-    <button
-      type="button"
-      onClick={onClose}
-      className="order-3 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl 
-                 hover:border-gray-400 hover:bg-white active:scale-95 
-                 transition-all duration-200 font-semibold text-sm"
-    >
-      Close Details
-    </button>
+        {/* Footer */}
+        <div className="border-t border-gray-100 p-4 sm:p-6 bg-gray-50/50 backdrop-blur-sm sticky bottom-0">
+          <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3">
+            
+            {/* Close Button - Secondary Style */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="order-3 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl 
+                       hover:border-gray-400 hover:bg-white active:scale-95 
+                       transition-all duration-200 font-semibold text-sm"
+            >
+              Close Details
+            </button>
 
-    {/* Preview Button - Ghost/Outline Style */}
-    <button
-      onClick={() => window.open(pdfUrl, '_blank')}
-      className="order-2 flex-1 sm:flex-none bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-200 
-                 hover:border-blue-400 hover:text-blue-600 hover:shadow-md active:scale-95 
-                 transition-all duration-200 flex items-center justify-center gap-2 font-bold"
-    >
-      <FaEye className="text-blue-500" />
-      <span className="whitespace-nowrap">Preview</span>
-    </button>
+            {/* Preview Button - Ghost/Outline Style */}
+            <button
+              onClick={() => window.open(pdfUrl, '_blank')}
+              className="order-2 flex-1 sm:flex-none bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-200 
+                       hover:border-blue-400 hover:text-blue-600 hover:shadow-md active:scale-95 
+                       transition-all duration-200 flex items-center justify-center gap-2 font-bold"
+            >
+              <FaEye className="text-blue-500" />
+              <span className="whitespace-nowrap">Preview</span>
+            </button>
 
-    <a
-      href={pdfUrl}
-      download={pdfName || `${title}.pdf`}
-      className="order-1 sm:order-3 flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-700 
-                 text-white px-8 py-3 rounded-xl shadow-lg shadow-blue-200 
-                 hover:shadow-blue-300 hover:scale-[1.02] active:scale-95 
-                 transition-all duration-200 flex items-center justify-center gap-2 font-bold"
-    >
-      <FaDownload />
-      <span className="whitespace-nowrap">Download PDF</span>
-    </a>
-    
-  </div>
-</div>
+            <a
+              href={pdfUrl}
+              download={pdfName || `${title}.pdf`}
+              className="order-1 sm:order-3 flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-700 
+                       text-white px-8 py-3 rounded-xl shadow-lg shadow-blue-200 
+                       hover:shadow-blue-300 hover:scale-[1.02] active:scale-95 
+                       transition-all duration-200 flex items-center justify-center gap-2 font-bold"
+            >
+              <FaDownload />
+              <span className="whitespace-nowrap">Download PDF</span>
+            </a>
+            
+          </div>
+        </div>
       </Box>
     </Modal>
   );
@@ -3147,10 +2894,6 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       setCurrentStep(prev => prev - 1);
     }
   };
-
-
-
-
 
   const getExistingPdfData = (field) => {
     if (!documents) return null;
@@ -3492,7 +3235,6 @@ const getFileIcon = (fileType) => {
   if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
   if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
   if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-  if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
   return <FaFile className="text-gray-500" />;
 };
 
@@ -3504,34 +3246,14 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// Helper function to safely parse JSON fields
-const parseJsonField = (field) => {
-  if (!field) return [];
-  try {
-    // If it's already an array, return it
-    if (Array.isArray(field)) return field;
-    // If it's a string, parse it
-    if (typeof field === 'string') {
-      return JSON.parse(field);
-    }
-    return [];
-  } catch (error) {
-    console.error('Error parsing JSON field:', error);
-    return [];
-  }
-};
-
 // Main School Documents Page Component with Complete CRUD
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-   const [confirmText, setConfirmText] = useState(''); // ← Add this line
-
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [confirmText, setConfirmText] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [updateFieldModal, setUpdateFieldModal] = useState({ open: false, field: '', value: '', label: '' });
 
   useEffect(() => {
     loadData();
@@ -3544,7 +3266,6 @@ export default function SchoolDocumentsPage() {
       
       if (docsResponse.ok) {
         const docsData = await docsResponse.json();
-        console.log("API Response:", docsData); // Debug log
         
         // FIXED: Properly extract document data from API response
         if (docsData.success && docsData.document) {
@@ -3589,40 +3310,6 @@ export default function SchoolDocumentsPage() {
     }
   };
 
-
-
-  const handleUpdateField = async (field, value) => {
-    try {
-      if (!documents?.id) {
-        toast.error('No document found to update');
-        return;
-      }
-
-      const response = await fetch(`/api/schooldocuments?id=${documents.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          field,
-          data: value
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update field');
-      }
-
-      const result = await response.json();
-      toast.success('Field updated successfully');
-      setDocuments(result.document);
-      setUpdateFieldModal({ open: false, field: '', value: '', label: '' });
-    } catch (error) {
-      console.error('Update failed:', error);
-      toast.error(error.message || 'Failed to update field');
-    }
-  };
-
   const handleSaveDocuments = async (documentData) => {
     try {
       setActionLoading(true);
@@ -3634,18 +3321,6 @@ export default function SchoolDocumentsPage() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleManageClick = (event) => {
-    if (documents) {
-      setAnchorEl(event.currentTarget);
-    } else {
-      setShowModal(true);
-    }
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
   };
 
   if (loading) {
@@ -3666,562 +3341,546 @@ export default function SchoolDocumentsPage() {
     (documents.additionalDocuments && documents.additionalDocuments.length > 0)
   );
 
-
   return (
     <FileSizeProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
         <Toaster position="top-right" richColors />
-{/* MODERN HEADER WITH INTEGRATED ACTIONS */}
-<div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
-  {/* Decorative Background Elements */}
-  <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-  <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
-  
-  <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
-    
-    <div className="flex-1 min-w-0">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
-        <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-          <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-              Document Management
-            </span>
-            <FaShieldAlt className="text-blue-300 text-[10px]" />
+        
+        {/* MODERN HEADER WITH INTEGRATED ACTIONS */}
+        <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
+                  <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
+                      Document Management
+                    </span>
+                    <FaShieldAlt className="text-blue-300 text-[10px]" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
+                    School Documents
+                  </h1>
+                </div>
+              </div>
+              
+              <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+                Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
+              </p>
+            </div>
+
+            {/* ACTION BUTTON GROUP */}
+            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              
+              {/* 1. REFRESH BUTTON (Always Visible) */}
+              <button 
+                onClick={loadData} 
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                {loading ? <CircularProgress size={14} color="inherit" /> : <FaSync className="text-xs" />}
+                <span>{loading ? 'Syncing...' : 'Refresh'}</span>
+              </button>
+
+              {/* 2. UPLOAD/EDIT BUTTON (Conditional Style) */}
+              <button 
+                onClick={() => setShowModal(true)} 
+                className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95"
+              >
+                {hasDocuments ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
+                <span>{hasDocuments ? 'Edit Documents' : 'Upload Documents'}</span>
+              </button>
+
+              {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
+              {hasDocuments && (
+                <button 
+                  onClick={() => setDeleteDialogOpen(true)} 
+                  className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
+                >
+                  <FaTrash className="text-xs group-hover:animate-bounce" />
+                  <span>Delete All</span>
+                </button>
+              )}
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
-            School Documents
-          </h1>
         </div>
-      </div>
-      
-      <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
-        Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
-      </p>
-    </div>
 
-    {/* ACTION BUTTON GROUP */}
-    <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-      
-      {/* 1. REFRESH BUTTON (Always Visible) */}
-      <button 
-        onClick={loadData} 
-        disabled={loading}
-        className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
-      >
-        {loading ? <CircularProgress size={14} color="inherit" /> : <FaSync className="text-xs" />}
-        <span>{loading ? 'Syncing...' : 'Refresh'}</span>
-      </button>
+        {!hasDocuments ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
+              <FaFilePdf className="w-12 h-12 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Documents Yet</h3>
+            <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
+              Start by uploading school documents to showcase your institution's curriculum, fee structures, and academic results
+            </p>
+            <button 
+              onClick={() => setShowModal(true)} 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
+            >
+              <FaUpload className="text-lg" /> 
+              <span>Upload School Documents</span>
+            </button>
+          </div>
+        ) : (
+          // GRID LAYOUT FOR DOCUMENT CARDS
+          <div className="my-6">
+            {/* Document Categories Header (Optional) */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">School Documents</h2>
+                <p className="text-gray-600 font-bold mt-1">Manage all your school documents in one place</p>
+              </div>
+              <button 
+                onClick={() => setShowModal(true)} 
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-2 text-sm"
+              >
+                <FaPlus className="text-sm" /> 
+                <span>Add New Document</span>
+              </button>
+            </div>
 
-      {/* 2. UPLOAD/EDIT BUTTON (Conditional Style) */}
-      <button 
-        onClick={() => setShowModal(true)} 
-        className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95"
-      >
-        {hasDocuments ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
-        <span>{hasDocuments ? 'Edit Documents' : 'Upload Documents'}</span>
-      </button>
+            {/* GRID CONTAINER */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* CURRICULUM DOCUMENT */}
+              {documents.curriculumPDF && (
+                <ModernDocumentCard
+                  title="Curriculum Document"
+                  description="Official school curriculum and syllabus"
+                  pdfUrl={documents.curriculumPDF}
+                  pdfName={documents.curriculumPdfName || "curriculum.pdf"}
+                  year={documents.curriculumYear}
+                  type="curriculum"
+                  fileSize={documents.curriculumPdfSize}
+                  uploadDate={documents.curriculumUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove curriculum document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* DAY SCHOOL FEES DOCUMENT */}
+              {documents.feesDayDistributionPdf && (
+                <ModernDocumentCard
+                  title="Day School Fee Structure"
+                  description="Day school fees breakdown and payment terms"
+                  pdfUrl={documents.feesDayDistributionPdf}
+                  pdfName={documents.feesDayPdfName || "day-fees.pdf"}
+                  year={documents.feesDayYear}
+                  term={documents.feesDayTerm}
+                  feeBreakdown={documents.feesDayDistributionJson || []}
+                  type="day"
+                  fileSize={documents.feesDayPdfSize}
+                  uploadDate={documents.feesDayUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove day school fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* BOARDING SCHOOL FEES DOCUMENT */}
+              {documents.feesBoardingDistributionPdf && (
+                <ModernDocumentCard
+                  title="Boarding School Fee Structure"
+                  description="Boarding school fees including accommodation"
+                  pdfUrl={documents.feesBoardingDistributionPdf}
+                  pdfName={documents.feesBoardingPdfName || "boarding-fees.pdf"}
+                  year={documents.feesBoardingYear}
+                  term={documents.feesBoardingTerm}
+                  feeBreakdown={documents.feesBoardingDistributionJson || []}
+                  type="boarding"
+                  fileSize={documents.feesBoardingPdfSize}
+                  uploadDate={documents.feesBoardingUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove boarding fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* ADMISSION FEES DOCUMENT */}
+              {documents.admissionFeePdf && (
+                <ModernDocumentCard
+                  title="Admission Fees"
+                  description="Admission and registration fees structure"
+                  pdfUrl={documents.admissionFeePdf}
+                  pdfName={documents.admissionFeePdfName || "admission-fees.pdf"}
+                  year={documents.admissionFeeYear}
+                  term={documents.admissionFeeTerm}
+                  admissionBreakdown={documents.admissionFeeDistribution || []}
+                  type="admission"
+                  fileSize={documents.admissionFeePdfSize}
+                  uploadDate={documents.admissionFeeUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove admission fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* EXAM RESULTS DOCUMENTS */}
+              {/* Form 1 Results */}
+              {documents.form1ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 1 Results"
+                  description={documents.form1ResultsDescription || "Form 1 examination results"}
+                  pdfUrl={documents.form1ResultsPdf}
+                  pdfName={documents.form1ResultsPdfName || "form1-results.pdf"}
+                  year={documents.form1ResultsYear}
+                  term={documents.form1ResultsTerm}
+                  type="results"
+                  fileSize={documents.form1ResultsPdfSize}
+                  uploadDate={documents.form1ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 1 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 2 Results */}
+              {documents.form2ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 2 Results"
+                  description={documents.form2ResultsDescription || "Form 2 examination results"}
+                  pdfUrl={documents.form2ResultsPdf}
+                  pdfName={documents.form2ResultsPdfName || "form2-results.pdf"}
+                  year={documents.form2ResultsYear}
+                  term={documents.form2ResultsTerm}
+                  type="results"
+                  fileSize={documents.form2ResultsPdfSize}
+                  uploadDate={documents.form2ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 2 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 3 Results */}
+              {documents.form3ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 3 Results"
+                  description={documents.form3ResultsDescription || "Form 3 examination results"}
+                  pdfUrl={documents.form3ResultsPdf}
+                  pdfName={documents.form3ResultsPdfName || "form3-results.pdf"}
+                  year={documents.form3ResultsYear}
+                  term={documents.form3ResultsTerm}
+                  type="results"
+                  fileSize={documents.form3ResultsPdfSize}
+                  uploadDate={documents.form3ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 3 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 4 Results */}
+              {documents.form4ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 4 Results"
+                  description={documents.form4ResultsDescription || "Form 4 examination results"}
+                  pdfUrl={documents.form4ResultsPdf}
+                  pdfName={documents.form4ResultsPdfName || "form4-results.pdf"}
+                  year={documents.form4ResultsYear}
+                  term={documents.form4ResultsTerm}
+                  type="results"
+                  fileSize={documents.form4ResultsPdfSize}
+                  uploadDate={documents.form4ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 4 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Mock Exams Results */}
+              {documents.mockExamsResultsPdf && (
+                <ModernDocumentCard
+                  title="Mock Exams Results"
+                  description={documents.mockExamsDescription || "Mock examination results"}
+                  pdfUrl={documents.mockExamsResultsPdf}
+                  pdfName={documents.mockExamsPdfName || "mock-exams-results.pdf"}
+                  year={documents.mockExamsYear}
+                  term={documents.mockExamsTerm}
+                  type="results"
+                  fileSize={documents.mockExamsPdfSize}
+                  uploadDate={documents.mockExamsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove mock exams results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* KCSE Results */}
+              {documents.kcseResultsPdf && (
+                <ModernDocumentCard
+                  title="KCSE Results"
+                  description={documents.kcseDescription || "KCSE examination results"}
+                  pdfUrl={documents.kcseResultsPdf}
+                  pdfName={documents.kcsePdfName || "kcse-results.pdf"}
+                  year={documents.kcseYear}
+                  term={documents.kcseTerm}
+                  type="results"
+                  fileSize={documents.kcsePdfSize}
+                  uploadDate={documents.kcseUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove KCSE results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+            </div>
 
-      {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
-      {hasDocuments && (
-        <button 
-          onClick={() => setDeleteDialogOpen(true)} 
-          className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
+            {/* ADDITIONAL DOCUMENTS SECTION */}
+            {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">Additional Documents</h3>
+                  <span className="text-sm text-gray-500 font-bold">
+                    {documents.additionalDocuments.length} document{documents.additionalDocuments.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {documents.additionalDocuments.map((doc, index) => (
+                    <ModernDocumentCard
+                      key={doc.id || index}
+                      title={doc.filename || `Document ${index + 1}`}
+                      description={doc.description || "Additional school document"}
+                      pdfUrl={doc.filepath}
+                      pdfName={doc.filename}
+                      year={doc.year}
+                      term={doc.term}
+                      type="additional"
+                      fileSize={doc.filesize}
+                      uploadDate={doc.uploadDate}
+                      existing={true}
+                      onReplace={() => setShowModal(true)}
+                      onRemove={() => {
+                        if (confirm("Remove this document?")) {
+                          // Handle removal
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* EMPTY STATE IF NO DOCUMENTS IN GRID (edge case) */}
+            {!documents.curriculumPDF && 
+             !documents.feesDayDistributionPdf && 
+             !documents.feesBoardingDistributionPdf && 
+             !documents.admissionFeePdf && 
+             !documents.form1ResultsPdf && 
+             !documents.form2ResultsPdf && 
+             !documents.form3ResultsPdf && 
+             !documents.form4ResultsPdf && 
+             !documents.mockExamsResultsPdf && 
+             !documents.kcseResultsPdf && 
+             (!documents.additionalDocuments || documents.additionalDocuments.length === 0) && (
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-300">
+                  <FaFile className="w-10 h-10 text-gray-500" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No Documents Found</h3>
+                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
+                  Add documents to showcase your school's information
+                </p>
+                <button 
+                  onClick={() => setShowModal(true)} 
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg flex items-center gap-2 mx-auto text-sm"
+                >
+                  <FaUpload className="text-sm" /> 
+                  <span>Upload Documents</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <Dialog 
+          open={deleteDialogOpen} 
+          onClose={() => setDeleteDialogOpen(false)}
+          PaperProps={{
+            className: "rounded-2xl p-0 w-[95vw] max-w-sm shadow-2xl overflow-hidden border border-gray-300 mx-auto" 
+          }}
         >
-          <FaTrash className="text-xs group-hover:animate-bounce" />
-          <span>Delete All</span>
-        </button>
-      )}
-    </div>
-  </div>
-</div>
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-red-600 to-orange-500 p-5 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white/25 rounded-xl backdrop-blur-sm shrink-0">
+                <FaExclamationTriangle className="text-xl" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Confirm Deletion</h2>
+                <p className="text-red-100 text-sm font-semibold mt-0.5">
+                  This action is permanent and cannot be undone
+                </p>
+              </div>
+            </div>
+          </div>
 
+          {/* Content Area */}
+          <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
+            {/* Main Warning */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-red-300">
+                <FaTrash className="text-red-700 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                Delete All School Documents?
+              </h3>
+              <p className="text-red-600 text-sm font-semibold">
+                You are about to permanently delete all uploaded documents
+              </p>
+            </div>
 
+            {/* Data Loss Details */}
+            <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+              <div className="mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
+                  <p className="text-sm font-bold text-red-800">
+                    Permanent data loss includes:
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {[
+                  'All curriculum documents and syllabi',
+                  'Complete fee structures (day & boarding)',
+                  'Admission fee breakdowns and policies',
+                  'All examination results and reports',
+                  'Additional school documents and files',
+                  'Upload history and file metadata'
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></div>
+                    <span className="text-sm text-gray-800 font-medium leading-snug">
+                      <span className="font-bold">{item}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-{!hasDocuments ? (
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
-    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
-      <FaFilePdf className="w-12 h-12 text-blue-600" />
-    </div>
-    <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Documents Yet</h3>
-    <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
-      Start by uploading school documents to showcase your institution's curriculum, fee structures, and academic results
-    </p>
-    <button 
-      onClick={() => setShowModal(true)} 
-      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
-    >
-      <FaUpload className="text-lg" /> 
-      <span>Upload School Documents</span>
-    </button>
-  </div>
-) : (
-  // GRID LAYOUT FOR DOCUMENT CARDS
-  <div className="my-6">
-    {/* Document Categories Header (Optional) */}
-    <div className="flex justify-between items-center mb-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">School Documents</h2>
-        <p className="text-gray-600 font-bold mt-1">Manage all your school documents in one place</p>
-      </div>
-      <button 
-        onClick={() => setShowModal(true)} 
-        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-2 text-sm"
-      >
-        <FaPlus className="text-sm" /> 
-        <span>Add New Document</span>
-      </button>
-    </div>
+            {/* Confirmation Input */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-bold text-gray-800">
+                  Type to confirm deletion:
+                </label>
+                <span className="text-red-700 font-bold text-sm select-none bg-red-100 px-2 py-0.5 rounded">
+                  "DELETE"
+                </span>
+              </div>
+              <input 
+                type="text" 
+                value={confirmText} 
+                onChange={(e) => setConfirmText(e.target.value)} 
+                placeholder='Type "DELETE" here...'
+                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-base font-medium placeholder-gray-400"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 font-medium text-center">
+                This prevents accidental deletion of important documents
+              </p>
+            </div>
 
-    {/* GRID CONTAINER */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {/* CURRICULUM DOCUMENT */}
-      {documents.curriculumPDF && (
-        <ModernDocumentCard
-          title="Curriculum Document"
-          description="Official school curriculum and syllabus"
-          pdfUrl={documents.curriculumPDF}
-          pdfName={documents.curriculumPdfName || "curriculum.pdf"}
-          year={documents.curriculumYear}
-          type="curriculum"
-          fileSize={documents.curriculumPdfSize}
-          uploadDate={documents.curriculumUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove curriculum document?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* DAY SCHOOL FEES DOCUMENT */}
-      {documents.feesDayDistributionPdf && (
-        <ModernDocumentCard
-          title="Day School Fee Structure"
-          description="Day school fees breakdown and payment terms"
-          pdfUrl={documents.feesDayDistributionPdf}
-          pdfName={documents.feesDayPdfName || "day-fees.pdf"}
-          year={documents.feesDayYear}
-          term={documents.feesDayTerm}
-          feeBreakdown={documents.feesDayDistributionJson || []}
-          type="day"
-          fileSize={documents.feesDayPdfSize}
-          uploadDate={documents.feesDayUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove day school fees document?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* BOARDING SCHOOL FEES DOCUMENT */}
-      {documents.feesBoardingDistributionPdf && (
-        <ModernDocumentCard
-          title="Boarding School Fee Structure"
-          description="Boarding school fees including accommodation"
-          pdfUrl={documents.feesBoardingDistributionPdf}
-          pdfName={documents.feesBoardingPdfName || "boarding-fees.pdf"}
-          year={documents.feesBoardingYear}
-          term={documents.feesBoardingTerm}
-          feeBreakdown={documents.feesBoardingDistributionJson || []}
-          type="boarding"
-          fileSize={documents.feesBoardingPdfSize}
-          uploadDate={documents.feesBoardingUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove boarding fees document?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* ADMISSION FEES DOCUMENT */}
-      {documents.admissionFeePdf && (
-        <ModernDocumentCard
-          title="Admission Fees"
-          description="Admission and registration fees structure"
-          pdfUrl={documents.admissionFeePdf}
-          pdfName={documents.admissionFeePdfName || "admission-fees.pdf"}
-          year={documents.admissionFeeYear}
-          term={documents.admissionFeeTerm}
-          admissionBreakdown={documents.admissionFeeDistribution || []}
-          type="admission"
-          fileSize={documents.admissionFeePdfSize}
-          uploadDate={documents.admissionFeeUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove admission fees document?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* EXAM RESULTS DOCUMENTS */}
-      {/* Form 1 Results */}
-      {documents.form1ResultsPdf && (
-        <ModernDocumentCard
-          title="Form 1 Results"
-          description={documents.form1ResultsDescription || "Form 1 examination results"}
-          pdfUrl={documents.form1ResultsPdf}
-          pdfName={documents.form1ResultsPdfName || "form1-results.pdf"}
-          year={documents.form1ResultsYear}
-          term={documents.form1ResultsTerm}
-          type="results"
-          fileSize={documents.form1ResultsPdfSize}
-          uploadDate={documents.form1ResultsUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove Form 1 results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* Form 2 Results */}
-      {documents.form2ResultsPdf && (
-        <ModernDocumentCard
-          title="Form 2 Results"
-          description={documents.form2ResultsDescription || "Form 2 examination results"}
-          pdfUrl={documents.form2ResultsPdf}
-          pdfName={documents.form2ResultsPdfName || "form2-results.pdf"}
-          year={documents.form2ResultsYear}
-          term={documents.form2ResultsTerm}
-          type="results"
-          fileSize={documents.form2ResultsPdfSize}
-          uploadDate={documents.form2ResultsUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove Form 2 results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* Form 3 Results */}
-      {documents.form3ResultsPdf && (
-        <ModernDocumentCard
-          title="Form 3 Results"
-          description={documents.form3ResultsDescription || "Form 3 examination results"}
-          pdfUrl={documents.form3ResultsPdf}
-          pdfName={documents.form3ResultsPdfName || "form3-results.pdf"}
-          year={documents.form3ResultsYear}
-          term={documents.form3ResultsTerm}
-          type="results"
-          fileSize={documents.form3ResultsPdfSize}
-          uploadDate={documents.form3ResultsUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove Form 3 results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* Form 4 Results */}
-      {documents.form4ResultsPdf && (
-        <ModernDocumentCard
-          title="Form 4 Results"
-          description={documents.form4ResultsDescription || "Form 4 examination results"}
-          pdfUrl={documents.form4ResultsPdf}
-          pdfName={documents.form4ResultsPdfName || "form4-results.pdf"}
-          year={documents.form4ResultsYear}
-          term={documents.form4ResultsTerm}
-          type="results"
-          fileSize={documents.form4ResultsPdfSize}
-          uploadDate={documents.form4ResultsUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove Form 4 results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* Mock Exams Results */}
-      {documents.mockExamsResultsPdf && (
-        <ModernDocumentCard
-          title="Mock Exams Results"
-          description={documents.mockExamsDescription || "Mock examination results"}
-          pdfUrl={documents.mockExamsResultsPdf}
-          pdfName={documents.mockExamsPdfName || "mock-exams-results.pdf"}
-          year={documents.mockExamsYear}
-          term={documents.mockExamsTerm}
-          type="results"
-          fileSize={documents.mockExamsPdfSize}
-          uploadDate={documents.mockExamsUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove mock exams results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-      
-      {/* KCSE Results */}
-      {documents.kcseResultsPdf && (
-        <ModernDocumentCard
-          title="KCSE Results"
-          description={documents.kcseDescription || "KCSE examination results"}
-          pdfUrl={documents.kcseResultsPdf}
-          pdfName={documents.kcsePdfName || "kcse-results.pdf"}
-          year={documents.kcseYear}
-          term={documents.kcseTerm}
-          type="results"
-          fileSize={documents.kcsePdfSize}
-          uploadDate={documents.kcseUploadDate}
-          existing={true}
-          onReplace={() => setShowModal(true)}
-          onRemove={() => {
-            if (confirm("Remove KCSE results?")) {
-              // Handle removal
-            }
-          }}
-        />
-      )}
-    </div>
+            {/* Final Warning */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
+              <FaExclamationCircle className="text-amber-700 shrink-0 text-base mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-900 mb-1">
+                  Important Warning
+                </p>
+                <p className="text-xs text-amber-800 font-medium leading-tight">
+                  No backup copies are maintained. Once deleted, all document data will be permanently removed from the system with no recovery options available.
+                </p>
+              </div>
+            </div>
+          </div>
 
-    {/* ADDITIONAL DOCUMENTS SECTION */}
-    {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
-      <div className="mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Additional Documents</h3>
-          <span className="text-sm text-gray-500 font-bold">
-            {documents.additionalDocuments.length} document{documents.additionalDocuments.length !== 1 ? 's' : ''}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {documents.additionalDocuments.map((doc, index) => (
-            <ModernDocumentCard
-              key={doc.id || index}
-              title={doc.filename || `Document ${index + 1}`}
-              description={doc.description || "Additional school document"}
-              pdfUrl={doc.filepath}
-              pdfName={doc.filename}
-              year={doc.year}
-              term={doc.term}
-              type="additional"
-              fileSize={doc.filesize}
-              uploadDate={doc.uploadDate}
-              existing={true}
-              onReplace={() => setShowModal(true)}
-              onRemove={() => {
-                if (confirm("Remove this document?")) {
-                  // Handle removal
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 p-5 bg-gray-50 border-t-2 border-gray-300">
+            <button 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setConfirmText('');
+              }}
+              disabled={actionLoading}
+              className="order-2 sm:order-1 flex-1 px-5 py-3 border-2 border-gray-400 text-gray-800 rounded-xl hover:bg-white hover:border-gray-500 transition font-bold text-sm"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={() => {
+                if (confirmText === "DELETE") {
+                  handleDeleteDocument();
+                } else {
+                  toast.error('Please type "DELETE" exactly to confirm deletion');
                 }
               }}
-            />
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* EMPTY STATE IF NO DOCUMENTS IN GRID (edge case) */}
-    {!documents.curriculumPDF && 
-     !documents.feesDayDistributionPdf && 
-     !documents.feesBoardingDistributionPdf && 
-     !documents.admissionFeePdf && 
-     !documents.form1ResultsPdf && 
-     !documents.form2ResultsPdf && 
-     !documents.form3ResultsPdf && 
-     !documents.form4ResultsPdf && 
-     !documents.mockExamsResultsPdf && 
-     !documents.kcseResultsPdf && 
-     (!documents.additionalDocuments || documents.additionalDocuments.length === 0) && (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-300">
-          <FaFile className="w-10 h-10 text-gray-500" />
-        </div>
-        <h3 className="text-xl font-bold text-gray-900 mb-2">No Documents Found</h3>
-        <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-          Add documents to showcase your school's information
-        </p>
-        <button 
-          onClick={() => setShowModal(true)} 
-          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg flex items-center gap-2 mx-auto text-sm"
-        >
-          <FaUpload className="text-sm" /> 
-          <span>Upload Documents</span>
-        </button>
-      </div>
-    )}
-  </div>
-)}
-
-
-<Dialog 
-  open={deleteDialogOpen} 
-  onClose={() => setDeleteDialogOpen(false)}
-  PaperProps={{
-    className: "rounded-2xl p-0 w-[95vw] max-w-sm shadow-2xl overflow-hidden border border-gray-300 mx-auto" 
-  }}
->
-  {/* Header with gradient */}
-  <div className="bg-gradient-to-r from-red-600 to-orange-500 p-5 text-white">
-    <div className="flex items-center gap-3">
-      <div className="p-2.5 bg-white/25 rounded-xl backdrop-blur-sm shrink-0">
-        <FaExclamationTriangle className="text-xl" />
-      </div>
-      <div>
-        <h2 className="text-lg font-bold">Confirm Deletion</h2>
-        <p className="text-red-100 text-sm font-semibold mt-0.5">
-          This action is permanent and cannot be undone
-        </p>
-      </div>
-    </div>
-  </div>
-
-  {/* Content Area */}
-  <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
-    {/* Main Warning */}
-    <div className="text-center">
-      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-red-300">
-        <FaTrash className="text-red-700 text-2xl" />
-      </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-1">
-        Delete All School Documents?
-      </h3>
-      <p className="text-red-600 text-sm font-semibold">
-        You are about to permanently delete all uploaded documents
-      </p>
-    </div>
-
-    {/* Data Loss Details */}
-    <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
-      <div className="mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
-          <p className="text-sm font-bold text-red-800">
-            Permanent data loss includes:
-          </p>
-        </div>
-      </div>
-      <div className="space-y-2.5">
-        {[
-          'All curriculum documents and syllabi',
-          'Complete fee structures (day & boarding)',
-          'Admission fee breakdowns and policies',
-          'All examination results and reports',
-          'Additional school documents and files',
-          'Upload history and file metadata'
-        ].map((item, index) => (
-          <div key={index} className="flex items-start gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></div>
-            <span className="text-sm text-gray-800 font-medium leading-snug">
-              <span className="font-bold">{item}</span>
-            </span>
+              disabled={actionLoading || confirmText !== "DELETE"}
+              className="order-1 sm:order-2 flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {actionLoading ? (
+                <>
+                  <CircularProgress size={16} color="inherit" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <FaTrash className="text-sm" />
+                  <span>Delete Permanently</span>
+                </>
+              )}
+            </button>
           </div>
-        ))}
-      </div>
-    </div>
-
-    {/* Confirmation Input */}
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between">
-        <label className="block text-sm font-bold text-gray-800">
-          Type to confirm deletion:
-        </label>
-        <span className="text-red-700 font-bold text-sm select-none bg-red-100 px-2 py-0.5 rounded">
-          "DELETE"
-        </span>
-      </div>
-      <input 
-        type="text" 
-        value={confirmText} 
-        onChange={(e) => setConfirmText(e.target.value)} 
-        placeholder='Type "DELETE" here...'
-        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-base font-medium placeholder-gray-400"
-        autoFocus
-      />
-      <p className="text-xs text-gray-500 font-medium text-center">
-        This prevents accidental deletion of important documents
-      </p>
-    </div>
-
-    {/* Final Warning */}
-    <div className="flex items-start gap-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
-      <FaExclamationCircle className="text-amber-700 shrink-0 text-base mt-0.5" />
-      <div>
-        <p className="text-sm font-bold text-amber-900 mb-1">
-          Important Warning
-        </p>
-        <p className="text-xs text-amber-800 font-medium leading-tight">
-          No backup copies are maintained. Once deleted, all document data will be permanently removed from the system with no recovery options available.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  {/* Action Buttons */}
-  <div className="flex flex-col sm:flex-row gap-3 p-5 bg-gray-50 border-t-2 border-gray-300">
-    <button 
-      onClick={() => {
-        setDeleteDialogOpen(false);
-        setConfirmText('');
-      }}
-      disabled={actionLoading}
-      className="order-2 sm:order-1 flex-1 px-5 py-3 border-2 border-gray-400 text-gray-800 rounded-xl hover:bg-white hover:border-gray-500 transition font-bold text-sm"
-    >
-      Cancel
-    </button>
-    <button 
-      onClick={() => {
-        if (confirmText === "DELETE") {
-          handleDeleteDocument();
-        } else {
-          toast.error('Please type "DELETE" exactly to confirm deletion');
-        }
-      }}
-      disabled={actionLoading || confirmText !== "DELETE"}
-      className="order-1 sm:order-2 flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-    >
-      {actionLoading ? (
-        <>
-          <CircularProgress size={16} color="inherit" />
-          <span>Deleting...</span>
-        </>
-      ) : (
-        <>
-          <FaTrash className="text-sm" />
-          <span>Delete Permanently</span>
-        </>
-      )}
-    </button>
-  </div>
-</Dialog>
-
-
-        {/* Update Field Modal */}
-        {updateFieldModal.open && (
-          <UpdateFieldModal
-            open={updateFieldModal.open}
-            onClose={() => setUpdateFieldModal({ open: false, field: '', value: '', label: '' })}
-            onSave={(value) => handleUpdateField(updateFieldModal.field, value)}
-            field={updateFieldModal.field}
-            currentValue={updateFieldModal.value}
-            fieldLabel={updateFieldModal.label}
-          />
-        )}
+        </Dialog>
 
         {showModal && (
           <DocumentsModal 
