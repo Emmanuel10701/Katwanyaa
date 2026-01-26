@@ -166,7 +166,6 @@ const parseDescriptionField = (value) => {
 const cleanDocumentResponse = (document) => {
   return {
     id: document.id,
-    schoolId: document.schoolId,
     
     // Curriculum PDF
     curriculumPDF: document.curriculumPDF,
@@ -261,18 +260,9 @@ const cleanDocumentResponse = (document) => {
 export async function POST(req) {
   try {
     const formData = await req.formData();
-    const schoolId = parseIntField(formData.get("schoolId"));
     
-    if (!schoolId) {
-      return NextResponse.json(
-        { success: false, error: "School ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Check if document already exists for this school
+    // Check if document already exists (we'll just use the first one since we're not linking to school)
     let existingDocument = await prisma.schoolDocument.findFirst({
-      where: { schoolId },
       include: { additionalDocuments: true }
     });
 
@@ -525,9 +515,8 @@ export async function POST(req) {
       });
 
     } else {
-      // Create new document
+      // Create new document (no schoolId needed)
       const createData = {
-        schoolId,
         ...updateData
       };
 
@@ -567,28 +556,18 @@ export async function POST(req) {
   }
 }
 
-// 🟡 GET School Documents by School ID
-export async function GET(req) {
+// 🟡 GET School Documents (no school ID needed)
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    const schoolId = searchParams.get('schoolId');
-    
-    if (!schoolId) {
-      return NextResponse.json(
-        { success: false, error: "School ID is required" },
-        { status: 400 }
-      );
-    }
-
+    // Get the first (and only) document since we're not linking to school
     const document = await prisma.schoolDocument.findFirst({
-      where: { schoolId: parseInt(schoolId) },
       include: { additionalDocuments: true }
     });
 
     if (!document) {
       return NextResponse.json({
         success: true,
-        message: "No documents found for this school",
+        message: "No documents found",
         document: null
       });
     }
@@ -608,26 +587,16 @@ export async function GET(req) {
 }
 
 // 🗑️ DELETE School Document
-export async function DELETE(req) {
+export async function DELETE() {
   try {
-    const { searchParams } = new URL(req.url);
-    const documentId = searchParams.get('documentId');
-    
-    if (!documentId) {
-      return NextResponse.json(
-        { success: false, error: "Document ID is required" },
-        { status: 400 }
-      );
-    }
-
-    const document = await prisma.schoolDocument.findUnique({
-      where: { id: parseInt(documentId) },
+    // Get the first document to delete
+    const document = await prisma.schoolDocument.findFirst({
       include: { additionalDocuments: true }
     });
 
     if (!document) {
       return NextResponse.json(
-        { success: false, message: "Document not found" },
+        { success: false, message: "No document found to delete" },
         { status: 404 }
       );
     }
@@ -656,7 +625,7 @@ export async function DELETE(req) {
 
     // Delete document from database (cascade will delete additional documents)
     await prisma.schoolDocument.delete({
-      where: { id: parseInt(documentId) }
+      where: { id: document.id }
     });
 
     return NextResponse.json({
