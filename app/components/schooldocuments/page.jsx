@@ -2338,7 +2338,7 @@ function ModernDocumentCard({
       <div className="bg-white rounded-2xl border-2 border-gray-200 p-5 shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-blue-300">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-3 ${type.includes('curriculum') ? 'bg-red-500' : type.includes('day') ? 'bg-green-500' : type.includes('boarding') ? 'bg-blue-500' : type.includes('admission') ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
+            <div className={`p-3 ${type.includes('curriculum') ? 'bg-red-500' : type.includes('day' ? 'bg-green-500' : type.includes('boarding') ? 'bg-blue-500' : type.includes('admission') ? 'bg-purple-500' : 'bg-orange-500')} rounded-xl text-white`}>
               <FaFilePdf className="text-lg" />
             </div>
             <div className="flex-1 min-w-0">
@@ -3480,6 +3480,7 @@ export default function SchoolDocumentsPage() {
   if (loading) {
     return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
   }
+
 
   return (
     <FileSizeProvider>
