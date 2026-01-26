@@ -2359,46 +2359,41 @@ export default function SchoolDocumentsPage() {
     loadData();
   }, []);
 
-
-const loadData = async () => {
-  try {
-    setLoading(true);
-    
-    // Remove schoolId parameter from the fetch call
-    const docsResponse = await fetch(`/api/schooldocuments`);
-    
-    if (docsResponse.ok) {
-      const docsData = await docsResponse.json();
-      setDocuments(docsData.document || docsData);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Remove schoolId parameter from the fetch call
+      const docsResponse = await fetch(`/api/schooldocuments`);
+      
+      if (docsResponse.ok) {
+        const docsData = await docsResponse.json();
+        setDocuments(docsData.document || docsData);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
     }
-    
+  };
 
-  } catch (error) {
-    console.error('Error loading data:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  const getFileIcon = (fileType) => {
+    if (!fileType) return <FaFile className="text-gray-500" />;
+    const type = fileType.toLowerCase();
+    if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
+    if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
+    if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
+    if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
+    return <FaFile className="text-gray-500" />;
+  };
 
-
-  // Add helper functions for file icons and size formatting:
-const getFileIcon = (fileType) => {
-  if (!fileType) return <FaFile className="text-gray-500" />;
-  const type = fileType.toLowerCase();
-  if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
-  if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-  if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-  if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
-  return <FaFile className="text-gray-500" />;
-};
-
-const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const handleSaveDocuments = async (documentData) => {
     try {
@@ -2441,7 +2436,7 @@ const formatFileSize = (bytes) => {
                   <FaShieldAlt className="text-blue-300 text-[10px]" />
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
-                  {schoolInfo?.name || 'School'} Documents
+                  School Documents {/* Fixed: Removed schoolInfo reference */}
                 </h1>
               </div>
             </div>
@@ -2479,7 +2474,7 @@ const formatFileSize = (bytes) => {
         </div>
       </div>
 
-{documents ? (
+      {documents ? ( // Fixed: Removed schoolInfo from condition
         <div className="space-y-6">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2608,56 +2603,54 @@ const formatFileSize = (bytes) => {
               )}
             </div>
 
-{/* Additional Documents Section */}
-{documents?.additionalDocuments && documents.additionalDocuments.length > 0 && (
-  <div className="mt-8">
-    <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {documents.additionalDocuments.map((file) => (
-        <div key={file.id} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 bg-gray-100 rounded-xl">
-              {getFileIcon(file.filetype)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">
-                {file.filename}
-              </p>
-              <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
-                {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
-                {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
+            {/* Additional Documents Section */}
+            {documents?.additionalDocuments && documents.additionalDocuments.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {documents.additionalDocuments.map((file) => (
+                    <div key={file.id} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 bg-gray-100 rounded-xl">
+                          {getFileIcon(file.filetype)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">
+                            {file.filename}
+                          </p>
+                          <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
+                            {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
+                            {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5 font-bold">
+                            {formatFileSize(file.filesize)} • {file.filetype?.toUpperCase() || 'Document'}
+                          </p>
+                        </div>
+                      </div>
+                      {file.filepath && (
+                        <div className="flex gap-2 mt-3">
+                          <a
+                            href={file.filepath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                          >
+                            View
+                          </a>
+                          <a
+                            href={file.filepath}
+                            download={file.filename}
+                            className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
+                          >
+                            Download
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-0.5 font-bold">
-                {formatFileSize(file.filesize)} • {file.filetype?.toUpperCase() || 'Document'}
-              </p>
-            </div>
-          </div>
-          {file.filepath && (
-            <div className="flex gap-2 mt-3">
-              <a
-                href={file.filepath}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                View
-              </a>
-              <a
-                href={file.filepath}
-                download={file.filename}
-                className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
-              >
-                Download
-              </a>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-
+            )}
 
             {(!documents || Object.keys(documents).length === 0) && (
               <div className="text-center py-12">
@@ -2678,23 +2671,23 @@ const formatFileSize = (bytes) => {
             )}
           </div>
         </div>
-) : (
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
-    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
-      <FaFilePdf className="w-8 h-8 text-blue-600" />
-    </div>
-    <h3 className="text-lg font-bold text-gray-900 mb-2">No Documents Found</h3>
-    <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-      Click "Manage Documents" to upload school documents.
-    </p>
-    <button 
-      onClick={() => setShowModal(true)} 
-      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg"
-    >
-      <FaUpload /> Upload Documents
-    </button>
-  </div>
-)}
+      ) : (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
+          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
+            <FaFilePdf className="w-8 h-8 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">No Documents Found</h3>
+          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
+            Click "Manage Documents" to upload school documents.
+          </p>
+          <button 
+            onClick={() => setShowModal(true)} 
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg"
+          >
+            <FaUpload /> Upload Documents
+          </button>
+        </div>
+      )}
 
       {showModal && (
         <DocumentsModal 
