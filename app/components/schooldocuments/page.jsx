@@ -828,7 +828,7 @@ function AdmissionFeeBreakdownModal({
   );
 }
 
-// Document Metadata Modal for Additional Files
+// Document Metadata Modal for Exam Results and Additional Files
 function DocumentMetadataModal({ 
   open, 
   onClose, 
@@ -861,7 +861,8 @@ function DocumentMetadataModal({
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        <div className="bg-gradient-to-r from-gray-600 via-gray-700 to-gray-800 p-6 text-white">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
@@ -975,34 +976,17 @@ function ModernPdfUpload({
   const [showAdmissionFeeModal, setShowAdmissionFeeModal] = useState(false);
   const [localFeeBreakdown, setLocalFeeBreakdown] = useState(feeBreakdown || existingFeeBreakdown || []);
   const fileInputRef = useRef(null);
+// Add these states at the top of the ModernPdfUpload component
+const [showMetadataModal, setShowMetadataModal] = useState(false);
+const [year, setYear] = useState('');
+const [description, setDescription] = useState('');
 
-  useEffect(() => {
-    if (pdfFile && typeof pdfFile === 'object') {
-      setPreviewName(pdfFile.name);
-    } else if (existingPdf) {
-      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
-    } else {
-      setPreviewName('');
-    }
-  }, [pdfFile, existingPdf]);
+// Modify the handleFileChange function to trigger metadata modal for exam results
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 1);
-    
-    if (files.length === 0) return;
 
-    const file = files[0];
-    
-    if (file.type !== 'application/pdf') {
-      toast.error('Only PDF files are allowed');
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('PDF file too large. Maximum size: 20MB');
-      return;
-    }
-
+// Add handler for metadata save
+const handleMetadataSave = (metadata) => {
+  if (selectedFileForMetadata) {
     // Simulate upload progress
     setUploadProgress(0);
     const interval = setInterval(() => {
@@ -1016,14 +1000,92 @@ function ModernPdfUpload({
     }, 100);
 
     setTimeout(() => {
-      onPdfChange(file);
+      onPdfChange(selectedFileForMetadata, metadata.year, metadata.description);
+      setPreviewName(selectedFileForMetadata.name);
+      setUploadProgress(100);
+      setIsReplacing(false);
+      setShowMetadataModal(false);
+      setSelectedFileForMetadata(null);
+      
+      setTimeout(() => setUploadProgress(0), 1000);
+    }, 500);
+  }
+};
+
+// Add this in the return statement, after the fee breakdown modals:
+{type === 'results' && showMetadataModal && selectedFileForMetadata && (
+  <DocumentMetadataModal
+    open={showMetadataModal}
+    onClose={() => {
+      setShowMetadataModal(false);
+      setSelectedFileForMetadata(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }}
+    onSave={handleMetadataSave}
+    fileName={selectedFileForMetadata.name}
+    existingData={{ year, description }}
+  />
+)}
+
+
+  useEffect(() => {
+    if (pdfFile && typeof pdfFile === 'object') {
+      setPreviewName(pdfFile.name);
+    } else if (existingPdf) {
+      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
+    } else {
+      setPreviewName('');
+    }
+  }, [pdfFile, existingPdf]);
+
+const handleFileChange = (e) => {
+  const files = Array.from(e.target.files).slice(0, 1);
+  
+  if (files.length === 0) return;
+
+  const file = files[0];
+  
+  if (file.type !== 'application/pdf') {
+    toast.error('Only PDF files are allowed');
+    return;
+  }
+
+  if (file.size > 20 * 1024 * 1024) {
+    toast.error('PDF file too large. Maximum size: 20MB');
+    return;
+  }
+
+  // Check if it's an exam result type
+  if (type === 'results') {
+    // Set the file and show metadata modal
+    setSelectedFileForMetadata(file);
+    setShowMetadataModal(true);
+  } else {
+    // For non-exam files, proceed with normal upload
+    // Simulate upload progress...
+    setUploadProgress(0);
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 100);
+
+    setTimeout(() => {
+      onPdfChange(file, year, description); // Pass metadata if available
       setPreviewName(file.name);
       setUploadProgress(100);
       setIsReplacing(false);
       
       setTimeout(() => setUploadProgress(0), 1000);
     }, 500);
-  };
+  }
+};
 
   const handleFeeBreakdownSave = (breakdown) => {
     setLocalFeeBreakdown(breakdown);
@@ -2104,45 +2166,50 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
               </div>
             )}
 
-            {currentStep === 3 && (
-              <div className="space-y-8">
-                {[
-                  { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', color: 'orange' },
-                  { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', color: 'orange' },
-                  { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', color: 'orange' },
-                  { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', color: 'orange' },
-                  { key: 'mockExamsResultsPdf', label: 'Mock Exams Results', yearKey: 'mockExamsYear', color: 'orange' },
-                  { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', color: 'orange' }
-                ].map((exam) => (
-                  <div key={exam.key} className="w-full max-w-2xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                        <FaAward className={`text-${exam.color}-600`} />
-                        <span className="text-base">{exam.label}</span>
-                      </label>
-                      <div className="w-32">
-                        <input
-                          type="number"
-                          min="2000"
-                          max="2100"
-                          value={examYears[exam.yearKey]}
-                          onChange={(e) => handleExamYearChange(exam.yearKey, e.target.value)}
-                          placeholder="Enter Year"
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-bold"
-                        />
-                      </div>
-                    </div>
-                    <ModernPdfUpload
-                      pdfFile={formData[exam.key]}
-                      onPdfChange={(file) => handleFileChange(exam.key, file)}
-                      onRemove={() => handleFileRemove(exam.key)}
-                      label={`${exam.label} PDF`}
-                      type="results"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+{currentStep === 3 && (
+  <div className="space-y-8">
+    {[
+      { key: 'form1ResultsPdf', label: 'Form 1 Results', yearKey: 'form1ResultsYear', color: 'orange' },
+      { key: 'form2ResultsPdf', label: 'Form 2 Results', yearKey: 'form2ResultsYear', color: 'orange' },
+      { key: 'form3ResultsPdf', label: 'Form 3 Results', yearKey: 'form3ResultsYear', color: 'orange' },
+      { key: 'form4ResultsPdf', label: 'Form 4 Results', yearKey: 'form4ResultsYear', color: 'orange' },
+      { key: 'mockExamsResultsPdf', label: 'Mock Exams Results', yearKey: 'mockExamsYear', color: 'orange' },
+      { key: 'kcseResultsPdf', label: 'KCSE Results', yearKey: 'kcseYear', color: 'orange' }
+    ].map((exam) => (
+      <div key={exam.key} className="w-full max-w-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <FaAward className={`text-${exam.color}-600`} />
+            <span className="text-base">{exam.label}</span>
+          </label>
+          <div className="w-32">
+            <input
+              type="number"
+              min="2000"
+              max="2100"
+              value={examYears[exam.yearKey]}
+              onChange={(e) => handleExamYearChange(exam.yearKey, e.target.value)}
+              placeholder="Enter Year"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-bold"
+            />
+          </div>
+        </div>
+        <ModernPdfUpload
+          pdfFile={formData[exam.key]}
+          onPdfChange={(file, year, description) => {
+            handleFileChange(exam.key, file);
+            if (year) {
+              handleExamYearChange(exam.yearKey, year);
+            }
+          }}
+          onRemove={() => handleFileRemove(exam.key)}
+          label={`${exam.label} PDF`}
+          type="results"
+        />
+      </div>
+    ))}
+  </div>
+)}
 
             {currentStep === 4 && (
               <div className="space-y-6">

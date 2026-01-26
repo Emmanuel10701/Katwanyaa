@@ -307,16 +307,24 @@ model SchoolInfo {
   @@index([admissionOpenDate, admissionCloseDate])
   @@map("SchoolInfo")
 }
+
+
 model SchoolDocument {
   id       Int @id @default(autoincrement())
+  schoolId Int @unique
+
+  // School Info Relationship
+  school   SchoolInfo @relation(fields: [schoolId], references: [id])
 
   // Curriculum PDF
   curriculumPDF           String?   @db.Text
   curriculumPdfName       String?   @db.VarChar(255)
   curriculumPdfSize       Int?
   curriculumPdfUploadDate DateTime?
+  curriculumDescription   String?   @db.Text
+  curriculumYear          Int?
 
-  
+  // Fee Breakdown JSON Fields
   feesDayDistributionJson      Json?
   feesBoardingDistributionJson Json?
   admissionFeeDistribution     Json?
@@ -326,18 +334,24 @@ model SchoolDocument {
   feesDayPdfName         String?   @db.VarChar(255)
   feesDayPdfSize         Int?
   feesDayPdfUploadDate   DateTime?
+  feesDayDescription     String?   @db.Text
+  feesDayYear            Int?
 
   // Boarding School Fees PDF
   feesBoardingDistributionPdf String?   @db.Text
   feesBoardingPdfName         String?   @db.VarChar(255)
   feesBoardingPdfSize         Int?
   feesBoardingPdfUploadDate   DateTime?
+  feesBoardingDescription     String?   @db.Text
+  feesBoardingYear            Int?
 
   // Admission Fee PDF
   admissionFeePdf           String?   @db.Text
   admissionFeePdfName       String?   @db.VarChar(255)
   admissionFeePdfSize       Int?
   admissionFeePdfUploadDate DateTime?
+  admissionFeeDescription   String?   @db.Text
+  admissionFeeYear          Int?
 
   // Form 1 Results PDF
   form1ResultsPdf           String?   @db.Text
@@ -387,22 +401,23 @@ model SchoolDocument {
   kcseYear                  Int?
   kcseUploadDate            DateTime?
 
-  // Additional Results Documents
+  // Additional Results Documents - Store as JSON array
   additionalResultsFiles      Json?     @default("[]")
-  additionalResultsFilesDescription String?   @db.Text
-  additionalResultsFilesYear  Int?
-  additionalFilesUploadDate   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([kcseYear])
+  @@index([schoolId])
+  @@index([curriculumYear])
+  @@index([feesDayYear])
+  @@index([feesBoardingYear])
+  @@index([admissionFeeYear])
   @@index([form1ResultsYear])
   @@index([form2ResultsYear])
   @@index([form3ResultsYear])
   @@index([form4ResultsYear])
   @@index([mockExamsYear])
-  @@index([additionalResultsFilesYear])
+  @@index([kcseYear])
   @@map("SchoolDocument")
 }
 
