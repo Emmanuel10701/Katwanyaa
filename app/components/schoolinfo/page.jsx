@@ -988,7 +988,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaBuilding className="text-blue-600" /> School Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1002,7 +1002,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaUsers className="text-green-600" /> Student Count <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1017,7 +1017,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border border-orange-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaChalkboardTeacher className="text-orange-600" /> Staff Count <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -1034,7 +1034,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                   
                   <div className="space-y-4">
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaQuoteLeft className="text-purple-600" /> School Motto
                       </label>
                       <input
@@ -1047,7 +1047,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 border border-indigo-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaEye className="text-indigo-600" /> Vision Statement
                       </label>
                       <TextareaAutosize
@@ -1060,7 +1060,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaRocket className="text-emerald-600" /> Mission Statement
                       </label>
                       <TextareaAutosize
@@ -1075,7 +1075,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 </div>
                 
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
-                  <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <FaFileAlt className="text-gray-600" /> School Description
                   </label>
                   <TextareaAutosize
@@ -1176,7 +1176,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-5 border border-blue-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaCalendarAlt className="text-blue-600" /> Admission Opening Date
                       </label>
                       <input
@@ -1188,7 +1188,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border border-red-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaHourglassHalf className="text-red-600" /> Admission Closing Date
                       </label>
                       <input
@@ -1200,7 +1200,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaCheckCircle className="text-green-600" /> Admission Fee (KES)
                       </label>
                       <input
@@ -1214,7 +1214,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-2xl p-5 border border-cyan-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaUsers className="text-cyan-600" /> Admission Capacity
                       </label>
                       <input
@@ -1230,7 +1230,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                   
                   <div className="space-y-4">
                     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-2xl p-5 border border-indigo-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaEnvelope className="text-indigo-600" /> Admission Contact Email
                       </label>
                       <input
@@ -1243,7 +1243,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-5 border border-purple-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaPhone className="text-purple-600" /> Admission Contact Phone
                       </label>
                       <input
@@ -1256,7 +1256,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     </div>
                     
                     <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border border-teal-200">
-                      <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <FaGlobe className="text-teal-600" /> Admission Website
                       </label>
                       <input
@@ -1272,7 +1272,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-5 border border-orange-200">
-                    <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                       <FaMapMarkerAlt className="text-orange-600" /> Admission Location
                     </label>
                     <input
@@ -1285,7 +1285,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                   </div>
                   
                   <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-5 border border-pink-200">
-                    <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                       <FaClock className="text-pink-600" /> Admission Office Hours
                     </label>
                     <input
@@ -1308,7 +1308,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                 </div>
                 
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5 border border-gray-200">
-                  <label className="block text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
                     <FaFileAlt className="text-gray-600" /> Admission Requirements
                   </label>
                   <TextareaAutosize
