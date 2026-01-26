@@ -19,7 +19,8 @@ import {
   FaUsersCog, FaRocket, FaArrowLeft, FaEyeDropper,
   FaEdit, FaList, FaCaretDown, FaCaretUp,
   FaSort, FaSortUp, FaSortDown, FaCalculator,
-  FaInfo, FaQuestionCircle, FaDatabase
+  FaInfo, FaQuestionCircle, FaDatabase,
+  FaPencilAlt, FaEllipsisV, FaExclamationCircle
 } from 'react-icons/fa';
 
 import { 
@@ -27,7 +28,8 @@ import {
   IconButton, Button, Chip, Stack, FormControl,
   InputLabel, Select, MenuItem, Divider,
   Paper, Typography, Card, CardContent,
-  Grid, Tooltip, Alert, Collapse
+  Grid, Tooltip, Alert, Collapse,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
@@ -177,7 +179,248 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
   );
 }
 
-// Dynamic Fee Category Component
+// Document Management Actions Component
+function DocumentActionsMenu({ documentId, onEdit, onDelete, onView }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    handleClose();
+    onEdit();
+  };
+
+  const handleDeleteClick = () => {
+    handleClose();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      setDeleteLoading(true);
+      const response = await fetch(`/api/schooldocuments?id=${documentId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Document deleted successfully');
+      onDelete();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast.error(error.message || 'Failed to delete document');
+    } finally {
+      setDeleteLoading(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="relative">
+        <button
+          onClick={handleClick}
+          className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <FaEllipsisV />
+        </button>
+        
+        {anchorEl && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-10">
+            <div className="py-1">
+              <button
+                onClick={handleEdit}
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <FaPencilAlt className="text-blue-500" />
+                Edit Document
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <FaTrash className="text-red-500" />
+                Delete Document
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle className="text-red-600 font-bold">
+          <div className="flex items-center gap-2">
+            <FaExclamationCircle />
+            Confirm Deletion
+          </div>
+        </DialogTitle>
+        <DialogContent>
+          <div className="py-4">
+            <p className="text-gray-700 font-bold mb-2">
+              Are you sure you want to delete this entire document?
+            </p>
+            <p className="text-sm text-gray-600">
+              This action will permanently delete:
+            </p>
+            <ul className="text-sm text-gray-600 mt-2 space-y-1">
+              <li>• All uploaded PDFs</li>
+              <li>• Fee breakdown data</li>
+              <li>• Exam results metadata</li>
+              <li>• Additional documents</li>
+            </ul>
+            <Alert severity="warning" className="mt-4">
+              This action cannot be undone!
+            </Alert>
+          </div>
+        </DialogContent>
+        <DialogActions className="p-4">
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            variant="outlined"
+            disabled={deleteLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            variant="contained" 
+            color="error"
+            startIcon={deleteLoading ? <CircularProgress size={16} color="inherit" /> : <FaTrash />}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
+// Update Specific Field Modal
+function UpdateFieldModal({ 
+  open, 
+  onClose, 
+  onSave, 
+  field,
+  currentValue,
+  fieldLabel
+}) {
+  const [value, setValue] = useState(currentValue || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!value.trim()) {
+      toast.error('Please enter a value');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSave(value);
+      onClose();
+    } catch (error) {
+      console.error('Update failed:', error);
+      toast.error('Failed to update field');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Modal open={open} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95vw',
+        maxWidth: '500px',
+        bgcolor: 'background.paper',
+        borderRadius: 2,
+        boxShadow: 24,
+        overflow: 'hidden',
+      }}>
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-white bg-opacity-20 rounded-xl">
+                <FaPencilAlt className="text-lg" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Update Field</h2>
+                <p className="text-white/90 text-sm mt-1 font-bold">
+                  {fieldLabel}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg"
+            >
+              <FaTimes className="text-lg" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="mb-6">
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              New Value
+            </label>
+            <textarea
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              rows="4"
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm font-bold resize-none"
+              placeholder={`Enter ${fieldLabel.toLowerCase()}...`}
+            />
+          </div>
+
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FaInfoCircle className="text-blue-600" />
+              <h4 className="text-sm font-bold text-gray-900">Field Information</h4>
+            </div>
+            <p className="text-xs text-gray-600 font-bold">
+              This will update only the {fieldLabel} field without affecting other document data.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 p-6 bg-white">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={loading || !value.trim()}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
+// Dynamic Fee Category Component (keep existing)
 function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -304,7 +547,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' 
   );
 }
 
-// Fee Breakdown Modal Component
+// Fee Breakdown Modal Component (keep existing)
 function FeeBreakdownModal({ 
   open, 
   onClose, 
@@ -616,7 +859,7 @@ function FeeBreakdownModal({
   );
 }
 
-// Admission Fee Breakdown Modal
+// Admission Fee Breakdown Modal (keep existing)
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
@@ -920,7 +1163,7 @@ function AdmissionFeeBreakdownModal({
   );
 }
 
-// Document Metadata Modal for Exam Results and Additional Files with Term Field
+// Document Metadata Modal for Exam Results and Additional Files with Term Field (keep existing)
 function DocumentMetadataModal({ 
   open, 
   onClose, 
@@ -1064,7 +1307,7 @@ function DocumentMetadataModal({
   );
 }
 
-// Enhanced Modern PDF Upload with all fixes
+// Enhanced Modern PDF Upload with all fixes (keep existing)
 function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
@@ -1640,7 +1883,7 @@ function ModernPdfUpload({
   );
 }
 
-// Enhanced Additional Results Upload with Metadata Modal
+// Enhanced Additional Results Upload with Metadata Modal (keep existing)
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
@@ -2049,7 +2292,7 @@ function AdditionalResultsUpload({
   );
 }
 
-// Modern Document Card Component
+// Modern Document Card Component (keep existing)
 function ModernDocumentCard({ 
   title, 
   description, 
@@ -2196,7 +2439,7 @@ function ModernDocumentCard({
   );
 }
 
-// Documents Modal Component
+// Documents Modal Component (keep existing with minor adjustments for delete functionality)
 function DocumentsModal({ onClose, onSave, documents, loading }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
@@ -2764,12 +3007,15 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   );
 }
 
-// Main School Documents Page Component
+// Main School Documents Page Component with Complete CRUD
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [updateFieldModal, setUpdateFieldModal] = useState({ open: false, field: '', value: '', label: '' });
 
   useEffect(() => {
     loadData();
@@ -2791,6 +3037,61 @@ export default function SchoolDocumentsPage() {
       setDocuments(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    try {
+      setActionLoading(true);
+      const response = await fetch(`/api/schooldocuments${documents?.id ? `?id=${documents.id}` : ''}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Document deleted successfully');
+      setDeleteDialogOpen(false);
+      await loadData(); // This will set documents to null and show the empty state
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast.error(error.message || 'Failed to delete document');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateField = async (field, value) => {
+    try {
+      if (!documents?.id) {
+        toast.error('No document found to update');
+        return;
+      }
+
+      const response = await fetch(`/api/schooldocuments?id=${documents.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          field,
+          data: value
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update field');
+      }
+
+      const result = await response.json();
+      toast.success('Field updated successfully');
+      setDocuments(result.document);
+      setUpdateFieldModal({ open: false, field: '', value: '', label: '' });
+    } catch (error) {
+      console.error('Update failed:', error);
+      toast.error(error.message || 'Failed to update field');
     }
   };
 
@@ -2825,6 +3126,18 @@ export default function SchoolDocumentsPage() {
     }
   };
 
+  const handleManageClick = (event) => {
+    if (documents) {
+      setAnchorEl(event.currentTarget);
+    } else {
+      setShowModal(true);
+    }
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   if (loading) {
     return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
   }
@@ -2834,7 +3147,7 @@ export default function SchoolDocumentsPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
         <Toaster position="top-right" richColors />
 
-        {/* MODERN HEADER */}
+        {/* MODERN HEADER WITH ACTIONS MENU */}
         <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
           <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
@@ -2882,19 +3195,62 @@ export default function SchoolDocumentsPage() {
               </button>
               
               <button 
-                onClick={() => setShowModal(true)} 
+                onClick={handleManageClick} 
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
               >
                 <FaUpload className="text-sm" />
-                <span className="whitespace-nowrap font-bold">Manage Documents</span>
+                <span className="whitespace-nowrap font-bold">
+                  {documents ? 'Manage Documents' : 'Upload Documents'}
+                </span>
+                {documents && <FaCaretDown className="ml-1" />}
               </button>
             </div>
           </div>
         </div>
 
+        {/* Actions Menu */}
+        {documents && anchorEl && (
+          <div className="absolute right-4 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+            <div className="py-1">
+              <button
+                onClick={() => { handleClose(); setShowModal(true); }}
+                className="flex items-center gap-2 w-full px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <FaPencilAlt className="text-blue-500" />
+                Edit Documents
+              </button>
+              <button
+                onClick={() => { handleClose(); setDeleteDialogOpen(true); }}
+                className="flex items-center gap-2 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <FaTrash className="text-red-500" />
+                Delete All Documents
+              </button>
+            </div>
+          </div>
+        )}
+
         {documents ? (
           <div className="space-y-6">
+            {/* Document Actions Header */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Uploaded Documents</h2>
+                  <p className="text-sm text-gray-600 font-bold">
+                    Last updated: {new Date(documents.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <DocumentActionsMenu
+                  documentId={documents.id}
+                  onEdit={() => setShowModal(true)}
+                  onDelete={() => {
+                    setDeleteDialogOpen(true);
+                  }}
+                  onView={loadData}
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Curriculum Document */}
                 {documents?.curriculumPDF && (
@@ -3034,7 +3390,12 @@ export default function SchoolDocumentsPage() {
               {/* Additional Documents Section */}
               {documents?.additionalDocuments && documents.additionalDocuments.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-gray-900">Additional Documents</h3>
+                    <span className="text-sm text-gray-600 font-bold">
+                      {documents.additionalDocuments.length} document(s)
+                    </span>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {documents.additionalDocuments.map((file) => (
                       <div key={file.id} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
@@ -3126,6 +3487,61 @@ export default function SchoolDocumentsPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+          <DialogTitle className="text-red-600 font-bold">
+            <div className="flex items-center gap-2">
+              <FaExclamationCircle />
+              Confirm Deletion
+            </div>
+          </DialogTitle>
+          <DialogContent>
+            <div className="py-4">
+              <p className="text-gray-700 font-bold mb-2">
+                Are you sure you want to delete this entire document?
+              </p>
+              <p className="text-sm text-gray-600">
+                This action will permanently delete:
+              </p>
+              <ul className="text-sm text-gray-600 mt-2 space-y-1">
+                <li>• All uploaded PDFs</li>
+                <li>• Fee breakdown data</li>
+                <li>• Exam results metadata</li>
+                <li>• Additional documents</li>
+              </ul>
+              <Alert severity="warning" className="mt-4">
+                This action cannot be undone!
+              </Alert>
+            </div>
+          </DialogContent>
+          <DialogActions className="p-4">
+            <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleDeleteDocument} 
+              variant="contained" 
+              color="error"
+              startIcon={actionLoading ? <CircularProgress size={16} color="inherit" /> : <FaTrash />}
+              disabled={actionLoading}
+            >
+              {actionLoading ? 'Deleting...' : 'Delete Permanently'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Update Field Modal */}
+        {updateFieldModal.open && (
+          <UpdateFieldModal
+            open={updateFieldModal.open}
+            onClose={() => setUpdateFieldModal({ open: false, field: '', value: '', label: '' })}
+            onSave={(value) => handleUpdateField(updateFieldModal.field, value)}
+            field={updateFieldModal.field}
+            currentValue={updateFieldModal.value}
+            fieldLabel={updateFieldModal.label}
+          />
         )}
 
         {showModal && (

@@ -7,13 +7,12 @@ const uploadPdfToCloudinary = async (file, folder) => {
   if (!file || file.size === 0) return null;
 
   try {
-    // Check file type by extension (not just mime type)
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     if (!['.pdf', '.doc', '.docx'].includes(fileExtension)) {
       throw new Error(`Only PDF, DOC, and DOCX files are allowed`);
     }
 
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB limit as per frontend
+    const maxSize = 4.5 * 1024 * 1024;
     if (file.size > maxSize) {
       throw new Error(`File too large. Maximum size: ${(maxSize / (1024 * 1024)).toFixed(1)}MB`);
     }
@@ -23,7 +22,6 @@ const uploadPdfToCloudinary = async (file, folder) => {
     const originalName = file.name;
     const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    // Determine resource type based on file extension
     const resourceType = fileExtension === '.pdf' ? 'raw' : 'raw';
     const format = fileExtension === '.pdf' ? 'pdf' : 
                    fileExtension === '.doc' ? 'doc' : 'docx';
@@ -57,18 +55,16 @@ const uploadPdfToCloudinary = async (file, folder) => {
   }
 };
 
-// Upload multiple file types (for additional files)
 const uploadAdditionalFileToCloudinary = async (file, folder) => {
   if (!file || file.size === 0) return null;
 
   try {
-    // Check file type by extension
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     if (!['.pdf', '.doc', '.docx'].includes(fileExtension)) {
       throw new Error(`Only PDF, DOC, and DOCX files are allowed`);
     }
 
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB limit
+    const maxSize = 4.5 * 1024 * 1024;
     if (file.size > maxSize) {
       throw new Error(`File too large. Maximum size: ${(maxSize / (1024 * 1024)).toFixed(1)}MB`);
     }
@@ -78,7 +74,6 @@ const uploadAdditionalFileToCloudinary = async (file, folder) => {
     const originalName = file.name;
     const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    // Determine resource type and format
     const resourceType = 'raw';
     const format = fileExtension === '.pdf' ? 'pdf' : 
                    fileExtension === '.doc' ? 'doc' : 'docx';
@@ -99,7 +94,9 @@ const uploadAdditionalFileToCloudinary = async (file, folder) => {
       uploadStream.end(buffer);
     });
     
-    const fileType = getFileTypeFromMime(file.type);
+    const fileType = file.type?.includes('pdf') ? 'pdf' : 
+                    file.type?.includes('word') ? 'doc' : 
+                    file.type?.includes('excel') ? 'xls' : 'document';
     
     return {
       url: result.secure_url,
@@ -113,16 +110,6 @@ const uploadAdditionalFileToCloudinary = async (file, folder) => {
     console.error(`❌ Cloudinary additional file upload error:`, error);
     throw error;
   }
-};
-
-const getFileTypeFromMime = (mimeType) => {
-  if (mimeType.includes('pdf')) return 'pdf';
-  if (mimeType.includes('word') || mimeType.includes('document')) return 'doc';
-  if (mimeType.includes('excel') || mimeType.includes('sheet')) return 'xls';
-  if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'ppt';
-  if (mimeType.includes('image')) return 'image';
-  if (mimeType.includes('text')) return 'text';
-  return 'document';
 };
 
 const deleteFromCloudinary = async (url) => {
@@ -140,17 +127,13 @@ const deleteFromCloudinary = async (url) => {
 };
 
 const parseIntField = (value) => {
-  if (!value || value.trim() === '') {
-    return null;
-  }
+  if (!value || value.trim() === '') return null;
   const num = parseInt(value);
   return isNaN(num) ? null : num;
 };
 
 const parseStringField = (value) => {
-  if (!value || value.trim() === '') {
-    return null;
-  }
+  if (!value || value.trim() === '') return null;
   return value.trim();
 };
 
@@ -159,8 +142,6 @@ const cleanDocumentResponse = (document) => {
   
   return {
     id: document.id,
-    
-    // Curriculum PDF
     curriculumPDF: document.curriculumPDF,
     curriculumPdfName: document.curriculumPdfName,
     curriculumPdfSize: document.curriculumPdfSize,
@@ -168,7 +149,6 @@ const cleanDocumentResponse = (document) => {
     curriculumDescription: document.curriculumDescription,
     curriculumYear: document.curriculumYear,
     
-    // Day School Fees PDF
     feesDayDistributionPdf: document.feesDayDistributionPdf,
     feesDayPdfName: document.feesDayPdfName,
     feesDayPdfSize: document.feesDayPdfSize,
@@ -176,7 +156,6 @@ const cleanDocumentResponse = (document) => {
     feesDayDescription: document.feesDayDescription,
     feesDayYear: document.feesDayYear,
     
-    // Boarding School Fees PDF
     feesBoardingDistributionPdf: document.feesBoardingDistributionPdf,
     feesBoardingPdfName: document.feesBoardingPdfName,
     feesBoardingPdfSize: document.feesBoardingPdfSize,
@@ -184,7 +163,6 @@ const cleanDocumentResponse = (document) => {
     feesBoardingDescription: document.feesBoardingDescription,
     feesBoardingYear: document.feesBoardingYear,
     
-    // Admission Fee PDF
     admissionFeePdf: document.admissionFeePdf,
     admissionFeePdfName: document.admissionFeePdfName,
     admissionFeePdfSize: document.admissionFeePdfSize,
@@ -192,12 +170,10 @@ const cleanDocumentResponse = (document) => {
     admissionFeeDescription: document.admissionFeeDescription,
     admissionFeeYear: document.admissionFeeYear,
     
-    // Fee breakdown JSON fields
     feesDayDistributionJson: document.feesDayDistributionJson,
     feesBoardingDistributionJson: document.feesBoardingDistributionJson,
     admissionFeeDistribution: document.admissionFeeDistribution,
     
-    // Exam Results PDFs
     form1ResultsPdf: document.form1ResultsPdf,
     form1ResultsPdfName: document.form1ResultsPdfName,
     form1ResultsPdfSize: document.form1ResultsPdfSize,
@@ -246,36 +222,61 @@ const cleanDocumentResponse = (document) => {
     kcseTerm: document.kcseTerm,
     kcseUploadDate: document.kcseUploadDate,
     
-    // Additional Documents (loaded separately)
     additionalDocuments: document.additionalDocuments || [],
     
-    // Timestamps
     createdAt: document.createdAt,
     updatedAt: document.updatedAt
   };
 };
 
-// 🟢 CREATE or UPDATE School Documents
+// GET - Fetch all documents
+export async function GET() {
+  try {
+    console.log("📥 GET Request received");
+    
+    const document = await prisma.schoolDocument.findFirst({
+      include: { additionalDocuments: true }
+    });
+
+    if (!document) {
+      return NextResponse.json({
+        success: true,
+        message: "No documents found",
+        document: null
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      document: cleanDocumentResponse(document)
+    });
+
+  } catch (error) {
+    console.error("❌ GET Error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Create or update all documents
 export async function POST(req) {
   try {
     console.log("📥 POST Request received");
     const formData = await req.formData();
     
-    // Log all form data keys for debugging
     console.log("📋 Form data keys:", Array.from(formData.keys()));
     
-    // Check if document already exists
     let existingDocument = await prisma.schoolDocument.findFirst({
       include: { additionalDocuments: true }
     });
 
     console.log("📄 Existing document:", existingDocument ? "Found" : "Not found");
 
-    // Handle PDF uploads
     const uploadPromises = {};
     const uploadResults = {};
 
-    // Main document fields - UPDATED TO MATCH PRISMA SCHEMA
     const documentFields = [
       { 
         key: 'curriculum', 
@@ -307,7 +308,6 @@ export async function POST(req) {
       },
     ];
 
-    // Handle exam results - UPDATED WITH TERM FIELDS
     const examFields = [
       { 
         key: 'form1Results', 
@@ -359,7 +359,6 @@ export async function POST(req) {
       }
     ];
 
-    // Handle main document uploads
     for (const doc of documentFields) {
       const pdfFile = formData.get(doc.name);
       if (pdfFile && pdfFile.size > 0) {
@@ -368,7 +367,6 @@ export async function POST(req) {
       }
     }
 
-    // Handle exam results uploads
     for (const exam of examFields) {
       const pdfFile = formData.get(exam.name);
       if (pdfFile && pdfFile.size > 0) {
@@ -377,13 +375,11 @@ export async function POST(req) {
       }
     }
 
-    // Execute all uploads
     const uploadEntries = Object.entries(uploadPromises);
     console.log("🔄 Total uploads to process:", uploadEntries.length);
     
     const results = await Promise.allSettled(uploadEntries.map(([key, promise]) => promise));
     
-    // Process upload results
     results.forEach((result, index) => {
       const [key] = uploadEntries[index];
       if (result.status === 'fulfilled' && result.value) {
@@ -394,7 +390,6 @@ export async function POST(req) {
       }
     });
 
-    // Handle additional documents
     const additionalFilesData = [];
     const additionalFiles = formData.getAll("additionalFiles[]");
     
@@ -431,10 +426,8 @@ export async function POST(req) {
       });
     }
 
-    // Handle file deletions
     const filesToDelete = [];
     
-    // Check for removed additional documents
     if (existingDocument) {
       const existingAdditionalIds = existingDocument.additionalDocuments.map(doc => doc.id);
       const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
@@ -451,7 +444,6 @@ export async function POST(req) {
       });
     }
 
-    // Delete old files if new ones are uploaded
     for (const doc of documentFields) {
       const fieldName = doc.key === 'curriculum' ? 'curriculumPDF' : 
                        doc.key === 'feesDay' ? 'feesDayDistributionPdf' :
@@ -470,23 +462,19 @@ export async function POST(req) {
       }
     }
 
-    // Delete old files
     if (filesToDelete.length > 0) {
       console.log("🗑️ Deleting old files:", filesToDelete.length);
       await Promise.all(filesToDelete);
     }
 
-    // Parse fee breakdown JSON
     const feesDayDistributionJson = formData.get("feesDayDistributionJson");
     const feesBoardingDistributionJson = formData.get("feesBoardingDistributionJson");
     const admissionFeeDistribution = formData.get("admissionFeeDistribution");
 
-    // Prepare update data - FIXED FIELD NAMES TO MATCH PRISMA SCHEMA
     const updateData = {
       updatedAt: new Date()
     };
 
-    // Add fee breakdown JSON if provided
     if (feesDayDistributionJson) {
       try {
         updateData.feesDayDistributionJson = JSON.parse(feesDayDistributionJson);
@@ -511,10 +499,8 @@ export async function POST(req) {
       }
     }
 
-    // Handle main document fields - FIXED FIELD NAMES
     for (const doc of documentFields) {
       if (uploadResults[doc.key]) {
-        // Map to correct Prisma field names
         const prismaFieldMap = {
           'curriculum': {
             pdf: 'curriculumPDF',
@@ -549,7 +535,6 @@ export async function POST(req) {
         updateData[fields.uploadDate] = new Date();
       }
       
-      // Update metadata
       const year = formData.get(doc.year);
       const description = formData.get(doc.description);
       
@@ -561,10 +546,8 @@ export async function POST(req) {
       }
     }
 
-    // Handle exam results - FIXED FIELD NAMES AND ADDED TERM
     for (const exam of examFields) {
       if (uploadResults[exam.key]) {
-        // Map to correct Prisma field names
         const prismaFieldMap = {
           'form1Results': {
             pdf: 'form1ResultsPdf',
@@ -611,7 +594,6 @@ export async function POST(req) {
         updateData[fields.uploadDate] = new Date();
       }
       
-      // Update metadata including term
       const year = formData.get(exam.year);
       const term = formData.get(exam.term);
       const description = formData.get(exam.description);
@@ -629,7 +611,6 @@ export async function POST(req) {
 
     console.log("📝 Update data prepared:", updateData);
 
-    // If document exists, update it
     if (existingDocument) {
       console.log("🔄 Updating existing document");
       const updatedDocument = await prisma.schoolDocument.update({
@@ -637,7 +618,6 @@ export async function POST(req) {
         data: updateData
       });
 
-      // Handle additional documents
       if (additionalFilesData.length > 0) {
         console.log("📁 Creating additional documents:", additionalFilesData.length);
         await prisma.additionalDocument.createMany({
@@ -654,7 +634,6 @@ export async function POST(req) {
         });
       }
 
-      // Delete removed additional documents
       const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
       if (additionalDocsToDelete.length > 0) {
         console.log("🗑️ Deleting additional documents:", additionalDocsToDelete.length);
@@ -667,7 +646,6 @@ export async function POST(req) {
         });
       }
 
-      // Get updated document with additional documents
       const finalDocument = await prisma.schoolDocument.findUnique({
         where: { id: existingDocument.id },
         include: { additionalDocuments: true }
@@ -683,12 +661,10 @@ export async function POST(req) {
 
     } else {
       console.log("🆕 Creating new document");
-      // Create new document
       const newDocument = await prisma.schoolDocument.create({
         data: updateData
       });
 
-      // Create additional documents
       if (additionalFilesData.length > 0) {
         console.log("📁 Creating additional documents:", additionalFilesData.length);
         await prisma.additionalDocument.createMany({
@@ -705,7 +681,6 @@ export async function POST(req) {
         });
       }
 
-      // Get complete document
       const finalDocument = await prisma.schoolDocument.findUnique({
         where: { id: newDocument.id },
         include: { additionalDocuments: true }
@@ -733,33 +708,54 @@ export async function POST(req) {
   }
 }
 
-// 🟡 GET School Documents (no school ID needed)
-export async function GET() {
+// PUT - Update specific document field
+export async function PUT(req) {
   try {
-    console.log("📥 GET Request received");
+    console.log("📥 PUT Request received");
     
-    // Get the first (and only) document since we're not linking to school
-    const document = await prisma.schoolDocument.findFirst({
+    const { searchParams } = new URL(req.url);
+    const documentId = searchParams.get('id');
+    
+    if (!documentId) {
+      return NextResponse.json(
+        { success: false, error: "Document ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const body = await req.json();
+    const { field, data } = body;
+
+    if (!field || !data) {
+      return NextResponse.json(
+        { success: false, error: "Field and data are required" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`🔄 Updating field: ${field} with data:`, data);
+
+    const updateData = {
+      [field]: data,
+      updatedAt: new Date()
+    };
+
+    const updatedDocument = await prisma.schoolDocument.update({
+      where: { id: parseInt(documentId) },
+      data: updateData,
       include: { additionalDocuments: true }
     });
 
-    if (!document) {
-      console.log("📭 No documents found");
-      return NextResponse.json({
-        success: true,
-        message: "No documents found",
-        document: null
-      });
-    }
+    console.log("✅ Document field updated successfully");
 
-    console.log("✅ Documents found:", document.id);
     return NextResponse.json({
       success: true,
-      document: cleanDocumentResponse(document)
+      message: "Document field updated successfully",
+      document: cleanDocumentResponse(updatedDocument)
     });
 
   } catch (error) {
-    console.error("❌ GET Error:", error);
+    console.error("❌ PUT Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Internal server error" },
       { status: 500 }
@@ -767,61 +763,122 @@ export async function GET() {
   }
 }
 
-// 🗑️ DELETE School Document
-export async function DELETE() {
+// PATCH - Partial update (for deleting specific files)
+export async function PATCH(req) {
   try {
-    console.log("🗑️ DELETE Request received");
+    console.log("📥 PATCH Request received");
     
-    // Get the first document to delete
-    const document = await prisma.schoolDocument.findFirst({
-      include: { additionalDocuments: true }
-    });
-
-    if (!document) {
-      console.log("📭 No document found to delete");
+    const { searchParams } = new URL(req.url);
+    const documentId = searchParams.get('id');
+    const field = searchParams.get('field');
+    
+    if (!documentId || !field) {
       return NextResponse.json(
-        { success: false, message: "No document found to delete" },
-        { status: 404 }
+        { success: false, error: "Document ID and field are required" },
+        { status: 400 }
       );
     }
 
-    console.log("🗑️ Deleting document:", document.id);
+    const body = await req.json();
+    const { action, fileId } = body;
 
-    // Delete all files from Cloudinary
-    const filesToDelete = [
-      document.curriculumPDF,
-      document.feesDayDistributionPdf,
-      document.feesBoardingDistributionPdf,
-      document.admissionFeePdf,
-      document.form1ResultsPdf,
-      document.form2ResultsPdf,
-      document.form3ResultsPdf,
-      document.form4ResultsPdf,
-      document.mockExamsResultsPdf,
-      document.kcseResultsPdf,
-    ].filter(Boolean);
+    if (!action) {
+      return NextResponse.json(
+        { success: false, error: "Action is required" },
+        { status: 400 }
+      );
+    }
 
-    // Delete additional files
-    document.additionalDocuments.forEach(file => {
-      if (file.filepath) filesToDelete.push(file.filepath);
-    });
+    console.log(`🔄 PATCH action: ${action} on field: ${field}, fileId: ${fileId}`);
 
-    console.log("🗑️ Files to delete:", filesToDelete.length);
+    if (action === 'deleteFile') {
+      // Find the document first
+      const document = await prisma.schoolDocument.findUnique({
+        where: { id: parseInt(documentId) },
+        include: { additionalDocuments: true }
+      });
 
-    // Delete all files
-    await Promise.all(filesToDelete.map(file => deleteFromCloudinary(file)));
+      if (!document) {
+        return NextResponse.json(
+          { success: false, error: "Document not found" },
+          { status: 404 }
+        );
+      }
 
-    // Delete document from database (cascade will delete additional documents)
-    await prisma.schoolDocument.delete({
-      where: { id: document.id }
-    });
+      let fileUrlToDelete = null;
 
-    console.log("✅ Document deleted successfully");
+      // Handle different field types
+      if (field === 'additionalDocuments' && fileId) {
+        // Delete specific additional document
+        const additionalDoc = document.additionalDocuments.find(doc => doc.id === parseInt(fileId));
+        if (additionalDoc) {
+          fileUrlToDelete = additionalDoc.filepath;
+          await prisma.additionalDocument.delete({
+            where: { id: parseInt(fileId) }
+          });
+        }
+      } else if (document[field]) {
+        // Delete main document field
+        fileUrlToDelete = document[field];
+        
+        // Clear the field
+        await prisma.schoolDocument.update({
+          where: { id: parseInt(documentId) },
+          data: {
+            [field]: null,
+            [`${field.replace('PDF', 'Pdf')}Name`]: null,
+            [`${field.replace('PDF', 'Pdf')}Size`]: null,
+            [`${field.replace('PDF', 'Pdf')}UploadDate`]: null,
+            updatedAt: new Date()
+          }
+        });
+      }
 
-    return NextResponse.json({
-      success: true,
-      message: "School documents deleted successfully"
-    });
+      // Delete file from Cloudinary
+      if (fileUrlToDelete) {
+        await deleteFromCloudinary(fileUrlToDelete);
+      }
+
+      const updatedDocument = await prisma.schoolDocument.findUnique({
+        where: { id: parseInt(documentId) },
+        include: { additionalDocuments: true }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "File deleted successfully",
+        document: cleanDocumentResponse(updatedDocument)
+      });
+    }
+
+    return NextResponse.json(
+      { success: false, error: "Invalid action" },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error("❌ PATCH Error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete entire document
+export async function DELETE(req) {
+  try {
+    console.log("🗑️ DELETE Request received");
+    
+    const { searchParams } = new URL(req.url);
+    const documentId = searchParams.get('id');
+    
+    if (!documentId) {
+      // If no ID, delete the first document (legacy behavior)
+      return handleDeleteFirstDocument();
+    }
+
+    return handleDeleteDocumentById(parseInt(documentId));
 
   } catch (error) {
     console.error("❌ DELETE Error:", error);
@@ -830,4 +887,73 @@ export async function DELETE() {
       { status: 500 }
     );
   }
+}
+
+async function handleDeleteFirstDocument() {
+  const document = await prisma.schoolDocument.findFirst({
+    include: { additionalDocuments: true }
+  });
+
+  if (!document) {
+    console.log("📭 No document found to delete");
+    return NextResponse.json(
+      { success: false, message: "No document found to delete" },
+      { status: 404 }
+    );
+  }
+
+  console.log("🗑️ Deleting document:", document.id);
+  return deleteDocumentAndFiles(document);
+}
+
+async function handleDeleteDocumentById(documentId) {
+  const document = await prisma.schoolDocument.findUnique({
+    where: { id: documentId },
+    include: { additionalDocuments: true }
+  });
+
+  if (!document) {
+    console.log("📭 No document found to delete");
+    return NextResponse.json(
+      { success: false, message: "Document not found" },
+      { status: 404 }
+    );
+  }
+
+  console.log("🗑️ Deleting document:", document.id);
+  return deleteDocumentAndFiles(document);
+}
+
+async function deleteDocumentAndFiles(document) {
+  const filesToDelete = [
+    document.curriculumPDF,
+    document.feesDayDistributionPdf,
+    document.feesBoardingDistributionPdf,
+    document.admissionFeePdf,
+    document.form1ResultsPdf,
+    document.form2ResultsPdf,
+    document.form3ResultsPdf,
+    document.form4ResultsPdf,
+    document.mockExamsResultsPdf,
+    document.kcseResultsPdf,
+  ].filter(Boolean);
+
+  document.additionalDocuments.forEach(file => {
+    if (file.filepath) filesToDelete.push(file.filepath);
+  });
+
+  console.log("🗑️ Files to delete:", filesToDelete.length);
+
+  await Promise.all(filesToDelete.map(file => deleteFromCloudinary(file)));
+
+  await prisma.schoolDocument.delete({
+    where: { id: document.id }
+  });
+
+  console.log("✅ Document deleted successfully");
+
+  return NextResponse.json({
+    success: true,
+    message: "School documents deleted successfully"
+  });
 }
