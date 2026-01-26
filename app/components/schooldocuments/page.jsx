@@ -2981,6 +2981,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   };
 
+
+
+
+
   const getExistingPdfData = (field) => {
     if (!documents) return null;
     
@@ -3481,6 +3485,20 @@ export default function SchoolDocumentsPage() {
     return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
   }
 
+  const hasDocuments = documents && (
+    documents.curriculumPDF ||
+    documents.feesDayDistributionPdf ||
+    documents.feesBoardingDistributionPdf ||
+    documents.admissionFeePdf ||
+    documents.form1ResultsPdf ||
+    documents.form2ResultsPdf ||
+    documents.form3ResultsPdf ||
+    documents.form4ResultsPdf ||
+    documents.mockExamsResultsPdf ||
+    documents.kcseResultsPdf ||
+    (documents.additionalDocuments && documents.additionalDocuments.length > 0)
+  );
+
 
   return (
     <FileSizeProvider>
@@ -3548,7 +3566,108 @@ export default function SchoolDocumentsPage() {
           </div>
         </div>
 
-    {/* Modernized Actions Menu */}
+
+
+
+{/* NO DOCUMENT SECTION */}
+{!hasDocuments ? (
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
+    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
+      <FaFilePdf className="w-12 h-12 text-blue-600" />
+    </div>
+    <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Documents Yet</h3>
+    <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
+      Start by uploading school documents to showcase your institution's curriculum, fee structures, and academic results
+    </p>
+    <button 
+      onClick={() => setShowModal(true)} 
+      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
+    >
+      <FaUpload className="text-lg" /> 
+      <span>Upload School Documents</span>
+    </button>
+  </div>
+) : (
+  // SIMPLE DOCUMENTS DISPLAY (if you want to show minimal info)
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">School Documents</h2>
+        <p className="text-gray-600 mt-1 font-bold">
+          {documents.curriculumPdfName || 'Manage your school documents'}
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        {documents.curriculumPDF && (
+          <div className="bg-blue-50 px-4 py-2 rounded-lg">
+            <p className="text-sm text-gray-600 font-bold">Curriculum</p>
+            <p className="text-lg font-bold text-blue-700">✓ Uploaded</p>
+          </div>
+        )}
+        {documents.feesDayDistributionPdf && (
+          <div className="bg-green-50 px-4 py-2 rounded-lg">
+            <p className="text-sm text-gray-600 font-bold">Day Fees</p>
+            <p className="text-lg font-bold text-green-700">✓ Uploaded</p>
+          </div>
+        )}
+        {documents.feesBoardingDistributionPdf && (
+          <div className="bg-purple-50 px-4 py-2 rounded-lg">
+            <p className="text-sm text-gray-600 font-bold">Boarding Fees</p>
+            <p className="text-lg font-bold text-purple-700">✓ Uploaded</p>
+          </div>
+        )}
+      </div>
+    </div>
+    
+    <div className="mb-6">
+      <h3 className="text-sm font-bold text-gray-700 mb-2">Available Documents</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {documents.curriculumPDF && (
+          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+            <FaBook className="text-red-500" />
+            <span className="text-sm font-bold text-gray-700">Curriculum Document</span>
+          </div>
+        )}
+        {documents.feesDayDistributionPdf && (
+          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+            <FaMoneyBillWave className="text-green-500" />
+            <span className="text-sm font-bold text-gray-700">Day School Fees</span>
+          </div>
+        )}
+        {documents.feesBoardingDistributionPdf && (
+          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+            <FaBuilding className="text-blue-500" />
+            <span className="text-sm font-bold text-gray-700">Boarding School Fees</span>
+          </div>
+        )}
+        {documents.admissionFeePdf && (
+          <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+            <FaUserCheck className="text-purple-500" />
+            <span className="text-sm font-bold text-gray-700">Admission Fees</span>
+          </div>
+        )}
+      </div>
+    </div>
+    
+    <div className="flex gap-3">
+      <button 
+        onClick={() => setShowModal(true)}
+        className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold flex items-center gap-2"
+      >
+        <FaEdit /> Manage Documents
+      </button>
+      <button 
+        onClick={() => setDeleteDialogOpen(true)}
+        className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-200 font-bold flex items-center gap-2"
+      >
+        <FaTrash /> Delete All
+        
+      </button>
+    </div>
+  </div>
+)}
+
+{/* Actions Menu */}
 {documents && anchorEl && (
   <div className="absolute right-4 mt-3 w-56 overflow-hidden bg-white/80 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 z-50 animate-in fade-in zoom-in duration-200">
     <div className="p-1.5">
@@ -3577,24 +3696,7 @@ export default function SchoolDocumentsPage() {
   </div>
 )}
 
-{(!documents || documents.length < 1) && (
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
-    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
-      <FaFilePdf className="w-12 h-12 text-blue-600" />
-    </div>
-    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Documents Yet</h3>
-    <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
-      Start by uploading school documents to showcase your institution
-    </p>
-    <button 
-      onClick={() => setShowModal(true)} 
-      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
-    >
-      <FaUpload className="text-lg" /> 
-      <span>Upload Documents</span>
-    </button>
-  </div>
-)}
+
 
 <Dialog 
   open={deleteDialogOpen} 
