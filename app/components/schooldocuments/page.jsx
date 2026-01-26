@@ -2863,46 +2863,50 @@ function DocumentDetailsModal({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => window.open(pdfUrl, '_blank')}
-                  className="bg-white text-gray-700 p-4 rounded-lg border border-gray-300 hover:border-blue-300 hover:bg-blue-50 transition-colors flex items-center justify-center gap-3 font-bold"
-                >
-                  <FaEye className="text-blue-500" />
-                  Preview Document
-                </button>
-                <a
-                  href={pdfUrl}
-                  download={pdfName || `${title}.pdf`}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-colors flex items-center justify-center gap-3 font-bold text-center"
-                >
-                  <FaDownload />
-                  Download PDF
-                </a>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-6 bg-white">
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold"
-            >
-              Close Details
-            </button>
-            <a
-              href={pdfUrl}
-              download={pdfName || `${title}.pdf`}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-2"
-            >
-              <FaDownload /> Download Document
-            </a>
-          </div>
-        </div>
+  {/* Footer */}
+<div className="border-t border-gray-100 p-4 sm:p-6 bg-gray-50/50 backdrop-blur-sm sticky bottom-0">
+  <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3">
+    
+    {/* Close Button - Secondary Style */}
+    <button
+      type="button"
+      onClick={onClose}
+      className="order-3 sm:order-1 px-6 py-3 border-2 border-gray-200 text-gray-600 rounded-xl 
+                 hover:border-gray-400 hover:bg-white active:scale-95 
+                 transition-all duration-200 font-semibold text-sm"
+    >
+      Close Details
+    </button>
+
+    {/* Preview Button - Ghost/Outline Style */}
+    <button
+      onClick={() => window.open(pdfUrl, '_blank')}
+      className="order-2 flex-1 sm:flex-none bg-white text-gray-700 px-6 py-3 rounded-xl border border-gray-200 
+                 hover:border-blue-400 hover:text-blue-600 hover:shadow-md active:scale-95 
+                 transition-all duration-200 flex items-center justify-center gap-2 font-bold"
+    >
+      <FaEye className="text-blue-500" />
+      <span className="whitespace-nowrap">Preview</span>
+    </button>
+
+    <a
+      href={pdfUrl}
+      download={pdfName || `${title}.pdf`}
+      className="order-1 sm:order-3 flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-700 
+                 text-white px-8 py-3 rounded-xl shadow-lg shadow-blue-200 
+                 hover:shadow-blue-300 hover:scale-[1.02] active:scale-95 
+                 transition-all duration-200 flex items-center justify-center gap-2 font-bold"
+    >
+      <FaDownload />
+      <span className="whitespace-nowrap">Download PDF</span>
+    </a>
+    
+  </div>
+</div>
       </Box>
     </Modal>
   );
