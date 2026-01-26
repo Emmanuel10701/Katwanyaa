@@ -980,9 +980,7 @@ function ModernPdfUpload({
 const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
 const [documentYear, setDocumentYear] = useState('');
 const [documentDescription, setDocumentDescription] = useState('');
-// Add these states at the top of the ModernPdfUpload component
-const [year, setYear] = useState('');
-const [description, setDescription] = useState('');
+
 
 
 // Update handleMetadataSave function:
