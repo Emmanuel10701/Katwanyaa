@@ -3574,53 +3574,25 @@ export default function SchoolDocumentsPage() {
   </div>
 )}
 
-
 {(!documents || documents.length < 1) && (
-  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center my-6">
-    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-blue-200">
-      <FaFilePdf className="w-10 h-10 text-blue-600" />
+  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
+    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
+      <FaFilePdf className="w-12 h-12 text-blue-600" />
     </div>
-    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Documents Found</h3>
-    <p className="text-gray-600 text-lg mb-4 max-w-md mx-auto font-bold">
-      There are no documents uploaded yet. Start uploading documents to make them appear on your website and portals.
-    </p>
-    <p className="text-gray-500 text-sm mb-6 max-w-lg mx-auto font-bold">
-      Upload curriculum, fee structures, admission forms, exam results, and additional documents to provide comprehensive information to students and parents.
+    <h3 className="text-2xl font-bold text-gray-900 mb-3">No Documents Yet</h3>
+    <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
+      Start by uploading school documents to showcase your institution
     </p>
     <button 
       onClick={() => setShowModal(true)} 
-      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-lg"
+      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
     >
-      <FaUpload className="text-xl" /> 
-      <span>Start Uploading Documents Now</span>
+      <FaUpload className="text-lg" /> 
+      <span>Upload Documents</span>
     </button>
-    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-      <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-        <div className="flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full mx-auto mb-3">
-          <FaBook />
-        </div>
-        <h4 className="font-bold text-gray-900 mb-2">Curriculum</h4>
-        <p className="text-xs text-gray-600 font-bold">Academic programs and courses</p>
-      </div>
-      <div className="bg-green-50 p-4 rounded-xl border border-green-200">
-        <div className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full mx-auto mb-3">
-          <FaMoneyBillWave />
-        </div>
-        <h4 className="font-bold text-gray-900 mb-2">Fee Structures</h4>
-        <p className="text-xs text-gray-600 font-bold">Day and boarding school fees</p>
-      </div>
-      <div className="bg-orange-50 p-4 rounded-xl border border-orange-200">
-        <div className="flex items-center justify-center w-10 h-10 bg-orange-500 text-white rounded-full mx-auto mb-3">
-          <FaAward />
-        </div>
-        <h4 className="font-bold text-gray-900 mb-2">Exam Results</h4>
-        <p className="text-xs text-gray-600 font-bold">Academic performance records</p>
-      </div>
-    </div>
   </div>
 )}
 
-      {/* Modernized Delete Confirmation Dialog */}
 {/* Modernized Delete Confirmation Dialog */}
 <Dialog 
   open={deleteDialogOpen} 
