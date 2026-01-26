@@ -299,6 +299,12 @@ model SchoolInfo {
   admissionLocation          String?   @db.Text
   admissionOfficeHours       String?   @db.VarChar(100)
   admissionDocumentsRequired Json      @default("[]")
+  form1ResultsTerm        String?   @db.VarChar(50)  // Add this
+  form2ResultsTerm        String?   @db.VarChar(50)  // Add this
+  form3ResultsTerm        String?   @db.VarChar(50)  // Add this
+  form4ResultsTerm        String?   @db.VarChar(50)  // Add this
+  mockExamsTerm           String?   @db.VarChar(50)  // Add this
+  kcseTerm                String?   @db.VarChar(50)  // Add this
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -306,6 +312,7 @@ model SchoolInfo {
   @@index([name])
   @@index([admissionOpenDate, admissionCloseDate])
   @@map("SchoolInfo")
+ 
 }
 
 model SchoolDocument {
