@@ -308,13 +308,9 @@ model SchoolInfo {
   @@map("SchoolInfo")
 }
 
-
 model SchoolDocument {
   id       Int @id @default(autoincrement())
-  schoolId Int @unique
-
-  // School Info Relationship
-  school   SchoolInfo @relation(fields: [schoolId], references: [id])
+  schoolId Int
 
   // Curriculum PDF
   curriculumPDF           String?   @db.Text
@@ -401,11 +397,11 @@ model SchoolDocument {
   kcseYear                  Int?
   kcseUploadDate            DateTime?
 
-  // Additional Results Documents - Store as JSON array
-  additionalResultsFiles      Json?     @default("[]")
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relationships
+  additionalDocuments AdditionalDocument[]
 
   @@index([schoolId])
   @@index([curriculumYear])
@@ -419,6 +415,26 @@ model SchoolDocument {
   @@index([mockExamsYear])
   @@index([kcseYear])
   @@map("SchoolDocument")
+}
+
+model AdditionalDocument {
+  id                Int      @id @default(autoincrement())
+  schoolDocumentId  Int
+  filename          String   @db.VarChar(255)
+  filepath          String   @db.Text
+  filetype          String   @db.VarChar(50)  // pdf, doc, xls, ppt, image, text
+  description       String?  @db.Text
+  year              Int?
+  filesize          Int?
+  uploadedAt        DateTime @default(now())
+  
+  // Relationships
+  schoolDocument    SchoolDocument @relation(fields: [schoolDocumentId], references: [id], onDelete: Cascade)
+
+  @@index([schoolDocumentId])
+  @@index([year])
+  @@index([filetype])
+  @@map("AdditionalDocument")
 }
 
 model AdmissionApplication {

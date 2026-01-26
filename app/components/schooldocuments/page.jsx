@@ -976,18 +976,18 @@ function ModernPdfUpload({
   const [showAdmissionFeeModal, setShowAdmissionFeeModal] = useState(false);
   const [localFeeBreakdown, setLocalFeeBreakdown] = useState(feeBreakdown || existingFeeBreakdown || []);
   const fileInputRef = useRef(null);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
+const [documentYear, setDocumentYear] = useState('');
+const [documentDescription, setDocumentDescription] = useState('');
 // Add these states at the top of the ModernPdfUpload component
-const [showMetadataModal, setShowMetadataModal] = useState(false);
 const [year, setYear] = useState('');
 const [description, setDescription] = useState('');
 
-// Modify the handleFileChange function to trigger metadata modal for exam results
 
-
-// Add handler for metadata save
+// Update handleMetadataSave function:
 const handleMetadataSave = (metadata) => {
   if (selectedFileForMetadata) {
-    // Simulate upload progress
     setUploadProgress(0);
     const interval = setInterval(() => {
       setUploadProgress(prev => {
@@ -1000,6 +1000,7 @@ const handleMetadataSave = (metadata) => {
     }, 100);
 
     setTimeout(() => {
+      // Pass file along with metadata
       onPdfChange(selectedFileForMetadata, metadata.year, metadata.description);
       setPreviewName(selectedFileForMetadata.name);
       setUploadProgress(100);
@@ -1012,7 +1013,7 @@ const handleMetadataSave = (metadata) => {
   }
 };
 
-// Add this in the return statement, after the fee breakdown modals:
+// Update the exam results metadata modal render:
 {type === 'results' && showMetadataModal && selectedFileForMetadata && (
   <DocumentMetadataModal
     open={showMetadataModal}
@@ -1025,7 +1026,7 @@ const handleMetadataSave = (metadata) => {
     }}
     onSave={handleMetadataSave}
     fileName={selectedFileForMetadata.name}
-    existingData={{ year, description }}
+    existingData={{ year: documentYear, description: documentDescription }}
   />
 )}
 
@@ -1396,49 +1397,70 @@ function AdditionalResultsUpload({
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const existingFileObjects = (existingFiles || []).map((file, index) => ({
-      ...file,
-      id: file.filepath || file.filename || `existing_${index}`,
-      isExisting: true,
-      isModified: false,
-      isRemoved: false,
-      isReplaced: false,
-      originalFilePath: file.filepath || file.filename,
-      year: file.year || '',
-      description: file.description || ''
-    }));
+// In AdditionalResultsUpload component, update the useEffect:
+useEffect(() => {
+  // For new API structure (additionalDocuments array)
+  const existingFileObjects = (existingFiles || []).map((file, index) => ({
+    ...file,
+    id: file.id || `existing_${index}`,
+    isExisting: true,
+    isModified: false,
+    isRemoved: false,
+    isReplaced: false,
+    originalFilePath: file.filepath,
+    year: file.year || '',
+    description: file.description || '',
+    filesize: file.filesize || file.size || 0,
+    filetype: file.filetype || 'document'
+  }));
+  
+  const newFileObjects = (files || []).filter(file => {
+    return !localFiles.some(lf => 
+      (lf.file && file.name === lf.file.name && file.size === lf.file.size) ||
+      (lf.filename === file.name)
+    );
+  }).map((file, index) => ({
+    id: `new_${Date.now()}_${index}`,
+    file: file,
+    filename: file.name,
+    year: '',
+    description: '',
+    isNew: true,
+    isModified: false,
+    filetype: file.type?.split('/')[1] || 'file',
+    filesize: file.size || 0
+  }));
+  
+  const allFiles = [...existingFileObjects, ...newFileObjects];
+  const uniqueFiles = [];
+  const seenIds = new Set();
+  
+  allFiles.forEach(file => {
+    if (!seenIds.has(file.id)) {
+      seenIds.add(file.id);
+      uniqueFiles.push(file);
+    }
+  });
+  
+  setLocalFiles(uniqueFiles);
+}, [existingFiles, files]);
+
+// Update handleRemoveExisting to handle database IDs:
+const handleRemoveExisting = (id) => {
+  const fileToRemove = localFiles.find(f => f.id === id);
+  
+  if (fileToRemove && fileToRemove.isExisting) {
+    setLocalFiles(prev => prev.map(file => 
+      file.id === id ? { ...file, isRemoved: true } : file
+    ));
     
-    const newFileObjects = (files || []).filter(file => {
-      return !localFiles.some(lf => 
-        (lf.file && file.name === lf.file.name && file.size === lf.file.size) ||
-        (lf.filename === file.name)
-      );
-    }).map((file, index) => ({
-      id: `new_${Date.now()}_${index}`,
-      file: file,
-      filename: file.name,
-      year: '',
-      description: '',
-      isNew: true,
-      isModified: false,
-      filetype: file.type?.split('/')[1] || 'file',
-      filesize: file.size || file.filesize || 0
-    }));
+    if (onRemoveExisting) {
+      onRemoveExisting(fileToRemove);
+    }
     
-    const allFiles = [...existingFileObjects, ...newFileObjects];
-    const uniqueFiles = [];
-    const seenIds = new Set();
-    
-    allFiles.forEach(file => {
-      if (!seenIds.has(file.id)) {
-        seenIds.add(file.id);
-        uniqueFiles.push(file);
-      }
-    });
-    
-    setLocalFiles(uniqueFiles);
-  }, [existingFiles, files]);
+    toast.warning('File marked for removal. Save changes to delete permanently.');
+  }
+};
 
   const handleFileChange = (e) => {
     const newFileList = Array.from(e.target.files);
@@ -1519,21 +1541,7 @@ function AdditionalResultsUpload({
     }
   };
 
-  const handleRemoveExisting = (id) => {
-    const fileToRemove = localFiles.find(f => f.id === id);
-    
-    if (fileToRemove && fileToRemove.isExisting) {
-      setLocalFiles(prev => prev.map(file => 
-        file.id === id ? { ...file, isRemoved: true } : file
-      ));
-      
-      if (onRemoveExisting) {
-        onRemoveExisting(fileToRemove);
-      }
-      
-      toast.warning('File marked for removal. Save changes to delete permanently.');
-    }
-  };
+
 
   const handleRemoveNewFile = (id) => {
     const fileToRemove = localFiles.find(f => f.id === id);
@@ -1916,73 +1924,121 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   ];
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+// In DocumentsModal component, update handleFormSubmit:
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    setActionLoading(true);
     
-    try {
-      setActionLoading(true);
-      
-      const data = new FormData();
-      data.append('schoolId', '1');
-      
-      // Add PDF files
-      Object.keys(formData).forEach(key => {
-        if (formData[key]) {
+    const data = new FormData();
+    const schoolId = 1; // You should get this from props or context
+    data.append('schoolId', schoolId);
+    
+    // Add PDF files
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) {
+        // Check if it's a file with metadata
+        if (Array.isArray(formData[key])) {
+          // Handle files with metadata
+          const [file, year, description] = formData[key];
+          data.append(key, file);
+          
+          // Add metadata fields based on file type
+          const metadataMappings = {
+            'curriculumPDF': { yearKey: 'curriculumYear', descKey: 'curriculumDescription' },
+            'feesDayDistributionPdf': { yearKey: 'feesDayYear', descKey: 'feesDayDescription' },
+            'feesBoardingDistributionPdf': { yearKey: 'feesBoardingYear', descKey: 'feesBoardingDescription' },
+            'admissionFeePdf': { yearKey: 'admissionFeeYear', descKey: 'admissionFeeDescription' },
+            'form1ResultsPdf': { yearKey: 'form1ResultsYear', descKey: 'form1ResultsDescription' },
+            'form2ResultsPdf': { yearKey: 'form2ResultsYear', descKey: 'form2ResultsDescription' },
+            'form3ResultsPdf': { yearKey: 'form3ResultsYear', descKey: 'form3ResultsDescription' },
+            'form4ResultsPdf': { yearKey: 'form4ResultsYear', descKey: 'form4ResultsDescription' },
+            'mockExamsResultsPdf': { yearKey: 'mockExamsYear', descKey: 'mockExamsDescription' },
+            'kcseResultsPdf': { yearKey: 'kcseYear', descKey: 'kcseDescription' }
+          };
+          
+          if (metadataMappings[key] && year) {
+            data.append(metadataMappings[key].yearKey, year);
+          }
+          if (metadataMappings[key] && description) {
+            data.append(metadataMappings[key].descKey, description);
+          }
+        } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
+          // Handle regular file uploads
           data.append(key, formData[key]);
         }
-      });
-      
-      // Add fee breakdowns as JSON
-      data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
-      data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
-      data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
-      
-      // Add exam years
-      Object.keys(examYears).forEach(key => {
-        if (examYears[key]) {
-          data.append(key, examYears[key]);
-        }
-      });
-      
-      // Add additional files
-      additionalFiles.forEach((file, index) => {
-        if (file.file) {
-          data.append(`additionalFiles[${index}]`, file.file);
-          if (file.year) {
-            data.append(`additionalFilesYear[${index}]`, file.year);
-          }
-          if (file.description) {
-            data.append(`additionalFilesDesc[${index}]`, file.description);
-          }
-        }
-      });
-      
-      const response = await fetch('/api/schooldocuments', {
-        method: 'POST',
-        body: data
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save documents');
       }
+    });
+    
+    // Add fee breakdowns as JSON
+    data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
+    data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
+    data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+    
+    // Add exam years (for existing documents without new uploads)
+    Object.keys(examYears).forEach(key => {
+      if (examYears[key] && examYears[key].trim() !== '') {
+        data.append(key, examYears[key]);
+      }
+    });
+    
+    // Add additional files with metadata
+    additionalFiles.forEach((file, index) => {
+      if (file.file) {
+        data.append(`additionalFiles[${index}]`, file.file);
+        if (file.year) {
+          data.append(`additionalFilesYear[${index}]`, file.year);
+        }
+        if (file.description) {
+          data.append(`additionalFilesDesc[${index}]`, file.description);
+        }
+      }
+    });
+    
+    // Add additional document IDs to delete
+    const additionalDocsToDelete = additionalFiles
+      .filter(file => file.isRemoved && file.id && file.id.toString().startsWith('existing_'))
+      .map(file => file.id.replace('existing_', ''));
+    
+    additionalDocsToDelete.forEach(id => {
+      data.append('additionalDocsToDelete[]', id);
+    });
+    
+    const response = await fetch('/api/schooldocuments', {
+      method: 'POST',
+      body: data
+    });
 
-      const result = await response.json();
-      
-      toast.success(result.message || 'Documents saved successfully!');
-      onSave(result.document);
-      onClose();
-      
-    } catch (error) {
-      console.error('Save failed:', error);
-      toast.error(error.message || 'Failed to save documents');
-    } finally {
-      setActionLoading(false);
+    if (!response.ok) {
+      throw new Error('Failed to save documents');
     }
-  };
 
-  const handleFileChange = (field, file) => {
+    const result = await response.json();
+    
+    toast.success(result.message || 'Documents saved successfully!');
+    onSave(result.document);
+    onClose();
+    
+  } catch (error) {
+    console.error('Save failed:', error);
+    toast.error(error.message || 'Failed to save documents');
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+// Update handleFileChange function:
+const handleFileChange = (field, file, year, description) => {
+  if (year || description) {
+    // Store file with metadata as array
+    setFormData(prev => ({ ...prev, [field]: [file, year, description] }));
+  } else {
+    // Store just the file
     setFormData(prev => ({ ...prev, [field]: file }));
-  };
+  }
+};
+
 
   const handleFileRemove = (field) => {
     setFormData(prev => ({ ...prev, [field]: null }));
@@ -2304,30 +2360,50 @@ export default function SchoolDocumentsPage() {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      
-      const schoolResponse = await fetch('/api/schooldocuments');
-      if (schoolResponse.ok) {
-        const schoolData = await schoolResponse.json();
-        setSchoolInfo(schoolData.school || schoolData);
-        
-        if (schoolData.school?.id || schoolData.id) {
-          const schoolId = schoolData.school?.id || schoolData.id;
-          const docsResponse = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
-          if (docsResponse.ok) {
-            const docsData = await docsResponse.json();
-            setDocuments(docsData.document || docsData);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
+const loadData = async () => {
+  try {
+    setLoading(true);
+    
+    const schoolId = 1; // You should get this from your app state
+    const docsResponse = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
+    
+    if (docsResponse.ok) {
+      const docsData = await docsResponse.json();
+      setDocuments(docsData.document || docsData);
     }
-  };
+    
+    // If you need school info separately:
+    const schoolResponse = await fetch('/api/school'); // Adjust to your actual API
+    if (schoolResponse.ok) {
+      const schoolData = await schoolResponse.json();
+      setSchoolInfo(schoolData);
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // Add helper functions for file icons and size formatting:
+const getFileIcon = (fileType) => {
+  if (!fileType) return <FaFile className="text-gray-500" />;
+  const type = fileType.toLowerCase();
+  if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
+  if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
+  if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
+  if (type.includes('excel') || type.includes('sheet') || type.includes('xls')) return <FaFileAlt className="text-green-600" />;
+  return <FaFile className="text-gray-500" />;
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
   const handleSaveDocuments = async (documentData) => {
     try {
@@ -2537,51 +2613,56 @@ export default function SchoolDocumentsPage() {
               )}
             </div>
 
-            {/* Additional Files Section */}
-            {documents?.additionalResultsFiles && documents.additionalResultsFiles.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {documents.additionalResultsFiles.map((file, index) => (
-                    <div key={index} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="p-2 bg-gray-100 rounded-xl">
-                          <FaFileAlt className="text-gray-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-gray-900 truncate">
-                            {file.filename || file.name}
-                          </p>
-                          <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
-                            {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
-                            {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
-                          </div>
-                        </div>
-                      </div>
-                      {file.filepath && (
-                        <div className="flex gap-2 mt-3">
-                          <a
-                            href={file.filepath}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-                          >
-                            View
-                          </a>
-                          <a
-                            href={file.filepath}
-                            download
-                            className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
-                          >
-                            Download
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+{/* Additional Documents Section */}
+{documents?.additionalDocuments && documents.additionalDocuments.length > 0 && (
+  <div className="mt-8">
+    <h3 className="text-lg font-bold text-gray-900 mb-4">Additional Documents</h3>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {documents.additionalDocuments.map((file) => (
+        <div key={file.id} className="bg-white rounded-2xl border-2 border-gray-200 p-4 shadow-sm hover:shadow-lg transition-all">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 bg-gray-100 rounded-xl">
+              {getFileIcon(file.filetype)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gray-900 truncate">
+                {file.filename}
+              </p>
+              <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
+                {file.year && <div>Year: <span className="text-blue-600">{file.year}</span></div>}
+                {file.description && <div>Description: <span className="text-gray-600">{file.description}</span></div>}
               </div>
-            )}
+              <p className="text-xs text-gray-500 mt-0.5 font-bold">
+                {formatFileSize(file.filesize)} • {file.filetype?.toUpperCase() || 'Document'}
+              </p>
+            </div>
+          </div>
+          {file.filepath && (
+            <div className="flex gap-2 mt-3">
+              <a
+                href={file.filepath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center py-2 text-xs font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                View
+              </a>
+              <a
+                href={file.filepath}
+                download={file.filename}
+                className="flex-1 text-center py-2 text-xs font-bold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-colors"
+              >
+                Download
+              </a>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
 
             {(!documents || Object.keys(documents).length === 0) && (
               <div className="text-center py-12">
