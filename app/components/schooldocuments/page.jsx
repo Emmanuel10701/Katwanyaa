@@ -3621,72 +3621,125 @@ export default function SchoolDocumentsPage() {
 )}
 
       {/* Modernized Delete Confirmation Dialog */}
+{/* Modernized Delete Confirmation Dialog */}
 <Dialog 
   open={deleteDialogOpen} 
   onClose={() => setDeleteDialogOpen(false)}
   PaperProps={{
-    className: "rounded-3xl p-2 max-w-md shadow-2xl" 
+    className: "rounded-2xl p-0 max-w-md shadow-2xl overflow-hidden border border-gray-200" 
   }}
 >
-  <div className="p-6">
-    {/* Header & Icon Area */}
-    <div className="flex flex-col items-center text-center mb-6">
-      <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-        <FaExclamationCircle className="text-red-500 text-3xl animate-pulse" />
+  {/* Header with gradient background */}
+  <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
+    <div className="flex items-center gap-4">
+      <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+        <FaExclamationTriangle className="text-xl" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900">Confirm Deletion</h2>
-      <p className="text-gray-500 mt-2">
-        Are you sure you want to delete this document? This process is irreversible.
+      <div>
+        <h2 className="text-xl font-bold">Confirm Document Deletion</h2>
+        <p className="text-red-100 opacity-90 text-sm mt-1">This action cannot be undone</p>
+      </div>
+    </div>
+  </div>
+
+  {/* Content */}
+  <div className="p-6 space-y-6">
+    {/* Warning Icon and Title */}
+    <div className="text-center">
+      <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-red-100">
+        <FaTrash className="text-red-600 text-2xl" />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 mb-2">Delete All School Documents?</h3>
+      <p className="text-gray-600 text-sm">
+        This will permanently delete ALL uploaded documents and related data.
       </p>
     </div>
 
-    {/* Impact Details Box */}
-    <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
-        The following data will be lost:
+    {/* Impact Details */}
+    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+      <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
+        The following data will be permanently deleted:
       </p>
-      <div className="grid grid-cols-1 gap-2">
-        {['All uploaded PDFs', 'Fee breakdown data', 'Exam results metadata', 'Additional documents'].map((item) => (
-          <div key={item} className="flex items-center gap-2 text-sm text-gray-700">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-            {item}
+      <div className="space-y-2">
+        {[
+          'All uploaded PDF documents',
+          'Dynamic fee breakdown data',
+          'Exam results metadata and files',
+          'Additional school documents',
+          'Document categorization and descriptions'
+        ].map((item) => (
+          <div key={item} className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></div>
+            <span className="text-sm text-gray-700 font-bold">{item}</span>
           </div>
         ))}
       </div>
     </div>
 
-    {/* Critical Warning Banner */}
-    <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl text-amber-800 text-sm mb-8">
-      <span className="text-lg">⚠️</span>
-      <p className="font-medium">Warning: This action cannot be undone!</p>
+    {/* Confirmation Input */}
+    <div className="space-y-2">
+      <label className="block text-sm font-bold text-gray-700">
+        Type <span className="font-mono text-red-600 bg-red-50 px-2 py-1 rounded border border-red-200">"DELETE ALL DOCUMENTS"</span> to confirm:
+      </label>
+      <input 
+        type="text" 
+        value={confirmText} 
+        onChange={(e) => setConfirmText(e.target.value)} 
+        placeholder='Type "DELETE ALL DOCUMENTS" here'
+        className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition duration-200 text-sm font-bold placeholder-gray-400"
+      />
+      <p className="text-xs text-gray-500 mt-1">
+        This extra step prevents accidental deletion of important school documents.
+      </p>
     </div>
 
-    {/* Modern Action Buttons */}
-    <div className="flex flex-col sm:flex-row gap-3">
-      <button 
-        onClick={() => setDeleteDialogOpen(false)}
-        className="flex-1 px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
-      >
-        Keep Everything
-      </button>
-      <button 
-        onClick={handleDeleteDocument} 
-        disabled={actionLoading}
-        className="flex-2 px-8 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 rounded-xl shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2"
-      >
-        {actionLoading ? (
-          <CircularProgress size={18} color="inherit" />
-        ) : (
-          <>
-            <FaTrash className="text-xs" />
-            Delete Permanently
-          </>
-        )}
-      </button>
+    {/* Critical Warning */}
+    <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+      <div className="p-2 bg-amber-100 rounded-lg">
+        <FaExclamationCircle className="text-amber-600" />
+      </div>
+      <div>
+        <p className="text-sm font-bold text-amber-800">⚠️ Critical Warning</p>
+        <p className="text-xs text-amber-700 mt-1">
+          Once deleted, all document data cannot be recovered. Make sure you have backups if needed.
+        </p>
+      </div>
     </div>
   </div>
-</Dialog>
 
+  {/* Action Buttons */}
+  <div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
+    <button 
+      onClick={() => setDeleteDialogOpen(false)}
+      disabled={actionLoading}
+      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-100 transition duration-200 font-bold disabled:opacity-50 text-sm"
+    >
+      <FaTimesCircle /> Cancel
+    </button>
+    <button 
+      onClick={() => {
+        if (confirmText === "DELETE ALL DOCUMENTS") {
+          handleDeleteDocument();
+        } else {
+          toast.error('Please type "DELETE ALL DOCUMENTS" exactly to confirm deletion');
+        }
+      }}
+      disabled={actionLoading || confirmText !== "DELETE ALL DOCUMENTS"}
+      className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl hover:from-red-700 hover:to-orange-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+    >
+      {actionLoading ? (
+        <>
+          <CircularProgress size={16} className="text-white" />
+          Deleting...
+        </>
+      ) : (
+        <>
+          <FaTrash /> Delete Permanently
+        </>
+      )}
+    </button>
+  </div>
+</Dialog>
 
 
         {/* Update Field Modal */}
