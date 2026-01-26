@@ -2676,7 +2676,6 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseResultsPdf: null
   });
   
-  // FIXED: Removed JSON.parse since API returns already parsed arrays
   const [feeBreakdowns, setFeeBreakdowns] = useState({
     feesDay: documents?.feesDayDistributionJson || [],
     feesBoarding: documents?.feesBoardingDistributionJson || [],
@@ -2711,6 +2710,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
   const [additionalFiles, setAdditionalFiles] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const steps = [
     { 
@@ -2742,6 +2743,12 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       label: 'Additional', 
       icon: FaFile, 
       description: 'Additional documents' 
+    },
+    { 
+      id: 'review', 
+      label: 'Review', 
+      icon: FaClipboardList, 
+      description: 'Review all documents before submission' 
     }
   ];
 
@@ -2752,7 +2759,16 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+    // Show review modal instead of directly submitting
+    setShowReviewModal(true);
+  };
+
+  const handleSubmitAfterReview = async () => {
+    if (!confirmed) {
+      toast.error('Please confirm review before submitting');
+      return;
+    }
+
     try {
       setActionLoading(true);
       
@@ -2803,7 +2819,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       
       // Add additional files with metadata
       additionalFiles.forEach((file, index) => {
-        if (file.file) {
+        if (file.file && !file.isRemoved) {
           data.append(`additionalFiles[${index}]`, file.file);
           if (file.year) {
             data.append(`additionalFilesYear[${index}]`, file.year);
@@ -2846,6 +2862,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       toast.error(error.message || 'Failed to save documents');
     } finally {
       setActionLoading(false);
+      setShowReviewModal(false);
     }
   };
 
@@ -2923,6 +2940,372 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
           filename: documents.admissionFeePdfName,
           size: documents.admissionFeePdfSize
         } : null;
+      default:
+        return null;
+    }
+  };
+
+  // Calculate total documents for review
+  const countTotalDocuments = () => {
+    let count = 0;
+    
+    // Main documents
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) {
+        if (Array.isArray(formData[key])) {
+          if (formData[key][0]) count++;
+        } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
+          count++;
+        }
+      }
+    });
+    
+    // Additional files
+    count += additionalFiles.filter(file => file.file && !file.isRemoved).length;
+    
+    return count;
+  };
+
+  // Get document status for review
+  const getDocumentStatus = (field) => {
+    const existing = getExistingPdfData(field);
+    const newFile = formData[field];
+    
+    if (newFile) {
+      if (Array.isArray(newFile)) {
+        return { status: 'new', name: newFile[0]?.name || 'New file' };
+      }
+      return { status: 'new', name: newFile.name || 'New file' };
+    } else if (existing) {
+      return { status: 'existing', name: existing.name || existing.filename || 'Existing file' };
+    }
+    return { status: 'none', name: 'No file' };
+  };
+
+  const renderStepContent = () => {
+    switch(currentStep) {
+      case 0: // Curriculum
+        return (
+          <div className="space-y-6">
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.curriculumPDF}
+                onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
+                onRemove={() => handleFileRemove('curriculumPDF')}
+                label="Curriculum PDF"
+                existingPdf={getExistingPdfData('curriculumPDF')}
+                type="curriculum"
+              />
+            </div>
+          </div>
+        );
+      
+      case 1: // Fee Structures
+        return (
+          <div className="space-y-8">
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.feesDayDistributionPdf}
+                onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
+                onRemove={() => handleFileRemove('feesDayDistributionPdf')}
+                label="Day School Fees PDF"
+                existingPdf={getExistingPdfData('feesDayDistributionPdf')}
+                feeBreakdown={feeBreakdowns.feesDay}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
+                type="day"
+              />
+            </div>
+            
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.feesBoardingDistributionPdf}
+                onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
+                onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
+                label="Boarding School Fees PDF"
+                existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
+                feeBreakdown={feeBreakdowns.feesBoarding}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
+                type="boarding"
+              />
+            </div>
+          </div>
+        );
+      
+      case 2: // Admission
+        return (
+          <div className="space-y-6">
+            <div className="w-full max-w-2xl">
+              <ModernPdfUpload
+                pdfFile={formData.admissionFeePdf}
+                onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
+                onRemove={() => handleFileRemove('admissionFeePdf')}
+                label="Admission Fee PDF"
+                existingPdf={getExistingPdfData('admissionFeePdf')}
+                feeBreakdown={feeBreakdowns.admissionFee}
+                onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
+                type="admission"
+              />
+            </div>
+          </div>
+        );
+      
+      case 3: // Exam Results
+        return (
+          <div className="space-y-8">
+            {[
+              { key: 'form1Results', label: 'Form 1 Results', color: 'orange' },
+              { key: 'form2Results', label: 'Form 2 Results', color: 'orange' },
+              { key: 'form3Results', label: 'Form 3 Results', color: 'orange' },
+              { key: 'form4Results', label: 'Form 4 Results', color: 'orange' },
+              { key: 'mockExams', label: 'Mock Exams Results', color: 'orange' },
+              { key: 'kcse', label: 'KCSE Results', color: 'orange' }
+            ].map((exam) => (
+              <div key={exam.key} className="w-full max-w-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <FaAward className="text-orange-600" />
+                    <span className="text-base">{exam.label}</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <div className="w-24">
+                      <input
+                        type="number"
+                        min="2000"
+                        max="2100"
+                        value={examMetadata[`${exam.key}Year`]}
+                        onChange={(e) => handleExamMetadataChange(`${exam.key}Year`, e.target.value)}
+                        placeholder="Year"
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                      />
+                    </div>
+                    <div className="w-32">
+                      <select
+                        value={examMetadata[`${exam.key}Term`]}
+                        onChange={(e) => handleExamMetadataChange(`${exam.key}Term`, e.target.value)}
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                      >
+                        <option value="">Select Term</option>
+                        <option value="Term 1">Term 1</option>
+                        <option value="Term 2">Term 2</option>
+                        <option value="Term 3">Term 3</option>
+                        <option value="Annual">Annual</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    value={examMetadata[`${exam.key}Description`]}
+                    onChange={(e) => handleExamMetadataChange(`${exam.key}Description`, e.target.value)}
+                    placeholder="Description of these results..."
+                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
+                  />
+                </div>
+                <ModernPdfUpload
+                  pdfFile={formData[`${exam.key}Pdf`]}
+                  onPdfChange={(file, year, description, term) => {
+                    handleFileChange(`${exam.key}Pdf`, file, year, description, term);
+                  }}
+                  onRemove={() => handleFileRemove(`${exam.key}Pdf`)}
+                  label={`${exam.label} PDF`}
+                  type="results"
+                />
+              </div>
+            ))}
+          </div>
+        );
+      
+      case 4: // Additional Documents
+        return (
+          <div className="space-y-6">
+            <div className="w-full max-w-2xl">
+              <AdditionalResultsUpload 
+                files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
+                onFilesChange={(newFiles) => {
+                  const newFileObjects = newFiles.filter(newFile => 
+                    !additionalFiles.some(f => f.file === newFile)
+                  ).map(file => ({
+                    file,
+                    filename: file.name,
+                    year: '',
+                    term: '',
+                    description: '',
+                    isNew: true,
+                    isModified: true
+                  }));
+                  
+                  setAdditionalFiles(prev => [...prev, ...newFileObjects]);
+                }}
+                label="Additional Documents"
+                existingFiles={documents?.additionalDocuments || []}
+              />
+            </div>
+          </div>
+        );
+      
+      case 5: // Review Step
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-500 text-white rounded-xl">
+                  <FaClipboardList className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
+                  <p className="text-sm text-gray-600 font-bold">
+                    Review all selected documents before submission
+                  </p>
+                </div>
+              </div>
+              
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
+                  <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
+                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Storage Used</p>
+                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getPercentage().toFixed(1)}%</p>
+                </div>
+              </div>
+              
+              {/* Document Summary */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <FaList className="text-blue-600" />
+                  Document Summary
+                </h4>
+                
+                {/* Curriculum */}
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaBook className="text-red-500" />
+                      <span className="font-bold text-gray-900">Curriculum Document</span>
+                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      getDocumentStatus('curriculumPDF').status === 'new' 
+                        ? 'bg-green-100 text-green-800' 
+                        : getDocumentStatus('curriculumPDF').status === 'existing'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {getDocumentStatus('curriculumPDF').status === 'new' ? 'NEW' : 
+                       getDocumentStatus('curriculumPDF').status === 'existing' ? 'EXISTING' : 'NOT SELECTED'}
+                    </span>
+                  </div>
+                  {getDocumentStatus('curriculumPDF').status !== 'none' && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {getDocumentStatus('curriculumPDF').name}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Fee Structures */}
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <FaMoneyBillWave className="text-green-500" />
+                      <span className="font-bold text-gray-900">Fee Structures</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Day School Fees</span>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        getDocumentStatus('feesDayDistributionPdf').status === 'new' 
+                          ? 'bg-green-100 text-green-800' 
+                          : getDocumentStatus('feesDayDistributionPdf').status === 'existing'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {getDocumentStatus('feesDayDistributionPdf').status === 'new' ? 'NEW' : 
+                         getDocumentStatus('feesDayDistributionPdf').status === 'existing' ? 'EXISTING' : 'NOT SELECTED'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Boarding School Fees</span>
+                      <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                        getDocumentStatus('feesBoardingDistributionPdf').status === 'new' 
+                          ? 'bg-green-100 text-green-800' 
+                          : getDocumentStatus('feesBoardingDistributionPdf').status === 'existing'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {getDocumentStatus('feesBoardingDistributionPdf').status === 'new' ? 'NEW' : 
+                         getDocumentStatus('feesBoardingDistributionPdf').status === 'existing' ? 'EXISTING' : 'NOT SELECTED'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Additional Documents */}
+                {additionalFiles.filter(f => !f.isRemoved && f.file).length > 0 && (
+                  <div className="bg-white rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FaFile className="text-gray-600" />
+                        <span className="font-bold text-gray-900">Additional Documents</span>
+                      </div>
+                      <span className="text-xs font-bold text-gray-600">
+                        {additionalFiles.filter(f => !f.isRemoved && f.file).length} files
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {additionalFiles.slice(0, 3).map((file, index) => (
+                        !file.isRemoved && file.file && (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                              {file.filename || file.name}
+                            </span>
+                            {file.year && (
+                              <span className="text-xs text-gray-500">
+                                {file.year} {file.term}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      ))}
+                      {additionalFiles.filter(f => !f.isRemoved && f.file).length > 3 && (
+                        <p className="text-xs text-gray-500 text-center">
+                          + {additionalFiles.filter(f => !f.isRemoved && f.file).length - 3} more documents
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Confirmation Checkbox */}
+              <div className="mt-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 mb-1">
+                      I confirm that I have reviewed all documents and they are accurate
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+      
       default:
         return null;
     }
@@ -3018,160 +3401,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 
         <div className="max-h-[calc(95vh-280px)] overflow-y-auto scrollbar-custom p-6">
           <form onSubmit={handleFormSubmit} className="space-y-8">
-            {currentStep === 0 && (
-              <div className="space-y-6">
-                <div className="w-full max-w-2xl">
-                  <ModernPdfUpload
-                    pdfFile={formData.curriculumPDF}
-                    onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
-                    onRemove={() => handleFileRemove('curriculumPDF')}
-                    label="Curriculum PDF"
-                    existingPdf={getExistingPdfData('curriculumPDF')}
-                    type="curriculum"
-                  />
-                </div>
-              </div>
-            )}
-
-            {currentStep === 1 && (
-              <div className="space-y-8">
-                <div className="w-full max-w-2xl">
-                  <ModernPdfUpload
-                    pdfFile={formData.feesDayDistributionPdf}
-                    onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
-                    onRemove={() => handleFileRemove('feesDayDistributionPdf')}
-                    label="Day School Fees PDF"
-                    existingPdf={getExistingPdfData('feesDayDistributionPdf')}
-                    feeBreakdown={feeBreakdowns.feesDay}
-                    onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
-                    type="day"
-                  />
-                </div>
-                
-                <div className="w-full max-w-2xl">
-                  <ModernPdfUpload
-                    pdfFile={formData.feesBoardingDistributionPdf}
-                    onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
-                    onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
-                    label="Boarding School Fees PDF"
-                    existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
-                    feeBreakdown={feeBreakdowns.feesBoarding}
-                    onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
-                    type="boarding"
-                  />
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="w-full max-w-2xl">
-                  <ModernPdfUpload
-                    pdfFile={formData.admissionFeePdf}
-                    onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
-                    onRemove={() => handleFileRemove('admissionFeePdf')}
-                    label="Admission Fee PDF"
-                    existingPdf={getExistingPdfData('admissionFeePdf')}
-                    feeBreakdown={feeBreakdowns.admissionFee}
-                    onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
-                    type="admission"
-                  />
-                </div>
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="space-y-8">
-                {[
-                  { key: 'form1Results', label: 'Form 1 Results', color: 'orange' },
-                  { key: 'form2Results', label: 'Form 2 Results', color: 'orange' },
-                  { key: 'form3Results', label: 'Form 3 Results', color: 'orange' },
-                  { key: 'form4Results', label: 'Form 4 Results', color: 'orange' },
-                  { key: 'mockExams', label: 'Mock Exams Results', color: 'orange' },
-                  { key: 'kcse', label: 'KCSE Results', color: 'orange' }
-                ].map((exam) => (
-                  <div key={exam.key} className="w-full max-w-2xl">
-                    <div className="flex items-center justify-between mb-4">
-                      <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                        <FaAward className="text-orange-600" />
-                        <span className="text-base">{exam.label}</span>
-                      </label>
-                      <div className="flex gap-2">
-                        <div className="w-24">
-                          <input
-                            type="number"
-                            min="2000"
-                            max="2100"
-                            value={examMetadata[`${exam.key}Year`]}
-                            onChange={(e) => handleExamMetadataChange(`${exam.key}Year`, e.target.value)}
-                            placeholder="Year"
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                          />
-                        </div>
-                        <div className="w-32">
-                          <select
-                            value={examMetadata[`${exam.key}Term`]}
-                            onChange={(e) => handleExamMetadataChange(`${exam.key}Term`, e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                          >
-                            <option value="">Select Term</option>
-                            <option value="Term 1">Term 1</option>
-                            <option value="Term 2">Term 2</option>
-                            <option value="Term 3">Term 3</option>
-                            <option value="Annual">Annual</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mb-3">
-                      <input
-                        type="text"
-                        value={examMetadata[`${exam.key}Description`]}
-                        onChange={(e) => handleExamMetadataChange(`${exam.key}Description`, e.target.value)}
-                        placeholder="Description of these results..."
-                        className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                      />
-                    </div>
-                    <ModernPdfUpload
-                      pdfFile={formData[`${exam.key}Pdf`]}
-                      onPdfChange={(file, year, description, term) => {
-                        handleFileChange(`${exam.key}Pdf`, file, year, description, term);
-                      }}
-                      onRemove={() => handleFileRemove(`${exam.key}Pdf`)}
-                      label={`${exam.label} PDF`}
-                      type="results"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div className="w-full max-w-2xl">
-                  <AdditionalResultsUpload 
-                    files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-                    onFilesChange={(newFiles) => {
-                      const newFileObjects = newFiles.filter(newFile => 
-                        !additionalFiles.some(f => f.file === newFile)
-                      ).map(file => ({
-                        file,
-                        filename: file.name,
-                        year: '',
-                        term: '',
-                        description: '',
-                        isNew: true,
-                        isModified: true
-                      }));
-                      
-                      setAdditionalFiles(prev => [...prev, ...newFileObjects]);
-                    }}
-                    label="Additional Documents"
-                    existingFiles={documents?.additionalDocuments || []}
-                  />
-                </div>
-              </div>
-            )}
+            {renderStepContent()}
 
             <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
@@ -3202,9 +3432,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   </button>
                 ) : (
                   <button 
-                    type="submit"
-                    disabled={actionLoading}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 flex items-center justify-center gap-2 w-full sm:w-auto"
+                    type="button"
+                    onClick={handleSubmitAfterReview}
+                    disabled={actionLoading || !confirmed}
+                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
                     {actionLoading ? (
                       <>
