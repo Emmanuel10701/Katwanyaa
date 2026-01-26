@@ -1383,7 +1383,6 @@ export default function SchoolInfoPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     loadSchoolInfo();
@@ -1403,6 +1402,14 @@ export default function SchoolInfoPage() {
       setLoading(false);
     }
   };
+
+  // Function to check if school info exists
+  const hasSchoolInfo = schoolInfo && (
+    schoolInfo.name ||
+    schoolInfo.description ||
+    schoolInfo.studentCount ||
+    schoolInfo.staffCount
+  );
 
   const handleSaveSchool = async (schoolData) => {
     try {
@@ -1435,41 +1442,6 @@ export default function SchoolInfoPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
       <Toaster position="top-right" richColors />
 
-      <style jsx global>{`
-        .scrollbar-custom {
-          scrollbar-width: thin;
-          scrollbar-color: #4f46e5 #e5e7eb;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-track {
-          background: #e5e7eb;
-          border-radius: 4px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb {
-          background: #4f46e5;
-          border-radius: 4px;
-        }
-        
-        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-          background: #4338ca;
-        }
-      `}</style>
-
-      {schoolInfo?.videoTour && (
-        <VideoModal
-          open={showVideoModal}
-          onClose={() => setShowVideoModal(false)}
-          videoType={schoolInfo.videoType}
-          videoPath={schoolInfo.videoTour}
-          thumbnail={schoolInfo.videoThumbnail}
-        />
-      )}
-
       {/* MODERN HEADER */}
       <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
         <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -1485,18 +1457,17 @@ export default function SchoolInfoPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-                    Verified Institution
+                    School Management
                   </span>
-                  <FaShieldAlt className="text-blue-300 text-[10px]" />
                 </div>
                 <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
-                  {schoolInfo?.name || 'School Information'}
+                  School Information
                 </h1>
               </div>
             </div>
             
             <p className="text-blue-50/80 text-sm md:text-lg font-bold max-w-2xl leading-relaxed">
-              Manage school identity, academic calendar, admission details, and institutional information.
+              {hasSchoolInfo ? 'Manage your school profile and information' : 'Set up your school information to get started'}
             </p>
           </div>
 
@@ -1513,11 +1484,11 @@ export default function SchoolInfoPage() {
                 <FaChartBar className="text-sm" /> 
               )}
               <span className="whitespace-nowrap font-bold">
-                {loading ? 'Syncing...' : 'Refresh Info'}
+                {loading ? 'Syncing...' : 'Refresh'}
               </span>
             </button>
             
-            {schoolInfo && (
+            {hasSchoolInfo && (
               <button 
                 onClick={() => setShowDeleteModal(true)} 
                 className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-bold text-sm active:scale-[0.98]"
@@ -1531,15 +1502,15 @@ export default function SchoolInfoPage() {
               onClick={() => setShowModal(true)} 
               className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
             >
-              {schoolInfo ? (
+              {hasSchoolInfo ? (
                 <>
                   <FaEdit className="text-sm" />
-                  <span className="whitespace-nowrap font-bold">Update Profile</span>
+                  <span className="whitespace-nowrap font-bold">Edit Info</span>
                 </>
               ) : (
                 <>
                   <FaPlus className="text-sm" />
-                  <span className="whitespace-nowrap font-bold">Initialize</span>
+                  <span className="whitespace-nowrap font-bold">Add School Info</span>
                 </>
               )}
             </button>
@@ -1547,360 +1518,71 @@ export default function SchoolInfoPage() {
         </div>
       </div>
 
-      {schoolInfo ? (
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow border border-gray-200 p-4 md:p-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-              <div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-2 border-blue-50 rounded-xl shadow-sm hover:border-blue-200 transition-colors">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FaGraduationCap className="text-blue-600 text-lg" />
-                    </div>
-                    <span className="text-slate-800 text-[15px] font-bold tracking-tight">
-                      {schoolInfo.studentCount?.toLocaleString()} <span className="text-slate-500 font-bold">Students</span>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2.5 px-4 py-3 bg-white border-2 border-green-50 rounded-xl shadow-sm hover:border-green-200 transition-colors">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <FaChalkboardTeacher className="text-green-600 text-lg" />
-                    </div>
-                    <span className="text-slate-800 text-[15px] font-bold tracking-tight">
-                      {schoolInfo.staffCount?.toLocaleString()} <span className="text-slate-500 font-bold">Staff</span>
-                    </span>
-                  </div>
-
-                  {schoolInfo.motto && (
-                    <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50/40 border-2 border-amber-100/50 rounded-xl shadow-sm">
-                      <FaQuoteLeft className="text-amber-500 text-sm" />
-                      <span className="text-amber-900 text-[15px] font-bold italic tracking-wide">
-                        "{schoolInfo.motto}"
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            {schoolInfo.description && (
-              <div className="mb-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-2 h-6 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
-                  <h3 className="text-base font-bold text-gray-900">School Overview</h3>
-                </div>
-                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-                  <p className="text-gray-700 text-base leading-relaxed tracking-tight font-bold">{schoolInfo.description}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="mb-10">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full"></div>
-                <h3 className="text-base font-bold text-gray-900">Our Guiding Principles</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {schoolInfo.vision && (
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white to-blue-50/50 p-6 border border-blue-100/80 shadow-[0_4px_20px_rgba(59,130,246,0.08)]">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-blue-500/5 to-transparent rounded-bl-full"></div>
-                    
-                    <div className="relative flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-                        <FaEye className="text-white text-lg" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-base font-bold text-gray-900">Our Vision</h4>
-                          <div className="w-8 h-0.5 bg-blue-200 rounded-full"></div>
-                        </div>
-                        <p className="text-gray-700 text-base leading-relaxed pl-0.5 font-bold">{schoolInfo.vision}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute bottom-4 left-4 w-8 h-1 bg-gradient-to-r from-blue-500/30 to-blue-400/10 rounded-full"></div>
-                  </div>
-                )}
-                
-                {schoolInfo.mission && (
-                  <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white to-emerald-50/50 p-6 border border-emerald-100/80 shadow-[0_4px_20px_rgba(16,185,129,0.08)]">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-bl-full"></div>
-                    
-                    <div className="relative flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md">
-                        <FaRocket className="text-white text-lg" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-base font-bold text-gray-900">Our Mission</h4>
-                          <div className="w-8 h-0.5 bg-emerald-200 rounded-full"></div>
-                        </div>
-                        <p className="text-gray-700 text-base leading-relaxed pl-0.5 font-bold">{schoolInfo.mission}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="absolute bottom-4 left-4 w-8 h-1 bg-gradient-to-r from-emerald-500/30 to-emerald-400/10 rounded-full"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {schoolInfo.videoTour && (
-              <div className="mb-6">
-                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <FaVideo className="text-red-500" />
-                  Video Tour
-                </h3>
-                <div className="max-w-md">
-                  <VideoThumbnail
-                    videoType={schoolInfo.videoType}
-                    videoPath={schoolInfo.videoTour}
-                    thumbnail={schoolInfo.videoThumbnail}
-                    onClick={() => setShowVideoModal(true)}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="mb-10 space-y-6">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100 shadow-sm transition-transform hover:scale-100">
-                  <FaGraduationCap className="text-purple-600 text-xl" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Academic Information</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Institutional Milestones & Curriculum</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-300 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-blue-50/50 rounded-bl-[60px] -z-0 group-hover:bg-blue-100/60 transition-colors" />
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-5">
-                      <FaCalendarAlt className="text-blue-500" />
-                      <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Academic Calendar</h4>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <FaClock className="text-[10px] text-emerald-500" />
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">Opening</span>
-                        </div>
-                        <span className="text-sm font-bold text-slate-900">
-                          {new Date(schoolInfo.openDate).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric'
-                          })}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between items-center p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <FaClock className="text-[10px] text-rose-500" />
-                          <span className="text-[11px] font-bold text-slate-400 uppercase">Closing</span>
-                        </div>
-                        <span className="text-sm font-bold text-slate-900">
-                          {new Date(schoolInfo.closeDate).toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {Array.isArray(schoolInfo.subjects) && schoolInfo.subjects.length > 0 && (
-                  <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-purple-100/50 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-purple-50/50 rounded-bl-[60px] -z-0 group-hover:bg-purple-100/60 transition-colors" />
-                    
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-5">
-                        <FaBookOpen className="text-purple-500" />
-                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Subjects Offered</h4>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {schoolInfo.subjects.map((subject, index) => (
-                          <span 
-                            key={index} 
-                            className="bg-white hover:bg-purple-600 hover:text-white border border-purple-100 text-purple-700 px-3 py-2 rounded-xl text-[11px] font-bold transition-all cursor-default shadow-sm"
-                          >
-                            {subject}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {Array.isArray(schoolInfo.departments) && schoolInfo.departments.length > 0 && (
-                  <div className="group bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-orange-100/50 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-orange-50/50 rounded-bl-[60px] -z-0 group-hover:bg-orange-100/60 transition-colors" />
-                    
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-5">
-                        <FaUsersCog className="text-orange-500" />
-                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-tighter">Departments</h4>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {schoolInfo.departments.map((dept, index) => (
-                          <span 
-                            key={index} 
-                            className="bg-slate-900 text-white px-3 py-2 rounded-xl text-[11px] font-bold hover:bg-orange-500 transition-colors shadow-lg shadow-slate-200"
-                          >
-                            {dept}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {(schoolInfo.admissionOpenDate || schoolInfo.admissionContactEmail) && (
-              <div className="mb-10 relative">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-200">
-                      <FaUserCheck className="text-white text-xl" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight">Admission Details</h3>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Enrolment & Direct Inquiry</p>
-                    </div>
-                  </div>
-                  
-                  {schoolInfo.admissionCloseDate && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-tighter">Admissions Active</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                  <div className="lg:col-span-2 group bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] p-6 shadow-xl relative overflow-hidden">
-                    <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-100 transition-transform duration-500">
-                      <FaCalendarAlt size={120} className="text-white" />
-                    </div>
-                    
-                    <div className="relative z-10">
-                      <h4 className="text-xs font-bold text-orange-400 uppercase tracking-[0.2em] mb-6">Timeline</h4>
-                      
-                      <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                            <FaArrowRight className="text-white text-xs rotate-[-45deg]" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">Registration Opens</p>
-                            <p className="text-lg font-bold text-white">
-                              {new Date(schoolInfo.admissionOpenDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
-                            <FaHourglassHalf className="text-orange-400 text-xs" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase">Closing Deadline</p>
-                            <p className="text-lg font-bold text-white">
-                              {new Date(schoolInfo.admissionCloseDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-3 bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Inquiry Suite</h4>
-                        {schoolInfo.admissionCapacity && (
-                          <div className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                            <FaUsers className="text-slate-400 text-xs" />
-                            <span className="text-[11px] font-bold text-slate-700">{schoolInfo.admissionCapacity.toLocaleString()} Slots</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {schoolInfo.admissionContactEmail && (
-                          <a href={`mailto:${schoolInfo.admissionContactEmail}`} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:text-blue-600 transition-colors">
-                              <FaEnvelope size={12} />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Email Registry</p>
-                              <p className="text-xs font-bold text-slate-700 truncate">{schoolInfo.admissionContactEmail}</p>
-                            </div>
-                          </a>
-                        )}
-
-                        {schoolInfo.admissionContactPhone && (
-                          <a href={`tel:${schoolInfo.admissionContactPhone}`} className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group">
-                            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm group-hover:text-emerald-600 transition-colors">
-                              <FaPhone size={12} />
-                            </div>
-                            <div>
-                              <p className="text-[9px] font-bold text-slate-400 uppercase">Direct Line</p>
-                              <p className="text-xs font-bold text-slate-700">{schoolInfo.admissionContactPhone}</p>
-                            </div>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-
-                    {schoolInfo.admissionWebsite && (
-                      <div className="mt-6">
-                        <a 
-                          href={schoolInfo.admissionWebsite} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-between bg-slate-900 hover:bg-slate-800 text-white p-4 rounded-2xl transition-all group shadow-lg shadow-slate-200"
-                        >
-                          <div className="flex items-center gap-3">
-                            <FaGlobe className="text-blue-400" />
-                            <span className="text-xs font-bold uppercase tracking-widest">Portal Access</span>
-                          </div>
-                          <FaArrowRight className="text-slate-500 group-hover:translate-x-1 transition-transform" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+      {/* NO SCHOOL INFORMATION FOUND - SIMPLE MODERN VERSION */}
+      {!hasSchoolInfo ? (
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
+            <FaSchool className="w-12 h-12 text-blue-600" />
           </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow border border-gray-200 p-6 text-center">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 border border-blue-100">
-            <FaSchool className="w-8 h-8 text-blue-600" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">No School Information Found</h3>
-          <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-            Set up your school information to showcase your institution to students and parents.
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Information Yet</h3>
+          <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
+            Start by adding your school details to showcase your institution
           </p>
           <button 
             onClick={() => setShowModal(true)} 
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow flex items-center gap-2 mx-auto text-sm cursor-pointer"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
           >
-            <FaPlus /> Create School Information
+            <FaPlus className="text-lg" /> 
+            <span>Add School Information</span>
           </button>
+        </div>
+      ) : (
+        // SIMPLE SCHOOL INFORMATION DISPLAY (if you want to show minimal info)
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{schoolInfo.name}</h2>
+              {schoolInfo.motto && (
+                <p className="text-gray-600 italic mt-1 font-bold">"{schoolInfo.motto}"</p>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              {schoolInfo.studentCount && (
+                <div className="bg-blue-50 px-4 py-2 rounded-lg">
+                  <p className="text-sm text-gray-600 font-bold">Students</p>
+                  <p className="text-lg font-bold text-blue-700">{schoolInfo.studentCount}</p>
+                </div>
+              )}
+              {schoolInfo.staffCount && (
+                <div className="bg-green-50 px-4 py-2 rounded-lg">
+                  <p className="text-sm text-gray-600 font-bold">Staff</p>
+                  <p className="text-lg font-bold text-green-700">{schoolInfo.staffCount}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {schoolInfo.description && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">About</h3>
+              <p className="text-gray-700">{schoolInfo.description}</p>
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <button 
+              onClick={() => setShowModal(true)}
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold flex items-center gap-2"
+            >
+              <FaEdit /> Edit Information
+            </button>
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-200 font-bold flex items-center gap-2"
+            >
+              <FaTrash /> Delete
+            </button>
+          </div>
         </div>
       )}
 
