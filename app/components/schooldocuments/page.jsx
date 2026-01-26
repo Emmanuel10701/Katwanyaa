@@ -179,7 +179,6 @@ function ModernLoadingSpinner({ message = "Loading school documents...", size = 
   );
 }
 
-// Document Management Actions Component
 function DocumentActionsMenu({ documentId, onEdit, onDelete, onView }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
