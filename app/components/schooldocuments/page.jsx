@@ -1584,7 +1584,7 @@ function ModernPdfUpload({
               {dragOver ? '📄 Drop file here!' : isReplacing ? 'Select replacement file' : 'Click to upload file'}
             </p>
             <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
-              Max: 4.5MB • PDF, DOC, DOCX only
+              Max: 500KB • PDF, DOC, DOCX only
             </p>
             <input 
               ref={fileInputRef}
@@ -1636,7 +1636,6 @@ function ModernPdfUpload({
   );
 }
 
-// Enhanced Additional Results Upload with Metadata Modal and Preview Section
 // First, update the AdditionalResultsUpload component to properly pass data to parent
 function AdditionalResultsUpload({ 
   files = [], 
@@ -2200,7 +2199,7 @@ function AdditionalResultsUpload({
           {dragOver ? '📁 Drop files here!' : 'Drag & drop or click to upload documents'}
         </p>
         <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
-          PDF, DOC, DOCX only • Max 4.5MB each
+          PDF, DOC, DOCX only • Max 500kb each
         </p>
         <input 
           ref={fileInputRef}
