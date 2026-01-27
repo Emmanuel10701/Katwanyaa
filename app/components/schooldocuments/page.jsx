@@ -3495,33 +3495,42 @@ export default function SchoolDocumentsPage() {
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const docsResponse = await fetch(`/api/schooldocuments`);
-      
-      if (docsResponse.ok) {
-        const docsData = await docsResponse.json();
-        
-        // FIXED: Properly extract document data from API response
-        if (docsData.success && docsData.document) {
-          setDocuments(docsData.document);
-        } else if (docsData.success && docsData) {
-          // If the API returns data directly (not nested in document property)
-          setDocuments(docsData);
-        } else {
-          setDocuments(null);
-        }
-      } else {
-        setDocuments(null);
-      }
-    } catch (error) {
-      console.error('Error loading data:', error);
+const loadData = async () => {
+  try {
+    setLoading(true);
+    const docsResponse = await fetch(`/api/schooldocuments`);
+    
+    console.log('Response status:', docsResponse.status);
+    console.log('Response headers:', Object.fromEntries(docsResponse.headers.entries()));
+    
+    // First, get the response as text to debug
+    const responseText = await docsResponse.text();
+    console.log('Raw response:', responseText.substring(0, 200)); // First 200 chars
+    
+    // Check if response is HTML
+    if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+      console.error('API returned HTML instead of JSON. API route might not exist.');
       setDocuments(null);
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+    
+    // Try to parse as JSON
+    const docsData = JSON.parse(responseText);
+    
+    if (docsData.success && docsData.document) {
+      setDocuments(docsData.document);
+    } else if (docsData.success && docsData) {
+      setDocuments(docsData);
+    } else {
+      setDocuments(null);
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    setDocuments(null);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteDocument = async () => {
     try {
