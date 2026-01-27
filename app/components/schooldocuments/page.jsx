@@ -320,7 +320,7 @@ function FeeBreakdownModal({
   const [errors, setErrors] = useState([]);
 
   useEffect(() => {
-    const total = categories.reduce((sum, cat) => sum + (cat.amount || 0), 0);
+const total = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat.amount || 0), 0) : 0;
     setTotalAmount(total);
   }, [categories]);
 
@@ -630,7 +630,7 @@ function AdmissionFeeBreakdownModal({
   const [errors, setErrors] = useState([]);
 
   useEffect(() => {
-    const total = categories.reduce((sum, cat) => sum + (cat.amount || 0), 0);
+const total = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat.amount || 0), 0) : 0;
     setTotalAmount(total);
   }, [categories]);
 
@@ -2749,11 +2749,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
-// Initialize additionalFiles state - FIXED VERSION
 const [additionalFiles, setAdditionalFiles] = useState(() => {
   if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
     return documents.additionalDocuments.map((doc, index) => ({
-      id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}_${index}`,
+      id: `existing_${doc.id || `doc_${Date.now()}_${index}`}`,
       filename: doc.filename,
       filepath: doc.filepath,
       filetype: doc.filetype,
@@ -2836,9 +2835,6 @@ const handleSubmitAfterReview = async () => {
     
     const data = new FormData();
     
-    // Debug: Log all additional files
-    console.log('All additional files:', additionalFiles);
-    
     // Add PDF files
     Object.keys(formData).forEach(key => {
       if (formData[key]) {
@@ -2890,33 +2886,49 @@ const handleSubmitAfterReview = async () => {
       }
     });
     
-// Initialize additionalFiles state - FIXED VERSION
-const [additionalFiles, setAdditionalFiles] = useState(() => {
-  if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
-    return documents.additionalDocuments.map((doc, index) => ({
-      id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}_${index}`,
-      filename: doc.filename,
-      filepath: doc.filepath,
-      filetype: doc.filetype,
-      description: doc.description,
-      year: doc.year,
-      term: doc.term,
-      filesize: doc.filesize,
-      isExisting: true,
-      isModified: false,
-      isRemoved: false,
-      isReplaced: false,
-      originalFilePath: doc.filepath,
-      status: 'existing',
-      uploadDate: doc.uploadedAt || doc.uploadDate
-    }));
-  }
-  return [];
-});
-    // Debug: Log what's being sent
+    // Handle additional documents properly
+    const activeAdditionalFiles = additionalFiles.filter(f => !f.isRemoved);
+    
+    if (activeAdditionalFiles.length > 0) {
+      // Separate new files and existing files
+      const newAdditionalFiles = activeAdditionalFiles.filter(f => f.isNew && f.file);
+      const existingAdditionalFiles = activeAdditionalFiles.filter(f => f.isExisting && !f.isReplaced);
+      
+      // Add new additional files
+      newAdditionalFiles.forEach((file, index) => {
+        if (file.file && file.file instanceof File) {
+          data.append(`additionalFiles[${index}]`, file.file);
+          if (file.year) data.append(`additionalFiles[${index}].year`, file.year);
+          if (file.term) data.append(`additionalFiles[${index}].term`, file.term);
+          if (file.description) data.append(`additionalFiles[${index}].description`, file.description);
+          data.append(`additionalFiles[${index}].filename`, file.filename);
+        }
+      });
+      
+      // Add existing additional file references (IDs)
+      const existingFileIds = existingAdditionalFiles
+        .filter(f => f.id && f.id.startsWith('existing_'))
+        .map(f => f.id.replace('existing_', ''));
+      
+      if (existingFileIds.length > 0) {
+        data.append('existingAdditionalFileIds', JSON.stringify(existingFileIds));
+      }
+      
+      // Add files marked for deletion
+      const filesToDelete = additionalFiles.filter(f => f.isRemoved && f.id);
+      const deleteFileIds = filesToDelete
+        .filter(f => f.id.startsWith('existing_'))
+        .map(f => f.id.replace('existing_', ''));
+      
+      if (deleteFileIds.length > 0) {
+        data.append('deleteAdditionalFileIds', JSON.stringify(deleteFileIds));
+      }
+    }
+    
+    // Debug logging
     console.log('=== FORM DATA BEING SENT TO BACKEND ===');
-    console.log('Total additional files:', newAdditionalFiles.length);
-    console.log('Files to delete:', additionalDocsToDelete.length);
+    console.log('Total active additional files:', additionalFiles.filter(f => !f.isRemoved).length);
+    console.log('Files to delete:', additionalFiles.filter(f => f.isRemoved).length);
     
     for (let [key, value] of data.entries()) {
       if (value instanceof File) {
