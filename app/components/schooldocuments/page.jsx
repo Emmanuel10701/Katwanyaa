@@ -3527,14 +3527,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
 }
 
 // Helper functions for file display
-const getFileIcon = (fileType) => {
-  if (!fileType) return <FaFile className="text-gray-500" />;
-  const type = fileType.toLowerCase();
-  if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
-  if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-  if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-  return <FaFile className="text-gray-500" />;
-};
+
 
 const formatFileSize = (bytes) => {
   if (!bytes || bytes === 0) return '0 Bytes';
