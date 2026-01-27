@@ -742,9 +742,11 @@ const ModernFeeCard = ({
   distribution, 
   pdfPath, 
   pdfName, 
+  description,
+  year,
+  term,
   icon: Icon, 
   gradient, 
-  term = "Annual",
   badge,
   features = []
 }) => {
@@ -766,7 +768,10 @@ const ModernFeeCard = ({
             </div>
             <div>
               <h3 className="text-xl md:text-2xl font-bold">{feeType}</h3>
-              <p className="text-white/80 text-sm">{term} Fee Structure</p>
+              <p className="text-white/80 text-sm">{year} {term} Fee Structure</p>
+              {description && (
+                <p className="text-white/70 text-xs mt-1 italic">{description}</p>
+              )}
             </div>
           </div>
           
@@ -779,13 +784,50 @@ const ModernFeeCard = ({
         
         {/* Total Fee Display */}
         <div className="text-center py-4 border-t border-white/20">
-          <div className="text-sm font-medium text-white/90 mb-1">Total {term} Fees</div>
+          <div className="text-sm font-medium text-white/90 mb-1">Total Fees</div>
           <div className="text-3xl md:text-5xl font-black">KSh {total?.toLocaleString() || '0'}</div>
         </div>
       </div>
       
       {/* Content Section */}
       <div className="p-4 md:p-6">
+        {/* Fee Breakdown */}
+        {distribution && Object.keys(distribution).length > 0 && (
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"></div>
+              <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fee Breakdown</h4>
+            </div>
+            
+            {Object.entries(distribution).slice(0, 5).map(([category, amount], idx) => (
+              <div 
+                key={idx}
+                className="flex items-center justify-between p-3 bg-white border border-slate-200/60 rounded-xl transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradient}`}></div>
+                  <span className="font-medium text-slate-700 text-sm capitalize">
+                    {typeof category === 'string' ? 
+                      category.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ') : 
+                      category}
+                  </span>
+                </div>
+                <span className="font-bold text-slate-900">
+                  KSh {parseInt(amount || 0).toLocaleString()}
+                </span>
+              </div>
+            ))}
+            
+            {Object.keys(distribution).length > 5 && (
+              <div className="text-center pt-2">
+                <span className="text-xs text-slate-400 font-medium">
+                  +{Object.keys(distribution).length - 5} more items in PDF
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Features List */}
         {features.length > 0 && (
           <div className="mb-6">
@@ -804,39 +846,6 @@ const ModernFeeCard = ({
           </div>
         )}
         
-        {/* Fee Breakdown */}
-        {distribution && (
-          <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400"></div>
-              <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fee Breakdown</h4>
-            </div>
-            
-            {Object.entries(distribution).slice(0, 5).map(([category, amount], idx) => (
-              <div 
-                key={idx}
-                className="flex items-center justify-between p-3 bg-white border border-slate-200/60 rounded-xl transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradient}`}></div>
-                  <span className="font-medium text-slate-700 text-sm capitalize">
-                    {category.replace(/([A-Z])/g, ' $1').trim()}
-                  </span>
-                </div>
-                <span className="font-bold text-slate-900">KSh {parseInt(amount).toLocaleString()}</span>
-              </div>
-            ))}
-            
-            {Object.keys(distribution).length > 5 && (
-              <div className="text-center pt-2">
-                <span className="text-xs text-slate-400 font-medium">
-                  +{Object.keys(distribution).length - 5} more items in PDF
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-        
         {/* Action Section */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-100">
           <div className="text-center sm:text-left">
@@ -845,6 +854,8 @@ const ModernFeeCard = ({
               <a 
                 href={pdfPath} 
                 download={pdfName}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl font-bold transition-all duration-200"
               >
                 <div className="p-2 bg-white/10 rounded-lg transition-transform">
@@ -866,7 +877,6 @@ const ModernFeeCard = ({
     </div>
   );
 };
-
 // Video Tour Component
 const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
   if (!videoTour) return null;
@@ -1035,7 +1045,14 @@ const VisionMissionSection = ({ vision, mission, motto }) => {
 };
 
 // Modernized Uniform Requirements Component
-const ModernUniformRequirementsSection = ({ admissionFeeDistribution, admissionFeePdf, admissionFeePdfName }) => {
+const ModernUniformRequirementsSection = ({ 
+  admissionFeeDistribution, 
+  admissionFeePdf, 
+  admissionFeePdfName,
+  admissionFeeDescription,
+  admissionFeeYear,
+  admissionFeeTerm
+}) => {
   const uniformItems = admissionFeeDistribution || {};
 
   return (
@@ -1052,6 +1069,14 @@ const ModernUniformRequirementsSection = ({ admissionFeeDistribution, admissionF
             <div>
               <h3 className="text-lg md:text-2xl font-bold">Admission Uniform Requirements</h3>
               <p className="text-blue-100 mt-1">Complete kit for academic excellence</p>
+              {admissionFeeDescription && (
+                <p className="text-blue-200 text-xs mt-1 italic">{admissionFeeDescription}</p>
+              )}
+              {(admissionFeeYear || admissionFeeTerm) && (
+                <p className="text-blue-200 text-xs mt-1">
+                  {admissionFeeYear} • {admissionFeeTerm}
+                </p>
+              )}
             </div>
           </div>
           
@@ -1059,6 +1084,8 @@ const ModernUniformRequirementsSection = ({ admissionFeeDistribution, admissionF
             <a 
               href={admissionFeePdf}
               download={admissionFeePdfName}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-white text-blue-600 rounded-xl font-bold transition-all duration-200 shadow-lg"
             >
               <div className="p-2 bg-blue-50 rounded-lg transition-transform">
@@ -1086,12 +1113,14 @@ const ModernUniformRequirementsSection = ({ admissionFeeDistribution, admissionF
                     </div>
                     <div>
                       <h4 className="font-bold text-slate-800 text-sm leading-tight capitalize">
-                        {item.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()}
+                        {typeof item === 'string' ? 
+                          item.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ') : 
+                          item}
                       </h4>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-slate-900">KSh {parseInt(cost).toLocaleString()}</div>
+                    <div className="text-lg font-bold text-slate-900">KSh {parseInt(cost || 0).toLocaleString()}</div>
                   </div>
                 </div>
                 
@@ -1125,27 +1154,23 @@ const ModernUniformRequirementsSection = ({ admissionFeeDistribution, admissionF
                 <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
                   <FiDollarSign className="text-white text-xl" />
                 </div>
-          <div>
-  <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
-    Total Uniform Cost Estimate
-  </h4>
-
-  <p className="text-xs text-slate-500 mb-1">
-    This is an approximate cost covering both boys’ and girls’ uniforms.
-  </p>
-
-  <p className="text-xs text-slate-500 mb-3">
-    Actual expenses may be lower depending on whether the student is a boy or a girl.
-  </p>
-
-  <div className="text-xl md:text-3xl font-bold text-slate-900">
-    KSh{" "}
-    {Object.values(uniformItems)
-      .reduce((sum, cost) => sum + parseInt(cost), 0)
-      .toLocaleString()}
-  </div>
-</div>
-
+                <div>
+                  <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    Total Uniform Cost Estimate
+                  </h4>
+                  <p className="text-xs text-slate-500 mb-1">
+                    This is an approximate cost covering both boys' and girls' uniforms.
+                  </p>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Actual expenses may be lower depending on whether the student is a boy or a girl.
+                  </p>
+                  <div className="text-xl md:text-3xl font-bold text-slate-900">
+                    KSh{" "}
+                    {Object.values(uniformItems)
+                      .reduce((sum, cost) => sum + parseInt(cost || 0), 0)
+                      .toLocaleString()}
+                  </div>
+                </div>
               </div>
               
               <div className="flex items-center gap-4 text-sm text-slate-500">
@@ -1449,25 +1474,36 @@ export default function ComprehensiveAdmissions() {
     }
   ];
 
-  // Fetch school data from API
-  useEffect(() => {
-    const fetchSchoolData = async () => {
+ useEffect(() => {
+    const fetchAllData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/school');
-        const data = await response.json();
-        if (data.success) {
-          setSchoolData(data.school);
+        // Fetch school data
+        const schoolResponse = await fetch('/api/school');
+        if (schoolResponse.ok) {
+          const schoolData = await schoolResponse.json();
+          if (schoolData.success) {
+            setSchoolData(schoolData.school);
+          }
+        }
+
+        // Fetch document data
+        const documentsResponse = await fetch('/api/schooldocuments');
+        if (documentsResponse.ok) {
+          const documentsData = await documentsResponse.json();
+          if (documentsData.success && documentsData.document) {
+            setDocumentData(documentsData.document);
+          }
         }
       } catch (error) {
-        console.error('Error fetching school data:', error);
-        toast.error('Failed to load school information');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSchoolData();
+    fetchAllData();
   }, []);
 
   // Dynamic stats from API data
@@ -2053,16 +2089,26 @@ export default function ComprehensiveAdmissions() {
                     </p>
                   </div>
 
-                  {schoolData?.curriculumPDF && (
-                    <a 
-                      href={schoolData.curriculumPDF}
-                      className="group/btn relative inline-flex items-center gap-4 px-6 py-3 md:px-8 md:py-4 bg-slate-900 text-white rounded-2xl overflow-hidden transition-all"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 transition-opacity duration-300" />
-                      <FiDownload className="relative z-10 text-xl" />
-                      <span className="relative z-10 font-bold tracking-tight">Download Curriculum</span>
-                    </a>
-                  )}
+{documentData?.curriculumPDF && (
+      <a 
+        href={documentData.curriculumPDF}
+        download={documentData.curriculumPdfName}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group/btn relative inline-flex items-center gap-4 px-6 py-3 md:px-8 md:py-4 bg-slate-900 text-white rounded-2xl overflow-hidden transition-all"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 transition-opacity duration-300" />
+        <FiDownload className="relative z-10 text-xl" />
+        <div className="relative z-10">
+          <div className="font-bold text-sm tracking-tight">Download Curriculum</div>
+          {documentData.curriculumYear && (
+            <div className="text-xs opacity-80">
+              {documentData.curriculumYear} • {documentData.curriculumTerm || 'All Terms'}
+            </div>
+          )}
+        </div>
+      </a>
+    )}
                 </div>
               </div>
 
@@ -2298,269 +2344,546 @@ export default function ComprehensiveAdmissions() {
             </div>
           )}
 
-          {/* Modernized Requirements Tab */}
-          {activeTab === 'requirements' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
-              
-              {/* Hero Header */}
-              <div className="text-center mb-8 md:mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-full mb-6">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Admission Checklist</span>
-                </div>
-                <h2 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-                  Application <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Requirements</span>
-                </h2>
-                <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-                  Everything you need to prepare for a successful application journey.
-                </p>
-              </div>
+{activeTab === 'requirements' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
+    
+    {/* Hero Header */}
+    <div className="text-center mb-8 md:mb-12 px-2 md:px-4">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-full mb-6">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+        </span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Admission Checklist</span>
+      </div>
+      <h2 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tight mb-4 px-2">
+        Application <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Requirements</span>
+      </h2>
+      <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto leading-relaxed px-2">
+        Everything you need to prepare for a successful application journey.
+      </p>
+    </div>
 
-              {/* Uniform Requirements - Modern Card */}
-              <ModernUniformRequirementsSection 
-                admissionFeeDistribution={schoolData?.admissionFeeDistribution}
-                admissionFeePdf={schoolData?.admissionFeePdf}
-                admissionFeePdfName={schoolData?.admissionFeePdfName}
-              />
+    {/* Uniform Requirements - Modern Card with API Data */}
+    <ModernUniformRequirementsSection 
+      admissionFeeDistribution={documentData?.admissionFeeDistribution}
+      admissionFeePdf={documentData?.admissionFeePdf}
+      admissionFeePdfName={documentData?.admissionFeePdfName}
+      admissionFeeDescription={documentData?.admissionFeeDescription}
+      admissionFeeYear={documentData?.admissionFeeYear}
+      admissionFeeTerm={documentData?.admissionFeeTerm}
+    />
 
-              {/* Required Documents - Modern Grid */}
-              <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
-                        <IoDocumentTextOutline className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Required Documents</h3>
+    {/* Required Documents - Modern Grid */}
+    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
+        <div>
+          <div className="flex items-center gap-2 md:gap-3 mb-2">
+            <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
+              <IoDocumentTextOutline className="text-white text-lg md:text-xl" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-slate-900">Required Documents</h3>
+          </div>
+          <p className="text-slate-500">Essential paperwork for admission processing</p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
+          <IoCheckmarkCircleOutline className="text-blue-500" />
+          <span>Complete Set</span>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {schoolData?.admissionDocumentsRequired?.length > 0 ? (
+          schoolData.admissionDocumentsRequired.map((doc, index) => (
+            <div 
+              key={index}
+              className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
+            >
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="relative">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                      <IoDocumentTextOutline className="text-white text-xs md:text-sm" />
                     </div>
-                    <p className="text-slate-500">Essential paperwork for admission processing</p>
                   </div>
-                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
-                    <IoCheckmarkCircleOutline className="text-blue-500" />
-                    <span>Complete Set</span>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {schoolData?.admissionDocumentsRequired?.map((doc, index) => (
-                    <div 
-                      key={index}
-                      className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-3 md:gap-4">
-                        <div className="relative">
-                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                            <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                              <IoDocumentTextOutline className="text-white text-xs md:text-sm" />
-                            </div>
-                          </div>
-                          <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">
-                            {index + 1}
-                          </div>
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-slate-800 text-sm leading-tight">{doc}</h4>
-                          <div className="flex items-center gap-1 mt-1">
-                            <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
-                              Required
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Transfer Process - Modern Timeline */}
-              <div className="bg-slate-900 rounded-2xl md:rounded-3xl p-6 md:p-10 text-white">
-                <div className="flex items-center justify-between mb-8 md:mb-10">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-                        <FiArrowRight className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold">Transfer Student Process</h3>
-                    </div>
-                    <p className="text-slate-300">Seamless transition with 4-step verification</p>
-                  </div>
-                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
-                    <FiClock className="text-yellow-400" />
-                    <span className="text-sm font-medium">2-3 Weeks Total</span>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">
+                    {index + 1}
                   </div>
                 </div>
-
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  {transferProcess.map((step, index) => (
-                    <div 
-                      key={index}
-                      className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 transition-all duration-300"
-                    >
-                      {/* Step Number */}
-                      <div className="absolute -top-2 -left-2 md:-top-3 md:-left-3 w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg">
-                        {step.step}
-                      </div>
-                      
-                      {/* Step Content */}
-                      <div className="space-y-3 md:space-y-4">
-                        <div className="flex items-start justify-between">
-                          <h4 className="text-base md:text-lg font-bold leading-tight">{step.title}</h4>
-                          <div className="flex items-center gap-1 text-yellow-300 text-xs font-bold">
-                            <FiClock className="text-sm" />
-                            {step.duration}
-                          </div>
-                        </div>
-                        
-                        <p className="text-slate-300 text-sm leading-relaxed">{step.description}</p>
-                        
-                        {/* Requirements List */}
-                        <div className="space-y-2 pt-3 md:pt-4 border-t border-white/10">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Requirements</span>
-                          <ul className="space-y-2">
-                            {step.requirements.map((req, idx) => (
-                              <li key={idx} className="flex items-center gap-2 text-xs md:text-sm text-slate-300">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                                <span>{req}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Connector Line for Desktop */}
-                      {index < transferProcess.length - 1 && (
-                        <div className="hidden lg:block absolute -right-3 top-1/2 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 transform translate-x-full -translate-y-1/2">
-                          <div className="absolute -right-2 top-1/2 w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transform -translate-y-1/2 animate-pulse"></div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Process Completion Indicator */}
-                <div className="mt-8 md:mt-10 p-4 md:p-6 bg-white/5 backdrop-blur-sm rounded-xl md:rounded-2xl border border-white/10">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 md:p-2.5 bg-green-500/20 rounded-xl">
-                        <IoCheckmarkCircleOutline className="text-green-400 text-lg md:text-xl" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-lg">Ready to Transfer?</h4>
-                        <p className="text-slate-300 text-sm">Complete all 4 steps for admission approval</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => router.push('/pages/apply-for-admissions')}
-                      className="px-4 py-3 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg"
-                    >
-                      Start Transfer Process
-                    </button>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm leading-tight">{doc}</h4>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
+                      Required
+                    </span>
+                    {index === 0 && (
+                      <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
+                        Original
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          ))
+        ) : (
+          <>
+            {/* Default requirements if API data is not available */}
+            {[
+              "Original KCPE Certificate",
+              "Birth Certificate",
+              "Passport Size Photos (4)",
+              "Medical Report",
+              "Transfer Letter (if applicable)",
+              "Previous School Reports"
+            ].map((doc, index) => (
+              <div 
+                key={index}
+                className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
+              >
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="relative">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
+                      <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <IoDocumentTextOutline className="text-white text-xs md:text-sm" />
+                      </div>
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">
+                      {index + 1}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm leading-tight">{doc}</h4>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
+                        Required
+                      </span>
+                      {index === 0 && (
+                        <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
+                          Original
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* Important Notes Section */}
+      <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
+        <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-amber-50/60 border border-amber-100 rounded-xl md:rounded-2xl">
+          <div className="flex-shrink-0 p-2 bg-amber-100 rounded-lg">
+            <FiAlertTriangle className="text-amber-600" />
+          </div>
+          <div>
+            <h4 className="font-bold text-amber-800 mb-2">Important Notes:</h4>
+            <ul className="space-y-2 text-amber-700 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 mt-1">•</span>
+                <span>All documents must be original or certified copies</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 mt-1">•</span>
+                <span>Documents should be submitted in a clear plastic folder</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 mt-1">•</span>
+                <span>Incomplete applications will not be processed</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-600 mt-1">•</span>
+                <span>Submit copies along with originals for verification</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Transfer Process - Modern Timeline */}
+    <div className="bg-slate-900 rounded-2xl md:rounded-3xl p-6 md:p-10 text-white">
+      <div className="flex items-center justify-between mb-8 md:mb-10">
+        <div>
+          <div className="flex items-center gap-2 md:gap-3 mb-2">
+            <div className="p-2 md:p-2.5 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+              <FiArrowRight className="text-white text-lg md:text-xl" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold">Transfer Student Process</h3>
+          </div>
+          <p className="text-slate-300">Seamless transition with 4-step verification</p>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
+          <FiClock className="text-yellow-400" />
+          <span className="text-sm font-medium">2-3 Weeks Total</span>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {transferProcess.map((step, index) => (
+          <div 
+            key={index}
+            className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 transition-all duration-300"
+          >
+            {/* Step Number */}
+            <div className="absolute -top-2 -left-2 md:-top-3 md:-left-3 w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base md:text-lg shadow-lg">
+              {step.step}
+            </div>
+            
+            {/* Step Content */}
+            <div className="space-y-3 md:space-y-4">
+              <div className="flex items-start justify-between">
+                <h4 className="text-base md:text-lg font-bold leading-tight">{step.title}</h4>
+                <div className="flex items-center gap-1 text-yellow-300 text-xs font-bold">
+                  <FiClock className="text-sm" />
+                  {step.duration}
+                </div>
+              </div>
+              
+              <p className="text-slate-300 text-sm leading-relaxed">{step.description}</p>
+              
+              {/* Requirements List */}
+              <div className="space-y-2 pt-3 md:pt-4 border-t border-white/10">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Requirements</span>
+                <ul className="space-y-2">
+                  {step.requirements.map((req, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-xs md:text-sm text-slate-300">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Connector Line for Desktop */}
+            {index < transferProcess.length - 1 && (
+              <div className="hidden lg:block absolute -right-3 top-1/2 w-6 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 transform translate-x-full -translate-y-1/2">
+                <div className="absolute -right-2 top-1/2 w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 transform -translate-y-1/2 animate-pulse"></div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Process Completion Indicator */}
+      <div className="mt-8 md:mt-10 p-4 md:p-6 bg-white/5 backdrop-blur-sm rounded-xl md:rounded-2xl border border-white/10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 md:p-2.5 bg-green-500/20 rounded-xl">
+              <IoCheckmarkCircleOutline className="text-green-400 text-lg md:text-xl" />
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">Ready to Transfer?</h4>
+              <p className="text-slate-300 text-sm">Complete all 4 steps for admission approval</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push('/pages/apply-for-admissions')}
+            className="px-4 py-3 md:px-6 md:py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg"
+          >
+            Start Transfer Process
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Additional Requirements Section */}
+    <div className="bg-gradient-to-br from-white to-emerald-50/30 border border-emerald-100/80 rounded-2xl md:rounded-3xl shadow-lg p-4 md:p-8">
+      <div className="flex items-center justify-between mb-6 md:mb-8">
+        <div>
+          <div className="flex items-center gap-2 md:gap-3 mb-2">
+            <div className="p-2 md:p-2.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl shadow-sm">
+              <FiCheckCircle className="text-white text-lg md:text-xl" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-slate-900">Additional Requirements</h3>
+          </div>
+          <p className="text-slate-500">Supplementary items for specific cases</p>
+        </div>
+        <div className="hidden md:block">
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Conditional</div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+        {/* Special Needs Support */}
+        <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <IoAccessibilityOutline className="text-purple-600 text-xl" />
+            </div>
+            <h4 className="font-bold text-slate-900">Special Needs Support</h4>
+          </div>
+          <ul className="space-y-3">
+            {[
+              "Medical assessment report",
+              "Specialist recommendations",
+              "Learning support plan",
+              "Accessibility requirements"
+            ].map((item, idx) => (
+              <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* International Students */}
+        <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FiGlobe className="text-blue-600 text-xl" />
+            </div>
+            <h4 className="font-bold text-slate-900">International Students</h4>
+          </div>
+          <ul className="space-y-3">
+            {[
+              "Valid student visa",
+              "Passport copies",
+              "Guardian appointment letter",
+              "Health insurance proof"
+            ].map((item, idx) => (
+              <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Fee Payment Information */}
+      <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg shadow-sm">
+              <FiCreditCard className="text-white text-lg" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 mb-1">Payment Information</h4>
+              <p className="text-slate-500 text-sm">
+                Application fee: KSh {schoolData?.admissionFee ? schoolData.admissionFee.toLocaleString() : '5,000'}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
+              Bank Transfer
+            </span>
+            <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
+              M-Pesa
+            </span>
+            <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
+              Cash
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Application Timeline */}
+    <div className="bg-gradient-to-br from-white to-blue-50/30 border border-blue-100/80 rounded-2xl md:rounded-3xl shadow-lg p-4 md:p-8">
+      <div className="text-center mb-6 md:mb-8">
+        <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">Application Timeline</h3>
+        <p className="text-slate-500">Important dates and deadlines to remember</p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+        {/* Opening Dates */}
+        <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <IoCalendarOutline className="text-green-600 text-xl" />
+            </div>
+            <h4 className="font-bold text-slate-900">Application Period</h4>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Opens:</span>
+              <span className="font-bold text-slate-900">
+                {schoolData?.admissionOpenDate ? 
+                  new Date(schoolData.admissionOpenDate).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  }) : 
+                  'January 15, 2024'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Closes:</span>
+              <span className="font-bold text-slate-900">
+                {schoolData?.admissionCloseDate ? 
+                  new Date(schoolData.admissionCloseDate).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                  }) : 
+                  'March 30, 2024'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Processing Timeline */}
+        <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FiClock className="text-blue-600 text-xl" />
+            </div>
+            <h4 className="font-bold text-slate-900">Processing Time</h4>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Review period:</span>
+              <span className="font-bold text-slate-900">2-3 weeks</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Interview notice:</span>
+              <span className="font-bold text-slate-900">Within 1 week</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-600">Final decision:</span>
+              <span className="font-bold text-slate-900">Within 4 weeks</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <button 
+          onClick={() => router.push('/pages/apply-for-admissions')}
+          className="px-4 py-3 md:px-6 md:py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold text-sm transition-all duration-200 shadow-lg"
+        >
+          Apply Now
+        </button>
+        <button className="px-4 py-3 md:px-6 md:py-3.5 border border-slate-300 text-slate-700 rounded-xl font-bold text-sm transition-all duration-200">
+          Download Checklist
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
           {/* Modernized Fee Structure Tab */}
-          {activeTab === 'fees' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
-              
-              {/* Hero Header */}
-              <div className="text-center mb-8 md:mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-full mb-6">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Financial Transparency</span>
-                </div>
-                <h2 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-                  Tuition <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Fee Structure</span>
-                </h2>
-                <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-                  Clear, comprehensive fee breakdown with flexible payment plans designed for accessibility.
-                </p>
-              </div>
+{activeTab === 'fees' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
+    
+    {/* Hero Header */}
+    <div className="text-center mb-8 md:mb-12">
+      {/* ... existing hero header code ... */}
+    </div>
 
-              {/* Fee Comparison Cards - Modern Grid */}
-              <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                <ModernFeeCard
-                  feeType="Boarding School"
-                  total={schoolData?.feesBoarding || 58700}
-                  distribution={schoolData?.feesBoardingDistribution}
-                  pdfPath={schoolData?.feesBoardingDistributionPdf}
-                  pdfName={schoolData?.feesBoardingPdfName}
-                  icon={IoBookOutline}
-                  gradient="from-blue-500 to-cyan-500"
-                  term="Annual"
-                  badge="Full Immersion"
-                  features={['24/7 Supervision', 'Full Accommodation', 'All Meals Included', 'Study Support']}
-                />
-                <ModernFeeCard
-                  feeType="Day School"
-                  total={schoolData?.feesDay || 30200}
-                  distribution={schoolData?.feesDayDistribution}
-                  pdfPath={schoolData?.feesDayDistributionPdf}
-                  pdfName={schoolData?.feesDayPdfName}
-                  icon={FiHome}
-                  gradient="from-emerald-500 to-green-500"
-                  term="Annual"
-                  badge="Flexible"
-                  features={['Daily Transport', 'Lunch Provided', 'Evening Study', 'Parent Access']}
-                />
-              </div>
+    {/* Fee Comparison Cards - Modern Grid with API Data */}
+    <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+      {/* Boarding School Fees Card */}
+      <ModernFeeCard
+        feeType="Boarding School"
+        total={schoolData?.feesBoarding || 0}
+        distribution={documentData?.feesBoardingDistributionJson}
+        pdfPath={documentData?.feesBoardingDistributionPdf}
+        pdfName={documentData?.feesBoardingPdfName}
+        description={documentData?.feesBoardingDescription}
+        year={documentData?.feesBoardingYear}
+        term={documentData?.feesBoardingTerm}
+        icon={IoBookOutline}
+        gradient="from-blue-500 to-cyan-500"
+        badge="Full Immersion"
+        features={[
+          '24/7 Supervision',
+          'Full Accommodation',
+          'All Meals Included',
+          'Study Support',
+          'Weekend Activities',
+          'Health Services'
+        ]}
+      />
+      
+      {/* Day School Fees Card */}
+      <ModernFeeCard
+        feeType="Day School"
+        total={schoolData?.feesDay || 0}
+        distribution={documentData?.feesDayDistributionJson}
+        pdfPath={documentData?.feesDayDistributionPdf}
+        pdfName={documentData?.feesDayPdfName}
+        description={documentData?.feesDayDescription}
+        year={documentData?.feesDayYear}
+        term={documentData?.feesDayTerm}
+        icon={FiHome}
+        gradient="from-emerald-500 to-green-500"
+        badge="Flexible"
+        features={[
+          'Daily Transport Support',
+          'Lunch Provided',
+          'Evening Study Sessions',
+          'Parent Access Hours',
+          'Library Access',
+          'Sports Facilities'
+        ]}
+      />
+    </div>
 
-              {/* Admission Fee - Premium Banner */}
-              {schoolData?.admissionFee && (
-                <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl md:rounded-3xl p-6 md:p-8 text-white">
-                  {/* Background Pattern */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
-                  <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 blur-[60px] rounded-full -ml-24 -mb-24"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 mb-6">
-                      <div className="flex items-center gap-3 md:gap-4">
-                        <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
-                          <IoReceiptOutline className="text-white text-xl md:text-2xl" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl md:text-2xl font-bold">All Uniform fees requirements</h3>
-                          <p className="text-amber-100">Secure your place with this initial investment</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-amber-100 mb-1">One-Time Payment</div>
-                        <div className="text-3xl md:text-5xl font-black">KSh {schoolData.admissionFee.toLocaleString()}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 md:pt-6 border-t border-white/20">
-                      <div className="text-amber-100 text-sm">
-                        Includes registration, processing, and administrative setup
-                      </div>
-                      
-                      {schoolData.admissionFeePdf && (
-                        <a 
-                          href={schoolData.admissionFeePdf}
-                          download={schoolData.admissionFeePdfName}
-                          className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-white text-amber-600 rounded-xl font-bold transition-all duration-200 shadow-lg"
-                        >
-                          <div className="p-2 bg-amber-50 rounded-lg transition-transform">
-                            <IoCloudDownloadOutline className="text-amber-600" />
-                          </div>
-                          <span>Uniform Details</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+    {/* Admission Fee Card with Document Data */}
+    {schoolData?.admissionFee && (
+      <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl md:rounded-3xl p-6 md:p-8 text-white">
+        {/* ... existing admission fee banner code ... */}
+        
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 mb-6">
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
+                <IoReceiptOutline className="text-white text-xl md:text-2xl" />
+              </div>
+              <div>
+                <h3 className="text-xl md:text-2xl font-bold">All Uniform Fees & Requirements</h3>
+                {documentData?.admissionFeeDescription && (
+                  <p className="text-amber-100 italic">{documentData.admissionFeeDescription}</p>
+                )}
+                {(documentData?.admissionFeeYear || documentData?.admissionFeeTerm) && (
+                  <p className="text-amber-200 text-sm mt-1">
+                    {documentData.admissionFeeYear} • {documentData.admissionFeeTerm}
+                  </p>
+                )}
+              </div>
             </div>
-          )}
+            
+            <div className="text-right">
+              <div className="text-sm font-medium text-amber-100 mb-1">One-Time Payment</div>
+              <div className="text-3xl md:text-5xl font-black">
+                KSh {schoolData.admissionFee.toLocaleString()}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 md:pt-6 border-t border-white/20">
+            <div className="text-amber-100 text-sm">
+              Includes registration, processing, and administrative setup
+            </div>
+            
+            {documentData?.admissionFeePdf && (
+              <a 
+                href={documentData.admissionFeePdf}
+                download={documentData.admissionFeePdfName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-white text-amber-600 rounded-xl font-bold transition-all duration-200 shadow-lg"
+              >
+                <div className="p-2 bg-amber-50 rounded-lg transition-transform">
+                  <IoCloudDownloadOutline className="text-amber-600" />
+                </div>
+                <span>Download Uniform Details</span>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
           {/* FAQ Tab - Modern & Responsive */}
           {activeTab === 'faq' && (
