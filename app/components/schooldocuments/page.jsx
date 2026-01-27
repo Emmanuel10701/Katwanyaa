@@ -1814,16 +1814,17 @@ const handleMetadataSave = async (metadata) => {
       isNew: true,
       isModified: true,
       status: 'uploaded',
-      uploadDate: new Date().toISOString()
+      uploadDate: new Date().toISOString(),
+      filesize: selectedFile.file.size
     };
     
     const updatedFiles = [...localFiles, newFileObject];
     setLocalFiles(updatedFiles);
     
-    // Only update parent with the file object, not the entire array
-    onFilesChange([...files, selectedFile.file]);
+    // Notify parent of new file
+    onFilesChange([selectedFile.file]);
     
-    // NEW: Update parent state via callback with the complete object
+    // Update parent state via callback with the complete object
     if (onAdditionalFilesStateChange) {
       onAdditionalFilesStateChange(updatedFiles);
     }
@@ -1838,6 +1839,8 @@ const handleMetadataSave = async (metadata) => {
     fileInputRef.current.value = '';
   }
 };
+
+
   const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2746,24 +2749,25 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
-// Initialize additionalFiles state
+// Initialize additionalFiles state - FIXED VERSION
 const [additionalFiles, setAdditionalFiles] = useState(() => {
   if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
     return documents.additionalDocuments.map((doc, index) => ({
-      ...doc,
       id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}_${index}`,
-      filename: doc.filename || `Document ${index + 1}`,
+      filename: doc.filename,
+      filepath: doc.filepath,
+      filetype: doc.filetype,
+      description: doc.description,
+      year: doc.year,
+      term: doc.term,
+      filesize: doc.filesize,
       isExisting: true,
       isModified: false,
       isRemoved: false,
       isReplaced: false,
       originalFilePath: doc.filepath,
-      year: doc.year || '',
-      description: doc.description || '',
-      term: doc.term || '',
-      filesize: doc.filesize || 0,
-      filetype: doc.filetype || 'document',
-      status: 'existing'
+      status: 'existing',
+      uploadDate: doc.uploadedAt || doc.uploadDate
     }));
   }
   return [];
@@ -2886,62 +2890,29 @@ const handleSubmitAfterReview = async () => {
       }
     });
     
-    // ✅ CRITICAL FIX: Add additional files in CORRECT format for backend
-
-const newAdditionalFiles = additionalFiles.filter(file => 
-  file.isNew && file.file && !file.isRemoved
-);
-
-console.log('New additional files to upload:', newAdditionalFiles.length);
-console.log('New additional files details:', newAdditionalFiles.map(f => ({
-  name: f.filename,
-  size: f.filesize,
-  year: f.year,
-  term: f.term,
-  description: f.description
-})));
-
-newAdditionalFiles.forEach((file, index) => {
-  if (file.file) {
-    // ✅ Use EXACT format backend expects
-    data.append('additionalFiles[]', file.file);
-    
-    // Add metadata with consistent indexing
-    if (file.year) {
-      data.append(`additionalFilesYear[${index}]`, file.year.toString());
-    }
-    if (file.term) {
-      data.append(`additionalFilesTerm[${index}]`, file.term);
-    }
-    if (file.description) {
-      data.append(`additionalFilesDesc[${index}]`, file.description);
-    }
-    
-    console.log(`Added file ${index}:`, file.filename);
-    console.log(`  - Year: ${file.year}`);
-    console.log(`  - Term: ${file.term}`);
-    console.log(`  - Description: ${file.description}`);
+// Initialize additionalFiles state - FIXED VERSION
+const [additionalFiles, setAdditionalFiles] = useState(() => {
+  if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
+    return documents.additionalDocuments.map((doc, index) => ({
+      id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}_${index}`,
+      filename: doc.filename,
+      filepath: doc.filepath,
+      filetype: doc.filetype,
+      description: doc.description,
+      year: doc.year,
+      term: doc.term,
+      filesize: doc.filesize,
+      isExisting: true,
+      isModified: false,
+      isRemoved: false,
+      isReplaced: false,
+      originalFilePath: doc.filepath,
+      status: 'existing',
+      uploadDate: doc.uploadedAt || doc.uploadDate
+    }));
   }
+  return [];
 });
-
-// ✅ CRITICAL FIX: Add additional document IDs to delete
-const additionalDocsToDelete = additionalFiles
-  .filter(file => file.isRemoved && file.isExisting && file.id)
-  .map(file => {
-    // Extract the numeric ID from "existing_X"
-    const match = file.id.toString().match(/existing_(\d+)/);
-    return match ? match[1] : null;
-  })
-  .filter(id => id !== null && !isNaN(parseInt(id)));
-
-console.log('Additional docs to delete IDs:', additionalDocsToDelete);
-
-additionalDocsToDelete.forEach(id => {
-  // ✅ Use EXACT format backend expects
-  data.append('additionalDocsToDelete[]', id);
-  console.log(`Marked for deletion: ID ${id}`);
-});
-    
     // Debug: Log what's being sent
     console.log('=== FORM DATA BEING SENT TO BACKEND ===');
     console.log('Total additional files:', newAdditionalFiles.length);
@@ -3206,58 +3177,56 @@ additionalDocsToDelete.forEach(id => {
             ))}
           </div>
         );
-      
-      case 4: // Additional Files
-        return (
-          <div className="w-full max-w-2xl">
-{/* In the "Additional Files" step (case 4): */}
-<AdditionalResultsUpload
-  files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-  onFilesChange={(newFiles) => {
-    // Keep the metadata from existing files
-    const existingFilesWithMetadata = additionalFiles.filter(f => 
-      (f.isExisting && !f.isRemoved) || (f.isNew && f.year && f.description)
-    );
-    
-    // Create new file objects from the new files
-    const newFileObjects = newFiles
-      .filter(newFile => !additionalFiles.some(f => 
-        f.file && f.file.name === newFile.name && f.file.size === newFile.size
-      ))
-      .map((file, index) => ({
-        id: `new_${Date.now()}_${index}`,
-        file: file,
-        filename: file.name,
-        year: '',
-        description: '',
-        term: '',
-        isNew: true,
-        isModified: false,
-        filetype: file.type?.split('/')[1] || 'file',
-        filesize: file.size || 0,
-        status: 'uploaded'
-      }));
-    
-    setAdditionalFiles([...existingFilesWithMetadata, ...newFileObjects]);
-  }}
-  label="Additional Documents"
-  existingFiles={documents?.additionalDocuments || []}
-  onCancelExisting={(file) => {
-    console.log('Cancel replacement for:', file);
-  }}
-  onRemoveExisting={(file) => {
-    setAdditionalFiles(prev => 
-      prev.map(f => 
-        f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
-      )
-    );
-  }}
-  additionalFilesState={additionalFiles}
-  onAdditionalFilesStateChange={setAdditionalFiles}
-/>
-          </div>
-        );
-      
+case 4: // Additional Files
+  return (
+    <div className="w-full max-w-2xl">
+      <AdditionalResultsUpload
+        files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
+        onFilesChange={(newFiles) => {
+          // Create new file objects from the new files
+          const newFileObjects = newFiles
+            .filter(newFile => !additionalFiles.some(f => 
+              f.file && f.file.name === newFile.name && f.file.size === newFile.size
+            ))
+            .map((file, index) => ({
+              id: `new_${Date.now()}_${index}`,
+              file: file,
+              filename: file.name,
+              year: '',
+              description: '',
+              term: '',
+              isNew: true,
+              isModified: false,
+              filetype: file.type?.split('/')[1] || 'file',
+              filesize: file.size || 0,
+              status: 'uploaded'
+            }));
+          
+          // Keep existing files (both existing and new with metadata)
+          const existingFilesWithMetadata = additionalFiles.filter(f => 
+            (f.isExisting && !f.isRemoved) || (f.isNew && f.year && f.description)
+          );
+          
+          setAdditionalFiles([...existingFilesWithMetadata, ...newFileObjects]);
+        }}
+        label="Additional Documents"
+        existingFiles={documents?.additionalDocuments || []}
+        onCancelExisting={(file) => {
+          console.log('Cancel replacement for:', file);
+        }}
+        onRemoveExisting={(file) => {
+          // Mark for deletion but keep in array
+          setAdditionalFiles(prev => 
+            prev.map(f => 
+              f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
+            )
+          );
+        }}
+        additionalFilesState={additionalFiles}
+        onAdditionalFilesStateChange={setAdditionalFiles}
+      />
+    </div>
+  );
       case 5: // Review Step
         return (
           <div className="space-y-6">
