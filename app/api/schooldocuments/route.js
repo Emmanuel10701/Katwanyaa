@@ -277,18 +277,33 @@ export async function GET() {
 }
 
 // POST - Create or update all documents
+// POST - Create or update all documents (REFINED VERSION)
 export async function POST(req) {
   try {
     console.log("📥 POST Request received");
     const formData = await req.formData();
     
-    console.log("📋 Form data keys:", Array.from(formData.keys()));
+    // DEBUG: Log all form data keys and values
+    console.log("=== FORM DATA DEBUG ===");
+    const formDataEntries = [];
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        formDataEntries.push(`${key}: File - ${value.name} (${value.size} bytes)`);
+      } else {
+        formDataEntries.push(`${key}: ${value}`);
+      }
+    }
+    console.log("Form data entries:", formDataEntries);
+    console.log("=== END FORM DATA DEBUG ===");
     
     let existingDocument = await prisma.schoolDocument.findFirst({
       include: { additionalDocuments: true }
     });
 
-    console.log("📄 Existing document:", existingDocument ? "Found" : "Not found");
+    console.log("📄 Existing document:", existingDocument ? `Found (ID: ${existingDocument.id})` : "Not found");
+    if (existingDocument) {
+      console.log(`📄 Existing has ${existingDocument.additionalDocuments?.length || 0} additional documents`);
+    }
 
     const uploadPromises = {};
     const uploadResults = {};
@@ -407,41 +422,75 @@ export async function POST(req) {
       }
     });
 
-    // Process additional files
+    // Process additional files - REFINED VERSION
     const additionalFilesData = [];
+    
+    // Get all additional files and metadata
     const additionalFiles = formData.getAll("additionalFiles[]");
+    console.log("📁 Processing additional files:", additionalFiles.length);
     
     if (additionalFiles && additionalFiles.length > 0) {
-      console.log("📁 Processing additional files:", additionalFiles.length);
-      const additionalUploadPromises = additionalFiles
-        .filter(file => file.size > 0)
-        .map((file, index) => {
-          console.log(`📤 Uploading additional file ${index}:`, file.name);
-          return uploadAdditionalFileToCloudinary(file, "additional-documents");
-        });
-      
-      const additionalResults = await Promise.allSettled(additionalUploadPromises);
-      
-      additionalResults.forEach((result, index) => {
-        if (result.status === 'fulfilled' && result.value) {
-          const description = formData.get(`additionalFilesDesc[${index}]`) || '';
-          const year = formData.get(`additionalFilesYear[${index}]`) || '';
-          const term = formData.get(`additionalFilesTerm[${index}]`) || '';
-          
-          additionalFilesData.push({
-            filename: result.value.original_name,
-            filepath: result.value.url,
-            filetype: result.value.file_type,
-            description: parseStringField(description),
-            year: parseIntField(year),
-            term: parseStringField(term),
-            filesize: result.value.bytes
-          });
-          console.log(`✅ Additional file uploaded:`, result.value.original_name);
-        } else if (result.status === 'rejected') {
-          console.error(`❌ Additional file upload failed:`, result.reason);
+      for (let i = 0; i < additionalFiles.length; i++) {
+        const file = additionalFiles[i];
+        
+        // Skip if file is empty or not a file
+        if (!file || file.size === 0 || !(file instanceof File)) {
+          console.log(`⚠️ Skipping empty/invalid file at index ${i}`);
+          continue;
         }
-      });
+        
+        try {
+          console.log(`📤 Uploading additional file ${i}:`, file.name, `(${file.size} bytes)`);
+          const uploadResult = await uploadAdditionalFileToCloudinary(file, "additional-documents");
+          
+          if (uploadResult) {
+            // Get metadata for this file - handle different naming patterns
+            let year = '';
+            let term = '';
+            let description = '';
+            
+            // Try multiple ways to get metadata
+            if (formData.has(`additionalFilesYear[${i}]`)) {
+              year = formData.get(`additionalFilesYear[${i}]`);
+            } else if (formData.has('additionalFilesYear')) {
+              year = formData.get('additionalFilesYear');
+            }
+            
+            if (formData.has(`additionalFilesTerm[${i}]`)) {
+              term = formData.get(`additionalFilesTerm[${i}]`);
+            } else if (formData.has('additionalFilesTerm')) {
+              term = formData.get('additionalFilesTerm');
+            }
+            
+            if (formData.has(`additionalFilesDesc[${i}]`)) {
+              description = formData.get(`additionalFilesDesc[${i}]`);
+            } else if (formData.has('additionalFilesDesc')) {
+              description = formData.get('additionalFilesDesc');
+            }
+            
+            console.log(`✅ Additional file ${i} metadata:`, { 
+              year, 
+              term, 
+              description,
+              filename: uploadResult.original_name 
+            });
+            
+            additionalFilesData.push({
+              filename: uploadResult.original_name,
+              filepath: uploadResult.url,
+              filetype: uploadResult.file_type || 'document',
+              description: parseStringField(description),
+              year: parseIntField(year),
+              term: parseStringField(term),
+              filesize: uploadResult.bytes || file.size
+            });
+            
+            console.log(`✅ Additional file uploaded and processed:`, uploadResult.original_name);
+          }
+        } catch (error) {
+          console.error(`❌ Additional file upload failed at index ${i}:`, error);
+        }
+      }
     }
 
     // Delete old files if replacing
@@ -451,6 +500,8 @@ export async function POST(req) {
       // Delete additional documents marked for deletion
       const existingAdditionalIds = existingDocument.additionalDocuments.map(doc => doc.id);
       const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
+      
+      console.log(`🗑️ Additional documents marked for deletion:`, additionalDocsToDelete);
       
       additionalDocsToDelete.forEach(id => {
         const docId = parseInt(id);
@@ -606,10 +657,11 @@ export async function POST(req) {
     }
 
     console.log("📝 Update data prepared:", updateData);
+    console.log("📁 Additional files data ready:", additionalFilesData.length, "files");
 
     // Create or update document
     if (existingDocument) {
-      console.log("🔄 Updating existing document");
+      console.log("🔄 Updating existing document ID:", existingDocument.id);
       const updatedDocument = await prisma.schoolDocument.update({
         where: { id: existingDocument.id },
         data: updateData
@@ -618,6 +670,9 @@ export async function POST(req) {
       // Handle additional documents
       if (additionalFilesData.length > 0) {
         console.log("📁 Creating additional documents:", additionalFilesData.length);
+        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
+        
+        // Create additional documents
         await prisma.additionalDocument.createMany({
           data: additionalFilesData.map(file => ({
             schoolDocumentId: existingDocument.id,
@@ -647,10 +702,17 @@ export async function POST(req) {
 
       const finalDocument = await prisma.schoolDocument.findUnique({
         where: { id: existingDocument.id },
-        include: { additionalDocuments: true }
+        include: { 
+          additionalDocuments: {
+            orderBy: {
+              uploadedAt: 'desc'
+            }
+          }
+        }
       });
 
       console.log("✅ Document update successful");
+      console.log(`✅ Final document has ${finalDocument.additionalDocuments?.length || 0} additional documents`);
 
       return NextResponse.json({
         success: true,
@@ -666,6 +728,8 @@ export async function POST(req) {
 
       if (additionalFilesData.length > 0) {
         console.log("📁 Creating additional documents:", additionalFilesData.length);
+        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
+        
         await prisma.additionalDocument.createMany({
           data: additionalFilesData.map(file => ({
             schoolDocumentId: newDocument.id,
@@ -682,10 +746,17 @@ export async function POST(req) {
 
       const finalDocument = await prisma.schoolDocument.findUnique({
         where: { id: newDocument.id },
-        include: { additionalDocuments: true }
+        include: { 
+          additionalDocuments: {
+            orderBy: {
+              uploadedAt: 'desc'
+            }
+          }
+        }
       });
 
       console.log("✅ Document creation successful");
+      console.log(`✅ Final document has ${finalDocument.additionalDocuments?.length || 0} additional documents`);
 
       return NextResponse.json({
         success: true,
@@ -706,6 +777,46 @@ export async function POST(req) {
     );
   }
 }
+
+// GET - Fetch all documents (REFINED VERSION)
+export async function GET() {
+  try {
+    console.log("📥 GET Request received");
+    
+    const document = await prisma.schoolDocument.findFirst({
+      include: { 
+        additionalDocuments: {
+          orderBy: {
+            uploadedAt: 'desc'
+          }
+        }
+      }
+    });
+
+    if (!document) {
+      return NextResponse.json({
+        success: true,
+        message: "No documents found",
+        document: null
+      });
+    }
+
+    console.log(`📄 Found document with ${document.additionalDocuments?.length || 0} additional documents`);
+    
+    return NextResponse.json({
+      success: true,
+      document: cleanDocumentResponse(document)
+    });
+
+  } catch (error) {
+    console.error("❌ GET Error:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
 
 // PUT - Update specific document field
 export async function PUT(req) {

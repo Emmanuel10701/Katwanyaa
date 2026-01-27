@@ -2887,46 +2887,60 @@ const handleSubmitAfterReview = async () => {
     });
     
     // ✅ CRITICAL FIX: Add additional files in CORRECT format for backend
-    const newAdditionalFiles = additionalFiles.filter(file => 
-      file.isNew && file.file && !file.isRemoved
-    );
+
+const newAdditionalFiles = additionalFiles.filter(file => 
+  file.isNew && file.file && !file.isRemoved
+);
+
+console.log('New additional files to upload:', newAdditionalFiles.length);
+console.log('New additional files details:', newAdditionalFiles.map(f => ({
+  name: f.filename,
+  size: f.filesize,
+  year: f.year,
+  term: f.term,
+  description: f.description
+})));
+
+newAdditionalFiles.forEach((file, index) => {
+  if (file.file) {
+    // ✅ Use EXACT format backend expects
+    data.append('additionalFiles[]', file.file);
     
-    console.log('New additional files to upload:', newAdditionalFiles.length);
+    // Add metadata with consistent indexing
+    if (file.year) {
+      data.append(`additionalFilesYear[${index}]`, file.year.toString());
+    }
+    if (file.term) {
+      data.append(`additionalFilesTerm[${index}]`, file.term);
+    }
+    if (file.description) {
+      data.append(`additionalFilesDesc[${index}]`, file.description);
+    }
     
-    newAdditionalFiles.forEach((file, index) => {
-      if (file.file) {
-        // ✅ Use EXACT format backend expects: additionalFiles[] for file array
-        data.append('additionalFiles[]', file.file);
-        
-        // ✅ Use EXACT format backend expects: indexed metadata
-        if (file.year) {
-          data.append(`additionalFilesYear[${index}]`, file.year);
-        }
-        if (file.term) {
-          data.append(`additionalFilesTerm[${index}]`, file.term);
-        }
-        if (file.description) {
-          data.append(`additionalFilesDesc[${index}]`, file.description);
-        }
-      }
-    });
-    
-    // ✅ CRITICAL FIX: Add additional document IDs to delete
-    const additionalDocsToDelete = additionalFiles
-      .filter(file => file.isRemoved && file.isExisting && file.id)
-      .map(file => {
-        // Extract the numeric ID from "existing_X"
-        const match = file.id.toString().match(/existing_(\d+)/);
-        return match ? match[1] : null;
-      })
-      .filter(id => id !== null && !isNaN(parseInt(id)));
-    
-    console.log('Additional docs to delete IDs:', additionalDocsToDelete);
-    
-    additionalDocsToDelete.forEach(id => {
-      // ✅ Use EXACT format backend expects: additionalDocsToDelete[]
-      data.append('additionalDocsToDelete[]', id);
-    });
+    console.log(`Added file ${index}:`, file.filename);
+    console.log(`  - Year: ${file.year}`);
+    console.log(`  - Term: ${file.term}`);
+    console.log(`  - Description: ${file.description}`);
+  }
+});
+
+// ✅ CRITICAL FIX: Add additional document IDs to delete
+const additionalDocsToDelete = additionalFiles
+  .filter(file => file.isRemoved && file.isExisting && file.id)
+  .map(file => {
+    // Extract the numeric ID from "existing_X"
+    const match = file.id.toString().match(/existing_(\d+)/);
+    return match ? match[1] : null;
+  })
+  .filter(id => id !== null && !isNaN(parseInt(id)));
+
+console.log('Additional docs to delete IDs:', additionalDocsToDelete);
+
+additionalDocsToDelete.forEach(id => {
+  // ✅ Use EXACT format backend expects
+  data.append('additionalDocsToDelete[]', id);
+  console.log(`Marked for deletion: ID ${id}`);
+});
     
     // Debug: Log what's being sent
     console.log('=== FORM DATA BEING SENT TO BACKEND ===');
