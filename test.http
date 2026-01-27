@@ -1,42 +1,42 @@
-### Test School Documents API (Temporary - without term fields)
-
+### School Documents API Testing
+### Base URL
 @baseUrl = https://katwanyaa.vercel.app/api/schooldocuments
 
 ### 1. GET - Retrieve all documents
 GET {{baseUrl}}
 Content-Type: application/json
 
-### 2. POST - Create/Update documents WITHOUT term fields for curriculum/fees
+### 2. POST - Create/Update documents (Curriculum & Fees WITHOUT term fields)
 POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=WebAppBoundary
+Content-Type: multipart/form-data; boundary=MainBoundary
 
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="curriculumYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="curriculumDescription"
 
 Mathematics, Science, and English Curriculum for 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="curriculumPDF"; filename="curriculum.pdf"
 Content-Type: application/pdf
 
-< ./test-files/curriculum.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="feesDayYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="feesDayDescription"
 
 Day School Fees Structure 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="feesDayDistributionPdf"; filename="fees-day.pdf"
 Content-Type: application/pdf
 
-< ./test-files/fees-day.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="feesDayDistributionJson"
 
 {
@@ -46,20 +46,20 @@ Content-Disposition: form-data; name="feesDayDistributionJson"
   "medical": 3000,
   "total": 68000
 }
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="feesBoardingYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="feesBoardingDescription"
 
 Boarding School Fees Structure 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="feesBoardingDistributionPdf"; filename="fees-boarding.pdf"
 Content-Type: application/pdf
 
-< ./test-files/fees-boarding.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="feesBoardingDistributionJson"
 
 {
@@ -70,20 +70,20 @@ Content-Disposition: form-data; name="feesBoardingDistributionJson"
   "medical": 3000,
   "total": 98000
 }
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="admissionFeeYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="admissionFeeDescription"
 
 Admission Fee Structure 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="admissionFeePdf"; filename="admission-fees.pdf"
 Content-Type: application/pdf
 
-< ./test-files/admission-fees.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="admissionFeeDistribution"
 
 {
@@ -93,108 +93,422 @@ Content-Disposition: form-data; name="admissionFeeDistribution"
   "books": 20000,
   "total": 41000
 }
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="form1ResultsYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="form1ResultsTerm"
 
 Term 1
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="form1ResultsDescription"
 
 Form 1 End of Term Results 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1-results.pdf"
 Content-Type: application/pdf
 
-< ./test-files/form1-results.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
+Content-Disposition: form-data; name="form2ResultsYear"
+
+2024
+--MainBoundary
+Content-Disposition: form-data; name="form2ResultsTerm"
+
+Term 2
+--MainBoundary
+Content-Disposition: form-data; name="form2ResultsDescription"
+
+Form 2 Mid Term Results 2024
+--MainBoundary
+Content-Disposition: form-data; name="form2ResultsPdf"; filename="form2-results.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--MainBoundary
+Content-Disposition: form-data; name="form3ResultsYear"
+
+2024
+--MainBoundary
+Content-Disposition: form-data; name="form3ResultsTerm"
+
+Term 1
+--MainBoundary
+Content-Disposition: form-data; name="form3ResultsDescription"
+
+Form 3 End of Term Results 2024
+--MainBoundary
+Content-Disposition: form-data; name="form3ResultsPdf"; filename="form3-results.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--MainBoundary
+Content-Disposition: form-data; name="form4ResultsYear"
+
+2024
+--MainBoundary
+Content-Disposition: form-data; name="form4ResultsTerm"
+
+Term 3
+--MainBoundary
+Content-Disposition: form-data; name="form4ResultsDescription"
+
+Form 4 Mock Results 2024
+--MainBoundary
+Content-Disposition: form-data; name="form4ResultsPdf"; filename="form4-results.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--MainBoundary
+Content-Disposition: form-data; name="mockExamsYear"
+
+2024
+--MainBoundary
+Content-Disposition: form-data; name="mockExamsTerm"
+
+Term 2
+--MainBoundary
+Content-Disposition: form-data; name="mockExamsDescription"
+
+Mock Examinations Results 2024
+--MainBoundary
+Content-Disposition: form-data; name="mockExamsResultsPdf"; filename="mock-exams.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="kcseYear"
 
 2023
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="kcseTerm"
 
 Annual
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="kcseDescription"
 
 KCSE 2023 Results Summary
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="kcseResultsPdf"; filename="kcse-2023.pdf"
 Content-Type: application/pdf
 
-< ./test-files/kcse-2023.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="additionalFiles[]"; filename="school-calendar.pdf"
 Content-Type: application/pdf
 
-< ./test-files/school-calendar.pdf
---WebAppBoundary
+< ./test-files/sample.pdf
+--MainBoundary
 Content-Disposition: form-data; name="additionalFilesYear"
 
 2024
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="additionalFilesTerm"
 
 Annual
---WebAppBoundary
+--MainBoundary
 Content-Disposition: form-data; name="additionalFilesDesc"
 
 School Academic Calendar 2024
---WebAppBoundary--
+--MainBoundary--
 
-### 3. POST - Minimal document update (just metadata without files)
+### 3. POST - Update only metadata (no files)
 POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=MinimalBoundary
+Content-Type: multipart/form-data; boundary=MetadataOnlyBoundary
 
---MinimalBoundary
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="curriculumYear"
 
 2025
---MinimalBoundary
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="curriculumDescription"
 
 Updated curriculum for 2025 academic year
---MinimalBoundary
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="feesDayYear"
 
 2025
---MinimalBoundary--
+--MetadataOnlyBoundary
+Content-Disposition: form-data; name="feesDayDescription"
 
-### 4. POST - Test only with exam results (which have term fields)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=ExamsOnlyBoundary
-
---ExamsOnlyBoundary
+Revised Day School Fees 2025
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="form1ResultsYear"
 
-2024
---ExamsOnlyBoundary
+2025
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="form1ResultsTerm"
 
 Term 1
---ExamsOnlyBoundary
+--MetadataOnlyBoundary
 Content-Disposition: form-data; name="form1ResultsDescription"
 
-Form 1 End of Term Results
---ExamsOnlyBoundary
-Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1.pdf"
+Form 1 Results 2025 Term 1
+--MetadataOnlyBoundary--
+
+### 4. POST - Add multiple additional files
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=AdditionalFilesBoundary
+
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="policy1.pdf"
 Content-Type: application/pdf
 
-< ./test-files/form1-results.pdf
---ExamsOnlyBoundary--
+< ./test-files/sample.pdf
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesYear[0]"
 
-### 5. PUT - Update specific field (JSON body)
+2024
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesTerm[0]"
+
+Annual
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesDesc[0]"
+
+School Discipline Policy
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="policy2.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ./test-files/sample.docx
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesYear[1]"
+
+2024
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesTerm[1]"
+
+Annual
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesDesc[1]"
+
+Examination Policy
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="newsletter.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesYear"
+
+2024
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesTerm"
+
+Term 1
+--AdditionalFilesBoundary
+Content-Disposition: form-data; name="additionalFilesDesc"
+
+Monthly School Newsletter
+--AdditionalFilesBoundary--
+
+### 5. POST - Delete additional documents
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=DeleteBoundary
+
+--DeleteBoundary
+Content-Disposition: form-data; name="curriculumYear"
+
+2024
+--DeleteBoundary
+Content-Disposition: form-data; name="additionalDocsToDelete[]"
+
+1
+--DeleteBoundary
+Content-Disposition: form-data; name="additionalDocsToDelete[]"
+
+2
+--DeleteBoundary--
+
+### 6. PUT - Update specific field (JSON body)
+### NOTE: Replace {id} with actual document ID from GET response
 PUT {{baseUrl}}?id=1
 Content-Type: application/json
 
 {
   "field": "curriculumDescription",
-  "data": "Updated curriculum description for all forms"
+  "data": "Updated curriculum description for all forms - 2024 Edition"
 }
 
-### 6. DELETE - Delete first document (legacy)
+### 7. PUT - Update JSON data field
+PUT {{baseUrl}}?id=1
+Content-Type: application/json
+
+{
+  "field": "feesDayDistributionJson",
+  "data": {
+    "tuition": 55000,
+    "activity": 12000,
+    "library": 6000,
+    "medical": 3500,
+    "development": 5000,
+    "total": 81500
+  }
+}
+
+### 8. PUT - Update exam term field
+PUT {{baseUrl}}?id=1
+Content-Type: application/json
+
+{
+  "field": "form1ResultsTerm",
+  "data": "Term 2"
+}
+
+### 9. PATCH - Delete curriculum PDF
+### NOTE: Replace {id} with actual document ID
+PATCH {{baseUrl}}?id=1&field=curriculumPDF
+Content-Type: application/json
+
+{
+  "action": "deleteFile"
+}
+
+### 10. PATCH - Delete exam results PDF
+PATCH {{baseUrl}}?id=1&field=form1ResultsPdf
+Content-Type: application/json
+
+{
+  "action": "deleteFile"
+}
+
+### 11. PATCH - Delete additional document by ID
+### NOTE: Replace {id} with document ID and {fileId} with additional document ID
+PATCH {{baseUrl}}?id=1&field=additionalDocuments
+Content-Type: application/json
+
+{
+  "action": "deleteFile",
+  "fileId": 3
+}
+
+### 12. DELETE - Delete by ID
+### NOTE: Replace {id} with actual document ID
+DELETE {{baseUrl}}?id=1
+
+### 13. DELETE - Delete first document (legacy)
 DELETE {{baseUrl}}
+
+### 14. POST - Test with invalid file type (should fail)
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=InvalidFileBoundary
+
+--InvalidFileBoundary
+Content-Disposition: form-data; name="curriculumPDF"; filename="invalid.jpg"
+Content-Type: image/jpeg
+
+< ./test-files/invalid.jpg
+--InvalidFileBoundary
+Content-Disposition: form-data; name="curriculumDescription"
+
+Test with invalid file type
+--InvalidFileBoundary--
+
+### 15. POST - Test error case: empty request
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=EmptyBoundary
+
+--EmptyBoundary--
+
+### 16. POST - Test with only additional files
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=OnlyAdditionalBoundary
+
+--OnlyAdditionalBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="test.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--OnlyAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesDesc"
+
+Test additional file only
+--OnlyAdditionalBoundary--
+
+### 17. POST - Test with DOC/DOCX files
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=DocFilesBoundary
+
+--DocFilesBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="report.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ./test-files/sample.docx
+--DocFilesBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="document.doc"
+Content-Type: application/msword
+
+< ./test-files/sample.doc
+--DocFilesBoundary
+Content-Disposition: form-data; name="additionalFilesDesc"
+
+Word documents test
+--DocFilesBoundary--
+
+### 18. POST - Test individual exam uploads
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=SingleExamBoundary
+
+--SingleExamBoundary
+Content-Disposition: form-data; name="kcseYear"
+
+2023
+--SingleExamBoundary
+Content-Disposition: form-data; name="kcseTerm"
+
+Annual
+--SingleExamBoundary
+Content-Disposition: form-data; name="kcseDescription"
+
+KCSE Results 2023
+--SingleExamBoundary
+Content-Disposition: form-data; name="kcseResultsPdf"; filename="kcse.pdf"
+Content-Type: application/pdf
+
+< ./test-files/sample.pdf
+--SingleExamBoundary--
+
+### 19. POST - Test fees JSON update without PDF
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=JsonOnlyBoundary
+
+--JsonOnlyBoundary
+Content-Disposition: form-data; name="feesDayDistributionJson"
+
+{
+  "tuition": 60000,
+  "activity": 15000,
+  "library": 8000,
+  "medical": 4000,
+  "development": 7000,
+  "total": 94000
+}
+--JsonOnlyBoundary
+Content-Disposition: form-data; name="admissionFeeDistribution"
+
+{
+  "application": 2000,
+  "registration": 8000,
+  "uniform": 20000,
+  "books": 25000,
+  "total": 55000
+}
+--JsonOnlyBoundary--
+
+### 20. POST - Test with all empty fields
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=AllEmptyBoundary
+
+--AllEmptyBoundary
+Content-Disposition: form-data; name="curriculumYear"
+
+--AllEmptyBoundary
+Content-Disposition: form-data; name="curriculumDescription"
+
+--AllEmptyBoundary
+Content-Disposition: form-data; name="form1ResultsTerm"
+
+--AllEmptyBoundary--

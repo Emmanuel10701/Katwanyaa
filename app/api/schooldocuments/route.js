@@ -284,7 +284,6 @@ export async function GET() {
   }
 }
 
-// POST - Create or update all documents
 export async function POST(req) {
   try {
     console.log("📥 POST Request received");
@@ -315,40 +314,41 @@ export async function POST(req) {
     const uploadPromises = {};
     const uploadResults = {};
 
-const documentFields = [
-  { 
-    key: 'curriculum', 
-    name: 'curriculumPDF', 
-    year: 'curriculumYear',
-    description: 'curriculumDescription',
-    folder: 'curriculum' 
-  },
-  { 
-    key: 'feesDay', 
-    name: 'feesDayDistributionPdf', 
-    year: 'feesDayYear',
-    description: 'feesDayDescription',
-    folder: 'day-fees' 
-  },
-  { 
-    key: 'feesBoarding', 
-    name: 'feesBoardingDistributionPdf', 
-    year: 'feesBoardingYear',
-    description: 'feesBoardingDescription',
-    folder: 'boarding-fees' 
-  },
-  { 
-    key: 'admissionFee', 
-    name: 'admissionFeePdf', 
-    year: 'admissionFeeYear',
-    description: 'admissionFeeDescription',
-    folder: 'admission' 
-  },
-];
-
-if (field.term && term !== null) {
-  updateData[field.term] = parseStringField(term);
-}
+    // Define document fields with their metadata
+    const documentFields = [
+      { 
+        key: 'curriculum', 
+        name: 'curriculumPDF', 
+        year: 'curriculumYear',
+        term: 'curriculumTerm',  // ADD THIS
+        description: 'curriculumDescription',
+        folder: 'curriculum' 
+      },
+      { 
+        key: 'feesDay', 
+        name: 'feesDayDistributionPdf', 
+        year: 'feesDayYear',
+        term: 'feesDayTerm',  // ADD THIS
+        description: 'feesDayDescription',
+        folder: 'day-fees' 
+      },
+      { 
+        key: 'feesBoarding', 
+        name: 'feesBoardingDistributionPdf', 
+        year: 'feesBoardingYear',
+        term: 'feesBoardingTerm',  // ADD THIS
+        description: 'feesBoardingDescription',
+        folder: 'boarding-fees' 
+      },
+      { 
+        key: 'admissionFee', 
+        name: 'admissionFeePdf', 
+        year: 'admissionFeeYear',
+        term: 'admissionFeeTerm',  // ADD THIS
+        description: 'admissionFeeDescription',
+        folder: 'admission' 
+      },
+    ];
 
     // Exam fields already have term
     const examFields = [
@@ -406,7 +406,6 @@ if (field.term && term !== null) {
     const allFields = [...documentFields, ...examFields];
     
     for (const field of allFields) {
-
       const pdfFile = formData.get(field.name);
       if (pdfFile && pdfFile.size > 0) {
         console.log(`📤 Uploading ${field.key} file:`, pdfFile.name);
@@ -429,111 +428,7 @@ if (field.term && term !== null) {
       }
     });
 
-    // Process additional files - REFINED VERSION
-    const additionalFilesData = [];
-    
-    // Get all additional files and metadata
-    const additionalFiles = formData.getAll("additionalFiles[]");
-    console.log("📁 Processing additional files:", additionalFiles.length);
-    
-    if (additionalFiles && additionalFiles.length > 0) {
-      for (let i = 0; i < additionalFiles.length; i++) {
-        const file = additionalFiles[i];
-        
-        // Skip if file is empty or not a file
-        if (!file || file.size === 0 || !(file instanceof File)) {
-          console.log(`⚠️ Skipping empty/invalid file at index ${i}`);
-          continue;
-        }
-        
-        try {
-          console.log(`📤 Uploading additional file ${i}:`, file.name, `(${file.size} bytes)`);
-          const uploadResult = await uploadAdditionalFileToCloudinary(file, "additional-documents");
-          
-          if (uploadResult) {
-            // Get metadata for this file - handle different naming patterns
-            let year = '';
-            let term = '';
-            let description = '';
-            
-            // Try multiple ways to get metadata
-            if (formData.has(`additionalFilesYear[${i}]`)) {
-              year = formData.get(`additionalFilesYear[${i}]`);
-            } else if (formData.has('additionalFilesYear')) {
-              year = formData.get('additionalFilesYear');
-            }
-            
-            if (formData.has(`additionalFilesTerm[${i}]`)) {
-              term = formData.get(`additionalFilesTerm[${i}]`);
-            } else if (formData.has('additionalFilesTerm')) {
-              term = formData.get('additionalFilesTerm');
-            }
-            
-            if (formData.has(`additionalFilesDesc[${i}]`)) {
-              description = formData.get(`additionalFilesDesc[${i}]`);
-            } else if (formData.has('additionalFilesDesc')) {
-              description = formData.get('additionalFilesDesc');
-            }
-            
-            console.log(`✅ Additional file ${i} metadata:`, { 
-              year, 
-              term, 
-              description,
-              filename: uploadResult.original_name 
-            });
-            
-            additionalFilesData.push({
-              filename: uploadResult.original_name,
-              filepath: uploadResult.url,
-              filetype: uploadResult.file_type || 'document',
-              description: parseStringField(description),
-              year: parseIntField(year),
-              term: parseStringField(term),
-              filesize: uploadResult.bytes || file.size
-            });
-            
-            console.log(`✅ Additional file uploaded and processed:`, uploadResult.original_name);
-          }
-        } catch (error) {
-          console.error(`❌ Additional file upload failed at index ${i}:`, error);
-        }
-      }
-    }
-
-    // Delete old files if replacing
-    const filesToDelete = [];
-    
-    if (existingDocument) {
-      // Delete additional documents marked for deletion
-      const existingAdditionalIds = existingDocument.additionalDocuments.map(doc => doc.id);
-      const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
-      
-      console.log(`🗑️ Additional documents marked for deletion:`, additionalDocsToDelete);
-      
-      additionalDocsToDelete.forEach(id => {
-        const docId = parseInt(id);
-        if (existingAdditionalIds.includes(docId)) {
-          const doc = existingDocument.additionalDocuments.find(d => d.id === docId);
-          if (doc) {
-            console.log(`🗑️ Marking additional document for deletion:`, doc.filename);
-            filesToDelete.push(deleteFromCloudinary(doc.filepath));
-          }
-        }
-      });
-    }
-
-    // Delete old main files if replacing
-    for (const field of allFields) {
-      if (uploadResults[field.key] && existingDocument && existingDocument[field.name]) {
-        console.log(`🗑️ Replacing old file for ${field.key}:`, existingDocument[field.name]);
-        filesToDelete.push(deleteFromCloudinary(existingDocument[field.name]));
-      }
-    }
-
-    if (filesToDelete.length > 0) {
-      console.log("🗑️ Deleting old files:", filesToDelete.length);
-      await Promise.all(filesToDelete);
-    }
+    // ... rest of your code remains the same until the field processing part ...
 
     // Prepare update data
     const updateData = {
@@ -648,135 +543,25 @@ if (field.term && term !== null) {
       }
       
       // Handle year, term, and description fields
- // Handle year, term, and description fields
-const year = formData.get(field.year);
-const description = formData.get(field.description);
+      const year = formData.get(field.year);
+      const description = formData.get(field.description);
+      const term = field.term ? formData.get(field.term) : null;
 
-if (year !== null) {
-  updateData[field.year] = parseIntField(year);
-}
-if (description !== null) {
-  updateData[field.description] = parseStringField(description);
-}
-
-// Only process term if the field has term property
-if (field.term) {
-  const termValue = formData.get(field.term);
-  if (termValue !== null) {
-    updateData[field.term] = parseStringField(termValue);
-  }
-}
+      if (year !== null) {
+        updateData[field.year] = parseIntField(year);
+      }
+      if (description !== null) {
+        updateData[field.description] = parseStringField(description);
+      }
+      // Only process term if the field has term property
+      if (field.term && term !== null) {
+        updateData[field.term] = parseStringField(term);
+      }
     }
 
     console.log("📝 Update data prepared:", updateData);
-    console.log("📁 Additional files data ready:", additionalFilesData.length, "files");
-
-    // Create or update document
-    if (existingDocument) {
-      console.log("🔄 Updating existing document ID:", existingDocument.id);
-      const updatedDocument = await prisma.schoolDocument.update({
-        where: { id: existingDocument.id },
-        data: updateData
-      });
-
-      // Handle additional documents
-      if (additionalFilesData.length > 0) {
-        console.log("📁 Creating additional documents:", additionalFilesData.length);
-        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
-        
-        // Create additional documents
-        await prisma.additionalDocument.createMany({
-          data: additionalFilesData.map(file => ({
-            schoolDocumentId: existingDocument.id,
-            filename: file.filename,
-            filepath: file.filepath,
-            filetype: file.filetype,
-            description: file.description,
-            year: file.year,
-            term: file.term,
-            filesize: file.filesize
-          }))
-        });
-      }
-
-      // Delete marked additional documents
-      const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
-      if (additionalDocsToDelete.length > 0) {
-        console.log("🗑️ Deleting additional documents:", additionalDocsToDelete.length);
-        await prisma.additionalDocument.deleteMany({
-          where: {
-            id: {
-              in: additionalDocsToDelete.map(id => parseInt(id))
-            }
-          }
-        });
-      }
-
-      const finalDocument = await prisma.schoolDocument.findUnique({
-        where: { id: existingDocument.id },
-        include: { 
-          additionalDocuments: {
-            orderBy: {
-              uploadedAt: 'desc'
-            }
-          }
-        }
-      });
-
-      console.log("✅ Document update successful");
-      console.log(`✅ Final document has ${finalDocument.additionalDocuments?.length || 0} additional documents`);
-
-      return NextResponse.json({
-        success: true,
-        message: "School documents updated successfully",
-        document: cleanDocumentResponse(finalDocument)
-      });
-
-    } else {
-      console.log("🆕 Creating new document");
-      const newDocument = await prisma.schoolDocument.create({
-        data: updateData
-      });
-
-      if (additionalFilesData.length > 0) {
-        console.log("📁 Creating additional documents:", additionalFilesData.length);
-        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
-        
-        await prisma.additionalDocument.createMany({
-          data: additionalFilesData.map(file => ({
-            schoolDocumentId: newDocument.id,
-            filename: file.filename,
-            filepath: file.filepath,
-            filetype: file.filetype,
-            description: file.description,
-            year: file.year,
-            term: file.term,
-            filesize: file.filesize
-          }))
-        });
-      }
-
-      const finalDocument = await prisma.schoolDocument.findUnique({
-        where: { id: newDocument.id },
-        include: { 
-          additionalDocuments: {
-            orderBy: {
-              uploadedAt: 'desc'
-            }
-          }
-        }
-      });
-
-      console.log("✅ Document creation successful");
-      console.log(`✅ Final document has ${finalDocument.additionalDocuments?.length || 0} additional documents`);
-
-      return NextResponse.json({
-        success: true,
-        message: "School documents created successfully",
-        document: cleanDocumentResponse(finalDocument)
-      }, { status: 201 });
-    }
-
+    
+    // ... rest of your code continues ...
   } catch (error) {
     console.error("❌ POST Error:", error);
     return NextResponse.json(
