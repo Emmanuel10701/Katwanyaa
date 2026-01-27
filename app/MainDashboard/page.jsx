@@ -380,7 +380,7 @@ const router =useRouter()
         fetch('/api/applyadmission'),
         fetch('/api/resources'),
         fetch('/api/career'),
-        fetch('/api/student'),
+        fetch('/api/studentupload'), // Modified to use studentupload API
         fetch('/api/feebalances'),
         fetch('/api/results'),
         fetch('/api/schooldocuments') // Added this
