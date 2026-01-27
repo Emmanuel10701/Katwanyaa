@@ -538,7 +538,7 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
     </div>
   );
 };
-// Feature Card Component
+
 const FeatureCard = ({ feature, onLearnMore }) => {
   const FeatureIcon = feature.icon;
   
@@ -877,6 +877,7 @@ const ModernFeeCard = ({
     </div>
   );
 };
+
 // Video Tour Component
 const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
   if (!videoTour) return null;
@@ -1191,6 +1192,193 @@ const ModernUniformRequirementsSection = ({
   );
 };
 
+// NEW: Academic Results Section Component
+const AcademicResultsSection = ({ documentData }) => {
+  const resultsData = [
+    {
+      name: 'Form 1 Results',
+      pdf: documentData?.form1ResultsPdf,
+      pdfName: documentData?.form1ResultsPdfName,
+      description: documentData?.form1ResultsDescription,
+      year: documentData?.form1ResultsYear,
+      term: documentData?.form1ResultsTerm,
+      icon: FiBook,
+      gradient: 'from-blue-500 to-cyan-500'
+    },
+    {
+      name: 'Form 2 Results',
+      pdf: documentData?.form2ResultsPdf,
+      pdfName: documentData?.form2ResultsPdfName,
+      description: documentData?.form2ResultsDescription,
+      year: documentData?.form2ResultsYear,
+      term: documentData?.form2ResultsTerm,
+      icon: FiBookOpen,
+      gradient: 'from-purple-500 to-pink-500'
+    },
+    {
+      name: 'Form 3 Results',
+      pdf: documentData?.form3ResultsPdf,
+      pdfName: documentData?.form3ResultsPdfName,
+      description: documentData?.form3ResultsDescription,
+      year: documentData?.form3ResultsYear,
+      term: documentData?.form3ResultsTerm,
+      icon: FiLayers,
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    {
+      name: 'Form 4 Results',
+      pdf: documentData?.form4ResultsPdf,
+      pdfName: documentData?.form4ResultsPdfName,
+      description: documentData?.form4ResultsDescription,
+      year: documentData?.form4ResultsYear,
+      term: documentData?.form4ResultsTerm,
+      icon: FiAward,
+      gradient: 'from-amber-500 to-orange-500'
+    },
+    {
+      name: 'Mock Exams',
+      pdf: documentData?.mockExamsResultsPdf,
+      pdfName: documentData?.mockExamsPdfName,
+      description: documentData?.mockExamsDescription,
+      year: documentData?.mockExamsYear,
+      term: documentData?.mockExamsTerm,
+      icon: FiFileText,
+      gradient: 'from-red-500 to-rose-500'
+    },
+    {
+      name: 'KCSE Results',
+      pdf: documentData?.kcseResultsPdf,
+      pdfName: documentData?.kcsePdfName,
+      description: documentData?.kcseDescription,
+      year: documentData?.kcseYear,
+      term: documentData?.kcseTerm,
+      icon: FiTrendingUp,
+      gradient: 'from-indigo-500 to-purple-500'
+    }
+  ];
+
+  // Filter out results that don't have PDFs
+  const availableResults = resultsData.filter(result => result.pdf);
+
+  if (availableResults.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg overflow-hidden">
+      {/* Header Section */}
+      <div className="relative p-4 md:p-8 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
+              <IoStatsChartOutline className="text-white text-xl md:text-2xl" />
+            </div>
+            <div>
+              <h3 className="text-lg md:text-2xl font-bold">Academic Results & Reports</h3>
+              <p className="text-slate-300 mt-1">Download past examination results and performance reports</p>
+            </div>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
+            <FiAward className="text-yellow-400" />
+            <span className="text-sm font-bold uppercase tracking-wider">Performance Data</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-4 md:p-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {availableResults.map((result, index) => (
+            <div 
+              key={index}
+              className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-r ${result.gradient} text-white`}>
+                    <result.icon className="text-lg md:text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 text-sm leading-tight">{result.name}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-slate-500">{result.year}</span>
+                      {result.term && (
+                        <>
+                          <span className="text-slate-300">•</span>
+                          <span className="text-xs font-medium text-slate-500">{result.term}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {result.description && (
+                <p className="text-slate-500 text-xs leading-relaxed mb-4 line-clamp-2">
+                  {result.description}
+                </p>
+              )}
+              
+              {result.pdf && (
+                <a 
+                  href={result.pdf}
+                  download={result.pdfName}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all duration-200 group-hover:bg-slate-100"
+                >
+                  <IoCloudDownloadOutline className="text-slate-500" />
+                  <span>Download PDF</span>
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Additional Documents */}
+        {documentData?.additionalDocuments && documentData.additionalDocuments.length > 0 && (
+          <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
+            <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Additional School Documents</h4>
+            <div className="grid md:grid-cols-2 gap-3">
+              {documentData.additionalDocuments.map((doc, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg">
+                      <IoDocumentTextOutline className="text-blue-500" />
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-slate-800 text-sm">{doc.description || doc.filename}</h5>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-slate-500">{doc.year}</span>
+                        {doc.term && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-xs text-slate-500">{doc.term}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <a 
+                    href={doc.filepath}
+                    download={doc.filename}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-white text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <FiDownload size={16} />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // FAQ Item Component
 const ModernFAQItem = ({ faq, index, openFaq, setOpenFaq }) => {
   const isOpen = openFaq === index;
@@ -1238,7 +1426,7 @@ export default function ComprehensiveAdmissions() {
   const [filterType, setFilterType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [schoolData, setSchoolData] = useState(null);
-  const [documentData, setDocumentData] = useState(null); // Added documentData state
+  const [documentData, setDocumentData] = useState(null);
 
   const router = useRouter();
 
@@ -1597,6 +1785,7 @@ export default function ComprehensiveAdmissions() {
     { id: 'career-paths', label: 'Career Paths', icon: FiBriefcase },
     { id: 'requirements', label: 'Requirements', icon: FiFileText },
     { id: 'fees', label: 'Fee Structure', icon: IoReceiptOutline },
+    { id: 'results', label: 'Results', icon: IoStatsChartOutline }, // New Results tab
     { id: 'faq', label: 'FAQ', icon: FiHelpCircle },
   ];
 
@@ -1664,7 +1853,7 @@ export default function ComprehensiveAdmissions() {
   const faqs = [
     {
       question: 'What are the admission requirements?',
-      answer: 'Admission requires completion of primary education, KCPE results, birth certificate, and medical records. Transfer students need additional documents including previous school reports and transfer letter.'
+      answer: schoolData?.admissionRequirements || 'Admission requires completion of primary education, KCPE results, birth certificate, and medical records. Transfer students need additional documents including previous school reports and transfer letter.'
     },
     {
       question: 'What is the fee structure and payment options?',
@@ -2794,7 +2983,7 @@ export default function ComprehensiveAdmissions() {
                 {/* Boarding School Fees Card */}
                 <ModernFeeCard
                   feeType="Boarding School"
-                  total={schoolData?.feesBoarding || 0}
+                  total={documentData?.feesBoardingDistributionJson?.total || schoolData?.feesBoarding || 0}
                   distribution={documentData?.feesBoardingDistributionJson}
                   pdfPath={documentData?.feesBoardingDistributionPdf}
                   pdfName={documentData?.feesBoardingPdfName}
@@ -2817,7 +3006,7 @@ export default function ComprehensiveAdmissions() {
                 {/* Day School Fees Card */}
                 <ModernFeeCard
                   feeType="Day School"
-                  total={schoolData?.feesDay || 0}
+                  total={documentData?.feesDayDistributionJson?.total || schoolData?.feesDay || 0}
                   distribution={documentData?.feesDayDistributionJson}
                   pdfPath={documentData?.feesDayDistributionPdf}
                   pdfName={documentData?.feesDayPdfName}
@@ -2944,6 +3133,85 @@ export default function ComprehensiveAdmissions() {
                       <p className="text-slate-600 text-sm">{option.description}</p>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NEW: Results Tab */}
+          {activeTab === 'results' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
+              
+              {/* Hero Header */}
+              <div className="text-center mb-8 md:mb-12">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-full mb-6">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Academic Performance</span>
+                </div>
+                <h2 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tight mb-4 px-2">
+                  Examination <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Results</span>
+                </h2>
+                <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto leading-relaxed px-2">
+                  Access past examination results, performance reports, and academic achievements.
+                </p>
+              </div>
+
+              {/* Academic Results Section */}
+              <AcademicResultsSection documentData={documentData} />
+
+              {/* Performance Statistics */}
+              <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
+                <div className="flex items-center justify-between mb-6 md:mb-8">
+                  <div>
+                    <div className="flex items-center gap-2 md:gap-3 mb-2">
+                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
+                        <IoStatsChartOutline className="text-white text-lg md:text-xl" />
+                      </div>
+                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Performance Statistics</h3>
+                    </div>
+                    <p className="text-slate-500">Key metrics and academic achievements</p>
+                  </div>
+                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
+                    <FiTrendingUp className="text-blue-500" />
+                    <span>Consistent Excellence</span>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Overall Pass Rate', value: '98%', color: 'from-green-500 to-emerald-500' },
+                    { label: 'University Placement', value: '95%', color: 'from-blue-500 to-cyan-500' },
+                    { label: 'Mean Score', value: 'B+', color: 'from-purple-500 to-pink-500' },
+                    { label: 'Top Performers', value: 'A- & Above', color: 'from-amber-500 to-orange-500' }
+                  ].map((stat, index) => (
+                    <div key={index} className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6 text-center">
+                      <div className={`inline-flex p-3 md:p-4 rounded-xl md:rounded-2xl bg-gradient-to-r ${stat.color} mb-4`}>
+                        <FiTrendingUp className="text-white text-xl md:text-2xl" />
+                      </div>
+                      <div className="text-2xl md:text-3xl font-black text-slate-900 mb-2">{stat.value}</div>
+                      <div className="text-sm text-slate-500 font-medium">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Results Archive Notice */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl md:rounded-2xl p-4 md:p-6">
+                <div className="flex items-start gap-3 md:gap-4">
+                  <div className="p-2 md:p-3 bg-white rounded-xl">
+                    <FiInfo className="text-blue-500 text-lg md:text-xl" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-blue-900 mb-2">Results Archive Information</h4>
+                    <p className="text-blue-700 text-sm">
+                      All examination results are available for download in PDF format. Results are typically uploaded 
+                      within 2 weeks after official release. For any missing results or technical issues, please contact 
+                      the academic office.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
