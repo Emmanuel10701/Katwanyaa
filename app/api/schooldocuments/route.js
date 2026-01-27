@@ -245,13 +245,19 @@ const cleanDocumentResponse = (document) => {
   };
 };
 
-// GET - Fetch all documents
+// GET - Fetch all documents (SINGLE VERSION - REMOVED DUPLICATE)
 export async function GET() {
   try {
     console.log("📥 GET Request received");
     
     const document = await prisma.schoolDocument.findFirst({
-      include: { additionalDocuments: true }
+      include: { 
+        additionalDocuments: {
+          orderBy: {
+            uploadedAt: 'desc'
+          }
+        }
+      }
     });
 
     if (!document) {
@@ -262,6 +268,8 @@ export async function GET() {
       });
     }
 
+    console.log(`📄 Found document with ${document.additionalDocuments?.length || 0} additional documents`);
+    
     return NextResponse.json({
       success: true,
       document: cleanDocumentResponse(document)
@@ -277,7 +285,6 @@ export async function GET() {
 }
 
 // POST - Create or update all documents
-// POST - Create or update all documents (REFINED VERSION)
 export async function POST(req) {
   try {
     console.log("📥 POST Request received");
@@ -777,46 +784,6 @@ export async function POST(req) {
     );
   }
 }
-
-// GET - Fetch all documents (REFINED VERSION)
-export async function GET() {
-  try {
-    console.log("📥 GET Request received");
-    
-    const document = await prisma.schoolDocument.findFirst({
-      include: { 
-        additionalDocuments: {
-          orderBy: {
-            uploadedAt: 'desc'
-          }
-        }
-      }
-    });
-
-    if (!document) {
-      return NextResponse.json({
-        success: true,
-        message: "No documents found",
-        document: null
-      });
-    }
-
-    console.log(`📄 Found document with ${document.additionalDocuments?.length || 0} additional documents`);
-    
-    return NextResponse.json({
-      success: true,
-      document: cleanDocumentResponse(document)
-    });
-
-  } catch (error) {
-    console.error("❌ GET Error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
 
 // PUT - Update specific document field
 export async function PUT(req) {
