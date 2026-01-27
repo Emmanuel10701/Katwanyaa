@@ -1642,7 +1642,6 @@ function ModernPdfUpload({
 }
 
 // First, update the AdditionalResultsUpload component to properly pass data to parent
-// Updated AdditionalResultsUpload Component with proper error handling
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
