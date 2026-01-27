@@ -3176,42 +3176,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                     <FaAward className="text-orange-600" />
                     <span className="text-base">{exam.label}</span>
                   </label>
-                  <div className="flex gap-2">
-                    <div className="w-24">
-                      <input
-                        type="number"
-                        min="2000"
-                        max="2100"
-                        value={examMetadata[`${exam.key}Year`]}
-                        onChange={(e) => handleExamMetadataChange(`${exam.key}Year`, e.target.value)}
-                        placeholder="Year"
-                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                      />
-                    </div>
-                    <div className="w-32">
-                      <select
-                        value={examMetadata[`${exam.key}Term`]}
-                        onChange={(e) => handleExamMetadataChange(`${exam.key}Term`, e.target.value)}
-                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                      >
-                        <option value="">Select Term</option>
-                        <option value="Term 1">Term 1</option>
-                        <option value="Term 2">Term 2</option>
-                        <option value="Term 3">Term 3</option>
-                        <option value="Annual">Annual</option>
-                      </select>
-                    </div>
-                  </div>
                 </div>
-                <div className="mb-3">
-                  <input
-                    type="text"
-                    value={examMetadata[`${exam.key}Description`]}
-                    onChange={(e) => handleExamMetadataChange(`${exam.key}Description`, e.target.value)}
-                    placeholder="Description of these results..."
-                    className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-sm font-bold"
-                  />
-                </div>
+           
                 <ModernPdfUpload
                   pdfFile={formData[`${exam.key}Pdf`]}
                   onPdfChange={(file, year, description, term) => {
@@ -3479,7 +3445,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3  mb-6 w-full sm:w-auto">
+              <div className="flex items-center gap-3  mb-10 w-full sm:w-auto">
                 {currentStep > 0 && (
                   <button 
                     type="button"
