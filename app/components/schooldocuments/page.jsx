@@ -1096,8 +1096,8 @@ function ModernPdfUpload({
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
 
-  // File size limit (4.5 MB individual file limit)
-  const MAX_INDIVIDUAL_SIZE = 4.5 * 1024 * 1024;
+  // File size limit (0.5 MB individual file limit)
+  const MAX_INDIVIDUAL_SIZE = 0.5 * 1024 * 1024;
   
   // Allowed file types
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
@@ -1334,7 +1334,7 @@ function ModernPdfUpload({
           <div className="flex items-center gap-2">
             <FaExclamationTriangle className="text-yellow-600" />
             <p className="text-sm font-bold text-yellow-800">
-              Each file must not exceed 4.5 MB. Allowed types: PDF, DOC, DOCX
+              Each file must not exceed 500kB. Allowed types: PDF, DOC, DOCX
             </p>
           </div>
         </div>
@@ -1658,8 +1658,8 @@ function AdditionalResultsUpload({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // File size limit (4.5 MB individual file limit)
-  const MAX_INDIVIDUAL_SIZE = 4.5 * 1024 * 1024;
+  // File size limit (0.5 MB individual file limit)
+  const MAX_INDIVIDUAL_SIZE = 0.5 * 1024 * 1024;
   
   // Allowed file types for additional documents
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
@@ -1990,7 +1990,7 @@ function AdditionalResultsUpload({
         <div className="flex items-center gap-2">
           <FaExclamationTriangle className="text-yellow-600" />
           <p className="text-sm font-bold text-yellow-800">
-            Each file must not exceed 4.5 MB. Allowed types: PDF, DOC, DOCX
+            Each file must not exceed 600 kB. Allowed types: PDF, DOC, DOCX
           </p>
         </div>
       </div>
@@ -3376,34 +3376,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
               <FaTimes className="text-lg" />
             </button>
           </div>
-          
-          {/* TOTAL SIZE PROGRESS BAR */}
-          <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <FaDatabase className="text-blue-300" />
-                <span className="text-sm font-bold text-white">Total Upload Size</span>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-bold text-white">{fileSizeManager.getTotalSizeMB()} MB</span>
-                <span className="text-xs text-white/80 ml-2">of {fileSizeManager.getMaxSizeMB()} MB</span>
-              </div>
-            </div>
-            <div className="w-full bg-white/20 rounded-full h-2.5">
-              <div 
-                className="bg-gradient-to-r from-green-400 to-emerald-500 h-2.5 rounded-full transition-all duration-500"
-                style={{ width: `${fileSizeManager.getPercentage()}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-xs text-white/80 font-bold">
-                {fileSizeManager.fileCount} file(s) selected
-              </span>
-              <span className="text-xs text-white/80 font-bold">
-                {fileSizeManager.getRemainingMB()} MB remaining
-              </span>
-            </div>
-          </div>
+  
         </div>
 
         <div className="bg-white border-b border-gray-200 p-4">
