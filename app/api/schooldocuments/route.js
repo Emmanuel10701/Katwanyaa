@@ -316,40 +316,50 @@ export async function POST(req) {
     const uploadResults = {};
 
     // All document fields including curriculum and fees now have term
-    const documentFields = [
-      { 
-        key: 'curriculum', 
-        name: 'curriculumPDF', 
-        year: 'curriculumYear', 
-        term: 'curriculumTerm',
-        description: 'curriculumDescription',
-        folder: 'curriculum' 
-      },
-      { 
-        key: 'feesDay', 
-        name: 'feesDayDistributionPdf', 
-        year: 'feesDayYear', 
-        term: 'feesDayTerm',
-        description: 'feesDayDescription',
-        folder: 'day-fees' 
-      },
-      { 
-        key: 'feesBoarding', 
-        name: 'feesBoardingDistributionPdf', 
-        year: 'feesBoardingYear', 
-        term: 'feesBoardingTerm',
-        description: 'feesBoardingDescription',
-        folder: 'boarding-fees' 
-      },
-      { 
-        key: 'admissionFee', 
-        name: 'admissionFeePdf', 
-        year: 'admissionFeeYear', 
-        term: 'admissionFeeTerm',
-        description: 'admissionFeeDescription',
-        folder: 'admission' 
-      },
-    ];
+const documentFields = [
+  { 
+    key: 'curriculum', 
+    name: 'curriculumPDF', 
+    year: 'curriculumYear',
+    // term: 'curriculumTerm', // Remove this line
+    description: 'curriculumDescription',
+    folder: 'curriculum' 
+  },
+  { 
+    key: 'feesDay', 
+    name: 'feesDayDistributionPdf', 
+    year: 'feesDayYear',
+    // term: 'feesDayTerm', // Remove this line
+    description: 'feesDayDescription',
+    folder: 'day-fees' 
+  },
+  { 
+    key: 'feesBoarding', 
+    name: 'feesBoardingDistributionPdf', 
+    year: 'feesBoardingYear',
+    // term: 'feesBoardingTerm', // Remove this line
+    description: 'feesBoardingDescription',
+    folder: 'boarding-fees' 
+  },
+  { 
+    key: 'admissionFee', 
+    name: 'admissionFeePdf', 
+    year: 'admissionFeeYear',
+    // term: 'admissionFeeTerm', // Remove this line
+    description: 'admissionFeeDescription',
+    folder: 'admission' 
+  },
+];
+
+// Also update the part where you process year, term, and description:
+// Change from:
+if (term !== null) {
+  updateData[field.term] = parseStringField(term);
+}
+// To:
+if (field.term && term !== null) {
+  updateData[field.term] = parseStringField(term);
+}
 
     // Exam fields already have term
     const examFields = [

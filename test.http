@@ -1,541 +1,363 @@
-### 1. Create School Info (Basic minimal data - no files)
-### ==================== BASE URL ====================
-@baseUrl =  https://katwanyaa.vercel.app/api/school
+### Test School Documents API
 
-### ==================== HEALTH CHECK ====================
-GET {{baseUrl}} HTTP/1.1
+@baseUrl = https://katwanyaa.vercel.app/api/schooldocuments
+
+### 1. GET - Retrieve all documents
+GET {{baseUrl}}
 Content-Type: application/json
 
-### ==================== GET SCHOOL INFO ====================
-GET {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 2. POST - Create/Update documents with form data
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
 
-### ==================== CREATE SCHOOL INFO (JSON ONLY - FILES ALREADY UPLOADED TO SUPABASE) ====================
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
-
-{
-  "name": "Clerk Test School",
-  "description": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
-  "motto": "Education is light, knowledge is strength",
-  "vision": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
-  "mission": "To provide quality and inclusive education through dedicated teaching, modern learning approaches, and strong values that empower students to achieve their full potential and positively impact society.",
-  
-  "studentCount": 1200,
-  "staffCount": 34,
-  "openDate": "2026-02-06",
-  "closeDate": "2026-05-07",
-  
-  "subjects": ["Mathematics", "English", "Science", "History", "Geography"],
-  "departments": ["Science Department", "Arts Department", "Sports Department"],
-  
-  "videoTour": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/videos/1769253171025_3kbhdg5e4.mp4",
-  "videoType": "file",
-  "videoThumbnail": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/thumbnails/1769253182780_yigsha1ag.jpg",
-  
-  "curriculumPDF": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
-  "curriculumPdfName": "Gospel of Thomas Lambdin.pdf",
-  
-  "feesDayDistribution": {
-    "Tuition": 50000,
-    "Activity Fee": 15000,
-    "Library": 5000,
-    "Laboratory": 10000
-  },
-  "feesDay": 80000,
-  "feesDayDistributionPdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
-  "feesDayPdfName": "Day Fees Breakdown.pdf",
-  
-  "feesBoardingDistribution": {
-    "Tuition": 50000,
-    "Boarding": 40000,
-    "Activity Fee": 15000,
-    "Library": 5000,
-    "Laboratory": 10000
-  },
-  "feesBoarding": 120000,
-  "feesBoardingDistributionPdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
-  "feesBoardingPdfName": "Boarding Fees Breakdown.pdf",
-  
-  "admissionFeeDistribution": {
-    "Registration": 10000,
-    "Processing": 5000,
-    "Admission Kit": 15000
-  },
-  "admissionFee": 30000,
-  "admissionFeePdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/documents/1769253183375_a0w198zbp.pdf",
-  "admissionFeePdfName": "Admission Fee Breakdown.pdf",
-  
-  "admissionOpenDate": "2026-01-15",
-  "admissionCloseDate": "2026-02-15",
-  "admissionRequirements": "Original KCPE Certificate, Birth Certificate, 2 Passport Photos, Medical Report",
-  "admissionCapacity": 200,
-  "admissionContactEmail": "admissions@accountsclerkschool.edu",
-  "admissionContactPhone": "+254712345678",
-  "admissionWebsite": "https://accountsclerkschool.edu/admissions",
-  "admissionLocation": "Main Administration Building, Room 101",
-  "admissionOfficeHours": "Monday-Friday: 8:00 AM - 5:00 PM",
-  "admissionDocumentsRequired": ["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report"],
-  
-  "examResults": {
-    "form1": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "Form_1_Results_2024.pdf",
-      "year": 2024
-    },
-    "form2": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "Form_2_Results_2024.pdf",
-      "year": 2024
-    },
-    "form3": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "Form_3_Results_2024.pdf",
-      "year": 2024
-    },
-    "form4": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "Form_4_Results_2024.pdf",
-      "year": 2024
-    },
-    "mockExams": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "Mock_Exams_2024.pdf",
-      "year": 2024
-    },
-    "kcse": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/1769253183992_oplt6o3w5.pdf",
-      "name": "KCSE_2023.pdf",
-      "year": 2023
-    }
-  },
-  
-  "additionalResultsFiles": [
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/sample.pdf",
-      "name": "Term_1_Report_2024.pdf",
-      "year": 2024,
-      "description": "Term 1 Academic Report",
-      "size": 1024000,
-      "type": "application/pdf"
-    },
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/sample2.pdf",
-      "name": "Sports_Day_Results.pdf",
-      "year": 2024,
-      "description": "Annual Sports Day Results",
-      "size": 512000,
-      "type": "application/pdf"
-    }
-  ]
-}
-
-### ==================== UPDATE SCHOOL INFO (MULTIPART/FORM-DATA) ====================
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
-
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
-
-Updated School Name
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="studentCount"
-
-1500
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="staffCount"
-
-45
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="motto"
-
-Updated Motto: Excellence Through Dedication
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionRequirements"
-
-Updated requirements: Original KCPE Certificate, Birth Certificate, 3 Passport Photos, Medical Report, Transfer Letter
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="subjects"
-
-["Mathematics", "English", "Science", "History", "Geography", "Computer Science", "Business Studies"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="departments"
-
-["Science Department", "Arts Department", "Sports Department", "ICT Department"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionDocumentsRequired"
-
-["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report", "Transfer Letter"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionCapacity"
-
-250
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="form1ResultsYear"
-
-2025
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="form2ResultsYear"
-
-2025
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="form3ResultsYear"
-
-2025
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="form4ResultsYear"
-
-2025
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="mockExamsYear"
-
-2025
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="kcseYear"
+--WebAppBoundary
+Content-Disposition: form-data; name="curriculumYear"
 
 2024
-------WebKitFormBoundary7MA4YWxkTrZu0gW
+--WebAppBoundary
+Content-Disposition: form-data; name="curriculumTerm"
 
-### ==================== UPDATE SCHOOL INFO (JSON ONLY) ====================
-PUT {{baseUrl}} HTTP/1.1
+Term 1
+--WebAppBoundary
+Content-Disposition: form-data; name="curriculumDescription"
+
+Mathematics, Science, and English Curriculum for 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="curriculumPDF"; filename="curriculum.pdf"
+Content-Type: application/pdf
+
+< ./test-files/curriculum.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayYear"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayTerm"
+
+Term 1
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayDescription"
+
+Day School Fees Structure 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayDistributionPdf"; filename="fees-day.pdf"
+Content-Type: application/pdf
+
+< ./test-files/fees-day.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="feesDayDistributionJson"
+
+{
+  "tuition": 50000,
+  "activity": 10000,
+  "library": 5000,
+  "medical": 3000,
+  "total": 68000
+}
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingYear"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingTerm"
+
+Term 1
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingDescription"
+
+Boarding School Fees Structure 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingDistributionPdf"; filename="fees-boarding.pdf"
+Content-Type: application/pdf
+
+< ./test-files/fees-boarding.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="feesBoardingDistributionJson"
+
+{
+  "tuition": 50000,
+  "boarding": 30000,
+  "activity": 10000,
+  "library": 5000,
+  "medical": 3000,
+  "total": 98000
+}
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeeYear"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeeTerm"
+
+Term 1
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeeDescription"
+
+Admission Fee Structure 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeePdf"; filename="admission-fees.pdf"
+Content-Type: application/pdf
+
+< ./test-files/admission-fees.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="admissionFeeDistribution"
+
+{
+  "application": 1000,
+  "registration": 5000,
+  "uniform": 15000,
+  "books": 20000,
+  "total": 41000
+}
+--WebAppBoundary
+Content-Disposition: form-data; name="form1ResultsYear"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="form1ResultsTerm"
+
+Term 1
+--WebAppBoundary
+Content-Disposition: form-data; name="form1ResultsDescription"
+
+Form 1 End of Term Results 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1-results.pdf"
+Content-Type: application/pdf
+
+< ./test-files/form1-results.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="kcseYear"
+
+2023
+--WebAppBoundary
+Content-Disposition: form-data; name="kcseTerm"
+
+Annual
+--WebAppBoundary
+Content-Disposition: form-data; name="kcseDescription"
+
+KCSE 2023 Results Summary
+--WebAppBoundary
+Content-Disposition: form-data; name="kcseResultsPdf"; filename="kcse-2023.pdf"
+Content-Type: application/pdf
+
+< ./test-files/kcse-2023.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="school-calendar.pdf"
+Content-Type: application/pdf
+
+< ./test-files/school-calendar.pdf
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesYear"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesTerm"
+
+Annual
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesDesc"
+
+School Academic Calendar 2024
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="sports-day.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+< ./test-files/sports-day.docx
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesYear[1]"
+
+2024
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesTerm[1]"
+
+Term 2
+--WebAppBoundary
+Content-Disposition: form-data; name="additionalFilesDesc[1]"
+
+Sports Day Announcement
+--WebAppBoundary--
+
+### 3. POST - Minimal document update (just metadata without files)
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=MinimalBoundary
+
+--MinimalBoundary
+Content-Disposition: form-data; name="curriculumYear"
+
+2025
+--MinimalBoundary
+Content-Disposition: form-data; name="curriculumTerm"
+
+Term 1
+--MinimalBoundary
+Content-Disposition: form-data; name="curriculumDescription"
+
+Updated curriculum for 2025 academic year
+--MinimalBoundary
+Content-Disposition: form-data; name="feesDayYear"
+
+2025
+--MinimalBoundary
+Content-Disposition: form-data; name="feesDayTerm"
+
+Term 1
+--MinimalBoundary--
+
+### 4. POST - Update with existing document deletion
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=DeleteBoundary
+
+--DeleteBoundary
+Content-Disposition: form-data; name="curriculumYear"
+
+2024
+--DeleteBoundary
+Content-Disposition: form-data; name="curriculumTerm"
+
+Term 2
+--DeleteBoundary
+Content-Disposition: form-data; name="additionalDocsToDelete[]"
+
+1
+--DeleteBoundary
+Content-Disposition: form-data; name="additionalDocsToDelete[]"
+
+2
+--DeleteBoundary--
+
+### 5. PUT - Update specific field (JSON body)
+PUT {{baseUrl}}?id=1
 Content-Type: application/json
 
 {
-  "name": "Accounts Clerk Updated School",
-  "description": "Updated description with more details about our educational philosophy and achievements.",
-  "motto": "Education is light, knowledge is strength - Updated",
-  "vision": "To be the leading institution in providing quality education that transforms lives and communities.",
-  "mission": "To empower students through innovative teaching methods and a supportive learning environment.",
-  
-  "studentCount": 1350,
-  "staffCount": 38,
-  "openDate": "2026-02-01",
-  "closeDate": "2026-05-10",
-  
-  "subjects": ["Mathematics", "English", "Science", "History", "Geography", "Computer", "Business"],
-  "departments": ["Science", "Arts", "Sports", "ICT", "Languages"],
-  
-  "feesDayDistribution": {
-    "Tuition": 55000,
-    "Activity Fee": 18000,
-    "Library": 7000,
-    "Laboratory": 12000,
-    "Development": 5000
-  },
-  "feesDay": 97000,
-  
-  "feesBoardingDistribution": {
-    "Tuition": 55000,
-    "Boarding": 45000,
-    "Activity Fee": 18000,
-    "Library": 7000,
-    "Laboratory": 12000,
-    "Development": 5000
-  },
-  "feesBoarding": 142000,
-  
-  "admissionFeeDistribution": {
-    "Registration": 12000,
-    "Processing": 6000,
-    "Admission Kit": 18000,
-    "Medical": 4000
-  },
-  "admissionFee": 40000,
-  
-  "admissionOpenDate": "2026-01-10",
-  "admissionCloseDate": "2026-02-20",
-  "admissionRequirements": "KCPE Certificate (Original), Birth Certificate (Original), 3 Passport Photos, Medical Report, Transfer Letter, Recommendation Letter",
-  "admissionCapacity": 250,
-  "admissionContactEmail": "info@accountsclerkschool.edu",
-  "admissionContactPhone": "+254711223344",
-  "admissionWebsite": "https://accountsclerkschool.edu",
-  "admissionLocation": "New Administration Wing, Ground Floor",
-  "admissionOfficeHours": "Monday-Saturday: 8:00 AM - 6:00 PM",
-  "admissionDocumentsRequired": ["KCPE Certificate", "Birth Certificate", "Passport Photos", "Medical Report", "Transfer Letter", "Recommendation Letter"],
-  
-  "examResults": {
-    "form1": {
-      "year": 2025
-    },
-    "form2": {
-      "year": 2025
-    },
-    "form3": {
-      "year": 2025
-    },
-    "form4": {
-      "year": 2025
-    },
-    "mockExams": {
-      "year": 2025
-    },
-    "kcse": {
-      "year": 2024
-    }
+  "field": "curriculumDescription",
+  "data": "Updated curriculum description for all forms"
+}
+
+### 6. PUT - Update JSON data field
+PUT {{baseUrl}}?id=1
+Content-Type: application/json
+
+{
+  "field": "feesDayDistributionJson",
+  "data": {
+    "tuition": 55000,
+    "activity": 12000,
+    "library": 6000,
+    "medical": 3500,
+    "development": 5000,
+    "total": 80500
   }
 }
 
-### ==================== UPDATE WITH YOUTUBE VIDEO ====================
-PUT {{baseUrl}} HTTP/1.1
+### 7. PATCH - Delete specific file
+PATCH {{baseUrl}}?id=1&field=curriculumPDF
 Content-Type: application/json
 
 {
-  "name": "Accounts Clerk with YouTube Video",
-  "videoTour": "https://www.youtube.com/watch?v=abcdefghijk",
-  "videoType": "youtube",
-  "removeVideo": false
+  "action": "deleteFile"
 }
 
-### ==================== UPDATE WITH FILE REMOVAL ====================
-PUT {{baseUrl}} HTTP/1.1
+### 8. PATCH - Delete additional document
+PATCH {{baseUrl}}?id=1&field=additionalDocuments
 Content-Type: application/json
 
 {
-  "name": "Accounts Clerk - Remove Files",
-  "removeVideo": true,
-  "removeCurriculumPDF": true,
-  "removeFeesDayDistributionPdf": true,
-  "filesToRemove": [
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/old_file.pdf",
-      "filename": "old_file.pdf"
-    }
-  ]
+  "action": "deleteFile",
+  "fileId": 3
 }
 
-### ==================== DELETE SCHOOL INFO ====================
-DELETE {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 9. DELETE - Delete by ID
+DELETE {{baseUrl}}?id=1
 
-### ==================== TEST OPTIONS (HEALTH CHECK) ====================
-OPTIONS {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 10. DELETE - Delete first document (legacy)
+DELETE {{baseUrl}}
 
-### ==================== TEST WITH MINIMAL DATA ====================
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 11. POST - Test with invalid file type (should fail)
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=InvalidBoundary
 
-{
-  "name": "Minimal Test School",
-  "studentCount": 500,
-  "staffCount": 20,
-  "openDate": "2026-01-15",
-  "closeDate": "2026-04-15",
-  "subjects": ["Math", "English"],
-  "departments": ["Academic"]
-}
+--InvalidBoundary
+Content-Disposition: form-data; name="curriculumPDF"; filename="invalid.jpg"
+Content-Type: image/jpeg
 
-### ==================== TEST WITH INVALID DATA ====================
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+< ./test-files/invalid.jpg
+--InvalidBoundary
+Content-Disposition: form-data; name="curriculumDescription"
 
-{
-  "name": "",
-  "studentCount": "not-a-number"
-}
+Test with invalid file type
+--InvalidBoundary--
 
-### ==================== TEST UPDATE NON-EXISTENT ====================
-# First delete if exists
-DELETE {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 12. POST - Test with large file (should fail if >4.5MB)
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=LargeFileBoundary
 
-###
+--LargeFileBoundary
+Content-Disposition: form-data; name="curriculumPDF"; filename="large-file.pdf"
+Content-Type: application/pdf
 
-# Then try to update
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+< ./test-files/large-document.pdf
+--LargeFileBoundary
+Content-Disposition: form-data; name="curriculumDescription"
 
-{
-  "name": "Should Fail"
-}
+Test with large file upload
+--LargeFileBoundary--
 
-### ==================== TEST LARGE SUBJECTS LIST ====================
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+### 13. POST - Multiple additional files with different metadata
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=MultipleAdditionalBoundary
 
-{
-  "name": "Large Subjects Test",
-  "subjects": [
-    "Mathematics", "English Language", "Kiswahili", "Biology", "Chemistry", 
-    "Physics", "Geography", "History", "CRE", "IRE", "Home Science", 
-    "Agriculture", "Business Studies", "Computer Studies", "Music", 
-    "Art and Design", "French", "German", "Arabic", "Physical Education",
-    "Life Skills", "Citizenship", "Environmental Education"
-  ],
-  "departments": [
-    "Science Department", "Mathematics Department", "Languages Department",
-    "Humanities Department", "Technical Department", "Sports Department",
-    "Guidance and Counseling", "Examinations Department", "ICT Department"
-  ]
-}
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="policy1.pdf"
+Content-Type: application/pdf
 
-### ==================== TEST ADMISSION UPDATES ====================
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+< ./test-files/policy1.pdf
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesYear[0]"
 
-{
-  "admissionOpenDate": "2026-01-01",
-  "admissionCloseDate": "2026-03-31",
-  "admissionRequirements": "1. Original KCPE Certificate\n2. Birth Certificate\n3. 4 Passport Photos\n4. Medical Report from Registered Hospital\n5. Transfer Letter from Previous School\n6. Recommendation Letter from Class Teacher",
-  "admissionFee": 45000,
-  "admissionCapacity": 300,
-  "admissionContactEmail": "admissions2026@accountsclerkschool.edu",
-  "admissionContactPhone": "+254700123456",
-  "admissionWebsite": "https://admissions.accountsclerkschool.edu",
-  "admissionLocation": "Admissions Office, Main Gate Building",
-  "admissionOfficeHours": "Weekdays: 8:00 AM - 5:00 PM | Saturdays: 9:00 AM - 1:00 PM",
-  "admissionDocumentsRequired": [
-    "KCPE Certificate (Original)",
-    "Birth Certificate (Original & Copy)",
-    "Passport Photos (4 copies)",
-    "Medical Report",
-    "Transfer Letter",
-    "Recommendation Letter",
-    "Parents' ID Copies",
-    "Payment Receipt"
-  ],
-  "admissionFeeDistribution": {
-    "Registration Fee": 15000,
-    "Processing Fee": 8000,
-    "Admission Kit": 20000,
-    "Medical Fee": 5000,
-    "ID Card": 2000
-  }
-}
+2024
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesTerm[0]"
 
-### ==================== TEST EXAM RESULTS UPDATE ====================
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+Annual
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesDesc[0]"
 
-{
-  "examResults": {
-    "form1": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form1_2025.pdf",
-      "name": "form1_results_2025.pdf",
-      "year": 2025
-    },
-    "form2": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form2_2025.pdf",
-      "name": "form2_results_2025.pdf",
-      "year": 2025
-    },
-    "form3": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form3_2025.pdf",
-      "name": "form3_results_2025.pdf",
-      "year": 2025
-    },
-    "form4": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/form4_2025.pdf",
-      "name": "form4_results_2025.pdf",
-      "year": 2025
-    },
-    "mockExams": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/mock_2025.pdf",
-      "name": "mock_exams_2025.pdf",
-      "year": 2025
-    },
-    "kcse": {
-      "pdf": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/exam-results/kcse_2024.pdf",
-      "name": "kcse_2024_results.pdf",
-      "year": 2024
-    }
-  },
-  "additionalResultsFiles": [
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term1_2024.pdf",
-      "name": "term_1_report_2024.pdf",
-      "year": 2024,
-      "description": "Term 1 Comprehensive Report",
-      "size": 2048000,
-      "type": "application/pdf"
-    },
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term2_2024.pdf",
-      "name": "term_2_report_2024.pdf",
-      "year": 2024,
-      "description": "Term 2 Comprehensive Report",
-      "size": 2100000,
-      "type": "application/pdf"
-    },
-    {
-      "url": "https://pkzsthlhoqwelzbxjyum.supabase.co/storage/v1/object/public/Katwanyaa%20High/additional-documents/term3_2024.pdf",
-      "name": "term_3_report_2024.pdf",
-      "year": 2024,
-      "description": "Term 3 Comprehensive Report",
-      "size": 1985000,
-      "type": "application/pdf"
-    }
-  ]
-}
+School Discipline Policy
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="policy2.docx"
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
 
-### ==================== TEST ERROR SCENARIOS ====================
+< ./test-files/policy2.docx
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesYear[1]"
 
-### Test with invalid JSON
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+2024
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesTerm[1]"
 
-{
-  "name": "Invalid Test",
-  "studentCount": "not a number",
-  "openDate": "invalid-date",
-  "subjects": "not an array"
-}
+Annual
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesDesc[1]"
 
-### Test with missing required fields
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+Examination Policy
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFiles[]"; filename="newsletter.pdf"
+Content-Type: application/pdf
 
-{
-  "name": ""
-}
+< ./test-files/newsletter.pdf
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesYear"
 
-### Test with very long strings
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+2024
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesTerm"
 
-{
-  "name": "A".repeat(1000),
-  "description": "B".repeat(10000),
-  "studentCount": 100,
-  "staffCount": 10,
-  "openDate": "2026-01-01",
-  "closeDate": "2026-12-31"
-}
+Term 1
+--MultipleAdditionalBoundary
+Content-Disposition: form-data; name="additionalFilesDesc"
 
-### ==================== TEST SEQUENTIAL OPERATIONS ====================
-
-### 1. Create school
-POST {{baseUrl}} HTTP/1.1
-Content-Type: application/json
-
-{
-  "name": "Sequential Test School",
-  "studentCount": 800,
-  "staffCount": 30,
-  "openDate": "2026-01-10",
-  "closeDate": "2026-04-10",
-  "subjects": ["Math", "Science"],
-  "departments": ["Academic"]
-}
-
-### 2. Update school
-PUT {{baseUrl}} HTTP/1.1
-Content-Type: application/json
-
-{
-  "name": "Updated Sequential School",
-  "studentCount": 850,
-  "motto": "Learning never ends"
-}
-
-### 3. Get school (verify update)
-GET {{baseUrl}} HTTP/1.1
-Content-Type: application/json
-
-### 4. Delete school
-DELETE {{baseUrl}} HTTP/1.1
-Content-Type: application/json
-
-### 5. Verify deletion
-GET {{baseUrl}} HTTP/1.1
-Content-Type: application/json
+Monthly School Newsletter
+--MultipleAdditionalBoundary--

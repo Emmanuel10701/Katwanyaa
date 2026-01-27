@@ -253,38 +253,42 @@ model SchoolInfo {
 model SchoolDocument {
   id       Int @id @default(autoincrement())
   
-  // Curriculum PDF - NOTE: field names must match exactly
+  // Curriculum PDF
   curriculumPDF           String?   @db.Text
-  curriculumPdfName       String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  curriculumPdfName       String?   @db.VarChar(255)
   curriculumPdfSize       Int?
   curriculumPdfUploadDate DateTime?
   curriculumDescription   String?   @db.Text
   curriculumYear          Int?
-
+  curriculumTerm          String?   @db.VarChar(50)  // ADD THIS LINE
+  
   // Day School Fees PDF
   feesDayDistributionPdf      String?   @db.Text
-  feesDayPdfName              String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  feesDayPdfName              String?   @db.VarChar(255)
   feesDayPdfSize              Int?
   feesDayPdfUploadDate        DateTime?
   feesDayDescription          String?   @db.Text
   feesDayYear                 Int?
-
+  feesDayTerm                 String?   @db.VarChar(50)  // ADD THIS LINE
+  
   // Boarding School Fees PDF
   feesBoardingDistributionPdf      String?   @db.Text
-  feesBoardingPdfName              String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  feesBoardingPdfName              String?   @db.VarChar(255)
   feesBoardingPdfSize              Int?
   feesBoardingPdfUploadDate        DateTime?
   feesBoardingDescription          String?   @db.Text
   feesBoardingYear                 Int?
-
+  feesBoardingTerm                 String?   @db.VarChar(50)  // ADD THIS LINE
+  
   // Admission Fee PDF
   admissionFeePdf           String?   @db.Text
-  admissionFeePdfName       String?   @db.VarChar(255)  // Note: PdfName not PDFName
+  admissionFeePdfName       String?   @db.VarChar(255)
   admissionFeePdfSize       Int?
   admissionFeePdfUploadDate DateTime?
   admissionFeeDescription   String?   @db.Text
   admissionFeeYear          Int?
-
+  admissionFeeTerm          String?   @db.VarChar(50)  // ADD THIS LINE
+  
   // Fee breakdown JSON fields
   feesDayDistributionJson      Json?
   feesBoardingDistributionJson Json?
@@ -296,7 +300,7 @@ model SchoolDocument {
   form1ResultsPdfSize       Int?
   form1ResultsDescription   String?   @db.Text
   form1ResultsYear          Int?
-  form1ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
+  form1ResultsTerm          String?   @db.VarChar(50)
   form1ResultsUploadDate    DateTime?
 
   // Form 2 Results PDF
@@ -305,7 +309,7 @@ model SchoolDocument {
   form2ResultsPdfSize       Int?
   form2ResultsDescription   String?   @db.Text
   form2ResultsYear          Int?
-  form2ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
+  form2ResultsTerm          String?   @db.VarChar(50)
   form2ResultsUploadDate    DateTime?
 
   // Form 3 Results PDF
@@ -314,7 +318,7 @@ model SchoolDocument {
   form3ResultsPdfSize       Int?
   form3ResultsDescription   String?   @db.Text
   form3ResultsYear          Int?
-  form3ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
+  form3ResultsTerm          String?   @db.VarChar(50)
   form3ResultsUploadDate    DateTime?
 
   // Form 4 Results PDF
@@ -323,7 +327,7 @@ model SchoolDocument {
   form4ResultsPdfSize       Int?
   form4ResultsDescription   String?   @db.Text
   form4ResultsYear          Int?
-  form4ResultsTerm          String?   @db.VarChar(50)  // ADD THIS FIELD
+  form4ResultsTerm          String?   @db.VarChar(50)
   form4ResultsUploadDate    DateTime?
 
   // Mock Exams PDF
@@ -332,7 +336,7 @@ model SchoolDocument {
   mockExamsPdfSize          Int?
   mockExamsDescription      String?   @db.Text
   mockExamsYear             Int?
-  mockExamsTerm             String?   @db.VarChar(50)  // ADD THIS FIELD
+  mockExamsTerm             String?   @db.VarChar(50)
   mockExamsUploadDate       DateTime?
 
   // KCSE Results PDF
@@ -341,7 +345,7 @@ model SchoolDocument {
   kcsePdfSize               Int?
   kcseDescription           String?   @db.Text
   kcseYear                  Int?
-  kcseTerm                  String?   @db.VarChar(50)  // ADD THIS FIELD
+  kcseTerm                  String?   @db.VarChar(50)
   kcseUploadDate            DateTime?
 
   createdAt DateTime @default(now())
@@ -350,6 +354,11 @@ model SchoolDocument {
   // Relationships
   additionalDocuments AdditionalDocument[]
 
+  // Add indexes for new term fields
+  @@index([curriculumTerm])
+  @@index([feesDayTerm])
+  @@index([feesBoardingTerm])
+  @@index([admissionFeeTerm])
   @@index([curriculumYear])
   @@index([feesDayYear])
   @@index([feesBoardingYear])
