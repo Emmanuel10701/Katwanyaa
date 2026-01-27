@@ -1791,54 +1791,53 @@ function AdditionalResultsUpload({
     }
   };
 
-  const handleMetadataSave = async (metadata) => {
-    if (selectedFile) {
-      // Check total size
-      const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
-      if (!success) {
-        setSelectedFile(null);
-        setShowMetadataModal(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-
-      await simulateUpload(selectedFile.file);
-
-      const newFileObject = {
-        ...selectedFile,
-        year: metadata.year,
-        term: metadata.term,
-        description: metadata.description,
-        isNew: true,
-        isModified: true,
-        status: 'uploaded',
-        uploadDate: new Date().toISOString()
-      };
-      
-      const updatedFiles = [...localFiles, newFileObject];
-      setLocalFiles(updatedFiles);
-      
-      // Update parent states
-      onFilesChange([...files, selectedFile.file]);
-      
-      // NEW: Update parent state via callback
-      if (onAdditionalFilesStateChange) {
-        onAdditionalFilesStateChange(updatedFiles);
-      }
-      
-      toast.success('Document added with metadata');
-      
+const handleMetadataSave = async (metadata) => {
+  if (selectedFile) {
+    // Check total size
+    const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
+    if (!success) {
       setSelectedFile(null);
       setShowMetadataModal(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    await simulateUpload(selectedFile.file);
+
+    const newFileObject = {
+      ...selectedFile,
+      year: metadata.year,
+      term: metadata.term,
+      description: metadata.description,
+      isNew: true,
+      isModified: true,
+      status: 'uploaded',
+      uploadDate: new Date().toISOString()
+    };
+    
+    const updatedFiles = [...localFiles, newFileObject];
+    setLocalFiles(updatedFiles);
+    
+    // Only update parent with the file object, not the entire array
+    onFilesChange([...files, selectedFile.file]);
+    
+    // NEW: Update parent state via callback with the complete object
+    if (onAdditionalFilesStateChange) {
+      onAdditionalFilesStateChange(updatedFiles);
     }
     
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
+    toast.success('Document added with metadata');
+    
+    setSelectedFile(null);
+    setShowMetadataModal(false);
+  }
+  
+  if (fileInputRef.current) {
+    fileInputRef.current.value = '';
+  }
+};
   const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -2747,27 +2746,28 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
-  // Initialize additionalFiles state
-  const [additionalFiles, setAdditionalFiles] = useState(() => {
-    if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
-      return documents.additionalDocuments.map((doc) => ({
-        ...doc,
-        id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}`,
-        isExisting: true,
-        isModified: false,
-        isRemoved: false,
-        isReplaced: false,
-        originalFilePath: doc.filepath,
-        year: doc.year || '',
-        description: doc.description || '',
-        term: doc.term || '',
-        filesize: doc.filesize || 0,
-        filetype: doc.filetype || 'document',
-        status: 'existing'
-      }));
-    }
-    return [];
-  });
+// Initialize additionalFiles state
+const [additionalFiles, setAdditionalFiles] = useState(() => {
+  if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
+    return documents.additionalDocuments.map((doc, index) => ({
+      ...doc,
+      id: doc.id ? `existing_${doc.id}` : `existing_${Date.now()}_${index}`,
+      filename: doc.filename || `Document ${index + 1}`,
+      isExisting: true,
+      isModified: false,
+      isRemoved: false,
+      isReplaced: false,
+      originalFilePath: doc.filepath,
+      year: doc.year || '',
+      description: doc.description || '',
+      term: doc.term || '',
+      filesize: doc.filesize || 0,
+      filetype: doc.filetype || 'document',
+      status: 'existing'
+    }));
+  }
+  return [];
+});
   
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -2821,32 +2821,33 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     await handleSubmitAfterReview();
   };
 
-  const handleSubmitAfterReview = async () => {
-    if (!confirmed) {
-      toast.error('Please confirm review before submitting');
-      return;
-    }
+const handleSubmitAfterReview = async () => {
+  if (!confirmed) {
+    toast.error('Please confirm review before submitting');
+    return;
+  }
 
-    try {
-      setActionLoading(true);
-      
-      const data = new FormData();
-      
-      // Debug: Log all additional files
-      console.log('All additional files:', additionalFiles);
-      
-      // Add PDF files
-      Object.keys(formData).forEach(key => {
-        if (formData[key]) {
-          if (Array.isArray(formData[key])) {
-            const [file, year, description, term] = formData[key];
+  try {
+    setActionLoading(true);
+    
+    const data = new FormData();
+    
+    // Debug: Log all additional files
+    console.log('All additional files:', additionalFiles);
+    
+    // Add PDF files
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) {
+        if (Array.isArray(formData[key])) {
+          const [file, year, description, term] = formData[key];
+          if (file) {
             data.append(key, file);
             
             const metadataMappings = {
-              'curriculumPDF': { yearKey: 'curriculumYear', descKey: 'curriculumDescription' },
-              'feesDayDistributionPdf': { yearKey: 'feesDayYear', descKey: 'feesDayDescription' },
-              'feesBoardingDistributionPdf': { yearKey: 'feesBoardingYear', descKey: 'feesBoardingDescription' },
-              'admissionFeePdf': { yearKey: 'admissionFeeYear', descKey: 'admissionFeeDescription' },
+              'curriculumPDF': { yearKey: 'curriculumYear', descKey: 'curriculumDescription', termKey: 'curriculumTerm' },
+              'feesDayDistributionPdf': { yearKey: 'feesDayYear', descKey: 'feesDayDescription', termKey: 'feesDayTerm' },
+              'feesBoardingDistributionPdf': { yearKey: 'feesBoardingYear', descKey: 'feesBoardingDescription', termKey: 'feesBoardingTerm' },
+              'admissionFeePdf': { yearKey: 'admissionFeeYear', descKey: 'admissionFeeDescription', termKey: 'admissionFeeTerm' },
               'form1ResultsPdf': { yearKey: 'form1ResultsYear', termKey: 'form1ResultsTerm', descKey: 'form1ResultsDescription' },
               'form2ResultsPdf': { yearKey: 'form2ResultsYear', termKey: 'form2ResultsTerm', descKey: 'form2ResultsDescription' },
               'form3ResultsPdf': { yearKey: 'form3ResultsYear', termKey: 'form3ResultsTerm', descKey: 'form3ResultsDescription' },
@@ -2860,117 +2861,118 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
               if (term && metadataMappings[key].termKey) data.append(metadataMappings[key].termKey, term);
               if (description) data.append(metadataMappings[key].descKey, description);
             }
-          } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
-            data.append(key, formData[key]);
           }
-        }
-      });
-      
-      // Add fee breakdowns as JSON
-      if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
-        data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
-      }
-      if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
-        data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
-      }
-      if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
-        data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
-      }
-      
-      // Add exam metadata (for existing documents without new uploads)
-      Object.keys(examMetadata).forEach(key => {
-        if (examMetadata[key] && examMetadata[key].trim() !== '') {
-          data.append(key, examMetadata[key]);
-        }
-      });
-      
-      // ✅ CRITICAL FIX: Add additional files in CORRECT format for backend
-      const newAdditionalFiles = additionalFiles.filter(file => 
-        file.isNew && file.file && !file.isRemoved
-      );
-      
-      console.log('New additional files to upload:', newAdditionalFiles.length);
-      
-      newAdditionalFiles.forEach((file, index) => {
-        if (file.file) {
-          // ✅ Use EXACT format backend expects: additionalFiles[] for file array
-          data.append('additionalFiles[]', file.file);
-          
-          // ✅ Use EXACT format backend expects: indexed metadata
-          if (file.year) {
-            data.append(`additionalFilesYear[${index}]`, file.year);
-          }
-          if (file.term) {
-            data.append(`additionalFilesTerm[${index}]`, file.term);
-          }
-          if (file.description) {
-            data.append(`additionalFilesDesc[${index}]`, file.description);
-          }
-        }
-      });
-      
-      // ✅ CRITICAL FIX: Add additional document IDs to delete
-      const additionalDocsToDelete = additionalFiles
-        .filter(file => file.isRemoved && file.isExisting && file.id)
-        .map(file => {
-          // Extract the numeric ID from "existing_X"
-          const match = file.id.toString().match(/existing_(\d+)/);
-          return match ? match[1] : null;
-        })
-        .filter(id => id !== null && !isNaN(parseInt(id)));
-      
-      console.log('Additional docs to delete IDs:', additionalDocsToDelete);
-      
-      additionalDocsToDelete.forEach(id => {
-        // ✅ Use EXACT format backend expects: additionalDocsToDelete[]
-        data.append('additionalDocsToDelete[]', id);
-      });
-      
-      // Debug: Log what's being sent
-      console.log('=== FORM DATA BEING SENT TO BACKEND ===');
-      console.log('Total additional files:', newAdditionalFiles.length);
-      console.log('Files to delete:', additionalDocsToDelete.length);
-      
-      for (let [key, value] of data.entries()) {
-        if (value instanceof File) {
-          console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-        } else {
-          console.log(`${key}: ${value}`);
+        } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
+          data.append(key, formData[key]);
         }
       }
-      
-      const response = await fetch('/api/schooldocuments', {
-        method: 'POST',
-        body: data
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-        throw new Error(`Failed to save documents: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      console.log('Save API response:', result);
-      
-      if (result.success) {
-        toast.success(result.message || 'Documents saved successfully!');
-        if (onSave && result.document) {
-          onSave(result.document);
-        }
-        onClose();
-      } else {
-        toast.error(result.error || 'Failed to save documents');
-      }
-      
-    } catch (error) {
-      console.error('Save failed:', error);
-      toast.error(error.message || 'Failed to save documents');
-    } finally {
-      setActionLoading(false);
+    });
+    
+    // Add fee breakdowns as JSON
+    if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
+      data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
     }
-  };
+    if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
+      data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
+    }
+    if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
+      data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+    }
+    
+    // Add exam metadata (for existing documents without new uploads)
+    Object.keys(examMetadata).forEach(key => {
+      if (examMetadata[key] && examMetadata[key].trim() !== '') {
+        data.append(key, examMetadata[key]);
+      }
+    });
+    
+    // ✅ CRITICAL FIX: Add additional files in CORRECT format for backend
+    const newAdditionalFiles = additionalFiles.filter(file => 
+      file.isNew && file.file && !file.isRemoved
+    );
+    
+    console.log('New additional files to upload:', newAdditionalFiles.length);
+    
+    newAdditionalFiles.forEach((file, index) => {
+      if (file.file) {
+        // ✅ Use EXACT format backend expects: additionalFiles[] for file array
+        data.append('additionalFiles[]', file.file);
+        
+        // ✅ Use EXACT format backend expects: indexed metadata
+        if (file.year) {
+          data.append(`additionalFilesYear[${index}]`, file.year);
+        }
+        if (file.term) {
+          data.append(`additionalFilesTerm[${index}]`, file.term);
+        }
+        if (file.description) {
+          data.append(`additionalFilesDesc[${index}]`, file.description);
+        }
+      }
+    });
+    
+    // ✅ CRITICAL FIX: Add additional document IDs to delete
+    const additionalDocsToDelete = additionalFiles
+      .filter(file => file.isRemoved && file.isExisting && file.id)
+      .map(file => {
+        // Extract the numeric ID from "existing_X"
+        const match = file.id.toString().match(/existing_(\d+)/);
+        return match ? match[1] : null;
+      })
+      .filter(id => id !== null && !isNaN(parseInt(id)));
+    
+    console.log('Additional docs to delete IDs:', additionalDocsToDelete);
+    
+    additionalDocsToDelete.forEach(id => {
+      // ✅ Use EXACT format backend expects: additionalDocsToDelete[]
+      data.append('additionalDocsToDelete[]', id);
+    });
+    
+    // Debug: Log what's being sent
+    console.log('=== FORM DATA BEING SENT TO BACKEND ===');
+    console.log('Total additional files:', newAdditionalFiles.length);
+    console.log('Files to delete:', additionalDocsToDelete.length);
+    
+    for (let [key, value] of data.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+      } else {
+        console.log(`${key}: ${value}`);
+      }
+    }
+    
+    const response = await fetch('/api/schooldocuments', {
+      method: 'POST',
+      body: data
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error response:', errorText);
+      throw new Error(`Failed to save documents: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    console.log('Save API response:', result);
+    
+    if (result.success) {
+      toast.success(result.message || 'Documents saved successfully!');
+      if (onSave && result.document) {
+        onSave(result.document);
+      }
+      onClose();
+    } else {
+      toast.error(result.error || 'Failed to save documents');
+    }
+    
+  } catch (error) {
+    console.error('Save failed:', error);
+    toast.error(error.message || 'Failed to save documents');
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   const handleFileChange = (field, file, year, description, term) => {
     if (year || description || term) {
@@ -3194,41 +3196,51 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       case 4: // Additional Files
         return (
           <div className="w-full max-w-2xl">
-            <AdditionalResultsUpload
-              files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-              onFilesChange={(newFiles) => {
-                // Add new files to the state
-                const existingFiles = additionalFiles.filter(f => f.isExisting && !f.isRemoved);
-                const newFileObjects = newFiles.map((file, index) => ({
-                  id: `new_${Date.now()}_${index}`,
-                  file: file,
-                  filename: file.name,
-                  year: '',
-                  description: '',
-                  term: '',
-                  isNew: true,
-                  isModified: true,
-                  filetype: file.type?.split('/')[1] || 'file',
-                  filesize: file.size || 0,
-                  status: 'uploaded'
-                }));
-                setAdditionalFiles([...existingFiles, ...newFileObjects]);
-              }}
-              label="Additional Documents"
-              existingFiles={documents?.additionalDocuments || []}
-              onCancelExisting={(file) => {
-                console.log('Cancel replacement for:', file);
-              }}
-              onRemoveExisting={(file) => {
-                setAdditionalFiles(prev => 
-                  prev.map(f => 
-                    f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
-                  )
-                );
-              }}
-              additionalFilesState={additionalFiles}
-              onAdditionalFilesStateChange={setAdditionalFiles}
-            />
+{/* In the "Additional Files" step (case 4): */}
+<AdditionalResultsUpload
+  files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
+  onFilesChange={(newFiles) => {
+    // Keep the metadata from existing files
+    const existingFilesWithMetadata = additionalFiles.filter(f => 
+      (f.isExisting && !f.isRemoved) || (f.isNew && f.year && f.description)
+    );
+    
+    // Create new file objects from the new files
+    const newFileObjects = newFiles
+      .filter(newFile => !additionalFiles.some(f => 
+        f.file && f.file.name === newFile.name && f.file.size === newFile.size
+      ))
+      .map((file, index) => ({
+        id: `new_${Date.now()}_${index}`,
+        file: file,
+        filename: file.name,
+        year: '',
+        description: '',
+        term: '',
+        isNew: true,
+        isModified: false,
+        filetype: file.type?.split('/')[1] || 'file',
+        filesize: file.size || 0,
+        status: 'uploaded'
+      }));
+    
+    setAdditionalFiles([...existingFilesWithMetadata, ...newFileObjects]);
+  }}
+  label="Additional Documents"
+  existingFiles={documents?.additionalDocuments || []}
+  onCancelExisting={(file) => {
+    console.log('Cancel replacement for:', file);
+  }}
+  onRemoveExisting={(file) => {
+    setAdditionalFiles(prev => 
+      prev.map(f => 
+        f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
+      )
+    );
+  }}
+  additionalFilesState={additionalFiles}
+  onAdditionalFilesStateChange={setAdditionalFiles}
+/>
           </div>
         );
       

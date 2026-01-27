@@ -142,38 +142,49 @@ const cleanDocumentResponse = (document) => {
   
   return {
     id: document.id,
+    
+    // Curriculum PDF
     curriculumPDF: document.curriculumPDF,
     curriculumPdfName: document.curriculumPdfName,
     curriculumPdfSize: document.curriculumPdfSize,
     curriculumPdfUploadDate: document.curriculumPdfUploadDate,
     curriculumDescription: document.curriculumDescription,
     curriculumYear: document.curriculumYear,
+    curriculumTerm: document.curriculumTerm,
     
+    // Day School Fees PDF
     feesDayDistributionPdf: document.feesDayDistributionPdf,
     feesDayPdfName: document.feesDayPdfName,
     feesDayPdfSize: document.feesDayPdfSize,
     feesDayPdfUploadDate: document.feesDayPdfUploadDate,
     feesDayDescription: document.feesDayDescription,
     feesDayYear: document.feesDayYear,
+    feesDayTerm: document.feesDayTerm,
     
+    // Boarding School Fees PDF
     feesBoardingDistributionPdf: document.feesBoardingDistributionPdf,
     feesBoardingPdfName: document.feesBoardingPdfName,
     feesBoardingPdfSize: document.feesBoardingPdfSize,
     feesBoardingPdfUploadDate: document.feesBoardingPdfUploadDate,
     feesBoardingDescription: document.feesBoardingDescription,
     feesBoardingYear: document.feesBoardingYear,
+    feesBoardingTerm: document.feesBoardingTerm,
     
+    // Admission Fee PDF
     admissionFeePdf: document.admissionFeePdf,
     admissionFeePdfName: document.admissionFeePdfName,
     admissionFeePdfSize: document.admissionFeePdfSize,
     admissionFeePdfUploadDate: document.admissionFeePdfUploadDate,
     admissionFeeDescription: document.admissionFeeDescription,
     admissionFeeYear: document.admissionFeeYear,
+    admissionFeeTerm: document.admissionFeeTerm,
     
+    // Fee breakdown JSON fields
     feesDayDistributionJson: document.feesDayDistributionJson,
     feesBoardingDistributionJson: document.feesBoardingDistributionJson,
     admissionFeeDistribution: document.admissionFeeDistribution,
     
+    // Form 1 Results PDF
     form1ResultsPdf: document.form1ResultsPdf,
     form1ResultsPdfName: document.form1ResultsPdfName,
     form1ResultsPdfSize: document.form1ResultsPdfSize,
@@ -182,6 +193,7 @@ const cleanDocumentResponse = (document) => {
     form1ResultsTerm: document.form1ResultsTerm,
     form1ResultsUploadDate: document.form1ResultsUploadDate,
     
+    // Form 2 Results PDF
     form2ResultsPdf: document.form2ResultsPdf,
     form2ResultsPdfName: document.form2ResultsPdfName,
     form2ResultsPdfSize: document.form2ResultsPdfSize,
@@ -190,6 +202,7 @@ const cleanDocumentResponse = (document) => {
     form2ResultsTerm: document.form2ResultsTerm,
     form2ResultsUploadDate: document.form2ResultsUploadDate,
     
+    // Form 3 Results PDF
     form3ResultsPdf: document.form3ResultsPdf,
     form3ResultsPdfName: document.form3ResultsPdfName,
     form3ResultsPdfSize: document.form3ResultsPdfSize,
@@ -198,6 +211,7 @@ const cleanDocumentResponse = (document) => {
     form3ResultsTerm: document.form3ResultsTerm,
     form3ResultsUploadDate: document.form3ResultsUploadDate,
     
+    // Form 4 Results PDF
     form4ResultsPdf: document.form4ResultsPdf,
     form4ResultsPdfName: document.form4ResultsPdfName,
     form4ResultsPdfSize: document.form4ResultsPdfSize,
@@ -206,6 +220,7 @@ const cleanDocumentResponse = (document) => {
     form4ResultsTerm: document.form4ResultsTerm,
     form4ResultsUploadDate: document.form4ResultsUploadDate,
     
+    // Mock Exams PDF
     mockExamsResultsPdf: document.mockExamsResultsPdf,
     mockExamsPdfName: document.mockExamsPdfName,
     mockExamsPdfSize: document.mockExamsPdfSize,
@@ -214,6 +229,7 @@ const cleanDocumentResponse = (document) => {
     mockExamsTerm: document.mockExamsTerm,
     mockExamsUploadDate: document.mockExamsUploadDate,
     
+    // KCSE Results PDF
     kcseResultsPdf: document.kcseResultsPdf,
     kcsePdfName: document.kcsePdfName,
     kcsePdfSize: document.kcsePdfSize,
@@ -277,11 +293,13 @@ export async function POST(req) {
     const uploadPromises = {};
     const uploadResults = {};
 
+    // All document fields including curriculum and fees now have term
     const documentFields = [
       { 
         key: 'curriculum', 
         name: 'curriculumPDF', 
         year: 'curriculumYear', 
+        term: 'curriculumTerm',
         description: 'curriculumDescription',
         folder: 'curriculum' 
       },
@@ -289,6 +307,7 @@ export async function POST(req) {
         key: 'feesDay', 
         name: 'feesDayDistributionPdf', 
         year: 'feesDayYear', 
+        term: 'feesDayTerm',
         description: 'feesDayDescription',
         folder: 'day-fees' 
       },
@@ -296,6 +315,7 @@ export async function POST(req) {
         key: 'feesBoarding', 
         name: 'feesBoardingDistributionPdf', 
         year: 'feesBoardingYear', 
+        term: 'feesBoardingTerm',
         description: 'feesBoardingDescription',
         folder: 'boarding-fees' 
       },
@@ -303,11 +323,13 @@ export async function POST(req) {
         key: 'admissionFee', 
         name: 'admissionFeePdf', 
         year: 'admissionFeeYear', 
+        term: 'admissionFeeTerm',
         description: 'admissionFeeDescription',
         folder: 'admission' 
       },
     ];
 
+    // Exam fields already have term
     const examFields = [
       { 
         key: 'form1Results', 
@@ -359,19 +381,14 @@ export async function POST(req) {
       }
     ];
 
-    for (const doc of documentFields) {
-      const pdfFile = formData.get(doc.name);
+    // Process all document uploads
+    const allFields = [...documentFields, ...examFields];
+    
+    for (const field of allFields) {
+      const pdfFile = formData.get(field.name);
       if (pdfFile && pdfFile.size > 0) {
-        console.log(`📤 Uploading ${doc.key} file:`, pdfFile.name);
-        uploadPromises[doc.key] = uploadPdfToCloudinary(pdfFile, doc.folder);
-      }
-    }
-
-    for (const exam of examFields) {
-      const pdfFile = formData.get(exam.name);
-      if (pdfFile && pdfFile.size > 0) {
-        console.log(`📤 Uploading ${exam.key} file:`, pdfFile.name);
-        uploadPromises[exam.key] = uploadPdfToCloudinary(pdfFile, exam.folder);
+        console.log(`📤 Uploading ${field.key} file:`, pdfFile.name);
+        uploadPromises[field.key] = uploadPdfToCloudinary(pdfFile, field.folder);
       }
     }
 
@@ -390,6 +407,7 @@ export async function POST(req) {
       }
     });
 
+    // Process additional files
     const additionalFilesData = [];
     const additionalFiles = formData.getAll("additionalFiles[]");
     
@@ -426,9 +444,11 @@ export async function POST(req) {
       });
     }
 
+    // Delete old files if replacing
     const filesToDelete = [];
     
     if (existingDocument) {
+      // Delete additional documents marked for deletion
       const existingAdditionalIds = existingDocument.additionalDocuments.map(doc => doc.id);
       const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
       
@@ -444,21 +464,11 @@ export async function POST(req) {
       });
     }
 
-    for (const doc of documentFields) {
-      const fieldName = doc.key === 'curriculum' ? 'curriculumPDF' : 
-                       doc.key === 'feesDay' ? 'feesDayDistributionPdf' :
-                       doc.key === 'feesBoarding' ? 'feesBoardingDistributionPdf' : 'admissionFeePdf';
-      
-      if (uploadResults[doc.key] && existingDocument && existingDocument[fieldName]) {
-        console.log(`🗑️ Replacing old file for ${doc.key}:`, existingDocument[fieldName]);
-        filesToDelete.push(deleteFromCloudinary(existingDocument[fieldName]));
-      }
-    }
-
-    for (const exam of examFields) {
-      if (uploadResults[exam.key] && existingDocument && existingDocument[exam.name]) {
-        console.log(`🗑️ Replacing old file for ${exam.key}:`, existingDocument[exam.name]);
-        filesToDelete.push(deleteFromCloudinary(existingDocument[exam.name]));
+    // Delete old main files if replacing
+    for (const field of allFields) {
+      if (uploadResults[field.key] && existingDocument && existingDocument[field.name]) {
+        console.log(`🗑️ Replacing old file for ${field.key}:`, existingDocument[field.name]);
+        filesToDelete.push(deleteFromCloudinary(existingDocument[field.name]));
       }
     }
 
@@ -467,13 +477,15 @@ export async function POST(req) {
       await Promise.all(filesToDelete);
     }
 
-    const feesDayDistributionJson = formData.get("feesDayDistributionJson");
-    const feesBoardingDistributionJson = formData.get("feesBoardingDistributionJson");
-    const admissionFeeDistribution = formData.get("admissionFeeDistribution");
-
+    // Prepare update data
     const updateData = {
       updatedAt: new Date()
     };
+
+    // Parse JSON fields
+    const feesDayDistributionJson = formData.get("feesDayDistributionJson");
+    const feesBoardingDistributionJson = formData.get("feesBoardingDistributionJson");
+    const admissionFeeDistribution = formData.get("admissionFeeDistribution");
 
     if (feesDayDistributionJson) {
       try {
@@ -499,9 +511,12 @@ export async function POST(req) {
       }
     }
 
-    for (const doc of documentFields) {
-      if (uploadResults[doc.key]) {
+    // Process all fields (documents + exams)
+    for (const field of allFields) {
+      // Handle file upload data
+      if (uploadResults[field.key]) {
         const prismaFieldMap = {
+          // Document fields
           'curriculum': {
             pdf: 'curriculumPDF',
             name: 'curriculumPdfName',
@@ -525,30 +540,8 @@ export async function POST(req) {
             name: 'admissionFeePdfName',
             size: 'admissionFeePdfSize',
             uploadDate: 'admissionFeePdfUploadDate'
-          }
-        };
-        
-        const fields = prismaFieldMap[doc.key];
-        updateData[fields.pdf] = uploadResults[doc.key].url;
-        updateData[fields.name] = uploadResults[doc.key].original_name;
-        updateData[fields.size] = uploadResults[doc.key].bytes;
-        updateData[fields.uploadDate] = new Date();
-      }
-      
-      const year = formData.get(doc.year);
-      const description = formData.get(doc.description);
-      
-      if (year !== null) {
-        updateData[doc.year] = parseIntField(year);
-      }
-      if (description !== null) {
-        updateData[doc.description] = parseStringField(description);
-      }
-    }
-
-    for (const exam of examFields) {
-      if (uploadResults[exam.key]) {
-        const prismaFieldMap = {
+          },
+          // Exam fields
           'form1Results': {
             pdf: 'form1ResultsPdf',
             name: 'form1ResultsPdfName',
@@ -587,30 +580,34 @@ export async function POST(req) {
           }
         };
         
-        const fields = prismaFieldMap[exam.key];
-        updateData[fields.pdf] = uploadResults[exam.key].url;
-        updateData[fields.name] = uploadResults[exam.key].original_name;
-        updateData[fields.size] = uploadResults[exam.key].bytes;
-        updateData[fields.uploadDate] = new Date();
+        const fields = prismaFieldMap[field.key];
+        if (fields) {
+          updateData[fields.pdf] = uploadResults[field.key].url;
+          updateData[fields.name] = uploadResults[field.key].original_name;
+          updateData[fields.size] = uploadResults[field.key].bytes;
+          updateData[fields.uploadDate] = new Date();
+        }
       }
       
-      const year = formData.get(exam.year);
-      const term = formData.get(exam.term);
-      const description = formData.get(exam.description);
+      // Handle year, term, and description fields
+      const year = formData.get(field.year);
+      const term = formData.get(field.term);
+      const description = formData.get(field.description);
       
       if (year !== null) {
-        updateData[exam.year] = parseIntField(year);
+        updateData[field.year] = parseIntField(year);
       }
       if (term !== null) {
-        updateData[exam.term] = parseStringField(term);
+        updateData[field.term] = parseStringField(term);
       }
       if (description !== null) {
-        updateData[exam.description] = parseStringField(description);
+        updateData[field.description] = parseStringField(description);
       }
     }
 
     console.log("📝 Update data prepared:", updateData);
 
+    // Create or update document
     if (existingDocument) {
       console.log("🔄 Updating existing document");
       const updatedDocument = await prisma.schoolDocument.update({
@@ -618,6 +615,7 @@ export async function POST(req) {
         data: updateData
       });
 
+      // Handle additional documents
       if (additionalFilesData.length > 0) {
         console.log("📁 Creating additional documents:", additionalFilesData.length);
         await prisma.additionalDocument.createMany({
@@ -634,6 +632,7 @@ export async function POST(req) {
         });
       }
 
+      // Delete marked additional documents
       const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
       if (additionalDocsToDelete.length > 0) {
         console.log("🗑️ Deleting additional documents:", additionalDocsToDelete.length);
@@ -821,16 +820,72 @@ export async function PATCH(req) {
         // Delete main document field
         fileUrlToDelete = document[field];
         
-        // Clear the field
+        // Get field mapping to clear related fields
+        const fieldMappings = {
+          // Document fields
+          'curriculumPDF': {
+            name: 'curriculumPdfName',
+            size: 'curriculumPdfSize',
+            uploadDate: 'curriculumPdfUploadDate',
+            description: 'curriculumDescription',
+            year: 'curriculumYear',
+            term: 'curriculumTerm'
+          },
+          'feesDayDistributionPdf': {
+            name: 'feesDayPdfName',
+            size: 'feesDayPdfSize',
+            uploadDate: 'feesDayPdfUploadDate',
+            description: 'feesDayDescription',
+            year: 'feesDayYear',
+            term: 'feesDayTerm'
+          },
+          'feesBoardingDistributionPdf': {
+            name: 'feesBoardingPdfName',
+            size: 'feesBoardingPdfSize',
+            uploadDate: 'feesBoardingPdfUploadDate',
+            description: 'feesBoardingDescription',
+            year: 'feesBoardingYear',
+            term: 'feesBoardingTerm'
+          },
+          'admissionFeePdf': {
+            name: 'admissionFeePdfName',
+            size: 'admissionFeePdfSize',
+            uploadDate: 'admissionFeePdfUploadDate',
+            description: 'admissionFeeDescription',
+            year: 'admissionFeeYear',
+            term: 'admissionFeeTerm'
+          },
+          // Exam fields
+          'form1ResultsPdf': {
+            name: 'form1ResultsPdfName',
+            size: 'form1ResultsPdfSize',
+            uploadDate: 'form1ResultsUploadDate',
+            description: 'form1ResultsDescription',
+            year: 'form1ResultsYear',
+            term: 'form1ResultsTerm'
+          },
+          // ... add other exam fields similarly
+        };
+
+        const clearData = {
+          [field]: null,
+          updatedAt: new Date()
+        };
+
+        const mapping = fieldMappings[field];
+        if (mapping) {
+          clearData[mapping.name] = null;
+          clearData[mapping.size] = null;
+          clearData[mapping.uploadDate] = null;
+          // Optional: clear description, year, and term too
+          // clearData[mapping.description] = null;
+          // clearData[mapping.year] = null;
+          // clearData[mapping.term] = null;
+        }
+        
         await prisma.schoolDocument.update({
           where: { id: parseInt(documentId) },
-          data: {
-            [field]: null,
-            [`${field.replace('PDF', 'Pdf')}Name`]: null,
-            [`${field.replace('PDF', 'Pdf')}Size`]: null,
-            [`${field.replace('PDF', 'Pdf')}UploadDate`]: null,
-            updatedAt: new Date()
-          }
+          data: clearData
         });
       }
 
