@@ -1,514 +1,230 @@
-### School Documents API Testing
-### Base URL
-@baseUrl = https://katwanyaa.vercel.app/api/schooldocuments
+@baseUrl = https://katwanyaa.vercel.app/api/school
 
-### 1. GET - Retrieve all documents
+### 1. GET - Check Current School Data
 GET {{baseUrl}}
 Content-Type: application/json
 
-### 2. POST - Create/Update documents (Curriculum & Fees WITHOUT term fields)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=MainBoundary
-
---MainBoundary
-Content-Disposition: form-data; name="curriculumYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
-Mathematics, Science, and English Curriculum for 2024
---MainBoundary
-Content-Disposition: form-data; name="curriculumPDF"; filename="curriculum.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="feesDayYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="feesDayDescription"
-
-Day School Fees Structure 2024
---MainBoundary
-Content-Disposition: form-data; name="feesDayDistributionPdf"; filename="fees-day.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="feesDayDistributionJson"
-
-{
-  "tuition": 50000,
-  "activity": 10000,
-  "library": 5000,
-  "medical": 3000,
-  "total": 68000
-}
---MainBoundary
-Content-Disposition: form-data; name="feesBoardingYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="feesBoardingDescription"
-
-Boarding School Fees Structure 2024
---MainBoundary
-Content-Disposition: form-data; name="feesBoardingDistributionPdf"; filename="fees-boarding.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="feesBoardingDistributionJson"
-
-{
-  "tuition": 50000,
-  "boarding": 30000,
-  "activity": 10000,
-  "library": 5000,
-  "medical": 3000,
-  "total": 98000
-}
---MainBoundary
-Content-Disposition: form-data; name="admissionFeeYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="admissionFeeDescription"
-
-Admission Fee Structure 2024
---MainBoundary
-Content-Disposition: form-data; name="admissionFeePdf"; filename="admission-fees.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="admissionFeeDistribution"
-
-{
-  "application": 1000,
-  "registration": 5000,
-  "uniform": 15000,
-  "books": 20000,
-  "total": 41000
-}
---MainBoundary
-Content-Disposition: form-data; name="form1ResultsYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="form1ResultsTerm"
-
-Term 1
---MainBoundary
-Content-Disposition: form-data; name="form1ResultsDescription"
-
-Form 1 End of Term Results 2024
---MainBoundary
-Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1-results.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="form2ResultsYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="form2ResultsTerm"
-
-Term 2
---MainBoundary
-Content-Disposition: form-data; name="form2ResultsDescription"
-
-Form 2 Mid Term Results 2024
---MainBoundary
-Content-Disposition: form-data; name="form2ResultsPdf"; filename="form2-results.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="form3ResultsYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="form3ResultsTerm"
-
-Term 1
---MainBoundary
-Content-Disposition: form-data; name="form3ResultsDescription"
-
-Form 3 End of Term Results 2024
---MainBoundary
-Content-Disposition: form-data; name="form3ResultsPdf"; filename="form3-results.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="form4ResultsYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="form4ResultsTerm"
-
-Term 3
---MainBoundary
-Content-Disposition: form-data; name="form4ResultsDescription"
-
-Form 4 Mock Results 2024
---MainBoundary
-Content-Disposition: form-data; name="form4ResultsPdf"; filename="form4-results.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="mockExamsYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="mockExamsTerm"
-
-Term 2
---MainBoundary
-Content-Disposition: form-data; name="mockExamsDescription"
-
-Mock Examinations Results 2024
---MainBoundary
-Content-Disposition: form-data; name="mockExamsResultsPdf"; filename="mock-exams.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="kcseYear"
-
-2023
---MainBoundary
-Content-Disposition: form-data; name="kcseTerm"
-
-Annual
---MainBoundary
-Content-Disposition: form-data; name="kcseDescription"
-
-KCSE 2023 Results Summary
---MainBoundary
-Content-Disposition: form-data; name="kcseResultsPdf"; filename="kcse-2023.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="school-calendar.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---MainBoundary
-Content-Disposition: form-data; name="additionalFilesYear"
-
-2024
---MainBoundary
-Content-Disposition: form-data; name="additionalFilesTerm"
-
-Annual
---MainBoundary
-Content-Disposition: form-data; name="additionalFilesDesc"
-
-School Academic Calendar 2024
---MainBoundary--
-
-### 3. POST - Update only metadata (no files)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=MetadataOnlyBoundary
-
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="curriculumYear"
-
-2025
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
-Updated curriculum for 2025 academic year
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="feesDayYear"
-
-2025
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="feesDayDescription"
-
-Revised Day School Fees 2025
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="form1ResultsYear"
-
-2025
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="form1ResultsTerm"
-
-Term 1
---MetadataOnlyBoundary
-Content-Disposition: form-data; name="form1ResultsDescription"
-
-Form 1 Results 2025 Term 1
---MetadataOnlyBoundary--
-
-### 4. POST - Add multiple additional files
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=AdditionalFilesBoundary
-
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="policy1.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesYear[0]"
-
-2024
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesTerm[0]"
-
-Annual
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesDesc[0]"
-
-School Discipline Policy
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="policy2.docx"
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-
-< ./test-files/sample.docx
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesYear[1]"
-
-2024
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesTerm[1]"
-
-Annual
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesDesc[1]"
-
-Examination Policy
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="newsletter.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesYear"
-
-2024
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesTerm"
-
-Term 1
---AdditionalFilesBoundary
-Content-Disposition: form-data; name="additionalFilesDesc"
-
-Monthly School Newsletter
---AdditionalFilesBoundary--
-
-### 5. POST - Delete additional documents
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=DeleteBoundary
-
---DeleteBoundary
-Content-Disposition: form-data; name="curriculumYear"
-
-2024
---DeleteBoundary
-Content-Disposition: form-data; name="additionalDocsToDelete[]"
-
-1
---DeleteBoundary
-Content-Disposition: form-data; name="additionalDocsToDelete[]"
-
-2
---DeleteBoundary--
-
-### 6. PUT - Update specific field (JSON body)
-### NOTE: Replace {id} with actual document ID from GET response
-PUT {{baseUrl}}?id=1
+### 2. PUT - Update School with Complete Information (Filling all null fields)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryComplete
+
+--boundaryComplete
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School - Excellence Campus
+--boundaryComplete
+Content-Disposition: form-data; name="studentCount"
+
+1250
+--boundaryComplete
+Content-Disposition: form-data; name="staffCount"
+
+65
+--boundaryComplete
+Content-Disposition: form-data; name="openDate"
+
+2026-01-10T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="closeDate"
+
+2026-04-10T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="description"
+
+Katwanyaa High School offers comprehensive education with both 8-4-4 and CBC curricula. Our modern campus includes state-of-the-art science labs, digital library, computer labs with high-speed internet, and extensive sports facilities. We focus on holistic development through academics, sports, clubs, and community service.
+
+We have a 15:1 student-teacher ratio for personalized attention and maintain a 98% university placement rate for our graduates.
+--boundaryComplete
+Content-Disposition: form-data; name="motto"
+
+Strive for Excellence, Lead with Integrity
+--boundaryComplete
+Content-Disposition: form-data; name="vision"
+
+To nurture academically competent, morally upright, and socially responsible global citizens
+--boundaryComplete
+Content-Disposition: form-data; name="mission"
+
+To provide holistic quality education through innovative teaching, modern facilities, character building, and community engagement
+--boundaryComplete
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=QH2-TGUlwu4
+--boundaryComplete
+Content-Disposition: form-data; name="feesDay"
+
+45000
+--boundaryComplete
+Content-Disposition: form-data; name="feesBoarding"
+
+85000
+--boundaryComplete
+Content-Disposition: form-data; name="admissionFee"
+
+5000
+--boundaryComplete
+Content-Disposition: form-data; name="admissionOpenDate"
+
+2025-09-01T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="admissionCloseDate"
+
+2025-11-30T23:59:59.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="admissionRequirements"
+
+1. Minimum KCSE mean grade of C+ (or equivalent)
+2. Good conduct record from previous school
+3. Medical fitness certificate from registered doctor
+4. Completed application form with all required documents
+5. Passed entrance examination and interview (if applicable)
+--boundaryComplete
+Content-Disposition: form-data; name="admissionCapacity"
+
+300
+--boundaryComplete
+Content-Disposition: form-data; name="admissionContactEmail"
+
+admissions@katwanyaa.sc.ke
+--boundaryComplete
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254793472960
+--boundaryComplete
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://www.katwanyaa.sc.ke
+--boundaryComplete
+Content-Disposition: form-data; name="admissionLocation"
+
+Katwanyaa, Bomet County, Kenya (Along Bomet-Sotik Highway)
+--boundaryComplete
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Monday to Friday: 8:00 AM - 5:00 PM
+--boundaryComplete
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "IRE", "HRE", "Business Studies", "Computer Studies", "Agriculture", "Home Science", "French", "Music", "Art & Design", "Physical Education"]
+--boundaryComplete
+Content-Disposition: form-data; name="departments"
+
+["Mathematics Department", "Languages Department", "Sciences Department", "Humanities Department", "Technical Department", "Administration Department", "Guidance & Counseling"]
+--boundaryComplete
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Original Birth Certificate", "KCPE/KCPE Result Slip (Original)", "4 Recent Passport Size Photos", "Medical Report from Registered Doctor", "Transfer Letter (For Transfer Students)", "Previous School Reports (2 Years)", "Parents/Guardian National ID Copies", "Immunization Card", "Co-curricular Achievement Certificates (If Any)"]
+--boundaryComplete--
+
+### 3. PUT - Alternative: Test with Local Video Upload (Simulated - would need actual file)
+# Note: This is commented out as it requires actual file upload
+# PUT {{baseUrl}}
+# Content-Type: multipart/form-data; boundary=boundaryVideo
+
+# --boundaryVideo
+# Content-Disposition: form-data; name="name"
+# 
+# Katwanyaa High School
+# --boundaryVideo
+# Content-Disposition: form-data; name="videoTour"; filename="campus-tour.mp4"
+# Content-Type: video/mp4
+# 
+# < ./test-files/campus-tour.mp4
+# --boundaryVideo
+# Content-Disposition: form-data; name="videoThumbnail"; filename="thumbnail.jpg"
+# Content-Type: image/jpeg
+# 
+# < ./test-files/thumbnail.jpg
+# --boundaryVideo--
+
+### 4. PUT - Update Fees and Academic Information Only
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryFees
+
+--boundaryFees
+Content-Disposition: form-data; name="feesDay"
+
+48000
+--boundaryFees
+Content-Disposition: form-data; name="feesBoarding"
+
+90000
+--boundaryFees
+Content-Disposition: form-data; name="admissionFee"
+
+5500
+--boundaryFees
+Content-Disposition: form-data; name="admissionCapacity"
+
+320
+--boundaryFees
+Content-Disposition: form-data; name="studentCount"
+
+1300
+--boundaryFees
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "IRE", "HRE", "Business Studies", "Computer Studies", "Agriculture", "Home Science", "French", "German", "Music", "Art & Design", "Physical Education", "Life Skills", "Entrepreneurship"]
+--boundaryFees
+Content-Disposition: form-data; name="departments"
+
+["Mathematics Department", "Languages Department", "Sciences Department", "Humanities Department", "Technical Department", "Administration", "Guidance & Counseling", "Sports Department"]
+--boundaryFees--
+
+### 5. PUT - Test Partial Update (Keep existing values for null fields)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryPartial
+
+--boundaryPartial
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254720123456
+--boundaryPartial
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://katwanyaa.ac.ke
+--boundaryPartial
+Content-Disposition: form-data; name="admissionLocation"
+
+P.O. Box 123-20400, Katwanyaa, Bomet County, Kenya
+--boundaryPartial
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Mon-Thu: 8:00 AM - 5:00 PM | Fri: 8:00 AM - 4:00 PM | Sat: 9:00 AM - 12:00 PM
+--boundaryPartial--
+
+### 6. GET - Verify Complete Update
+GET {{baseUrl}}
 Content-Type: application/json
 
-{
-  "field": "curriculumDescription",
-  "data": "Updated curriculum description for all forms - 2024 Edition"
-}
+### 7. PUT - Test Video Removal (Set to null)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryNoVideo
 
-### 7. PUT - Update JSON data field
-PUT {{baseUrl}}?id=1
+--boundaryNoVideo
+Content-Disposition: form-data; name="youtubeLink"
+
+--boundaryNoVideo
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School
+--boundaryNoVideo--
+
+### 8. GET - Verify Video Removal
+GET {{baseUrl}}
 Content-Type: application/json
 
-{
-  "field": "feesDayDistributionJson",
-  "data": {
-    "tuition": 55000,
-    "activity": 12000,
-    "library": 6000,
-    "medical": 3500,
-    "development": 5000,
-    "total": 81500
-  }
-}
+### 9. PUT - Test Invalid Data (Should return error)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryError
 
-### 8. PUT - Update exam term field
-PUT {{baseUrl}}?id=1
-Content-Type: application/json
+--boundaryError
+Content-Disposition: form-data; name="youtubeLink"
 
-{
-  "field": "form1ResultsTerm",
-  "data": "Term 2"
-}
+invalid-url-here
+--boundaryError
+Content-Disposition: form-data; name="studentCount"
 
-### 9. PATCH - Delete curriculum PDF
-### NOTE: Replace {id} with actual document ID
-PATCH {{baseUrl}}?id=1&field=curriculumPDF
-Content-Type: application/json
-
-{
-  "action": "deleteFile"
-}
-
-### 10. PATCH - Delete exam results PDF
-PATCH {{baseUrl}}?id=1&field=form1ResultsPdf
-Content-Type: application/json
-
-{
-  "action": "deleteFile"
-}
-
-### 11. PATCH - Delete additional document by ID
-### NOTE: Replace {id} with document ID and {fileId} with additional document ID
-PATCH {{baseUrl}}?id=1&field=additionalDocuments
-Content-Type: application/json
-
-{
-  "action": "deleteFile",
-  "fileId": 3
-}
-
-### 12. DELETE - Delete by ID
-### NOTE: Replace {id} with actual document ID
-DELETE {{baseUrl}}?id=1
-
-### 13. DELETE - Delete first document (legacy)
-DELETE {{baseUrl}}
-
-### 14. POST - Test with invalid file type (should fail)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=InvalidFileBoundary
-
---InvalidFileBoundary
-Content-Disposition: form-data; name="curriculumPDF"; filename="invalid.jpg"
-Content-Type: image/jpeg
-
-< ./test-files/invalid.jpg
---InvalidFileBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
-Test with invalid file type
---InvalidFileBoundary--
-
-### 15. POST - Test error case: empty request
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=EmptyBoundary
-
---EmptyBoundary--
-
-### 16. POST - Test with only additional files
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=OnlyAdditionalBoundary
-
---OnlyAdditionalBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="test.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---OnlyAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesDesc"
-
-Test additional file only
---OnlyAdditionalBoundary--
-
-### 17. POST - Test with DOC/DOCX files
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=DocFilesBoundary
-
---DocFilesBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="report.docx"
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-
-< ./test-files/sample.docx
---DocFilesBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="document.doc"
-Content-Type: application/msword
-
-< ./test-files/sample.doc
---DocFilesBoundary
-Content-Disposition: form-data; name="additionalFilesDesc"
-
-Word documents test
---DocFilesBoundary--
-
-### 18. POST - Test individual exam uploads
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=SingleExamBoundary
-
---SingleExamBoundary
-Content-Disposition: form-data; name="kcseYear"
-
-2023
---SingleExamBoundary
-Content-Disposition: form-data; name="kcseTerm"
-
-Annual
---SingleExamBoundary
-Content-Disposition: form-data; name="kcseDescription"
-
-KCSE Results 2023
---SingleExamBoundary
-Content-Disposition: form-data; name="kcseResultsPdf"; filename="kcse.pdf"
-Content-Type: application/pdf
-
-< ./test-files/sample.pdf
---SingleExamBoundary--
-
-### 19. POST - Test fees JSON update without PDF
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=JsonOnlyBoundary
-
---JsonOnlyBoundary
-Content-Disposition: form-data; name="feesDayDistributionJson"
-
-{
-  "tuition": 60000,
-  "activity": 15000,
-  "library": 8000,
-  "medical": 4000,
-  "development": 7000,
-  "total": 94000
-}
---JsonOnlyBoundary
-Content-Disposition: form-data; name="admissionFeeDistribution"
-
-{
-  "application": 2000,
-  "registration": 8000,
-  "uniform": 20000,
-  "books": 25000,
-  "total": 55000
-}
---JsonOnlyBoundary--
-
-### 20. POST - Test with all empty fields
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=AllEmptyBoundary
-
---AllEmptyBoundary
-Content-Disposition: form-data; name="curriculumYear"
-
---AllEmptyBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
---AllEmptyBoundary
-Content-Disposition: form-data; name="form1ResultsTerm"
-
---AllEmptyBoundary--
+not-a-number
+--boundaryError
+Content-Disposition: form-data; name="subjects"

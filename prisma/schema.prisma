@@ -232,7 +232,7 @@ model SchoolInfo {
   admissionContactPhone      String?   @db.VarChar(50)
   admissionWebsite           String?   @db.VarChar(255)
   admissionLocation          String?   @db.Text
-  admissionOfficeHours       String?   @db.VarChar(100)
+  admissionOfficeHours       String?    @db.Text
   admissionDocumentsRequired Json      @default("[]")
   form1ResultsTerm        String?   @db.VarChar(50)  // Add this
   form2ResultsTerm        String?   @db.VarChar(50)  // Add this
