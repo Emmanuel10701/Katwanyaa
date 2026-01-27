@@ -315,13 +315,11 @@ export async function POST(req) {
     const uploadPromises = {};
     const uploadResults = {};
 
-    // All document fields including curriculum and fees now have term
 const documentFields = [
   { 
     key: 'curriculum', 
     name: 'curriculumPDF', 
     year: 'curriculumYear',
-    // term: 'curriculumTerm', // Remove this line
     description: 'curriculumDescription',
     folder: 'curriculum' 
   },
@@ -329,7 +327,6 @@ const documentFields = [
     key: 'feesDay', 
     name: 'feesDayDistributionPdf', 
     year: 'feesDayYear',
-    // term: 'feesDayTerm', // Remove this line
     description: 'feesDayDescription',
     folder: 'day-fees' 
   },
@@ -337,7 +334,6 @@ const documentFields = [
     key: 'feesBoarding', 
     name: 'feesBoardingDistributionPdf', 
     year: 'feesBoardingYear',
-    // term: 'feesBoardingTerm', // Remove this line
     description: 'feesBoardingDescription',
     folder: 'boarding-fees' 
   },
@@ -345,18 +341,11 @@ const documentFields = [
     key: 'admissionFee', 
     name: 'admissionFeePdf', 
     year: 'admissionFeeYear',
-    // term: 'admissionFeeTerm', // Remove this line
     description: 'admissionFeeDescription',
     folder: 'admission' 
   },
 ];
 
-// Also update the part where you process year, term, and description:
-// Change from:
-if (term !== null) {
-  updateData[field.term] = parseStringField(term);
-}
-// To:
 if (field.term && term !== null) {
   updateData[field.term] = parseStringField(term);
 }
@@ -417,6 +406,7 @@ if (field.term && term !== null) {
     const allFields = [...documentFields, ...examFields];
     
     for (const field of allFields) {
+
       const pdfFile = formData.get(field.name);
       if (pdfFile && pdfFile.size > 0) {
         console.log(`📤 Uploading ${field.key} file:`, pdfFile.name);
@@ -658,19 +648,24 @@ if (field.term && term !== null) {
       }
       
       // Handle year, term, and description fields
-      const year = formData.get(field.year);
-      const term = formData.get(field.term);
-      const description = formData.get(field.description);
-      
-      if (year !== null) {
-        updateData[field.year] = parseIntField(year);
-      }
-      if (term !== null) {
-        updateData[field.term] = parseStringField(term);
-      }
-      if (description !== null) {
-        updateData[field.description] = parseStringField(description);
-      }
+ // Handle year, term, and description fields
+const year = formData.get(field.year);
+const description = formData.get(field.description);
+
+if (year !== null) {
+  updateData[field.year] = parseIntField(year);
+}
+if (description !== null) {
+  updateData[field.description] = parseStringField(description);
+}
+
+// Only process term if the field has term property
+if (field.term) {
+  const termValue = formData.get(field.term);
+  if (termValue !== null) {
+    updateData[field.term] = parseStringField(termValue);
+  }
+}
     }
 
     console.log("📝 Update data prepared:", updateData);

@@ -1,4 +1,4 @@
-### Test School Documents API
+### Test School Documents API (Temporary - without term fields)
 
 @baseUrl = https://katwanyaa.vercel.app/api/schooldocuments
 
@@ -6,7 +6,7 @@
 GET {{baseUrl}}
 Content-Type: application/json
 
-### 2. POST - Create/Update documents with form data
+### 2. POST - Create/Update documents WITHOUT term fields for curriculum/fees
 POST {{baseUrl}}
 Content-Type: multipart/form-data; boundary=WebAppBoundary
 
@@ -14,10 +14,6 @@ Content-Type: multipart/form-data; boundary=WebAppBoundary
 Content-Disposition: form-data; name="curriculumYear"
 
 2024
---WebAppBoundary
-Content-Disposition: form-data; name="curriculumTerm"
-
-Term 1
 --WebAppBoundary
 Content-Disposition: form-data; name="curriculumDescription"
 
@@ -31,10 +27,6 @@ Content-Type: application/pdf
 Content-Disposition: form-data; name="feesDayYear"
 
 2024
---WebAppBoundary
-Content-Disposition: form-data; name="feesDayTerm"
-
-Term 1
 --WebAppBoundary
 Content-Disposition: form-data; name="feesDayDescription"
 
@@ -59,10 +51,6 @@ Content-Disposition: form-data; name="feesBoardingYear"
 
 2024
 --WebAppBoundary
-Content-Disposition: form-data; name="feesBoardingTerm"
-
-Term 1
---WebAppBoundary
 Content-Disposition: form-data; name="feesBoardingDescription"
 
 Boarding School Fees Structure 2024
@@ -86,10 +74,6 @@ Content-Disposition: form-data; name="feesBoardingDistributionJson"
 Content-Disposition: form-data; name="admissionFeeYear"
 
 2024
---WebAppBoundary
-Content-Disposition: form-data; name="admissionFeeTerm"
-
-Term 1
 --WebAppBoundary
 Content-Disposition: form-data; name="admissionFeeDescription"
 
@@ -160,23 +144,6 @@ Annual
 Content-Disposition: form-data; name="additionalFilesDesc"
 
 School Academic Calendar 2024
---WebAppBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="sports-day.docx"
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-
-< ./test-files/sports-day.docx
---WebAppBoundary
-Content-Disposition: form-data; name="additionalFilesYear[1]"
-
-2024
---WebAppBoundary
-Content-Disposition: form-data; name="additionalFilesTerm[1]"
-
-Term 2
---WebAppBoundary
-Content-Disposition: form-data; name="additionalFilesDesc[1]"
-
-Sports Day Announcement
 --WebAppBoundary--
 
 ### 3. POST - Minimal document update (just metadata without files)
@@ -188,10 +155,6 @@ Content-Disposition: form-data; name="curriculumYear"
 
 2025
 --MinimalBoundary
-Content-Disposition: form-data; name="curriculumTerm"
-
-Term 1
---MinimalBoundary
 Content-Disposition: form-data; name="curriculumDescription"
 
 Updated curriculum for 2025 academic year
@@ -199,33 +162,30 @@ Updated curriculum for 2025 academic year
 Content-Disposition: form-data; name="feesDayYear"
 
 2025
---MinimalBoundary
-Content-Disposition: form-data; name="feesDayTerm"
-
-Term 1
 --MinimalBoundary--
 
-### 4. POST - Update with existing document deletion
+### 4. POST - Test only with exam results (which have term fields)
 POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=DeleteBoundary
+Content-Type: multipart/form-data; boundary=ExamsOnlyBoundary
 
---DeleteBoundary
-Content-Disposition: form-data; name="curriculumYear"
+--ExamsOnlyBoundary
+Content-Disposition: form-data; name="form1ResultsYear"
 
 2024
---DeleteBoundary
-Content-Disposition: form-data; name="curriculumTerm"
+--ExamsOnlyBoundary
+Content-Disposition: form-data; name="form1ResultsTerm"
 
-Term 2
---DeleteBoundary
-Content-Disposition: form-data; name="additionalDocsToDelete[]"
+Term 1
+--ExamsOnlyBoundary
+Content-Disposition: form-data; name="form1ResultsDescription"
 
-1
---DeleteBoundary
-Content-Disposition: form-data; name="additionalDocsToDelete[]"
+Form 1 End of Term Results
+--ExamsOnlyBoundary
+Content-Disposition: form-data; name="form1ResultsPdf"; filename="form1.pdf"
+Content-Type: application/pdf
 
-2
---DeleteBoundary--
+< ./test-files/form1-results.pdf
+--ExamsOnlyBoundary--
 
 ### 5. PUT - Update specific field (JSON body)
 PUT {{baseUrl}}?id=1
@@ -236,128 +196,5 @@ Content-Type: application/json
   "data": "Updated curriculum description for all forms"
 }
 
-### 6. PUT - Update JSON data field
-PUT {{baseUrl}}?id=1
-Content-Type: application/json
-
-{
-  "field": "feesDayDistributionJson",
-  "data": {
-    "tuition": 55000,
-    "activity": 12000,
-    "library": 6000,
-    "medical": 3500,
-    "development": 5000,
-    "total": 80500
-  }
-}
-
-### 7. PATCH - Delete specific file
-PATCH {{baseUrl}}?id=1&field=curriculumPDF
-Content-Type: application/json
-
-{
-  "action": "deleteFile"
-}
-
-### 8. PATCH - Delete additional document
-PATCH {{baseUrl}}?id=1&field=additionalDocuments
-Content-Type: application/json
-
-{
-  "action": "deleteFile",
-  "fileId": 3
-}
-
-### 9. DELETE - Delete by ID
-DELETE {{baseUrl}}?id=1
-
-### 10. DELETE - Delete first document (legacy)
+### 6. DELETE - Delete first document (legacy)
 DELETE {{baseUrl}}
-
-### 11. POST - Test with invalid file type (should fail)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=InvalidBoundary
-
---InvalidBoundary
-Content-Disposition: form-data; name="curriculumPDF"; filename="invalid.jpg"
-Content-Type: image/jpeg
-
-< ./test-files/invalid.jpg
---InvalidBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
-Test with invalid file type
---InvalidBoundary--
-
-### 12. POST - Test with large file (should fail if >4.5MB)
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=LargeFileBoundary
-
---LargeFileBoundary
-Content-Disposition: form-data; name="curriculumPDF"; filename="large-file.pdf"
-Content-Type: application/pdf
-
-< ./test-files/large-document.pdf
---LargeFileBoundary
-Content-Disposition: form-data; name="curriculumDescription"
-
-Test with large file upload
---LargeFileBoundary--
-
-### 13. POST - Multiple additional files with different metadata
-POST {{baseUrl}}
-Content-Type: multipart/form-data; boundary=MultipleAdditionalBoundary
-
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="policy1.pdf"
-Content-Type: application/pdf
-
-< ./test-files/policy1.pdf
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesYear[0]"
-
-2024
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesTerm[0]"
-
-Annual
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesDesc[0]"
-
-School Discipline Policy
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="policy2.docx"
-Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
-
-< ./test-files/policy2.docx
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesYear[1]"
-
-2024
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesTerm[1]"
-
-Annual
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesDesc[1]"
-
-Examination Policy
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFiles[]"; filename="newsletter.pdf"
-Content-Type: application/pdf
-
-< ./test-files/newsletter.pdf
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesYear"
-
-2024
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesTerm"
-
-Term 1
---MultipleAdditionalBoundary
-Content-Disposition: form-data; name="additionalFilesDesc"
-
-Monthly School Newsletter
---MultipleAdditionalBoundary--
