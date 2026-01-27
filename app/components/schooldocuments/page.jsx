@@ -319,10 +319,13 @@ function FeeBreakdownModal({
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
 
-  useEffect(() => {
-const total = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat.amount || 0), 0) : 0;
-    setTotalAmount(total);
-  }, [categories]);
+useEffect(() => {
+  const total = Array.isArray(categories) 
+    ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
+    : 0;
+  setTotalAmount(total);
+}, [categories]);
+
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -629,10 +632,12 @@ function AdmissionFeeBreakdownModal({
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
 
-  useEffect(() => {
-const total = Array.isArray(categories) ? categories.reduce((sum, cat) => sum + (cat.amount || 0), 0) : 0;
-    setTotalAmount(total);
-  }, [categories]);
+useEffect(() => {
+  const total = Array.isArray(categories) 
+    ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
+    : 0;
+  setTotalAmount(total);
+}, [categories]);
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -1637,6 +1642,7 @@ function ModernPdfUpload({
 }
 
 // First, update the AdditionalResultsUpload component to properly pass data to parent
+// Updated AdditionalResultsUpload Component with proper error handling
 function AdditionalResultsUpload({ 
   files = [], 
   onFilesChange, 
@@ -1644,7 +1650,6 @@ function AdditionalResultsUpload({
   existingFiles = [],
   onCancelExisting = null,
   onRemoveExisting = null,
-  // NEW PROPS for direct state management
   additionalFilesState = [],
   onAdditionalFilesStateChange = null
 }) {
@@ -1663,11 +1668,14 @@ function AdditionalResultsUpload({
   // Allowed file types for additional documents
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
-  // Initialize localFiles from props
+  // Initialize localFiles from props - FIXED VERSION
   useEffect(() => {
-    const existingFileObjects = (existingFiles || []).map((file, index) => ({
+    // Ensure existingFiles is an array
+    const safeExistingFiles = Array.isArray(existingFiles) ? existingFiles : [];
+    
+    const existingFileObjects = safeExistingFiles.map((file, index) => ({
       ...file,
-      id: file.id || `existing_${index}`,
+      id: file.id || `existing_${Date.now()}_${index}`,
       isExisting: true,
       isModified: false,
       isRemoved: false,
@@ -1681,7 +1689,10 @@ function AdditionalResultsUpload({
       status: 'existing'
     }));
     
-    const newFileObjects = (files || []).filter(file => {
+    // Ensure files is an array
+    const safeFiles = Array.isArray(files) ? files : [];
+    
+    const newFileObjects = safeFiles.filter(file => {
       return !localFiles.some(lf => 
         (lf.file && file.name === lf.file.name && file.size === lf.file.size) ||
         (lf.filename === file.name)
@@ -1713,20 +1724,25 @@ function AdditionalResultsUpload({
     
     setLocalFiles(uniqueFiles);
     
-    // NEW: Update parent state if prop is provided
-    if (onAdditionalFilesStateChange) {
+    // Update parent state if prop is provided
+    if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
       onAdditionalFilesStateChange(uniqueFiles);
     }
   }, [existingFiles, files]);
 
-  // NEW: Effect to sync with parent state when provided
+  // Update localFiles when additionalFilesState changes
   useEffect(() => {
-    if (additionalFilesState && additionalFilesState.length > 0) {
+    if (additionalFilesState && Array.isArray(additionalFilesState)) {
       setLocalFiles(additionalFilesState);
     }
   }, [additionalFilesState]);
 
   const validateFile = (file) => {
+    if (!file || !file.name) {
+      toast.error('Invalid file');
+      return false;
+    }
+    
     // Check file type by extension
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
@@ -1791,55 +1807,56 @@ function AdditionalResultsUpload({
     }
   };
 
-const handleMetadataSave = async (metadata) => {
-  if (selectedFile) {
-    // Check total size
-    const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
-    if (!success) {
+  const handleMetadataSave = async (metadata) => {
+    if (selectedFile && selectedFile.file) {
+      // Check total size
+      const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
+      if (!success) {
+        setSelectedFile(null);
+        setShowMetadataModal(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
+      await simulateUpload(selectedFile.file);
+
+      const newFileObject = {
+        ...selectedFile,
+        year: metadata.year,
+        term: metadata.term,
+        description: metadata.description,
+        isNew: true,
+        isModified: true,
+        status: 'uploaded',
+        uploadDate: new Date().toISOString(),
+        filesize: selectedFile.file.size
+      };
+      
+      const updatedFiles = [...localFiles, newFileObject];
+      setLocalFiles(updatedFiles);
+      
+      // Notify parent of new file
+      if (onFilesChange && typeof onFilesChange === 'function') {
+        onFilesChange([selectedFile.file]);
+      }
+      
+      // Update parent state via callback with the complete object
+      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
+        onAdditionalFilesStateChange(updatedFiles);
+      }
+      
+      toast.success('Document added with metadata');
+      
       setSelectedFile(null);
       setShowMetadataModal(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      return;
-    }
-
-    await simulateUpload(selectedFile.file);
-
-    const newFileObject = {
-      ...selectedFile,
-      year: metadata.year,
-      term: metadata.term,
-      description: metadata.description,
-      isNew: true,
-      isModified: true,
-      status: 'uploaded',
-      uploadDate: new Date().toISOString(),
-      filesize: selectedFile.file.size
-    };
-    
-    const updatedFiles = [...localFiles, newFileObject];
-    setLocalFiles(updatedFiles);
-    
-    // Notify parent of new file
-    onFilesChange([selectedFile.file]);
-    
-    // Update parent state via callback with the complete object
-    if (onAdditionalFilesStateChange) {
-      onAdditionalFilesStateChange(updatedFiles);
     }
     
-    toast.success('Document added with metadata');
-    
-    setSelectedFile(null);
-    setShowMetadataModal(false);
-  }
-  
-  if (fileInputRef.current) {
-    fileInputRef.current.value = '';
-  }
-};
-
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -1894,7 +1911,7 @@ const handleMetadataSave = async (metadata) => {
           });
           setShowMetadataModal(true);
           
-          if (onCancelExisting) {
+          if (onCancelExisting && typeof onCancelExisting === 'function') {
             onCancelExisting(fileToReplace);
           }
         }
@@ -1913,12 +1930,12 @@ const handleMetadataSave = async (metadata) => {
       
       setLocalFiles(updatedFiles);
       
-      // NEW: Update parent state via callback
-      if (onAdditionalFilesStateChange) {
+      // Update parent state via callback
+      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
         onAdditionalFilesStateChange(updatedFiles);
       }
       
-      if (onRemoveExisting) {
+      if (onRemoveExisting && typeof onRemoveExisting === 'function') {
         onRemoveExisting(fileToRemove);
       }
       
@@ -1936,8 +1953,8 @@ const handleMetadataSave = async (metadata) => {
       const updatedFiles = localFiles.filter(file => file.id !== id);
       setLocalFiles(updatedFiles);
       
-      // NEW: Update parent state via callback
-      if (onAdditionalFilesStateChange) {
+      // Update parent state via callback
+      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
         onAdditionalFilesStateChange(updatedFiles);
       }
       
@@ -1946,7 +1963,9 @@ const handleMetadataSave = async (metadata) => {
           f !== fileToRemove.file && 
           f.name !== fileToRemove.filename
         );
-        onFilesChange(updatedFilesList);
+        if (onFilesChange && typeof onFilesChange === 'function') {
+          onFilesChange(updatedFilesList);
+        }
       }
       
       toast.info('New file removed from list.');
@@ -2103,9 +2122,7 @@ const handleMetadataSave = async (metadata) => {
                       <p className="text-xs text-gray-500 font-bold">
                         {formatFileSize(file.filesize || file.size)}
                       </p>
-                      <p className="text-xs text-gray-400 font-bold">
-                        •
-                      </p>
+                      <p className="text-xs text-gray-400 font-bold">•</p>
                       <p className="text-xs text-gray-500 font-bold">
                         {file.filetype?.toUpperCase() || 'DOCUMENT'}
                       </p>
@@ -2749,24 +2766,25 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
+  
 const [additionalFiles, setAdditionalFiles] = useState(() => {
-  if (documents?.additionalDocuments && documents.additionalDocuments.length > 0) {
+  if (documents?.additionalDocuments && Array.isArray(documents.additionalDocuments) && documents.additionalDocuments.length > 0) {
     return documents.additionalDocuments.map((doc, index) => ({
       id: `existing_${doc.id || `doc_${Date.now()}_${index}`}`,
       filename: doc.filename,
       filepath: doc.filepath,
       filetype: doc.filetype,
-      description: doc.description,
-      year: doc.year,
-      term: doc.term,
-      filesize: doc.filesize,
+      description: doc.description || '',
+      year: doc.year || '',
+      term: doc.term || '',
+      filesize: doc.filesize || 0,
       isExisting: true,
       isModified: false,
       isRemoved: false,
       isReplaced: false,
       originalFilePath: doc.filepath,
       status: 'existing',
-      uploadDate: doc.uploadedAt || doc.uploadDate
+      uploadDate: doc.uploadedAt || doc.uploadDate || new Date().toISOString()
     }));
   }
   return [];
