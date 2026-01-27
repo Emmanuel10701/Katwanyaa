@@ -631,7 +631,7 @@ const StatCard = ({ stat }) => {
                 {stat.label}
               </span>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tight italic">
+                <h3 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight italic">
                   {stat.number}
                 </h3>
               </div>
@@ -1880,7 +1880,7 @@ export default function ComprehensiveAdmissions() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Admissions Open {new Date().getFullYear()}</span>
                 </div>
                 <h2 className="
-                  text-2xl sm:text-3xl md:text-4xl lg:text-5xl
+                  text-2xl sm:text-3xl md:text-3xl lg:text-5xl
                   font-extrabold text-slate-900
                   mb-3 sm:mb-5
                   tracking-tight
@@ -1974,7 +1974,7 @@ export default function ComprehensiveAdmissions() {
                         Our Advantages
                       </span>
                     </div>
-                    <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                    <h2 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
                       Why Choose <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Our School?</span>
                     </h2>
                   </div>
@@ -2182,7 +2182,7 @@ export default function ComprehensiveAdmissions() {
                   
                   <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8 md:gap-12">
                     <div className="text-center lg:text-left">
-                      <h3 className="text-white text-2xl md:text-4xl font-black tracking-tight mb-4">Academic Calendar</h3>
+                      <h3 className="text-white text-2xl md:text-3xl font-black tracking-tight mb-4">Academic Calendar</h3>
                       <p className="text-slate-400 text-base md:text-lg">Mark your journey. Stay ahead of the curve.</p>
                     </div>
 
@@ -3089,7 +3089,7 @@ export default function ComprehensiveAdmissions() {
             </div>
 
             {/* 2. Responsive Typography (Reduced Sizes) */}
-            <h2 className="text-xl md:text-4xl font-black text-white mb-4 tracking-tight leading-tight text-balance">
+            <h2 className="text-xl md:text-3xl font-black text-white mb-4 tracking-tight leading-tight text-balance">
               Ready to Begin Your <span className="text-blue-400">Academic Journey This year</span>
             </h2>
             
