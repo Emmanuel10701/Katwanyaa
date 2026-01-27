@@ -3471,7 +3471,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
           <form onSubmit={handleFormSubmit} className="space-y-8">
             {renderStepContent()}
 
-            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
+            <div className="flex  mb-6 flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -3479,7 +3479,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-3  mb-6 w-full sm:w-auto">
                 {currentStep > 0 && (
                   <button 
                     type="button"
