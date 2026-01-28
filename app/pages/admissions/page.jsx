@@ -879,10 +879,14 @@ const ModernFeeCard = ({
 };
 
 // Video Tour Component
+
+
 const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
+  // State to manage overlay visibility
+  const [isPlaying, setIsPlaying] = useState(false);
+
   if (!videoTour) return null;
 
-  // Function to extract YouTube video ID
   const getYouTubeId = (url) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
@@ -891,113 +895,125 @@ const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
 
   const videoId = videoType === 'youtube' ? getYouTubeId(videoTour) : null;
 
+  // Handler to hide overlay when playing
+  const handlePlay = () => setIsPlaying(true);
+
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg overflow-hidden">
+    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-2xl overflow-hidden transition-all duration-300">
+      
       {/* Header Section */}
-      <div className="relative p-4 md:p-8 bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 blur-[60px] rounded-full -mr-24 -mt-24"></div>
+      <div className="relative p-4 md:p-8 bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
         
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3 md:gap-4">
-            <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
-              <IoVideocamOutline className="text-white text-xl md:text-2xl" />
+            <div className="p-2 md:p-3 bg-white/20 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/30 shadow-inner">
+              <IoVideocamOutline className="text-white text-xl md:text-3xl" />
             </div>
             <div>
-              <h3 className="text-lg md:text-2xl font-bold">Virtual Campus Tour</h3>
-              <p className="text-blue-100 text-sm mt-1">Experience our campus from anywhere</p>
+              <h3 className="text-xl md:text-3xl font-extrabold tracking-tight">Virtual School Tour</h3>
+              <p className="text-blue-100/90 text-sm md:text-base font-medium mt-1">Experience our campus in immersive detail</p>
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
-            <span className="text-xs font-bold uppercase tracking-wider">HD Tour</span>
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Ultra HD 4K</span>
           </div>
         </div>
       </div>
 
-      {/* Video Container - Reduced size on larger screens */}
-      <div className="p-4 md:p-6">
-        <div className="relative mx-auto" style={{ maxWidth: '800px' }}>
-          {/* Video Player */}
-          <div className="relative rounded-xl md:rounded-2xl overflow-hidden shadow-xl border border-slate-200/60 bg-black">
-            {/* Play Button Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-              <div className="w-12 h-12 md:w-20 md:h-20 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center">
-                <FiPlay className="text-white text-xl md:text-3xl ml-1" />
-              </div>
-            </div>
+      {/* Video Container */}
+      <div className="p-4 md:p-10">
+        <div className="relative mx-auto" style={{ maxWidth: '900px' }}>
+          
+          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200/50 bg-black group">
             
-            {/* Video Thumbnail Background */}
-            {videoThumbnail && (
-              <div className="absolute inset-0 bg-cover bg-center opacity-30" 
-                   style={{ backgroundImage: `url(${videoThumbnail})` }} />
+            {/* Play Button Overlay - Now conditional on !isPlaying */}
+            {!isPlaying && (
+              <div 
+                className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer group-hover:bg-black/20 transition-all duration-500"
+                onClick={handlePlay}
+              >
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-blue-600/90 backdrop-blur-md border-4 border-white/30 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform">
+                  <FiPlay className="text-white text-2xl md:text-4xl ml-1.5" />
+                </div>
+                
+                {/* Background Thumbnail */}
+                {videoThumbnail && (
+                  <div className="absolute inset-0 -z-10 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
+                       style={{ backgroundImage: `url(${videoThumbnail})` }} />
+                )}
+                <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              </div>
             )}
             
-            {/* Video Player */}
+            {/* Video Player Interface */}
             <div className="relative aspect-video w-full">
               {videoType === 'youtube' && videoId ? (
                 <iframe
-                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=${isPlaying ? 1 : 0}`}
                   className="absolute inset-0 w-full h-full"
-                  title="Virtual Campus Tour"
+                  title="Virtual school Tour"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
-                  loading="lazy"
                 />
-              ) : videoType === 'file' && videoTour ? (
+              ) : (
                 <video
+                  onPlay={handlePlay}
+                  onPause={() => setIsPlaying(false)}
                   controls
                   className="absolute inset-0 w-full h-full"
                   poster={videoThumbnail || ''}
                   preload="metadata"
                 >
                   <source src={videoTour} type="video/mp4" />
-                  <source src={videoTour} type="video/webm" />
                   Your browser does not support the video tag.
                 </video>
-              ) : null}
+              )}
             </div>
           </div>
 
-          {/* Video Info Footer */}
-          <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-600">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <FiClock className="text-blue-500" />
-                <span>3:45 min</span>
+          {/* Stats Bar */}
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 px-2">
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-blue-50 rounded-lg"><FiClock className="text-blue-600 font-bold" /></div>
+                <span className="text-sm font-bold text-slate-700">3:45 Duration</span>
               </div>
-              <div className="flex items-center gap-2">
-                <FiEye className="text-cyan-500" />
-                <span>HD Quality</span>
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-cyan-50 rounded-lg"><FiEye className="text-cyan-600 font-bold" /></div>
+                <span className="text-sm font-bold text-slate-700">Premium Quality</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
+            <div className="flex items-center gap-3 bg-slate-100/50 p-2 rounded-2xl pr-4">
+              <div className="flex -space-x-2.5">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-slate-300 to-slate-400 shadow-sm"></div>
                 ))}
               </div>
-              <span className="text-xs font-medium text-slate-500">500+ watched</span>
+              <span className="text-xs font-black text-slate-600 uppercase tracking-tight">1.2k+ Views</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Links */}
-      <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50/50">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-slate-600">
-            <span className="font-bold text-slate-800">Take the full tour</span> with our interactive campus map
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-medium">
-            <FiMapPin className="text-blue-500" />
-            <span>Explore school  Map</span>
+      {/* Footer CTA */}
+      <div className="p-6 md:p-8 border-t border-slate-100 bg-white">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <p className="text-slate-600 font-medium text-center sm:text-left">
+            Want a more detailed view? <span className="font-extrabold text-indigo-600">Open the Interactive Map</span>
+          </p>
+          <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-3.5 bg-slate-900 hover:bg-indigo-600 text-white rounded-2xl text-sm font-bold transition-all shadow-lg active:scale-95">
+            <FiMapPin className="text-lg" />
+            <span>Launch School Map</span>
           </button>
         </div>
       </div>
     </div>
   );
 };
+
 
 // Vision & Mission Section
 const VisionMissionSection = ({ vision, mission, motto }) => {
@@ -2240,14 +2256,14 @@ export default function ComprehensiveAdmissions() {
                     </div>
                   </div>
 
-                  {/* 3. Digital-First Campus - Slim Banner */}
+                  {/* 3. Digital-First school - Slim Banner */}
                   <div className="md:col-span-12 relative overflow-hidden rounded-2xl md:rounded-3xl bg-slate-50 border border-slate-200 p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6">
                     <div className="w-12 h-12 md:w-14 md:h-14 bg-white text-emerald-600 rounded-xl md:rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm shrink-0">
                       <FiCpu size={20} />
                     </div>
 
                     <div className="flex-1">
-                      <h4 className="text-lg font-bold text-slate-900 mb-0.5">Digital-First Campus</h4>
+                      <h4 className="text-lg font-bold text-slate-900 mb-0.5">Digital-First school</h4>
                       <p className="text-slate-500 text-xs leading-snug max-w-xl">
                         Immersive learning spaces with high-speed fiber and smart lab integration.
                       </p>
