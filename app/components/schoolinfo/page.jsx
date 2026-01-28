@@ -18,7 +18,7 @@ import {
   FaBusinessTime, FaHome, FaChurch, FaMosque,
   FaHandsHelping, FaCalculator, FaChartLine,
   FaUniversity, FaDoorOpen, FaDoorClosed,
-  FaIdCard, FaStethoscope, FaSyringe, 
+  FaIdCard, FaStethoscope, FaSyringe, FaMoneyBill,
   FiUsers, FiBook, FiCalendar, FiFileText, FiTrendingUp, FiTrendingDown,
   FiEye, FiDownload, FiMail, FiUserPlus, FiArrowUpRight, FiStar,
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
@@ -745,6 +745,12 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     mission: school?.mission || '',
     studentCount: school?.studentCount?.toString() || '',
     staffCount: school?.staffCount?.toString() || '',
+    
+    // Fee fields
+    feesDay: school?.feesDay?.toString() || '',
+    feesBoarding: school?.feesBoarding?.toString() || '',
+    admissionFee: school?.admissionFee?.toString() || '',
+    
     openDate: school?.openDate ? new Date(school.openDate).toISOString().split('T')[0] : '',
     closeDate: school?.closeDate ? new Date(school.closeDate).toISOString().split('T')[0] : '',
     subjects: school?.subjects || [],
@@ -974,6 +980,22 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                         required
                       />
                     </div>
+
+                    {/* Fee Fields - Added Here */}
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-5 border border-yellow-200">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <FaMoneyBill className="text-yellow-600" /> Day School Fees (KES)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={formData.feesDay}
+                        onChange={(e) => handleChange('feesDay', e.target.value)}
+                        placeholder="Enter day school fees..."
+                        className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-base font-bold placeholder-gray-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="space-y-4">
@@ -1013,6 +1035,37 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                         onChange={(e) => handleChange('mission', e.target.value)}
                         placeholder="Enter mission statement..."
                         className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none bg-white text-base font-bold placeholder-gray-500"
+                      />
+                    </div>
+
+                    {/* More Fee Fields */}
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border border-red-200">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <FaMoneyBill className="text-red-600" /> Boarding School Fees (KES)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={formData.feesBoarding}
+                        onChange={(e) => handleChange('feesBoarding', e.target.value)}
+                        placeholder="Enter boarding school fees..."
+                        className="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-base font-bold placeholder-gray-500"
+                      />
+                    </div>
+
+                    <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-5 border border-pink-200">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <FaMoneyBill className="text-pink-600" /> Admission Fee (KES)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={formData.admissionFee}
+                        onChange={(e) => handleChange('admissionFee', e.target.value)}
+                        placeholder="Enter admission fee..."
+                        className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 bg-white text-base font-bold placeholder-gray-500"
                       />
                     </div>
                   </div>
@@ -1443,6 +1496,16 @@ export default function SchoolInfoPage() {
     });
   };
 
+  // Format currency
+  const formatCurrency = (amount) => {
+    if (!amount) return 'Not set';
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
   // Get subject icons mapping
   const getSubjectIcon = (subject) => {
     const subjectIcons = {
@@ -1649,22 +1712,22 @@ export default function SchoolInfoPage() {
               subtitle="Teaching & support" 
             />
             <StatCard 
-              icon={FaCalendar} 
-              label="Academic Year" 
-              value={new Date().getFullYear()} 
+              icon={FaMoneyBill} 
+              label="Day School Fees" 
+              value={schoolInfo.feesDay} 
               change={0}
               trend="stable"
               color="purple" 
-              subtitle="Current session" 
+              subtitle="Per term" 
             />
             <StatCard 
-              icon={FaUsers} 
-              label="Admission Capacity" 
-              value={schoolInfo.admissionCapacity} 
+              icon={FaMoneyBill} 
+              label="Boarding Fees" 
+              value={schoolInfo.feesBoarding} 
               change={0}
               trend="stable"
               color="orange" 
-              subtitle="Available slots" 
+              subtitle="Per term" 
             />
           </div>
 
@@ -1725,6 +1788,28 @@ export default function SchoolInfoPage() {
                         <p className="text-sm text-slate-600">{schoolInfo.mission}</p>
                       </div>
                     )}
+                  </div>
+
+                  {/* Fee Information Section */}
+                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-xl border border-yellow-100">
+                    <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                      <FaMoneyBill className="text-yellow-600" />
+                      Fee Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
+                        <p className="text-xs font-bold text-slate-400">Day School</p>
+                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.feesDay)}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
+                        <p className="text-xs font-bold text-slate-400">Boarding</p>
+                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.feesBoarding)}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
+                        <p className="text-xs font-bold text-slate-400">Admission Fee</p>
+                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.admissionFee)}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
