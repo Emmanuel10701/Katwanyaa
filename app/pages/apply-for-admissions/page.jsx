@@ -992,7 +992,7 @@ const KatwanyaaAdmission = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-1 sm:space-y-2">
               <label className="block text-sm sm:text-base font-semibold text-gray-800">
-                Email Address *
+                Email Address (Optional)
               </label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -1619,7 +1619,7 @@ const KatwanyaaAdmission = () => {
               ) : (
                 <>
                   <FiCheckCircle className="mr-1 sm:mr-2 text-sm md:text-lg" /> 
-                  <span className="hidden xs:inline">Submit</span>
+                  <span >Submit</span>
                 </>
               )}
             </button>

@@ -1018,16 +1018,8 @@ export default function ModernResourcesAssignmentsView({
                 )}
               </p>
             </div>
-            
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              <button
-                onClick={handleDownloadAll}
-                disabled={filteredCount === 0}
-                className="px-4 py-2 sm:px-5 sm:py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <IoCloudDownload />
-                <span>Download All ({filteredCount})</span>
-              </button>
+
+            <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={activeTab === 'assignments' ? fetchAssignments : fetchResources}
                 className="px-4 py-2 sm:px-5 sm:py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2"

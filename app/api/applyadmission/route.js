@@ -313,7 +313,7 @@ export async function POST(req) {
     const requiredFields = [
       'firstName', 'lastName', 'gender', 'dateOfBirth',
       'nationality', 'county', 'constituency', 'ward',
-      'email', 'postalAddress',
+      'postalAddress',
       'previousSchool', 'previousClass'
     ];
 
@@ -325,10 +325,23 @@ export async function POST(req) {
       );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      return NextResponse.json({ success: false, error: "Invalid email format" }, { status: 400 });
+    // Email validation (email is now optional, but validate if provided)
+    if (data.email && data.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        return NextResponse.json({ success: false, error: "Invalid email format" }, { status: 400 });
+      }
+      
+      // Check for existing email only if email is provided
+      const existing = await prisma.admissionApplication.findUnique({
+        where: { email: data.email.toLowerCase() }
+      });
+      if (existing) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "Email already registered" 
+        }, { status: 400 });
+      }
     }
 
     // Phone validation (phone is now optional, but validate if provided)
@@ -339,17 +352,6 @@ export async function POST(req) {
           error: "Invalid phone format. Use 07XXXXXXXX or 01XXXXXXXX (or leave empty)" 
         }, { status: 400 });
       }
-    }
-
-    // Check for existing email
-    const existing = await prisma.admissionApplication.findUnique({
-      where: { email: data.email.toLowerCase() }
-    });
-    if (existing) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Email already registered" 
-      }, { status: 400 });
     }
 
     // 2. PREPARE DATA
@@ -370,7 +372,7 @@ export async function POST(req) {
       village: data.village?.trim(),
       
       // Contact
-      email: data.email.trim().toLowerCase(),
+      email: data.email ? data.email.trim().toLowerCase() : null,
       phone: data.phone ? data.phone.replace(/\s/g, '') : null,
       alternativePhone: data.alternativePhone?.replace(/\s/g, ''),
       postalAddress: data.postalAddress.trim(),
@@ -420,7 +422,10 @@ export async function POST(req) {
     // 4. SEND EMAILS
     try {
       const fullName = `${application.firstName} ${application.lastName}`;
-      await sendApplicantConfirmation(application.email, fullName, application.applicationNumber);
+      // Only send confirmation email if email was provided
+      if (application.email) {
+        await sendApplicantConfirmation(application.email, fullName, application.applicationNumber);
+      }
       await sendAdminNotification(application, application.applicationNumber);
     } catch (emailError) {
       console.warn("Email sending failed:", emailError);
