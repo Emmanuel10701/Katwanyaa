@@ -157,9 +157,6 @@ function ModernVideoUpload({
   const fileInputRef = useRef(null);
   const thumbnailInputRef = useRef(null);
   
-  const MAX_VIDEO_SIZE = 4.25 * 1024 * 1024;
-  const MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024;
-  
   const allowedVideoTypes = [
     'video/mp4', 'video/x-m4v', 'video/quicktime',
     'video/webm', 'video/ogg'
@@ -213,13 +210,15 @@ function ModernVideoUpload({
 
     const file = files[0];
     setIsProcessing(true);
-    
+
+    // Remove strict size rejection — we still warn for extremely large files but will keep here.
+    const MAX_VIDEO_SIZE = 12 * 1024 * 1024; // allow larger uploads; backend still validates
     if (file.size > MAX_VIDEO_SIZE) {
-      showToast('Video file too large! Maximum size: 4.25MB', 'error');
-      setIsProcessing(false);
-      return;
+      showToast('Video file is large. It will be uploaded but consider compressing.', 'warning');
     }
 
+    // Validate basic mime types
+    const allowedVideoTypes = ['video/mp4', 'video/x-m4v', 'video/quicktime', 'video/webm', 'video/ogg'];
     if (!allowedVideoTypes.includes(file.type)) {
       showToast('Invalid video format! Allowed: MP4, MOV, M4V, WebM, OGG', 'error');
       setIsProcessing(false);
@@ -229,7 +228,8 @@ function ModernVideoUpload({
     setUploadProgress(0);
     const previewUrl = URL.createObjectURL(file);
     setVideoPreview(previewUrl);
-    
+
+    // Progress simulation
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 100) {
@@ -241,17 +241,26 @@ function ModernVideoUpload({
     }, 200);
 
     try {
-      if (onVideoChange) {
-        onVideoChange(file);
+      if (onVideoChange) onVideoChange(file);
+
+      // auto-generate thumbnail if none selected
+      if (!customThumbnail && onThumbnailSelect) {
+        try {
+          const thumbFile = await generateThumbnailFromVideoFile(file, 1280, 720, 0.85);
+          if (thumbFile) {
+            setCustomThumbnail(URL.createObjectURL(thumbFile));
+            onThumbnailSelect(thumbFile);
+            showToast('Generated thumbnail from video', 'success');
+          }
+        } catch (genErr) {
+          console.warn('Failed to generate thumbnail:', genErr);
+        }
       }
-      
+
       setLocalYoutubeLink('');
-      if (onYoutubeLinkChange) {
-        onYoutubeLinkChange('');
-      }
-      
-      showToast('Video uploaded successfully!', 'success');
-      
+      if (onYoutubeLinkChange) onYoutubeLinkChange('');
+      showToast('Video ready', 'success');
+
     } catch (error) {
       console.error('Video processing error:', error);
       showToast('Failed to process video file', 'error');
@@ -265,30 +274,21 @@ function ModernVideoUpload({
     }
   };
 
-  const handleThumbnailUpload = (e) => {
+  const handleThumbnailUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-
     const file = files[0];
-    
-    if (file.size > MAX_THUMBNAIL_SIZE) {
-      showToast('Thumbnail image too large! Maximum size: 2MB', 'error');
-      return;
-    }
 
-    if (!allowedImageTypes.includes(file.type)) {
-      showToast('Invalid image format! Allowed: JPG, PNG, GIF, WebP', 'error');
-      return;
+    // Automatically resize/normalize thumbnails (remove strict size requirement)
+    try {
+      const resized = await resizeImageFile(file, 1280, 720, 0.88);
+      setCustomThumbnail(URL.createObjectURL(resized));
+      if (onThumbnailSelect) onThumbnailSelect(resized);
+      showToast('Thumbnail uploaded and resized', 'success');
+    } catch (err) {
+      console.error('Thumbnail resize error:', err);
+      showToast('Failed to process thumbnail', 'error');
     }
-
-    const previewUrl = URL.createObjectURL(file);
-    setCustomThumbnail(previewUrl);
-    
-    if (onThumbnailSelect) {
-      onThumbnailSelect(file);
-    }
-    
-    showToast('Thumbnail uploaded successfully!', 'success');
   };
 
   const handleRemoveThumbnail = () => {
@@ -785,7 +785,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
       
       const formDataObj = new FormData();
       
-      // Add form data
+      // Add form data - arrays stringified
       Object.keys(formData).forEach(key => {
         if (Array.isArray(formData[key])) {
           formDataObj.append(key, JSON.stringify(formData[key]));
@@ -794,14 +794,22 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
         }
       });
       
-      // Add video file if present
+      // Add video file if present (ensure blob/file has a filename)
       if (videoFile) {
-        formDataObj.append('videoTour', videoFile);
+        if (videoFile instanceof Blob && !(videoFile instanceof File)) {
+          formDataObj.append('videoTour', new File([videoFile], 'video.mp4', { type: videoFile.type || 'video/mp4' }));
+        } else {
+          formDataObj.append('videoTour', videoFile);
+        }
       }
       
-      // Add thumbnail if present
+      // Add thumbnail if present - ensure filename
       if (videoThumbnail) {
-        formDataObj.append('videoThumbnail', videoThumbnail);
+        if (videoThumbnail instanceof Blob && !(videoThumbnail instanceof File)) {
+          formDataObj.append('videoThumbnail', new File([videoThumbnail], 'thumbnail.jpg', { type: videoThumbnail.type || 'image/jpeg' }));
+        } else {
+          formDataObj.append('videoThumbnail', videoThumbnail);
+        }
       }
       
       const response = await fetch('/api/school', {
@@ -2136,4 +2144,72 @@ export default function SchoolInfoPage() {
       )}
     </div>
   );
+}
+
+// Add helper utilities (place near top of file inside the same module)
+async function resizeImageFile(file, maxWidth = 1280, maxHeight = 720, quality = 0.85) {
+  if (!file || !file.type.startsWith('image/')) return file;
+  const img = await new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const i = new Image();
+    i.onload = () => { URL.revokeObjectURL(url); resolve(i); };
+    i.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+    i.src = url;
+  });
+
+  let { width, height } = img;
+  const aspect = width / height;
+  if (width > maxWidth) {
+    width = maxWidth;
+    height = Math.round(width / aspect);
+  }
+  if (height > maxHeight) {
+    height = maxHeight;
+    width = Math.round(height * aspect);
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+  return new File([blob], (file.name || 'thumbnail.jpg').replace(/\s+/g,'_'), { type: 'image/jpeg' });
+}
+
+async function generateThumbnailFromVideoFile(file, maxWidth = 1280, maxHeight = 720, quality = 0.8) {
+  if (!file || !file.type.startsWith('video/')) return null;
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.src = url;
+
+  await new Promise((resolve, reject) => {
+    video.onloadedmetadata = () => { resolve(); };
+    video.onerror = reject;
+  });
+
+  // Seek to 0.75s to capture a frame (some videos need to buffer)
+  const seekTime = Math.min(1, Math.max(0.1, (video.duration || 1) * 0.1));
+  await new Promise((resolve) => {
+    const handler = () => { video.removeEventListener('seeked', handler); resolve(); };
+    video.addEventListener('seeked', handler);
+    video.currentTime = seekTime;
+  });
+
+  const canvas = document.createElement('canvas');
+  const aspect = video.videoWidth / video.videoHeight || 16/9;
+  let width = Math.min(maxWidth, video.videoWidth || maxWidth);
+  let height = Math.round(width / aspect);
+  if (height > maxHeight) { height = maxHeight; width = Math.round(height * aspect); }
+
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, width, height);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+  URL.revokeObjectURL(url);
+  return new File([blob], 'video-generated-thumbnail.jpg', { type: 'image/jpeg' });
 }
