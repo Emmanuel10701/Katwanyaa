@@ -375,62 +375,78 @@ const CareerPortalModal = ({ isOpen, onClose, data }) => {
 
 const ModernEducationSystemCard = ({ system, icon: Icon, color, description, features, structure, advantages }) => {
   return (
-    <div className="group relative bg-slate-50 rounded-2xl md:rounded-[2rem] p-2 transition-all duration-500">
-      {/* Outer Glow / Border Effect */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 transition-opacity duration-500 rounded-2xl md:rounded-[2rem]`} />
+    <div className="group relative bg-slate-50 rounded-[2.5rem] p-2 transition-all duration-500 hover:shadow-2xl">
+      {/* Outer Glow Effect */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-[2.5rem]`} />
       
-      <div className="relative bg-white rounded-xl md:rounded-[1.8rem] border border-slate-200/60 overflow-hidden">
+      <div className="relative bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
         
-        {/* Top Header - Sleeker Gradient */}
-        <div className={`relative h-32 p-6 md:p-8 bg-gradient-to-br ${color} overflow-hidden`}>
+        {/* Top Header - High Contrast Bento Style */}
+        <div className={`relative h-40 p-8 md:p-10 bg-gradient-to-br ${color} overflow-hidden`}>
           {/* Decorative Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 blur-[80px] rounded-full -mr-32 -mt-32 animate-pulse" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 blur-[40px] rounded-full" />
+          <div className="absolute top-0 right-0 w-72 h-72 bg-white/20 blur-[90px] rounded-full -mr-36 -mt-36 animate-pulse" />
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-black/10 blur-[50px] rounded-full" />
           
           <div className="relative z-10">
-            <h3 className="text-xl md:text-3xl font-black text-white tracking-tighter uppercase">{system.name}</h3>
-            <p className="text-white/80 text-xs font-bold tracking-[0.2em] mt-1 uppercase">{system.fullName}</p>
+            <h3 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none">
+              {system.name}
+            </h3>
+            <p className="text-white/90 text-[11px] font-black tracking-[0.3em] mt-3 uppercase opacity-80">
+              {system.fullName}
+            </p>
           </div>
         </div>
 
-        {/* Floating Icon Section */}
-        <div className="relative px-6 md:px-8">
-          <div className={`absolute -top-6 md:-top-8 right-6 md:right-8 p-3 md:p-4 bg-white rounded-xl md:rounded-2xl shadow-xl border border-slate-100 transition-transform duration-500`}>
-            <div className={`p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br ${color} text-white shadow-inner`}>
-              <Icon className="text-2xl md:text-3xl" />
+        {/* Floating Icon - More Visible Border */}
+        <div className="relative px-8">
+          <div className="absolute -top-10 md:-top-12 right-8 p-1 bg-white rounded-[1.5rem] shadow-2xl border border-slate-100">
+            <div className={`p-4 md:p-5 rounded-[1.2rem] bg-gradient-to-br ${color} text-white shadow-inner active:scale-95 transition-transform`}>
+              <Icon className="text-3xl md:text-4xl" />
             </div>
           </div>
         </div>
 
         {/* Main Content Body */}
-        <div className="p-6 md:p-8 pt-8 md:pt-10">
-          <p className="text-slate-500 leading-relaxed text-sm font-medium mb-6 md:mb-8 italic">
-            "{description}"
-          </p>
+        <div className="p-8 md:p-10 pt-12">
+          <div className="relative mb-10">
+            <span className="absolute -top-4 -left-2 text-6xl text-slate-100 font-black pointer-events-none">“</span>
+            <p className="relative z-10 text-slate-500 leading-relaxed text-sm md:text-base font-bold italic">
+              {description}
+            </p>
+          </div>
 
-          {/* Educational Structure - Bento Style */}
-          <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6 md:mb-8">
+          {/* Educational Structure - High Visibility Bento */}
+          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-4 ml-1">Academic Path</h4>
+          <div className="grid grid-cols-3 gap-3 md:gap-4 mb-10">
             {structure.map((stage, idx) => (
-              <div key={idx} className="relative overflow-hidden p-3 md:p-4 rounded-xl bg-slate-50 border border-slate-100">
-                <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${color} opacity-40`} />
-                <div className="font-black text-slate-900 text-xl md:text-2xl leading-none">{stage.years}</div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mt-2">{stage.name}</div>
+              <div key={idx} className="relative overflow-hidden p-4 md:p-5 rounded-[1.5rem] bg-[#0F172A] border border-slate-800 transition-transform hover:-translate-y-1">
+                <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${color}`} />
+                <div className="font-black text-white text-2xl md:text-3xl leading-none tabular-nums">
+                  {stage.years}
+                </div>
+                <div className="text-[9px] text-blue-400 font-black uppercase tracking-widest mt-3 leading-tight">
+                  {stage.name}
+                </div>
               </div>
             ))}
           </div>
 
           {/* Features - Clean Minimalist Grid */}
-          <div className="space-y-3 mb-6 md:mb-8">
-             <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-4">
-               Core System Features
+          <div className="space-y-6 mb-10">
+             <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-6 ml-1">
+               System Pillars
              </h4>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                 {features.map((feature, idx) => (
-                  <div key={idx} className="flex gap-3 md:gap-4 items-center">
-                    <div className={`flex-shrink-0 w-2 h-2 rounded-full bg-gradient-to-r ${color}`} />
-                    <div>
-                      <h5 className="font-bold text-slate-800 text-sm leading-tight">{feature.title}</h5>
-                      <p className="text-slate-400 text-[11px] font-medium leading-tight">{feature.description}</p>
+                  <div key={idx} className="flex gap-4 items-start group/feat">
+                    <div className={`flex-shrink-0 w-3 h-3 rounded-full bg-gradient-to-r ${color} mt-1.5 group-hover/feat:scale-125 transition-transform`} />
+                    <div className="min-w-0">
+                      <h5 className="font-black text-slate-900 text-[13px] uppercase tracking-tight leading-tight mb-1">
+                        {feature.title}
+                      </h5>
+                      <p className="text-slate-400 text-[11px] font-bold leading-snug">
+                        {feature.description}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -438,21 +454,20 @@ const ModernEducationSystemCard = ({ system, icon: Icon, color, description, fea
           </div>
 
           {/* Advantages - Modern Pill Tags */}
-          <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-            {advantages.map((advantage, idx) => (
-              <span key={idx} className="px-2 py-1 md:px-3 md:py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                {advantage}
-              </span>
-            ))}
+          <div className="pt-8 border-t border-slate-100">
+            <div className="flex flex-wrap gap-2">
+              {advantages.map((advantage, idx) => (
+                <span key={idx} className="px-4 py-2 bg-slate-100 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-[0.15em] hover:bg-slate-900 hover:text-white transition-colors cursor-default">
+                  {advantage}
+                </span>
+              ))}
+            </div>
           </div>
-
-         
         </div>
       </div>
     </div>
   );
 };
-
 const AdmissionPathCard = ({ path, onApply, index }) => {
   const getLocalImage = (type) => {
     const images = {
@@ -2776,41 +2791,7 @@ export default function ComprehensiveAdmissions() {
               {/* Academic Results Section */}
               <AcademicResultsSection documentData={documentData} />
 
-              {/* Performance Statistics */}
-              <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
-                        <IoStatsChartOutline className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Performance Statistics</h3>
-                    </div>
-                    <p className="text-slate-500">Key metrics and academic achievements</p>
-                  </div>
-                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
-                    <FiTrendingUp className="text-blue-500" />
-                    <span>Consistent Excellence</span>
-                  </div>
-                </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { label: 'Overall Pass Rate', value: '98%', color: 'from-green-500 to-emerald-500' },
-                    { label: 'University Placement', value: '95%', color: 'from-blue-500 to-cyan-500' },
-                    { label: 'Mean Score', value: 'B+', color: 'from-purple-500 to-pink-500' },
-                    { label: 'Top Performers', value: 'A- & Above', color: 'from-amber-500 to-orange-500' }
-                  ].map((stat, index) => (
-                    <div key={index} className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6 text-center">
-                      <div className={`inline-flex p-3 md:p-4 rounded-xl md:rounded-2xl bg-gradient-to-r ${stat.color} mb-4`}>
-                        <FiTrendingUp className="text-white text-xl md:text-2xl" />
-                      </div>
-                      <div className="text-2xl md:text-3xl font-black text-slate-900 mb-2">{stat.value}</div>
-                      <div className="text-sm text-slate-500 font-medium">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
               {/* Results Archive Notice */}
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl md:rounded-2xl p-4 md:p-6">
