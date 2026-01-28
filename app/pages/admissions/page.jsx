@@ -1977,58 +1977,55 @@ export default function ComprehensiveAdmissions() {
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Modernized Admissions Portal Header with MUI Loader */}
-<header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12 px-2 max-w-full overflow-hidden">
+<header className="relative bg-[#0F172A] rounded-2xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
+  {/* Subtle Mesh Accents - scaled down to prevent clutter */}
+  <div className="absolute top-[-20%] right-[-10%] w-[250px] h-[250px] bg-blue-600/20 rounded-full blur-[80px] pointer-events-none" />
   
-  {/* Left Section: Branding & Modern Typography */}
-  <div className="flex flex-col gap-5 min-w-0">
-    <div className="flex items-center gap-4">
-      {/* Icon scales with zoom, doesn't lose shape */}
-      <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-900 text-white shadow-xl border border-white/10 shrink-0">
-        <IoSchoolOutline className="w-6 h-6 md:w-7 md:h-7" />
+  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    
+    {/* Left: Branding & Title - Tighter Spacing */}
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div className="h-6 w-1 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,99,235,0.5)]" />
+        <div className="flex flex-col">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 leading-none">
+            {schoolData?.name || 'Katwanyaa High School'}
+          </h2>
+          <p className="text-[9px] font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
+            "Education is Light"
+          </p>
+        </div>
       </div>
-      <div className="flex flex-col min-w-0">
-        <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-blue-600 leading-none truncate">
-          Katwanyaa High School
-        </h2>
-        <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 truncate">
-          Academic Enrollment System 2026
+
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-2xl md:text-4xl font-black tracking-tighter uppercase leading-none">
+          Admissions <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-blue-400">Portal</span>
+        </h1>
+        <span className="hidden sm:block text-[10px] font-black px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/20 uppercase">
+          2026 Session
         </span>
       </div>
     </div>
 
-    <div className="relative">
-      {/* Leading-[0.85] creates that modern tight look */}
-      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 tracking-tighter leading-[0.85] uppercase break-words">
-        Admissions <br />
-        <span className="text-blue-600">Portal</span>
-      </h1>
-      <div className="mt-4 flex items-center gap-3">
-        <div className="h-[2px] w-8 bg-slate-200 shrink-0"></div>
-        <p className="text-slate-600 font-black text-xs md:text-base tracking-tight uppercase">
-          Providing **Quality Education** through **Integrity**.
-        </p>
-      </div>
+    {/* Right: Modern Compact Action Hub */}
+    <div className="flex items-center gap-2 p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl self-start md:self-center">
+      
+      {/* Sync Button */}
+      <button
+        onClick={refreshData}
+        disabled={loading}
+        className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest bg-white/5 hover:bg-white/10 text-white/70 active:scale-95"
+      >
+        {loading ? (
+          <CircularProgress size={14} thickness={6} sx={{ color: '#3b82f6' }} />
+        ) : (
+          <>
+            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Sync</span>
+          </>
+        )}
+      </button>
     </div>
-  </div>
-
-  {/* Right Section: Compact Action Hub (Mobile Responsive Stack) */}
-  <div className="flex flex-row items-center gap-2 p-2 bg-slate-50 border-2 border-slate-100 rounded-[24px] sm:rounded-[32px] shadow-sm self-start lg:self-center">
-    
-    <button
-      onClick={refreshData}
-      disabled={loading}
-      className={`flex items-center justify-center h-12 px-4 md:px-6 rounded-[18px] sm:rounded-[22px] transition-all font-black text-[10px] uppercase tracking-[0.15em]
-        ${loading 
-          ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
-          : 'bg-white text-slate-600 border border-slate-200 shadow-sm active:scale-95'
-        }`}
-    >
-      {loading ? (
-        <CircularProgress size={16} thickness={7} sx={{ color: '#94a3b8' }} />
-      ) : (
-        "Sync"
-      )}
-    </button>
   </div>
 </header>
 
