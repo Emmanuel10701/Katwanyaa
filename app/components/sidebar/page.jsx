@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { 
   FiLogOut, 
   FiX, 
@@ -12,80 +11,31 @@ import {
   FiMail,
   FiUser,
   FiShield,
-  FiUsers,
-  FiUserCheck,
   FiInfo,
   FiMessageCircle,
   FiCalendar,
-  FiUserPlus,
   FiClipboard,
   FiFileText,
-  FiCheckCircle,
-  FiDownload,
-  FiFilter,
-  FiSearch,FiDollarSign,
+  FiDollarSign,
   FiFolder,
-  FiFile,
-  FiVideo,
-  FiMusic,
-  FiArchive,
-  FiTrendingUp,
-  FiDatabase,
-  FiPieChart,
-  FiLayers,
-  FiUpload
+  FiArchive
 } from 'react-icons/fi';
 
-
 import { 
-  IoSparkles, 
-  IoStatsChart,
-  IoRocket,
   IoNewspaper,
   IoPeopleCircle,
-  IoSchool
 } from 'react-icons/io5';
 
 import { 
   MdAdminPanelSettings,
-  MdPersonOutline
 } from 'react-icons/md';
 import { useEffect, useState } from 'react';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen, tabs }) {
   const [isMobile, setIsMobile] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showSupportModal, setShowSupportModal] = useState(false);
-  const [realStats, setRealStats] = useState({
-    totalStaff: 0,
-    totalSubscribers: 0,
-    upcomingEvents: 0,
-    totalNews: 0,
-    activeAssignments: 0,
-    galleryItems: 0,
-    guidanceSessions: 0,
-    totalApplications: 0,
-    pendingApplications: 0,
-    acceptedApplications: 0,
-    rejectedApplications: 0,
-    totalResources: 0,
-    recentResources: 0,
-    totalStudent: 0,
-    totalFees:0,
-    totalResults:0,
-    activeResources: 0,
-    totalCareers: 0,
-    schooldocuments: 0,
-    resourcesByType: {
-      documents: 0,
-      videos: 0,
-      pdfs: 0,
-      presentations: 0
-    }
-  });
 
   // Get user data from localStorage same way as dashboard
   useEffect(() => {
@@ -178,121 +128,6 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     initializeUser();
   }, []);
 
-  // Fetch real counts from APIs including resources
-  const fetchRealCounts = async () => {
-    try {
-const [
-  staffRes,
-  subscribersRes,
-  eventsRes,
-  newsRes,
-  assignmentsRes,
-  galleryRes,
-  guidanceRes,
-  admissionsRes,
-  resourcesRes,
-  careersRes,
-  studentRes, // Changed from schooldocumentsRes
-  schooldocumentsRes,
-  feesRes,
-  resultsRes
-] = await Promise.allSettled([
-  fetch('/api/staff'),
-  fetch('/api/subscriber'),
-  fetch('/api/events'),
-  fetch('/api/news'),
-  fetch('/api/assignment'),
-  fetch('/api/gallery'),
-  fetch('/api/guidance'),
-  fetch('/api/applyadmission'),
-  fetch('/api/resources?accessLevel=admin&limit=100'),
-  fetch('/api/career'),
-  fetch('/api/studentupload'), // This matches studentRes
-  fetch('/api/schooldocuments'), // Added leading slash
-  fetch('/api/feebalances'),
-  fetch('/api/results')
-]);
-
-      // Process responses and get actual counts
-      const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
-      const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
-      const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
-      const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
-      const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
-      const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
-      const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
-      const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
-      const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
-      const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
-    const schooldocuments = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
-
-
-
-const activeStudents = student.students?.filter(s => s.status === 'Active').length || 0; // Changed 'students' to 'student'
-const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
-      
-      const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
-      
-      // Admission statistics
-      const admissionsData = admissions.applications || [];
-      const pendingApps = admissionsData.filter(app => app.status === 'PENDING').length || 0;
-      const acceptedApps = admissionsData.filter(app => app.status === 'ACCEPTED').length || 0;
-      const rejectedApps = admissionsData.filter(app => app.status === 'REJECTED').length || 0;
-
-      // Resource statistics
-      const resourcesData = resources.resources || [];
-      const activeResources = resourcesData.filter(r => r.isActive !== false).length || 0;
-      
-      // Calculate resources by type
-      const resourcesByType = {
-        documents: resourcesData.filter(r => r.type === 'document' || r.type === 'worksheet').length || 0,
-        videos: resourcesData.filter(r => r.type === 'video').length || 0,
-        pdfs: resourcesData.filter(r => r.type === 'pdf').length || 0,
-        presentations: resourcesData.filter(r => r.type === 'presentation').length || 0
-      };
-
-      // Calculate recent resources (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const recentResources = resourcesData.filter(r => 
-        r.createdAt && new Date(r.createdAt) > sevenDaysAgo
-      ).length || 0;
-
-      setRealStats({
-        totalStudents: students.students?.length || 0,
-
-        totalStaff: staff.staff?.length || 0,
-        totalSubscribers: subscribers.subscribers?.length || 0,
-        upcomingEvents,
-        totalNews: news.news?.length || 0,
-        activeAssignments,
-        galleryItems: gallery.galleries?.length || 0,
-        guidanceSessions: guidance.events?.length || 0,
-        totalApplications: admissionsData.length || 0,
-        pendingApplications: pendingApps,
-        acceptedApplications: acceptedApps,
-        rejectedApplications: rejectedApps,
-        totalResources: resourcesData.length || 0,
-        recentResources,
-        activeResources,
-        resourcesByType,     
-         schooldocuments: schooldocuments.documents?.length || 0,
-
-        totalCareers: careers.careers?.length || 0
-      });
-
-    } catch (error) {
-      console.error('Error fetching real counts:', error);
-    }
-  };
-
-  // Fetch counts when component mounts
-  useEffect(() => {
-    if (!loading) {
-      fetchRealCounts();
-    }
-  }, [loading]);
-
   // Detect screen size and set initial sidebar state
   useEffect(() => {
     const checkScreenSize = () => {
@@ -340,36 +175,7 @@ const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date())
     setShowSupportModal(true);
   };
 
- 
-  // Resource specific stats for the expanded view
-  const resourceStats = [
-    { 
-      label: 'Documents', 
-      value: realStats.resourcesByType?.documents?.toLocaleString() || '0', 
-      icon: FiFileText, 
-      color: 'blue' 
-    },
-    { 
-      label: 'Videos', 
-      value: realStats.resourcesByType?.videos?.toLocaleString() || '0', 
-      icon: FiVideo, 
-      color: 'purple' 
-    },
-    { 
-      label: 'PDFs', 
-      value: realStats.resourcesByType?.pdfs?.toLocaleString() || '0', 
-      icon: FiFileText, 
-      color: 'red' 
-    },
-    { 
-      label: 'Presentations', 
-      value: realStats.resourcesByType?.presentations?.toLocaleString() || '0', 
-      icon: FiFolder, 
-      color: 'orange' 
-    }
-  ];
-
-  // Define default tabs if none provided - now with resource tab (counts removed)
+  // Define default tabs if none provided
   const defaultTabs = [
     { 
       id: 'overview', 
@@ -389,31 +195,30 @@ const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date())
       icon: FiMessageCircle,
       badge: 'purple'
     },
-   
     {
       id: 'results',
       label: 'Exam Results',
       icon: FiClipboard,
       badge: 'teal'
     },
-{
-    id: 'schooldocuments',
-    label: 'School Documents',
-    icon: FiArchive, 
-    badge: 'indigo'
-  },
+    {
+      id: 'schooldocuments',
+      label: 'School Documents',
+      icon: FiArchive, 
+      badge: 'indigo'
+    },
     { 
       id: 'assignments', 
       label: 'Assignments', 
       icon: FiBook,
       badge: 'red'
     },
-{
-id: 'careers',
+    {
+      id: 'careers',
       label: 'Careers',
       icon: FiCalendar,
       badge: 'lime'
-},
+    },
     { 
       id: 'resources', 
       label: 'Learning Resources', 
@@ -431,8 +236,7 @@ id: 'careers',
       label: 'Student Records',
       icon: FiInfo,
       badge: 'cyan'
-}
-,
+    },
     { 
       id: 'admissions', 
       label: 'Admission Applications', 
@@ -674,8 +478,6 @@ id: 'careers',
               );
             })}
             </div>
-
-         
           </nav>
 
           {/* Footer */}
