@@ -1017,80 +1017,62 @@ const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
 
 // Vision & Mission Section
 
-
 const VisionMissionSection = ({ vision, mission, motto }) => {
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-10">
-      {/* Container with responsive gap and zoom-friendly scaling */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8">
+    <div className="w-full max-w-6xl mx-auto px-4 py-8">
+      {/* Bento Grid with reduced scaling */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        {/* 1. Vision Card - Large Focus (Spans 7 columns on desktop) */}
-        <div className="md:col-span-7 bg-slate-900 rounded-[2.5rem] p-8 md:p-14 relative overflow-hidden border border-slate-800 shadow-2xl flex flex-col justify-between min-h-[320px] md:min-h-[400px]">
-          {/* Modern abstract accent */}
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+        {/* 1. Vision Card - Compact & Modern */}
+        <div className="md:col-span-7 bg-slate-900 rounded-3xl p-6 md:p-8 relative overflow-hidden border border-slate-800 shadow-xl flex flex-col justify-between min-h-[220px]">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 blur-[60px] rounded-full -mr-16 -mt-16"></div>
           
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 mb-8">
-              <IoEyeOutline className="text-blue-400 text-2xl" />
-              <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-100">Our Vision</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 backdrop-blur-md rounded-lg border border-white/10 mb-4">
+              <IoEyeOutline className="text-blue-400 text-lg" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-blue-100">Vision</span>
             </div>
-            
-            <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-6 tracking-tighter leading-tight uppercase italic">
-              The <span className="text-blue-500 underline decoration-4 underline-offset-8">Future</span> we build
+            <h3 className="text-xl md:text-2xl font-black text-white mb-3 tracking-tight uppercase italic">
+              The <span className="text-blue-500">Future</span> we build
             </h3>
-          </div>
-
-          <div className="relative z-10">
-            <p className="text-slate-300 text-lg md:text-xl font-bold leading-relaxed max-w-xl">
-              {vision || (
-                <>
-                  To be a **premier center of academic excellence** in Machakos, nurturing students into **globally competitive leaders** through **integrity** and **character development**.
-                </>
-              )}
+            <p className="text-slate-400 text-sm md:text-base font-bold leading-snug max-w-lg">
+              {vision || "To be a **premier center of academic excellence** in Machakos, nurturing **globally competitive leaders** through **integrity**."}
             </p>
           </div>
         </div>
 
-        {/* 2. Mission Card - High Contrast (Spans 5 columns on desktop) */}
-        <div className="md:col-span-5 bg-white rounded-[2.5rem] p-8 md:p-12 border-2 border-slate-100 shadow-xl flex flex-col justify-between min-h-[320px] md:min-h-[400px]">
-          <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center border border-blue-100">
-            <FiTarget className="text-blue-600 text-3xl" />
+        {/* 2. Mission Card - High Contrast */}
+        <div className="md:col-span-5 bg-white rounded-3xl p-6 md:p-8 border-2 border-slate-100 shadow-md flex flex-col justify-between min-h-[220px]">
+          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center border border-blue-100 mb-4">
+            <FiTarget className="text-blue-600 text-xl" />
           </div>
           
           <div>
-            <div className="mb-4">
-               <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Katwanyaa Mission</span>
-               <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Our Purpose</h3>
-            </div>
-            <p className="text-slate-600 text-base md:text-lg font-bold leading-relaxed">
-              {mission || (
-                <>
-                  To provide **quality and relevant education** through **effective teaching** and **modern infrastructure**, fostering **discipline, innovation,** and **self-reliance** in every student.
-                </>
-              )}
+            <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Our Mission</h3>
+            <p className="text-slate-600 text-xs md:text-sm font-bold leading-relaxed">
+              {mission || "Providing **quality education** via **modern infrastructure**, fostering **discipline, innovation,** and **self-reliance**."}
             </p>
           </div>
         </div>
 
-        {/* 3. Motto Banner - Full Width */}
-        <div className="md:col-span-12 bg-gradient-to-r from-blue-700 to-indigo-800 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-2xl">
-          {/* Background Graphic */}
-          <FiZap className="absolute right-[-20px] top-1/2 -translate-y-1/2 text-white/10 text-[200px] -rotate-12 pointer-events-none" />
+        {/* 3. Motto Banner - Slimmed Down */}
+        <div className="md:col-span-12 bg-gradient-to-r from-blue-700 to-indigo-800 rounded-3xl p-5 md:p-6 relative overflow-hidden shadow-lg">
+          <FiZap className="absolute right-0 top-1/2 -translate-y-1/2 text-white/5 text-8xl -rotate-12 pointer-events-none" />
           
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-white/10 backdrop-blur-2xl rounded-3xl flex items-center justify-center border border-white/20 shadow-inner shrink-0">
-                <FiAward className="text-white text-4xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/20 shrink-0">
+                <FiAward className="text-white text-2xl" />
               </div>
-              <div className="text-center md:text-left">
-                <span className="text-blue-200 text-xs font-black uppercase tracking-[0.4em]">The Official Motto</span>
-                <h3 className="text-white text-3xl md:text-4xl font-black tracking-tighter uppercase">School Identity</h3>
+              <div className="text-left">
+                <span className="text-blue-200 text-[9px] font-black uppercase tracking-widest block">The Spirit of Katwanyaa</span>
+                <h3 className="text-white text-lg font-black tracking-tighter uppercase">School Motto</h3>
               </div>
             </div>
 
             <div className="w-full md:w-auto">
-              <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 px-10 py-6 rounded-[2rem] text-center">
-                <p className="text-white text-3xl md:text-5xl lg:text-6xl font-black italic tracking-tighter">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl text-center">
+                <p className="text-white text-xl md:text-2xl font-black italic tracking-tighter">
                   "{motto || "Strive for Excellence"}"
                 </p>
               </div>
@@ -1102,6 +1084,7 @@ const VisionMissionSection = ({ vision, mission, motto }) => {
     </div>
   );
 };
+
 
 
 // Updated Modern Uniform Requirements Component
