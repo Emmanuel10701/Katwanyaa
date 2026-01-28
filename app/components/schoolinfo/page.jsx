@@ -24,7 +24,6 @@ import {
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
   FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity, FiRefreshCw, FaExchangeAlt, FaMoneyBill
 } from 'react-icons/fa';
-import { IoPeopleCircle, IoNewspaper, IoSparkles, IoStatsChart } from 'react-icons/io5';
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
 
 // Modern Loading Spinner Component

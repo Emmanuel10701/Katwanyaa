@@ -1124,8 +1124,7 @@ const fetchAllData = useCallback(async () => {
     ).length || 0;
     
     // FIXED: Remove time-based filtering for upcomingEvents
-    const upcomingEvents = events.events?.length || 0; // Just count all events
-    
+   const upcomingEvents = events?.events?.length || 0;    
     const guidanceSessionsCount = guidance.events?.length || 0;
     const completedAssignments = assignments.assignments?.filter(a => 
       (a.status || '').toLowerCase() === 'completed'
