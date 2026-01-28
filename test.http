@@ -253,7 +253,7 @@ Content-Disposition: form-data; name="admissionRequirements"
 --boundaryPartial--
 
 ### 10. GET - Verify Partial Update
-GET {{baseUrl}}
+DELETE  {{baseUrl}}
 Content-Type: application/json
 
 ### 11. PUT - Test Error Cases

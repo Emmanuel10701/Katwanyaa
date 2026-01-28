@@ -979,22 +979,19 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                         required
                       />
                     </div>
-
-                    {/* Fee Fields - Added Here */}
-                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-5 border border-yellow-200">
+                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200">
                       <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <FaMoneyBill className="text-yellow-600" /> Day School Fees (KES)
+                        <FaRocket className="text-emerald-600" /> Mission Statement
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={formData.feesDay}
-                        onChange={(e) => handleChange('feesDay', e.target.value)}
-                        placeholder="Enter day school fees..."
-                        className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-base font-bold placeholder-gray-500"
+                      <TextareaAutosize
+                        minRows={3}
+                        value={formData.mission}
+                        onChange={(e) => handleChange('mission', e.target.value)}
+                        placeholder="Enter mission statement..."
+                        className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none bg-white text-base font-bold placeholder-gray-500"
                       />
                     </div>
+
                   </div>
                   
                   <div className="space-y-4">
@@ -1024,49 +1021,8 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                       />
                     </div>
                     
-                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl p-5 border border-emerald-200">
-                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <FaRocket className="text-emerald-600" /> Mission Statement
-                      </label>
-                      <TextareaAutosize
-                        minRows={3}
-                        value={formData.mission}
-                        onChange={(e) => handleChange('mission', e.target.value)}
-                        placeholder="Enter mission statement..."
-                        className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none bg-white text-base font-bold placeholder-gray-500"
-                      />
-                    </div>
+               
 
-                    {/* More Fee Fields */}
-                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-2xl p-5 border border-red-200">
-                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <FaMoneyBill className="text-red-600" /> Boarding School Fees (KES)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={formData.feesBoarding}
-                        onChange={(e) => handleChange('feesBoarding', e.target.value)}
-                        placeholder="Enter boarding school fees..."
-                        className="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-base font-bold placeholder-gray-500"
-                      />
-                    </div>
-
-                    <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-5 border border-pink-200">
-                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <FaMoneyBill className="text-pink-600" /> Admission Fee (KES)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1000"
-                        value={formData.admissionFee}
-                        onChange={(e) => handleChange('admissionFee', e.target.value)}
-                        placeholder="Enter admission fee..."
-                        className="w-full px-4 py-3 border-2 border-pink-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 bg-white text-base font-bold placeholder-gray-500"
-                      />
-                    </div>
                   </div>
                 </div>
                 
