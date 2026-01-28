@@ -1169,7 +1169,7 @@ function AdmissionFeeBreakdownModal({
               </p>
             </div>
             
-            <div className="flex gap-3 w-full sm:w-auto">
+            <div className="flex gap-3 w-full sm:w-auto mb-6">
               <button
                 type="button"
                 onClick={onClose}
@@ -1183,7 +1183,7 @@ function AdmissionFeeBreakdownModal({
                 disabled={categories.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                {isEditMode ? 'Update Admission Fees' : 'Save Admission Fees'}
+                {isEditMode ? 'Update Fees' : 'Save Fees'}
               </button>
             </div>
           </div>
