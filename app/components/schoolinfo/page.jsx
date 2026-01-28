@@ -1669,24 +1669,8 @@ export default function SchoolInfoPage() {
               color="blue" 
               subtitle="Teaching & support" 
             />
-            <StatCard 
-              icon={FaMoneyBill} 
-              label="Day School Fees" 
-              value={schoolInfo.feesDay || 0} 
-              change={0}
-              trend="stable"
-              color="purple" 
-              subtitle="Per term" 
-            />
-            <StatCard 
-              icon={FaMoneyBill} 
-              label="Boarding Fees" 
-              value={schoolInfo.feesBoarding || 0} 
-              change={0}
-              trend="stable"
-              color="orange" 
-              subtitle="Per term" 
-            />
+        
+       
           </div>
 
           {/* SCHOOL OVERVIEW */}
