@@ -1008,7 +1008,7 @@ const VisionMissionSection = ({ vision, mission, motto }) => {
               The <span className="text-blue-500">Future</span> we build
             </h3>
             <p className="text-slate-400 text-sm md:text-base font-bold leading-snug max-w-lg">
-              {vision || "To be a **premier center of academic excellence** in Machakos, nurturing **globally competitive leaders** through **integrity**."}
+              {vision || "To be a premier center of academic excellence in Machakos, nurturing globally competitive leaders through integrity."}
             </p>
           </div>
         </div>
@@ -1022,7 +1022,7 @@ const VisionMissionSection = ({ vision, mission, motto }) => {
           <div>
             <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Our Mission</h3>
             <p className="text-slate-600 text-xs md:text-sm font-bold leading-relaxed">
-              {mission || "Providing **quality education** via **modern infrastructure**, fostering **discipline, innovation,** and **self-reliance**."}
+              {mission || "Providing quality education via modern infrastructure, fostering discipline, innovation, and self-reliance."}
             </p>
           </div>
         </div>
@@ -2009,8 +2009,8 @@ export default function ComprehensiveAdmissions() {
             </h3>
             <p className={`text-sm font-bold leading-tight ${isOpen ? 'text-emerald-100' : 'text-slate-400'}`}>
               {isOpen 
-                ? 'Join **Katwanyaa High School** for the upcoming academic year.' 
-                : 'The application window has **officially ended** for this period.'}
+                ? 'Join Katwanyaa High School for the upcoming academic year.' 
+                : 'The application window has officially ended for this period.'}
             </p>
           </div>
         </div>
@@ -2191,7 +2191,7 @@ export default function ComprehensiveAdmissions() {
     
     <div className="sm:text-right">
       <p className="text-slate-600 text-sm md:text-base font-bold leading-tight max-w-xs">
-        Building **strong foundations** in Machakos through **discipline** and **academic rigor**.
+        Building strong foundations in Machakos through discipline and academic rigor.
       </p>
       <div className="flex items-center sm:justify-end gap-3 mt-4">
         <div className="flex items-center gap-1 text-xs text-slate-500 font-black">
@@ -2219,7 +2219,7 @@ export default function ComprehensiveAdmissions() {
         <div>
           <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">Academic Achievement</h4>
           <p className="text-slate-600 text-sm font-bold leading-snug max-w-md">
-            Consistently producing **strong KCSE results** with a specialized focus on **STEM subjects** and **early career guidance**.
+            Consistently producing strong KCSE results with a specialized focus on STEM subjects and early career guidance.
           </p>
         </div>
       </div>
@@ -2234,7 +2234,7 @@ export default function ComprehensiveAdmissions() {
         <div>
           <h4 className="text-xl font-black mb-2 uppercase tracking-tight text-blue-400">Expert Educators</h4>
           <p className="text-slate-300 text-sm font-bold leading-snug">
-            Staffed by **TSC-certified professionals** dedicated to **individualized student mentorship** and CBC implementation.
+            Staffed by TSC-certified professionals dedicated to individualized student mentorship and CBC implementation.
           </p>
         </div>
       </div>
@@ -2249,7 +2249,7 @@ export default function ComprehensiveAdmissions() {
       <div className="flex-1 text-center md:text-left">
         <h4 className="text-xl font-black text-slate-900 mb-1 uppercase">Modern Learning Resources</h4>
         <p className="text-slate-600 text-sm md:text-base font-bold leading-relaxed max-w-2xl">
-          Investment in **functional science laboratories**, **computer literacy programs**, and **spacious classrooms** to enhance the student experience.
+          Investment in functional science laboratories, computer literacy programs, and spacious classrooms to enhance the student experience.
         </p>
       </div>
 
