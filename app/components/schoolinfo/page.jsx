@@ -1378,6 +1378,9 @@ const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) 
   
   const selectedColor = colorMap[color] || colorMap.blue;
   
+  // Ensure value is a number for toLocaleString
+  const displayValue = typeof value === 'number' ? value : parseInt(value) || 0;
+  
   return (
     <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hove overflow-hidden">
       
@@ -1392,7 +1395,7 @@ const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) 
               {label}
             </span>
             <h3 className="text-3xl font-black text-slate-900 tracking-tight mt-1">
-              {value.toLocaleString()}
+              {displayValue.toLocaleString()}
             </h3>
           </div>
           
@@ -1696,7 +1699,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaUserGraduate} 
               label="Total Students" 
-              value={schoolInfo.studentCount} 
+              value={schoolInfo.studentCount || 0} 
               change={0}
               trend="up"
               color="green" 
@@ -1705,7 +1708,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaUserTie} 
               label="Staff Members" 
-              value={schoolInfo.staffCount} 
+              value={schoolInfo.staffCount || 0} 
               change={0}
               trend="up"
               color="blue" 
@@ -1714,7 +1717,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaMoneyBill} 
               label="Day School Fees" 
-              value={schoolInfo.feesDay} 
+              value={schoolInfo.feesDay || 0} 
               change={0}
               trend="stable"
               color="purple" 
@@ -1723,7 +1726,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaMoneyBill} 
               label="Boarding Fees" 
-              value={schoolInfo.feesBoarding} 
+              value={schoolInfo.feesBoarding || 0} 
               change={0}
               trend="stable"
               color="orange" 
@@ -1754,7 +1757,7 @@ export default function SchoolInfoPage() {
                         <FaBuilding className="text-blue-600" />
                       </div>
                       <div>
-                        <h4 className="text-lg font-black text-slate-800">{schoolInfo.name}</h4>
+                        <h4 className="text-lg font-black text-slate-800">{schoolInfo.name || 'Unnamed School'}</h4>
                         {schoolInfo.motto && (
                           <p className="text-sm text-slate-600 italic">"{schoolInfo.motto}"</p>
                         )}
@@ -1880,22 +1883,29 @@ export default function SchoolInfoPage() {
               </div>
 
               <div className="relative z-10">
-                <div className="grid grid-cols-2 gap-3">
-                  {schoolInfo.subjects?.map((subject, index) => {
-                    const Icon = getSubjectIcon(subject);
-                    return (
-                      <div 
-                        key={index}
-                        className="flex items-center gap-3 p-3 bg-slate-50/50 hover:bg-blue-50 rounded-xl border border-slate-100 transition-colors group/subject"
-                      >
-                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                          <Icon className="text-blue-600 text-sm" />
+                {schoolInfo.subjects && schoolInfo.subjects.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {schoolInfo.subjects.map((subject, index) => {
+                      const Icon = getSubjectIcon(subject);
+                      return (
+                        <div 
+                          key={index}
+                          className="flex items-center gap-3 p-3 bg-slate-50/50 hover:bg-blue-50 rounded-xl border border-slate-100 transition-colors group/subject"
+                        >
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <Icon className="text-blue-600 text-sm" />
+                          </div>
+                          <span className="text-sm font-bold text-slate-700">{subject}</span>
                         </div>
-                        <span className="text-sm font-bold text-slate-700">{subject}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                    <FaBook className="text-3xl text-slate-300 mb-2" />
+                    <p className="text-slate-400 text-sm font-medium">No subjects added yet</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1913,24 +1923,33 @@ export default function SchoolInfoPage() {
                 </div>
               </div>
 
-              <div className="relative z-10 space-y-3">
-                {schoolInfo.departments?.map((department, index) => {
-                  const Icon = getDepartmentIcon(department);
-                  return (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-white hover:from-blue-50 hover:to-white rounded-xl border border-slate-100 transition-all group/dept"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white rounded-lg shadow-sm">
-                          <Icon className="text-teal-600 text-sm" />
+              <div className="relative z-10">
+                {schoolInfo.departments && schoolInfo.departments.length > 0 ? (
+                  <div className="space-y-3">
+                    {schoolInfo.departments.map((department, index) => {
+                      const Icon = getDepartmentIcon(department);
+                      return (
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-gradient-to-r from-slate-50 to-white hover:from-blue-50 hover:to-white rounded-xl border border-slate-100 transition-all group/dept"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <Icon className="text-teal-600 text-sm" />
+                            </div>
+                            <span className="font-bold text-slate-700">{department}</span>
+                          </div>
+                          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Dept</span>
                         </div>
-                        <span className="font-bold text-slate-700">{department}</span>
-                      </div>
-                      <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Dept</span>
-                    </div>
-                  );
-                })}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                    <FaUsersCog className="text-3xl text-slate-300 mb-2" />
+                    <p className="text-slate-400 text-sm font-medium">No departments added yet</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2030,22 +2049,29 @@ export default function SchoolInfoPage() {
                     </div>
                   )}
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {schoolInfo.admissionDocumentsRequired?.map((doc, index) => {
-                      const Icon = getDocumentIcon(doc);
-                      return (
-                        <div 
-                          key={index}
-                          className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 hover:shadow-sm transition-shadow"
-                        >
-                          <div className="p-2 bg-indigo-50 rounded-lg">
-                            <Icon className="text-indigo-600 text-sm" />
+                  {schoolInfo.admissionDocumentsRequired && schoolInfo.admissionDocumentsRequired.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {schoolInfo.admissionDocumentsRequired.map((doc, index) => {
+                        const Icon = getDocumentIcon(doc);
+                        return (
+                          <div 
+                            key={index}
+                            className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 hover:shadow-sm transition-shadow"
+                          >
+                            <div className="p-2 bg-indigo-50 rounded-lg">
+                              <Icon className="text-indigo-600 text-sm" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-700">{doc}</span>
                           </div>
-                          <span className="text-sm font-bold text-slate-700">{doc}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <FaFileAlt className="text-3xl text-slate-300 mb-2" />
+                      <p className="text-slate-400 text-sm font-medium">No documents required listed</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2066,7 +2092,7 @@ export default function SchoolInfoPage() {
                 </div>
 
                 <div className="space-y-4 relative z-10">
-                  {schoolInfo.admissionContactEmail && (
+                  {schoolInfo.admissionContactEmail ? (
                     <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white rounded-lg">
                         <FaEnvelope className="text-cyan-600" />
@@ -2076,9 +2102,9 @@ export default function SchoolInfoPage() {
                         <p className="text-sm font-bold text-slate-700">{schoolInfo.admissionContactEmail}</p>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   
-                  {schoolInfo.admissionContactPhone && (
+                  {schoolInfo.admissionContactPhone ? (
                     <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white rounded-lg">
                         <FaPhone className="text-cyan-600" />
@@ -2088,9 +2114,9 @@ export default function SchoolInfoPage() {
                         <p className="text-sm font-bold text-slate-700">{schoolInfo.admissionContactPhone}</p>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   
-                  {schoolInfo.admissionWebsite && (
+                  {schoolInfo.admissionWebsite ? (
                     <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white rounded-lg">
                         <FaGlobe className="text-cyan-600" />
@@ -2100,9 +2126,9 @@ export default function SchoolInfoPage() {
                         <p className="text-sm font-bold text-slate-700">{schoolInfo.admissionWebsite}</p>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   
-                  {schoolInfo.admissionLocation && (
+                  {schoolInfo.admissionLocation ? (
                     <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white rounded-lg">
                         <FaMapMarkerAlt className="text-cyan-600" />
@@ -2112,9 +2138,9 @@ export default function SchoolInfoPage() {
                         <p className="text-sm font-bold text-slate-700">{schoolInfo.admissionLocation}</p>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                   
-                  {schoolInfo.admissionOfficeHours && (
+                  {schoolInfo.admissionOfficeHours ? (
                     <div className="flex items-center gap-3 p-3 bg-slate-50/50 rounded-xl border border-slate-100">
                       <div className="p-2 bg-white rounded-lg">
                         <FaClock className="text-cyan-600" />
@@ -2123,6 +2149,18 @@ export default function SchoolInfoPage() {
                         <p className="text-xs font-bold text-slate-400">Office Hours</p>
                         <p className="text-sm font-bold text-slate-700">{schoolInfo.admissionOfficeHours}</p>
                       </div>
+                    </div>
+                  ) : null}
+                  
+                  {/* Fallback when no contact info */}
+                  {!schoolInfo.admissionContactEmail && 
+                   !schoolInfo.admissionContactPhone && 
+                   !schoolInfo.admissionWebsite && 
+                   !schoolInfo.admissionLocation && 
+                   !schoolInfo.admissionOfficeHours && (
+                    <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                      <FaPhone className="text-3xl text-slate-300 mb-2" />
+                      <p className="text-slate-400 text-sm font-medium">No contact information added</p>
                     </div>
                   )}
                 </div>
