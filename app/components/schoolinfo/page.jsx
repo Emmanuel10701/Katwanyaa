@@ -18,7 +18,7 @@ import {
   FaBusinessTime, FaHome, FaChurch, FaMosque,
   FaHandsHelping, FaCalculator, FaChartLine,
   FaUniversity, FaDoorOpen, FaDoorClosed,
-  FaIdCard, FaStethoscope, FaSyringe, FaSchool as FaSchoolIcon
+  FaIdCard, FaStethoscope, FaSyringe, FaSchool as FaSchoolIcon, FaExchangeAlt 
 } from 'react-icons/fa';
 
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
