@@ -1987,7 +1987,7 @@ export default function ComprehensiveAdmissions() {
     {/* Left: Branding & Title - Tighter Spacing */}
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <div className="h-6 w-1 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,99,235,0.5)]" />
+        <div className="h-10 w-1 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,99,235,0.5)]" />
         <div className="flex flex-col">
           <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 leading-none">
             {schoolData?.name || 'Katwanyaa High School'}
@@ -2003,7 +2003,7 @@ export default function ComprehensiveAdmissions() {
           Admissions <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-blue-400">Portal</span>
         </h1>
         <span className="hidden sm:block text-[10px] font-black px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/20 uppercase">
-          2026 Session
+          {schoolData?.academicYear || '2026'} Session
         </span>
       </div>
     </div>
@@ -2019,7 +2019,7 @@ export default function ComprehensiveAdmissions() {
   className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl
              transition-all font-black text-[10px] uppercase tracking-widest
              bg-white/5 hover:bg-white/10 text-white/70
-             active:scale-95 disabled:opacity-50"
+             active:scale-100 disabled:opacity-50"
 >
   {loading ? (
     <>
