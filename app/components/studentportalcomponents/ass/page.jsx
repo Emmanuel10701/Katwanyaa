@@ -1031,45 +1031,45 @@ export default function ModernResourcesAssignmentsView({
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
-        <StatsCard
-          title="Total Assignments"
-          value={stats.totalAssignments}
-          icon={IoDocument}
-          color="from-purple-500 to-purple-600"
-          trend={5}
-          description={`${stats.pendingAssignments} pending`}
-        />
-        
-        <StatsCard
-          title="Learning Resources"
-          value={stats.totalResources}
-          icon={IoDocumentsOutline}
-          color="from-blue-500 to-blue-600"
-          trend={12}
-          description="Available files"
-        />
-        
-        <StatsCard
-          title="Completion Rate"
-          value={stats.averageCompletion}
-          icon={IoCheckmarkCircle}
-          color="from-emerald-500 to-emerald-600"
-          trend={stats.averageCompletion > 75 ? 8 : -3}
-          unit="%"
-          description="Assignments completed"
-        />
-        
-        <StatsCard
-          title="Bookmarked Items"
-          value={bookmarkedItems.size}
-          icon={IoStar}
-          color="from-amber-500 to-amber-600"
-          trend={bookmarkedItems.size > 0 ? 15 : 0}
-          description="Saved for later"
-        />
-      </div>
+ {/* Stats Grid - 2 columns on small mobile, 4 on desktop */}
+<div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
+  <StatsCard
+    title="Total Assignments"
+    value={stats.totalAssignments}
+    icon={IoDocument}
+    color="from-purple-500 to-purple-600"
+    trend={5}
+    description={`${stats.pendingAssignments} pending`}
+  />
+  
+  <StatsCard
+    title="Learning Resources"
+    value={stats.totalResources}
+    icon={IoDocumentsOutline}
+    color="from-blue-500 to-blue-600"
+    trend={12}
+    description="Available files"
+  />
+  
+  <StatsCard
+    title="Completion Rate"
+    value={stats.averageCompletion}
+    icon={IoCheckmarkCircle}
+    color="from-emerald-500 to-emerald-600"
+    trend={stats.averageCompletion > 75 ? 8 : -3}
+    unit="%"
+    description="Completed"
+  />
+  
+  <StatsCard
+    title="Bookmarked Items"
+    value={bookmarkedItems.size}
+    icon={IoStar}
+    color="from-amber-500 to-amber-600"
+    trend={bookmarkedItems.size > 0 ? 15 : 0}
+    description="Saved items"
+  />
+</div>
 
       {/* Main Content Card */}
       <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 shadow-xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
