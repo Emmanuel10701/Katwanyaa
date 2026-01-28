@@ -1627,48 +1627,67 @@ function ModernPdfUpload({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {hasExistingPdf && (
-                    <div className="flex gap-2">
-<button
-  type="button"
-  onClick={() => {
-    setIsReplacing(true);
-    // Clear current selection
-    setPreviewName('');
-    setFileSelected(false);
-    setUploadProgress(0);
-    if (onCancelExisting) onCancelExisting();
-    toast.info('Select a replacement file');
-    // Directly trigger file input click
-    setTimeout(() => {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-        fileInputRef.current.click();
-      }
-    }, 100);
-  }}
-  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
->
-  <FaUpload className="text-xs" />
-  Replace File
-</button>
-
-<button
-  type="button"
-  onClick={() => {
-    handleRemoveExisting();
-    // Clear file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }}
-  className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
->
-  <FaTrash className="text-xs" />
-  Delete
-</button>
-                    </div>
-                  )}
+{hasExistingPdf && (
+  <div className="flex gap-2">
+    <button
+      type="button"
+      onClick={() => {
+        // Clear the current file reference
+        setPreviewName('');
+        setFileSelected(false);
+        
+        // Create and trigger file input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.pdf,.doc,.docx';
+        input.onchange = (e) => {
+          if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            // Validate and handle the file
+            if (validateFile(file)) {
+              // Update parent state with replacement
+              onPdfChange(file);
+              
+              // Update local state
+              setPreviewName(file.name);
+              setFileSelected(true);
+              
+              // If this is an existing file, mark it for replacement
+              if (existingPdf && onCancelExisting) {
+                onCancelExisting(existingPdf);
+              }
+              
+              toast.success('File selected for replacement');
+            }
+          }
+        };
+        input.click();
+      }}
+      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
+    >
+      <FaUpload className="text-xs" />
+      Replace File
+    </button>
+    
+    <button
+      type="button"
+      onClick={() => {
+        // Mark for deletion
+        if (onRemoveExisting) {
+          onRemoveExisting();
+        }
+        // Clear local state
+        setPreviewName('');
+        setFileSelected(false);
+        toast.warning('File marked for deletion');
+      }}
+      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
+    >
+      <FaTrash className="text-xs" />
+      Delete
+    </button>
+  </div>
+)}
                   {hasNewPdf && (
                     <div className="flex gap-2">
                       <button
@@ -2891,138 +2910,224 @@ function DocumentDetailsModal({
   );
 }
 
-// Documents Modal Component - UPDATED VERSION
+// Documents Modal Component - UPDATED VERSION with complete fixes
 function DocumentsModal({ onClose, onSave, documents, loading }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
-// FIXED: Preload existing values for all form fields
-const [formData, setFormData] = useState({
-  curriculumPDF: documents?.curriculumPDF ? { 
-    name: documents.curriculumPdfName,
-    filename: documents.curriculumPdfName,
-    size: documents.curriculumPdfSize
-  } : null,
-  feesDayDistributionPdf: documents?.feesDayDistributionPdf ? {
-    name: documents.feesDayPdfName,
-    filename: documents.feesDayPdfName,
-    size: documents.feesDayPdfSize
-  } : null,
-  feesBoardingDistributionPdf: documents?.feesBoardingDistributionPdf ? {
-    name: documents.feesBoardingPdfName,
-    filename: documents.feesBoardingPdfName,
-    size: documents.feesBoardingPdfSize
-  } : null,
-  admissionFeePdf: documents?.admissionFeePdf ? {
-    name: documents.admissionFeePdfName,
-    filename: documents.admissionFeePdfName,
-    size: documents.admissionFeePdfSize
-  } : null,
-  form1ResultsPdf: documents?.form1ResultsPdf ? {
-    name: documents.form1ResultsPdfName,
-    filename: documents.form1ResultsPdfName,
-    size: documents.form1ResultsPdfSize
-  } : null,
-  form2ResultsPdf: documents?.form2ResultsPdf ? {
-    name: documents.form2ResultsPdfName,
-    filename: documents.form2ResultsPdfName,
-    size: documents.form2ResultsPdfSize
-  } : null,
-  form3ResultsPdf: documents?.form3ResultsPdf ? {
-    name: documents.form3ResultsPdfName,
-    filename: documents.form3ResultsPdfName,
-    size: documents.form3ResultsPdfSize
-  } : null,
-  form4ResultsPdf: documents?.form4ResultsPdf ? {
-    name: documents.form4ResultsPdfName,
-    filename: documents.form4ResultsPdfName,
-    size: documents.form4ResultsPdfSize
-  } : null,
-  mockExamsResultsPdf: documents?.mockExamsResultsPdf ? {
-    name: documents.mockExamsPdfName,
-    filename: documents.mockExamsPdfName,
-    size: documents.mockExamsPdfSize
-  } : null,
-  kcseResultsPdf: documents?.kcseResultsPdf ? {
-    name: documents.kcsePdfName,
-    filename: documents.kcsePdfName,
-    size: documents.kcsePdfSize
-  } : null
-});
+  
+  // COMPLETE FIX: Preload existing values for all form fields
+  const [formData, setFormData] = useState({
+    curriculumPDF: documents?.curriculumPDF ? { 
+      file: null,
+      name: documents.curriculumPdfName,
+      filename: documents.curriculumPdfName,
+      size: documents.curriculumPdfSize,
+      year: documents.curriculumYear,
+      description: documents.curriculumDescription,
+      term: documents.curriculumTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    feesDayDistributionPdf: documents?.feesDayDistributionPdf ? {
+      file: null,
+      name: documents.feesDayPdfName,
+      filename: documents.feesDayPdfName,
+      size: documents.feesDayPdfSize,
+      year: documents.feesDayYear,
+      description: documents.feesDayDescription,
+      term: documents.feesDayTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    feesBoardingDistributionPdf: documents?.feesBoardingDistributionPdf ? {
+      file: null,
+      name: documents.feesBoardingPdfName,
+      filename: documents.feesBoardingPdfName,
+      size: documents.feesBoardingPdfSize,
+      year: documents.feesBoardingYear,
+      description: documents.feesBoardingDescription,
+      term: documents.feesBoardingTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    admissionFeePdf: documents?.admissionFeePdf ? {
+      file: null,
+      name: documents.admissionFeePdfName,
+      filename: documents.admissionFeePdfName,
+      size: documents.admissionFeePdfSize,
+      year: documents.admissionFeeYear,
+      description: documents.admissionFeeDescription,
+      term: documents.admissionFeeTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    // Exam Results PDFs
+    form1ResultsPdf: documents?.form1ResultsPdf ? {
+      file: null,
+      name: documents.form1ResultsPdfName,
+      filename: documents.form1ResultsPdfName,
+      size: documents.form1ResultsPdfSize,
+      year: documents.form1ResultsYear,
+      description: documents.form1ResultsDescription,
+      term: documents.form1ResultsTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    form2ResultsPdf: documents?.form2ResultsPdf ? {
+      file: null,
+      name: documents.form2ResultsPdfName,
+      filename: documents.form2ResultsPdfName,
+      size: documents.form2ResultsPdfSize,
+      year: documents.form2ResultsYear,
+      description: documents.form2ResultsDescription,
+      term: documents.form2ResultsTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    form3ResultsPdf: documents?.form3ResultsPdf ? {
+      file: null,
+      name: documents.form3ResultsPdfName,
+      filename: documents.form3ResultsPdfName,
+      size: documents.form3ResultsPdfSize,
+      year: documents.form3ResultsYear,
+      description: documents.form3ResultsDescription,
+      term: documents.form3ResultsTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    form4ResultsPdf: documents?.form4ResultsPdf ? {
+      file: null,
+      name: documents.form4ResultsPdfName,
+      filename: documents.form4ResultsPdfName,
+      size: documents.form4ResultsPdfSize,
+      year: documents.form4ResultsYear,
+      description: documents.form4ResultsDescription,
+      term: documents.form4ResultsTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    mockExamsResultsPdf: documents?.mockExamsResultsPdf ? {
+      file: null,
+      name: documents.mockExamsPdfName,
+      filename: documents.mockExamsPdfName,
+      size: documents.mockExamsPdfSize,
+      year: documents.mockExamsYear,
+      description: documents.mockExamsDescription,
+      term: documents.mockExamsTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null,
+    
+    kcseResultsPdf: documents?.kcseResultsPdf ? {
+      file: null,
+      name: documents.kcsePdfName,
+      filename: documents.kcsePdfName,
+      size: documents.kcsePdfSize,
+      year: documents.kcseYear,
+      description: documents.kcseDescription,
+      term: documents.kcseTerm,
+      isExisting: true,
+      markedForDeletion: false
+    } : null
+  });
 
-// FIXED: Preload existing fee breakdowns
-const [feeBreakdowns, setFeeBreakdowns] = useState({
-  feesDay: Array.isArray(documents?.feesDayDistributionJson) ? documents.feesDayDistributionJson : [],
-  feesBoarding: Array.isArray(documents?.feesBoardingDistributionJson) ? documents.feesBoardingDistributionJson : [],
-  admissionFee: Array.isArray(documents?.admissionFeeDistribution) ? documents.admissionFeeDistribution : []
-});
+  // COMPLETE FIX: Preload existing fee breakdowns
+  const [feeBreakdowns, setFeeBreakdowns] = useState({
+    feesDay: Array.isArray(documents?.feesDayDistributionJson) ? documents.feesDayDistributionJson : [],
+    feesBoarding: Array.isArray(documents?.feesBoardingDistributionJson) ? documents.feesBoardingDistributionJson : [],
+    admissionFee: Array.isArray(documents?.admissionFeeDistribution) ? documents.admissionFeeDistribution : []
+  });
 
-// FIXED: Preload existing exam metadata
-const [examMetadata, setExamMetadata] = useState({
-  form1ResultsYear: documents?.form1ResultsYear?.toString() || '',
-  form1ResultsTerm: documents?.form1ResultsTerm || '',
-  form1ResultsDescription: documents?.form1ResultsDescription || '',
-  
-  form2ResultsYear: documents?.form2ResultsYear?.toString() || '',
-  form2ResultsTerm: documents?.form2ResultsTerm || '',
-  form2ResultsDescription: documents?.form2ResultsDescription || '',
-  
-  form3ResultsYear: documents?.form3ResultsYear?.toString() || '',
-  form3ResultsTerm: documents?.form3ResultsTerm || '',
-  form3ResultsDescription: documents?.form3ResultsDescription || '',
-  
-  form4ResultsYear: documents?.form4ResultsYear?.toString() || '',
-  form4ResultsTerm: documents?.form4ResultsTerm || '',
-  form4ResultsDescription: documents?.form4ResultsDescription || '',
-  
-  mockExamsYear: documents?.mockExamsYear?.toString() || '',
-  mockExamsTerm: documents?.mockExamsTerm || '',
-  mockExamsDescription: documents?.mockExamsDescription || '',
-  
-  kcseYear: documents?.kcseYear?.toString() || '',
-  kcseTerm: documents?.kcseTerm || '',
-  kcseDescription: documents?.kcseDescription || ''
-});
+  // COMPLETE FIX: Preload existing exam metadata
+  const [examMetadata, setExamMetadata] = useState({
+    form1ResultsYear: documents?.form1ResultsYear?.toString() || '',
+    form1ResultsTerm: documents?.form1ResultsTerm || '',
+    form1ResultsDescription: documents?.form1ResultsDescription || '',
+    
+    form2ResultsYear: documents?.form2ResultsYear?.toString() || '',
+    form2ResultsTerm: documents?.form2ResultsTerm || '',
+    form2ResultsDescription: documents?.form2ResultsDescription || '',
+    
+    form3ResultsYear: documents?.form3ResultsYear?.toString() || '',
+    form3ResultsTerm: documents?.form3ResultsTerm || '',
+    form3ResultsDescription: documents?.form3ResultsDescription || '',
+    
+    form4ResultsYear: documents?.form4ResultsYear?.toString() || '',
+    form4ResultsTerm: documents?.form4ResultsTerm || '',
+    form4ResultsDescription: documents?.form4ResultsDescription || '',
+    
+    mockExamsYear: documents?.mockExamsYear?.toString() || '',
+    mockExamsTerm: documents?.mockExamsTerm || '',
+    mockExamsDescription: documents?.mockExamsDescription || '',
+    
+    kcseYear: documents?.kcseYear?.toString() || '',
+    kcseTerm: documents?.kcseTerm || '',
+    kcseDescription: documents?.kcseDescription || ''
+  });
 
-  
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-const steps = [
-  { 
-    id: 'curriculum', 
-    label: 'Curriculum', 
-    icon: FaBook, 
-    description: 'Academic curriculum documents' 
-  },
-  { 
-    id: 'fees', 
-    label: 'Fee Structures', 
-    icon: FaMoneyBillWave, 
-    description: 'Day and boarding fee documents' 
-  },
-  { 
-    id: 'admission', 
-    label: 'Admission', 
-    icon: FaUserCheck, 
-    description: 'Admission fee documents' 
-  },
-  { 
-    id: 'exams', 
-    label: 'Exam Results', 
-    icon: FaAward, 
-    description: 'Academic results documents' 
-  },
-  { 
-    id: 'review', 
-    label: 'Review', 
-    icon: FaClipboardList, 
-    description: 'Review all documents before submission' 
-  }
-];
+  const steps = [
+    { 
+      id: 'curriculum', 
+      label: 'Curriculum', 
+      icon: FaBook, 
+      description: 'Academic curriculum documents' 
+    },
+    { 
+      id: 'fees', 
+      label: 'Fee Structures', 
+      icon: FaMoneyBillWave, 
+      description: 'Day and boarding fee documents' 
+    },
+    { 
+      id: 'admission', 
+      label: 'Admission', 
+      icon: FaUserCheck, 
+      description: 'Admission fee documents' 
+    },
+    { 
+      id: 'exams', 
+      label: 'Exam Results', 
+      icon: FaAward, 
+      description: 'Academic results documents' 
+    },
+    { 
+      id: 'review', 
+      label: 'Review', 
+      icon: FaClipboardList, 
+      description: 'Review all documents before submission' 
+    }
+  ];
 
   useEffect(() => {
     // Reset file size manager when modal opens
     fileSizeManager.reset();
+    
+    // Initialize file size manager with existing files
+    Object.keys(formData).forEach(key => {
+      const fileData = formData[key];
+      if (fileData && fileData.isExisting && !fileData.markedForDeletion) {
+        // Create a dummy file object for size tracking
+        const dummyFile = new File([], fileData.name, { 
+          type: 'application/pdf',
+          lastModified: Date.now()
+        });
+        Object.defineProperty(dummyFile, 'size', { value: fileData.size || 0 });
+        
+        const fileId = `existing_${key}_${Date.now()}`;
+        fileSizeManager.addFile(dummyFile, fileId);
+      }
+    });
   }, []);
 
   const handleFormSubmit = async (e) => {
@@ -3030,143 +3135,207 @@ const steps = [
     await handleSubmitAfterReview();
   };
 
-const handleSubmitAfterReview = async () => {
-  if (!confirmed) {
-    toast.error('Please confirm review before submitting');
-    return;
-  }
-
-  try {
-    setActionLoading(true);
-    
-    const data = new FormData();
-    
-    // Add PDF files
-    Object.keys(formData).forEach(key => {
-      const fileData = formData[key];
-      if (fileData && !fileData.markedForDeletion) {
-        if (fileData instanceof File) {
-          // New file upload
-          data.append(key, fileData);
-          
-          const metadataMappings = {
-            'curriculumPDF': { yearKey: 'curriculumYear', descKey: 'curriculumDescription', termKey: 'curriculumTerm' },
-            'feesDayDistributionPdf': { yearKey: 'feesDayYear', descKey: 'feesDayDescription', termKey: 'feesDayTerm' },
-            'feesBoardingDistributionPdf': { yearKey: 'feesBoardingYear', descKey: 'feesBoardingDescription', termKey: 'feesBoardingTerm' },
-            'admissionFeePdf': { yearKey: 'admissionFeeYear', descKey: 'admissionFeeDescription', termKey: 'admissionFeeTerm' },
-            'form1ResultsPdf': { yearKey: 'form1ResultsYear', termKey: 'form1ResultsTerm', descKey: 'form1ResultsDescription' },
-            'form2ResultsPdf': { yearKey: 'form2ResultsYear', termKey: 'form2ResultsTerm', descKey: 'form2ResultsDescription' },
-            'form3ResultsPdf': { yearKey: 'form3ResultsYear', termKey: 'form3ResultsTerm', descKey: 'form3ResultsDescription' },
-            'form4ResultsPdf': { yearKey: 'form4ResultsYear', termKey: 'form4ResultsTerm', descKey: 'form4ResultsDescription' },
-            'mockExamsResultsPdf': { yearKey: 'mockExamsYear', termKey: 'mockExamsTerm', descKey: 'mockExamsDescription' },
-            'kcseResultsPdf': { yearKey: 'kcseYear', termKey: 'kcseTerm', descKey: 'kcseDescription' }
-          };
-          
-          if (metadataMappings[key]) {
-            if (fileData.year) data.append(metadataMappings[key].yearKey, fileData.year);
-            if (fileData.term && metadataMappings[key].termKey) data.append(metadataMappings[key].termKey, fileData.term);
-            if (fileData.description) data.append(metadataMappings[key].descKey, fileData.description);
-          }
-        }
-      }
-    });
-    
-    // Add fee breakdowns as JSON
-    if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
-      data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
-    }
-    if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
-      data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
-    }
-    if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
-      data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
-    }
-    
-    // Add exam metadata (for existing documents without new uploads)
-    Object.keys(examMetadata).forEach(key => {
-      if (examMetadata[key] && examMetadata[key].trim() !== '') {
-        data.append(key, examMetadata[key]);
-      }
-    });
-    
-    // Mark files for deletion - FIXED: This tells the API which files to delete
-    const filesToDelete = [];
-    Object.keys(formData).forEach(key => {
-      if (formData[key] && formData[key].markedForDeletion) {
-        filesToDelete.push(key);
-        // Add delete flag for each file to be deleted
-        data.append(`${key}_delete`, 'true');
-      }
-    });
-    
-    console.log('Files marked for deletion:', filesToDelete);
-    
-    // Debug logging
-    console.log('=== FORM DATA BEING SENT TO BACKEND ===');
-    for (let [key, value] of data.entries()) {
-      if (value instanceof File) {
-        console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-      } else {
-        console.log(`${key}: ${value}`);
-      }
-    }
-    
-    const response = await fetch('/api/schooldocuments', {
-      method: 'POST',
-      body: data
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server error response:', errorText);
-      throw new Error(`Failed to save documents: ${response.status}`);
+  const handleSubmitAfterReview = async () => {
+    if (!confirmed) {
+      toast.error('Please confirm review before submitting');
+      return;
     }
 
-    const result = await response.json();
-    
-    console.log('Save API response:', result);
-    
-    if (result.success) {
-      toast.success(result.message || 'Documents saved successfully!');
-      if (onSave && result.document) {
-        onSave(result.document);
-      }
-      onClose();
-    } else {
-      toast.error(result.error || 'Failed to save documents');
-    }
-    
-  } catch (error) {
-    console.error('Save failed:', error);
-    toast.error(error.message || 'Failed to save documents');
-  } finally {
-    setActionLoading(false);
-  }
-};
-  const handleFileChange = (field, file, year, description, term) => {
-    if (year || description || term) {
-      setFormData(prev => ({ ...prev, [field]: [file, year, description, term] }));
+    try {
+      setActionLoading(true);
       
-      // Update metadata state for exam results
-      if (field.includes('ResultsPdf')) {
-        const baseKey = field.replace('Pdf', '');
-        if (year) {
-          setExamMetadata(prev => ({ ...prev, [`${baseKey}Year`]: year }));
+      const data = new FormData();
+      
+      // Add all files and metadata
+      Object.keys(formData).forEach(key => {
+        const fileData = formData[key];
+        
+        if (!fileData) return;
+        
+        if (fileData.markedForDeletion) {
+          // Mark file for deletion
+          data.append(`${key}_delete`, 'true');
+        } else if (fileData.file && fileData.file instanceof File) {
+          // New file upload or replacement
+          data.append(key, fileData.file);
+          
+          // Add metadata
+          if (fileData.year) data.append(`${key}_year`, fileData.year);
+          if (fileData.term) data.append(`${key}_term`, fileData.term);
+          if (fileData.description) data.append(`${key}_description`, fileData.description);
+        } else if (fileData.isExisting && !fileData.markedForDeletion) {
+          // Existing file kept - only update metadata if changed
+          if (fileData.year) data.append(`${key}_year`, fileData.year);
+          if (fileData.term) data.append(`${key}_term`, fileData.term);
+          if (fileData.description) data.append(`${key}_description`, fileData.description);
         }
-        if (term) {
-          setExamMetadata(prev => ({ ...prev, [`${baseKey}Term`]: term }));
+      });
+      
+      // Add fee breakdowns as JSON
+      if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
+        data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
+      }
+      if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
+        data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
+      }
+      if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
+        data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+      }
+      
+      // Add exam metadata for all exam PDFs
+      Object.keys(examMetadata).forEach(key => {
+        if (examMetadata[key] && examMetadata[key].trim() !== '') {
+          data.append(key, examMetadata[key]);
         }
-        if (description) {
-          setExamMetadata(prev => ({ ...prev, [`${baseKey}Description`]: description }));
+      });
+      
+      // Add school ID if exists
+      if (documents?.schoolId) {
+        data.append('schoolId', documents.schoolId);
+      }
+      
+      console.log('=== FORM DATA BEING SENT TO BACKEND ===');
+      for (let [key, value] of data.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
         }
       }
-    } else {
-      setFormData(prev => ({ ...prev, [field]: file }));
+      
+      const response = await fetch('/api/schooldocuments', {
+        method: 'POST',
+        body: data
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to save documents: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      console.log('Save API response:', result);
+      
+      if (result.success) {
+        toast.success(result.message || 'Documents saved successfully!');
+        if (onSave && result.document) {
+          onSave(result.document);
+        }
+        onClose();
+      } else {
+        toast.error(result.error || 'Failed to save documents');
+      }
+      
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast.error(error.message || 'Failed to save documents');
+    } finally {
+      setActionLoading(false);
     }
   };
 
+  // FIXED: Handle file change properly for both new and existing files
+  const handleFileChange = (field, file, year, description, term) => {
+    if (file instanceof File) {
+      // New file upload or replacement
+      const fileData = {
+        file,
+        name: file.name,
+        filename: file.name,
+        size: file.size,
+        year: year || '',
+        description: description || '',
+        term: term || '',
+        isNew: true,
+        isExisting: formData[field]?.isExisting || false,
+        markedForDeletion: false,
+        isReplacement: formData[field]?.isExisting || false
+      };
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        [field]: fileData 
+      }));
+    } else if (year || description || term) {
+      // Update metadata for existing file
+      setFormData(prev => {
+        const existing = prev[field];
+        if (existing) {
+          return {
+            ...prev,
+            [field]: {
+              ...existing,
+              year: year || existing.year,
+              description: description || existing.description,
+              term: term || existing.term
+            }
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
+  // FIXED: Handle file removal with proper deletion marking
   const handleFileRemove = (field) => {
-    setFormData(prev => ({ ...prev, [field]: null }));
+    setFormData(prev => {
+      const current = prev[field];
+      if (!current) return prev;
+      
+      if (current.isExisting) {
+        // Mark existing file for deletion
+        return {
+          ...prev,
+          [field]: {
+            ...current,
+            markedForDeletion: true,
+            file: null
+          }
+        };
+      } else {
+        // Remove new file
+        return {
+          ...prev,
+          [field]: null
+        };
+      }
+    });
+    
+    // Remove from file size manager
+    const fileIds = Object.keys(fileSizeManager.uploadedFiles).filter(id => 
+      id.includes(field)
+    );
+    fileIds.forEach(id => fileSizeManager.removeFile(id));
+  };
+
+  // FIXED: Cancel existing file replacement
+  const handleCancelExisting = (field, existingFile) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        markedForDeletion: false,
+        isReplacement: false,
+        file: null
+      }
+    }));
+  };
+
+  // FIXED: Remove existing file permanently
+  const handleRemoveExisting = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: {
+        ...prev[field],
+        markedForDeletion: true,
+        isReplacement: false,
+        file: null
+      }
+    }));
+    
+    toast.warning('File marked for deletion. Save to confirm.');
   };
 
   const handleFeeBreakdownChange = (type, breakdown) => {
@@ -3190,38 +3359,32 @@ const handleSubmitAfterReview = async () => {
   };
 
   const getExistingPdfData = (field) => {
-    if (!documents) return null;
-    
-    switch (field) {
-      case 'curriculumPDF':
-        return documents.curriculumPDF ? {
-          name: documents.curriculumPdfName,
-          filename: documents.curriculumPdfName,
-          size: documents.curriculumPdfSize
-        } : null;
-      case 'feesDayDistributionPdf':
-        return documents.feesDayDistributionPdf ? {
-          name: documents.feesDayPdfName,
-          filename: documents.feesDayPdfName,
-          size: documents.feesDayPdfSize
-        } : null;
-      case 'feesBoardingDistributionPdf':
-        return documents.feesBoardingDistributionPdf ? {
-          name: documents.feesBoardingPdfName,
-          filename: documents.feesBoardingPdfName,
-          size: documents.feesBoardingPdfSize
-        } : null;
-      case 'admissionFeePdf':
-        return documents.admissionFeePdf ? {
-          name: documents.admissionFeePdfName,
-          filename: documents.admissionFeePdfName,
-          size: documents.admissionFeePdfSize
-        } : null;
-      default:
-        return null;
+    const fileData = formData[field];
+    if (fileData && fileData.isExisting && !fileData.markedForDeletion) {
+      return {
+        name: fileData.name,
+        filename: fileData.filename,
+        size: fileData.size,
+        year: fileData.year,
+        description: fileData.description,
+        term: fileData.term,
+        isExisting: true
+      };
     }
+    return null;
   };
 
+  // Helper to count total documents
+  const countTotalDocuments = () => {
+    let count = 0;
+    Object.keys(formData).forEach(key => {
+      const fileData = formData[key];
+      if (fileData && !fileData.markedForDeletion) {
+        count++;
+      }
+    });
+    return count;
+  };
 
   const renderStepContent = () => {
     switch(currentStep) {
@@ -3230,11 +3393,16 @@ const handleSubmitAfterReview = async () => {
           <div className="space-y-6">
             <div className="w-full max-w-2xl">
               <ModernPdfUpload
-                pdfFile={formData.curriculumPDF}
-                onPdfChange={(file) => handleFileChange('curriculumPDF', file)}
+                pdfFile={formData.curriculumPDF?.file || null}
+                onPdfChange={(file, year, description, term) => 
+                  handleFileChange('curriculumPDF', file, year, description, term)
+                }
                 onRemove={() => handleFileRemove('curriculumPDF')}
                 label="Curriculum PDF"
+                required={true}
                 existingPdf={getExistingPdfData('curriculumPDF')}
+                onCancelExisting={(existingFile) => handleCancelExisting('curriculumPDF', existingFile)}
+                onRemoveExisting={() => handleRemoveExisting('curriculumPDF')}
                 type="curriculum"
               />
             </div>
@@ -3246,11 +3414,15 @@ const handleSubmitAfterReview = async () => {
           <div className="space-y-8">
             <div className="w-full max-w-2xl">
               <ModernPdfUpload
-                pdfFile={formData.feesDayDistributionPdf}
-                onPdfChange={(file) => handleFileChange('feesDayDistributionPdf', file)}
+                pdfFile={formData.feesDayDistributionPdf?.file || null}
+                onPdfChange={(file, year, description, term) => 
+                  handleFileChange('feesDayDistributionPdf', file, year, description, term)
+                }
                 onRemove={() => handleFileRemove('feesDayDistributionPdf')}
                 label="Day School Fees PDF"
                 existingPdf={getExistingPdfData('feesDayDistributionPdf')}
+                onCancelExisting={(existingFile) => handleCancelExisting('feesDayDistributionPdf', existingFile)}
+                onRemoveExisting={() => handleRemoveExisting('feesDayDistributionPdf')}
                 feeBreakdown={feeBreakdowns.feesDay}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
                 type="day"
@@ -3259,11 +3431,15 @@ const handleSubmitAfterReview = async () => {
             
             <div className="w-full max-w-2xl">
               <ModernPdfUpload
-                pdfFile={formData.feesBoardingDistributionPdf}
-                onPdfChange={(file) => handleFileChange('feesBoardingDistributionPdf', file)}
+                pdfFile={formData.feesBoardingDistributionPdf?.file || null}
+                onPdfChange={(file, year, description, term) => 
+                  handleFileChange('feesBoardingDistributionPdf', file, year, description, term)
+                }
                 onRemove={() => handleFileRemove('feesBoardingDistributionPdf')}
                 label="Boarding School Fees PDF"
                 existingPdf={getExistingPdfData('feesBoardingDistributionPdf')}
+                onCancelExisting={(existingFile) => handleCancelExisting('feesBoardingDistributionPdf', existingFile)}
+                onRemoveExisting={() => handleRemoveExisting('feesBoardingDistributionPdf')}
                 feeBreakdown={feeBreakdowns.feesBoarding}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
                 type="boarding"
@@ -3277,11 +3453,15 @@ const handleSubmitAfterReview = async () => {
           <div className="space-y-6">
             <div className="w-full max-w-2xl">
               <ModernPdfUpload
-                pdfFile={formData.admissionFeePdf}
-                onPdfChange={(file) => handleFileChange('admissionFeePdf', file)}
+                pdfFile={formData.admissionFeePdf?.file || null}
+                onPdfChange={(file, year, description, term) => 
+                  handleFileChange('admissionFeePdf', file, year, description, term)
+                }
                 onRemove={() => handleFileRemove('admissionFeePdf')}
                 label="Admission Fee PDF"
                 existingPdf={getExistingPdfData('admissionFeePdf')}
+                onCancelExisting={(existingFile) => handleCancelExisting('admissionFeePdf', existingFile)}
+                onRemoveExisting={() => handleRemoveExisting('admissionFeePdf')}
                 feeBreakdown={feeBreakdowns.admissionFee}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
                 type="admission"
@@ -3294,12 +3474,12 @@ const handleSubmitAfterReview = async () => {
         return (
           <div className="space-y-8">
             {[
-              { key: 'form1Results', label: 'Form 1 Results', color: 'orange' },
-              { key: 'form2Results', label: 'Form 2 Results', color: 'orange' },
-              { key: 'form3Results', label: 'Form 3 Results', color: 'orange' },
-              { key: 'form4Results', label: 'Form 4 Results', color: 'orange' },
-              { key: 'mockExams', label: 'Mock Exams Results', color: 'orange' },
-              { key: 'kcse', label: 'KCSE Results', color: 'orange' }
+              { key: 'form1Results', label: 'Form 1 Results', field: 'form1ResultsPdf' },
+              { key: 'form2Results', label: 'Form 2 Results', field: 'form2ResultsPdf' },
+              { key: 'form3Results', label: 'Form 3 Results', field: 'form3ResultsPdf' },
+              { key: 'form4Results', label: 'Form 4 Results', field: 'form4ResultsPdf' },
+              { key: 'mockExams', label: 'Mock Exams Results', field: 'mockExamsResultsPdf' },
+              { key: 'kcse', label: 'KCSE Results', field: 'kcseResultsPdf' }
             ].map((exam) => (
               <div key={exam.key} className="w-full max-w-2xl">
                 <div className="flex items-center justify-between mb-4">
@@ -3307,15 +3487,31 @@ const handleSubmitAfterReview = async () => {
                     <FaAward className="text-orange-600" />
                     <span className="text-base">{exam.label}</span>
                   </label>
+                  
+                  {/* Display existing metadata if available */}
+                  {getExistingPdfData(exam.field) && (
+                    <div className="text-xs text-gray-600 font-bold">
+                      {examMetadata[`${exam.key}Year`] && `Year: ${examMetadata[`${exam.key}Year`]}`}
+                      {examMetadata[`${exam.key}Term`] && ` • Term: ${examMetadata[`${exam.key}Term`]}`}
+                    </div>
+                  )}
                 </div>
-           
+                
                 <ModernPdfUpload
-                  pdfFile={formData[`${exam.key}Pdf`]}
+                  pdfFile={formData[exam.field]?.file || null}
                   onPdfChange={(file, year, description, term) => {
-                    handleFileChange(`${exam.key}Pdf`, file, year, description, term);
+                    handleFileChange(exam.field, file, year, description, term);
+                    if (year || description || term) {
+                      if (year) handleExamMetadataChange(`${exam.key}Year`, year);
+                      if (term) handleExamMetadataChange(`${exam.key}Term`, term);
+                      if (description) handleExamMetadataChange(`${exam.key}Description`, description);
+                    }
                   }}
-                  onRemove={() => handleFileRemove(`${exam.key}Pdf`)}
+                  onRemove={() => handleFileRemove(exam.field)}
                   label={`${exam.label} PDF`}
+                  existingPdf={getExistingPdfData(exam.field)}
+                  onCancelExisting={(existingFile) => handleCancelExisting(exam.field, existingFile)}
+                  onRemoveExisting={() => handleRemoveExisting(exam.field)}
                   type="results"
                 />
               </div>
@@ -3323,68 +3519,116 @@ const handleSubmitAfterReview = async () => {
           </div>
         );
 
-  
-case 5: // Review Step
-  return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-blue-500 text-white rounded-xl">
-            <FaClipboardList className="text-lg" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
-            <p className="text-sm text-gray-600 font-bold">
-              Review all selected documents before submission
-            </p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl border border-blue-200">
-            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
-            <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-blue-200">
-            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
-            <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-blue-200">
-            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Main Documents</p>
-            <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-            <FaList className="text-blue-600" />
-            Document Summary
-          </h4>
-          
-          {/* REMOVED: Additional Documents section */}
-        </div>
-        
-        <div className="mt-6">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={confirmed}
-              onChange={(e) => setConfirmed(e.target.checked)}
-              className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <div>
-              <p className="text-sm font-bold text-gray-900 mb-1">
-                I confirm that I have reviewed all documents and they are accurate
-              </p>
-              <p className="text-xs text-gray-600">
-                By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
-              </p>
+      case 4: // Review
+        return (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-blue-500 text-white rounded-xl">
+                  <FaClipboardList className="text-lg" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
+                  <p className="text-sm text-gray-600 font-bold">
+                    Review all selected documents before submission
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
+                  <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
+                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-blue-200">
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Remaining</p>
+                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getRemainingMB()} MB</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <FaList className="text-blue-600" />
+                  Document Summary
+                </h4>
+                
+                <div className="space-y-3">
+                  {Object.keys(formData).map((key) => {
+                    const fileData = formData[key];
+                    if (!fileData || fileData.markedForDeletion) return null;
+                    
+                    const labels = {
+                      curriculumPDF: 'Curriculum Document',
+                      feesDayDistributionPdf: 'Day School Fees',
+                      feesBoardingDistributionPdf: 'Boarding School Fees',
+                      admissionFeePdf: 'Admission Fees',
+                      form1ResultsPdf: 'Form 1 Results',
+                      form2ResultsPdf: 'Form 2 Results',
+                      form3ResultsPdf: 'Form 3 Results',
+                      form4ResultsPdf: 'Form 4 Results',
+                      mockExamsResultsPdf: 'Mock Exams Results',
+                      kcseResultsPdf: 'KCSE Results'
+                    };
+                    
+                    return (
+                      <div key={key} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          {fileData.isExisting ? (
+                            <FaCheckCircle className="text-green-500" />
+                          ) : (
+                            <FaFile className="text-blue-500" />
+                          )}
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">{labels[key] || key}</p>
+                            <p className="text-xs text-gray-600">
+                              {fileData.filename || fileData.name}
+                              {fileData.year && ` • ${fileData.year}`}
+                              {fileData.term && ` • ${fileData.term}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs font-bold text-gray-700">
+                            {fileData.isExisting ? 'Existing' : 'New Upload'}
+                          </p>
+                          {fileData.size && (
+                            <p className="text-xs text-gray-500">
+                              {formatFileSize(fileData.size)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmed}
+                    onChange={(e) => setConfirmed(e.target.checked)}
+                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 mb-1">
+                      I confirm that I have reviewed all documents and they are accurate
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
-          </label>
-        </div>
-      </div>
-    </div>
-  );   
+          </div>
+        );
+      
       default:
         return null;
     }
@@ -3421,7 +3665,20 @@ case 5: // Review Step
               <FaTimes className="text-lg" />
             </button>
           </div>
-  
+          
+          {/* File Size Progress Bar */}
+          <div className="mt-4">
+            <div className="flex justify-between text-xs font-bold mb-1">
+              <span>Total Size: {fileSizeManager.getTotalSizeMB()} MB / {fileSizeManager.getMaxSizeMB()} MB</span>
+              <span>{fileSizeManager.getPercentage().toFixed(0)}%</span>
+            </div>
+            <div className="w-full bg-white/20 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-green-400 to-cyan-400 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${fileSizeManager.getPercentage()}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white border-b border-gray-200 p-4">
@@ -3455,15 +3712,15 @@ case 5: // Review Step
           <form onSubmit={handleFormSubmit} className="space-y-8">
             {renderStepContent()}
 
-            <div className="flex  mb-6 flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
-                <div className="flex items-center gap-1 ">
+                <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
                   <span className="font-bold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3  mb-10 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 {currentStep > 0 && (
                   <button 
                     type="button"
@@ -3509,6 +3766,7 @@ case 5: // Review Step
     </Modal>
   );
 }
+
 
 // Helper functions for file display
 
