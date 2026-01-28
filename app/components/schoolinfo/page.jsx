@@ -11,7 +11,14 @@ import {
   FaArrowRight, FaBuilding, FaQuoteLeft, FaPlay,
   FaShieldAlt, FaAward, FaUserCheck, FaHourglassHalf,
   FaBookOpen, FaUsersCog, FaFileAlt, FaCalendarAlt,
-  FaImage
+  FaImage, FaMoneyBillWave, FaList, FaFileMedical,
+  FaCertificate, FaUserGraduate, FaUserTie,
+  FaFlask, FaLaptopCode, FaSeedling, FaMusic,
+  FaPalette, FaFutbol, FaLanguage, FaHistory,
+  FaBusinessTime, FaHome, FaChurch, FaMosque,
+  FaHandsHelping, FaCalculator, FaChartLine,
+  FaUniversity, FaDoorOpen, FaDoorClosed,
+  FaIdCard, FaStethoscope, FaSyringe, FaSchool as FaSchoolIcon
 } from 'react-icons/fa';
 
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
@@ -800,6 +807,9 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     mission: school?.mission || '',
     studentCount: school?.studentCount?.toString() || '',
     staffCount: school?.staffCount?.toString() || '',
+    feesDay: school?.feesDay?.toString() || '',
+    feesBoarding: school?.feesBoarding?.toString() || '',
+    admissionFee: school?.admissionFee?.toString() || '',
     openDate: school?.openDate ? new Date(school.openDate).toISOString().split('T')[0] : '',
     closeDate: school?.closeDate ? new Date(school.closeDate).toISOString().split('T')[0] : '',
     subjects: school?.subjects || [],
@@ -808,7 +818,6 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     admissionOpenDate: school?.admissionOpenDate ? new Date(school.admissionOpenDate).toISOString().split('T')[0] : '',
     admissionCloseDate: school?.admissionCloseDate ? new Date(school.admissionCloseDate).toISOString().split('T')[0] : '',
     admissionRequirements: school?.admissionRequirements || '',
-    admissionFee: school?.admissionFee?.toString() || '',
     admissionCapacity: school?.admissionCapacity?.toString() || '',
     admissionContactEmail: school?.admissionContactEmail || '',
     admissionContactPhone: school?.admissionContactPhone || '',
@@ -1030,6 +1039,34 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                         required
                       />
                     </div>
+
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-2xl p-5 border border-yellow-200">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-yellow-600" /> Day School Fees (KES)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.feesDay}
+                        onChange={(e) => handleChange('feesDay', e.target.value)}
+                        placeholder="Enter day school fees..."
+                        className="w-full px-4 py-3 border-2 border-yellow-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-base font-bold placeholder-gray-500"
+                      />
+                    </div>
+
+                    <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl p-5 border border-teal-200">
+                      <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <FaMoneyBillWave className="text-teal-600" /> Boarding Fees (KES)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.feesBoarding}
+                        onChange={(e) => handleChange('feesBoarding', e.target.value)}
+                        placeholder="Enter boarding fees..."
+                        className="w-full px-4 py-3 border-2 border-teal-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white text-base font-bold placeholder-gray-500"
+                      />
+                    </div>
                   </div>
                   
                   <div className="space-y-4">
@@ -1201,7 +1238,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
                     
                     <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-5 border border-green-200">
                       <label className=" text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                        <FaCheckCircle className="text-green-600" /> Admission Fee (KES)
+                        <FaMoneyBillWave className="text-green-600" /> Admission Fee (KES)
                       </label>
                       <input
                         type="number"
@@ -1383,6 +1420,8 @@ export default function SchoolInfoPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     loadSchoolInfo();
@@ -1432,6 +1471,101 @@ export default function SchoolInfoPage() {
     } catch (error) {
       toast.error('Failed to delete school information!');
     }
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not set';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Helper function to format currency
+  const formatCurrency = (amount) => {
+    if (!amount) return 'Not set';
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // Get subject icons mapping
+  const getSubjectIcon = (subject) => {
+    const subjectIcons = {
+      'Mathematics': FaCalculator,
+      'English': FaLanguage,
+      'Kiswahili': FaLanguage,
+      'Biology': FaFlask,
+      'Chemistry': FaFlask,
+      'Physics': FaFlask,
+      'Geography': FaMapMarkerAlt,
+      'History': FaHistory,
+      'CRE': FaChurch,
+      'IRE': FaMosque,
+      'HRE': FaHandsHelping,
+      'Business Studies': FaBusinessTime,
+      'Computer Studies': FaLaptopCode,
+      'Agriculture': FaSeedling,
+      'Home Science': FaHome,
+      'French': FaLanguage,
+      'Music': FaMusic,
+      'Art & Design': FaPalette,
+      'Physical Education': FaFutbol
+    };
+
+    for (const [key, icon] of Object.entries(subjectIcons)) {
+      if (subject.toLowerCase().includes(key.toLowerCase())) {
+        return icon;
+      }
+    }
+    return FaBookOpen;
+  };
+
+  // Get department icons mapping
+  const getDepartmentIcon = (department) => {
+    const departmentIcons = {
+      'Mathematics': FaCalculator,
+      'Languages': FaLanguage,
+      'Sciences': FaFlask,
+      'Humanities': FaBook,
+      'Technical': FaLaptopCode,
+      'Administration': FaUsersCog,
+      'Guidance': FaHandsHelping
+    };
+
+    for (const [key, icon] of Object.entries(departmentIcons)) {
+      if (department.toLowerCase().includes(key.toLowerCase())) {
+        return icon;
+      }
+    }
+    return FaUsersCog;
+  };
+
+  // Get document icons mapping
+  const getDocumentIcon = (document) => {
+    const documentIcons = {
+      'Birth Certificate': FaIdCard,
+      'Result Slip': FaFileAlt,
+      'Photos': FaImage,
+      'Medical': FaStethoscope,
+      'Transfer': FaExchangeAlt,
+      'Reports': FaChartLine,
+      'National ID': FaIdCard,
+      'Immunization': FaSyringe,
+      'Certificate': FaCertificate
+    };
+
+    for (const [key, icon] of Object.entries(documentIcons)) {
+      if (document.toLowerCase().includes(key.toLowerCase())) {
+        return icon;
+      }
+    }
+    return FaFileAlt;
   };
 
   if (loading && !schoolInfo) {
@@ -1518,81 +1652,591 @@ export default function SchoolInfoPage() {
         </div>
       </div>
 
-{!hasSchoolInfo ? (
-  <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-14 text-center my-8 transition-all duration-300">
-    
-    <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-blue-100/50">
-      <FaSchool className="w-10 h-10 md:w-14 md:h-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600" />
-    </div>
-
-    {/* Typography with Responsive Sizing */}
-    <h3 className="text-xl md:text-3xl font-black text-gray-900 mb-3 tracking-tight">
-      No School Information Yet
-    </h3>
-    
-    <p className="text-gray-500 text-sm md:text-lg mb-8 max-w-[280px] md:max-w-lg mx-auto font-medium leading-relaxed">
-      Start by adding your school details to showcase your institution to students and staff.
-    </p>
-
-    {/* Primary Action Button - Full width on mobile */}
-    <button 
-      onClick={() => setShowModal(true)} 
-      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
-                 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-blue-200/50
-                 hover:shadow-indigo-300/50 hover:scale-[1.03] active:scale-95 
-                 transition-all duration-300 flex items-center justify-center gap-3 mx-auto text-base"
-    >
-      <FaPlus className="text-xl" /> 
-      <span>Add School Information</span>
-    </button>
-  </div>
-) :  (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">{schoolInfo.name}</h2>
-              {schoolInfo.motto && (
-                <p className="text-gray-600 italic mt-1 font-bold">"{schoolInfo.motto}"</p>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              {schoolInfo.studentCount && (
-                <div className="bg-blue-50 px-4 py-2 rounded-lg">
-                  <p className="text-sm text-gray-600 font-bold">Students</p>
-                  <p className="text-lg font-bold text-blue-700">{schoolInfo.studentCount}</p>
-                </div>
-              )}
-              {schoolInfo.staffCount && (
-                <div className="bg-green-50 px-4 py-2 rounded-lg">
-                  <p className="text-sm text-gray-600 font-bold">Staff</p>
-                  <p className="text-lg font-bold text-green-700">{schoolInfo.staffCount}</p>
-                </div>
-              )}
-            </div>
+      {!hasSchoolInfo ? (
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-14 text-center my-8 transition-all duration-300">
+          <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-blue-100/50">
+            <FaSchool className="w-10 h-10 md:w-14 md:h-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
+
+          <h3 className="text-xl md:text-3xl font-black text-gray-900 mb-3 tracking-tight">
+            No School Information Yet
+          </h3>
           
-          {schoolInfo.description && (
-            <div className="mb-6">
-              <h3 className="text-sm font-bold text-gray-700 mb-2">About</h3>
-              <p className="text-gray-700">{schoolInfo.description}</p>
+          <p className="text-gray-500 text-sm md:text-lg mb-8 max-w-[280px] md:max-w-lg mx-auto font-medium leading-relaxed">
+            Start by adding your school details to showcase your institution to students and staff.
+          </p>
+
+          <button 
+            onClick={() => setShowModal(true)} 
+            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
+                     text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-blue-200/50
+                     hover:shadow-indigo-300/50 hover:scale-[1.03] active:scale-95 
+                     transition-all duration-300 flex items-center justify-center gap-3 mx-auto text-base"
+          >
+            <FaPlus className="text-xl" /> 
+            <span>Add School Information</span>
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* TAB NAVIGATION */}
+          <div className="mb-8">
+            <div className="flex flex-wrap gap-2 mb-6">
+              {['overview', 'academic', 'admission', 'video'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
+                    activeTab === tab
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
-          )}
-          
-          <div className="flex gap-3">
+
+            {/* OVERVIEW TAB */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* HERO SECTION */}
+                <div className="bg-gradient-to-br from-white to-blue-50 rounded-3xl p-8 shadow-xl border border-blue-100">
+                  <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 bg-blue-100 rounded-2xl">
+                          <FaSchoolIcon className="text-3xl text-blue-600" />
+                        </div>
+                        <div>
+                          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+                            {schoolInfo.name}
+                          </h1>
+                          {schoolInfo.motto && (
+                            <p className="text-lg text-blue-600 italic font-bold">
+                              "{schoolInfo.motto}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {schoolInfo.description && (
+                        <div className="prose prose-lg max-w-none">
+                          <p className="text-gray-700 leading-relaxed">
+                            {schoolInfo.description}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* STATS BADGES */}
+                    <div className="flex flex-col gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-100">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-100 rounded-xl">
+                              <FaUserGraduate className="text-green-600 text-xl" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-600">Students</p>
+                              <p className="text-2xl font-black text-green-700">{schoolInfo.studentCount}</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-2xl border border-blue-100">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-xl">
+                              <FaUserTie className="text-blue-600 text-xl" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-600">Staff</p>
+                              <p className="text-2xl font-black text-blue-700">{schoolInfo.staffCount}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* VISION & MISSION CARDS */}
+                      <div className="space-y-4">
+                        {schoolInfo.vision && (
+                          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-2xl border border-purple-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FaEye className="text-purple-600" />
+                              <h3 className="font-bold text-purple-700">Vision</h3>
+                            </div>
+                            <p className="text-gray-700 text-sm">{schoolInfo.vision}</p>
+                          </div>
+                        )}
+                        
+                        {schoolInfo.mission && (
+                          <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-4 rounded-2xl border border-orange-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FaRocket className="text-orange-600" />
+                              <h3 className="font-bold text-orange-700">Mission</h3>
+                            </div>
+                            <p className="text-gray-700 text-sm">{schoolInfo.mission}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QUICK FACTS GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-blue-50 rounded-xl">
+                        <FaMoneyBillWave className="text-blue-600 text-xl" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-700">Day School Fees</h3>
+                        <p className="text-2xl font-black text-gray-900">
+                          {formatCurrency(schoolInfo.feesDay)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-green-50 rounded-xl">
+                        <FaMoneyBillWave className="text-green-600 text-xl" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-700">Boarding Fees</h3>
+                        <p className="text-2xl font-black text-gray-900">
+                          {formatCurrency(schoolInfo.feesBoarding)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-purple-50 rounded-xl">
+                        <FaDoorOpen className="text-purple-600 text-xl" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-700">Term Opens</h3>
+                        <p className="text-lg font-black text-gray-900">
+                          {formatDate(schoolInfo.openDate)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-3 bg-red-50 rounded-xl">
+                        <FaDoorClosed className="text-red-600 text-xl" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-700">Term Closes</h3>
+                        <p className="text-lg font-black text-gray-900">
+                          {formatDate(schoolInfo.closeDate)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ACADEMIC TAB */}
+            {activeTab === 'academic' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* SUBJECTS CARD */}
+                  <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-indigo-100 rounded-2xl">
+                        <FaBook className="text-2xl text-indigo-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">Subjects Offered</h2>
+                        <p className="text-gray-500 text-sm">Comprehensive curriculum with {schoolInfo.subjects?.length || 0} subjects</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {schoolInfo.subjects?.map((subject, index) => {
+                        const Icon = getSubjectIcon(subject);
+                        return (
+                          <div 
+                            key={index}
+                            className="flex items-center gap-3 p-4 bg-gray-50 hover:bg-blue-50 rounded-xl transition-colors group"
+                          >
+                            <div className="p-2 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+                              <Icon className="text-blue-600 text-lg" />
+                            </div>
+                            <span className="font-bold text-gray-700">{subject}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* DEPARTMENTS CARD */}
+                  <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-purple-100 rounded-2xl">
+                        <FaUsersCog className="text-2xl text-purple-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">Departments</h2>
+                        <p className="text-gray-500 text-sm">Organized academic structure</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {schoolInfo.departments?.map((department, index) => {
+                        const Icon = getDepartmentIcon(department);
+                        return (
+                          <div 
+                            key={index}
+                            className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white hover:from-blue-50 hover:to-white rounded-xl border border-gray-100 transition-all group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-white rounded-lg shadow-sm group-hover:shadow-md transition-shadow">
+                                <Icon className="text-purple-600 text-lg" />
+                              </div>
+                              <span className="font-bold text-gray-700">{department}</span>
+                            </div>
+                            <div className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-md">
+                              Department
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACADEMIC CALENDAR */}
+                <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-green-100 rounded-2xl">
+                      <FaCalendar className="text-2xl text-green-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900">Academic Calendar</h2>
+                      <p className="text-gray-500 text-sm">Term dates and schedule</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-2xl border border-blue-100">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-blue-100 rounded-xl">
+                          <FaDoorOpen className="text-blue-600" />
+                        </div>
+                        <h3 className="font-bold text-blue-700">Term Opening</h3>
+                      </div>
+                      <p className="text-3xl font-black text-gray-900 mb-2">
+                        {formatDate(schoolInfo.openDate)}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        Students report back to school
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-2xl border border-red-100">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-red-100 rounded-xl">
+                          <FaDoorClosed className="text-red-600" />
+                        </div>
+                        <h3 className="font-bold text-red-700">Term Closing</h3>
+                      </div>
+                      <p className="text-3xl font-black text-gray-900 mb-2">
+                        {formatDate(schoolInfo.closeDate)}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        End of term and holiday begins
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ADMISSION TAB */}
+            {activeTab === 'admission' && (
+              <div className="space-y-6">
+                {/* ADMISSION OVERVIEW */}
+                <div className="bg-gradient-to-br from-white to-emerald-50 rounded-3xl p-8 shadow-xl border border-emerald-100">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-3 bg-emerald-100 rounded-2xl">
+                      <FaUserCheck className="text-2xl text-emerald-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900">Admission Information</h2>
+                      <p className="text-gray-500 text-sm">Application process and requirements</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FaCalendar className="text-blue-600" />
+                        <h3 className="font-bold text-gray-700">Application Opens</h3>
+                      </div>
+                      <p className="text-lg font-black text-gray-900">
+                        {formatDate(schoolInfo.admissionOpenDate)}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FaHourglassHalf className="text-red-600" />
+                        <h3 className="font-bold text-gray-700">Application Closes</h3>
+                      </div>
+                      <p className="text-lg font-black text-gray-900">
+                        {formatDate(schoolInfo.admissionCloseDate)}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FaMoneyBillWave className="text-green-600" />
+                        <h3 className="font-bold text-gray-700">Admission Fee</h3>
+                      </div>
+                      <p className="text-lg font-black text-gray-900">
+                        {formatCurrency(schoolInfo.admissionFee)}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FaUsers className="text-purple-600" />
+                        <h3 className="font-bold text-gray-700">Capacity</h3>
+                      </div>
+                      <p className="text-2xl font-black text-gray-900">
+                        {schoolInfo.admissionCapacity}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ADMISSION REQUIREMENTS */}
+                  <div className="mb-8">
+                    <h3 className="text-xl font-black text-gray-900 mb-4">Admission Requirements</h3>
+                    <div className="prose prose-lg max-w-none bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                      {schoolInfo.admissionRequirements.split('\r\n').map((line, index) => (
+                        <p key={index} className="text-gray-700 mb-2">{line}</p>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* REQUIRED DOCUMENTS */}
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900 mb-4">Required Documents</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {schoolInfo.admissionDocumentsRequired?.map((doc, index) => {
+                        const Icon = getDocumentIcon(doc);
+                        return (
+                          <div 
+                            key={index}
+                            className="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                          >
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                              <Icon className="text-blue-600" />
+                            </div>
+                            <span className="font-bold text-gray-700">{doc}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CONTACT INFORMATION */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-blue-100 rounded-2xl">
+                        <FaMapMarkerAlt className="text-2xl text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">Contact Information</h2>
+                        <p className="text-gray-500 text-sm">Admission office details</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <FaMapMarkerAlt className="text-gray-400" />
+                        <div>
+                          <p className="font-bold text-gray-700">Location</p>
+                          <p className="text-gray-600">{schoolInfo.admissionLocation}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <FaPhone className="text-gray-400" />
+                        <div>
+                          <p className="font-bold text-gray-700">Phone</p>
+                          <p className="text-gray-600">{schoolInfo.admissionContactPhone}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <FaEnvelope className="text-gray-400" />
+                        <div>
+                          <p className="font-bold text-gray-700">Email</p>
+                          <p className="text-gray-600">{schoolInfo.admissionContactEmail}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <FaGlobe className="text-gray-400" />
+                        <div>
+                          <p className="font-bold text-gray-700">Website</p>
+                          <p className="text-gray-600">{schoolInfo.admissionWebsite}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <FaClock className="text-gray-400" />
+                        <div>
+                          <p className="font-bold text-gray-700">Office Hours</p>
+                          <p className="text-gray-600">{schoolInfo.admissionOfficeHours}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ADMISSION TIMELINE */}
+                  <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-3 bg-purple-100 rounded-2xl">
+                        <FaCalendarAlt className="text-2xl text-purple-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">Admission Timeline</h2>
+                        <p className="text-gray-500 text-sm">Application process schedule</p>
+                      </div>
+                    </div>
+                    
+                    <div className="relative">
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                      
+                      <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <FaCalendar className="text-blue-600 text-sm" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">Application Period Opens</h4>
+                            <p className="text-gray-600 text-sm">{formatDate(schoolInfo.admissionOpenDate)}</p>
+                            <p className="text-gray-500 text-xs mt-1">Begin accepting applications</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                            <FaHourglassHalf className="text-red-600 text-sm" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">Application Deadline</h4>
+                            <p className="text-gray-600 text-sm">{formatDate(schoolInfo.admissionCloseDate)}</p>
+                            <p className="text-gray-500 text-xs mt-1">Last day to submit applications</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <FaCheckCircle className="text-green-600 text-sm" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-gray-900">Admission Notification</h4>
+                            <p className="text-gray-600 text-sm">Within 4 weeks of closing</p>
+                            <p className="text-gray-500 text-xs mt-1">Successful applicants notified</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* VIDEO TAB */}
+            {activeTab === 'video' && schoolInfo.videoTour && (
+              <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-red-100 rounded-2xl">
+                      <FaVideo className="text-2xl text-red-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900">School Video Tour</h2>
+                      <p className="text-gray-500 text-sm">Virtual tour of our campus and facilities</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowVideoModal(true)}
+                    className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-orange-700 transition-all font-bold"
+                  >
+                    <FaPlay /> Watch Full Video
+                  </button>
+                </div>
+                
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                  <div className="relative pb-[56.25%]">
+                    <img 
+                      src={`https://img.youtube.com/vi/${schoolInfo.videoTour.split('v=')[1]}/maxresdefault.jpg`}
+                      alt="Video Thumbnail" 
+                      className="absolute top-0 left-0 w-full h-full object-cover"
+                    />
+                    
+                    <div 
+                      className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center cursor-pointer hover:bg-opacity-30 transition"
+                      onClick={() => setShowVideoModal(true)}
+                    >
+                      <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:bg-red-700 transition">
+                        <FaPlay className="text-white text-2xl ml-1" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-gray-50 to-white p-6">
+                    <h3 className="text-xl font-black text-gray-900 mb-2">Katwanyaa High School Campus Tour</h3>
+                    <p className="text-gray-600 mb-4">
+                      Experience our state-of-the-art facilities, modern classrooms, science labs, and sports grounds.
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <FaVideo /> YouTube Video
+                      </span>
+                      <span>•</span>
+                      <span>High Definition</span>
+                      <span>•</span>
+                      <span>Updated {formatDate(schoolInfo.updatedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ACTION BUTTONS */}
+          <div className="flex flex-col sm:flex-row gap-4 mt-8">
             <button 
               onClick={() => setShowModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold flex items-center gap-2"
+              className="flex-1 flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-bold shadow-lg"
             >
-              <FaEdit /> Edit Information
+              <FaEdit /> Edit School Information
             </button>
+            
             <button 
               onClick={() => setShowDeleteModal(true)}
-              className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:from-red-700 hover:to-red-800 transition duration-200 font-bold flex items-center gap-2"
+              className="flex-1 flex items-center justify-center gap-3 bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-4 rounded-2xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-bold shadow-lg"
             >
-              <FaTrash /> Delete
+              <FaTrash /> Delete Information
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {showModal && (
@@ -1608,6 +2252,16 @@ export default function SchoolInfoPage() {
           onClose={() => setShowDeleteModal(false)} 
           onConfirm={handleDeleteSchool} 
           loading={false}
+        />
+      )}
+
+      {showVideoModal && schoolInfo?.videoTour && (
+        <VideoModal 
+          open={showVideoModal}
+          onClose={() => setShowVideoModal(false)}
+          videoType={schoolInfo.videoType}
+          videoPath={schoolInfo.videoTour}
+          thumbnail={schoolInfo.videoThumbnail}
         />
       )}
     </div>
