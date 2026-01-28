@@ -2861,365 +2861,151 @@ export default function ComprehensiveAdmissions() {
                 </div>
               </div>
 
-              {/* Additional Requirements Section */}
-              <div className="bg-gradient-to-br from-white to-emerald-50/30 border border-emerald-100/80 rounded-2xl md:rounded-3xl shadow-lg p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl shadow-sm">
-                        <FiCheckCircle className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Additional Requirements</h3>
-                    </div>
-                    <p className="text-slate-500">Supplementary items for specific cases</p>
-                  </div>
-                  <div className="hidden md:block">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Conditional</div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-                  {/* Special Needs Support */}
-                  <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-purple-50 rounded-lg">
-                        <IoAccessibilityOutline className="text-purple-600 text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900">Special Needs Support</h4>
-                    </div>
-                    <ul className="space-y-3">
-                      {[
-                        "Medical assessment report",
-                        "Specialist recommendations",
-                        "Learning support plan",
-                        "Accessibility requirements"
-                      ].map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
-                          <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* International Students */}
-                  <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-blue-50 rounded-lg">
-                        <FiGlobe className="text-blue-600 text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900">International Students</h4>
-                    </div>
-                    <ul className="space-y-3">
-                      {[
-                        "Valid student visa",
-                        "Passport copies",
-                        "Guardian appointment letter",
-                        "Health insurance proof"
-                      ].map((item, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-slate-600">
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Fee Payment Information */}
-                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg shadow-sm">
-                        <FiCreditCard className="text-white text-lg" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-slate-900 mb-1">Payment Information</h4>
-                        <p className="text-slate-500 text-sm">
-                          Application fee: KSh {schoolData?.admissionFee ? schoolData.admissionFee.toLocaleString() : '5,000'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-                        Bank Transfer
-                      </span>
-                      <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-                        M-Pesa
-                      </span>
-                      <span className="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full text-xs font-bold">
-                        Cash
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Application Timeline */}
-              <div className="bg-gradient-to-br from-white to-blue-50/30 border border-blue-100/80 rounded-2xl md:rounded-3xl shadow-lg p-4 md:p-8">
-                <div className="text-center mb-6 md:mb-8">
-                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">Application Timeline</h3>
-                  <p className="text-slate-500">Important dates and deadlines to remember</p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                  {/* Opening Dates */}
-                  <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-green-50 rounded-lg">
-                        <IoCalendarOutline className="text-green-600 text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900">Application Period</h4>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-600">Opens:</span>
-                        <span className="font-bold text-slate-900">
-                          {schoolData?.admissionOpenDate ? 
-                            new Date(schoolData.admissionOpenDate).toLocaleDateString('en-US', { 
-                              month: 'long', 
-                              day: 'numeric', 
-                              year: 'numeric' 
-                            }) : 
-                            'January 15, 2024'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-600">Closes:</span>
-                        <span className="font-bold text-slate-900">
-                          {schoolData?.admissionCloseDate ? 
-                            new Date(schoolData.admissionCloseDate).toLocaleDateString('en-US', { 
-                              month: 'long', 
-                              day: 'numeric', 
-                              year: 'numeric' 
-                            }) : 
-                            'March 30, 2024'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Processing Timeline */}
-                  <div className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-blue-50 rounded-lg">
-                        <FiClock className="text-blue-600 text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900">Processing Time</h4>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-600">Review period:</span>
-                        <span className="font-bold text-slate-900">2-3 weeks</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-600">Interview notice:</span>
-                        <span className="font-bold text-slate-900">Within 1 week</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-600">Final decision:</span>
-                        <span className="font-bold text-slate-900">Within 4 weeks</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                  <button 
-                    onClick={() => router.push('/pages/apply-for-admissions')}
-                    className="px-4 py-3 md:px-6 md:py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold text-sm transition-all duration-200 shadow-lg"
-                  >
-                    Apply Now
-                  </button>
-                  <button className="px-4 py-3 md:px-6 md:py-3.5 border border-slate-300 text-slate-700 rounded-xl font-bold text-sm transition-all duration-200">
-                    Download Checklist
-                  </button>
-                </div>
-              </div>
+         
             </div>
           )}
 
-          {/* Modernized Fee Structure Tab */}
-          {activeTab === 'fees' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
-              
-              {/* Hero Header */}
-              <div className="text-center mb-8 md:mb-12">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-full mb-6">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Fee Structure</span>
-                </div>
-                <h2 className="text-2xl md:text-5xl font-black text-slate-900 tracking-tight mb-4 px-2">
-                  Transparent <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Pricing</span>
-                </h2>
-                <p className="text-slate-500 text-base md:text-lg max-w-3xl mx-auto leading-relaxed px-2">
-                  Clear, comprehensive fee breakdowns for day and boarding students with flexible payment options.
-                </p>
+{activeTab === 'fees' && (
+  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 max-w-7xl mx-auto px-2">
+    
+    {/* Modern Hero Header - Compact */}
+    <div className="text-left md:text-center mb-10">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full mb-4">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+        </span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Official {documentData?.academicYear || '2026'} Schedule</span>
+      </div>
+      <h2 className="text-3xl md:text-6xl font-black text-slate-900 tracking-tighter uppercase leading-none">
+        Fee <span className="text-blue-600">Structure</span>
+      </h2>
+      <p className="text-slate-500 font-bold text-sm md:text-lg mt-4 max-w-2xl md:mx-auto leading-tight">
+        Transparent breakdowns for **Day** and **Boarding** tracks. All figures are in **Kenya Shillings (KSh)**.
+      </p>
+    </div>
+
+    {/* Fee Comparison Grid */}
+    <div className="grid lg:grid-cols-2 gap-6 md:gap-10">
+      
+      {/* 1. Boarding School Fees Section */}
+      <div className="bg-[#0F172A] rounded-[2rem] p-6 md:p-10 text-white shadow-2xl border border-white/5 flex flex-col">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Track 01</span>
+            <h3 className="text-3xl font-black tracking-tighter uppercase mt-1">Boarding</h3>
+          </div>
+          <div className="bg-blue-600 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest">
+            Residential
+          </div>
+        </div>
+
+        {/* Real API Mapping for Boarding Distribution */}
+        <div className="space-y-3 mb-8 flex-grow">
+          {documentData?.feesBoardingDistributionJson?.map((item, idx) => (
+            <div key={item.id} className="flex justify-between items-center py-3 border-b border-white/5 group">
+              <div className="flex flex-col">
+                <span className="font-black text-sm uppercase tracking-tight group-hover:text-blue-400 transition-colors">
+                  {item.name}
+                </span>
+                <span className="text-[10px] text-white/40 font-bold">{item.description}</span>
               </div>
-
-              {/* Fee Comparison Cards - Modern Grid with API Data */}
-              <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                {/* Boarding School Fees Card */}
-                <ModernFeeCard
-                  feeType="Boarding School"
-                  total={documentData?.feesBoardingDistributionJson?.total || schoolData?.feesBoarding || 0}
-                  distribution={documentData?.feesBoardingDistributionJson}
-                  pdfPath={documentData?.feesBoardingDistributionPdf}
-                  pdfName={documentData?.feesBoardingPdfName}
-                  description={documentData?.feesBoardingDescription}
-                  year={documentData?.feesBoardingYear}
-                  term={documentData?.feesBoardingTerm}
-                  icon={IoBookOutline}
-                  gradient="from-blue-500 to-cyan-500"
-                  badge="Full Immersion"
-                  features={[
-                    '24/7 Supervision',
-                    'Full Accommodation',
-                    'All Meals Included',
-                    'Study Support',
-                    'Weekend Activities',
-                    'Health Services'
-                  ]}
-                />
-                
-                {/* Day School Fees Card */}
-                <ModernFeeCard
-                  feeType="Day School"
-                  total={documentData?.feesDayDistributionJson?.total || schoolData?.feesDay || 0}
-                  distribution={documentData?.feesDayDistributionJson}
-                  pdfPath={documentData?.feesDayDistributionPdf}
-                  pdfName={documentData?.feesDayPdfName}
-                  description={documentData?.feesDayDescription}
-                  year={documentData?.feesDayYear}
-                  term={documentData?.feesDayTerm}
-                  icon={FiHome}
-                  gradient="from-emerald-500 to-green-500"
-                  badge="Flexible"
-                  features={[
-                    'Daily Transport Support',
-                    'Lunch Provided',
-                    'Evening Study Sessions',
-                    'Parent Access Hours',
-                    'Library Access',
-                    'Sports Facilities'
-                  ]}
-                />
-              </div>
-
-              {/* Admission Fee Card with Document Data */}
-              {schoolData?.admissionFee && (
-                <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl md:rounded-3xl p-6 md:p-8 text-white">
-                  {/* Background Glow */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 mb-6">
-                      <div className="flex items-center gap-3 md:gap-4">
-                        <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
-                          <IoReceiptOutline className="text-white text-xl md:text-2xl" />
-                        </div>
-                        <div>
-                          <h3 className="text-xl md:text-2xl font-bold">Admission Fee</h3>
-                          {documentData?.admissionFeeDescription && (
-                            <p className="text-amber-100 italic">{documentData.admissionFeeDescription}</p>
-                          )}
-                          {(documentData?.admissionFeeYear || documentData?.admissionFeeTerm) && (
-                            <p className="text-amber-200 text-sm mt-1">
-                              {documentData.admissionFeeYear} • {documentData.admissionFeeTerm}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-amber-100 mb-1">One-Time Payment</div>
-                        <div className="text-3xl md:text-5xl font-black">
-                          KSh {schoolData.admissionFee.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-4 md:pt-6 border-t border-white/20">
-                      <div className="text-amber-100 text-sm">
-                        Includes registration, processing, and administrative setup
-                      </div>
-                      
-                      {documentData?.admissionFeePdf && (
-                        <a 
-                          href={documentData.admissionFeePdf}
-                          download={documentData.admissionFeePdfName}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-white text-amber-600 rounded-xl font-bold transition-all duration-200 shadow-lg"
-                        >
-                          <div className="p-2 bg-amber-50 rounded-lg transition-transform">
-                            <IoCloudDownloadOutline className="text-amber-600" />
-                          </div>
-                          <span>Download Fee Details</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Payment Options */}
-              <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
-                        <FiCreditCard className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Payment Options</h3>
-                    </div>
-                    <p className="text-slate-500">Flexible payment methods to suit your needs</p>
-                  </div>
-                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
-                    <IoCheckmarkCircleOutline className="text-blue-500" />
-                    <span>Secure & Verified</span>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-                  {[
-                    {
-                      title: 'Bank Transfer',
-                      description: 'Direct bank deposit to school account',
-                      icon: FiCreditCard,
-                      color: 'from-blue-500 to-cyan-500'
-                    },
-                    {
-                      title: 'M-Pesa',
-                      description: 'Mobile money payment via Paybill number',
-                      icon: FiPhone,
-                      color: 'from-green-500 to-emerald-500'
-                    },
-                    {
-                      title: 'Installment Plan',
-                      description: 'Spread payments over the term',
-                      icon: FiCalendar,
-                      color: 'from-purple-500 to-pink-500'
-                    }
-                  ].map((option, index) => (
-                    <div key={index} className="bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-r ${option.color} text-white`}>
-                          <option.icon className="text-lg md:text-xl" />
-                        </div>
-                        <h4 className="font-bold text-slate-900">{option.title}</h4>
-                      </div>
-                      <p className="text-slate-600 text-sm">{option.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <span className="font-black text-lg tabular-nums">
+                {item.amount.toLocaleString()}
+              </span>
             </div>
-          )}
+          ))}
+        </div>
+
+        <div className="mt-auto pt-6 border-t border-white/10 flex justify-between items-end">
+          <div>
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Per Term</p>
+            <p className="text-4xl font-black tracking-tighter text-blue-400">
+              KSh {(documentData?.feesBoardingDistributionJson?.reduce((sum, item) => sum + item.amount, 0) || 0).toLocaleString()}
+            </p>
+          </div>
+          <a href={documentData?.feesBoardingDistributionPdf} target="_blank" className="p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all">
+            <IoCloudDownloadOutline className="text-xl" />
+          </a>
+        </div>
+      </div>
+
+      {/* 2. Day School Fees Section */}
+      <div className="bg-white rounded-[2rem] p-6 md:p-10 text-slate-900 shadow-xl border border-slate-100 flex flex-col">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Track 02</span>
+            <h3 className="text-3xl font-black tracking-tighter uppercase mt-1">Day School</h3>
+          </div>
+          <div className="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest">
+            Regular
+          </div>
+        </div>
+
+        {/* Real API Mapping for Day Distribution */}
+        <div className="space-y-3 mb-8 flex-grow">
+          {documentData?.feesDayDistributionJson?.map((item) => (
+            <div key={item.id} className="flex justify-between items-center py-3 border-b border-slate-100 group">
+              <div className="flex flex-col">
+                <span className="font-black text-sm uppercase tracking-tight group-hover:text-blue-600 transition-colors">
+                  {item.name}
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold">{item.description}</span>
+              </div>
+              <span className="font-black text-lg tabular-nums text-slate-900">
+                {item.amount.toLocaleString()}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-auto pt-6 border-t border-slate-100 flex justify-between items-end">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Per Term</p>
+            <p className="text-4xl font-black tracking-tighter text-slate-900">
+              KSh {(documentData?.feesDayDistributionJson?.reduce((sum, item) => sum + item.amount, 0) || 0).toLocaleString()}
+            </p>
+          </div>
+          <a href={documentData?.feesDayDistributionPdf} target="_blank" className="p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all">
+            <IoCloudDownloadOutline className="text-xl text-slate-400" />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {/* 3. Admission Fees - Full Width Bento */}
+    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] p-6 md:p-12 text-white shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -mr-32 -mt-32"></div>
+      
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
+        <div className="space-y-6 max-w-xl">
+          <div className="flex items-center gap-3">
+             <IoReceiptOutline className="text-3xl text-blue-200" />
+             <h3 className="text-3xl font-black tracking-tighter uppercase">Admission Fees</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+            {documentData?.admissionFeeDistribution?.map((item) => (
+              <div key={item.id} className="flex justify-between items-center border-b border-white/10 py-2">
+                <span className="font-black text-[10px] uppercase tracking-wider text-blue-100">{item.name}</span>
+                <span className="font-black text-sm">KSh {item.amount.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] text-center w-full md:w-auto min-w-[280px]">
+          <p className="text-[10px] font-black text-blue-200 uppercase tracking-[0.3em] mb-2">Total One-Time</p>
+          <p className="text-5xl font-black tracking-tighter leading-none mb-4">
+            KSh {(documentData?.admissionFeeDistribution?.reduce((sum, item) => sum + item.amount, 0) || 0).toLocaleString()}
+          </p>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+)}
 
           {/* NEW: Results Tab */}
           {activeTab === 'results' && (
@@ -3334,91 +3120,7 @@ export default function ComprehensiveAdmissions() {
                 ))}
               </div>
 
-              {/* Contact Support - Responsive Layout */}
-              <div className="bg-gradient-to-br from-white to-blue-50/30 border border-blue-100/80 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 md:gap-8">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 md:gap-4 mb-4">
-                      <div className="p-2 md:p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl md:rounded-2xl">
-                        <FiMessageCircle className="text-white text-lg md:text-xl" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg md:text-2xl font-bold text-slate-900">Still have questions?</h3>
-                        <p className="text-slate-500 mt-1">Our admissions team is ready to assist you.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                        <span>Available Mon-Fri, 8AM-5PM</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                        <span>Response within 24 hours</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Action Buttons - Stacked on mobile */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <a 
-                      href={`tel:${schoolData?.admissionContactPhone || '+254793472960'}`}
-                      className="flex items-center justify-center gap-2 md:gap-3 px-4 py-3 md:px-6 md:py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold text-sm"
-                    >
-                      <div className="p-1 md:p-1.5 bg-white/20 rounded-lg">
-                        <FiPhone className="text-white text-base" />
-                      </div>
-                      <span>Call Admissions</span>
-                    </a>
-                    
-                    <button 
-                      onClick={() => router.push('/pages/apply-for-admissions')}
-                      className="flex items-center justify-center gap-2 md:gap-3 px-4 py-3 md:px-6 md:py-3.5 border border-slate-300 text-slate-700 rounded-xl font-bold text-sm"
-                    >
-                      <div className="p-1 md:p-1.5 bg-slate-100 rounded-lg">
-                        <FiEdit3 className="text-slate-600 text-base" />
-                      </div>
-                      <span>Apply Online</span>
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Additional Contact Info */}
-                <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-blue-100/50">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                    <div className="flex items-center gap-2 md:gap-3 p-3 bg-white border border-slate-200/60 rounded-xl">
-                      <div className="p-2 bg-blue-50 rounded-lg">
-                        <FiClock className="text-blue-500 text-lg" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Office Hours</p>
-                        <p className="text-sm font-medium text-slate-800">Mon-Fri: 8AM - 5PM</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 md:gap-3 p-3 bg-white border border-slate-200/60 rounded-xl">
-                      <div className="p-2 bg-cyan-50 rounded-lg">
-                        <FiMail className="text-cyan-500 text-lg" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Email Response</p>
-                        <p className="text-sm font-medium text-slate-800">Within 24 hours</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 md:gap-3 p-3 bg-white border border-slate-200/60 rounded-xl">
-                      <div className="p-2 bg-emerald-50 rounded-lg">
-                        <FiCheckCircle className="text-emerald-500 text-lg" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Support Type</p>
-                        <p className="text-sm font-medium text-slate-800">Phone & In-Person</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+    
             </div>
           )}
         </div>
@@ -3450,7 +3152,7 @@ export default function ComprehensiveAdmissions() {
             </p>
 
             {/* Action Buttons – always flex row, no wrap */}
-            <div className="flex flex-row flex-nowrap items-center gap-2 sm:gap-3 w-full overflow-x-auto">
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto">
               
               {/* Primary Button */}
               <button
