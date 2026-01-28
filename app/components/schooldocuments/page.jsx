@@ -306,26 +306,43 @@ function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' 
   );
 }
 
-// Fee Breakdown Modal Component
+// Fee Breakdown Modal Component with edit mode support
 function FeeBreakdownModal({ 
   open, 
   onClose, 
   onSave, 
   title = "Fee Structure Breakdown",
   existingBreakdown = [],
-  type = 'day'
+  type = 'day',
+  // NEW PROP: isEditMode
+  isEditMode = false
 }) {
-  const [categories, setCategories] = useState(existingBreakdown || []);
+  // FIXED: Initialize with existingBreakdown only, no preset/placeholder in edit mode
+  const [categories, setCategories] = useState(() => {
+    // In edit mode, show only existing database values
+    if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      return existingBreakdown.map((cat, index) => ({
+        ...cat,
+        id: cat.id || `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        order: cat.order || index,
+        // Ensure proper types
+        amount: typeof cat.amount === 'string' ? parseFloat(cat.amount) || 0 : cat.amount || 0,
+        optional: Boolean(cat.optional),
+        boardingOnly: type === 'boarding' ? Boolean(cat.boardingOnly) : false
+      }));
+    }
+    return [];
+  });
+  
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
 
-useEffect(() => {
-  const total = Array.isArray(categories) 
-    ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
-    : 0;
-  setTotalAmount(total);
-}, [categories]);
-
+  useEffect(() => {
+    const total = Array.isArray(categories) 
+      ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
+      : 0;
+    setTotalAmount(total);
+  }, [categories]);
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -342,7 +359,11 @@ useEffect(() => {
 
   const handleCategoryChange = (index, field, value) => {
     const updated = [...categories];
-    updated[index] = { ...updated[index], [field]: value };
+    if (field === 'amount') {
+      updated[index] = { ...updated[index], [field]: parseFloat(value) || 0 };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
     setCategories(updated);
   };
 
@@ -405,10 +426,19 @@ useEffect(() => {
   ];
 
   const loadPreset = (preset) => {
+    // In edit mode, don't load presets if we have existing data
+    if (isEditMode && categories.length > 0) {
+      const confirmLoad = window.confirm(
+        'You are in edit mode with existing fee categories. Loading a preset will replace your current categories. Continue?'
+      );
+      if (!confirmLoad) return;
+    }
+    
     const loaded = preset.map((cat, index) => ({
       ...cat,
       id: `preset_${Date.now()}_${index}`,
-      order: index
+      order: index,
+      amount: typeof cat.amount === 'string' ? parseFloat(cat.amount) || 0 : cat.amount || 0
     }));
     setCategories(loaded);
     toast.success('Preset categories loaded. Update amounts as needed.');
@@ -427,6 +457,7 @@ useEffect(() => {
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
+        {/* Header with edit mode indicator */}
         <div className={`bg-gradient-to-r ${type === 'boarding' ? 'from-blue-600 via-blue-700 to-indigo-700' : 'from-green-600 via-green-700 to-emerald-700'} p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -436,7 +467,8 @@ useEffect(() => {
               <div>
                 <h2 className="text-xl font-bold">{title}</h2>
                 <p className="text-white/90 text-sm mt-1 font-bold">
-                  {type === 'day' ? 'Day School' : 'Boarding School'} Fee Structure Breakdown
+                  {isEditMode ? 'Edit Existing ' : ''}{type === 'day' ? 'Day School' : 'Boarding School'} Fee Structure Breakdown
+                  {isEditMode && <span className="ml-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit Mode</span>}
                 </p>
               </div>
             </div>
@@ -450,6 +482,24 @@ useEffect(() => {
         </div>
 
         <div className="max-h-[calc(85vh-180px)] overflow-y-auto p-6">
+          {isEditMode && categories.length > 0 && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <FaInfoCircle className="h-5 w-5 text-yellow-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700 font-bold">
+                    You are editing the existing fee breakdown. All changes will update the current record.
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Found {categories.length} existing fee categories. You can modify, add, or remove categories as needed.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {errors.length > 0 && (
             <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -468,13 +518,15 @@ useEffect(() => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Fee Categories</h3>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadPreset(presetCategories)}
-                  className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Load Preset
-                </button>
+                {!isEditMode && (
+                  <button
+                    type="button"
+                    onClick={() => loadPreset(presetCategories)}
+                    className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Load Preset
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleAddCategory}
@@ -488,9 +540,14 @@ useEffect(() => {
             {categories.length === 0 ? (
               <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl border-2 border-dashed border-gray-300">
                 <FaMoneyBillWave className="mx-auto text-4xl text-gray-400 mb-4" />
-                <h4 className="text-lg font-bold text-gray-700 mb-2">No Fee Categories</h4>
+                <h4 className="text-lg font-bold text-gray-700 mb-2">
+                  {isEditMode ? 'No Existing Fee Categories Found' : 'No Fee Categories'}
+                </h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  Start by adding fee categories or load a preset to get started.
+                  {isEditMode 
+                    ? 'Start by adding fee categories. Since no existing breakdown was found, you can create a new one.'
+                    : 'Start by adding fee categories or load a preset to get started.'
+                  }
                 </p>
                 <button
                   onClick={handleAddCategory}
@@ -554,6 +611,7 @@ useEffect(() => {
                   <h3 className="text-lg font-bold text-gray-900">Fee Summary</h3>
                   <p className="text-sm text-gray-600 font-bold">
                     {categories.length} categories defined
+                    {isEditMode && <span className="ml-2 text-emerald-700">(Editing existing)</span>}
                   </p>
                 </div>
               </div>
@@ -594,7 +652,10 @@ useEffect(() => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total: <span className="text-emerald-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1 font-bold">{categories.length} fee categories configured</p>
+              <p className="text-xs mt-1 font-bold">
+                {categories.length} fee categories configured
+                {isEditMode && <span className="text-blue-600 ml-2">• Edit Mode Active</span>}
+              </p>
             </div>
             
             <div className="flex gap-3 w-full sm:w-auto">
@@ -611,7 +672,7 @@ useEffect(() => {
                 disabled={categories.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                Save Breakdown
+                {isEditMode ? 'Update Breakdown' : 'Save Breakdown'}
               </button>
             </div>
           </div>
@@ -620,24 +681,26 @@ useEffect(() => {
     </Modal>
   );
 }
-
 // Admission Fee Breakdown Modal Component - COMPLETE FIXED VERSION
+// Admission Fee Breakdown Modal Component - COMPLETE FIXED VERSION with edit mode
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
   onSave, 
-  existingBreakdown = []
+  existingBreakdown = [],
+  isEditMode = false
 }) {
-  // Initialize with empty array if no existing breakdown
+  // FIXED: Enhanced initialization for edit mode
   const [categories, setCategories] = useState(() => {
-    // Only use existingBreakdown if it's a valid array with admission-specific data
+    // EDIT MODE: Load only existing database values
     if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
-      // Filter out any non-admission specific fields that might have been inherited
-      return existingBreakdown.map(cat => ({
+      return existingBreakdown.map((cat, index) => ({
         ...cat,
+        id: cat.id || `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         boardingOnly: false, // Ensure boardingOnly is false for admission fees
-        optional: cat.optional || false,
-        id: cat.id || `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        optional: Boolean(cat.optional),
+        order: cat.order || index,
+        amount: typeof cat.amount === 'string' ? parseFloat(cat.amount) || 0 : cat.amount || 0
       }));
     }
     return []; // Start with empty array
@@ -655,13 +718,11 @@ function AdmissionFeeBreakdownModal({
 
   // Add this effect to reset when modal opens/closes
   useEffect(() => {
-    if (open) {
-      // Reset categories when modal opens to prevent autofill from previous categories
-      if (!Array.isArray(existingBreakdown) || existingBreakdown.length === 0) {
-        setCategories([]);
-      }
+    if (open && !isEditMode) {
+      // Only reset for non-edit mode
+      setCategories([]);
     }
-  }, [open, existingBreakdown]);
+  }, [open, isEditMode]);
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -678,7 +739,11 @@ function AdmissionFeeBreakdownModal({
 
   const handleCategoryChange = (index, field, value) => {
     const updated = [...categories];
-    updated[index] = { ...updated[index], [field]: value };
+    if (field === 'amount') {
+      updated[index] = { ...updated[index], [field]: parseFloat(value) || 0 };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
     
     // Ensure boardingOnly is always false for admission fees
     if (field === 'boardingOnly') {
@@ -774,12 +839,21 @@ function AdmissionFeeBreakdownModal({
   ];
 
   const loadPreset = (preset) => {
+    // In edit mode, ask for confirmation before loading preset
+    if (isEditMode && categories.length > 0) {
+      const confirmLoad = window.confirm(
+        'You are in edit mode with existing admission fee categories. Loading a preset will replace your current categories. Continue?'
+      );
+      if (!confirmLoad) return;
+    }
+    
     const loaded = preset.map((cat, index) => ({
       ...cat,
       id: `admission_preset_${Date.now()}_${index}`,
       order: index,
       boardingOnly: false, // Ensure no boarding flags
-      optional: cat.optional || false
+      optional: Boolean(cat.optional),
+      amount: typeof cat.amount === 'string' ? parseFloat(cat.amount) || 0 : cat.amount || 0
     }));
     setCategories(loaded);
     toast.success('Preset admission categories loaded. Update amounts as needed.');
@@ -823,7 +897,8 @@ function AdmissionFeeBreakdownModal({
               <div>
                 <h2 className="text-xl font-bold">Admission Fee Breakdown</h2>
                 <p className="text-white/90 text-sm mt-1 font-bold">
-                  Define admission-related fees and charges
+                  {isEditMode ? 'Edit Existing ' : ''}Admission-related fees and charges
+                  {isEditMode && <span className="ml-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit Mode</span>}
                 </p>
               </div>
             </div>
@@ -838,6 +913,21 @@ function AdmissionFeeBreakdownModal({
 
         {/* Content Area */}
         <div className="max-h-[calc(85vh-180px)] overflow-y-auto p-6">
+          {isEditMode && categories.length > 0 && (
+            <div className="bg-purple-50 border-l-4 border-purple-400 p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <FaInfoCircle className="h-5 w-5 text-purple-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-purple-700 font-bold">
+                    Editing {categories.length} existing admission fee categories. All changes will update the current record.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {errors.length > 0 && (
             <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -856,13 +946,15 @@ function AdmissionFeeBreakdownModal({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Admission Fee Categories</h3>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadPreset(presetCategories)}
-                  className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Load Preset
-                </button>
+                {!isEditMode && (
+                  <button
+                    type="button"
+                    onClick={() => loadPreset(presetCategories)}
+                    className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Load Preset
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleAddCategory}
@@ -876,18 +968,24 @@ function AdmissionFeeBreakdownModal({
             {categories.length === 0 ? (
               <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-dashed border-purple-300">
                 <FaUserCheck className="mx-auto text-4xl text-purple-400 mb-4" />
-                <h4 className="text-lg font-bold text-gray-700 mb-2">No Admission Fees</h4>
+                <h4 className="text-lg font-bold text-gray-700 mb-2">
+                  {isEditMode ? 'No Existing Admission Fees Found' : 'No Admission Fees'}
+                </h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  Define the admission fees that new students need to pay.
-                  Start fresh with empty fields or load a preset.
+                  {isEditMode 
+                    ? 'Start by adding admission fee categories. Since no existing breakdown was found, you can create a new one.'
+                    : 'Define the admission fees that new students need to pay. Start fresh with empty fields or load a preset.'
+                  }
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => loadPreset(presetCategories)}
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-colors font-bold shadow-lg flex items-center gap-2"
-                  >
-                    <FaFileAlt /> Load Preset
-                  </button>
+                  {!isEditMode && (
+                    <button
+                      onClick={() => loadPreset(presetCategories)}
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-colors font-bold shadow-lg flex items-center gap-2"
+                    >
+                      <FaFileAlt /> Load Preset
+                    </button>
+                  )}
                   <button
                     onClick={handleAddCategory}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-colors font-bold shadow-lg flex items-center gap-2"
@@ -1017,6 +1115,7 @@ function AdmissionFeeBreakdownModal({
                   <h3 className="text-lg font-bold text-gray-900">Admission Fee Summary</h3>
                   <p className="text-sm text-gray-600 font-bold">
                     {categories.length} admission fee categories
+                    {isEditMode && <span className="ml-2 text-purple-700">(Editing existing)</span>}
                   </p>
                 </div>
               </div>
@@ -1060,7 +1159,10 @@ function AdmissionFeeBreakdownModal({
               <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
               <p className="text-xs mt-1 font-bold">{categories.length} admission fee categories configured</p>
               <p className="text-xs text-gray-500 mt-1">
-                All fields start empty to prevent autofill from other fee types
+                {isEditMode 
+                  ? 'Editing existing admission fee breakdown. Changes will update the current record.'
+                  : 'All fields start empty to prevent autofill from other fee types'
+                }
               </p>
             </div>
             
@@ -1078,7 +1180,7 @@ function AdmissionFeeBreakdownModal({
                 disabled={categories.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                Save Admission Fees
+                {isEditMode ? 'Update Admission Fees' : 'Save Admission Fees'}
               </button>
             </div>
           </div>
@@ -1088,7 +1190,7 @@ function AdmissionFeeBreakdownModal({
   );
 }
 
-// Document Metadata Modal for Exam Results and Additional Files with Term Field
+// Document Metadata Modal for Exam Results and Additional Files with Term Field - Updated for edit mode
 function DocumentMetadataModal({ 
   open, 
   onClose, 
@@ -1099,6 +1201,15 @@ function DocumentMetadataModal({
   const [year, setYear] = useState(existingData.year || '');
   const [term, setTerm] = useState(existingData.term || '');
   const [description, setDescription] = useState(existingData.description || '');
+  
+  // Reset form when modal opens
+  useEffect(() => {
+    if (open) {
+      setYear(existingData.year || '');
+      setTerm(existingData.term || '');
+      setDescription(existingData.description || '');
+    }
+  }, [open, existingData]);
 
   const handleSave = () => {
     if (!year || !term || !description) {
@@ -1109,6 +1220,8 @@ function DocumentMetadataModal({
     onSave({ year, term, description });
     onClose();
   };
+
+  const isEditMode = !!existingData.year || !!existingData.term || !!existingData.description;
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -1122,16 +1235,19 @@ function DocumentMetadataModal({
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white">
+        <div className={`bg-gradient-to-r ${isEditMode ? 'from-purple-600 via-purple-700 to-indigo-700' : 'from-blue-600 via-blue-700 to-indigo-700'} p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
                 <FaFileAlt className="text-lg" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Document Metadata</h2>
+                <h2 className="text-xl font-bold">
+                  {isEditMode ? 'Edit Document Metadata' : 'Document Metadata'}
+                </h2>
                 <p className="text-white/90 text-sm mt-1 font-bold">
                   {fileName}
+                  {isEditMode && <span className="ml-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit Mode</span>}
                 </p>
               </div>
             </div>
@@ -1205,6 +1321,12 @@ function DocumentMetadataModal({
                 Adding year, term, and description helps organize documents by academic year and term.
                 This ensures proper categorization and makes document management more efficient.
               </p>
+              {isEditMode && (
+                <p className="text-xs text-blue-600 font-bold mt-2">
+                  <FaEdit className="inline mr-1" />
+                  You are editing existing metadata. Changes will update the document information.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1223,7 +1345,7 @@ function DocumentMetadataModal({
               onClick={handleSave}
               className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow"
             >
-              Save Metadata
+              {isEditMode ? 'Update Metadata' : 'Save Metadata'}
             </button>
           </div>
         </div>
@@ -1233,6 +1355,7 @@ function DocumentMetadataModal({
 }
 
 // Enhanced Modern PDF Upload with all fixes
+// Enhanced Modern PDF Upload with all fixes including edit mode
 function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
@@ -1246,7 +1369,9 @@ function ModernPdfUpload({
   type = 'curriculum',
   onCancelExisting = null,
   onRemoveExisting = null,
-  description = ""
+  description = "",
+  // NEW PROP: isEditMode to detect edit context
+  isEditMode = false
 }) {
   const fileSizeManager = useFileSize();
   const [previewName, setPreviewName] = useState('');
@@ -1255,7 +1380,16 @@ function ModernPdfUpload({
   const [isReplacing, setIsReplacing] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [showAdmissionFeeModal, setShowAdmissionFeeModal] = useState(false);
-  const [localFeeBreakdown, setLocalFeeBreakdown] = useState(feeBreakdown || existingFeeBreakdown || []);
+  
+  // FIXED: Initialize with existing fee breakdown in edit mode
+  const [localFeeBreakdown, setLocalFeeBreakdown] = useState(() => {
+    // In edit mode, prioritize existingFeeBreakdown
+    if (isEditMode && existingFeeBreakdown && Array.isArray(existingFeeBreakdown)) {
+      return existingFeeBreakdown;
+    }
+    return feeBreakdown || [];
+  });
+  
   const [fileSelected, setFileSelected] = useState(false);
   const [fileId, setFileId] = useState(null);
   const fileInputRef = useRef(null);
@@ -1268,22 +1402,31 @@ function ModernPdfUpload({
   // Allowed file types
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
+  // FIXED: Initialize with existing file in edit mode
   useEffect(() => {
-    if (pdfFile && typeof pdfFile === 'object') {
+    if (isEditMode && existingPdf) {
+      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
+      setFileSelected(true);
+      
+      // Set fee breakdown from existing data in edit mode
+      if (existingFeeBreakdown && Array.isArray(existingFeeBreakdown)) {
+        setLocalFeeBreakdown(existingFeeBreakdown);
+        if (onFeeBreakdownChange) {
+          onFeeBreakdownChange(existingFeeBreakdown);
+        }
+      }
+    } else if (pdfFile && typeof pdfFile === 'object') {
       setPreviewName(pdfFile.name);
       setFileSelected(true);
       if (!fileId) {
         const newFileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         setFileId(newFileId);
       }
-    } else if (existingPdf) {
-      setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
-      setFileSelected(true);
     } else {
       setPreviewName('');
       setFileSelected(false);
     }
-  }, [pdfFile, existingPdf, fileId]);
+  }, [pdfFile, existingPdf, fileId, isEditMode, existingFeeBreakdown]);
 
   const validateFile = (file) => {
     // Check file type by extension
@@ -1300,6 +1443,20 @@ function ModernPdfUpload({
     }
     
     return true;
+  };
+
+  // Add this new function for editing metadata of existing files
+  const handleEditMetadata = () => {
+    if (existingPdf) {
+      setSelectedFileForMetadata({
+        file: null,
+        name: existingPdf.name || existingPdf.filename,
+        year: existingPdf.year || '',
+        term: existingPdf.term || '',
+        description: existingPdf.description || ''
+      });
+      setShowMetadataModal(true);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -1319,7 +1476,13 @@ function ModernPdfUpload({
 
     // Check if it's an exam result type
     if (type === 'results') {
-      setSelectedFileForMetadata(file);
+      setSelectedFileForMetadata({
+        file: file,
+        name: file.name,
+        year: existingPdf?.year || '',
+        term: existingPdf?.term || '',
+        description: existingPdf?.description || ''
+      });
       setShowMetadataModal(true);
     } else {
       // For non-exam files
@@ -1372,57 +1535,68 @@ function ModernPdfUpload({
 
   const handleMetadataSave = (metadata) => {
     if (selectedFileForMetadata) {
-      // Check total size for new file
-      if (fileId) {
-        // Replace existing file
-        const success = fileSizeManager.replaceFile(fileId, selectedFileForMetadata);
-        if (!success) {
+      const { file, name, ...existingMetadata } = selectedFileForMetadata;
+      
+      if (file) {
+        // New file with metadata
+        if (fileId) {
+          // Replace existing file
+          const success = fileSizeManager.replaceFile(fileId, file);
+          if (!success) {
+            setShowMetadataModal(false);
+            setSelectedFileForMetadata(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+            return;
+          }
+        } else {
+          // Add new file
+          const newFileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const success = fileSizeManager.addFile(file, newFileId);
+          if (!success) {
+            setShowMetadataModal(false);
+            setSelectedFileForMetadata(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+            return;
+          }
+          setFileId(newFileId);
+        }
+
+        setUploadProgress(0);
+        const interval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(interval);
+              return 100;
+            }
+            return prev + 20;
+          });
+        }, 100);
+
+        setTimeout(() => {
+          onPdfChange(file, metadata.year, metadata.description, metadata.term);
+          setPreviewName(file.name);
+          setFileSelected(true);
+          setUploadProgress(100);
+          setIsReplacing(false);
           setShowMetadataModal(false);
           setSelectedFileForMetadata(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
+          
+          toast.success('File with metadata saved successfully');
+          
+          setTimeout(() => setUploadProgress(0), 1000);
+        }, 500);
       } else {
-        // Add new file
-        const newFileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const success = fileSizeManager.addFile(selectedFileForMetadata, newFileId);
-        if (!success) {
-          setShowMetadataModal(false);
-          setSelectedFileForMetadata(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
-        setFileId(newFileId);
-      }
-
-      setUploadProgress(0);
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 100);
-
-      setTimeout(() => {
-        onPdfChange(selectedFileForMetadata, metadata.year, metadata.description, metadata.term);
-        setPreviewName(selectedFileForMetadata.name);
-        setFileSelected(true);
-        setUploadProgress(100);
-        setIsReplacing(false);
+        // Editing metadata for existing file
+        onPdfChange(null, metadata.year, metadata.description, metadata.term);
         setShowMetadataModal(false);
         setSelectedFileForMetadata(null);
         
-        toast.success('File with metadata saved successfully');
-        
-        setTimeout(() => setUploadProgress(0), 1000);
-      }, 500);
+        toast.success('Metadata updated successfully');
+      }
     }
   };
 
@@ -1491,6 +1665,105 @@ function ModernPdfUpload({
     }
   };
 
+  // Helper to render existing file actions
+  const renderExistingFileActions = () => {
+    return (
+      <div className="flex gap-2">
+        {/* Edit Metadata Button for existing files */}
+        <button
+          type="button"
+          onClick={handleEditMetadata}
+          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-purple-600 hover:to-purple-700 flex items-center gap-1 text-sm font-bold"
+        >
+          <FaEdit className="text-xs" />
+          Edit Metadata
+        </button>
+        
+        <button
+          type="button"
+          onClick={() => {
+            // Clear the current file reference
+            setPreviewName('');
+            setFileSelected(false);
+            
+            // Create and trigger file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx';
+            input.onchange = (e) => {
+              if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                if (validateFile(file)) {
+                  onPdfChange(file);
+                  setPreviewName(file.name);
+                  setFileSelected(true);
+                  
+                  if (existingPdf && onCancelExisting) {
+                    onCancelExisting(existingPdf);
+                  }
+                  
+                  toast.success('File selected for replacement');
+                }
+              }
+            };
+            input.click();
+          }}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
+        >
+          <FaUpload className="text-xs" />
+          Replace File
+        </button>
+        
+        <button
+          type="button"
+          onClick={() => {
+            if (onRemoveExisting) {
+              onRemoveExisting();
+            }
+            setPreviewName('');
+            setFileSelected(false);
+            toast.warning('File marked for deletion');
+          }}
+          className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
+        >
+          <FaTrash className="text-xs" />
+          Delete
+        </button>
+      </div>
+    );
+  };
+
+  // Helper to render new file actions
+  const renderNewFileActions = () => {
+    return (
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setIsReplacing(true);
+            setPreviewName('');
+            setFileSelected(false);
+            setUploadProgress(0);
+            toast.info('Select a replacement file');
+            setTimeout(() => fileInputRef.current?.click(), 100);
+          }}
+          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
+        >
+          <FaUpload className="text-xs" />
+          Replace
+        </button>
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700"
+          title="Remove PDF"
+        >
+          <FaTimes className="text-xs" />
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Upload Section */}
@@ -1518,6 +1791,12 @@ function ModernPdfUpload({
               <span className="flex items-center gap-1 text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
                 <FaCheck className="text-xs" />
                 Selected
+              </span>
+            )}
+            {isEditMode && existingPdf && (
+              <span className="flex items-center gap-1 text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded-full">
+                <FaEdit className="text-xs" />
+                Edit Mode
               </span>
             )}
           </label>
@@ -1553,6 +1832,12 @@ function ModernPdfUpload({
               <p className="text-xs text-gray-700 font-bold leading-relaxed">
                 {getDescription()}
               </p>
+              {isEditMode && existingPdf && (
+                <p className="text-xs text-blue-600 font-bold mt-2">
+                  <FaInfoCircle className="inline mr-1" />
+                  You are editing an existing document. You can update metadata, replace the file, or delete it.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1564,6 +1849,7 @@ function ModernPdfUpload({
                 <FaMoneyBillWave className={type === 'admission' ? 'text-purple-600' : type === 'boarding' ? 'text-blue-600' : 'text-green-600'} />
                 <h4 className="text-sm font-bold text-gray-900">
                   {type === 'admission' ? 'Admission Fees' : `${type.charAt(0).toUpperCase() + type.slice(1)} School Fees`}
+                  {isEditMode && <span className="ml-2 text-xs text-gray-500">(Existing breakdown)</span>}
                 </h4>
               </div>
               <span className={`text-lg font-bold ${type === 'admission' ? 'text-purple-700' : type === 'boarding' ? 'text-blue-700' : 'text-green-700'}`}>
@@ -1609,10 +1895,10 @@ function ModernPdfUpload({
       <div className="w-full max-w-2xl">
         {(hasNewPdf || hasExistingPdf) ? (
           <div className="relative group">
-            <div className={`relative overflow-hidden rounded-2xl border-2 ${fileSelected ? 'border-green-400 bg-green-50/20' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100'} shadow-lg transition-all duration-300 p-5`}>
+            <div className={`relative overflow-hidden rounded-2xl border-2 ${fileSelected ? (hasExistingPdf ? 'border-blue-400 bg-blue-50/20' : 'border-green-400 bg-green-50/20') : 'border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100'} shadow-lg transition-all duration-300 p-5`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-3 ${fileSelected ? 'bg-green-500' : type === 'curriculum' ? 'bg-red-500' : type === 'day' ? 'bg-green-500' : type === 'boarding' ? 'bg-blue-500' : type === 'admission' ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
+                  <div className={`p-3 ${fileSelected ? (hasExistingPdf ? 'bg-blue-500' : 'bg-green-500') : type === 'curriculum' ? 'bg-red-500' : type === 'day' ? 'bg-green-500' : type === 'boarding' ? 'bg-blue-500' : type === 'admission' ? 'bg-purple-500' : 'bg-orange-500'} rounded-xl text-white`}>
                     {fileSelected ? <FaCheck className="text-lg" /> : <FaFilePdf className="text-lg" />}
                   </div>
                   <div>
@@ -1620,110 +1906,27 @@ function ModernPdfUpload({
                       {hasNewPdf ? pdfFile.name : (existingPdf.name || existingPdf.filename || 'Existing PDF')}
                     </p>
                     <p className="text-xs text-gray-600 font-bold">
-                      {fileSelected ? '✓ File Selected' : 'No file selected'}
+                      {fileSelected ? (hasExistingPdf ? '✓ Existing File' : '✓ File Selected') : 'No file selected'}
                       {hasNewPdf && pdfFile.size && ` • ${(pdfFile.size / 1024).toFixed(0)} KB`}
+                      {hasExistingPdf && existingPdf.year && ` • Year: ${existingPdf.year}`}
+                      {hasExistingPdf && existingPdf.term && ` • Term: ${existingPdf.term}`}
                       {hasFeeBreakdown && ` • ${localFeeBreakdown.length} categories`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-{hasExistingPdf && (
-  <div className="flex gap-2">
-    <button
-      type="button"
-      onClick={() => {
-        // Clear the current file reference
-        setPreviewName('');
-        setFileSelected(false);
-        
-        // Create and trigger file input
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.pdf,.doc,.docx';
-        input.onchange = (e) => {
-          if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            // Validate and handle the file
-            if (validateFile(file)) {
-              // Update parent state with replacement
-              onPdfChange(file);
-              
-              // Update local state
-              setPreviewName(file.name);
-              setFileSelected(true);
-              
-              // If this is an existing file, mark it for replacement
-              if (existingPdf && onCancelExisting) {
-                onCancelExisting(existingPdf);
-              }
-              
-              toast.success('File selected for replacement');
-            }
-          }
-        };
-        input.click();
-      }}
-      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
-    >
-      <FaUpload className="text-xs" />
-      Replace File
-    </button>
-    
-    <button
-      type="button"
-      onClick={() => {
-        // Mark for deletion
-        if (onRemoveExisting) {
-          onRemoveExisting();
-        }
-        // Clear local state
-        setPreviewName('');
-        setFileSelected(false);
-        toast.warning('File marked for deletion');
-      }}
-      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
-    >
-      <FaTrash className="text-xs" />
-      Delete
-    </button>
-  </div>
-)}
-                  {hasNewPdf && (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsReplacing(true);
-                          setPreviewName('');
-                          setFileSelected(false);
-                          setUploadProgress(0);
-                          toast.info('Select a replacement file');
-                          setTimeout(() => fileInputRef.current?.click(), 100);
-                        }}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
-                      >
-                        <FaUpload className="text-xs" />
-                        Replace
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRemove}
-                        className="bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700"
-                        title="Remove PDF"
-                      >
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </div>
-                  )}
+                  {hasExistingPdf ? renderExistingFileActions() : renderNewFileActions()}
                 </div>
               </div>
               
               {fileSelected && (
                 <div className="mt-3 flex items-center gap-2">
-                  <div className="w-full bg-green-100 rounded-full h-2">
-                    <div className="bg-green-500 h-2 rounded-full"></div>
+                  <div className={`w-full ${hasExistingPdf ? 'bg-blue-100' : 'bg-green-100'} rounded-full h-2`}>
+                    <div className={`${hasExistingPdf ? 'bg-blue-500' : 'bg-green-500'} h-2 rounded-full`}></div>
                   </div>
-                  <span className="text-xs font-bold text-green-700">Selected ✓</span>
+                  <span className={`text-xs font-bold ${hasExistingPdf ? 'text-blue-700' : 'text-green-700'}`}>
+                    {hasExistingPdf ? 'Existing File ✓' : 'Selected ✓'}
+                  </span>
                 </div>
               )}
               
@@ -1781,6 +1984,7 @@ function ModernPdfUpload({
             </div>
             <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-base">
               {dragOver ? '📄 Drop file here!' : isReplacing ? 'Select replacement file' : 'Click to upload file'}
+              {isEditMode && ' (Optional - keep existing file)'}
             </p>
             <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
               Max: 500KB • PDF, DOC, DOCX only
@@ -1805,6 +2009,7 @@ function ModernPdfUpload({
           title={`${type === 'day' ? 'Day School' : 'Boarding School'} Fee Breakdown`}
           existingBreakdown={localFeeBreakdown}
           type={type}
+          isEditMode={isEditMode && hasExistingPdf}
         />
       )}
 
@@ -1814,10 +2019,11 @@ function ModernPdfUpload({
           onClose={() => setShowAdmissionFeeModal(false)}
           onSave={handleAdmissionFeeSave}
           existingBreakdown={localFeeBreakdown}
+          isEditMode={isEditMode && hasExistingPdf}
         />
       )}
 
-      {type === 'results' && showMetadataModal && selectedFileForMetadata && (
+      {showMetadataModal && selectedFileForMetadata && (
         <DocumentMetadataModal
           open={showMetadataModal}
           onClose={() => {
@@ -1829,632 +2035,18 @@ function ModernPdfUpload({
           }}
           onSave={handleMetadataSave}
           fileName={selectedFileForMetadata.name}
-        />
-      )}
-    </div>
-  );
-}
-
-// First, update the AdditionalResultsUpload component to properly pass data to parent
-function AdditionalResultsUpload({ 
-  files = [], 
-  onFilesChange, 
-  label = "Additional Documents",
-  existingFiles = [],
-  onCancelExisting = null,
-  onRemoveExisting = null,
-  additionalFilesState = [],
-  onAdditionalFilesStateChange = null
-}) {
-  const fileSizeManager = useFileSize();
-  const [dragOver, setDragOver] = useState(false);
-  const [localFiles, setLocalFiles] = useState([]);
-  const [showMetadataModal, setShowMetadataModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
-
-  // File size limit (0.5 MB individual file limit)
-  const MAX_INDIVIDUAL_SIZE = 0.5 * 1024 * 1024;
-  
-  // Allowed file types for additional documents
-  const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
-
-  // Initialize localFiles from props - FIXED VERSION
-  useEffect(() => {
-    // Ensure existingFiles is an array
-    const safeExistingFiles = Array.isArray(existingFiles) ? existingFiles : [];
-    
-    const existingFileObjects = safeExistingFiles.map((file, index) => ({
-      ...file,
-      id: file.id || `existing_${Date.now()}_${index}`,
-      isExisting: true,
-      isModified: false,
-      isRemoved: false,
-      isReplaced: false,
-      originalFilePath: file.filepath,
-      year: file.year || '',
-      description: file.description || '',
-      term: file.term || '',
-      filesize: file.filesize || file.size || 0,
-      filetype: file.filetype || 'document',
-      status: 'existing'
-    }));
-    
-    // Ensure files is an array
-    const safeFiles = Array.isArray(files) ? files : [];
-    
-    const newFileObjects = safeFiles.filter(file => {
-      return !localFiles.some(lf => 
-        (lf.file && file.name === lf.file.name && file.size === lf.file.size) ||
-        (lf.filename === file.name)
-      );
-    }).map((file, index) => ({
-      id: `new_${Date.now()}_${index}`,
-      file: file,
-      filename: file.name,
-      year: file.year || '',
-      description: file.description || '',
-      term: file.term || '',
-      isNew: true,
-      isModified: false,
-      filetype: file.type?.split('/')[1] || 'file',
-      filesize: file.size || 0,
-      status: 'uploaded'
-    }));
-    
-    const allFiles = [...existingFileObjects, ...newFileObjects];
-    const uniqueFiles = [];
-    const seenIds = new Set();
-    
-    allFiles.forEach(file => {
-      if (!seenIds.has(file.id)) {
-        seenIds.add(file.id);
-        uniqueFiles.push(file);
-      }
-    });
-    
-    setLocalFiles(uniqueFiles);
-    
-    // Update parent state if prop is provided
-    if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
-      onAdditionalFilesStateChange(uniqueFiles);
-    }
-  }, [existingFiles, files]);
-
-  // Update localFiles when additionalFilesState changes
-  useEffect(() => {
-    if (additionalFilesState && Array.isArray(additionalFilesState)) {
-      setLocalFiles(additionalFilesState);
-    }
-  }, [additionalFilesState]);
-
-  const validateFile = (file) => {
-    if (!file || !file.name) {
-      toast.error('Invalid file');
-      return false;
-    }
-    
-    // Check file type by extension
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
-      toast.error('Only PDF, DOC, and DOCX files are allowed');
-      return false;
-    }
-    
-    // Check individual file size
-    if (file.size > MAX_INDIVIDUAL_SIZE) {
-      toast.error(`Individual file must not exceed ${(MAX_INDIVIDUAL_SIZE / (1024 * 1024)).toFixed(1)} MB`);
-      return false;
-    }
-    
-    return true;
-  };
-
-  const simulateUpload = (file) => {
-    return new Promise((resolve) => {
-      setIsUploading(true);
-      setUploadProgress(0);
-      
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setTimeout(() => {
-              setUploadProgress(0);
-              setIsUploading(false);
-            }, 1000);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 100);
-      
-      setTimeout(() => {
-        resolve(file);
-      }, 600);
-    });
-  };
-
-  const handleFileChange = async (e) => {
-    const newFileList = Array.from(e.target.files);
-    if (newFileList.length > 0) {
-      const newFile = newFileList[0];
-      
-      if (!validateFile(newFile)) {
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-      
-      await simulateUpload(newFile);
-      
-      setSelectedFile({
-        file: newFile,
-        id: `new_${Date.now()}`,
-        filename: newFile.name
-      });
-      setShowMetadataModal(true);
-    }
-  };
-
-  const handleMetadataSave = async (metadata) => {
-    if (selectedFile && selectedFile.file) {
-      // Check total size
-      const success = fileSizeManager.addFile(selectedFile.file, selectedFile.id);
-      if (!success) {
-        setSelectedFile(null);
-        setShowMetadataModal(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-
-      await simulateUpload(selectedFile.file);
-
-      const newFileObject = {
-        ...selectedFile,
-        year: metadata.year,
-        term: metadata.term,
-        description: metadata.description,
-        isNew: true,
-        isModified: true,
-        status: 'uploaded',
-        uploadDate: new Date().toISOString(),
-        filesize: selectedFile.file.size
-      };
-      
-      const updatedFiles = [...localFiles, newFileObject];
-      setLocalFiles(updatedFiles);
-      
-      // Notify parent of new file
-      if (onFilesChange && typeof onFilesChange === 'function') {
-        onFilesChange([selectedFile.file]);
-      }
-      
-      // Update parent state via callback with the complete object
-      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
-        onAdditionalFilesStateChange(updatedFiles);
-      }
-      
-      toast.success('Document added with metadata');
-      
-      setSelectedFile(null);
-      setShowMetadataModal(false);
-    }
-    
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-    const newFiles = Array.from(e.dataTransfer.files);
-    if (newFiles.length > 0) {
-      const newFile = newFiles[0];
-      
-      if (!validateFile(newFile)) {
-        return;
-      }
-      
-      await simulateUpload(newFile);
-      
-      setSelectedFile({
-        file: newFile,
-        id: `new_${Date.now()}`,
-        filename: newFile.name
-      });
-      setShowMetadataModal(true);
-    }
-  };
-
-  const handleReplaceExisting = (id) => {
-    const fileToReplace = localFiles.find(f => f.id === id);
-    
-    if (fileToReplace && fileToReplace.isExisting) {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.pdf,.doc,.docx';
-      input.onchange = async (e) => {
-        const replacementFile = e.target.files[0];
-        if (replacementFile) {
-          if (!validateFile(replacementFile)) {
-            return;
-          }
-          
-          await simulateUpload(replacementFile);
-          
-          // Check total size for replacement
-          const success = fileSizeManager.replaceFile(id, replacementFile);
-          if (!success) {
-            return;
-          }
-          
-          setSelectedFile({
-            file: replacementFile,
-            id: `replacement_${Date.now()}`,
-            filename: replacementFile.name,
-            replacesFileId: id
-          });
-          setShowMetadataModal(true);
-          
-          if (onCancelExisting && typeof onCancelExisting === 'function') {
-            onCancelExisting(fileToReplace);
-          }
-        }
-      };
-      input.click();
-    }
-  };
-
-  const handleRemoveExisting = (id) => {
-    const fileToRemove = localFiles.find(f => f.id === id);
-    
-    if (fileToRemove && fileToRemove.isExisting) {
-      const updatedFiles = localFiles.map(file => 
-        file.id === id ? { ...file, isRemoved: true, status: 'removed' } : file
-      );
-      
-      setLocalFiles(updatedFiles);
-      
-      // Update parent state via callback
-      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
-        onAdditionalFilesStateChange(updatedFiles);
-      }
-      
-      if (onRemoveExisting && typeof onRemoveExisting === 'function') {
-        onRemoveExisting(fileToRemove);
-      }
-      
-      toast.warning('File marked for removal. Save changes to delete permanently.');
-    }
-  };
-
-  const handleRemoveNewFile = (id) => {
-    const fileToRemove = localFiles.find(f => f.id === id);
-    
-    if (fileToRemove && fileToRemove.isNew) {
-      // Remove from size manager
-      fileSizeManager.removeFile(id);
-      
-      const updatedFiles = localFiles.filter(file => file.id !== id);
-      setLocalFiles(updatedFiles);
-      
-      // Update parent state via callback
-      if (onAdditionalFilesStateChange && typeof onAdditionalFilesStateChange === 'function') {
-        onAdditionalFilesStateChange(updatedFiles);
-      }
-      
-      if (fileToRemove.file) {
-        const updatedFilesList = files.filter(f => 
-          f !== fileToRemove.file && 
-          f.name !== fileToRemove.filename
-        );
-        if (onFilesChange && typeof onFilesChange === 'function') {
-          onFilesChange(updatedFilesList);
-        }
-      }
-      
-      toast.info('New file removed from list.');
-    }
-  };
-
-  const handleViewFile = (file) => {
-    if (file.file) {
-      // For new files, create object URL for preview
-      const url = URL.createObjectURL(file.file);
-      window.open(url, '_blank');
-    } else if (file.filepath) {
-      // For existing files, open from server path
-      window.open(file.filepath, '_blank');
-    }
-  };
-
-  const getFileIcon = (fileType) => {
-    if (!fileType) return <FaFile className="text-gray-500" />;
-    const type = fileType.toLowerCase();
-    if (type.includes('pdf')) return <FaFilePdf className="text-red-500" />;
-    if (type.includes('image')) return <FaFileAlt className="text-green-500" />;
-    if (type.includes('word') || type.includes('doc')) return <FaFileAlt className="text-blue-500" />;
-    return <FaFile className="text-gray-500" />;
-  };
-
-  const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const displayFiles = localFiles.filter(file => !file.isRemoved);
-  const hasFiles = displayFiles.length > 0;
-
-  return (
-    <div className="space-y-4 w-full max-w-2xl">
-      {/* FILE SIZE NOTIFICATION */}
-      <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-4">
-        <div className="flex items-center gap-2">
-          <FaExclamationTriangle className="text-yellow-600" />
-          <p className="text-sm font-bold text-yellow-800">
-            Each file must not exceed 600 kB. Allowed types: PDF, DOC, DOCX
-          </p>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-          <FaFile className="text-gray-600" />
-          <span className="text-base">{label}</span>
-          {hasFiles && (
-            <span className="flex items-center gap-1 text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
-              <FaCheck className="text-xs" />
-              {displayFiles.length} document{displayFiles.length !== 1 ? 's' : ''} selected
-            </span>
-          )}
-        </label>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2.5 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg text-sm"
-        >
-          <FaPlus className="text-sm" /> Add Document
-        </button>
-      </div>
-
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
-        <div className="flex items-start gap-3">
-          <FaInfoCircle className="text-blue-600 mt-1 flex-shrink-0" />
-          <div>
-            <h4 className="text-sm font-bold text-gray-900 mb-1">Why upload additional documents?</h4>
-            <p className="text-xs text-gray-700 font-bold leading-relaxed">
-              Upload supplementary documents like school policies, extra-curricular activity information, 
-              special programs, or any other relevant school documentation. Each document requires year, 
-              term, and description for proper organization.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* PREVIEW SECTION */}
-      {hasFiles && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-              <FaEye className="text-blue-500" />
-              Preview Selected Documents ({displayFiles.length})
-            </h3>
-            <span className="text-xs text-gray-500 font-bold">
-              {localFiles.filter(f => f.isNew).length} new, {localFiles.filter(f => f.isExisting).length} existing
-            </span>
-          </div>
-          
-          <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
-            {displayFiles.map((file) => (
-              <div key={file.id} className={`bg-white rounded-2xl p-4 border-2 ${
-                file.isReplaced ? 'border-amber-200 bg-amber-50/30' : 
-                file.isNew ? 'border-emerald-200 bg-emerald-50/30' : 
-                'border-gray-200 hover:border-blue-200'
-              } transition-all duration-300`}>
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="p-3 bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-xl cursor-pointer"
-                       onClick={() => handleViewFile(file)}>
-                    {getFileIcon(file.filetype)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-bold text-gray-900 text-sm truncate cursor-pointer hover:text-blue-600"
-                         onClick={() => handleViewFile(file)}>
-                        {file.filename || file.name || 'Document'}
-                      </p>
-                      <div className="flex gap-1">
-                        {file.isReplaced && (
-                          <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded font-bold uppercase">
-                            Replaced
-                          </span>
-                        )}
-                        {file.isNew && !file.isReplacement && (
-                          <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded font-bold uppercase">
-                            New
-                          </span>
-                        )}
-                        {file.isExisting && (
-                          <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded font-bold uppercase">
-                            Existing
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-700 space-y-1 mt-1 font-bold">
-                      {file.year && (
-                        <div className="flex items-center gap-1">
-                          <FaCalendar className="text-gray-400" />
-                          Year: <span className="text-blue-600">{file.year}</span>
-                        </div>
-                      )}
-                      {file.term && (
-                        <div className="flex items-center gap-1">
-                          <FaClock className="text-gray-400" />
-                          Term: <span className="text-green-600">{file.term}</span>
-                        </div>
-                      )}
-                      {file.description && (
-                        <div className="flex items-start gap-1 mt-1">
-                          <FaAlignLeft className="text-gray-400 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-600">{file.description}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <p className="text-xs text-gray-500 font-bold">
-                        {formatFileSize(file.filesize || file.size)}
-                      </p>
-                      <p className="text-xs text-gray-400 font-bold">•</p>
-                      <p className="text-xs text-gray-500 font-bold">
-                        {file.filetype?.toUpperCase() || 'DOCUMENT'}
-                      </p>
-                      {file.uploadDate && (
-                        <>
-                          <p className="text-xs text-gray-400 font-bold">•</p>
-                          <p className="text-xs text-gray-500 font-bold">
-                            Uploaded: {new Date(file.uploadDate).toLocaleDateString()}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleViewFile(file)}
-                      className="p-2 text-blue-600 bg-blue-50 rounded-xl border border-blue-200 hover:bg-blue-100 transition-colors"
-                      title="View document"
-                    >
-                      <FaEye size={12} />
-                    </button>
-                    {file.isExisting && !file.isReplaced ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleReplaceExisting(file.id)}
-                          className="p-2 text-amber-600 bg-amber-50 rounded-xl border border-amber-200 hover:bg-amber-100 transition-colors"
-                          title="Replace file"
-                        >
-                          <FaUpload size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveExisting(file.id)}
-                          className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200 hover:bg-red-100 transition-colors"
-                          title="Delete file"
-                        >
-                          <FaTrash size={12} />
-                        </button>
-                      </>
-                    ) : file.isNew ? (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveNewFile(file.id)}
-                        className="p-2 text-red-600 bg-red-50 rounded-xl border border-red-200 hover:bg-red-100 transition-colors"
-                        title="Remove file"
-                      >
-                        <FaTimes size={12} />
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-                
-                {isUploading && file.id === selectedFile?.id && (
-                  <div className="mt-2">
-                    <div className="flex justify-between mb-1.5">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Uploading...</span>
-                      <span className="text-xs font-bold text-blue-600">{uploadProgress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* UPLOAD AREA */}
-      <div
-        className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all duration-300 cursor-pointer group w-full max-w-2xl ${
-          dragOver 
-            ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
-            : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
-        } ${hasFiles ? 'mt-4' : ''}`}
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-        onDragLeave={() => setDragOver(false)}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <div className="relative">
-          <FaUpload className={`mx-auto text-2xl mb-3 transition-all duration-300 ${
-            dragOver ? 'text-blue-500 scale-110' : 'text-gray-400 group-hover:text-blue-500'
-          }`} />
-        </div>
-        <p className="text-gray-700 mb-1.5 font-bold transition-colors duration-300 group-hover:text-gray-800 text-base">
-          {dragOver ? '📁 Drop files here!' : 'Drag & drop or click to upload documents'}
-        </p>
-        <p className="text-xs text-gray-600 transition-colors duration-300 group-hover:text-gray-700 font-bold">
-          PDF, DOC, DOCX only • Max 500kb each
-        </p>
-        <input 
-          ref={fileInputRef}
-          type="file" 
-          onChange={handleFileChange} 
-          className="hidden" 
-          id="additional-files-upload" 
-        />
-        
-        {isUploading && (
-          <div className="mt-4">
-            <div className="flex justify-between mb-1.5">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Preparing...</span>
-              <span className="text-xs font-bold text-blue-600">{uploadProgress}%</span>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500"
-                style={{ width: `${uploadProgress}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Metadata Modal */}
-      {showMetadataModal && selectedFile && (
-        <DocumentMetadataModal
-          open={showMetadataModal}
-          onClose={() => {
-            setShowMetadataModal(false);
-            setSelectedFile(null);
-            if (fileInputRef.current) {
-              fileInputRef.current.value = '';
-            }
+          existingData={{
+            year: selectedFileForMetadata.year,
+            term: selectedFileForMetadata.term,
+            description: selectedFileForMetadata.description
           }}
-          onSave={handleMetadataSave}
-          fileName={selectedFile.filename}
         />
       )}
     </div>
   );
 }
+
+
 
 
 // Updated ModernDocumentCard Component with View Details
@@ -2910,167 +2502,216 @@ function DocumentDetailsModal({
   );
 }
 
-// Documents Modal Component - UPDATED VERSION with complete fixes
-function DocumentsModal({ onClose, onSave, documents, loading }) {
+// Documents Modal Component - UPDATED VERSION with complete edit mode fixes
+function DocumentsModal({ onClose, onSave, documents, loading, schoolId }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
   
-  // COMPLETE FIX: Preload existing values for all form fields
-  const [formData, setFormData] = useState({
-    curriculumPDF: documents?.curriculumPDF ? { 
-      file: null,
-      name: documents.curriculumPdfName,
-      filename: documents.curriculumPdfName,
-      size: documents.curriculumPdfSize,
-      year: documents.curriculumYear,
-      description: documents.curriculumDescription,
-      term: documents.curriculumTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
+  // FIXED: Enhanced form data initialization for edit mode
+  const [formData, setFormData] = useState(() => {
+    // Check if we're in edit mode (documents exist with schoolId)
+    const editMode = !!(documents && (documents.schoolId || documents.id));
     
-    feesDayDistributionPdf: documents?.feesDayDistributionPdf ? {
-      file: null,
-      name: documents.feesDayPdfName,
-      filename: documents.feesDayPdfName,
-      size: documents.feesDayPdfSize,
-      year: documents.feesDayYear,
-      description: documents.feesDayDescription,
-      term: documents.feesDayTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
+    if (!editMode) {
+      return {
+        curriculumPDF: null,
+        feesDayDistributionPdf: null,
+        feesBoardingDistributionPdf: null,
+        admissionFeePdf: null,
+        form1ResultsPdf: null,
+        form2ResultsPdf: null,
+        form3ResultsPdf: null,
+        form4ResultsPdf: null,
+        mockExamsResultsPdf: null,
+        kcseResultsPdf: null
+      };
+    }
     
-    feesBoardingDistributionPdf: documents?.feesBoardingDistributionPdf ? {
-      file: null,
-      name: documents.feesBoardingPdfName,
-      filename: documents.feesBoardingPdfName,
-      size: documents.feesBoardingPdfSize,
-      year: documents.feesBoardingYear,
-      description: documents.feesBoardingDescription,
-      term: documents.feesBoardingTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    admissionFeePdf: documents?.admissionFeePdf ? {
-      file: null,
-      name: documents.admissionFeePdfName,
-      filename: documents.admissionFeePdfName,
-      size: documents.admissionFeePdfSize,
-      year: documents.admissionFeeYear,
-      description: documents.admissionFeeDescription,
-      term: documents.admissionFeeTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    // Exam Results PDFs
-    form1ResultsPdf: documents?.form1ResultsPdf ? {
-      file: null,
-      name: documents.form1ResultsPdfName,
-      filename: documents.form1ResultsPdfName,
-      size: documents.form1ResultsPdfSize,
-      year: documents.form1ResultsYear,
-      description: documents.form1ResultsDescription,
-      term: documents.form1ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form2ResultsPdf: documents?.form2ResultsPdf ? {
-      file: null,
-      name: documents.form2ResultsPdfName,
-      filename: documents.form2ResultsPdfName,
-      size: documents.form2ResultsPdfSize,
-      year: documents.form2ResultsYear,
-      description: documents.form2ResultsDescription,
-      term: documents.form2ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form3ResultsPdf: documents?.form3ResultsPdf ? {
-      file: null,
-      name: documents.form3ResultsPdfName,
-      filename: documents.form3ResultsPdfName,
-      size: documents.form3ResultsPdfSize,
-      year: documents.form3ResultsYear,
-      description: documents.form3ResultsDescription,
-      term: documents.form3ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form4ResultsPdf: documents?.form4ResultsPdf ? {
-      file: null,
-      name: documents.form4ResultsPdfName,
-      filename: documents.form4ResultsPdfName,
-      size: documents.form4ResultsPdfSize,
-      year: documents.form4ResultsYear,
-      description: documents.form4ResultsDescription,
-      term: documents.form4ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    mockExamsResultsPdf: documents?.mockExamsResultsPdf ? {
-      file: null,
-      name: documents.mockExamsPdfName,
-      filename: documents.mockExamsPdfName,
-      size: documents.mockExamsPdfSize,
-      year: documents.mockExamsYear,
-      description: documents.mockExamsDescription,
-      term: documents.mockExamsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    kcseResultsPdf: documents?.kcseResultsPdf ? {
-      file: null,
-      name: documents.kcsePdfName,
-      filename: documents.kcsePdfName,
-      size: documents.kcsePdfSize,
-      year: documents.kcseYear,
-      description: documents.kcseDescription,
-      term: documents.kcseTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null
+    // EDIT MODE: Preload all existing data from database
+    return {
+      curriculumPDF: documents?.curriculumPDF ? {
+        file: null,
+        name: documents.curriculumPdfName,
+        filename: documents.curriculumPdfName,
+        size: documents.curriculumPdfSize,
+        year: documents.curriculumYear,
+        description: documents.curriculumDescription,
+        term: documents.curriculumTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.curriculumPDF
+      } : null,
+      
+      feesDayDistributionPdf: documents?.feesDayDistributionPdf ? {
+        file: null,
+        name: documents.feesDayPdfName,
+        filename: documents.feesDayPdfName,
+        size: documents.feesDayPdfSize,
+        year: documents.feesDayYear,
+        description: documents.feesDayDescription,
+        term: documents.feesDayTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.feesDayDistributionPdf
+      } : null,
+      
+      feesBoardingDistributionPdf: documents?.feesBoardingDistributionPdf ? {
+        file: null,
+        name: documents.feesBoardingPdfName,
+        filename: documents.feesBoardingPdfName,
+        size: documents.feesBoardingPdfSize,
+        year: documents.feesBoardingYear,
+        description: documents.feesBoardingDescription,
+        term: documents.feesBoardingTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.feesBoardingDistributionPdf
+      } : null,
+      
+      admissionFeePdf: documents?.admissionFeePdf ? {
+        file: null,
+        name: documents.admissionFeePdfName,
+        filename: documents.admissionFeePdfName,
+        size: documents.admissionFeePdfSize,
+        year: documents.admissionFeeYear,
+        description: documents.admissionFeeDescription,
+        term: documents.admissionFeeTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.admissionFeePdf
+      } : null,
+      
+      // Exam Results PDFs - EDIT MODE PRELOAD
+      form1ResultsPdf: documents?.form1ResultsPdf ? {
+        file: null,
+        name: documents.form1ResultsPdfName,
+        filename: documents.form1ResultsPdfName,
+        size: documents.form1ResultsPdfSize,
+        year: documents.form1ResultsYear,
+        description: documents.form1ResultsDescription,
+        term: documents.form1ResultsTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.form1ResultsPdf
+      } : null,
+      
+      form2ResultsPdf: documents?.form2ResultsPdf ? {
+        file: null,
+        name: documents.form2ResultsPdfName,
+        filename: documents.form2ResultsPdfName,
+        size: documents.form2ResultsPdfSize,
+        year: documents.form2ResultsYear,
+        description: documents.form2ResultsDescription,
+        term: documents.form2ResultsTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.form2ResultsPdf
+      } : null,
+      
+      form3ResultsPdf: documents?.form3ResultsPdf ? {
+        file: null,
+        name: documents.form3ResultsPdfName,
+        filename: documents.form3ResultsPdfName,
+        size: documents.form3ResultsPdfSize,
+        year: documents.form3ResultsYear,
+        description: documents.form3ResultsDescription,
+        term: documents.form3ResultsTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.form3ResultsPdf
+      } : null,
+      
+      form4ResultsPdf: documents?.form4ResultsPdf ? {
+        file: null,
+        name: documents.form4ResultsPdfName,
+        filename: documents.form4ResultsPdfName,
+        size: documents.form4ResultsPdfSize,
+        year: documents.form4ResultsYear,
+        description: documents.form4ResultsDescription,
+        term: documents.form4ResultsTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.form4ResultsPdf
+      } : null,
+      
+      mockExamsResultsPdf: documents?.mockExamsResultsPdf ? {
+        file: null,
+        name: documents.mockExamsPdfName,
+        filename: documents.mockExamsPdfName,
+        size: documents.mockExamsPdfSize,
+        year: documents.mockExamsYear,
+        description: documents.mockExamsDescription,
+        term: documents.mockExamsTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.mockExamsResultsPdf
+      } : null,
+      
+      kcseResultsPdf: documents?.kcseResultsPdf ? {
+        file: null,
+        name: documents.kcsePdfName,
+        filename: documents.kcsePdfName,
+        size: documents.kcsePdfSize,
+        year: documents.kcseYear,
+        description: documents.kcseDescription,
+        term: documents.kcseTerm,
+        isExisting: true,
+        markedForDeletion: false,
+        filepath: documents.kcseResultsPdf
+      } : null
+    };
   });
 
-  // COMPLETE FIX: Preload existing fee breakdowns
-  const [feeBreakdowns, setFeeBreakdowns] = useState({
-    feesDay: Array.isArray(documents?.feesDayDistributionJson) ? documents.feesDayDistributionJson : [],
-    feesBoarding: Array.isArray(documents?.feesBoardingDistributionJson) ? documents.feesBoardingDistributionJson : [],
-    admissionFee: Array.isArray(documents?.admissionFeeDistribution) ? documents.admissionFeeDistribution : []
+  // FIXED: Enhanced fee breakdowns initialization for edit mode
+  const [feeBreakdowns, setFeeBreakdowns] = useState(() => {
+    // EDIT MODE: Load actual persisted database values
+    if (documents) {
+      return {
+        feesDay: Array.isArray(documents.feesDayDistributionJson) && documents.feesDayDistributionJson.length > 0 
+          ? documents.feesDayDistributionJson 
+          : [],
+        feesBoarding: Array.isArray(documents.feesBoardingDistributionJson) && documents.feesBoardingDistributionJson.length > 0
+          ? documents.feesBoardingDistributionJson 
+          : [],
+        admissionFee: Array.isArray(documents.admissionFeeDistribution) && documents.admissionFeeDistribution.length > 0
+          ? documents.admissionFeeDistribution 
+          : []
+      };
+    }
+    return { feesDay: [], feesBoarding: [], admissionFee: [] };
   });
 
-  // COMPLETE FIX: Preload existing exam metadata
-  const [examMetadata, setExamMetadata] = useState({
-    form1ResultsYear: documents?.form1ResultsYear?.toString() || '',
-    form1ResultsTerm: documents?.form1ResultsTerm || '',
-    form1ResultsDescription: documents?.form1ResultsDescription || '',
-    
-    form2ResultsYear: documents?.form2ResultsYear?.toString() || '',
-    form2ResultsTerm: documents?.form2ResultsTerm || '',
-    form2ResultsDescription: documents?.form2ResultsDescription || '',
-    
-    form3ResultsYear: documents?.form3ResultsYear?.toString() || '',
-    form3ResultsTerm: documents?.form3ResultsTerm || '',
-    form3ResultsDescription: documents?.form3ResultsDescription || '',
-    
-    form4ResultsYear: documents?.form4ResultsYear?.toString() || '',
-    form4ResultsTerm: documents?.form4ResultsTerm || '',
-    form4ResultsDescription: documents?.form4ResultsDescription || '',
-    
-    mockExamsYear: documents?.mockExamsYear?.toString() || '',
-    mockExamsTerm: documents?.mockExamsTerm || '',
-    mockExamsDescription: documents?.mockExamsDescription || '',
-    
-    kcseYear: documents?.kcseYear?.toString() || '',
-    kcseTerm: documents?.kcseTerm || '',
-    kcseDescription: documents?.kcseDescription || ''
+  // FIXED: Enhanced exam metadata initialization for edit mode
+  const [examMetadata, setExamMetadata] = useState(() => {
+    if (documents) {
+      return {
+        form1ResultsYear: documents.form1ResultsYear?.toString() || '',
+        form1ResultsTerm: documents.form1ResultsTerm || '',
+        form1ResultsDescription: documents.form1ResultsDescription || '',
+        
+        form2ResultsYear: documents.form2ResultsYear?.toString() || '',
+        form2ResultsTerm: documents.form2ResultsTerm || '',
+        form2ResultsDescription: documents.form2ResultsDescription || '',
+        
+        form3ResultsYear: documents.form3ResultsYear?.toString() || '',
+        form3ResultsTerm: documents.form3ResultsTerm || '',
+        form3ResultsDescription: documents.form3ResultsDescription || '',
+        
+        form4ResultsYear: documents.form4ResultsYear?.toString() || '',
+        form4ResultsTerm: documents.form4ResultsTerm || '',
+        form4ResultsDescription: documents.form4ResultsDescription || '',
+        
+        mockExamsYear: documents.mockExamsYear?.toString() || '',
+        mockExamsTerm: documents.mockExamsTerm || '',
+        mockExamsDescription: documents.mockExamsDescription || '',
+        
+        kcseYear: documents.kcseYear?.toString() || '',
+        kcseTerm: documents.kcseTerm || '',
+        kcseDescription: documents.kcseDescription || ''
+      };
+    }
+    return {};
   });
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -3110,24 +2751,30 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   ];
 
   useEffect(() => {
+    // Detect edit mode on component mount
+    const editModeDetected = !!(documents && (documents.schoolId || documents.id));
+    setIsEditMode(editModeDetected);
+    
     // Reset file size manager when modal opens
     fileSizeManager.reset();
     
-    // Initialize file size manager with existing files
-    Object.keys(formData).forEach(key => {
-      const fileData = formData[key];
-      if (fileData && fileData.isExisting && !fileData.markedForDeletion) {
-        // Create a dummy file object for size tracking
-        const dummyFile = new File([], fileData.name, { 
-          type: 'application/pdf',
-          lastModified: Date.now()
-        });
-        Object.defineProperty(dummyFile, 'size', { value: fileData.size || 0 });
-        
-        const fileId = `existing_${key}_${Date.now()}`;
-        fileSizeManager.addFile(dummyFile, fileId);
-      }
-    });
+    // Initialize file size manager with existing files in edit mode
+    if (editModeDetected) {
+      Object.keys(formData).forEach(key => {
+        const fileData = formData[key];
+        if (fileData && fileData.isExisting && !fileData.markedForDeletion && fileData.size) {
+          // Create a dummy file object for size tracking
+          const dummyFile = new File([], fileData.name || fileData.filename, { 
+            type: 'application/pdf',
+            lastModified: Date.now()
+          });
+          Object.defineProperty(dummyFile, 'size', { value: fileData.size || 0 });
+          
+          const fileId = `existing_${key}_${Date.now()}`;
+          fileSizeManager.addFile(dummyFile, fileId);
+        }
+      });
+    }
   }, []);
 
   const handleFormSubmit = async (e) => {
@@ -3145,6 +2792,15 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       setActionLoading(true);
       
       const data = new FormData();
+      
+      // Add school ID for edit mode
+      if (schoolId) {
+        data.append('schoolId', schoolId);
+      } else if (documents?.schoolId) {
+        data.append('schoolId', documents.schoolId);
+      } else if (documents?.id) {
+        data.append('schoolId', documents.id);
+      }
       
       // Add all files and metadata
       Object.keys(formData).forEach(key => {
@@ -3189,12 +2845,9 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         }
       });
       
-      // Add school ID if exists
-      if (documents?.schoolId) {
-        data.append('schoolId', documents.schoolId);
-      }
-      
       console.log('=== FORM DATA BEING SENT TO BACKEND ===');
+      console.log('Edit Mode:', isEditMode);
+      console.log('School ID:', schoolId || documents?.schoolId || documents?.id);
       for (let [key, value] of data.entries()) {
         if (value instanceof File) {
           console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
@@ -3203,8 +2856,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         }
       }
       
+      // Use PUT for edit mode, POST for create
+      const method = isEditMode ? 'PUT' : 'POST';
       const response = await fetch('/api/schooldocuments', {
-        method: 'POST',
+        method: method,
         body: data
       });
 
@@ -3219,7 +2874,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
       console.log('Save API response:', result);
       
       if (result.success) {
-        toast.success(result.message || 'Documents saved successfully!');
+        toast.success(result.message || (isEditMode ? 'Documents updated successfully!' : 'Documents saved successfully!'));
         if (onSave && result.document) {
           onSave(result.document);
         }
@@ -3269,7 +2924,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
               ...existing,
               year: year || existing.year,
               description: description || existing.description,
-              term: term || existing.term
+              term: term || existing.term,
+              isModified: true
             }
           };
         }
@@ -3291,7 +2947,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
           [field]: {
             ...current,
             markedForDeletion: true,
-            file: null
+            file: null,
+            isModified: true
           }
         };
       } else {
@@ -3318,7 +2975,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         ...prev[field],
         markedForDeletion: false,
         isReplacement: false,
-        file: null
+        file: null,
+        isModified: false
       }
     }));
   };
@@ -3331,7 +2989,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         ...prev[field],
         markedForDeletion: true,
         isReplacement: false,
-        file: null
+        file: null,
+        isModified: true
       }
     }));
     
@@ -3368,7 +3027,8 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         year: fileData.year,
         description: fileData.description,
         term: fileData.term,
-        isExisting: true
+        isExisting: true,
+        filepath: fileData.filepath
       };
     }
     return null;
@@ -3404,6 +3064,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 onCancelExisting={(existingFile) => handleCancelExisting('curriculumPDF', existingFile)}
                 onRemoveExisting={() => handleRemoveExisting('curriculumPDF')}
                 type="curriculum"
+                isEditMode={isEditMode}
               />
             </div>
           </div>
@@ -3424,8 +3085,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 onCancelExisting={(existingFile) => handleCancelExisting('feesDayDistributionPdf', existingFile)}
                 onRemoveExisting={() => handleRemoveExisting('feesDayDistributionPdf')}
                 feeBreakdown={feeBreakdowns.feesDay}
+                existingFeeBreakdown={feeBreakdowns.feesDay}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesDay', breakdown)}
                 type="day"
+                isEditMode={isEditMode}
               />
             </div>
             
@@ -3441,8 +3104,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 onCancelExisting={(existingFile) => handleCancelExisting('feesBoardingDistributionPdf', existingFile)}
                 onRemoveExisting={() => handleRemoveExisting('feesBoardingDistributionPdf')}
                 feeBreakdown={feeBreakdowns.feesBoarding}
+                existingFeeBreakdown={feeBreakdowns.feesBoarding}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('feesBoarding', breakdown)}
                 type="boarding"
+                isEditMode={isEditMode}
               />
             </div>
           </div>
@@ -3463,8 +3128,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 onCancelExisting={(existingFile) => handleCancelExisting('admissionFeePdf', existingFile)}
                 onRemoveExisting={() => handleRemoveExisting('admissionFeePdf')}
                 feeBreakdown={feeBreakdowns.admissionFee}
+                existingFeeBreakdown={feeBreakdowns.admissionFee}
                 onFeeBreakdownChange={(breakdown) => handleFeeBreakdownChange('admissionFee', breakdown)}
                 type="admission"
+                isEditMode={isEditMode}
               />
             </div>
           </div>
@@ -3513,6 +3180,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   onCancelExisting={(existingFile) => handleCancelExisting(exam.field, existingFile)}
                   onRemoveExisting={() => handleRemoveExisting(exam.field)}
                   type="results"
+                  isEditMode={isEditMode}
                 />
               </div>
             ))}
@@ -3530,8 +3198,16 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
                   <p className="text-sm text-gray-600 font-bold">
-                    Review all selected documents before submission
+                    {isEditMode ? 'Review and update all documents' : 'Review all selected documents before submission'}
                   </p>
+                  {isEditMode && (
+                    <div className="mt-2">
+                      <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                        <FaEdit className="text-xs" />
+                        Edit Mode
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -3574,11 +3250,17 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                       kcseResultsPdf: 'KCSE Results'
                     };
                     
+                    const isModified = fileData.isModified || fileData.isNew || fileData.isReplacement;
+                    
                     return (
-                      <div key={key} className="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200">
+                      <div key={key} className={`flex items-center justify-between bg-white p-3 rounded-xl border ${isModified ? 'border-yellow-300' : 'border-gray-200'}`}>
                         <div className="flex items-center gap-2">
                           {fileData.isExisting ? (
-                            <FaCheckCircle className="text-green-500" />
+                            isModified ? (
+                              <FaPencilAlt className="text-yellow-500" />
+                            ) : (
+                              <FaCheckCircle className="text-green-500" />
+                            )
                           ) : (
                             <FaFile className="text-blue-500" />
                           )}
@@ -3588,12 +3270,13 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                               {fileData.filename || fileData.name}
                               {fileData.year && ` • ${fileData.year}`}
                               {fileData.term && ` • ${fileData.term}`}
+                              {isModified && <span className="ml-2 text-yellow-600 font-bold">(Modified)</span>}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-xs font-bold text-gray-700">
-                            {fileData.isExisting ? 'Existing' : 'New Upload'}
+                            {fileData.isExisting ? (isModified ? 'Modified' : 'Existing') : 'New Upload'}
                           </p>
                           {fileData.size && (
                             <p className="text-xs text-gray-500">
@@ -3617,10 +3300,16 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   />
                   <div>
                     <p className="text-sm font-bold text-gray-900 mb-1">
-                      I confirm that I have reviewed all documents and they are accurate
+                      {isEditMode 
+                        ? 'I confirm that all modifications are accurate and ready for update'
+                        : 'I confirm that I have reviewed all documents and they are accurate'
+                      }
                     </p>
                     <p className="text-xs text-gray-600">
-                      By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+                      {isEditMode
+                        ? 'By checking this box, I confirm that all updates to documents, metadata, and fee breakdowns are accurate and complete.'
+                        : 'By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.'
+                      }
                     </p>
                   </div>
                 </label>
@@ -3648,16 +3337,23 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
         {/* HEADER WITH TOTAL SIZE PROGRESS */}
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 text-white">
+        <div className={`bg-gradient-to-r ${isEditMode ? 'from-yellow-600 via-yellow-700 to-amber-700' : 'from-blue-600 via-blue-700 to-indigo-700'} p-6 text-white`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
                 <FaFilePdf className="text-lg" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Manage School Documents</h2>
+                <h2 className="text-xl font-bold">
+                  {isEditMode ? 'Edit School Documents' : 'Manage School Documents'}
+                </h2>
                 <p className="text-white/90 text-sm mt-1 font-bold">
                   Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
+                  {isEditMode && (
+                    <span className="ml-2 bg-white/30 px-2 py-0.5 rounded text-xs font-bold">
+                      Editing Existing Records
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -3674,7 +3370,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
             </div>
             <div className="w-full bg-white/20 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-400 to-cyan-400 h-2 rounded-full transition-all duration-300"
+                className={`h-2 rounded-full transition-all duration-300 ${isEditMode ? 'bg-gradient-to-r from-yellow-400 to-orange-400' : 'bg-gradient-to-r from-green-400 to-cyan-400'}`}
                 style={{ width: `${fileSizeManager.getPercentage()}%` }}
               ></div>
             </div>
@@ -3689,7 +3385,9 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   onClick={() => setCurrentStep(index)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold ${
                     index === currentStep 
-                      ? 'bg-blue-500 text-white shadow-lg scale-105' 
+                      ? isEditMode 
+                        ? 'bg-yellow-500 text-white shadow-lg scale-105' 
+                        : 'bg-blue-500 text-white shadow-lg scale-105'
                       : index < currentStep
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -3715,8 +3413,10 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
             <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="font-bold">Step {currentStep + 1} of {steps.length}</span>
+                  <div className={`w-2 h-2 rounded-full ${isEditMode ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                  <span className="font-bold">
+                    {isEditMode ? 'Edit Mode' : 'Create Mode'} • Step {currentStep + 1} of {steps.length}
+                  </span>
                 </div>
               </div>
 
@@ -3735,7 +3435,7 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   <button 
                     type="button"
                     onClick={handleNextStep}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow flex items-center justify-center gap-2 w-full sm:w-auto"
+                    className={`px-8 py-3 ${isEditMode ? 'bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700' : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'} text-white rounded-xl transition duration-200 font-bold shadow flex items-center justify-center gap-2 w-full sm:w-auto`}
                   >
                     Continue →
                   </button>
@@ -3743,17 +3443,17 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
                   <button 
                     type="submit"
                     disabled={actionLoading || !confirmed}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto"
+                    className={`px-8 py-3 ${isEditMode ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700' : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'} text-white rounded-xl transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 w-full sm:w-auto`}
                   >
                     {actionLoading ? (
                       <>
                         <CircularProgress size={16} className="text-white" />
-                        <span>Saving Documents...</span>
+                        <span>{isEditMode ? 'Updating...' : 'Saving...'}</span>
                       </>
                     ) : (
                       <>
                         <FaSave className="text-sm" />
-                        <span>Save All Documents</span>
+                        <span>{isEditMode ? 'Update All Documents' : 'Save All Documents'}</span>
                       </>
                     )}
                   </button>
@@ -3780,6 +3480,681 @@ const formatFileSize = (bytes) => {
 };
 
 // Main School Documents Page Component with Complete CRUD
+// Main School Documents Page Component with Complete CRUD - Updated API calls
+export default function SchoolDocumentsPage() {
+  const [documents, setDocuments] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Get school ID from context/URL - implement based on your app
+  const getSchoolId = () => {
+    // Implementation depends on your app structure
+    // Example: from URL path /schools/[id]/documents
+    const pathname = window.location.pathname;
+    const match = pathname.match(/\/schools\/([^\/]+)/);
+    return match ? match[1] : null;
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const schoolId = getSchoolId();
+      
+      if (!schoolId) {
+        console.error('No school ID found in context');
+        setDocuments(null);
+        setLoading(false);
+        return;
+      }
+      
+      const docsResponse = await fetch(`/api/schooldocuments?schoolId=${schoolId}`);
+      
+      console.log('Response status:', docsResponse.status);
+      console.log('Response headers:', Object.fromEntries(docsResponse.headers.entries()));
+      
+      // First, get the response as text to debug
+      const responseText = await docsResponse.text();
+      console.log('Raw response:', responseText.substring(0, 200)); // First 200 chars
+      
+      // Check if response is HTML
+      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+        console.error('API returned HTML instead of JSON. API route might not exist.');
+        setDocuments(null);
+        return;
+      }
+      
+      // Try to parse as JSON
+      const docsData = JSON.parse(responseText);
+      
+      if (docsData.success && docsData.document) {
+        setDocuments(docsData.document);
+      } else if (docsData.success && docsData) {
+        setDocuments(docsData);
+      } else {
+        setDocuments(null);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setDocuments(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async () => {
+    try {
+      setActionLoading(true);
+      const schoolId = getSchoolId();
+      
+      if (!schoolId) {
+        toast.error('No school ID found');
+        return;
+      }
+      
+      const response = await fetch(`/api/schooldocuments?schoolId=${schoolId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      const result = await response.json();
+      toast.success(result.message || 'Document deleted successfully');
+      setDeleteDialogOpen(false);
+      await loadData();
+    } catch (error) {
+      console.error('Delete failed:', error);
+      toast.error(error.message || 'Failed to delete document');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSaveDocuments = async (documentData) => {
+    try {
+      setActionLoading(true);
+      toast.success('Documents saved successfully!');
+      setShowModal(false);
+      await loadData();
+    } catch (error) {
+      toast.error(error.message || 'Failed to save documents');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
+  }
+
+  const hasDocuments = documents && (
+    documents.curriculumPDF ||
+    documents.feesDayDistributionPdf ||
+    documents.feesBoardingDistributionPdf ||
+    documents.admissionFeePdf ||
+    documents.form1ResultsPdf ||
+    documents.form2ResultsPdf ||
+    documents.form3ResultsPdf ||
+    documents.form4ResultsPdf ||
+    documents.mockExamsResultsPdf ||
+    documents.kcseResultsPdf
+  );
+
+  return (
+    <FileSizeProvider>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
+        <Toaster position="top-right" richColors />
+        
+        {/* MODERN HEADER WITH INTEGRATED ACTIONS */}
+        <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
+          {/* Decorative Background Elements */}
+          <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-4 mb-4">
+                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
+                  <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
+                      Document Management
+                    </span>
+                    <FaShieldAlt className="text-blue-300 text-[10px]" />
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
+                    School Documents
+                  </h1>
+                  {hasDocuments && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="bg-green-500/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-400/30">
+                        <FaEdit className="inline mr-1" />
+                        Edit Mode Available
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
+                Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
+              </p>
+            </div>
+
+            {/* ACTION BUTTON GROUP */}
+            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              
+              {/* 1. REFRESH BUTTON (Always Visible) */}
+              <button 
+                onClick={loadData} 
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
+              >
+                {loading ? <CircularProgress size={14} color="inherit" /> : <FaSync className="text-xs" />}
+                <span>{loading ? 'Syncing...' : 'Refresh'}</span>
+              </button>
+
+              {/* 2. UPLOAD/EDIT BUTTON (Conditional Style) */}
+              <button 
+                onClick={() => setShowModal(true)} 
+                className={`flex items-center justify-center gap-2 ${hasDocuments ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700' : 'bg-white text-blue-600 hover:bg-gradient-to-r hover:from-white hover:to-gray-100'} px-6 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95`}
+              >
+                {hasDocuments ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
+                <span>{hasDocuments ? 'Edit Documents' : 'Upload Documents'}</span>
+              </button>
+
+              {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
+              {hasDocuments && (
+                <button 
+                  onClick={() => setDeleteDialogOpen(true)} 
+                  className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
+                >
+                  <FaTrash className="text-xs group-hover:animate-bounce" />
+                  <span>Delete All</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {!hasDocuments ? (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
+              <FaFilePdf className="w-12 h-12 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Documents Yet</h3>
+            <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
+              Start by uploading school documents to showcase your institution's curriculum, fee structures, and academic results
+            </p>
+            <button 
+              onClick={() => setShowModal(true)} 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
+            >
+              <FaUpload className="text-lg" /> 
+              <span>Upload School Documents</span>
+            </button>
+          </div>
+        ) : (
+          // GRID LAYOUT FOR DOCUMENT CARDS
+          <div className="my-6">
+            {/* Document Categories Header (Optional) */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">School Documents</h2>
+                <p className="text-gray-600 font-bold mt-1">Manage all your school documents in one place</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full">
+                    <FaEdit className="inline mr-1" />
+                    Edit Mode Available
+                  </span>
+                  <span className="text-xs text-gray-500 font-bold">
+                    Click "Edit Documents" to modify existing records
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowModal(true)} 
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition duration-200 font-bold shadow-lg flex items-center gap-2 text-sm"
+              >
+                <FaPencilAlt className="text-sm" /> 
+                <span>Edit Documents</span>
+              </button>
+            </div>
+
+            {/* GRID CONTAINER */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* CURRICULUM DOCUMENT */}
+              {documents.curriculumPDF && (
+                <ModernDocumentCard
+                  title="Curriculum Document"
+                  description="Official school curriculum and syllabus"
+                  pdfUrl={documents.curriculumPDF}
+                  pdfName={documents.curriculumPdfName || "curriculum.pdf"}
+                  year={documents.curriculumYear}
+                  type="curriculum"
+                  fileSize={documents.curriculumPdfSize}
+                  uploadDate={documents.curriculumUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove curriculum document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* DAY SCHOOL FEES DOCUMENT */}
+              {documents.feesDayDistributionPdf && (
+                <ModernDocumentCard
+                  title="Day School Fee Structure"
+                  description="Day school fees breakdown and payment terms"
+                  pdfUrl={documents.feesDayDistributionPdf}
+                  pdfName={documents.feesDayPdfName || "day-fees.pdf"}
+                  year={documents.feesDayYear}
+                  term={documents.feesDayTerm}
+                  feeBreakdown={documents.feesDayDistributionJson || []}
+                  type="day"
+                  fileSize={documents.feesDayPdfSize}
+                  uploadDate={documents.feesDayUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove day school fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* BOARDING SCHOOL FEES DOCUMENT */}
+              {documents.feesBoardingDistributionPdf && (
+                <ModernDocumentCard
+                  title="Boarding School Fee Structure"
+                  description="Boarding school fees including accommodation"
+                  pdfUrl={documents.feesBoardingDistributionPdf}
+                  pdfName={documents.feesBoardingPdfName || "boarding-fees.pdf"}
+                  year={documents.feesBoardingYear}
+                  term={documents.feesBoardingTerm}
+                  feeBreakdown={documents.feesBoardingDistributionJson || []}
+                  type="boarding"
+                  fileSize={documents.feesBoardingPdfSize}
+                  uploadDate={documents.feesBoardingUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove boarding fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* ADMISSION FEES DOCUMENT */}
+              {documents.admissionFeePdf && (
+                <ModernDocumentCard
+                  title="Admission Fees"
+                  description="Admission and registration fees structure"
+                  pdfUrl={documents.admissionFeePdf}
+                  pdfName={documents.admissionFeePdfName || "admission-fees.pdf"}
+                  year={documents.admissionFeeYear}
+                  term={documents.admissionFeeTerm}
+                  admissionBreakdown={documents.admissionFeeDistribution || []}
+                  type="admission"
+                  fileSize={documents.admissionFeePdfSize}
+                  uploadDate={documents.admissionFeeUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove admission fees document?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* EXAM RESULTS DOCUMENTS */}
+              {/* Form 1 Results */}
+              {documents.form1ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 1 Results"
+                  description={documents.form1ResultsDescription || "Form 1 examination results"}
+                  pdfUrl={documents.form1ResultsPdf}
+                  pdfName={documents.form1ResultsPdfName || "form1-results.pdf"}
+                  year={documents.form1ResultsYear}
+                  term={documents.form1ResultsTerm}
+                  type="results"
+                  fileSize={documents.form1ResultsPdfSize}
+                  uploadDate={documents.form1ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 1 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 2 Results */}
+              {documents.form2ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 2 Results"
+                  description={documents.form2ResultsDescription || "Form 2 examination results"}
+                  pdfUrl={documents.form2ResultsPdf}
+                  pdfName={documents.form2ResultsPdfName || "form2-results.pdf"}
+                  year={documents.form2ResultsYear}
+                  term={documents.form2ResultsTerm}
+                  type="results"
+                  fileSize={documents.form2ResultsPdfSize}
+                  uploadDate={documents.form2ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 2 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 3 Results */}
+              {documents.form3ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 3 Results"
+                  description={documents.form3ResultsDescription || "Form 3 examination results"}
+                  pdfUrl={documents.form3ResultsPdf}
+                  pdfName={documents.form3ResultsPdfName || "form3-results.pdf"}
+                  year={documents.form3ResultsYear}
+                  term={documents.form3ResultsTerm}
+                  type="results"
+                  fileSize={documents.form3ResultsPdfSize}
+                  uploadDate={documents.form3ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 3 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Form 4 Results */}
+              {documents.form4ResultsPdf && (
+                <ModernDocumentCard
+                  title="Form 4 Results"
+                  description={documents.form4ResultsDescription || "Form 4 examination results"}
+                  pdfUrl={documents.form4ResultsPdf}
+                  pdfName={documents.form4ResultsPdfName || "form4-results.pdf"}
+                  year={documents.form4ResultsYear}
+                  term={documents.form4ResultsTerm}
+                  type="results"
+                  fileSize={documents.form4ResultsPdfSize}
+                  uploadDate={documents.form4ResultsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove Form 4 results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* Mock Exams Results */}
+              {documents.mockExamsResultsPdf && (
+                <ModernDocumentCard
+                  title="Mock Exams Results"
+                  description={documents.mockExamsDescription || "Mock examination results"}
+                  pdfUrl={documents.mockExamsResultsPdf}
+                  pdfName={documents.mockExamsPdfName || "mock-exams-results.pdf"}
+                  year={documents.mockExamsYear}
+                  term={documents.mockExamsTerm}
+                  type="results"
+                  fileSize={documents.mockExamsPdfSize}
+                  uploadDate={documents.mockExamsUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove mock exams results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+              
+              {/* KCSE Results */}
+              {documents.kcseResultsPdf && (
+                <ModernDocumentCard
+                  title="KCSE Results"
+                  description={documents.kcseDescription || "KCSE examination results"}
+                  pdfUrl={documents.kcseResultsPdf}
+                  pdfName={documents.kcsePdfName || "kcse-results.pdf"}
+                  year={documents.kcseYear}
+                  term={documents.kcseTerm}
+                  type="results"
+                  fileSize={documents.kcsePdfSize}
+                  uploadDate={documents.kcseUploadDate}
+                  existing={true}
+                  onReplace={() => setShowModal(true)}
+                  onRemove={() => {
+                    if (confirm("Remove KCSE results?")) {
+                      // Handle removal
+                    }
+                  }}
+                />
+              )}
+            </div>
+
+            {/* EMPTY STATE IF NO DOCUMENTS IN GRID (edge case) */}
+            {!documents.curriculumPDF && 
+             !documents.feesDayDistributionPdf && 
+             !documents.feesBoardingDistributionPdf && 
+             !documents.admissionFeePdf && 
+             !documents.form1ResultsPdf && 
+             !documents.form2ResultsPdf && 
+             !documents.form3ResultsPdf && 
+             !documents.form4ResultsPdf && 
+             !documents.mockExamsResultsPdf && 
+             !documents.kcseResultsPdf && 
+             (!documents.additionalDocuments || documents.additionalDocuments.length === 0) && (
+              <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-12 text-center transition-all duration-300 hover:shadow-2xl">
+                <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-blue-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-inner">
+                  <FaFile className="w-8 h-8 md:w-12 md:h-12 text-blue-400/80" />
+                </div>
+
+                {/* Text Content */}
+                <h3 className="text-lg md:text-2xl font-black text-gray-800 mb-3 tracking-tight">
+                  No Documents Found
+                </h3>
+                
+                <p className="text-gray-500 text-xs md:text-base mb-8 max-w-[250px] md:max-w-md mx-auto font-medium leading-relaxed">
+                  Add documents to showcase your school's information and keep your resources organized.
+                </p>
+
+                {/* Action Button - Full width on mobile, auto width on desktop */}
+                <button 
+                  onClick={() => setShowModal(true)} 
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl 
+                           hover:from-blue-700 hover:to-indigo-700 hover:scale-[1.03] active:scale-95 
+                           transition-all duration-200 font-bold shadow-blue-200 shadow-lg 
+                           flex items-center justify-center gap-3 mx-auto text-sm md:text-base"
+                >
+                  <FaUpload className="text-lg" /> 
+                  <span>Upload Documents</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <Dialog 
+          open={deleteDialogOpen} 
+          onClose={() => setDeleteDialogOpen(false)}
+          PaperProps={{
+            className: "rounded-2xl p-0 w-[95vw] max-w-sm shadow-2xl overflow-hidden border border-gray-300 mx-auto" 
+          }}
+        >
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-red-600 to-orange-500 p-5 text-white">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white/25 rounded-xl backdrop-blur-sm shrink-0">
+                <FaExclamationTriangle className="text-xl" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">Confirm Deletion</h2>
+                <p className="text-red-100 text-sm font-semibold mt-0.5">
+                  This action is permanent and cannot be undone
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
+            {/* Main Warning */}
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-red-300">
+                <FaTrash className="text-red-700 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">
+                Delete All School Documents?
+              </h3>
+              <p className="text-red-600 text-sm font-semibold">
+                You are about to permanently delete all uploaded documents
+              </p>
+            </div>
+
+            {/* Data Loss Details */}
+            <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+              <div className="mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-600"></div>
+                  <p className="text-sm font-bold text-red-800">
+                    Permanent data loss includes:
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {[
+                  'All curriculum documents and syllabi',
+                  'Complete fee structures (day & boarding)',
+                  'Admission fee breakdowns and policies',
+                  'All examination results and reports',
+                  'Additional school documents and files',
+                  'Upload history and file metadata'
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></div>
+                    <span className="text-sm text-gray-800 font-medium leading-snug">
+                      <span className="font-bold">{item}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Confirmation Input */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-bold text-gray-800">
+                  Type to confirm deletion:
+                </label>
+                <span className="text-red-700 font-bold text-sm select-none bg-red-100 px-2 py-0.5 rounded">
+                  "DELETE"
+                </span>
+              </div>
+              <input 
+                type="text" 
+                value={confirmText} 
+                onChange={(e) => setConfirmText(e.target.value)} 
+                placeholder='Type "DELETE" here...'
+                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all text-base font-medium placeholder-gray-400"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 font-medium text-center">
+                This prevents accidental deletion of important documents
+              </p>
+            </div>
+
+            {/* Final Warning */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
+              <FaExclamationCircle className="text-amber-700 shrink-0 text-base mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-amber-900 mb-1">
+                  Important Warning
+                </p>
+                <p className="text-xs text-amber-800 font-medium leading-tight">
+                  No backup copies are maintained. Once deleted, all document data will be permanently removed from the system with no recovery options available.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 p-5 bg-gray-50 border-t-2 border-gray-300">
+            <button 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setConfirmText('');
+              }}
+              disabled={actionLoading}
+              className="order-2 sm:order-1 flex-1 px-5 py-3 border-2 border-gray-400 text-gray-800 rounded-xl hover:border-gray-400 hover:bg-white transition font-bold text-sm"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={() => {
+                if (confirmText === "DELETE") {
+                  handleDeleteDocument();
+                } else {
+                  toast.error('Please type "DELETE" exactly to confirm deletion');
+                }
+              }}
+              disabled={actionLoading || confirmText !== "DELETE"}
+              className="order-1 sm:order-2 flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {actionLoading ? (
+                <>
+                  <CircularProgress size={16} color="inherit" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <FaTrash className="text-sm" />
+                  <span>Delete Permanently</span>
+                </>
+              )}
+            </button>
+          </div>
+        </Dialog>
+
+        {showModal && (
+          <DocumentsModal 
+            onClose={() => setShowModal(false)} 
+            onSave={handleSaveDocuments}
+            documents={documents}
+            loading={actionLoading}
+            schoolId={getSchoolId()}
+          />
+        )}
+      </div>
+    </FileSizeProvider>
+  );
+}
+
 export default function SchoolDocumentsPage() {
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
