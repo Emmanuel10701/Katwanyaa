@@ -2188,101 +2188,99 @@ export default function ComprehensiveAdmissions() {
                 </div>
               )}
 
-              <div className="py-8 md:py-12 px-4 md:px-6 max-w-6xl mx-auto">
-                {/* Tight Header */}
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 md:mb-10 pb-6 md:pb-8 border-b border-slate-200/60">
-                  <div className="flex-1">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-full border border-blue-100/80 mb-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-700">
-                        Our Advantages
-                      </span>
-                    </div>
-                    <h2 className="text-2xl md:text-3xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                      Why Choose <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Our School?</span>
-                    </h2>
-                  </div>
-                  
-                  <div className="sm:text-right">
-                    <p className="text-slate-500 text-sm md:text-base font-medium leading-relaxed max-w-xs">
-                      Where <span className="font-bold text-blue-600">excellence</span> meets <span className="font-bold text-cyan-600">innovation</span> in education
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <FiAward className="text-amber-500" />
-                        <span className="font-medium">Proven Excellence</span>
-                      </div>
-                      <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <FiUsers className="text-blue-500" />
-                        <span className="font-medium">Personalized</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+<div className="py-12 md:py-16 px-4 md:px-6 max-w-6xl mx-auto bg-white">
+  {/* Modernized Tight Header */}
+  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 pb-8 border-b-2 border-slate-100">
+    <div className="flex-1">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-md mb-4 border border-slate-200">
+        <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+          Institutional Profile
+        </span>
+      </div>
+      <h2 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+        Why <span className="text-blue-600">Katwanyaa High?</span>
+      </h2>
+    </div>
+    
+    <div className="sm:text-right">
+      <p className="text-slate-600 text-sm md:text-base font-bold leading-tight max-w-xs">
+        Building **strong foundations** in Machakos through **discipline** and **academic rigor**.
+      </p>
+      <div className="flex items-center sm:justify-end gap-3 mt-4">
+        <div className="flex items-center gap-1 text-xs text-slate-500 font-black">
+          <FiAward className="text-blue-600" />
+          <span>KICD APPROVED</span>
+        </div>
+        <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+        <div className="flex items-center gap-1 text-xs text-slate-500 font-black">
+          <FiUsers className="text-blue-600" />
+          <span>COMMUNITY DRIVEN</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                {/* Reduced row height from 280px to 200px */}
-                <div className="grid grid-cols-1 md:grid-cols-12 auto-rows-[180px] md:auto-rows-[200px] gap-3">
-                  
-                  {/* 1. Academic Excellence - Compact */}
-                  <div className="md:col-span-7 group relative overflow-hidden rounded-2xl md:rounded-3xl bg-white border border-slate-200 p-4 md:p-6 transition-all">
-                    <div className="relative z-10 flex flex-col h-full">
-                      <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-4">
-                        <IoBulbOutline size={20} />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-slate-900 mb-1">Academic Excellence</h4>
-                        <p className="text-slate-500 text-xs leading-relaxed max-w-xs">
-                          Ivy-league ready curriculum designed for top-tier academic performance.
-                        </p>
-                      </div>
-                    </div>
-                    <FiArrowUpRight className="absolute top-4 md:top-6 right-4 md:right-6 text-slate-300" />
-                  </div>
+  {/* Modern Bento Grid - No Hovers */}
+  <div className="grid grid-cols-1 md:grid-cols-12 auto-rows-[180px] md:auto-rows-[200px] gap-4">
+    
+    {/* 1. Academic Performance - Real Information */}
+    <div className="md:col-span-7 relative overflow-hidden rounded-3xl bg-slate-50 border-2 border-slate-200 p-6 md:p-8">
+      <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-sm border border-slate-200">
+          <IoBulbOutline size={24} />
+        </div>
+        <div>
+          <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">Academic Achievement</h4>
+          <p className="text-slate-600 text-sm font-bold leading-snug max-w-md">
+            Consistently producing **strong KCSE results** with a specialized focus on **STEM subjects** and **early career guidance**.
+          </p>
+        </div>
+      </div>
+    </div>
 
-                  {/* 2. Expert Faculty - High Contrast Compact */}
-                  <div className="md:col-span-5 relative overflow-hidden rounded-2xl md:rounded-3xl bg-slate-900 p-4 md:p-6 text-white transition-all">
-                    <div className="absolute -top-4 -right-4 text-white/5">
-                      <FiUsers size={120} />
-                    </div>
-                    <div className="relative z-10 flex flex-col h-full">
-                      <div className="w-10 h-10 bg-white/10 backdrop-blur-md border border-white/10 rounded-xl flex items-center justify-center mb-4">
-                        <FiUsers size={20} className="text-white" />
-                      </div>
-                      <h4 className="text-lg font-bold mb-1 leading-tight">Expert Faculty</h4>
-                      <p className="text-slate-400 text-xs leading-relaxed">
-                        Mentors committed to personalized student growth.
-                      </p>
-                    </div>
-                  </div>
+    {/* 2. TSC Certified Faculty */}
+    <div className="md:col-span-5 relative overflow-hidden rounded-3xl bg-slate-900 p-6 md:p-8 text-white">
+      <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="w-12 h-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl flex items-center justify-center">
+          <FiUsers size={24} className="text-white" />
+        </div>
+        <div>
+          <h4 className="text-xl font-black mb-2 uppercase tracking-tight text-blue-400">Expert Educators</h4>
+          <p className="text-slate-300 text-sm font-bold leading-snug">
+            Staffed by **TSC-certified professionals** dedicated to **individualized student mentorship** and CBC implementation.
+          </p>
+        </div>
+      </div>
+    </div>
 
-                  {/* 3. Digital-First school - Slim Banner */}
-                  <div className="md:col-span-12 relative overflow-hidden rounded-2xl md:rounded-3xl bg-slate-50 border border-slate-200 p-4 md:p-6 flex flex-col md:flex-row items-center gap-4 md:gap-6">
-                    <div className="w-12 h-12 md:w-14 md:h-14 bg-white text-emerald-600 rounded-xl md:rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm shrink-0">
-                      <FiCpu size={20} />
-                    </div>
+    {/* 3. Facilities & Infrastructure */}
+    <div className="md:col-span-12 relative overflow-hidden rounded-3xl bg-white border-2 border-slate-900 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+      <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center border border-blue-100 shrink-0">
+        <FiCpu size={32} />
+      </div>
 
-                    <div className="flex-1">
-                      <h4 className="text-lg font-bold text-slate-900 mb-0.5">Digital-First school</h4>
-                      <p className="text-slate-500 text-xs leading-snug max-w-xl">
-                        Immersive learning spaces with high-speed fiber and smart lab integration.
-                      </p>
-                    </div>
+      <div className="flex-1 text-center md:text-left">
+        <h4 className="text-xl font-black text-slate-900 mb-1 uppercase">Modern Learning Resources</h4>
+        <p className="text-slate-600 text-sm md:text-base font-bold leading-relaxed max-w-2xl">
+          Investment in **functional science laboratories**, **computer literacy programs**, and **spacious classrooms** to enhance the student experience.
+        </p>
+      </div>
 
-                    {/* Social Proof - Smaller Icons */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex -space-x-2">
-                        {[1, 2, 3].map(i => (
-                          <div key={i} className="w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-slate-50 bg-slate-200" />
-                        ))}
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md">
-                        +500 Students
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Capacity Indicator */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 shrink-0">
+        <div className="flex -space-x-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-300" />
+          ))}
+        </div>
+        <span className="text-[11px] font-black text-slate-900 uppercase">
+          10k+ Alumni
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
           )}
 
