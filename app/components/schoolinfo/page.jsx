@@ -18,7 +18,7 @@ import {
   FaBusinessTime, FaHome, FaChurch, FaMosque,
   FaHandsHelping, FaCalculator, FaChartLine,
   FaUniversity, FaDoorOpen, FaDoorClosed,
-  FaIdCard, FaStethoscope, FaSyringe, FaMoneyBill,
+  FaIdCard, FaStethoscope, FaSyringe,
   FiUsers, FiBook, FiCalendar, FiFileText, FiTrendingUp, FiTrendingDown,
   FiEye, FiDownload, FiMail, FiUserPlus, FiArrowUpRight, FiStar,
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
