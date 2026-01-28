@@ -3983,22 +3983,32 @@ const loadData = async () => {
              !documents.mockExamsResultsPdf && 
              !documents.kcseResultsPdf && 
              (!documents.additionalDocuments || documents.additionalDocuments.length === 0) && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-gray-300">
-                  <FaFile className="w-10 h-10 text-gray-500" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">No Documents Found</h3>
-                <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  Add documents to showcase your school's information
-                </p>
-                <button 
-                  onClick={() => setShowModal(true)} 
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold shadow-lg flex items-center gap-2 mx-auto text-sm"
-                >
-                  <FaUpload className="text-sm" /> 
-                  <span>Upload Documents</span>
-                </button>
-              </div>
+<div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-12 text-center transition-all duration-300 hover:shadow-2xl">
+  <div className="w-16 h-16 md:w-24 md:h-24 bg-gradient-to-br from-blue-50 to-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-inner">
+    <FaFile className="w-8 h-8 md:w-12 md:h-12 text-blue-400/80" />
+  </div>
+
+  {/* Text Content */}
+  <h3 className="text-lg md:text-2xl font-black text-gray-800 mb-3 tracking-tight">
+    No Documents Found
+  </h3>
+  
+  <p className="text-gray-500 text-xs md:text-base mb-8 max-w-[250px] md:max-w-md mx-auto font-medium leading-relaxed">
+    Add documents to showcase your school's information and keep your resources organized.
+  </p>
+
+  {/* Action Button - Full width on mobile, auto width on desktop */}
+  <button 
+    onClick={() => setShowModal(true)} 
+    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl 
+               hover:from-blue-700 hover:to-indigo-700 hover:scale-[1.03] active:scale-95 
+               transition-all duration-200 font-bold shadow-blue-200 shadow-lg 
+               flex items-center justify-center gap-3 mx-auto text-sm md:text-base"
+  >
+    <FaUpload className="text-lg" /> 
+    <span>Upload Documents</span>
+  </button>
+</div>
             )}
           </div>
         )}

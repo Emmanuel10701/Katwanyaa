@@ -1518,26 +1518,35 @@ export default function SchoolInfoPage() {
         </div>
       </div>
 
-      {/* NO SCHOOL INFORMATION FOUND - SIMPLE MODERN VERSION */}
-      {!hasSchoolInfo ? (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-blue-200">
-            <FaSchool className="w-12 h-12 text-blue-600" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">No School Information Yet</h3>
-          <p className="text-gray-600 text-base mb-6 max-w-md mx-auto font-bold">
-            Start by adding your school details to showcase your institution
-          </p>
-          <button 
-            onClick={() => setShowModal(true)} 
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow-lg flex items-center gap-3 mx-auto text-base"
-          >
-            <FaPlus className="text-lg" /> 
-            <span>Add School Information</span>
-          </button>
-        </div>
-      ) : (
-        // SIMPLE SCHOOL INFORMATION DISPLAY (if you want to show minimal info)
+{!hasSchoolInfo ? (
+  <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-14 text-center my-8 transition-all duration-300">
+    
+    <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-blue-100/50">
+      <FaSchool className="w-10 h-10 md:w-14 md:h-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600" />
+    </div>
+
+    {/* Typography with Responsive Sizing */}
+    <h3 className="text-xl md:text-3xl font-black text-gray-900 mb-3 tracking-tight">
+      No School Information Yet
+    </h3>
+    
+    <p className="text-gray-500 text-sm md:text-lg mb-8 max-w-[280px] md:max-w-lg mx-auto font-medium leading-relaxed">
+      Start by adding your school details to showcase your institution to students and staff.
+    </p>
+
+    {/* Primary Action Button - Full width on mobile */}
+    <button 
+      onClick={() => setShowModal(true)} 
+      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 
+                 text-white px-10 py-4 rounded-2xl font-bold shadow-xl shadow-blue-200/50
+                 hover:shadow-indigo-300/50 hover:scale-[1.03] active:scale-95 
+                 transition-all duration-300 flex items-center justify-center gap-3 mx-auto text-base"
+    >
+      <FaPlus className="text-xl" /> 
+      <span>Add School Information</span>
+    </button>
+  </div>
+) :  (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
             <div>

@@ -415,7 +415,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm lg:text-lg font-bold text-gray-800 truncate">
-                  Nyaribu Secondary School
+                  Katz High School
                 </h1>
                 <p className="text-gray-600 text-xs lg:text-sm font-medium truncate">Admin Portal</p>
               </div>
