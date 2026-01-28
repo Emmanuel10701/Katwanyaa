@@ -417,7 +417,7 @@ export default function AdminLoginPage() {
                       >
                         <Key className="w-2 h-2 sm:w-3 sm:h-3" />
                         <span className="hidden xs:inline">Forgot password</span>
-                        <span className="xs:hidden">Forgot</span>
+                        <span className="xs:hidden">Forgot password</span>
                       </button>
                     </div>
                     <div className="relative">
