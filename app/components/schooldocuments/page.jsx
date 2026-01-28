@@ -3061,129 +3061,120 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
   const fileSizeManager = useFileSize();
   const [currentStep, setCurrentStep] = useState(0);
   
-  // COMPLETE FIX: Preload existing values for all form fields
-  const [formData, setFormData] = useState({
-    curriculumPDF: documents?.curriculumPDF ? { 
-      file: null,
-      name: documents.curriculumPdfName,
-      filename: documents.curriculumPdfName,
-      size: documents.curriculumPdfSize,
-      year: documents.curriculumYear,
-      description: documents.curriculumDescription,
-      term: documents.curriculumTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    feesDayDistributionPdf: documents?.feesDayDistributionPdf ? {
-      file: null,
-      name: documents.feesDayPdfName,
-      filename: documents.feesDayPdfName,
-      size: documents.feesDayPdfSize,
-      year: documents.feesDayYear,
-      description: documents.feesDayDescription,
-      term: documents.feesDayTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    feesBoardingDistributionPdf: documents?.feesBoardingDistributionPdf ? {
-      file: null,
-      name: documents.feesBoardingPdfName,
-      filename: documents.feesBoardingPdfName,
-      size: documents.feesBoardingPdfSize,
-      year: documents.feesBoardingYear,
-      description: documents.feesBoardingDescription,
-      term: documents.feesBoardingTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    admissionFeePdf: documents?.admissionFeePdf ? {
-      file: null,
-      name: documents.admissionFeePdfName,
-      filename: documents.admissionFeePdfName,
-      size: documents.admissionFeePdfSize,
-      year: documents.admissionFeeYear,
-      description: documents.admissionFeeDescription,
-      term: documents.admissionFeeTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    // Exam Results PDFs
-    form1ResultsPdf: documents?.form1ResultsPdf ? {
-      file: null,
-      name: documents.form1ResultsPdfName,
-      filename: documents.form1ResultsPdfName,
-      size: documents.form1ResultsPdfSize,
-      year: documents.form1ResultsYear,
-      description: documents.form1ResultsDescription,
-      term: documents.form1ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form2ResultsPdf: documents?.form2ResultsPdf ? {
-      file: null,
-      name: documents.form2ResultsPdfName,
-      filename: documents.form2ResultsPdfName,
-      size: documents.form2ResultsPdfSize,
-      year: documents.form2ResultsYear,
-      description: documents.form2ResultsDescription,
-      term: documents.form2ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form3ResultsPdf: documents?.form3ResultsPdf ? {
-      file: null,
-      name: documents.form3ResultsPdfName,
-      filename: documents.form3ResultsPdfName,
-      size: documents.form3ResultsPdfSize,
-      year: documents.form3ResultsYear,
-      description: documents.form3ResultsDescription,
-      term: documents.form3ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    form4ResultsPdf: documents?.form4ResultsPdf ? {
-      file: null,
-      name: documents.form4ResultsPdfName,
-      filename: documents.form4ResultsPdfName,
-      size: documents.form4ResultsPdfSize,
-      year: documents.form4ResultsYear,
-      description: documents.form4ResultsDescription,
-      term: documents.form4ResultsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    mockExamsResultsPdf: documents?.mockExamsResultsPdf ? {
-      file: null,
-      name: documents.mockExamsPdfName,
-      filename: documents.mockExamsPdfName,
-      size: documents.mockExamsPdfSize,
-      year: documents.mockExamsYear,
-      description: documents.mockExamsDescription,
-      term: documents.mockExamsTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null,
-    
-    kcseResultsPdf: documents?.kcseResultsPdf ? {
-      file: null,
-      name: documents.kcsePdfName,
-      filename: documents.kcsePdfName,
-      size: documents.kcsePdfSize,
-      year: documents.kcseYear,
-      description: documents.kcseDescription,
-      term: documents.kcseTerm,
-      isExisting: true,
-      markedForDeletion: false
-    } : null
+// FIXED: Correct formData initialization that matches API response structure
+const [formData, setFormData] = useState(() => {
+  // Create a base structure
+  const baseFormData = {};
+  
+  // Define all possible fields with their getters
+  const documentFields = [
+    // Main documents
+    { 
+      key: 'curriculumPDF',
+      nameField: 'curriculumPdfName',
+      sizeField: 'curriculumPdfSize',
+      yearField: 'curriculumYear',
+      descriptionField: 'curriculumDescription',
+      termField: 'curriculumTerm'
+    },
+    { 
+      key: 'feesDayDistributionPdf',
+      nameField: 'feesDayPdfName',
+      sizeField: 'feesDayPdfSize',
+      yearField: 'feesDayYear',
+      descriptionField: 'feesDayDescription',
+      termField: 'feesDayTerm'
+    },
+    { 
+      key: 'feesBoardingDistributionPdf',
+      nameField: 'feesBoardingPdfName',
+      sizeField: 'feesBoardingPdfSize',
+      yearField: 'feesBoardingYear',
+      descriptionField: 'feesBoardingDescription',
+      termField: 'feesBoardingTerm'
+    },
+    { 
+      key: 'admissionFeePdf',
+      nameField: 'admissionFeePdfName',
+      sizeField: 'admissionFeePdfSize',
+      yearField: 'admissionFeeYear',
+      descriptionField: 'admissionFeeDescription',
+      termField: 'admissionFeeTerm'
+    },
+    // Exam results
+    { 
+      key: 'form1ResultsPdf',
+      nameField: 'form1ResultsPdfName',
+      sizeField: 'form1ResultsPdfSize',
+      yearField: 'form1ResultsYear',
+      descriptionField: 'form1ResultsDescription',
+      termField: 'form1ResultsTerm'
+    },
+    { 
+      key: 'form2ResultsPdf',
+      nameField: 'form2ResultsPdfName',
+      sizeField: 'form2ResultsPdfSize',
+      yearField: 'form2ResultsYear',
+      descriptionField: 'form2ResultsDescription',
+      termField: 'form2ResultsTerm'
+    },
+    { 
+      key: 'form3ResultsPdf',
+      nameField: 'form3ResultsPdfName',
+      sizeField: 'form3ResultsPdfSize',
+      yearField: 'form3ResultsYear',
+      descriptionField: 'form3ResultsDescription',
+      termField: 'form3ResultsTerm'
+    },
+    { 
+      key: 'form4ResultsPdf',
+      nameField: 'form4ResultsPdfName',
+      sizeField: 'form4ResultsPdfSize',
+      yearField: 'form4ResultsYear',
+      descriptionField: 'form4ResultsDescription',
+      termField: 'form4ResultsTerm'
+    },
+    { 
+      key: 'mockExamsResultsPdf',
+      nameField: 'mockExamsPdfName',
+      sizeField: 'mockExamsPdfSize',
+      yearField: 'mockExamsYear',
+      descriptionField: 'mockExamsDescription',
+      termField: 'mockExamsTerm'
+    },
+    { 
+      key: 'kcseResultsPdf',
+      nameField: 'kcsePdfName',
+      sizeField: 'kcsePdfSize',
+      yearField: 'kcseYear',
+      descriptionField: 'kcseDescription',
+      termField: 'kcseTerm'
+    }
+  ];
+
+  // Initialize each field properly
+  documentFields.forEach(field => {
+    if (documents && documents[field.key]) {
+      baseFormData[field.key] = {
+        file: null, // Will be set if user uploads a new file
+        name: documents[field.nameField] || '',
+        filename: documents[field.nameField] || '',
+        size: documents[field.sizeField] || 0,
+        year: documents[field.yearField] || '',
+        description: documents[field.descriptionField] || '',
+        term: documents[field.termField] || '',
+        isExisting: true,
+        markedForDeletion: false,
+        url: documents[field.key] // Store the actual URL
+      };
+    } else {
+      baseFormData[field.key] = null;
+    }
   });
+
+  console.log('FormData initialized from documents:', baseFormData);
+  return baseFormData;
+});
 
   // COMPLETE FIX: Preload existing fee breakdowns
   const [feeBreakdowns, setFeeBreakdowns] = useState({
@@ -3504,21 +3495,22 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     }
   };
 
-  const getExistingPdfData = (field) => {
-    const fileData = formData[field];
-    if (fileData && fileData.isExisting && !fileData.markedForDeletion) {
-      return {
-        name: fileData.name,
-        filename: fileData.filename,
-        size: fileData.size,
-        year: fileData.year,
-        description: fileData.description,
-        term: fileData.term,
-        isExisting: true
-      };
-    }
-    return null;
-  };
+const getExistingPdfData = (field) => {
+  const fileData = formData[field];
+  if (fileData && fileData.isExisting && !fileData.markedForDeletion) {
+    return {
+      name: fileData.name,
+      filename: fileData.filename,
+      size: fileData.size,
+      year: fileData.year,
+      description: fileData.description,
+      term: fileData.term,
+      isExisting: true,
+      url: fileData.url // Add this for viewing existing files
+    };
+  }
+  return null;
+};
 
   // Helper to count total documents
   const countTotalDocuments = () => {
