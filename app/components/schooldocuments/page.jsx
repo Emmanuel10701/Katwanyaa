@@ -621,31 +621,56 @@ useEffect(() => {
   );
 }
 
-// Admission Fee Breakdown Modal
+// Admission Fee Breakdown Modal Component - COMPLETE FIXED VERSION
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
   onSave, 
   existingBreakdown = []
 }) {
-  const [categories, setCategories] = useState(existingBreakdown || []);
+  // Initialize with empty array if no existing breakdown
+  const [categories, setCategories] = useState(() => {
+    // Only use existingBreakdown if it's a valid array with admission-specific data
+    if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      // Filter out any non-admission specific fields that might have been inherited
+      return existingBreakdown.map(cat => ({
+        ...cat,
+        boardingOnly: false, // Ensure boardingOnly is false for admission fees
+        optional: cat.optional || false,
+        id: cat.id || `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      }));
+    }
+    return []; // Start with empty array
+  });
+  
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
 
-useEffect(() => {
-  const total = Array.isArray(categories) 
-    ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
-    : 0;
-  setTotalAmount(total);
-}, [categories]);
+  useEffect(() => {
+    const total = Array.isArray(categories) 
+      ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
+      : 0;
+    setTotalAmount(total);
+  }, [categories]);
+
+  // Add this effect to reset when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      // Reset categories when modal opens to prevent autofill from previous categories
+      if (!Array.isArray(existingBreakdown) || existingBreakdown.length === 0) {
+        setCategories([]);
+      }
+    }
+  }, [open, existingBreakdown]);
 
   const handleAddCategory = () => {
     const newCategory = {
-      id: `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: '',
       amount: 0,
       description: '',
       optional: false,
+      boardingOnly: false, // Explicitly false for admission fees
       order: categories.length
     };
     setCategories([...categories, newCategory]);
@@ -654,6 +679,12 @@ useEffect(() => {
   const handleCategoryChange = (index, field, value) => {
     const updated = [...categories];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // Ensure boardingOnly is always false for admission fees
+    if (field === 'boardingOnly') {
+      updated[index].boardingOnly = false;
+    }
+    
     setCategories(updated);
   };
 
@@ -668,6 +699,8 @@ useEffect(() => {
 
   const handleSave = () => {
     const validationErrors = [];
+    
+    // Validate all categories
     categories.forEach((cat, index) => {
       if (!cat.name?.trim()) {
         validationErrors.push(`Category ${index + 1} requires a name`);
@@ -683,28 +716,88 @@ useEffect(() => {
       return;
     }
 
+    // Clean up data before saving - remove boardingOnly flag and ensure proper structure
+    const cleanedCategories = categories.map(cat => ({
+      ...cat,
+      boardingOnly: false, // Force false for admission
+      id: cat.id.startsWith('admission_') ? cat.id : `admission_${cat.id || Date.now()}`
+    }));
+
     setErrors([]);
-    onSave(categories);
+    onSave(cleanedCategories);
     onClose();
   };
 
   const presetCategories = [
-    { name: 'Application Fee', amount: 0, description: 'Non-refundable application processing fee' },
-    { name: 'Registration Fee', amount: 0, description: 'Student registration fee' },
-    { name: 'Acceptance Fee', amount: 0, description: 'Fee to secure admission spot' },
-    { name: 'Uniform Deposit', amount: 0, description: 'Uniform purchase deposit' },
-    { name: 'Medical Fee', amount: 0, description: 'Medical examination and records' },
-    { name: 'Development Fee', amount: 0, description: 'School infrastructure development' },
+    { 
+      name: 'Application Fee', 
+      amount: 0, 
+      description: 'Non-refundable application processing fee',
+      optional: false,
+      boardingOnly: false
+    },
+    { 
+      name: 'Registration Fee', 
+      amount: 0, 
+      description: 'Student registration fee',
+      optional: false,
+      boardingOnly: false
+    },
+    { 
+      name: 'Acceptance Fee', 
+      amount: 0, 
+      description: 'Fee to secure admission spot',
+      optional: false,
+      boardingOnly: false
+    },
+    { 
+      name: 'Uniform Deposit', 
+      amount: 0, 
+      description: 'Uniform purchase deposit',
+      optional: true,
+      boardingOnly: false
+    },
+    { 
+      name: 'Medical Fee', 
+      amount: 0, 
+      description: 'Medical examination and records',
+      optional: false,
+      boardingOnly: false
+    },
+    { 
+      name: 'Development Fee', 
+      amount: 0, 
+      description: 'School infrastructure development',
+      optional: false,
+      boardingOnly: false
+    },
   ];
 
   const loadPreset = (preset) => {
     const loaded = preset.map((cat, index) => ({
       ...cat,
-      id: `preset_${Date.now()}_${index}`,
-      order: index
+      id: `admission_preset_${Date.now()}_${index}`,
+      order: index,
+      boardingOnly: false, // Ensure no boarding flags
+      optional: cat.optional || false
     }));
     setCategories(loaded);
-    toast.success('Preset categories loaded. Update amounts as needed.');
+    toast.success('Preset admission categories loaded. Update amounts as needed.');
+  };
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(categories);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    const orderedItems = items.map((item, index) => ({ 
+      ...item, 
+      order: index,
+      boardingOnly: false // Maintain admission-specific structure
+    }));
+    setCategories(orderedItems);
   };
 
   return (
@@ -712,14 +805,15 @@ useEffect(() => {
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
         width: '95vw',
-        maxWidth: '600px',
-        maxHeight: '80vh',
+        maxWidth: '700px',
+        maxHeight: '85vh',
         bgcolor: 'background.paper',
         borderRadius: 2,
         boxShadow: 24,
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
+        {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -742,7 +836,8 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="max-h-[calc(80vh-180px)] overflow-y-auto p-6">
+        {/* Content Area */}
+        <div className="max-h-[calc(85vh-180px)] overflow-y-auto p-6">
           {errors.length > 0 && (
             <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -784,95 +879,136 @@ useEffect(() => {
                 <h4 className="text-lg font-bold text-gray-700 mb-2">No Admission Fees</h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
                   Define the admission fees that new students need to pay.
+                  Start fresh with empty fields or load a preset.
                 </p>
-                <button
-                  onClick={handleAddCategory}
-                  className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-purple-800 transition-colors font-bold shadow-lg flex items-center gap-2 mx-auto"
-                >
-                  <FaPlus /> Add First Category
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => loadPreset(presetCategories)}
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-colors font-bold shadow-lg flex items-center gap-2"
+                  >
+                    <FaFileAlt /> Load Preset
+                  </button>
+                  <button
+                    onClick={handleAddCategory}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-colors font-bold shadow-lg flex items-center gap-2"
+                  >
+                    <FaPlus /> Add First Category
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                {categories.map((category, index) => (
-                  <div key={category.id} className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border-2 border-purple-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="p-2 bg-purple-500 text-white rounded-xl">
-                          <FaMoneyBillWave className="text-sm" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-gray-900">{category.name}</h4>
-                          <p className="text-xs text-gray-600 font-bold">
-                            KES {category.amount?.toLocaleString() || '0'}
-                            {category.optional && <span className="text-gray-500 ml-2">(Optional)</span>}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCategory(index)}
-                        className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                      >
-                        <FaTrash className="text-sm" />
-                      </button>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="admission-fee-categories">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-3"
+                    >
+                      {categories.map((category, index) => (
+                        <Draggable 
+                          key={category.id} 
+                          draggableId={category.id} 
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className="relative"
+                            >
+                              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 p-2 cursor-move" {...provided.dragHandleProps}>
+                                <FaSort className="text-gray-400" />
+                              </div>
+                              <div className="ml-8">
+                                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-4 border-2 border-purple-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="p-2 bg-purple-500 text-white rounded-xl">
+                                        <FaMoneyBillWave className="text-sm" />
+                                      </div>
+                                      <div>
+                                        <h4 className="text-sm font-bold text-gray-900">{category.name || `Admission Fee ${index + 1}`}</h4>
+                                        <p className="text-xs text-gray-600 font-bold">
+                                          Amount: KES {category.amount?.toLocaleString() || '0'}
+                                          {category.optional && <span className="text-gray-500 ml-2">(Optional)</span>}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveCategory(index)}
+                                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                      title="Remove category"
+                                    >
+                                      <FaTrash className="text-sm" />
+                                    </button>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="block text-xs font-bold text-gray-700 mb-2">Category Name *</label>
+                                      <input
+                                        type="text"
+                                        value={category.name || ''}
+                                        onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
+                                        placeholder="e.g., Application Fee"
+                                        className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-xs font-bold text-gray-700 mb-2">Amount (KES) *</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="100"
+                                        value={category.amount || ''}
+                                        onChange={(e) => handleCategoryChange(index, 'amount', parseFloat(e.target.value) || 0)}
+                                        placeholder="Enter amount"
+                                        className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-3">
+                                    <label className="block text-xs font-bold text-gray-700 mb-2">Description</label>
+                                    <textarea
+                                      value={category.description || ''}
+                                      onChange={(e) => handleCategoryChange(index, 'description', e.target.value)}
+                                      placeholder="Description of this admission fee..."
+                                      rows="2"
+                                      className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold resize-none"
+                                    />
+                                  </div>
+                                  
+                                  <div className="mt-3">
+                                    <label className="flex items-center gap-2 text-xs font-bold text-gray-700">
+                                      <input
+                                        type="checkbox"
+                                        checked={category.optional || false}
+                                        onChange={(e) => handleCategoryChange(index, 'optional', e.target.checked)}
+                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                      />
+                                      Optional Fee (Not required for admission)
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-2">Category Name *</label>
-                        <input
-                          type="text"
-                          value={category.name || ''}
-                          onChange={(e) => handleCategoryChange(index, 'name', e.target.value)}
-                          placeholder="e.g., Application Fee"
-                          className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-2">Amount (KES) *</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="100"
-                          value={category.amount || ''}
-                          onChange={(e) => handleCategoryChange(index, 'amount', parseFloat(e.target.value) || 0)}
-                          placeholder="Enter amount"
-                          className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="mt-3">
-                      <label className="block text-xs font-bold text-gray-700 mb-2">Description</label>
-                      <input
-                        type="text"
-                        value={category.description || ''}
-                        onChange={(e) => handleCategoryChange(index, 'description', e.target.value)}
-                        placeholder="Description of this fee..."
-                        className="w-full px-3 py-2.5 bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-sm font-bold"
-                      />
-                    </div>
-                    
-                    <div className="mt-3">
-                      <label className="flex items-center gap-2 text-xs font-bold text-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={category.optional || false}
-                          onChange={(e) => handleCategoryChange(index, 'optional', e.target.checked)}
-                          className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                        />
-                        Optional Fee (Not required for admission)
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             )}
           </div>
 
+          {/* Summary Section */}
           <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 p-6 mb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-purple-500 text-white rounded-xl">
                   <FaCalculator className="text-lg" />
@@ -893,14 +1029,39 @@ useEffect(() => {
                 </p>
               </div>
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-purple-200">
+                <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Required Fees</p>
+                <p className="text-lg font-bold text-gray-900">
+                  KES {categories.filter(c => !c.optional).reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-600 mt-1 font-bold">
+                  {categories.filter(c => !c.optional).length} categories
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-purple-200">
+                <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Optional Fees</p>
+                <p className="text-lg font-bold text-gray-900">
+                  KES {categories.filter(c => c.optional).reduce((sum, cat) => sum + (cat.amount || 0), 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-600 mt-1 font-bold">
+                  {categories.filter(c => c.optional).length} categories
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Footer Actions */}
         <div className="border-t border-gray-200 p-6 bg-white">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1 font-bold">{categories.length} categories configured</p>
+              <p className="text-xs mt-1 font-bold">{categories.length} admission fee categories configured</p>
+              <p className="text-xs text-gray-500 mt-1">
+                All fields start empty to prevent autofill from other fee types
+              </p>
             </div>
             
             <div className="flex gap-3 w-full sm:w-auto">
