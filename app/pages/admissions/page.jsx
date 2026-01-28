@@ -2012,20 +2012,28 @@ export default function ComprehensiveAdmissions() {
     <div className="flex items-center gap-2 p-1.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl self-start md:self-center">
       
       {/* Sync Button */}
-      <button
-        onClick={refreshData}
-        disabled={loading}
-        className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest bg-white/5 hover:bg-white/10 text-white/70 active:scale-95"
-      >
-        {loading ? (
-          <CircularProgress size={14} thickness={6} sx={{ color: '#3b82f6' }} />
-        ) : (
-          <>
-            <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">Sync</span>
-          </>
-        )}
-      </button>
+<button
+  onClick={refreshData}
+  disabled={loading}
+  title="Refresh latest information"
+  className="flex items-center justify-center gap-2 h-10 px-4 rounded-xl
+             transition-all font-black text-[10px] uppercase tracking-widest
+             bg-white/5 hover:bg-white/10 text-white/70
+             active:scale-95 disabled:opacity-50"
+>
+  {loading ? (
+    <>
+      <CircularProgress size={14} thickness={6} sx={{ color: '#3b82f6' }} />
+      Refreshing...
+    </>
+  ) : (
+    <>
+      <FiRefreshCw className="transition-transform duration-300 group-hover:rotate-180" />
+      <span className="hidden sm:inline">Refresh Info</span>
+    </>
+  )}
+</button>
+
     </div>
   </div>
 </header>
