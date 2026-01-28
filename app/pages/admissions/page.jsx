@@ -1977,78 +1977,60 @@ export default function ComprehensiveAdmissions() {
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Modernized Admissions Portal Header with MUI Loader */}
-        <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
-          
-          {/* Left Section: Branding & Title */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900 text-white shadow-sm">
-                <IoSchoolOutline size={18} />
-              </div>
-              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
-                Academic Enrollment 2026
-              </span>
-            </div>
+<header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12 px-2 max-w-full overflow-hidden">
+  
+  {/* Left Section: Branding & Modern Typography */}
+  <div className="flex flex-col gap-5 min-w-0">
+    <div className="flex items-center gap-4">
+      {/* Icon scales with zoom, doesn't lose shape */}
+      <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-900 text-white shadow-xl border border-white/10 shrink-0">
+        <IoSchoolOutline className="w-6 h-6 md:w-7 md:h-7" />
+      </div>
+      <div className="flex flex-col min-w-0">
+        <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-blue-600 leading-none truncate">
+          Katwanyaa High School
+        </h2>
+        <span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 truncate">
+          Academic Enrollment System 2026
+        </span>
+      </div>
+    </div>
 
-            <div className="space-y-1">
-              <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
-                Admissions Portal
-              </h1>
-              <div className="flex items-center gap-2 text-slate-500 font-medium italic">
-                <span className="w-4 h-[1px] bg-slate-300 inline-block"></span>
-                <p className="text-sm md:text-base">
-                  {schoolData?.name || 'Katwanyaa High School'} — Shape Your Future
-                </p>
-              </div>
-            </div>
-          </div>
+    <div className="relative">
+      {/* Leading-[0.85] creates that modern tight look */}
+      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-slate-900 tracking-tighter leading-[0.85] uppercase break-words">
+        Admissions <br />
+        <span className="text-blue-600">Portal</span>
+      </h1>
+      <div className="mt-4 flex items-center gap-3">
+        <div className="h-[2px] w-8 bg-slate-200 shrink-0"></div>
+        <p className="text-slate-600 font-black text-xs md:text-base tracking-tight uppercase">
+          Providing **Quality Education** through **Integrity**.
+        </p>
+      </div>
+    </div>
+  </div>
 
-          {/* Right Section: Action Bento Box */}
-          <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded-2xl md:rounded-[24px] self-start lg:self-center shadow-sm">
-            
-            <button
-              onClick={refreshData}
-              disabled={loading}
-              className={`flex items-center justify-center gap-3 h-12 px-4 md:px-5 rounded-2xl border transition-all shadow-sm
-                ${loading 
-                  ? 'bg-slate-50 border-slate-200 cursor-not-allowed' 
-                  : 'bg-white border-slate-200 active:bg-slate-100 active:scale-95'
-                }`}
-            >
-              {loading ? (
-                <>
-                  {/* Material UI Circular Progress */}
-                  <CircularProgress 
-                    size={18} 
-                    thickness={6} 
-                    sx={{ color: '#0f172a' }} // Slate-900
-                  />
-                  {/* Loading Text */}
-                  <span className="text-xs font-black text-slate-900">
-                    Refreshing...
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="text-xs font-black text-slate-500">
-                    Refresh
-                  </span>
-                </>
-              )}
-            </button>
-
-            {/* Primary Apply CTA */}
-            <button
-              onClick={() => router.push('/pages/apply-for-admissions')}
-              className="flex items-center gap-3 px-4 py-3 md:px-6 md:py-3.5 bg-slate-900 text-white rounded-2xl font-bold text-sm tracking-wide shadow-xl active:scale-95 transition-all"
-            >
-              <div className="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center">
-                <FiPlus size={14} />
-              </div>
-              <span>Apply Online</span>
-            </button>
-          </div>
-        </header>
+  {/* Right Section: Compact Action Hub (Mobile Responsive Stack) */}
+  <div className="flex flex-row items-center gap-2 p-2 bg-slate-50 border-2 border-slate-100 rounded-[24px] sm:rounded-[32px] shadow-sm self-start lg:self-center">
+    
+    <button
+      onClick={refreshData}
+      disabled={loading}
+      className={`flex items-center justify-center h-12 px-4 md:px-6 rounded-[18px] sm:rounded-[22px] transition-all font-black text-[10px] uppercase tracking-[0.15em]
+        ${loading 
+          ? 'bg-slate-100 text-slate-300 cursor-not-allowed' 
+          : 'bg-white text-slate-600 border border-slate-200 shadow-sm active:scale-95'
+        }`}
+    >
+      {loading ? (
+        <CircularProgress size={16} thickness={7} sx={{ color: '#94a3b8' }} />
+      ) : (
+        "Sync"
+      )}
+    </button>
+  </div>
+</header>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
