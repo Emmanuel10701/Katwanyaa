@@ -305,7 +305,6 @@ function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' 
   );
 }
 
-// Fee Breakdown Modal Component
 function FeeBreakdownModal({ 
   open, 
   onClose, 
@@ -314,17 +313,47 @@ function FeeBreakdownModal({
   existingBreakdown = [],
   type = 'day'
 }) {
-  const [categories, setCategories] = useState(existingBreakdown || []);
+  // FIXED: Initialize with existing data or empty array, never with placeholders in edit mode
+  const [categories, setCategories] = useState(() => {
+    console.log('FeeBreakdownModal initializing with existingBreakdown:', existingBreakdown);
+    
+    // Only use existingBreakdown if it's a valid array with data
+    if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      console.log('Edit Mode: Loading existing fee breakdown data', existingBreakdown);
+      return existingBreakdown.map((cat, index) => ({
+        ...cat,
+        id: cat.id || `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        amount: parseFloat(cat.amount) || 0,
+        order: cat.order || index,
+        // Ensure proper boolean values
+        optional: Boolean(cat.optional),
+        boardingOnly: Boolean(cat.boardingOnly && type === 'boarding')
+      }));
+    }
+    console.log('Add Mode: Starting with empty categories');
+    return []; // Start with empty array for new entries
+  });
+
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
-useEffect(() => {
-  const total = Array.isArray(categories) 
-    ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
-    : 0;
-  setTotalAmount(total);
-}, [categories]);
+  useEffect(() => {
+    const total = Array.isArray(categories) 
+      ? categories.reduce((sum, cat) => sum + (parseFloat(cat.amount) || 0), 0) 
+      : 0;
+    setTotalAmount(total);
+  }, [categories]);
 
+  // FIXED: Detect edit mode and prevent preset loading
+  useEffect(() => {
+    if (open && existingBreakdown && existingBreakdown.length > 0) {
+      setIsEditMode(true);
+      console.log('Edit Mode detected with', existingBreakdown.length, 'existing categories');
+    } else {
+      setIsEditMode(false);
+    }
+  }, [open, existingBreakdown]);
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -403,14 +432,22 @@ useEffect(() => {
     { name: 'Development Levy', amount: 0, description: 'School development fund' },
   ];
 
+  // FIXED: Preset loading only allowed when no existing data
   const loadPreset = (preset) => {
-    const loaded = preset.map((cat, index) => ({
-      ...cat,
-      id: `preset_${Date.now()}_${index}`,
-      order: index
-    }));
-    setCategories(loaded);
-    toast.success('Preset categories loaded. Update amounts as needed.');
+    // Only allow preset loading if there are NO existing categories
+    if (categories.length === 0 && !isEditMode) {
+      const loaded = preset.map((cat, index) => ({
+        ...cat,
+        id: `preset_${Date.now()}_${index}`,
+        order: index,
+        optional: cat.optional || false,
+        boardingOnly: cat.boardingOnly || false
+      }));
+      setCategories(loaded);
+      toast.success('Preset categories loaded. Update amounts as needed.');
+    } else {
+      toast.info('Cannot load preset when editing existing fee structure. Edit current categories instead.');
+    }
   };
 
   return (
@@ -437,6 +474,16 @@ useEffect(() => {
                 <p className="text-white/90 text-sm mt-1 font-bold">
                   {type === 'day' ? 'Day School' : 'Boarding School'} Fee Structure Breakdown
                 </p>
+                {isEditMode && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-white/30 px-2 py-1 rounded-full font-bold">
+                      📝 Edit Mode
+                    </span>
+                    <span className="text-xs text-white/80">
+                      Editing {categories.length} existing categories
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <button 
@@ -467,13 +514,16 @@ useEffect(() => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Fee Categories</h3>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadPreset(presetCategories)}
-                  className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Load Preset
-                </button>
+                {/* FIXED: Show Load Preset button only when NOT in edit mode */}
+                {!isEditMode && categories.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => loadPreset(presetCategories)}
+                    className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Load Preset
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleAddCategory}
@@ -489,7 +539,9 @@ useEffect(() => {
                 <FaMoneyBillWave className="mx-auto text-4xl text-gray-400 mb-4" />
                 <h4 className="text-lg font-bold text-gray-700 mb-2">No Fee Categories</h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  Start by adding fee categories or load a preset to get started.
+                  {isEditMode 
+                    ? 'No existing fee categories found. Start by adding new categories.' 
+                    : 'Start by adding fee categories or load a preset to get started.'}
                 </p>
                 <button
                   onClick={handleAddCategory}
@@ -553,6 +605,7 @@ useEffect(() => {
                   <h3 className="text-lg font-bold text-gray-900">Fee Summary</h3>
                   <p className="text-sm text-gray-600 font-bold">
                     {categories.length} categories defined
+                    {isEditMode && <span className="text-blue-600 ml-2">(Editing existing)</span>}
                   </p>
                 </div>
               </div>
@@ -593,7 +646,10 @@ useEffect(() => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total: <span className="text-emerald-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1 font-bold">{categories.length} fee categories configured</p>
+              <p className="text-xs mt-1 font-bold">
+                {categories.length} fee categories configured
+                {isEditMode && <span className="text-blue-600 ml-2">(Edit Mode)</span>}
+              </p>
             </div>
             
             <div className="flex gap-3 w-full sm:w-auto">
@@ -610,7 +666,7 @@ useEffect(() => {
                 disabled={categories.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                Save Breakdown
+                {isEditMode ? 'Update Breakdown' : 'Save Breakdown'}
               </button>
             </div>
           </div>
@@ -620,30 +676,36 @@ useEffect(() => {
   );
 }
 
-// Admission Fee Breakdown Modal Component - COMPLETE FIXED VERSION
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
   onSave, 
   existingBreakdown = []
 }) {
-  // Initialize with empty array if no existing breakdown
+  // FIXED: Initialize with existing data in edit mode
   const [categories, setCategories] = useState(() => {
+    console.log('AdmissionFeeBreakdownModal initializing with:', existingBreakdown);
+    
     // Only use existingBreakdown if it's a valid array with admission-specific data
     if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      console.log('Edit Mode: Loading existing admission fee breakdown', existingBreakdown);
       // Filter out any non-admission specific fields that might have been inherited
-      return existingBreakdown.map(cat => ({
+      return existingBreakdown.map((cat, index) => ({
         ...cat,
         boardingOnly: false, // Ensure boardingOnly is false for admission fees
-        optional: cat.optional || false,
-        id: cat.id || `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        optional: Boolean(cat.optional || false),
+        amount: parseFloat(cat.amount) || 0,
+        id: cat.id || `admission_category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        order: cat.order || index
       }));
     }
+    console.log('Add Mode: Starting with empty admission categories');
     return []; // Start with empty array
   });
   
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const total = Array.isArray(categories) 
@@ -652,11 +714,23 @@ function AdmissionFeeBreakdownModal({
     setTotalAmount(total);
   }, [categories]);
 
-  // Add this effect to reset when modal opens/closes
+  // FIXED: Detect edit mode and load existing data
   useEffect(() => {
     if (open) {
-      // Reset categories when modal opens to prevent autofill from previous categories
-      if (!Array.isArray(existingBreakdown) || existingBreakdown.length === 0) {
+      if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+        setIsEditMode(true);
+        console.log('Admission Edit Mode detected with', existingBreakdown.length, 'existing categories');
+        // Load existing data when modal opens
+        setCategories(existingBreakdown.map((cat, index) => ({
+          ...cat,
+          boardingOnly: false,
+          optional: Boolean(cat.optional || false),
+          amount: parseFloat(cat.amount) || 0,
+          id: cat.id || `admission_category_${Date.now()}_${index}`,
+          order: cat.order || index
+        })));
+      } else {
+        setIsEditMode(false);
         setCategories([]);
       }
     }
@@ -717,9 +791,13 @@ function AdmissionFeeBreakdownModal({
 
     // Clean up data before saving - remove boardingOnly flag and ensure proper structure
     const cleanedCategories = categories.map(cat => ({
-      ...cat,
+      id: cat.id,
+      name: cat.name,
+      amount: parseFloat(cat.amount) || 0,
+      description: cat.description || '',
+      optional: Boolean(cat.optional),
       boardingOnly: false, // Force false for admission
-      id: cat.id.startsWith('admission_') ? cat.id : `admission_${cat.id || Date.now()}`
+      order: cat.order || 0
     }));
 
     setErrors([]);
@@ -772,16 +850,21 @@ function AdmissionFeeBreakdownModal({
     },
   ];
 
+  // FIXED: Prevent preset loading in edit mode
   const loadPreset = (preset) => {
-    const loaded = preset.map((cat, index) => ({
-      ...cat,
-      id: `admission_preset_${Date.now()}_${index}`,
-      order: index,
-      boardingOnly: false, // Ensure no boarding flags
-      optional: cat.optional || false
-    }));
-    setCategories(loaded);
-    toast.success('Preset admission categories loaded. Update amounts as needed.');
+    if (categories.length === 0 && !isEditMode) {
+      const loaded = preset.map((cat, index) => ({
+        ...cat,
+        id: `admission_preset_${Date.now()}_${index}`,
+        order: index,
+        boardingOnly: false, // Ensure no boarding flags
+        optional: cat.optional || false
+      }));
+      setCategories(loaded);
+      toast.success('Preset admission categories loaded. Update amounts as needed.');
+    } else {
+      toast.warning('Cannot load preset when editing existing admission fees.');
+    }
   };
 
   const handleDragEnd = (result) => {
@@ -824,6 +907,16 @@ function AdmissionFeeBreakdownModal({
                 <p className="text-white/90 text-sm mt-1 font-bold">
                   Define admission-related fees and charges
                 </p>
+                {isEditMode && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs bg-white/30 px-2 py-1 rounded-full font-bold">
+                      📝 Edit Mode
+                    </span>
+                    <span className="text-xs text-white/80">
+                      Editing {categories.length} existing admission fee categories
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             <button 
@@ -855,13 +948,16 @@ function AdmissionFeeBreakdownModal({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Admission Fee Categories</h3>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => loadPreset(presetCategories)}
-                  className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-                >
-                  Load Preset
-                </button>
+                {/* FIXED: Show Load Preset only when NOT in edit mode */}
+                {!isEditMode && categories.length === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => loadPreset(presetCategories)}
+                    className="px-4 py-2 text-sm font-bold bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                  >
+                    Load Preset
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={handleAddCategory}
@@ -877,16 +973,19 @@ function AdmissionFeeBreakdownModal({
                 <FaUserCheck className="mx-auto text-4xl text-purple-400 mb-4" />
                 <h4 className="text-lg font-bold text-gray-700 mb-2">No Admission Fees</h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  Define the admission fees that new students need to pay.
-                  Start fresh with empty fields or load a preset.
+                  {isEditMode 
+                    ? 'No existing admission fees found. Start by adding new categories.' 
+                    : 'Define the admission fees that new students need to pay. Start fresh with empty fields or load a preset.'}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
-                    onClick={() => loadPreset(presetCategories)}
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-colors font-bold shadow-lg flex items-center gap-2"
-                  >
-                    <FaFileAlt /> Load Preset
-                  </button>
+                  {!isEditMode && (
+                    <button
+                      onClick={() => loadPreset(presetCategories)}
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-colors font-bold shadow-lg flex items-center gap-2"
+                    >
+                      <FaFileAlt /> Load Preset
+                    </button>
+                  )}
                   <button
                     onClick={handleAddCategory}
                     className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-colors font-bold shadow-lg flex items-center gap-2"
@@ -1016,6 +1115,7 @@ function AdmissionFeeBreakdownModal({
                   <h3 className="text-lg font-bold text-gray-900">Admission Fee Summary</h3>
                   <p className="text-sm text-gray-600 font-bold">
                     {categories.length} admission fee categories
+                    {isEditMode && <span className="text-blue-600 ml-2">(Editing existing)</span>}
                   </p>
                 </div>
               </div>
@@ -1057,9 +1157,14 @@ function AdmissionFeeBreakdownModal({
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1 font-bold">{categories.length} admission fee categories configured</p>
+              <p className="text-xs mt-1 font-bold">
+                {categories.length} admission fee categories configured
+                {isEditMode && <span className="text-blue-600 ml-2">(Edit Mode)</span>}
+              </p>
               <p className="text-xs text-gray-500 mt-1">
-                All fields start empty to prevent autofill from other fee types
+                {isEditMode 
+                  ? 'Editing existing admission fee categories' 
+                  : 'All fields start empty to prevent autofill from other fee types'}
               </p>
             </div>
             
@@ -1077,7 +1182,7 @@ function AdmissionFeeBreakdownModal({
                 disabled={categories.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                Save Admission Fees
+                {isEditMode ? 'Update Admission Fees' : 'Save Admission Fees'}
               </button>
             </div>
           </div>
@@ -1086,7 +1191,6 @@ function AdmissionFeeBreakdownModal({
     </Modal>
   );
 }
-
 // Document Metadata Modal for Exam Results and Additional Files with Term Field
 function DocumentMetadataModal({ 
   open, 
@@ -1231,7 +1335,7 @@ function DocumentMetadataModal({
   );
 }
 
-// Enhanced Modern PDF Upload with all fixes
+// Enhanced Modern PDF Upload with all fixes for edit mode
 function ModernPdfUpload({ 
   pdfFile, 
   onPdfChange, 
@@ -1254,12 +1358,21 @@ function ModernPdfUpload({
   const [isReplacing, setIsReplacing] = useState(false);
   const [showFeeModal, setShowFeeModal] = useState(false);
   const [showAdmissionFeeModal, setShowAdmissionFeeModal] = useState(false);
-  const [localFeeBreakdown, setLocalFeeBreakdown] = useState(feeBreakdown || existingFeeBreakdown || []);
+  const [localFeeBreakdown, setLocalFeeBreakdown] = useState(() => {
+    // Use existingFeeBreakdown if provided (edit mode)
+    if (existingFeeBreakdown && Array.isArray(existingFeeBreakdown) && existingFeeBreakdown.length > 0) {
+      console.log(`Edit Mode: Loading existing fee breakdown for ${type}`, existingFeeBreakdown);
+      return existingFeeBreakdown;
+    }
+    return feeBreakdown || [];
+  });
+  
   const [fileSelected, setFileSelected] = useState(false);
   const [fileId, setFileId] = useState(null);
   const fileInputRef = useRef(null);
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [selectedFileForMetadata, setSelectedFileForMetadata] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // File size limit (0.5 MB individual file limit)
   const MAX_INDIVIDUAL_SIZE = 0.5 * 1024 * 1024;
@@ -1267,7 +1380,13 @@ function ModernPdfUpload({
   // Allowed file types
   const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx'];
 
+  // FIXED: Enhanced initialization for edit mode
   useEffect(() => {
+    if (existingPdf) {
+      setIsEditMode(true);
+      console.log(`Edit Mode activated for ${type} with existing PDF:`, existingPdf);
+    }
+    
     if (pdfFile && typeof pdfFile === 'object') {
       setPreviewName(pdfFile.name);
       setFileSelected(true);
@@ -1278,11 +1397,15 @@ function ModernPdfUpload({
     } else if (existingPdf) {
       setPreviewName(existingPdf.name || existingPdf.filename || 'Existing PDF');
       setFileSelected(true);
+      // Preserve existing fee breakdown in edit mode
+      if (existingFeeBreakdown && existingFeeBreakdown.length > 0) {
+        setLocalFeeBreakdown(existingFeeBreakdown);
+      }
     } else {
       setPreviewName('');
       setFileSelected(false);
     }
-  }, [pdfFile, existingPdf, fileId]);
+  }, [pdfFile, existingPdf, fileId, existingFeeBreakdown, type]);
 
   const validateFile = (file) => {
     // Check file type by extension
@@ -1301,6 +1424,7 @@ function ModernPdfUpload({
     return true;
   };
 
+  // FIXED: Enhanced file change handler for edit mode metadata preservation
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files).slice(0, 1);
     
@@ -1321,107 +1445,47 @@ function ModernPdfUpload({
       setSelectedFileForMetadata(file);
       setShowMetadataModal(true);
     } else {
-      // For non-exam files
-      if (fileId) {
-        // Replace existing file
-        const success = fileSizeManager.replaceFile(fileId, file);
-        if (!success) {
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
-      } else {
-        // Add new file
-        const newFileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const success = fileSizeManager.addFile(file, newFileId);
-        if (!success) {
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
-        setFileId(newFileId);
-      }
+      // For non-exam files - preserve existing metadata in edit mode
+      const existingMetadata = existingPdf ? {
+        year: existingPdf.year || '',
+        description: existingPdf.description || '',
+        term: existingPdf.term || ''
+      } : {};
 
-      setUploadProgress(0);
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 100);
-
-      setTimeout(() => {
-        onPdfChange(file);
-        setPreviewName(file.name);
-        setFileSelected(true);
-        setUploadProgress(100);
-        setIsReplacing(false);
-        
-        toast.success('File selected successfully');
-        
-        setTimeout(() => setUploadProgress(0), 1000);
-      }, 500);
+      // Update parent with file and preserved metadata
+      onPdfChange(file, existingMetadata.year, existingMetadata.description, existingMetadata.term);
+      
+      // Update local state
+      setPreviewName(file.name);
+      setFileSelected(true);
+      
+      toast.success(isEditMode ? 'Replacement file selected' : 'File selected successfully');
     }
   };
 
+  // FIXED: Enhanced metadata save handler for edit mode
   const handleMetadataSave = (metadata) => {
     if (selectedFileForMetadata) {
-      // Check total size for new file
-      if (fileId) {
-        // Replace existing file
-        const success = fileSizeManager.replaceFile(fileId, selectedFileForMetadata);
-        if (!success) {
-          setShowMetadataModal(false);
-          setSelectedFileForMetadata(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
-      } else {
-        // Add new file
-        const newFileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const success = fileSizeManager.addFile(selectedFileForMetadata, newFileId);
-        if (!success) {
-          setShowMetadataModal(false);
-          setSelectedFileForMetadata(null);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          return;
-        }
-        setFileId(newFileId);
-      }
+      // Preserve existing metadata if not overridden
+      const existingMetadata = existingPdf ? {
+        year: existingPdf.year || '',
+        description: existingPdf.description || '',
+        term: existingPdf.term || ''
+      } : {};
+      
+      const finalMetadata = {
+        year: metadata.year || existingMetadata.year,
+        description: metadata.description || existingMetadata.description,
+        term: metadata.term || existingMetadata.term
+      };
 
-      setUploadProgress(0);
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 100);
-
-      setTimeout(() => {
-        onPdfChange(selectedFileForMetadata, metadata.year, metadata.description, metadata.term);
-        setPreviewName(selectedFileForMetadata.name);
-        setFileSelected(true);
-        setUploadProgress(100);
-        setIsReplacing(false);
-        setShowMetadataModal(false);
-        setSelectedFileForMetadata(null);
-        
-        toast.success('File with metadata saved successfully');
-        
-        setTimeout(() => setUploadProgress(0), 1000);
-      }, 500);
+      onPdfChange(selectedFileForMetadata, finalMetadata.year, finalMetadata.description, finalMetadata.term);
+      setPreviewName(selectedFileForMetadata.name);
+      setFileSelected(true);
+      setShowMetadataModal(false);
+      setSelectedFileForMetadata(null);
+      
+      toast.success(isEditMode ? 'File with metadata updated successfully' : 'File with metadata saved successfully');
     }
   };
 
@@ -1430,7 +1494,7 @@ function ModernPdfUpload({
     if (onFeeBreakdownChange) {
       onFeeBreakdownChange(breakdown);
     }
-    toast.success('Fee breakdown saved successfully');
+    toast.success(isEditMode ? 'Fee breakdown updated successfully' : 'Fee breakdown saved successfully');
   };
 
   const handleAdmissionFeeSave = (breakdown) => {
@@ -1438,7 +1502,7 @@ function ModernPdfUpload({
     if (onFeeBreakdownChange) {
       onFeeBreakdownChange(breakdown);
     }
-    toast.success('Admission fees saved successfully');
+    toast.success(isEditMode ? 'Admission fees updated successfully' : 'Admission fees saved successfully');
   };
 
   const calculateTotal = (breakdown) => {
@@ -1447,15 +1511,23 @@ function ModernPdfUpload({
   };
 
   const handleRemove = () => {
-    if (fileId) {
-      fileSizeManager.removeFile(fileId);
+    if (isEditMode && existingPdf) {
+      // In edit mode, mark existing file for deletion
+      if (onRemoveExisting) {
+        onRemoveExisting();
+      }
+    } else {
+      // In add mode or for new files
+      if (fileId) {
+        fileSizeManager.removeFile(fileId);
+      }
+      onRemove();
     }
-    onRemove();
     setPreviewName('');
     setFileSelected(false);
     setFileId(null);
     setUploadProgress(0);
-    toast.info('File removed');
+    toast.info(isEditMode ? 'File marked for deletion' : 'File removed');
   };
 
   const handleRemoveExisting = () => {
@@ -1472,6 +1544,19 @@ function ModernPdfUpload({
   const hasExistingPdf = existingPdf && !pdfFile;
   const hasNewPdf = pdfFile && typeof pdfFile === 'object';
   const hasFeeBreakdown = localFeeBreakdown && localFeeBreakdown.length > 0;
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const files = Array.from(e.dataTransfer.files).slice(0, 1);
+    if (files.length > 0) {
+      const file = files[0];
+      if (validateFile(file)) {
+        handleFileChange({ target: { files } });
+      }
+    }
+  };
 
   const getDescription = () => {
     switch(type) {
@@ -1492,8 +1577,25 @@ function ModernPdfUpload({
 
   return (
     <div className="space-y-4">
-      {/* Upload Section */}
+      {/* Upload Section with Edit Mode Indicator */}
       <div className="w-full max-w-2xl">
+        {/* EDIT MODE NOTIFICATION */}
+        {isEditMode && (
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <FaPencilAlt className="text-blue-600" />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-blue-800">
+                  📝 Edit Mode - Editing Existing Document
+                </p>
+                <p className="text-xs text-blue-700 font-bold mt-1">
+                  You can replace the file or edit metadata. Existing metadata will be preserved unless changed.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* FILE SIZE NOTIFICATION */}
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-4">
           <div className="flex items-center gap-2">
@@ -1516,33 +1618,76 @@ function ModernPdfUpload({
             {fileSelected && (
               <span className="flex items-center gap-1 text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
                 <FaCheck className="text-xs" />
-                Selected
+                {isEditMode ? 'Editing' : 'Selected'}
+              </span>
+            )}
+            {isEditMode && (
+              <span className="flex items-center gap-1 text-blue-600 text-xs bg-blue-50 px-2 py-1 rounded-full">
+                <FaPencilAlt className="text-xs" />
+                Edit Mode
               </span>
             )}
           </label>
           
-          {(type === 'day' || type === 'boarding') && (
+          {(type === 'day' || type === 'boarding' || type === 'admission') && (
             <button
               type="button"
-              onClick={() => setShowFeeModal(true)}
+              onClick={() => {
+                if (type === 'admission') {
+                  setShowAdmissionFeeModal(true);
+                } else {
+                  setShowFeeModal(true);
+                }
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition duration-200 font-bold text-sm shadow-lg"
             >
               <FaCalculator className="text-xs" />
-              {hasFeeBreakdown ? 'Edit Breakdown' : 'Add Fee Breakdown'}
-            </button>
-          )}
-          
-          {type === 'admission' && (
-            <button
-              type="button"
-              onClick={() => setShowAdmissionFeeModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition duration-200 font-bold text-sm shadow-lg"
-            >
-              <FaMoneyBillWave className="text-xs" />
-              {hasFeeBreakdown ? 'Edit Fees' : 'Add Admission Fees'}
+              {hasFeeBreakdown 
+                ? (isEditMode ? 'Edit Existing Breakdown' : 'Edit Breakdown') 
+                : 'Add Fee Breakdown'}
             </button>
           )}
         </div>
+        
+        {/* EXISTING METADATA DISPLAY IN EDIT MODE */}
+        {hasExistingPdf && (
+          <div className="mb-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-4 border-2 border-blue-200">
+            <div className="flex items-start gap-3">
+              <FaInfoCircle className="text-blue-600 mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="text-sm font-bold text-gray-900 mb-2">Existing Document Information</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {existingPdf.year && (
+                    <div className="bg-white p-2 rounded-lg border border-blue-200">
+                      <p className="text-xs text-gray-500 font-bold">Year</p>
+                      <p className="text-sm font-bold text-gray-900">{existingPdf.year}</p>
+                    </div>
+                  )}
+                  {existingPdf.term && (
+                    <div className="bg-white p-2 rounded-lg border border-blue-200">
+                      <p className="text-xs text-gray-500 font-bold">Term</p>
+                      <p className="text-sm font-bold text-gray-900">{existingPdf.term}</p>
+                    </div>
+                  )}
+                  {existingPdf.description && (
+                    <div className="col-span-2 bg-white p-2 rounded-lg border border-blue-200">
+                      <p className="text-xs text-gray-500 font-bold">Description</p>
+                      <p className="text-sm font-bold text-gray-900">{existingPdf.description}</p>
+                    </div>
+                  )}
+                  {existingPdf.size && (
+                    <div className="bg-white p-2 rounded-lg border border-blue-200">
+                      <p className="text-xs text-gray-500 font-bold">File Size</p>
+                      <p className="text-sm font-bold text-gray-900">
+                        {formatFileSize(existingPdf.size)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="mb-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
           <div className="flex items-start gap-3">
@@ -1563,6 +1708,7 @@ function ModernPdfUpload({
                 <FaMoneyBillWave className={type === 'admission' ? 'text-purple-600' : type === 'boarding' ? 'text-blue-600' : 'text-green-600'} />
                 <h4 className="text-sm font-bold text-gray-900">
                   {type === 'admission' ? 'Admission Fees' : `${type.charAt(0).toUpperCase() + type.slice(1)} School Fees`}
+                  {isEditMode && <span className="text-blue-600 text-xs ml-2">(Editing Existing)</span>}
                 </h4>
               </div>
               <span className={`text-lg font-bold ${type === 'admission' ? 'text-purple-700' : type === 'boarding' ? 'text-blue-700' : 'text-green-700'}`}>
@@ -1619,74 +1765,82 @@ function ModernPdfUpload({
                       {hasNewPdf ? pdfFile.name : (existingPdf.name || existingPdf.filename || 'Existing PDF')}
                     </p>
                     <p className="text-xs text-gray-600 font-bold">
-                      {fileSelected ? '✓ File Selected' : 'No file selected'}
+                      {fileSelected ? (isEditMode ? '✓ Editing Existing File' : '✓ File Selected') : 'No file selected'}
                       {hasNewPdf && pdfFile.size && ` • ${(pdfFile.size / 1024).toFixed(0)} KB`}
                       {hasFeeBreakdown && ` • ${localFeeBreakdown.length} categories`}
+                      {isEditMode && hasExistingPdf && ` • ${isEditMode ? 'Edit Mode' : ''}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-{hasExistingPdf && (
-  <div className="flex gap-2">
-    <button
-      type="button"
-      onClick={() => {
-        // Clear the current file reference
-        setPreviewName('');
-        setFileSelected(false);
-        
-        // Create and trigger file input
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.pdf,.doc,.docx';
-        input.onchange = (e) => {
-          if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            // Validate and handle the file
-            if (validateFile(file)) {
-              // Update parent state with replacement
-              onPdfChange(file);
-              
-              // Update local state
-              setPreviewName(file.name);
-              setFileSelected(true);
-              
-              // If this is an existing file, mark it for replacement
-              if (existingPdf && onCancelExisting) {
-                onCancelExisting(existingPdf);
-              }
-              
-              toast.success('File selected for replacement');
-            }
-          }
-        };
-        input.click();
-      }}
-      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
-    >
-      <FaUpload className="text-xs" />
-      Replace File
-    </button>
-    
-    <button
-      type="button"
-      onClick={() => {
-        // Mark for deletion
-        if (onRemoveExisting) {
-          onRemoveExisting();
-        }
-        // Clear local state
-        setPreviewName('');
-        setFileSelected(false);
-        toast.warning('File marked for deletion');
-      }}
-      className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
-    >
-      <FaTrash className="text-xs" />
-      Delete
-    </button>
-  </div>
-)}
+                  {hasExistingPdf && (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Clear the current file reference
+                          setPreviewName('');
+                          setFileSelected(false);
+                          
+                          // Create and trigger file input
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '.pdf,.doc,.docx';
+                          input.onchange = (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              const file = e.target.files[0];
+                              // Validate and handle the file
+                              if (validateFile(file)) {
+                                // Preserve existing metadata
+                                const existingMetadata = existingPdf ? {
+                                  year: existingPdf.year || '',
+                                  description: existingPdf.description || '',
+                                  term: existingPdf.term || ''
+                                } : {};
+                                
+                                // Update parent state with replacement
+                                onPdfChange(file, existingMetadata.year, existingMetadata.description, existingMetadata.term);
+                                
+                                // Update local state
+                                setPreviewName(file.name);
+                                setFileSelected(true);
+                                
+                                // If this is an existing file, mark it for replacement
+                                if (existingPdf && onCancelExisting) {
+                                  onCancelExisting(existingPdf);
+                                }
+                                
+                                toast.success('File selected for replacement');
+                              }
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-blue-600 hover:to-blue-700 flex items-center gap-1 text-sm font-bold"
+                      >
+                        <FaUpload className="text-xs" />
+                        Replace File
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Mark for deletion
+                          if (onRemoveExisting) {
+                            onRemoveExisting();
+                          }
+                          // Clear local state
+                          setPreviewName('');
+                          setFileSelected(false);
+                          toast.warning('File marked for deletion');
+                        }}
+                        className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow hover:shadow-md hover:from-red-600 hover:to-red-700 flex items-center gap-1 text-sm font-bold"
+                      >
+                        <FaTrash className="text-xs" />
+                        Delete
+                      </button>
+                    </div>
+                  )}
                   {hasNewPdf && (
                     <div className="flex gap-2">
                       <button
@@ -1722,7 +1876,9 @@ function ModernPdfUpload({
                   <div className="w-full bg-green-100 rounded-full h-2">
                     <div className="bg-green-500 h-2 rounded-full"></div>
                   </div>
-                  <span className="text-xs font-bold text-green-700">Selected ✓</span>
+                  <span className="text-xs font-bold text-green-700">
+                    {isEditMode ? 'Editing ✓' : 'Selected ✓'}
+                  </span>
                 </div>
               )}
               
@@ -1749,18 +1905,7 @@ function ModernPdfUpload({
                 ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 ring-4 ring-blue-50' 
                 : 'border-gray-200 hover:border-blue-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:shadow-lg'
             }`}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setDragOver(false);
-              const files = Array.from(e.dataTransfer.files).slice(0, 1);
-              if (files.length > 0) {
-                const file = files[0];
-                if (validateFile(file)) {
-                  handleFileChange({ target: { files } });
-                }
-              }
-            }}
+            onDrop={handleDrop}
             onDragOver={(e) => { 
               e.preventDefault(); 
               e.stopPropagation();
@@ -1833,6 +1978,8 @@ function ModernPdfUpload({
     </div>
   );
 }
+
+// Helper function for file size formatting
 
 // First, update the AdditionalResultsUpload component to properly pass data to parent
 function AdditionalResultsUpload({ 
