@@ -843,9 +843,7 @@ const ModernFeeCard = ({
             <IoCloudDownloadOutline size={18} />
             Download PDF
           </a>
-          <button className={`font-black text-[10px] uppercase tracking-[0.2em] ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-            View Payment Policy →
-          </button>
+       
         </div>
       </div>
     </div>
@@ -1070,33 +1068,28 @@ const ModernUniformRequirementsSection = ({
   admissionFeeYear,
   admissionFeeTerm
 }) => {
-  // admissionFeeDistribution is now an array, not an object
   const uniformItems = admissionFeeDistribution || [];
-
-  // Calculate total from array
   const totalCost = uniformItems.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg overflow-hidden">
-      {/* Header Section */}
-      <div className={`relative p-4 md:p-8 bg-gradient-to-r from-blue-500 to-cyan-500 text-white`}>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden max-w-full">
+      
+      {/* Header Section: Now uses the high-end Slate-900 look */}
+      <div className="relative p-6 md:p-10 bg-[#0F172A] text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
-              <IoShirtOutline className="text-white text-xl md:text-2xl" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shrink-0">
+              <IoShirtOutline className="text-blue-400 text-2xl md:text-3xl" />
             </div>
-            <div>
-              <h3 className="text-lg md:text-2xl font-bold">Admission Fee Breakdown</h3>
-              <p className="text-blue-100 mt-1">Complete kit for academic excellence</p>
+            <div className="min-w-0">
+              <h3 className="text-lg md:text-2xl font-black uppercase tracking-tighter">Admission Breakdown</h3>
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mt-1">
+                {admissionFeeYear || '2026'} • {admissionFeeTerm || 'Full Session'}
+              </p>
               {admissionFeeDescription && (
-                <p className="text-blue-200 text-xs mt-1 italic">{admissionFeeDescription}</p>
-              )}
-              {(admissionFeeYear || admissionFeeTerm) && (
-                <p className="text-blue-200 text-xs mt-1">
-                  {admissionFeeYear} • {admissionFeeTerm}
-                </p>
+                <p className="text-white/40 text-[10px] mt-1 italic font-bold truncate">{admissionFeeDescription}</p>
               )}
             </div>
           </div>
@@ -1107,65 +1100,55 @@ const ModernUniformRequirementsSection = ({
               download={admissionFeePdfName}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 px-4 py-3 md:px-6 md:py-3 bg-white text-blue-600 rounded-xl font-bold transition-all duration-200 shadow-lg"
+              className="flex items-center gap-3 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-900/40 shrink-0 active:scale-95"
             >
-              <div className="p-2 bg-blue-50 rounded-lg transition-transform">
-                <IoCloudDownloadOutline className="text-blue-600" />
-              </div>
-              <span>Download Full List</span>
+              <IoCloudDownloadOutline className="text-lg" />
+              <span>Download PDF</span>
             </a>
           )}
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="p-4 md:p-8">
+      {/* Content Section: Individual Item Cards */}
+      <div className="p-5 md:p-10 bg-slate-50/50">
         {uniformItems.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {uniformItems.map((item, index) => (
               <div 
                 key={item.id || index}
-                className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
+                className="group bg-white border border-slate-200 rounded-2xl p-5 transition-all hover:shadow-xl hover:border-blue-200"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                      {item.optional ? (
-                        <FiCheckCircle className="text-green-500" />
-                      ) : (
-                        <IoCheckmarkCircleOutline className="text-blue-500" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-800 text-sm leading-tight">
-                        {item.name}
-                      </h4>
-                      {item.description && (
-                        <p className="text-slate-500 text-xs mt-1">{item.description}</p>
-                      )}
-                    </div>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="min-w-0">
+                    <h4 className="font-black text-slate-900 text-[11px] uppercase tracking-wider mb-1 truncate">
+                      {item.name}
+                    </h4>
+                    <p className="text-slate-400 text-[10px] font-bold leading-tight line-clamp-2">
+                      {item.description || 'Standard requirement'}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-slate-900">
+                  <div className={`p-1.5 rounded-lg shrink-0 ${item.optional ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                    {item.optional ? <FiCheckCircle size={14} /> : <IoCheckmarkCircleOutline size={14} />}
+                  </div>
+                </div>
+
+                <div className="flex items-end justify-between mt-6">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Amount</span>
+                    <span className="text-lg font-black text-slate-900 tabular-nums">
                       KSh {parseInt(item.amount || 0).toLocaleString()}
-                    </div>
-                    {item.optional && (
-                      <span className="text-xs text-green-600 font-bold">Optional</span>
-                    )}
-                    {item.boardingOnly && (
-                      <span className="text-xs text-blue-600 font-bold">Boarding Only</span>
-                    )}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {item.optional && <span className="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-black uppercase">Optional</span>}
+                    {item.boardingOnly && <span className="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-black uppercase">Boarding</span>}
                   </div>
                 </div>
                 
-                {/* Progress Indicator */}
-                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                {/* Visual Progress Bar - Boldened */}
+                <div className="w-full h-1.5 bg-slate-100 rounded-full mt-4 overflow-hidden">
                   <div 
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      item.optional 
-                        ? 'bg-gradient-to-r from-green-400 to-emerald-400' 
-                        : 'bg-gradient-to-r from-blue-400 to-cyan-400'
-                    }`}
+                    className={`h-full transition-all duration-1000 ${item.optional ? 'bg-emerald-500' : 'bg-blue-600'}`}
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -1173,52 +1156,38 @@ const ModernUniformRequirementsSection = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 md:py-12">
-            <div className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 flex items-center justify-center">
-              <FiAlertTriangle className="w-8 h-8 md:w-12 md:h-12 text-blue-400" />
-            </div>
-            <h4 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Admission Fee Details</h4>
-            <p className="text-slate-500 max-w-md mx-auto">
-              Complete admission fee structure will be provided upon application submission
-            </p>
+          <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-[2rem]">
+            <FiAlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h4 className="text-slate-900 font-black uppercase tracking-widest text-sm">No items found</h4>
+            <p className="text-slate-400 text-xs font-bold mt-2">The admission list is being updated by the registrar.</p>
           </div>
         )}
 
-        {/* Total Cost Summary */}
+        {/* Total Cost Summary Bento - Sticky-ready for Mobile */}
         {uniformItems.length > 0 && (
-          <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
-                  <FiDollarSign className="text-white text-xl" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Total Admission Cost
-                  </h4>
-                  <p className="text-xs text-slate-500 mb-1">
-                    {uniformItems.filter(item => !item.optional).length} mandatory items
-                    {uniformItems.filter(item => item.optional).length > 0 && 
-                      ` + ${uniformItems.filter(item => item.optional).length} optional items`
-                    }
-                  </p>
-                  <div className="text-xl md:text-3xl font-bold text-slate-900">
-                    KSh {totalCost.toLocaleString()}
-                  </div>
+          <div className="mt-10 p-6 md:p-8 bg-slate-900 rounded-[2rem] text-white shadow-2xl flex flex-col md:flex-row justify-between items-center gap-8 border border-white/5">
+            <div className="flex items-center gap-5 w-full md:w-auto">
+              <div className="p-4 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/20">
+                <FiDollarSign size={24} className="text-white" />
+              </div>
+              <div>
+                <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-1">
+                  Cumulative Total
+                </h4>
+                <div className="text-3xl md:text-5xl font-black tracking-tighter tabular-nums leading-none">
+                  KSh {totalCost.toLocaleString()}
                 </div>
               </div>
-              
-              <div className="flex items-center gap-4 text-sm text-slate-500">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                  <span>Mandatory items</span>
-                </div>
-                {uniformItems.some(item => item.optional) && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                    <span>Optional items</span>
-                  </div>
-                )}
+            </div>
+            
+            <div className="flex gap-6 w-full md:w-auto border-t md:border-t-0 md:border-l border-white/10 pt-6 md:pt-0 md:pl-10">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Mandatory</span>
+                <span className="text-xl font-black text-white">{uniformItems.filter(i => !i.optional).length} Items</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em]">Optional</span>
+                <span className="text-xl font-black text-emerald-400">{uniformItems.filter(i => i.optional).length} Items</span>
               </div>
             </div>
           </div>
@@ -1238,7 +1207,8 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.form1ResultsYear,
       term: documentData?.form1ResultsTerm,
       icon: FiBook,
-      gradient: 'from-blue-500 to-cyan-500'
+      accent: 'text-blue-400',
+      bg: 'bg-blue-400/10'
     },
     {
       name: 'Form 2 Results',
@@ -1248,7 +1218,8 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.form2ResultsYear,
       term: documentData?.form2ResultsTerm,
       icon: FiBookOpen,
-      gradient: 'from-purple-500 to-pink-500'
+      accent: 'text-purple-400',
+      bg: 'bg-purple-400/10'
     },
     {
       name: 'Form 3 Results',
@@ -1258,7 +1229,8 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.form3ResultsYear,
       term: documentData?.form3ResultsTerm,
       icon: FiLayers,
-      gradient: 'from-green-500 to-emerald-500'
+      accent: 'text-emerald-400',
+      bg: 'bg-emerald-400/10'
     },
     {
       name: 'Form 4 Results',
@@ -1268,7 +1240,8 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.form4ResultsYear,
       term: documentData?.form4ResultsTerm,
       icon: FiAward,
-      gradient: 'from-amber-500 to-orange-500'
+      accent: 'text-amber-400',
+      bg: 'bg-amber-400/10'
     },
     {
       name: 'Mock Exams',
@@ -1278,7 +1251,8 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.mockExamsYear,
       term: documentData?.mockExamsTerm,
       icon: FiFileText,
-      gradient: 'from-red-500 to-rose-500'
+      accent: 'text-rose-400',
+      bg: 'bg-rose-400/10'
     },
     {
       name: 'KCSE Results',
@@ -1288,111 +1262,100 @@ const AcademicResultsSection = ({ documentData }) => {
       year: documentData?.kcseYear,
       term: documentData?.kcseTerm,
       icon: FiTrendingUp,
-      gradient: 'from-indigo-500 to-purple-500'
+      accent: 'text-indigo-400',
+      bg: 'bg-indigo-400/10'
     }
   ];
 
-  // Filter out results that don't have PDFs
   const availableResults = resultsData.filter(result => result.pdf);
-
   if (availableResults.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg overflow-hidden">
-      {/* Header Section */}
-      <div className="relative p-4 md:p-8 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl overflow-hidden">
+      
+      {/* Header Section - Dark Bento Style */}
+      <div className="relative p-6 md:p-10 bg-[#0F172A] text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/20 blur-[100px] rounded-full -mr-32 -mt-32"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-          <div className="flex items-center gap-3 md:gap-4">
-            <div className="p-2 md:p-3 bg-white/20 backdrop-blur-md rounded-xl md:rounded-2xl border border-white/30">
-              <IoStatsChartOutline className="text-white text-xl md:text-2xl" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10">
+              <IoStatsChartOutline className="text-blue-400 text-2xl md:text-3xl" />
             </div>
             <div>
-              <h3 className="text-lg md:text-2xl font-bold">Academic Results & Reports</h3>
-              <p className="text-slate-300 mt-1">Download past examination results and performance reports</p>
+              <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Academic Reports</h3>
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">Official Performance Archives</p>
             </div>
           </div>
-          
-          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
-            <FiAward className="text-yellow-400" />
-            <span className="text-sm font-bold uppercase tracking-wider">Performance Data</span>
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+            <FiAward className="text-amber-400" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Verified Data</span>
           </div>
         </div>
       </div>
 
-      {/* Content Section */}
-      <div className="p-4 md:p-8">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Main Grid - Results Cards */}
+      <div className="p-5 md:p-10 bg-slate-50/30">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {availableResults.map((result, index) => (
             <div 
               key={index}
-              className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
+              className="group bg-white border border-slate-200 rounded-[2rem] p-6 transition-all hover:shadow-xl hover:-translate-y-1"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 md:p-3 rounded-xl md:rounded-2xl bg-gradient-to-r ${result.gradient} text-white`}>
-                    <result.icon className="text-lg md:text-xl" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm leading-tight">{result.name}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-bold text-slate-500">{result.year}</span>
-                      {result.term && (
-                        <>
-                          <span className="text-slate-300">•</span>
-                          <span className="text-xs font-medium text-slate-500">{result.term}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+              <div className="flex items-start justify-between mb-6">
+                <div className={`p-4 rounded-2xl ${result.bg} ${result.accent}`}>
+                  <result.icon size={24} />
+                </div>
+                <div className="text-right">
+                  <span className="block text-lg font-black text-slate-900 leading-none">{result.year}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{result.term || 'Annual'}</span>
                 </div>
               </div>
               
+              <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight mb-2 truncate">
+                {result.name}
+              </h4>
+              
               {result.description && (
-                <p className="text-slate-500 text-xs leading-relaxed mb-4 line-clamp-2">
+                <p className="text-slate-400 text-[10px] font-bold leading-relaxed mb-6 line-clamp-2 h-8">
                   {result.description}
                 </p>
               )}
               
-              {result.pdf && (
-                <a 
-                  href={result.pdf}
-                  download={result.pdfName}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all duration-200 group-hover:bg-slate-100"
-                >
-                  <IoCloudDownloadOutline className="text-slate-500" />
-                  <span>Download PDF</span>
-                </a>
-              )}
+              <a 
+                href={result.pdf}
+                download={result.pdfName}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3 w-full py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all hover:bg-blue-600 active:scale-95"
+              >
+                <IoCloudDownloadOutline size={16} />
+                <span>Download Report</span>
+              </a>
             </div>
           ))}
         </div>
 
-        {/* Additional Documents */}
+        {/* Additional Documents - Horizontal Bento */}
         {documentData?.additionalDocuments && documentData.additionalDocuments.length > 0 && (
-          <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
-            <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Additional School Documents</h4>
-            <div className="grid md:grid-cols-2 gap-3">
+          <div className="mt-12 pt-10 border-t border-slate-200">
+            <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 px-2">
+              School Resource Archive
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {documentData.additionalDocuments.map((doc, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white rounded-lg">
-                      <IoDocumentTextOutline className="text-blue-500" />
+                <div key={index} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 group transition-all hover:border-blue-400">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="p-3 bg-slate-100 rounded-xl group-hover:bg-blue-50 transition-colors shrink-0">
+                      <IoDocumentTextOutline className="text-slate-500 group-hover:text-blue-500" />
                     </div>
-                    <div>
-                      <h5 className="font-medium text-slate-800 text-sm">{doc.description || doc.filename}</h5>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-slate-500">{doc.year}</span>
-                        {doc.term && (
-                          <>
-                            <span className="text-slate-300">•</span>
-                            <span className="text-xs text-slate-500">{doc.term}</span>
-                          </>
-                        )}
-                      </div>
+                    <div className="min-w-0">
+                      <h5 className="font-black text-slate-900 text-[11px] uppercase tracking-wide truncate">
+                        {doc.description || doc.filename}
+                      </h5>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                        {doc.year} • {doc.term || 'General'}
+                      </p>
                     </div>
                   </div>
                   <a 
@@ -1400,7 +1363,7 @@ const AcademicResultsSection = ({ documentData }) => {
                     download={doc.filename}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-white text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="p-3 bg-slate-900 text-white rounded-xl hover:bg-blue-600 transition-all active:scale-90"
                   >
                     <FiDownload size={16} />
                   </a>
@@ -2514,77 +2477,7 @@ export default function ComprehensiveAdmissions() {
                 </div>
               </div>
 
-              {/* University Pathways - Modern */}
-              <div className="bg-slate-50 rounded-xl md:rounded-[2.5rem] p-6 md:p-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <h3 className="text-xl md:text-2xl font-bold text-slate-900">University Access</h3>
-                    <p className="text-slate-500">Global and local higher education partnerships</p>
-                  </div>
-                  <div className="mt-4 md:mt-0">
-                    <div className="inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2 bg-white rounded-full border border-slate-200">
-                      <FiGlobe className="text-blue-500" />
-                      <span className="text-sm font-medium text-slate-700">Global Network</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-                  {/* Local Universities */}
-                  <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-100">
-                    <div className="flex items-center gap-3 mb-4 md:mb-6">
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-50 rounded-lg md:rounded-xl flex items-center justify-center">
-                        <IoSchoolOutline className="text-blue-600 text-lg md:text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900 text-lg">National Institutions</h4>
-                    </div>
-                    
-                    <div className="space-y-3 md:space-y-4">
-                      {[
-                        { name: 'University of Nairobi', rank: '#1 National' },
-                        { name: 'Kenyatta University', rank: 'Top 5 Nationally' },
-                        { name: 'Moi University', rank: 'Research Intensive' },
-                        { name: 'Technical University of Kenya', rank: 'STEM Focus' }
-                      ].map((uni, idx) => (
-                        <div key={idx} className="flex items-center justify-between py-2 md:py-3 border-b border-slate-100 last:border-0">
-                          <div className="flex items-center gap-2 md:gap-3">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="font-medium text-slate-800 text-sm md:text-base">{uni.name}</span>
-                          </div>
-                          <span className="text-xs md:text-sm text-slate-500 font-medium">{uni.rank}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* International Opportunities */}
-                  <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-100">
-                    <div className="flex items-center gap-3 mb-4 md:mb-6">
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-green-50 rounded-lg md:rounded-xl flex items-center justify-center">
-                        <FiGlobe className="text-green-600 text-lg md:text-xl" />
-                      </div>
-                      <h4 className="font-bold text-slate-900 text-lg">Global Partnerships</h4>
-                    </div>
-                    
-                    <div className="space-y-3 md:space-y-4">
-                      {[
-                        { program: 'Scholarship Programs', countries: 'USA, UK, Canada' },
-                        { program: 'Student Exchange', partners: '20+ Countries' },
-                        { program: 'Dual Degrees', status: 'Available' },
-                        { program: 'Online Degrees', platforms: 'Coursera, edX' }
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between py-2 md:py-3 border-b border-slate-100 last:border-0">
-                          <div className="flex items-center gap-2 md:gap-3">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="font-medium text-slate-800 text-sm md:text-base">{item.program}</span>
-                          </div>
-                          <span className="text-xs md:text-sm text-slate-500 font-medium">{item.countries || item.partners || item.status || item.platforms}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+ 
             </div>
           )}
 
@@ -2884,36 +2777,7 @@ export default function ComprehensiveAdmissions() {
       />
     </div>
 
-    {/* Admission Fee - One-Time Bento Card */}
-    <div className="bg-gradient-to-br from-blue-600 to-indigo-900 rounded-[3rem] p-8 md:p-14 text-white shadow-2xl relative overflow-hidden mx-2">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-      
-      <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <h3 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4">Initial <span className="text-blue-300">Admission</span></h3>
-          <p className="font-bold text-blue-100/60 uppercase text-xs tracking-widest mb-8">One-time payment for new student registration</p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {documentData?.admissionFeeDistribution?.map((item) => (
-              <div key={item.id} className="flex justify-between items-center border-b border-white/10 py-3">
-                <span className="font-black text-[10px] uppercase tracking-wider text-blue-200">{item.name}</span>
-                <span className="font-black text-sm">KSh {item.amount.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        <div className="bg-white/10 backdrop-blur-2xl border border-white/20 p-10 rounded-[2.5rem] text-center">
-          <p className="text-[10px] font-black text-blue-300 uppercase tracking-[0.4em] mb-4">Total Registration</p>
-          <p className="text-6xl md:text-7xl font-black tracking-tighter leading-none mb-8 tabular-nums">
-            KSh {(documentData?.admissionFeeDistribution?.reduce((sum, item) => sum + item.amount, 0) || 0).toLocaleString()}
-          </p>
-          <button className="w-full bg-white text-slate-900 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl shadow-2xl active:scale-95 transition-all">
-            Proceed to Payment
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 )}
 
