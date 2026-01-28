@@ -643,23 +643,23 @@ const listenForRecentActivity = async () => {
     return sortedActivities;
 
   } catch (error) {
-    console.error('🚨 Critical error in listenForRecentActivity:', error);
+console.error('🚨 Critical error in listenForRecentActivity:', error);
     
     // Return fallback activities if everything fails
-    return [{
-      id: 'fallback-activity',
-      action: 'System online',
-      target: 'Dashboard is monitoring activities',
-      time: 'Just now',
-      formattedDate: 'Today',
-      type: 'system',
-      icon: FiActivity,
-      color: 'blue',
-      timestamp: new Date(),
-      details: {
-        note: 'Activities will appear here as they occur'
-      }
-    }];
+return [{
+  id: 'fallback-activity',
+  action: 'System online',
+  target: 'Dashboard is monitoring activities',
+  time: 'Just now',
+  formattedDate: 'Today',
+  type: 'system',
+  icon: FiActivity,
+  color: 'blue',
+  timestamp: new Date(),
+  details: {
+    note: 'Activities will appear here as they occur'
+  }
+}];
   }
 };
 

@@ -181,36 +181,37 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
   // Fetch real counts from APIs including resources
   const fetchRealCounts = async () => {
     try {
-      const [
-        staffRes,
-        subscribersRes,
-        eventsRes,
-        newsRes,
-        assignmentsRes,
-        galleryRes,
-        guidanceRes,
-        admissionsRes,
-        resourcesRes,
-        careersRes,
-        schooldocumentsRes,
-        resultsRes,
-        studentRes
-      ] = await Promise.allSettled([
-        fetch('/api/staff'),
-        fetch('/api/subscriber'),
-        fetch('/api/events'),
-        fetch('/api/news'),
-        fetch('/api/assignment'),
-        fetch('/api/gallery'),
-        fetch('/api/guidance'),
-        fetch('/api/applyadmission'),
-        fetch('/api/resources?accessLevel=admin&limit=100'),
-        fetch('/api/career'),
-        fetch('/api/studentupload'),
-        fetch('api/schooldocuments'),
-        fetch('/api/feebalances'),
-        fetch('/api/results')
-      ]);
+const [
+  staffRes,
+  subscribersRes,
+  eventsRes,
+  newsRes,
+  assignmentsRes,
+  galleryRes,
+  guidanceRes,
+  admissionsRes,
+  resourcesRes,
+  careersRes,
+  studentRes, // Changed from schooldocumentsRes
+  schooldocumentsRes,
+  feesRes,
+  resultsRes
+] = await Promise.allSettled([
+  fetch('/api/staff'),
+  fetch('/api/subscriber'),
+  fetch('/api/events'),
+  fetch('/api/news'),
+  fetch('/api/assignment'),
+  fetch('/api/gallery'),
+  fetch('/api/guidance'),
+  fetch('/api/applyadmission'),
+  fetch('/api/resources?accessLevel=admin&limit=100'),
+  fetch('/api/career'),
+  fetch('/api/studentupload'), // This matches studentRes
+  fetch('/api/schooldocuments'), // Added leading slash
+  fetch('/api/feebalances'),
+  fetch('/api/results')
+]);
 
       // Process responses and get actual counts
       const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
@@ -225,13 +226,11 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
       const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
     const schooldocuments = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
 
-      const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
-      const fees = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { feebalances: [] };
-      const results = resultsRes.status === 'fulfilled' ? await resultsRes.value.json() : { results: [] };
 
 
-      const activeStudents = students.students?.filter(s => s.status === 'Active').length || 0;
-      const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
+const activeStudents = student.students?.filter(s => s.status === 'Active').length || 0; // Changed 'students' to 'student'
+const upcomingEvents = events.events?.filter(e => new Date(e.date) > new Date()).length || 0;
+      
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
       
       // Admission statistics
