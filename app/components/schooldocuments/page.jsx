@@ -2926,71 +2926,43 @@ function DocumentsModal({ onClose, onSave, documents, loading }) {
     kcseDescription: documents?.kcseDescription || ''
   });
 
-  
-const [additionalFiles, setAdditionalFiles] = useState(() => {
-  if (documents?.additionalDocuments && Array.isArray(documents.additionalDocuments) && documents.additionalDocuments.length > 0) {
-    return documents.additionalDocuments.map((doc, index) => ({
-      id: `existing_${doc.id || `doc_${Date.now()}_${index}`}`,
-      filename: doc.filename,
-      filepath: doc.filepath,
-      filetype: doc.filetype,
-      description: doc.description || '',
-      year: doc.year || '',
-      term: doc.term || '',
-      filesize: doc.filesize || 0,
-      isExisting: true,
-      isModified: false,
-      isRemoved: false,
-      isReplaced: false,
-      originalFilePath: doc.filepath,
-      status: 'existing',
-      uploadDate: doc.uploadedAt || doc.uploadDate || new Date().toISOString()
-    }));
-  }
-  return [];
-});
+
   
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  const steps = [
-    { 
-      id: 'curriculum', 
-      label: 'Curriculum', 
-      icon: FaBook, 
-      description: 'Academic curriculum documents' 
-    },
-    { 
-      id: 'fees', 
-      label: 'Fee Structures', 
-      icon: FaMoneyBillWave, 
-      description: 'Day and boarding fee documents' 
-    },
-    { 
-      id: 'admission', 
-      label: 'Admission', 
-      icon: FaUserCheck, 
-      description: 'Admission fee documents' 
-    },
-    { 
-      id: 'exams', 
-      label: 'Exam Results', 
-      icon: FaAward, 
-      description: 'Academic results documents' 
-    },
-    { 
-      id: 'additional', 
-      label: 'Additional', 
-      icon: FaFile, 
-      description: 'Additional documents' 
-    },
-    { 
-      id: 'review', 
-      label: 'Review', 
-      icon: FaClipboardList, 
-      description: 'Review all documents before submission' 
-    }
-  ];
+const steps = [
+  { 
+    id: 'curriculum', 
+    label: 'Curriculum', 
+    icon: FaBook, 
+    description: 'Academic curriculum documents' 
+  },
+  { 
+    id: 'fees', 
+    label: 'Fee Structures', 
+    icon: FaMoneyBillWave, 
+    description: 'Day and boarding fee documents' 
+  },
+  { 
+    id: 'admission', 
+    label: 'Admission', 
+    icon: FaUserCheck, 
+    description: 'Admission fee documents' 
+  },
+  { 
+    id: 'exams', 
+    label: 'Exam Results', 
+    icon: FaAward, 
+    description: 'Academic results documents' 
+  },
+  { 
+    id: 'review', 
+    label: 'Review', 
+    icon: FaClipboardList, 
+    description: 'Review all documents before submission' 
+  }
+];
 
   useEffect(() => {
     // Reset file size manager when modal opens
@@ -3064,49 +3036,10 @@ const handleSubmitAfterReview = async () => {
       }
     });
     
-    // Handle additional documents properly
-    const activeAdditionalFiles = additionalFiles.filter(f => !f.isRemoved);
-    
-    if (activeAdditionalFiles.length > 0) {
-      // Separate new files and existing files
-      const newAdditionalFiles = activeAdditionalFiles.filter(f => f.isNew && f.file);
-      const existingAdditionalFiles = activeAdditionalFiles.filter(f => f.isExisting && !f.isReplaced);
-      
-      // Add new additional files
-      newAdditionalFiles.forEach((file, index) => {
-        if (file.file && file.file instanceof File) {
-          data.append(`additionalFiles[${index}]`, file.file);
-          if (file.year) data.append(`additionalFiles[${index}].year`, file.year);
-          if (file.term) data.append(`additionalFiles[${index}].term`, file.term);
-          if (file.description) data.append(`additionalFiles[${index}].description`, file.description);
-          data.append(`additionalFiles[${index}].filename`, file.filename);
-        }
-      });
-      
-      // Add existing additional file references (IDs)
-      const existingFileIds = existingAdditionalFiles
-        .filter(f => f.id && f.id.startsWith('existing_'))
-        .map(f => f.id.replace('existing_', ''));
-      
-      if (existingFileIds.length > 0) {
-        data.append('existingAdditionalFileIds', JSON.stringify(existingFileIds));
-      }
-      
-      // Add files marked for deletion
-      const filesToDelete = additionalFiles.filter(f => f.isRemoved && f.id);
-      const deleteFileIds = filesToDelete
-        .filter(f => f.id.startsWith('existing_'))
-        .map(f => f.id.replace('existing_', ''));
-      
-      if (deleteFileIds.length > 0) {
-        data.append('deleteAdditionalFileIds', JSON.stringify(deleteFileIds));
-      }
-    }
+    // REMOVED: All additional files processing
     
     // Debug logging
     console.log('=== FORM DATA BEING SENT TO BACKEND ===');
-    console.log('Total active additional files:', additionalFiles.filter(f => !f.isRemoved).length);
-    console.log('Files to delete:', additionalFiles.filter(f => f.isRemoved).length);
     
     for (let [key, value] of data.entries()) {
       if (value instanceof File) {
@@ -3228,45 +3161,6 @@ const handleSubmitAfterReview = async () => {
     }
   };
 
-  const countTotalDocuments = () => {
-    let count = 0;
-    
-    // Main documents
-    Object.keys(formData).forEach(key => {
-      if (formData[key]) {
-        if (Array.isArray(formData[key])) {
-          if (formData[key][0]) count++;
-        } else if (typeof formData[key] === 'object' && formData[key] instanceof File) {
-          count++;
-        }
-      } else if (documents && documents[key]) {
-        // Count existing documents that haven't been replaced
-        count++;
-      }
-    });
-    
-    // Additional files (only active ones)
-    count += additionalFiles.filter(file => 
-      !file.isRemoved && (file.file || (file.isExisting && !file.isReplaced))
-    ).length;
-    
-    return count;
-  };
-
-  const getDocumentStatus = (field) => {
-    const existing = getExistingPdfData(field);
-    const newFile = formData[field];
-    
-    if (newFile) {
-      if (Array.isArray(newFile)) {
-        return { status: 'new', name: newFile[0]?.name || 'New file' };
-      }
-      return { status: 'new', name: newFile.name || 'New file' };
-    } else if (existing) {
-      return { status: 'existing', name: existing.name || existing.filename || 'Existing file' };
-    }
-    return { status: 'none', name: 'No file' };
-  };
 
   const renderStepContent = () => {
     switch(currentStep) {
@@ -3367,163 +3261,69 @@ const handleSubmitAfterReview = async () => {
             ))}
           </div>
         );
-case 4: // Additional Files
+
+  
+case 5: // Review Step
   return (
-    <div className="w-full max-w-2xl">
-      <AdditionalResultsUpload
-        files={additionalFiles.filter(f => f.isNew && f.file).map(f => f.file)}
-        onFilesChange={(newFiles) => {
-          // Create new file objects from the new files
-          const newFileObjects = newFiles
-            .filter(newFile => !additionalFiles.some(f => 
-              f.file && f.file.name === newFile.name && f.file.size === newFile.size
-            ))
-            .map((file, index) => ({
-              id: `new_${Date.now()}_${index}`,
-              file: file,
-              filename: file.name,
-              year: '',
-              description: '',
-              term: '',
-              isNew: true,
-              isModified: false,
-              filetype: file.type?.split('/')[1] || 'file',
-              filesize: file.size || 0,
-              status: 'uploaded'
-            }));
-          
-          // Keep existing files (both existing and new with metadata)
-          const existingFilesWithMetadata = additionalFiles.filter(f => 
-            (f.isExisting && !f.isRemoved) || (f.isNew && f.year && f.description)
-          );
-          
-          setAdditionalFiles([...existingFilesWithMetadata, ...newFileObjects]);
-        }}
-        label="Additional Documents"
-        existingFiles={documents?.additionalDocuments || []}
-        onCancelExisting={(file) => {
-          console.log('Cancel replacement for:', file);
-        }}
-        onRemoveExisting={(file) => {
-          // Mark for deletion but keep in array
-          setAdditionalFiles(prev => 
-            prev.map(f => 
-              f.id === file.id ? { ...f, isRemoved: true, status: 'removed' } : f
-            )
-          );
-        }}
-        additionalFilesState={additionalFiles}
-        onAdditionalFilesStateChange={setAdditionalFiles}
-      />
-    </div>
-  );
-      case 5: // Review Step
-        return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-blue-500 text-white rounded-xl">
-                  <FaClipboardList className="text-lg" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
-                  <p className="text-sm text-gray-600 font-bold">
-                    Review all selected documents before submission
-                  </p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white p-4 rounded-xl border border-blue-200">
-                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
-                  <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-blue-200">
-                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
-                  <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
-                </div>
-                <div className="bg-white p-4 rounded-xl border border-blue-200">
-                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Additional Files</p>
-                  <p className="text-xl font-bold text-blue-700">
-                    {additionalFiles.filter(f => !f.isRemoved && (f.isNew || f.isExisting)).length}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  <FaList className="text-blue-600" />
-                  Document Summary
-                </h4>
-                
-                {/* Additional Documents */}
-                {additionalFiles.filter(f => !f.isRemoved).length > 0 && (
-                  <div className="bg-white rounded-xl p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <FaFile className="text-gray-600" />
-                        <span className="font-bold text-gray-900">Additional Documents</span>
-                      </div>
-                      <span className="text-xs font-bold text-blue-600">
-                        {additionalFiles.filter(f => !f.isRemoved).length} files
-                      </span>
-                    </div>
-                    <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                      {additionalFiles.filter(f => !f.isRemoved).map((file, index) => (
-                        <div key={file.id || index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-gray-900 truncate">
-                              {file.filename || file.name || 'Document'}
-                            </p>
-                            <div className="flex gap-2 mt-1">
-                              {file.year && (
-                                <span className="text-xs text-blue-600">Year: {file.year}</span>
-                              )}
-                              {file.term && (
-                                <span className="text-xs text-green-600">Term: {file.term}</span>
-                              )}
-                              {file.isNew && (
-                                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">New</span>
-                              )}
-                              {file.isExisting && (
-                                <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Existing</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-600">
-                              {formatFileSize(file.filesize || file.size || 0)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="mt-6">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={confirmed}
-                    onChange={(e) => setConfirmed(e.target.checked)}
-                    className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <p className="text-sm font-bold text-gray-900 mb-1">
-                      I confirm that I have reviewed all documents and they are accurate
-                    </p>
-                    <p className="text-xs text-gray-600">
-                      By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
-                    </p>
-                  </div>
-                </label>
-              </div>
-            </div>
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-blue-500 text-white rounded-xl">
+            <FaClipboardList className="text-lg" />
           </div>
-        );
-      
+          <div>
+            <h3 className="text-lg font-bold text-gray-900">Document Review</h3>
+            <p className="text-sm text-gray-600 font-bold">
+              Review all selected documents before submission
+            </p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Total Documents</p>
+            <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">File Size</p>
+            <p className="text-xl font-bold text-blue-700">{fileSizeManager.getTotalSizeMB()} MB</p>
+          </div>
+          <div className="bg-white p-4 rounded-xl border border-blue-200">
+            <p className="text-xs text-gray-600 font-bold uppercase tracking-wider mb-1">Main Documents</p>
+            <p className="text-xl font-bold text-blue-700">{countTotalDocuments()}</p>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+            <FaList className="text-blue-600" />
+            Document Summary
+          </h4>
+          
+          {/* REMOVED: Additional Documents section */}
+        </div>
+        
+        <div className="mt-6">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+            />
+            <div>
+              <p className="text-sm font-bold text-gray-900 mb-1">
+                I confirm that I have reviewed all documents and they are accurate
+              </p>
+              <p className="text-xs text-gray-600">
+                By checking this box, I confirm that all uploaded documents, metadata, and fee breakdowns are accurate and complete.
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  );   
       default:
         return null;
     }
@@ -3750,19 +3550,18 @@ const loadData = async () => {
     return <ModernLoadingSpinner message="Loading school documents..." size="medium" />;
   }
 
-  const hasDocuments = documents && (
-    documents.curriculumPDF ||
-    documents.feesDayDistributionPdf ||
-    documents.feesBoardingDistributionPdf ||
-    documents.admissionFeePdf ||
-    documents.form1ResultsPdf ||
-    documents.form2ResultsPdf ||
-    documents.form3ResultsPdf ||
-    documents.form4ResultsPdf ||
-    documents.mockExamsResultsPdf ||
-    documents.kcseResultsPdf ||
-    (documents.additionalDocuments && documents.additionalDocuments.length > 0)
-  );
+const hasDocuments = documents && (
+  documents.curriculumPDF ||
+  documents.feesDayDistributionPdf ||
+  documents.feesBoardingDistributionPdf ||
+  documents.admissionFeePdf ||
+  documents.form1ResultsPdf ||
+  documents.form2ResultsPdf ||
+  documents.form3ResultsPdf ||
+  documents.form4ResultsPdf ||
+  documents.mockExamsResultsPdf ||
+  documents.kcseResultsPdf
+);
 
   return (
     <FileSizeProvider>
@@ -4097,41 +3896,40 @@ const loadData = async () => {
               )}
             </div>
 
-            {/* ADDITIONAL DOCUMENTS SECTION */}
-            {documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
-              <div className="mt-8">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">Additional Documents</h3>
-                  <span className="text-sm text-gray-500 font-bold">
-                    {documents.additionalDocuments.length} document{documents.additionalDocuments.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {documents.additionalDocuments.map((doc, index) => (
-                    <ModernDocumentCard
-                      key={doc.id || index}
-                      title={doc.filename || `Document ${index + 1}`}
-                      description={doc.description || "Additional school document"}
-                      pdfUrl={doc.filepath}
-                      pdfName={doc.filename}
-                      year={doc.year}
-                      term={doc.term}
-                      type="additional"
-                      fileSize={doc.filesize}
-                      uploadDate={doc.uploadDate}
-                      existing={true}
-                      onReplace={() => setShowModal(true)}
-                      onRemove={() => {
-                        if (confirm("Remove this document?")) {
-                          // Handle removal
-                        }
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
+{/* REMOVE THIS ENTIRE SECTION */}
+{documents.additionalDocuments && documents.additionalDocuments.length > 0 && (
+  <div className="mt-8">
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-xl font-bold text-gray-900">Additional Documents</h3>
+      <span className="text-sm text-gray-500 font-bold">
+        {documents.additionalDocuments.length} document{documents.additionalDocuments.length !== 1 ? 's' : ''}
+      </span>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {documents.additionalDocuments.map((doc, index) => (
+        <ModernDocumentCard
+          key={doc.id || index}
+          title={doc.filename || `Document ${index + 1}`}
+          description={doc.description || "Additional school document"}
+          pdfUrl={doc.filepath}
+          pdfName={doc.filename}
+          year={doc.year}
+          term={doc.term}
+          type="additional"
+          fileSize={doc.filesize}
+          uploadDate={doc.uploadDate}
+          existing={true}
+          onReplace={() => setShowModal(true)}
+          onRemove={() => {
+            if (confirm("Remove this document?")) {
+              // Handle removal
+            }
+          }}
+        />
+      ))}
+    </div>
+  </div>
+)}
             {/* EMPTY STATE IF NO DOCUMENTS IN GRID (edge case) */}
             {!documents.curriculumPDF && 
              !documents.feesDayDistributionPdf && 
