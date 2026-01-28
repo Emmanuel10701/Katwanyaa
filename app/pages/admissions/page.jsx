@@ -2511,134 +2511,105 @@ export default function ComprehensiveAdmissions() {
                 admissionFeeTerm={documentData?.admissionFeeTerm}
               />
 
-              {/* Required Documents - Modern Grid */}
-              <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg p-4 md:p-8">
-                <div className="flex items-center justify-between mb-6 md:mb-8">
-                  <div>
-                    <div className="flex items-center gap-2 md:gap-3 mb-2">
-                      <div className="p-2 md:p-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-sm">
-                        <IoDocumentTextOutline className="text-white text-lg md:text-xl" />
-                      </div>
-                      <h3 className="text-xl md:text-2xl font-bold text-slate-900">Required Documents</h3>
-                    </div>
-                    <p className="text-slate-500">Essential paperwork for admission processing</p>
-                  </div>
-                  <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-bold">
-                    <IoCheckmarkCircleOutline className="text-blue-500" />
-                    <span>Complete Set</span>
-                  </div>
-                </div>
+      {/* Required Documents - Modern Grid */}
+<div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl p-6 md:p-10 overflow-hidden">
+  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+    <div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-3 bg-slate-900 rounded-2xl shadow-xl shadow-slate-200">
+          <IoDocumentTextOutline className="text-white text-2xl md:text-3xl" />
+        </div>
+        <h3 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter">
+          Required Documents
+        </h3>
+      </div>
+      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+        Essential paperwork for admission processing
+      </p>
+    </div>
+    
+    <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100">
+      <IoCheckmarkCircleOutline className="text-lg" />
+      <span className="text-[10px] font-black uppercase tracking-widest">Mandatory Set</span>
+    </div>
+  </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {schoolData?.admissionDocumentsRequired?.length > 0 ? (
-                    schoolData.admissionDocumentsRequired.map((doc, index) => (
-                      <div 
-                        key={index}
-                        className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-3 md:gap-4">
-                          <div className="relative">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                              <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                                <IoDocumentTextOutline className="text-white text-xs md:text-sm" />
-                              </div>
-                            </div>
-                            <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">
-                              {index + 1}
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-slate-800 text-sm leading-tight">{doc}</h4>
-                            <div className="flex items-center gap-1 mt-1">
-                              <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
-                                Required
-                              </span>
-                              {index === 0 && (
-                                <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
-                                  Original
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <>
-                      {/* Default requirements if API data is not available */}
-                      {[
-                        "Original KCPE Certificate",
-                        "Birth Certificate",
-                        "Passport Size Photos (4)",
-                        "Medical Report",
-                        "Transfer Letter (if applicable)",
-                        "Previous School Reports"
-                      ].map((doc, index) => (
-                        <div 
-                          key={index}
-                          className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-3 md:gap-4">
-                            <div className="relative">
-                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                                <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                                  <IoDocumentTextOutline className="text-white text-xs md:text-sm" />
-                                </div>
-                              </div>
-                              <div className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 rounded-full bg-white border border-blue-100 flex items-center justify-center text-xs font-bold text-blue-600 shadow-sm">
-                                {index + 1}
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-bold text-slate-800 text-sm leading-tight">{doc}</h4>
-                              <div className="flex items-center gap-1 mt-1">
-                                <span className="text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
-                                  Required
-                                </span>
-                                {index === 0 && (
-                                  <span className="text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">
-                                    Original
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
+  {/* Document Cards Grid */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {(schoolData?.admissionDocumentsRequired?.length > 0 ? schoolData.admissionDocumentsRequired : [
+      "Original KCPE Certificate",
+      "Birth Certificate",
+      "Passport Size Photos (4)",
+      "Medical Report",
+      "Transfer Letter (if applicable)",
+      "Previous School Reports"
+    ]).map((doc, index) => (
+      <div 
+        key={index}
+        className="group relative bg-white border-2 border-slate-50 rounded-[2rem] p-6 transition-all hover:border-blue-400 hover:shadow-2xl"
+      >
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+              <IoDocumentTextOutline className="text-slate-400 group-hover:text-white text-xl" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black border-4 border-white">
+              {index + 1}
+            </div>
+          </div>
+          
+          <div className="min-w-0">
+            <h4 className="font-black text-slate-900 text-sm leading-tight uppercase tracking-tight truncate group-hover:whitespace-normal">
+              {doc}
+            </h4>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                Required
+              </span>
+              {index === 0 && (
+                <span className="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                  Original
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
 
-                {/* Important Notes Section */}
-                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
-                  <div className="flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-amber-50/60 border border-amber-100 rounded-xl md:rounded-2xl">
-                    <div className="flex-shrink-0 p-2 bg-amber-100 rounded-lg">
-                      <FiAlertTriangle className="text-amber-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-amber-800 mb-2">Important Notes:</h4>
-                      <ul className="space-y-2 text-amber-700 text-sm">
-                        <li className="flex items-start gap-2">
-                          <span className="text-amber-600 mt-1">•</span>
-                          <span>All documents must be original or certified copies</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-amber-600 mt-1">•</span>
-                          <span>Documents should be submitted in a clear plastic folder</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-amber-600 mt-1">•</span>
-                          <span>Incomplete applications will not be processed</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-amber-600 mt-1">•</span>
-                          <span>Submit copies along with originals for verification</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  {/* Important Notes - High Visibility Section */}
+  <div className="mt-12 p-8 bg-slate-900 rounded-[2.5rem] relative overflow-hidden border border-white/5 shadow-2xl">
+    <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[80px] rounded-full -mr-32 -mt-32"></div>
+    
+    <div className="relative z-10">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-2.5 bg-amber-500 rounded-xl">
+          <FiAlertTriangle className="text-slate-900 text-xl" />
+        </div>
+        <h4 className="text-[11px] font-black text-white uppercase tracking-[0.4em]">
+          Important Submission Notes
+        </h4>
+      </div>
+      
+      <div className="grid md:grid-cols-2 gap-x-12 gap-y-5">
+        {[
+          "All documents must be original or certified copies",
+          "Documents should be submitted in a clear plastic folder",
+          "Incomplete applications will not be processed",
+          "Submit copies along with originals for verification"
+        ].map((note, i) => (
+          <div key={i} className="flex items-start gap-4 group">
+            <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 shrink-0 group-hover:scale-125 transition-transform" />
+            <p className="text-[11px] font-bold text-slate-400 leading-relaxed group-hover:text-white transition-colors">
+              {note}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
 
               {/* Transfer Process - Modern Timeline */}
               <div className="bg-slate-900 rounded-2xl md:rounded-3xl p-6 md:p-10 text-white">
