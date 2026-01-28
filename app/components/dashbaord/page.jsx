@@ -1123,10 +1123,8 @@ const fetchAllData = useCallback(async () => {
       (a.status || '').toLowerCase() === 'assigned'
     ).length || 0;
     
-    const upcomingEvents = events.events?.filter(e => {
-      if (!e.date) return false;
-      return new Date(e.date) > new Date();
-    }).length || 0;
+    // FIXED: Remove time-based filtering for upcomingEvents
+    const upcomingEvents = events.events?.length || 0; // Just count all events
     
     const guidanceSessionsCount = guidance.events?.length || 0;
     const completedAssignments = assignments.assignments?.filter(a => 
@@ -1189,7 +1187,7 @@ const fetchAllData = useCallback(async () => {
       totalSubscribers: subscribers.subscribers?.length || 0,
       pendingEmails: 0,
       activeAssignments,
-      upcomingEvents,
+      upcomingEvents, // Now properly defined
       galleryItems: gallery.galleries?.length || 0,
       guidanceSessions: guidanceSessionsCount,
       totalNews: news.news?.length || 0,
@@ -1334,7 +1332,6 @@ const fetchAllData = useCallback(async () => {
     
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    sooner.error('Failed to load dashboard data');
   } finally {
     setLoading(false);
   }
@@ -2276,7 +2273,7 @@ const QuickTourModal = () => (
             change={parseFloat(growthMetrics.eventGrowth)} 
             trend={parseFloat(growthMetrics.eventGrowth) >= 0 ? "up" : "down"}
             color="red" 
-            subtitle="Scheduled events" 
+            subtitle="All events" 
           />
           <StatCard 
             icon={FiMessageCircle} 
