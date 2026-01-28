@@ -2057,40 +2057,76 @@ export default function ComprehensiveAdmissions() {
           ))}
         </div>
 
-        {/* Admission Dates Banner - Prominently Displayed */}
-        {schoolData && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-4 md:p-6 text-white shadow-lg">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-5">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm">
-                  <IoCalendarOutline className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg md:text-xl">Admission Period Now Open</h3>
-                  <p className="text-blue-100 opacity-90 text-sm">
-                    Secure your place for the upcoming academic year
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-sm text-blue-100">Application Opens</p>
-                  <p className="font-bold text-lg">{formatDate(schoolData.admissionOpenDate)}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-blue-100">Application Closes</p>
-                  <p className="font-bold text-lg">{formatDate(schoolData.admissionCloseDate)}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => router.push('/pages/apply-for-admissions')}
-                className="px-4 py-3 md:px-6 md:py-3 bg-white text-blue-600 rounded-lg font-bold transition-all duration-200 shadow-md"
-              >
-                Apply Now
-              </button>
-            </div>
+{schoolData && (() => {
+  // Logic to check status against current date (2026)
+  const today = new Date();
+  const openDate = new Date(schoolData.admissionOpenDate);
+  const closeDate = new Date(schoolData.admissionCloseDate);
+  const isOpen = today >= openDate && today <= closeDate;
+
+  return (
+    <div className={`rounded-2xl p-5 md:p-8 shadow-2xl border-2 transition-all duration-500 ${
+      isOpen 
+        ? 'bg-gradient-to-r from-emerald-600 to-teal-700 border-emerald-400/20' 
+        : 'bg-gradient-to-r from-slate-800 to-slate-950 border-slate-700'
+    }`}>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        
+        {/* Status Section */}
+        <div className="flex items-center gap-4">
+          <div className={`p-3.5 rounded-2xl backdrop-blur-md border shadow-inner ${
+            isOpen ? 'bg-white/20 border-white/30' : 'bg-slate-800 border-slate-700'
+          }`}>
+            <IoCalendarOutline className={`w-7 h-7 ${isOpen ? 'text-white' : 'text-slate-500'}`} />
           </div>
-        )}
+          <div>
+            <h3 className="font-black text-xl md:text-2xl text-white tracking-tighter uppercase">
+              {isOpen ? 'Admissions Now Open' : 'Admissions Currently Closed'}
+            </h3>
+            <p className={`text-sm font-bold leading-tight ${isOpen ? 'text-emerald-100' : 'text-slate-400'}`}>
+              {isOpen 
+                ? 'Join **Katwanyaa High School** for the upcoming academic year.' 
+                : 'The application window has **officially ended** for this period.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Dynamic Date Grid */}
+        <div className="grid grid-cols-2 gap-4 md:gap-10 px-6 py-4 bg-black/20 rounded-2xl border border-white/5">
+          <div className="text-left md:text-center">
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isOpen ? 'text-emerald-300' : 'text-slate-500'}`}>
+              Applications are Opened
+            </p>
+            <p className="font-black text-lg text-white tabular-nums">
+              {formatDate(schoolData.admissionOpenDate)}
+            </p>
+          </div>
+          <div className="text-left md:text-center border-l border-white/10 pl-4 md:pl-0 md:border-l-0">
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${isOpen ? 'text-emerald-300' : 'text-slate-500'}`}>
+              Final Deadline
+            </p>
+            <p className="font-black text-lg text-white tabular-nums">
+              {formatDate(schoolData.admissionCloseDate)}
+            </p>
+          </div>
+        </div>
+
+        {/* Interactive Action Button */}
+        <button
+          disabled={!isOpen}
+          onClick={() => router.push('/pages/apply-for-admissions')}
+          className={`px-8 py-4 rounded-xl font-black text-xs uppercase tracking-[0.15em] shadow-xl transition-all active:scale-95 ${
+            isOpen 
+              ? 'bg-white text-emerald-700 hover:shadow-emerald-500/20' 
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+          }`}
+        >
+          {isOpen ? 'Apply Now' : 'Closed'}
+        </button>
+      </div>
+    </div>
+  );
+})()}
 
         {/* Navigation Tabs - Modernized */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/70 overflow-hidden mb-6">
