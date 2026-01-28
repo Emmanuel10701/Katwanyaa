@@ -260,7 +260,7 @@ model SchoolDocument {
   curriculumPdfUploadDate DateTime?
   curriculumDescription   String?   @db.Text
   curriculumYear          Int?
-  curriculumTerm          String?   @db.VarChar(50)  // ADD THIS LINE
+  curriculumTerm          String?   @db.VarChar(50)
   
   // Day School Fees PDF
   feesDayDistributionPdf      String?   @db.Text
@@ -269,7 +269,7 @@ model SchoolDocument {
   feesDayPdfUploadDate        DateTime?
   feesDayDescription          String?   @db.Text
   feesDayYear                 Int?
-  feesDayTerm                 String?   @db.VarChar(50)  // ADD THIS LINE
+  feesDayTerm                 String?   @db.VarChar(50)
   
   // Boarding School Fees PDF
   feesBoardingDistributionPdf      String?   @db.Text
@@ -278,7 +278,7 @@ model SchoolDocument {
   feesBoardingPdfUploadDate        DateTime?
   feesBoardingDescription          String?   @db.Text
   feesBoardingYear                 Int?
-  feesBoardingTerm                 String?   @db.VarChar(50)  // ADD THIS LINE
+  feesBoardingTerm                 String?   @db.VarChar(50)
   
   // Admission Fee PDF
   admissionFeePdf           String?   @db.Text
@@ -287,7 +287,7 @@ model SchoolDocument {
   admissionFeePdfUploadDate DateTime?
   admissionFeeDescription   String?   @db.Text
   admissionFeeYear          Int?
-  admissionFeeTerm          String?   @db.VarChar(50)  // ADD THIS LINE
+  admissionFeeTerm          String?   @db.VarChar(50)
   
   // Fee breakdown JSON fields
   feesDayDistributionJson      Json?
@@ -351,8 +351,6 @@ model SchoolDocument {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relationships
-  additionalDocuments AdditionalDocument[]
 
   // Add indexes for new term fields
   @@index([curriculumTerm])
@@ -372,26 +370,7 @@ model SchoolDocument {
   @@map("SchoolDocument")
 }
 
-model AdditionalDocument {
-  id                Int      @id @default(autoincrement())
-  schoolDocumentId  Int
-  filename          String   @db.VarChar(255)
-  filepath          String   @db.Text
-  filetype          String   @db.VarChar(50)
-  description       String?  @db.Text
-  year              Int?
-  term              String?  @db.VarChar(50)  // ADD THIS FIELD
-  filesize          Int?
-  uploadedAt        DateTime @default(now())
-  
-  // Relationships
-  schoolDocument    SchoolDocument @relation(fields: [schoolDocumentId], references: [id], onDelete: Cascade)
 
-  @@index([schoolDocumentId])
-  @@index([year])
-  @@index([filetype])
-  @@map("AdditionalDocument")
-}
 model AdmissionApplication {
   id                     String    @id @default(cuid())
   applicationNumber      String    @unique
@@ -405,7 +384,7 @@ model AdmissionApplication {
   constituency           String
   ward                   String
   village                String?
-  email                  String    @unique
+  email                  String ?   @unique
   phone                  String? // Changed to optional
   alternativePhone       String?
   postalAddress          String

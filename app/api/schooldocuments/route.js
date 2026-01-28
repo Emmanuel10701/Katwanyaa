@@ -55,62 +55,10 @@ const uploadPdfToCloudinary = async (file, folder) => {
   }
 };
 
-const uploadAdditionalFileToCloudinary = async (file, folder) => {
-  if (!file || file.size === 0) return null;
-
-  try {
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    if (!['.pdf', '.doc', '.docx'].includes(fileExtension)) {
-      throw new Error(`Only PDF, DOC, and DOCX files are allowed`);
-    }
-
-    const maxSize = 4.5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      throw new Error(`File too large. Maximum size: ${(maxSize / (1024 * 1024)).toFixed(1)}MB`);
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const timestamp = Date.now();
-    const originalName = file.name;
-    const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    
-    const resourceType = 'raw';
-    const format = fileExtension === '.pdf' ? 'pdf' : 
-                   fileExtension === '.doc' ? 'doc' : 'docx';
-    
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: resourceType,
-          folder: `school/documents/${folder}`,
-          public_id: `${timestamp}-${sanitizedFileName}`,
-          format: format,
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      );
-      uploadStream.end(buffer);
-    });
-    
-    const fileType = file.type?.includes('pdf') ? 'pdf' : 
-                    file.type?.includes('word') ? 'doc' : 
-                    file.type?.includes('excel') ? 'xls' : 'document';
-    
-    return {
-      url: result.secure_url,
-      public_id: result.public_id,
-      bytes: result.bytes,
-      format: result.format,
-      original_name: file.name,
-      file_type: fileType
-    };
-  } catch (error) {
-    console.error(`❌ Cloudinary additional file upload error:`, error);
-    throw error;
-  }
-};
+// REMOVE THIS FUNCTION - Additional files upload
+// const uploadAdditionalFileToCloudinary = async (file, folder) => {
+//   ... REMOVE ENTIRE FUNCTION ...
+// };
 
 const deleteFromCloudinary = async (url) => {
   if (!url) return;
@@ -238,26 +186,21 @@ const cleanDocumentResponse = (document) => {
     kcseTerm: document.kcseTerm,
     kcseUploadDate: document.kcseUploadDate,
     
-    additionalDocuments: document.additionalDocuments || [],
+    // REMOVED: additionalDocuments
+    // additionalDocuments: document.additionalDocuments || [],
     
     createdAt: document.createdAt,
     updatedAt: document.updatedAt
   };
 };
 
-// GET - Fetch all documents (SINGLE VERSION - REMOVED DUPLICATE)
+// GET - Fetch all documents
 export async function GET() {
   try {
     console.log("📥 GET Request received");
     
     const document = await prisma.schoolDocument.findFirst({
-      include: { 
-        additionalDocuments: {
-          orderBy: {
-            uploadedAt: 'desc'
-          }
-        }
-      }
+      // REMOVED: include additionalDocuments
     });
 
     if (!document) {
@@ -267,8 +210,6 @@ export async function GET() {
         document: null
       });
     }
-
-    console.log(`📄 Found document with ${document.additionalDocuments?.length || 0} additional documents`);
     
     return NextResponse.json({
       success: true,
@@ -290,27 +231,11 @@ export async function POST(req) {
     console.log("📥 POST Request received");
     const formData = await req.formData();
     
-    // DEBUG: Log all form data keys and values
-    console.log("=== FORM DATA DEBUG ===");
-    const formDataEntries = [];
-    for (let [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        formDataEntries.push(`${key}: File - ${value.name} (${value.size} bytes)`);
-      } else {
-        formDataEntries.push(`${key}: ${value}`);
-      }
-    }
-    console.log("Form data entries:", formDataEntries);
-    console.log("=== END FORM DATA DEBUG ===");
-    
     let existingDocument = await prisma.schoolDocument.findFirst({
-      include: { additionalDocuments: true }
+      // REMOVED: include additionalDocuments
     });
 
     console.log("📄 Existing document:", existingDocument ? `Found (ID: ${existingDocument.id})` : "Not found");
-    if (existingDocument) {
-      console.log(`📄 Existing has ${existingDocument.additionalDocuments?.length || 0} additional documents`);
-    }
 
     const uploadPromises = {};
     const uploadResults = {};
@@ -351,7 +276,7 @@ export async function POST(req) {
       },
     ];
 
-    // Exam fields already have term
+    // Exam fields
     const examFields = [
       { 
         key: 'form1Results', 
@@ -374,7 +299,7 @@ export async function POST(req) {
         name: 'form3ResultsPdf', 
         year: 'form3ResultsYear', 
         term: 'form3ResultsTerm',
-        description: 'form1ResultsDescription', 
+        description: 'form3ResultsDescription', 
         folder: 'exam-results' 
       },
       { 
@@ -429,97 +354,13 @@ export async function POST(req) {
       }
     });
 
-    // Process additional files
-    const additionalFilesData = [];
-    
-    // Get all additional files and metadata
-    const additionalFiles = formData.getAll("additionalFiles[]");
-    console.log("📁 Processing additional files:", additionalFiles.length);
-    
-    if (additionalFiles && additionalFiles.length > 0) {
-      for (let i = 0; i < additionalFiles.length; i++) {
-        const file = additionalFiles[i];
-        
-        // Skip if file is empty or not a file
-        if (!file || file.size === 0 || !(file instanceof File)) {
-          console.log(`⚠️ Skipping empty/invalid file at index ${i}`);
-          continue;
-        }
-        
-        try {
-          console.log(`📤 Uploading additional file ${i}:`, file.name, `(${file.size} bytes)`);
-          const uploadResult = await uploadAdditionalFileToCloudinary(file, "additional-documents");
-          
-          if (uploadResult) {
-            // Get metadata for this file - handle different naming patterns
-            let year = '';
-            let term = '';
-            let description = '';
-            
-            // Try multiple ways to get metadata
-            if (formData.has(`additionalFilesYear[${i}]`)) {
-              year = formData.get(`additionalFilesYear[${i}]`);
-            } else if (formData.has('additionalFilesYear')) {
-              year = formData.get('additionalFilesYear');
-            }
-            
-            if (formData.has(`additionalFilesTerm[${i}]`)) {
-              term = formData.get(`additionalFilesTerm[${i}]`);
-            } else if (formData.has('additionalFilesTerm')) {
-              term = formData.get('additionalFilesTerm');
-            }
-            
-            if (formData.has(`additionalFilesDesc[${i}]`)) {
-              description = formData.get(`additionalFilesDesc[${i}]`);
-            } else if (formData.has('additionalFilesDesc')) {
-              description = formData.get('additionalFilesDesc');
-            }
-            
-            console.log(`✅ Additional file ${i} metadata:`, { 
-              year, 
-              term, 
-              description,
-              filename: uploadResult.original_name 
-            });
-            
-            additionalFilesData.push({
-              filename: uploadResult.original_name,
-              filepath: uploadResult.url,
-              filetype: uploadResult.file_type || 'document',
-              description: parseStringField(description),
-              year: parseIntField(year),
-              term: parseStringField(term),
-              filesize: uploadResult.bytes || file.size
-            });
-            
-            console.log(`✅ Additional file uploaded and processed:`, uploadResult.original_name);
-          }
-        } catch (error) {
-          console.error(`❌ Additional file upload failed at index ${i}:`, error);
-        }
-      }
-    }
+    // REMOVED: All additional files processing
 
     // Delete old files if replacing
     const filesToDelete = [];
     
     if (existingDocument) {
-      // Delete additional documents marked for deletion
-      const existingAdditionalIds = existingDocument.additionalDocuments.map(doc => doc.id);
-      const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
-      
-      console.log(`🗑️ Additional documents marked for deletion:`, additionalDocsToDelete);
-      
-      additionalDocsToDelete.forEach(id => {
-        const docId = parseInt(id);
-        if (existingAdditionalIds.includes(docId)) {
-          const doc = existingDocument.additionalDocuments.find(d => d.id === docId);
-          if (doc) {
-            console.log(`🗑️ Marking additional document for deletion:`, doc.filename);
-            filesToDelete.push(deleteFromCloudinary(doc.filepath));
-          }
-        }
-      });
+      // REMOVED: Additional documents deletion logic
     }
 
     // Delete old main files if replacing
@@ -658,14 +499,12 @@ export async function POST(req) {
       if (description !== null) {
         updateData[field.description] = parseStringField(description);
       }
-      // Only process term if the field has term property
       if (field.term && term !== null) {
         updateData[field.term] = parseStringField(term);
       }
     }
 
     console.log("📝 Update data prepared:", updateData);
-    console.log("📁 Additional files data ready:", additionalFilesData.length, "files");
 
     // Create or update document
     let finalDocument;
@@ -677,52 +516,11 @@ export async function POST(req) {
         data: updateData
       });
 
-      // Handle additional documents
-      if (additionalFilesData.length > 0) {
-        console.log("📁 Creating additional documents:", additionalFilesData.length);
-        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
-        
-        // Create additional documents
-        await prisma.additionalDocument.createMany({
-          data: additionalFilesData.map(file => ({
-            schoolDocumentId: existingDocument.id,
-            filename: file.filename,
-            filepath: file.filepath,
-            filetype: file.filetype,
-            description: file.description,
-            year: file.year,
-            term: file.term,
-            filesize: file.filesize
-          }))
-        });
-      }
-
-      // Delete marked additional documents
-      const additionalDocsToDelete = formData.getAll("additionalDocsToDelete[]");
-      if (additionalDocsToDelete.length > 0) {
-        console.log("🗑️ Deleting additional documents:", additionalDocsToDelete.length);
-        await prisma.additionalDocument.deleteMany({
-          where: {
-            id: {
-              in: additionalDocsToDelete.map(id => parseInt(id))
-            }
-          }
-        });
-      }
-
       finalDocument = await prisma.schoolDocument.findUnique({
-        where: { id: existingDocument.id },
-        include: { 
-          additionalDocuments: {
-            orderBy: {
-              uploadedAt: 'desc'
-            }
-          }
-        }
+        where: { id: existingDocument.id }
       });
 
       console.log("✅ Document update successful");
-      console.log(`✅ Final document has ${finalDocument?.additionalDocuments?.length || 0} additional documents`);
 
       return NextResponse.json({
         success: true,
@@ -736,37 +534,11 @@ export async function POST(req) {
         data: updateData
       });
 
-      if (additionalFilesData.length > 0) {
-        console.log("📁 Creating additional documents:", additionalFilesData.length);
-        console.log("📁 Additional documents data:", JSON.stringify(additionalFilesData, null, 2));
-        
-        await prisma.additionalDocument.createMany({
-          data: additionalFilesData.map(file => ({
-            schoolDocumentId: newDocument.id,
-            filename: file.filename,
-            filepath: file.filepath,
-            filetype: file.filetype,
-            description: file.description,
-            year: file.year,
-            term: file.term,
-            filesize: file.filesize
-          }))
-        });
-      }
-
       finalDocument = await prisma.schoolDocument.findUnique({
-        where: { id: newDocument.id },
-        include: { 
-          additionalDocuments: {
-            orderBy: {
-              uploadedAt: 'desc'
-            }
-          }
-        }
+        where: { id: newDocument.id }
       });
 
       console.log("✅ Document creation successful");
-      console.log(`✅ Final document has ${finalDocument?.additionalDocuments?.length || 0} additional documents`);
 
       return NextResponse.json({
         success: true,
@@ -822,8 +594,7 @@ export async function PUT(req) {
 
     const updatedDocument = await prisma.schoolDocument.update({
       where: { id: parseInt(documentId) },
-      data: updateData,
-      include: { additionalDocuments: true }
+      data: updateData
     });
 
     console.log("✅ Document field updated successfully");
@@ -874,8 +645,7 @@ export async function PATCH(req) {
     if (action === 'deleteFile') {
       // Find the document first
       const document = await prisma.schoolDocument.findUnique({
-        where: { id: parseInt(documentId) },
-        include: { additionalDocuments: true }
+        where: { id: parseInt(documentId) }
       });
 
       if (!document) {
@@ -887,17 +657,9 @@ export async function PATCH(req) {
 
       let fileUrlToDelete = null;
 
-      // Handle different field types
-      if (field === 'additionalDocuments' && fileId) {
-        // Delete specific additional document
-        const additionalDoc = document.additionalDocuments.find(doc => doc.id === parseInt(fileId));
-        if (additionalDoc) {
-          fileUrlToDelete = additionalDoc.filepath;
-          await prisma.additionalDocument.delete({
-            where: { id: parseInt(fileId) }
-          });
-        }
-      } else if (document[field]) {
+      // REMOVED: Additional documents handling
+
+      if (document[field]) {
         // Delete main document field
         fileUrlToDelete = document[field];
         
@@ -958,10 +720,6 @@ export async function PATCH(req) {
           clearData[mapping.name] = null;
           clearData[mapping.size] = null;
           clearData[mapping.uploadDate] = null;
-          // Optional: clear description, year, and term too
-          // clearData[mapping.description] = null;
-          // clearData[mapping.year] = null;
-          // clearData[mapping.term] = null;
         }
         
         await prisma.schoolDocument.update({
@@ -976,8 +734,7 @@ export async function PATCH(req) {
       }
 
       const updatedDocument = await prisma.schoolDocument.findUnique({
-        where: { id: parseInt(documentId) },
-        include: { additionalDocuments: true }
+        where: { id: parseInt(documentId) }
       });
 
       return NextResponse.json({
@@ -1026,9 +783,7 @@ export async function DELETE(req) {
 }
 
 async function handleDeleteFirstDocument() {
-  const document = await prisma.schoolDocument.findFirst({
-    include: { additionalDocuments: true }
-  });
+  const document = await prisma.schoolDocument.findFirst();
 
   if (!document) {
     console.log("📭 No document found to delete");
@@ -1044,8 +799,7 @@ async function handleDeleteFirstDocument() {
 
 async function handleDeleteDocumentById(documentId) {
   const document = await prisma.schoolDocument.findUnique({
-    where: { id: documentId },
-    include: { additionalDocuments: true }
+    where: { id: documentId }
   });
 
   if (!document) {
@@ -1074,9 +828,6 @@ async function deleteDocumentAndFiles(document) {
     document.kcseResultsPdf,
   ].filter(Boolean);
 
-  document.additionalDocuments.forEach(file => {
-    if (file.filepath) filesToDelete.push(file.filepath);
-  });
 
   console.log("🗑️ Files to delete:", filesToDelete.length);
 
