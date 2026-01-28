@@ -1045,7 +1045,7 @@ const VisionMissionSection = ({ vision, mission, motto }) => {
   );
 };
 
-// Modernized Uniform Requirements Component
+// Updated Modern Uniform Requirements Component
 const ModernUniformRequirementsSection = ({ 
   admissionFeeDistribution, 
   admissionFeePdf, 
@@ -1054,7 +1054,11 @@ const ModernUniformRequirementsSection = ({
   admissionFeeYear,
   admissionFeeTerm
 }) => {
-  const uniformItems = admissionFeeDistribution || {};
+  // admissionFeeDistribution is now an array, not an object
+  const uniformItems = admissionFeeDistribution || [];
+
+  // Calculate total from array
+  const totalCost = uniformItems.reduce((sum, item) => sum + (item.amount || 0), 0);
 
   return (
     <div className="bg-gradient-to-br from-white to-slate-50/50 rounded-2xl md:rounded-3xl border border-slate-100/80 shadow-lg overflow-hidden">
@@ -1068,7 +1072,7 @@ const ModernUniformRequirementsSection = ({
               <IoShirtOutline className="text-white text-xl md:text-2xl" />
             </div>
             <div>
-              <h3 className="text-lg md:text-2xl font-bold">Admission Uniform Requirements</h3>
+              <h3 className="text-lg md:text-2xl font-bold">Admission Fee Breakdown</h3>
               <p className="text-blue-100 mt-1">Complete kit for academic excellence</p>
               {admissionFeeDescription && (
                 <p className="text-blue-200 text-xs mt-1 italic">{admissionFeeDescription}</p>
@@ -1092,7 +1096,7 @@ const ModernUniformRequirementsSection = ({
               <div className="p-2 bg-blue-50 rounded-lg transition-transform">
                 <IoCloudDownloadOutline className="text-blue-600" />
               </div>
-              <span>Download Uniform List</span>
+              <span>Download Full List</span>
             </a>
           )}
         </div>
@@ -1100,35 +1104,52 @@ const ModernUniformRequirementsSection = ({
 
       {/* Content Section */}
       <div className="p-4 md:p-8">
-        {Object.keys(uniformItems).length > 0 ? (
+        {uniformItems.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(uniformItems).map(([item, cost], index) => (
+            {uniformItems.map((item, index) => (
               <div 
-                key={index}
+                key={item.id || index}
                 className="group bg-white border border-slate-200/60 rounded-xl md:rounded-2xl p-4 md:p-5 transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-                      <IoCheckmarkCircleOutline className="text-blue-500" />
+                      {item.optional ? (
+                        <FiCheckCircle className="text-green-500" />
+                      ) : (
+                        <IoCheckmarkCircleOutline className="text-blue-500" />
+                      )}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-800 text-sm leading-tight capitalize">
-                        {typeof item === 'string' ? 
-                          item.replace(/([A-Z])/g, ' $1').trim().replace(/_/g, ' ') : 
-                          item}
+                      <h4 className="font-bold text-slate-800 text-sm leading-tight">
+                        {item.name}
                       </h4>
+                      {item.description && (
+                        <p className="text-slate-500 text-xs mt-1">{item.description}</p>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-bold text-slate-900">KSh {parseInt(cost || 0).toLocaleString()}</div>
+                    <div className="text-lg font-bold text-slate-900">
+                      KSh {parseInt(item.amount || 0).toLocaleString()}
+                    </div>
+                    {item.optional && (
+                      <span className="text-xs text-green-600 font-bold">Optional</span>
+                    )}
+                    {item.boardingOnly && (
+                      <span className="text-xs text-blue-600 font-bold">Boarding Only</span>
+                    )}
                   </div>
                 </div>
                 
                 {/* Progress Indicator */}
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full transition-all duration-700"
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      item.optional 
+                        ? 'bg-gradient-to-r from-green-400 to-emerald-400' 
+                        : 'bg-gradient-to-r from-blue-400 to-cyan-400'
+                    }`}
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -1140,15 +1161,15 @@ const ModernUniformRequirementsSection = ({
             <div className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 flex items-center justify-center">
               <FiAlertTriangle className="w-8 h-8 md:w-12 md:h-12 text-blue-400" />
             </div>
-            <h4 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Uniform Requirements</h4>
+            <h4 className="text-lg md:text-xl font-bold text-slate-700 mb-2">Admission Fee Details</h4>
             <p className="text-slate-500 max-w-md mx-auto">
-              Complete uniform specifications will be provided upon admission confirmation
+              Complete admission fee structure will be provided upon application submission
             </p>
           </div>
         )}
 
         {/* Total Cost Summary */}
-        {Object.keys(uniformItems).length > 0 && (
+        {uniformItems.length > 0 && (
           <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-slate-100">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -1157,19 +1178,16 @@ const ModernUniformRequirementsSection = ({
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    Total Uniform Cost Estimate
+                    Total Admission Cost
                   </h4>
                   <p className="text-xs text-slate-500 mb-1">
-                    This is an approximate cost covering both boys' and girls' uniforms.
-                  </p>
-                  <p className="text-xs text-slate-500 mb-3">
-                    Actual expenses may be lower depending on whether the student is a boy or a girl.
+                    {uniformItems.filter(item => !item.optional).length} mandatory items
+                    {uniformItems.filter(item => item.optional).length > 0 && 
+                      ` + ${uniformItems.filter(item => item.optional).length} optional items`
+                    }
                   </p>
                   <div className="text-xl md:text-3xl font-bold text-slate-900">
-                    KSh{" "}
-                    {Object.values(uniformItems)
-                      .reduce((sum, cost) => sum + parseInt(cost || 0), 0)
-                      .toLocaleString()}
+                    KSh {totalCost.toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -1177,12 +1195,14 @@ const ModernUniformRequirementsSection = ({
               <div className="flex items-center gap-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                  <span>All items mandatory</span>
+                  <span>Mandatory items</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-                  <span>One-time purchase</span>
-                </div>
+                {uniformItems.some(item => item.optional) && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                    <span>Optional items</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1191,7 +1211,6 @@ const ModernUniformRequirementsSection = ({
     </div>
   );
 };
-
 // NEW: Academic Results Section Component
 const AcademicResultsSection = ({ documentData }) => {
   const resultsData = [

@@ -4,6 +4,472 @@
 GET {{baseUrl}}
 Content-Type: application/json
 
+
+
+
+@baseUrl = https://katwanyaa.vercel.app/api/school
+
+### 1. GET - Check Current School Data (Should return null on first run)
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 2. POST - Create School Data (Initial Creation)
+# This should be run first if no school data exists
+POST {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryCreate
+
+--boundaryCreate
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School
+--boundaryCreate
+Content-Disposition: form-data; name="studentCount"
+
+1250
+--boundaryCreate
+Content-Disposition: form-data; name="staffCount"
+
+65
+--boundaryCreate
+Content-Disposition: form-data; name="openDate"
+
+2026-01-10T00:00:00.000Z
+--boundaryCreate
+Content-Disposition: form-data; name="closeDate"
+
+2026-04-10T00:00:00.000Z
+--boundaryCreate
+Content-Disposition: form-data; name="description"
+
+Katwanyaa High School offers comprehensive education with both 8-4-4 and CBC curricula. Our modern campus includes state-of-the-art science labs, digital library, computer labs with high-speed internet, and extensive sports facilities.
+--boundaryCreate
+Content-Disposition: form-data; name="motto"
+
+Strive for Excellence, Lead with Integrity
+--boundaryCreate
+Content-Disposition: form-data; name="vision"
+
+To nurture academically competent, morally upright, and socially responsible global citizens
+--boundaryCreate
+Content-Disposition: form-data; name="mission"
+
+To provide holistic quality education through innovative teaching, modern facilities, character building, and community engagement
+--boundaryCreate
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=dCsYOw9T7cQ
+--boundaryCreate
+Content-Disposition: form-data; name="feesDay"
+
+45000
+--boundaryCreate
+Content-Disposition: form-data; name="feesBoarding"
+
+85000
+--boundaryCreate
+Content-Disposition: form-data; name="admissionFee"
+
+5000
+--boundaryCreate
+Content-Disposition: form-data; name="admissionOpenDate"
+
+2025-09-01T00:00:00.000Z
+--boundaryCreate
+Content-Disposition: form-data; name="admissionCloseDate"
+
+2025-11-30T23:59:59.000Z
+--boundaryCreate
+Content-Disposition: form-data; name="admissionRequirements"
+
+1. Minimum KCSE mean grade of C+ (or equivalent)
+2. Good conduct record from previous school
+3. Medical fitness certificate from registered doctor
+4. Completed application form with all required documents
+5. Passed entrance examination and interview (if applicable)
+--boundaryCreate
+Content-Disposition: form-data; name="admissionCapacity"
+
+300
+--boundaryCreate
+Content-Disposition: form-data; name="admissionContactEmail"
+
+admissions@katwanyaa.sc.ke
+--boundaryCreate
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254793472960
+--boundaryCreate
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://www.katwanyaa.sc.ke
+--boundaryCreate
+Content-Disposition: form-data; name="admissionLocation"
+
+Katwanyaa, Bomet County, Kenya (Along Bomet-Sotik Highway)
+--boundaryCreate
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Monday to Friday: 8:00 AM - 5:00 PM
+--boundaryCreate
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "IRE", "HRE", "Business Studies", "Computer Studies", "Agriculture", "Home Science", "French", "Music", "Art & Design", "Physical Education"]
+--boundaryCreate
+Content-Disposition: form-data; name="departments"
+
+["Mathematics Department", "Languages Department", "Sciences Department", "Humanities Department", "Technical Department", "Administration Department", "Guidance & Counseling"]
+--boundaryCreate
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Original Birth Certificate", "KCPE/KCPE Result Slip (Original)", "4 Recent Passport Size Photos", "Medical Report from Registered Doctor", "Transfer Letter (For Transfer Students)", "Previous School Reports (2 Years)", "Parents/Guardian National ID Copies", "Immunization Card", "Co-curricular Achievement Certificates (If Any)"]
+--boundaryCreate--
+
+### 3. GET - Verify School Creation
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 4. PUT - Update School Information (After POST)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryUpdate
+
+--boundaryUpdate
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School (Updated)
+--boundaryUpdate
+Content-Disposition: form-data; name="studentCount"
+
+1300
+--boundaryUpdate
+Content-Disposition: form-data; name="staffCount"
+
+70
+--boundaryUpdate
+Content-Disposition: form-data; name="description"
+
+Katwanyaa High School offers comprehensive education with both 8-4-4 and CBC curricula. Our modern campus includes state-of-the-art science labs, digital library, computer labs with high-speed internet, and extensive sports facilities. We focus on holistic development through academics, sports, clubs, and community service.
+
+We have a 15:1 student-teacher ratio for personalized attention and maintain a 98% university placement rate for our graduates.
+--boundaryUpdate
+Content-Disposition: form-data; name="feesDay"
+
+48000
+--boundaryUpdate
+Content-Disposition: form-data; name="feesBoarding"
+
+90000
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionFee"
+
+5500
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionCapacity"
+
+320
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254720123456
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://katwanyaa.ac.ke
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionLocation"
+
+P.O. Box 123-20400, Katwanyaa, Bomet County, Kenya
+--boundaryUpdate
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Mon-Thu: 8:00 AM - 5:00 PM | Fri: 8:00 AM - 4:00 PM | Sat: 9:00 AM - 12:00 PM
+--boundaryUpdate
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "IRE", "HRE", "Business Studies", "Computer Studies", "Agriculture", "Home Science", "French", "German", "Music", "Art & Design", "Physical Education", "Life Skills", "Entrepreneurship"]
+--boundaryUpdate
+Content-Disposition: form-data; name="departments"
+
+["Mathematics Department", "Languages Department", "Sciences Department", "Humanities Department", "Technical Department", "Administration", "Guidance & Counseling", "Sports Department"]
+--boundaryUpdate--
+
+### 5. GET - Verify Update
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 6. PUT - Test Video Change (YouTube to Local Simulation)
+# Note: This requires actual file upload in production
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryVideo
+
+--boundaryVideo
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=example123
+--boundaryVideo
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School
+--boundaryVideo--
+
+### 7. PUT - Test Video Removal
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryNoVideo
+
+--boundaryNoVideo
+Content-Disposition: form-data; name="youtubeLink"
+
+--boundaryNoVideo
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School
+--boundaryNoVideo--
+
+### 8. GET - Verify Video Removal
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 9. PUT - Test Partial Update (Only change contact info)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryPartial
+
+--boundaryPartial
+Content-Disposition: form-data; name="admissionContactEmail"
+
+info@katwanyaa.ac.ke
+--boundaryPartial
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254711222333
+--boundaryPartial
+Content-Disposition: form-data; name="admissionRequirements"
+
+1. Minimum KCSE mean grade of C+ (or equivalent)
+2. Good conduct record from previous school
+3. Medical fitness certificate from registered doctor
+4. Completed application form with all required documents
+5. Passed entrance examination and interview (if applicable)
+6. Personal statement from student (200-300 words)
+7. Two reference letters from previous teachers
+--boundaryPartial--
+
+### 10. GET - Verify Partial Update
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 11. PUT - Test Error Cases
+# Invalid YouTube URL
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryError
+
+--boundaryError
+Content-Disposition: form-data; name="youtubeLink"
+
+invalid-url-here
+--boundaryError
+Content-Disposition: form-data; name="studentCount"
+
+not-a-number
+--boundaryError
+Content-Disposition: form-data; name="subjects"
+
+["Invalid JSON
+--boundaryError--
+
+### 12. PUT - Reset to Complete Information
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryComplete
+
+--boundaryComplete
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School (Final)
+--boundaryComplete
+Content-Disposition: form-data; name="studentCount"
+
+1350
+--boundaryComplete
+Content-Disposition: form-data; name="staffCount"
+
+75
+--boundaryComplete
+Content-Disposition: form-data; name="openDate"
+
+2026-01-10T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="closeDate"
+
+2026-04-10T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="description"
+
+Katwanyaa High School - A Center of Excellence in Education. Our institution provides world-class education with modern facilities, qualified teachers, and a nurturing environment for students to achieve their full potential academically, socially, and spiritually.
+--boundaryComplete
+Content-Disposition: form-data; name="motto"
+
+Excellence Through Knowledge and Character
+--boundaryComplete
+Content-Disposition: form-data; name="vision"
+
+To be the leading institution in holistic education and character development in East Africa
+--boundaryComplete
+Content-Disposition: form-data; name="mission"
+
+1. Provide quality education through modern teaching methods
+2. Nurture moral values and ethical leadership
+3. Develop talents in sports, arts, and technology
+4. Foster community service and global citizenship
+5. Prepare students for university and career success
+--boundaryComplete
+Content-Disposition: form-data; name="youtubeLink"
+
+https://www.youtube.com/watch?v=school-tour-2024
+--boundaryComplete
+Content-Disposition: form-data; name="feesDay"
+
+50000
+--boundaryComplete
+Content-Disposition: form-data; name="feesBoarding"
+
+95000
+--boundaryComplete
+Content-Disposition: form-data; name="admissionFee"
+
+6000
+--boundaryComplete
+Content-Disposition: form-data; name="admissionOpenDate"
+
+2025-09-01T00:00:00.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="admissionCloseDate"
+
+2025-12-15T23:59:59.000Z
+--boundaryComplete
+Content-Disposition: form-data; name="admissionRequirements"
+
+1. Minimum KCSE mean grade of C+ (or equivalent)
+2. Good conduct record from previous school
+3. Medical fitness certificate from registered doctor
+4. Completed application form with all required documents
+5. Passed entrance examination and interview (if applicable)
+6. Personal statement from student (200-300 words)
+7. Two reference letters from previous teachers
+8. Evidence of co-curricular participation
+--boundaryComplete
+Content-Disposition: form-data; name="admissionCapacity"
+
+350
+--boundaryComplete
+Content-Disposition: form-data; name="admissionContactEmail"
+
+admissions@katwanyaa.ac.ke
+--boundaryComplete
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254720123456
+--boundaryComplete
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://www.katwanyaa.ac.ke
+--boundaryComplete
+Content-Disposition: form-data; name="admissionLocation"
+
+Main Campus: Katwanyaa, Bomet County | Branch: Nairobi Westlands
+--boundaryComplete
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Mon-Fri: 8:00 AM - 5:00 PM | Sat: 9:00 AM - 1:00 PM
+--boundaryComplete
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "English", "Kiswahili", "Biology", "Chemistry", "Physics", "Geography", "History", "CRE", "IRE", "HRE", "Business Studies", "Computer Studies", "Agriculture", "Home Science", "French", "German", "Chinese", "Music", "Art & Design", "Physical Education", "Life Skills", "Entrepreneurship", "Robotics", "Environmental Science"]
+--boundaryComplete
+Content-Disposition: form-data; name="departments"
+
+["Mathematics Department", "Languages Department", "Sciences Department", "Humanities Department", "Technical Department", "Administration", "Guidance & Counseling", "Sports Department", "ICT Department", "Library Department", "Dining Department", "Boarding Department"]
+--boundaryComplete
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Original Birth Certificate", "KCPE/KCPE Result Slip (Original)", "6 Recent Passport Size Photos", "Medical Report from Registered Doctor", "Transfer Letter (For Transfer Students)", "Previous School Reports (3 Years)", "Parents/Guardian National ID Copies", "Immunization Card", "Co-curricular Achievement Certificates", "Birth Certificate of Siblings (If Applicable)", "Affidavit for Guardianship (If Applicable)"]
+--boundaryComplete--
+
+### 13. GET - Final Verification
+GET {{baseUrl}}
+Content-Type: application/json
+
+### 14. DELETE - Delete School Data (Optional - Use with caution!)
+# DELETE {{baseUrl}}
+# Content-Type: application/json
+
+### 15. POST - Attempt to Create Again After Delete (If DELETE was used)
+# POST {{baseUrl}}
+# Content-Type: multipart/form-data; boundary=boundaryAfterDelete
+
+# --boundaryAfterDelete
+# Content-Disposition: form-data; name="name"
+
+# New Katwanyaa School
+# --boundaryAfterDelete
+# Content-Disposition: form-data; name="studentCount"
+
+# 1000
+# --boundaryAfterDelete
+# Content-Disposition: form-data; name="staffCount"
+
+# 50
+# --boundaryAfterDelete
+# Content-Disposition: form-data; name="openDate"
+
+# 2026-01-10T00:00:00.000Z
+# --boundaryAfterDelete
+# Content-Disposition: form-data; name="closeDate"
+
+# 2026-04-10T00:00:00.000Z
+# --boundaryAfterDelete--
+
+### 16. PUT - Test with Empty Form Data (Should preserve existing values)
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryEmpty
+
+--boundaryEmpty
+Content-Disposition: form-data; name="name"
+
+--boundaryEmpty--
+
+### 17. PUT - Test with Only Required Fields
+PUT {{baseUrl}}
+Content-Type: multipart/form-data; boundary=boundaryRequired
+
+--boundaryRequired
+Content-Disposition: form-data; name="name"
+
+Katwanyaa High School (Required Only)
+--boundaryRequired
+Content-Disposition: form-data; name="studentCount"
+
+1400
+--boundaryRequired
+Content-Disposition: form-data; name="staffCount"
+
+80
+--boundaryRequired
+Content-Disposition: form-data; name="openDate"
+
+2026-01-15T00:00:00.000Z
+--boundaryRequired
+Content-Disposition: form-data; name="closeDate"
+
+2026-04-20T00:00:00.000Z
+--boundaryRequired--
+
+
+
+
+
+
+
+
+
+
 ### 2. PUT - Update School with Complete Information (Filling all null fields)
 PUT {{baseUrl}}
 Content-Type: multipart/form-data; boundary=boundaryComplete
