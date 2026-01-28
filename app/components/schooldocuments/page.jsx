@@ -1629,7 +1629,6 @@ function ModernPdfUpload({
                 <div className="flex items-center gap-2">
                   {hasExistingPdf && (
                     <div className="flex gap-2">
-// FIXED: Replace button now properly triggers file picker
 <button
   type="button"
   onClick={() => {
@@ -1654,7 +1653,6 @@ function ModernPdfUpload({
   Replace File
 </button>
 
-// FIXED: Delete action now properly removes file
 <button
   type="button"
   onClick={() => {
