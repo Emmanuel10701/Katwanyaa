@@ -791,7 +791,7 @@ const router =useRouter()
               <div className="hidden xl:flex items-center gap-3">
                 <HeaderStat 
                   icon={FiUsers} 
-                  value={realStats.totalStudents} 
+                  value={realStats.totalStudent} 
                   label="Students" 
                   color="blue"
                   trend="up"
@@ -803,13 +803,7 @@ const router =useRouter()
                   color="green"
                   trend="up"
                 />
-                <HeaderStat 
-                  icon={FiUserPlus} 
-                  value={realStats.totalSubscribers} 
-                  label="Subscribers" 
-                  color="purple"
-                  trend="up"
-                />
+                               
               </div>
 
               {/* User Menu */}
