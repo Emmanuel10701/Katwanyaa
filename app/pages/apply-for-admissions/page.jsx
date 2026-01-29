@@ -441,7 +441,7 @@ const KatwanyaaAdmission = () => {
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
                     placeholder={`Search ${locationType}...`}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-bold"
                     autoFocus
                   />
                   {locationSearch && (
@@ -453,7 +453,7 @@ const KatwanyaaAdmission = () => {
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mt-2 font-medium">
+                <p className="text-sm text-gray-600 mt-2 font-bold">
                   {filteredLocations.length} {locationType}(s) found
                 </p>
               </div>
@@ -478,7 +478,7 @@ const KatwanyaaAdmission = () => {
                             {location.name}
                           </div>
                           {location.count && (
-                            <div className="text-sm text-gray-600 font-medium">
+                            <div className="text-sm text-gray-600 font-bold">
                               {location.count} {locationType === 'county' ? 'constituencies' : 'wards'}
                             </div>
                           )}
@@ -492,7 +492,7 @@ const KatwanyaaAdmission = () => {
                 <div className="text-center py-12">
                   <FiSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <div className="text-lg font-semibold text-gray-600">No {locationType}s found</div>
-                  <div className="text-gray-500 mt-2 font-medium">Try a different search term</div>
+                  <div className="text-gray-500 mt-2 font-bold">Try a different search term</div>
                 </div>
               )}
             </div>
@@ -566,7 +566,7 @@ const KatwanyaaAdmission = () => {
                 <h2 className="text-3xl font-bold text-center mb-2">
                   🎉 Application Submitted Successfully!
                 </h2>
-                <p className="text-center text-green-100 text-lg font-medium">
+                <p className="text-center text-green-100 text-lg font-bold">
                   Your journey to excellence begins here
                 </p>
               </div>
@@ -580,7 +580,7 @@ const KatwanyaaAdmission = () => {
                     </h3>
                     {applicationNumber && (
                       <div className="mb-6">
-                        <div className="text-sm text-gray-600 mb-2 flex items-center font-medium">
+                        <div className="text-sm text-gray-600 mb-2 flex items-center font-bold">
                           <FiCopy className="mr-2" /> Application Number
                         </div>
                         <div className="flex items-center">
@@ -600,13 +600,13 @@ const KatwanyaaAdmission = () => {
                     {submittedData && (
                       <div className="space-y-4">
                         <div>
-                          <div className="text-sm text-gray-600 mb-1 font-medium">Applicant Name</div>
+                          <div className="text-sm text-gray-600 mb-1 font-bold">Applicant Name</div>
                           <div className="font-semibold text-gray-800">
                             {submittedData.firstName} {submittedData.lastName}
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-600 mb-1 font-medium">Submitted On</div>
+                          <div className="text-sm text-gray-600 mb-1 font-bold">Submitted On</div>
                           <div className="font-semibold text-gray-800">
                             {submittedData.submissionDate} at {submittedData.submissionTime}
                           </div>
@@ -627,7 +627,7 @@ const KatwanyaaAdmission = () => {
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-800">Email Confirmation</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                          <p className="text-sm text-gray-600 mt-1 font-bold">
                             Check your email ({formData.email}) for application confirmation.
                           </p>
                         </div>
@@ -639,7 +639,7 @@ const KatwanyaaAdmission = () => {
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-800">Parent Contact</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                          <p className="text-sm text-gray-600 mt-1 font-bold">
                             Further communication will be sent to parent/guardian contacts provided.
                           </p>
                         </div>
@@ -651,7 +651,7 @@ const KatwanyaaAdmission = () => {
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-800">Document Verification</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-medium">
+                          <p className="text-sm text-gray-600 mt-1 font-bold">
                             Bring original documents when requested for verification.
                           </p>
                         </div>
@@ -662,7 +662,7 @@ const KatwanyaaAdmission = () => {
                       <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                         📞 Need Help?
                       </h4>
-                      <div className="text-sm text-gray-600 space-y-2 font-medium">
+                      <div className="text-sm text-gray-600 space-y-2 font-bold">
                         <p>Admissions Office: <strong>0712 345 678</strong></p>
                         <p>Email: <strong>admissions@Katwanyaa.ac.ke</strong></p>
                         <p>Office Hours: Mon-Fri, 8:00 AM - 5:00 PM</p>
@@ -735,7 +735,7 @@ const KatwanyaaAdmission = () => {
           {step === 3 && '🎓 Academic Information'}
           {step === 4 && '📝 Review & Submit'}
         </h2>
-        <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
+        <p className="text-xs sm:text-sm md:text-base text-gray-600 font-bold">
           {step === 1 && 'Tell us about the prospective student'}
           {step === 2 && 'How can we reach you? Provide contact details'}
           {step === 3 && 'Educational background and academic preferences'}
@@ -773,7 +773,7 @@ const KatwanyaaAdmission = () => {
                     name={field}
                     value={formData[field]}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                    className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                     placeholder={
                       field === 'firstName' ? 'John' :
                       field === 'middleName' ? 'Kamau' : 'Doe'
@@ -794,7 +794,7 @@ const KatwanyaaAdmission = () => {
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                 required
               >
                 <option value="" className="text-gray-400">Select Gender</option>
@@ -814,7 +814,7 @@ const KatwanyaaAdmission = () => {
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   required
                   max={new Date().toISOString().split('T')[0]}
                 />
@@ -834,7 +834,7 @@ const KatwanyaaAdmission = () => {
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 flex items-center">
               <FiMapPin className="mr-2 text-green-600" /> Location Information
             </h3>
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-medium">
+            <div className="text-xs text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-bold">
               Select from dropdowns ↓
             </div>
           </div>
@@ -848,7 +848,7 @@ const KatwanyaaAdmission = () => {
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-blue-800">County</span>
               </div>
-              <div className="text-xs text-gray-600 font-medium">Required</div>
+              <div className="text-xs text-gray-600 font-bold">Required</div>
             </div>
             
             <div className={`bg-gradient-to-br ${formData.county ? 'from-emerald-50 to-emerald-100 border-emerald-200' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg sm:rounded-xl p-3 sm:p-4 border`}>
@@ -858,7 +858,7 @@ const KatwanyaaAdmission = () => {
                 </div>
                 <span className={`text-xs sm:text-sm font-semibold ${formData.county ? 'text-emerald-800' : 'text-gray-400'}`}>Constituency</span>
               </div>
-              <div className="text-xs text-gray-500 font-medium">{formData.county ? 'Now select' : 'Select county first'}</div>
+              <div className="text-xs text-gray-500 font-bold">{formData.county ? 'Now select' : 'Select county first'}</div>
             </div>
             
             <div className={`bg-gradient-to-br ${formData.constituency ? 'from-purple-50 to-purple-100 border-purple-200' : 'from-gray-50 to-gray-100 border-gray-200'} rounded-lg sm:rounded-xl p-3 sm:p-4 border`}>
@@ -868,7 +868,7 @@ const KatwanyaaAdmission = () => {
                 </div>
                 <span className={`text-xs sm:text-sm font-semibold ${formData.constituency ? 'text-purple-800' : 'text-gray-400'}`}>Ward</span>
               </div>
-              <div className="text-xs text-gray-500 font-medium">{formData.constituency ? 'Now select' : 'Select constituency first'}</div>
+              <div className="text-xs text-gray-500 font-bold">{formData.constituency ? 'Now select' : 'Select constituency first'}</div>
             </div>
             
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200">
@@ -878,7 +878,7 @@ const KatwanyaaAdmission = () => {
                 </div>
                 <span className="text-xs sm:text-sm font-semibold text-gray-400">Village</span>
               </div>
-              <div className="text-xs text-gray-500 font-medium">Optional</div>
+              <div className="text-xs text-gray-500 font-bold">Optional</div>
             </div>
           </div>
 
@@ -893,7 +893,7 @@ const KatwanyaaAdmission = () => {
                 name="nationality"
                 value={formData.nationality}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                 required
               />
             </div>
@@ -909,7 +909,7 @@ const KatwanyaaAdmission = () => {
                   value={formData.county}
                   readOnly
                   onClick={() => openLocationModal('county')}
-                  className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium cursor-pointer bg-white"
+                  className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold cursor-pointer bg-white"
                   placeholder="Click to select county..."
                   required
                 />
@@ -931,7 +931,7 @@ const KatwanyaaAdmission = () => {
                   value={formData.constituency}
                   readOnly
                   onClick={() => openLocationModal('constituency')}
-                  className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 font-medium cursor-pointer bg-white"
+                  className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 font-bold cursor-pointer bg-white"
                   placeholder="Click to select constituency..."
                   required
                 />
@@ -954,7 +954,7 @@ const KatwanyaaAdmission = () => {
                     value={formData.ward}
                     readOnly
                     onClick={() => openLocationModal('ward')}
-                    className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 font-medium cursor-pointer bg-white"
+                    className="w-full pl-10 pr-10 py-2.5 sm:py-3 text-sm sm:text-base border border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all text-gray-800 font-bold cursor-pointer bg-white"
                     placeholder="Click to select ward..."
                     required
                   />
@@ -972,7 +972,7 @@ const KatwanyaaAdmission = () => {
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-all text-gray-800 font-bold"
                   placeholder="Enter village or estate name"
                 />
               </div>
@@ -1001,7 +1001,7 @@ const KatwanyaaAdmission = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="student@example.com"
                   required
                 />
@@ -1019,11 +1019,11 @@ const KatwanyaaAdmission = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="Optional - 0712 345 678"
                 />
               </div>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-medium">Format: 07XXXXXXXX or 01XXXXXXXX</p>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 font-bold">Format: 07XXXXXXXX or 01XXXXXXXX</p>
             </div>
           </div>
 
@@ -1036,7 +1036,7 @@ const KatwanyaaAdmission = () => {
               name="alternativePhone"
               value={formData.alternativePhone}
               onChange={handleChange}
-              className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+              className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
               placeholder="Optional alternative number"
             />
           </div>
@@ -1053,7 +1053,7 @@ const KatwanyaaAdmission = () => {
                   name="postalAddress"
                   value={formData.postalAddress}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="P.O. Box 123-10100, Nairobi"
                   required
                 />
@@ -1069,7 +1069,7 @@ const KatwanyaaAdmission = () => {
                 name="postalCode"
                 value={formData.postalCode}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                 placeholder="10100"
               />
             </div>
@@ -1096,7 +1096,7 @@ const KatwanyaaAdmission = () => {
                   name="fatherName"
                   value={formData.fatherName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="Father's full name"
                 />
               </div>
@@ -1109,7 +1109,7 @@ const KatwanyaaAdmission = () => {
                   name="fatherPhone"
                   value={formData.fatherPhone}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="Father's phone"
                 />
               </div>
@@ -1122,7 +1122,7 @@ const KatwanyaaAdmission = () => {
                   name="fatherEmail"
                   value={formData.fatherEmail}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="father@example.com"
                 />
               </div>
@@ -1135,7 +1135,7 @@ const KatwanyaaAdmission = () => {
                   name="fatherOccupation"
                   value={formData.fatherOccupation}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold"
                   placeholder="Father's occupation"
                 />
               </div>
@@ -1160,7 +1160,7 @@ const KatwanyaaAdmission = () => {
                     name={field}
                     value={formData[field]}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-gray-800 font-medium"
+                    className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all text-gray-800 font-bold"
                     placeholder={
                       field === 'motherName' ? "Mother's full name" :
                       field === 'motherPhone' ? "Mother's phone" :
@@ -1191,7 +1191,7 @@ const KatwanyaaAdmission = () => {
                     name={field}
                     value={formData[field]}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 font-medium"
+                    className="w-full px-4 py-2.5 sm:py-3 font-bold text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-gray-800 "
                     placeholder="Optional"
                   />
                 </div>
@@ -1221,7 +1221,7 @@ const KatwanyaaAdmission = () => {
                   name="previousSchool"
                   value={formData.previousSchool}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                  className="w-full pl-10 pr-4 py-2.5 font-bold sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 "
                   placeholder="Name of previous school"
                   required
                 />
@@ -1237,7 +1237,7 @@ const KatwanyaaAdmission = () => {
                 name="previousClass"
                 value={formData.previousClass}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium"
+                className="w-full px-4 py-2.5 sm:py-3 font-bold text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800"
                 placeholder="e.g., Class 8, Form 2"
                 required
               />
@@ -1261,7 +1261,7 @@ const KatwanyaaAdmission = () => {
                   name="kcpeYear"
                   value={formData.kcpeYear}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-bold"
                   placeholder="2024"
                   min="2000"
                   max="2025"
@@ -1277,7 +1277,7 @@ const KatwanyaaAdmission = () => {
                   name="kcpeIndex"
                   value={formData.kcpeIndex}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-bold"
                   placeholder="12345678901"
                 />
               </div>
@@ -1291,7 +1291,7 @@ const KatwanyaaAdmission = () => {
                   name="kcpeMarks"
                   value={formData.kcpeMarks}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-bold"
                   placeholder="0-500"
                   min="0"
                   max="500"
@@ -1321,7 +1321,7 @@ const KatwanyaaAdmission = () => {
                   name="meanGrade"
                   value={formData.meanGrade}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-medium"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-gray-800 font-bold"
                 >
                   <option value="" className="text-gray-400">Select Grade</option>
                   {meanGrades.map(grade => (
@@ -1348,7 +1348,7 @@ const KatwanyaaAdmission = () => {
                 name="medicalCondition"
                 value={formData.medicalCondition}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium min-h-[100px] sm:min-h-[120px]"
+                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold min-h-[100px] sm:min-h-[120px]"
                 placeholder="Any medical conditions we should be aware of..."
               />
             </div>
@@ -1361,7 +1361,7 @@ const KatwanyaaAdmission = () => {
                 name="allergies"
                 value={formData.allergies}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-medium min-h-[80px] sm:min-h-[80px]"
+                className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-800 font-bold min-h-[80px] sm:min-h-[80px]"
                 placeholder="Food, drug allergies..."
               />
             </div>
@@ -1381,7 +1381,7 @@ const KatwanyaaAdmission = () => {
                   name="sportsInterests"
                   value={formData.sportsInterests}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 font-medium min-h-[60px] sm:min-h-[80px]"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 font-bold min-h-[60px] sm:min-h-[80px]"
                   placeholder="Football, Basketball, Athletics..."
                 />
               </div>
@@ -1394,7 +1394,7 @@ const KatwanyaaAdmission = () => {
                   name="clubsInterests"
                   value={formData.clubsInterests}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 font-medium min-h-[60px] sm:min-h-[80px]"
+                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 font-bold min-h-[60px] sm:min-h-[80px]"
                   placeholder="Debate, Science Club, Drama..."
                 />
               </div>
@@ -1407,7 +1407,7 @@ const KatwanyaaAdmission = () => {
                   name="talents"
                   value={formData.talents}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800 font-medium min-h-[60px] sm:min-h-[80px]"
+                  className="w-full px-4 py-2.5 font-bold sm:py-3 text-sm sm:text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-gray-800  min-h-[60px] sm:min-h-[80px]"
                   placeholder="Music, Art, Public Speaking..."
                 />
               </div>
@@ -1636,7 +1636,7 @@ const KatwanyaaAdmission = () => {
         <div className="mt-12 text-center relative z-10">
           <div className="bg-gradient-to-r from-blue-50/80 to-emerald-50/80 backdrop-blur-sm rounded-2xl p-8 border border-blue-100 mb-6 shadow-sm">
             <h3 className="text-lg font-bold text-gray-800 mb-3">📞 Need Assistance?</h3>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 font-medium">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 font-bold">
               <div className="flex items-center">
                 <FiPhone className="mr-2 text-blue-600" />
                 <span>Admissions: <strong className="text-gray-900">0712 345 678</strong></span>
@@ -1655,7 +1655,7 @@ const KatwanyaaAdmission = () => {
           <p className="text-gray-600 text-sm font-semibold">
             © {new Date().getFullYear()} Katwanyaa High  School. Excellence Through Discipline and Diligence.
           </p>
-          <p className="text-gray-500 text-xs mt-2 font-medium">
+          <p className="text-gray-500 text-xs mt-2 font-bold">
             All applications are processed in accordance with our privacy policy and data protection regulations.
           </p>
         </div>

@@ -946,8 +946,8 @@ function EmergencyModal({ student, onClose, onSubmit }) {
                     onClick={() => handleChange({ target: { name: 'urgency', value: level.value } })}
                     className={`p-2 rounded-lg border-2 transition-all mobile-touch-target ${
                       formData.urgency === level.value
-                        ? `border-red-500 bg-gradient-to-r ${level.color} text-white`
-                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                        ? `border-red-500 font-bold bg-gradient-to-r ${level.color} text-white`
+                        : 'border-gray-300 font-bold bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
                     <span className="text-xs font-bold">{level.label}</span>
@@ -968,7 +968,7 @@ function EmergencyModal({ student, onClose, onSubmit }) {
                 required
                 rows={4}
                 placeholder="Please describe the emergency situation in detail..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                className="w-full px-3 py-2 font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               />
             </div>
 
@@ -977,7 +977,7 @@ function EmergencyModal({ student, onClose, onSubmit }) {
               <h4 className="font-bold text-gray-900 text-sm">Contact Information</h4>
               
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold  text-gray-700 mb-1">
                   Phone Number
                 </label>
                 <input
@@ -986,12 +986,12 @@ function EmergencyModal({ student, onClose, onSubmit }) {
                   value={formData.contactPhone}
                   onChange={handleChange}
                   placeholder="Enter phone number for immediate contact"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 border font-bold border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold  text-gray-700 mb-1">
                   Email Address
                 </label>
                 <input
@@ -1001,7 +1001,7 @@ function EmergencyModal({ student, onClose, onSubmit }) {
                   onChange={handleChange}
                   required
                   placeholder="Enter email address"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full px-3 py-2 font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
             </div>
@@ -1011,7 +1011,7 @@ function EmergencyModal({ student, onClose, onSubmit }) {
               <div className="flex items-start gap-2">
                 <FiAlertTriangle className="text-amber-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-700">
+                  <p className="text-xs  text-gray-700">
                     <span className="font-bold">Important:</span> For immediate life-threatening emergencies, 
                     please call Our Ofiice Direct 0789384922 or your local emergency number first. This form is for urgent school-related 
                     matters that require immediate administrative attention.
