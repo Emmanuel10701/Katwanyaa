@@ -19,7 +19,6 @@ const CONTACT_PHONE = '+254720123456';
 const CONTACT_EMAIL = 'info@katwanyaa highSchool.sc.ke';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || CONTACT_EMAIL;
 const COUNSELOR_EMAIL = process.env.COUNSELOR_EMAIL || 'guidance@school.edu';
-
 // ====================================================================
 // UTILITY FUNCTIONS
 // ====================================================================
