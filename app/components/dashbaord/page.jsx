@@ -40,7 +40,8 @@ import {
   FiCpu,
   FiTrendingUp as FiTrendingUpSolid,
   FiTrendingDown as FiTrendingDownSolid,
-  FiActivity as FiActivitySolid
+  FiActivity as FiActivitySolid,
+  FiBriefcase  // Added for careers
 } from 'react-icons/fi';
 import { 
   IoPeopleCircle,
@@ -771,7 +772,7 @@ export default function DashboardOverview() {
     totalSubscribers: 0,
     pendingEmails: 0,
     activeAssignments: 0,
-    upcomingEvents: 0,
+    totalCareers: 0, // Changed from upcomingEvents to totalCareers
     galleryItems: 0,
     guidanceSessions: 0,
     totalNews: 0,
@@ -970,7 +971,7 @@ const fetchAllData = useCallback(async () => {
       staffRes,
       subscribersRes,
       assignmentsRes,
-      eventsRes,
+      careersRes, // Replaced eventsRes with careersRes
       galleryRes,
       guidanceRes,
       newsRes,
@@ -978,7 +979,6 @@ const fetchAllData = useCallback(async () => {
       adminsRes,
       admissionsRes,
       resourcesRes,
-      careersRes,
       emailCampaignsRes,
       resultsRes // Results data for engagement calculation
     ] = await Promise.allSettled([
@@ -986,7 +986,7 @@ const fetchAllData = useCallback(async () => {
       fetch('/api/staff'),
       fetch('/api/subscriber'),
       fetch('/api/assignment'),
-      fetch('/api/events'),
+      fetch('/api/career'), // Changed from events to career
       fetch('/api/gallery'),
       fetch('/api/guidance'),
       fetch('/api/news'),
@@ -994,7 +994,6 @@ const fetchAllData = useCallback(async () => {
       fetch('/api/register'),
       fetch('/api/applyadmission'),
       fetch('/api/resources'),
-      fetch('/api/career'),
       fetch('/api/emails'),
       fetch('/api/results?limit=1000&includeStudent=true') // Get all results with student data
     ]);
@@ -1011,7 +1010,7 @@ const fetchAllData = useCallback(async () => {
     const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
     const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
     const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
-    const events = eventsRes.status === 'fulfilled' ? await eventsRes.value.json() : { events: [] };
+    const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
     const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
     const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
     const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
@@ -1019,7 +1018,6 @@ const fetchAllData = useCallback(async () => {
     const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
     const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
     const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
-    const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
     const emailCampaignsData = emailCampaignsRes.status === 'fulfilled' ? await emailCampaignsRes.value.json() : { campaigns: [] };
     
     // Store school video for quick tour
@@ -1104,6 +1102,7 @@ const fetchAllData = useCallback(async () => {
     }
     
     // Set careers data
+    const totalCareers = careersData.jobs?.length || careersData.careers?.length || 0;
     if (careersData.jobs && careersData.jobs.length > 0) {
       setCareers(careersData.jobs.slice(0, 3));
     }
@@ -1123,8 +1122,6 @@ const fetchAllData = useCallback(async () => {
       (a.status || '').toLowerCase() === 'assigned'
     ).length || 0;
     
-    // FIXED: Remove time-based filtering for upcomingEvents
-   const upcomingEvents = events?.events?.length || 0;    
     const guidanceSessionsCount = guidance.events?.length || 0;
     const completedAssignments = assignments.assignments?.filter(a => 
       (a.status || '').toLowerCase() === 'completed'
@@ -1177,7 +1174,7 @@ const fetchAllData = useCallback(async () => {
     setEngagementStats(calculatedEngagementStats);
     setStudentEngagements(engagements.slice(0, 10));
     
-    // Update stats with engagement data
+    // Update stats with careers data
     const updatedStats = {
       totalStudents: studentList.length || 0,
       activeStudents,
@@ -1186,7 +1183,7 @@ const fetchAllData = useCallback(async () => {
       totalSubscribers: subscribers.subscribers?.length || 0,
       pendingEmails: 0,
       activeAssignments,
-      upcomingEvents, // Now properly defined
+      totalCareers, // Changed from upcomingEvents to totalCareers
       galleryItems: gallery.galleries?.length || 0,
       guidanceSessions: guidanceSessionsCount,
       totalNews: news.news?.length || 0,
@@ -1938,7 +1935,7 @@ const QuickTourModal = () => (
               <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
                 Currently overseeing <span className="text-white font-bold underline decoration-blue-500/50 decoration-2 underline-offset-4">{stats.totalStudents} students</span> and <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4">{stats.totalStaff} staff</span>. 
                 You have <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/20 mx-1">{stats.activeAssignments} active tasks</span> 
-                and <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/20 mx-1">{stats.upcomingEvents} events</span> scheduled.
+                and <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-green-500/20 text-green-400 border border-green-500/20 mx-1">{stats.totalCareers} career opportunities</span> listed.
               </p>
             </div>
             
@@ -2263,16 +2260,16 @@ const QuickTourModal = () => (
           </div>
         </div>
         
-        {/* Additional Stat Cards */}
+        {/* Additional Stat Cards - UPDATED with Total Careers */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
-            icon={FiCalendar} 
-            label="Upcoming Events" 
-            value={stats.upcomingEvents} 
-            change={parseFloat(growthMetrics.eventGrowth)} 
-            trend={parseFloat(growthMetrics.eventGrowth) >= 0 ? "up" : "down"}
-            color="red" 
-            subtitle="All events" 
+            icon={FiBriefcase} // Changed from FiCalendar to FiBriefcase
+            label="Total Careers" // Changed from "Upcoming Events" to "Total Careers"
+            value={stats.totalCareers} // Changed from stats.upcomingEvents to stats.totalCareers
+            change={0} // You can add career growth calculation if needed
+            trend="up" // You can adjust this based on your logic
+            color="green" // Changed color to green for careers
+            subtitle="Career opportunities" // Changed subtitle
           />
           <StatCard 
             icon={FiMessageCircle} 
