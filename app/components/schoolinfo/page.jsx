@@ -776,64 +776,80 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     { id: 'academic', label: 'Academic', icon: FaGraduationCap },
     { id: 'admission', label: 'Admission', icon: FaUserCheck }
   ];
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
+const handleFormSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    setActionLoading(true);
     
-    try {
-      setActionLoading(true);
-      
-      const formDataObj = new FormData();
-      
-      // Add form data - arrays stringified
-      Object.keys(formData).forEach(key => {
-        if (Array.isArray(formData[key])) {
-          formDataObj.append(key, JSON.stringify(formData[key]));
-        } else {
-          formDataObj.append(key, formData[key] || '');
-        }
-      });
-      
-      // Add video file if present (ensure blob/file has a filename)
-      if (videoFile) {
-        if (videoFile instanceof Blob && !(videoFile instanceof File)) {
-          formDataObj.append('videoTour', new File([videoFile], 'video.mp4', { type: videoFile.type || 'video/mp4' }));
-        } else {
-          formDataObj.append('videoTour', videoFile);
-        }
+    const formDataObj = new FormData();
+    
+    // Add form data - arrays stringified
+    Object.keys(formData).forEach(key => {
+      if (Array.isArray(formData[key])) {
+        formDataObj.append(key, JSON.stringify(formData[key]));
+      } else {
+        formDataObj.append(key, formData[key] || '');
       }
-      
-      // Add thumbnail if present - ensure filename
-      if (videoThumbnail) {
-        if (videoThumbnail instanceof Blob && !(videoThumbnail instanceof File)) {
-          formDataObj.append('videoThumbnail', new File([videoThumbnail], 'thumbnail.jpg', { type: videoThumbnail.type || 'image/jpeg' }));
-        } else {
-          formDataObj.append('videoThumbnail', videoThumbnail);
-        }
+    });
+    
+    // Add video file if present
+    if (videoFile) {
+      if (videoFile instanceof Blob && !(videoFile instanceof File)) {
+        formDataObj.append('videoTour', new File([videoFile], 'video.mp4', { type: videoFile.type || 'video/mp4' }));
+      } else {
+        formDataObj.append('videoTour', videoFile);
       }
-      
-      const response = await fetch('/api/school', {
-        method: school ? 'PUT' : 'POST',
-        body: formDataObj
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save school information');
-      }
-
-      const result = await response.json();
-      toast.success(result.message || (school ? 'Updated successfully!' : 'Created successfully!'));
-      onSave(result.school);
-      onClose();
-      
-    } catch (error) {
-      console.error('Save failed:', error);
-      toast.error(error.message || 'Failed to save school information');
-    } finally {
-      setActionLoading(false);
     }
-  };
+    
+    // Add thumbnail if present
+    if (videoThumbnail) {
+      if (videoThumbnail instanceof Blob && !(videoThumbnail instanceof File)) {
+        formDataObj.append('videoThumbnail', new File([videoThumbnail], 'thumbnail.jpg', { type: videoThumbnail.type || 'image/jpeg' }));
+      } else {
+        formDataObj.append('videoThumbnail', videoThumbnail);
+      }
+    }
+    
+    // Check if school info already exists to decide the method
+    const hasExistingSchool = await checkIfSchoolExists();
+    const method = hasExistingSchool ? 'PUT' : 'POST';
+    
+    const response = await fetch('/api/school', {
+      method: method,
+      body: formDataObj
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to ${hasExistingSchool ? 'update' : 'save'} school information`);
+    }
+
+    const result = await response.json();
+    toast.success(result.message || (hasExistingSchool ? 'Updated successfully!' : 'Created successfully!'));
+    onSave(result.school);
+    onClose();
+    
+  } catch (error) {
+    console.error('Save failed:', error);
+    toast.error(error.message || 'Failed to save school information');
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+// Helper function to check if school exists
+const checkIfSchoolExists = async () => {
+  try {
+    const response = await fetch('/api/school');
+    if (!response.ok) return false;
+    const data = await response.json();
+    return !!(data.school && data.school.id);
+  } catch (error) {
+    console.error('Error checking school existence:', error);
+    return false;
+  }
+};
 
   const handleNextStep = (e) => {
     e.preventDefault();

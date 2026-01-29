@@ -339,20 +339,12 @@ export async function GET() {
 // 🟢 CREATE School Info
 export async function POST(req) {
   try {
-    console.log("📝 POST /api/school - Creating school info");
+    console.log("📝 POST /api/school - Creating or updating school info");
     
-    const existing = await prisma.schoolInfo.findFirst();
-    if (existing) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: "School info already exists. Please update instead." 
-        },
-        { status: 400 }
-      );
-    }
-
     const formData = await req.formData();
+    
+    // Check if school exists
+    const existing = await prisma.schoolInfo.findFirst();
     
     // Validate required fields
     try {
@@ -367,29 +359,27 @@ export async function POST(req) {
       );
     }
 
-    // Handle video upload with thumbnail
-    let videoUrl = null;
-    let videoType = null;
-    let thumbnailUrl = null;
+    // Handle video upload
+    let videoUrl = existing?.videoTour || null;
+    let videoType = existing?.videoType || null;
+    let thumbnailUrl = existing?.videoThumbnail || null;
     
     try {
       const youtubeLink = formData.get("youtubeLink");
       const videoTour = formData.get("videoTour");
       const thumbnail = formData.get("videoThumbnail");
       
-      console.log("📹 Processing video upload...");
-      console.log("- YouTube Link:", youtubeLink ? "Provided" : "Not provided");
-      console.log("- Video File:", videoTour ? `Yes (${videoTour.size} bytes)` : "Not provided");
-      console.log("- Thumbnail:", thumbnail ? `Yes (${thumbnail.size} bytes)` : "Not provided");
-      
-      const videoResult = await handleVideoUpload(youtubeLink, videoTour, thumbnail, null, false);
+      const videoResult = await handleVideoUpload(
+        youtubeLink, 
+        videoTour, 
+        thumbnail, 
+        existing,
+        !!existing // isUpdateOperation
+      );
       videoUrl = videoResult.videoUrl;
       videoType = videoResult.videoType;
       thumbnailUrl = videoResult.thumbnailUrl;
-      
-      console.log("✅ Video processed:", { videoType, videoUrl: videoUrl ? "Set" : "Not set", thumbnailUrl: thumbnailUrl ? "Set" : "Not set" });
     } catch (videoError) {
-      console.error("❌ Video upload error:", videoError);
       return NextResponse.json(
         { 
           success: false, 
@@ -405,13 +395,12 @@ export async function POST(req) {
     let admissionDocumentsRequired = [];
     
     try {
-      // Parse academic JSON fields
       subjects = parseJsonField(formData.get("subjects") || "[]", "subjects");
       departments = parseJsonField(formData.get("departments") || "[]", "departments");
-      
-      const admissionDocsStr = formData.get("admissionDocumentsRequired");
-      admissionDocumentsRequired = admissionDocsStr ? parseJsonField(admissionDocsStr, "admissionDocumentsRequired") : [];
-      
+      admissionDocumentsRequired = parseJsonField(
+        formData.get("admissionDocumentsRequired") || "[]", 
+        "admissionDocumentsRequired"
+      );
     } catch (parseError) {
       return NextResponse.json(
         { 
@@ -422,53 +411,58 @@ export async function POST(req) {
       );
     }
 
-    console.log("💾 Saving school to database...");
-    
-    const school = await prisma.schoolInfo.create({
-      data: {
-        name: formData.get("name"),
-        description: formData.get("description") || null,
-        motto: formData.get("motto") || null,
-        vision: formData.get("vision") || null,
-        mission: formData.get("mission") || null,
-        videoTour: videoUrl,
-        videoType,
-        videoThumbnail: thumbnailUrl,
-        studentCount: parseIntField(formData.get("studentCount")) || 0,
-        staffCount: parseIntField(formData.get("staffCount")) || 0,
-        
-        // Fees
-        feesDay: parseNumber(formData.get("feesDay")),
-        feesBoarding: parseNumber(formData.get("feesBoarding")),
-        admissionFee: parseNumber(formData.get("admissionFee")),
-        
-        // Academic Calendar
-        openDate: parseDate(formData.get("openDate")) || new Date(),
-        closeDate: parseDate(formData.get("closeDate")) || new Date(),
-        
-        // Academic Information
-        subjects,
-        departments,
-        
-        // Admission Information
-        admissionOpenDate: parseDate(formData.get("admissionOpenDate")),
-        admissionCloseDate: parseDate(formData.get("admissionCloseDate")),
-        admissionRequirements: formData.get("admissionRequirements") || null,
-        admissionCapacity: parseIntField(formData.get("admissionCapacity")),
-        admissionContactEmail: formData.get("admissionContactEmail") || null,
-        admissionContactPhone: formData.get("admissionContactPhone") || null,
-        admissionWebsite: formData.get("admissionWebsite") || null,
-        admissionLocation: formData.get("admissionLocation") || null,
-        admissionOfficeHours: formData.get("admissionOfficeHours") || null,
-        admissionDocumentsRequired,
-      },
-    });
+    // Use upsert - update if exists, create if not
+    const schoolData = {
+      name: formData.get("name"),
+      description: formData.get("description") || null,
+      motto: formData.get("motto") || null,
+      vision: formData.get("vision") || null,
+      mission: formData.get("mission") || null,
+      videoTour: videoUrl,
+      videoType,
+      videoThumbnail: thumbnailUrl,
+      studentCount: parseIntField(formData.get("studentCount")) || 0,
+      staffCount: parseIntField(formData.get("staffCount")) || 0,
+      feesDay: parseNumber(formData.get("feesDay")),
+      feesBoarding: parseNumber(formData.get("feesBoarding")),
+      admissionFee: parseNumber(formData.get("admissionFee")),
+      openDate: parseDate(formData.get("openDate")) || new Date(),
+      closeDate: parseDate(formData.get("closeDate")) || new Date(),
+      subjects,
+      departments,
+      admissionOpenDate: parseDate(formData.get("admissionOpenDate")),
+      admissionCloseDate: parseDate(formData.get("admissionCloseDate")),
+      admissionRequirements: formData.get("admissionRequirements") || null,
+      admissionCapacity: parseIntField(formData.get("admissionCapacity")),
+      admissionContactEmail: formData.get("admissionContactEmail") || null,
+      admissionContactPhone: formData.get("admissionContactPhone") || null,
+      admissionWebsite: formData.get("admissionWebsite") || null,
+      admissionLocation: formData.get("admissionLocation") || null,
+      admissionOfficeHours: formData.get("admissionOfficeHours") || null,
+      admissionDocumentsRequired,
+      updatedAt: new Date(),
+    };
 
-    console.log("✅ School created successfully:", school.name);
+    let school;
+    
+    if (existing) {
+      // Update existing
+      school = await prisma.schoolInfo.update({
+        where: { id: existing.id },
+        data: schoolData,
+      });
+      console.log("✅ School updated successfully:", school.name);
+    } else {
+      // Create new
+      school = await prisma.schoolInfo.create({
+        data: schoolData,
+      });
+      console.log("✅ School created successfully:", school.name);
+    }
     
     return NextResponse.json({ 
       success: true, 
-      message: "School info created successfully",
+      message: existing ? "School info updated successfully" : "School info created successfully",
       school: cleanSchoolResponse(school)
     });
     
@@ -478,7 +472,7 @@ export async function POST(req) {
       { 
         success: false, 
         error: error.message || "Internal server error",
-        message: "Failed to create school information"
+        message: "Failed to save school information"
       }, 
       { status: 500 }
     );
