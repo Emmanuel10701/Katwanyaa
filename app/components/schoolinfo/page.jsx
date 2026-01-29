@@ -735,6 +735,7 @@ function ModernDeleteModal({ onClose, onConfirm, loading }) {
 
 // School Info Modal Component
 function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) {
+  const isUpdateMode = !!school;
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState(() => ({
     name: school?.name || '',
@@ -776,80 +777,87 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
     { id: 'academic', label: 'Academic', icon: FaGraduationCap },
     { id: 'admission', label: 'Admission', icon: FaUserCheck }
   ];
-const handleFormSubmit = async (e) => {
-  e.preventDefault();
-  
-  try {
-    setActionLoading(true);
-    
-    const formDataObj = new FormData();
-    
-    // Add form data - arrays stringified
-    Object.keys(formData).forEach(key => {
-      if (Array.isArray(formData[key])) {
-        formDataObj.append(key, JSON.stringify(formData[key]));
-      } else {
-        formDataObj.append(key, formData[key] || '');
-      }
-    });
-    
-    // Add video file if present
-    if (videoFile) {
-      if (videoFile instanceof Blob && !(videoFile instanceof File)) {
-        formDataObj.append('videoTour', new File([videoFile], 'video.mp4', { type: videoFile.type || 'video/mp4' }));
-      } else {
-        formDataObj.append('videoTour', videoFile);
-      }
-    }
-    
-    // Add thumbnail if present
-    if (videoThumbnail) {
-      if (videoThumbnail instanceof Blob && !(videoThumbnail instanceof File)) {
-        formDataObj.append('videoThumbnail', new File([videoThumbnail], 'thumbnail.jpg', { type: videoThumbnail.type || 'image/jpeg' }));
-      } else {
-        formDataObj.append('videoThumbnail', videoThumbnail);
-      }
-    }
-    
-    // Check if school info already exists to decide the method
-    const hasExistingSchool = await checkIfSchoolExists();
-    const method = hasExistingSchool ? 'PUT' : 'POST';
-    
-    const response = await fetch('/api/school', {
-      method: method,
-      body: formDataObj
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to ${hasExistingSchool ? 'update' : 'save'} school information`);
-    }
-
-    const result = await response.json();
-    toast.success(result.message || (hasExistingSchool ? 'Updated successfully!' : 'Created successfully!'));
-    onSave(result.school);
-    onClose();
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
     
-  } catch (error) {
-    console.error('Save failed:', error);
-    toast.error(error.message || 'Failed to save school information');
-  } finally {
-    setActionLoading(false);
-  }
-};
+    try {
+      setActionLoading(true);
+      
+      const formDataObj = new FormData();
+      
+      // Add form data - arrays stringified
+      Object.keys(formData).forEach(key => {
+        if (Array.isArray(formData[key])) {
+          formDataObj.append(key, JSON.stringify(formData[key]));
+        } else if (formData[key] !== null && formData[key] !== undefined) {
+          // Add other values
+          formDataObj.append(key, formData[key]);
+        }
+      });
+      
+      // Add video file if present
+      if (videoFile) {
+        // Ensure it's a proper File object
+        let videoToUpload = videoFile;
+        if (videoFile instanceof Blob && !(videoFile instanceof File)) {
+          videoToUpload = new File([videoFile], 'video.mp4', { 
+            type: videoFile.type || 'video/mp4',
+            lastModified: Date.now()
+          });
+        }
+        formDataObj.append('videoTour', videoToUpload);
+      }
+      
+      // Add thumbnail if present
+      if (videoThumbnail) {
+        let thumbnailToUpload = videoThumbnail;
+        if (videoThumbnail instanceof Blob && !(videoThumbnail instanceof File)) {
+          thumbnailToUpload = new File([videoThumbnail], 'thumbnail.jpg', { 
+            type: videoThumbnail.type || 'image/jpeg',
+            lastModified: Date.now()
+          });
+        }
+        formDataObj.append('videoThumbnail', thumbnailToUpload);
+      }
+      
+      // Use PUT for updates, POST for creates
+      const method = isUpdateMode ? 'PUT' : 'POST';
+      
+      console.log(`Submitting school data with ${method} method`, {
+        isUpdateMode,
+        hasVideoFile: !!videoFile,
+        hasThumbnail: !!videoThumbnail,
+        formData: Object.fromEntries(formDataObj.entries())
+      });
+      
+      const response = await fetch('/api/school', {
+        method: method,
+        body: formDataObj
+      });
 
-// Helper function to check if school exists
-const checkIfSchoolExists = async () => {
-  try {
-    const response = await fetch('/api/school');
-    if (!response.ok) return false;
-    const data = await response.json();
-    return !!(data.school && data.school.id);
-  } catch (error) {
-    console.error('Error checking school existence:', error);
-    return false;
-  }
-};
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to ${isUpdateMode ? 'update' : 'save'} school information`);
+      }
+
+      const result = await response.json();
+      toast.success(result.message || (isUpdateMode ? 'School information updated successfully!' : 'School information created successfully!'));
+      
+      // Call onSave with the updated/created school data
+      if (result.school) {
+        onSave(result.school);
+      }
+      
+      onClose();
+      
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast.error(error.message || 'Failed to save school information');
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleNextStep = (e) => {
     e.preventDefault();
@@ -907,14 +915,16 @@ const checkIfSchoolExists = async () => {
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
       }}>
-        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-4 text-white">
+        <div className={`p-4 text-white ${isUpdateMode ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700' : 'bg-gradient-to-r from-green-600 via-emerald-700 to-teal-700'}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
                 <FaSchool className="text-lg" />
               </div>
               <div>
-                <h2 className="text-lg md:text-xl font-bold">{school ? 'Update School Information' : 'Create School Information'}</h2>
+                <h2 className="text-lg md:text-xl font-bold">
+                  {isUpdateMode ? 'Update School Information' : 'Create School Information'}
+                </h2>
                 <p className="text-blue-100 opacity-90 text-xs mt-0.5">
                   Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}
                 </p>
@@ -935,9 +945,13 @@ const checkIfSchoolExists = async () => {
                   onClick={() => setCurrentStep(index)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-sm font-bold ${
                     index === currentStep 
-                      ? 'bg-blue-500 text-white shadow-lg' 
+                      ? isUpdateMode 
+                        ? 'bg-blue-500 text-white shadow-lg' 
+                        : 'bg-green-500 text-white shadow-lg'
                       : index < currentStep
-                      ? 'bg-green-500 text-white'
+                      ? isUpdateMode
+                        ? 'bg-blue-400 text-white'
+                        : 'bg-green-400 text-white'
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                   }`}
                 >
@@ -946,7 +960,9 @@ const checkIfSchoolExists = async () => {
                 </button>
                 {index < steps.length - 1 && (
                   <div className={`w-4 h-0.5 mx-1.5 md:w-6 ${
-                    index < currentStep ? 'bg-green-500' : 'bg-gray-300'
+                    index < currentStep 
+                      ? isUpdateMode ? 'bg-blue-400' : 'bg-green-400'
+                      : 'bg-gray-300'
                   }`} />
                 )}
               </div>
@@ -1287,7 +1303,7 @@ const checkIfSchoolExists = async () => {
             <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-gray-200 gap-3">
               <div className="flex items-center gap-2 text-sm text-gray-600 font-bold">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div className={`w-2 h-2 rounded-full ${isUpdateMode ? 'bg-blue-500' : 'bg-green-500'}`}></div>
                   <span className="font-bold">Step {currentStep + 1} of {steps.length}</span>
                 </div>
               </div>
@@ -1308,7 +1324,11 @@ const checkIfSchoolExists = async () => {
                     type="button"
                     onClick={handleNextStep}
                     disabled={!isStepValid()}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-base w-full sm:w-auto"
+                    className={`px-8 py-3 rounded-xl transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-base w-full sm:w-auto ${
+                      isUpdateMode 
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                    }`}
                   >
                     Continue →
                   </button>
@@ -1316,17 +1336,21 @@ const checkIfSchoolExists = async () => {
                   <button 
                     type="submit"
                     disabled={actionLoading || !isStepValid()}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-base w-full sm:w-auto"
+                    className={`px-8 py-3 rounded-xl transition duration-200 font-bold shadow disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-base w-full sm:w-auto ${
+                      isUpdateMode 
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                        : 'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700'
+                    }`}
                   >
                     {actionLoading ? (
                       <>
                         <CircularProgress size={16} className="text-white" />
-                        <span>{school ? 'Updating...' : 'Creating...'}</span>
+                        <span>{isUpdateMode ? 'Updating...' : 'Creating...'}</span>
                       </>
                     ) : (
                       <>
                         <FaSave className="text-sm" />
-                        <span>{school ? 'Update School Info' : 'Create School Info'}</span>
+                        <span>{isUpdateMode ? 'Update School Info' : 'Create School Info'}</span>
                       </>
                     )}
                   </button>
