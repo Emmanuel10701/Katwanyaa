@@ -479,7 +479,7 @@ export async function POST(req) {
   }
 }
 
-// 🟠 PUT update existing info
+
 export async function PUT(req) {
   try {
     console.log("✏️ PUT /api/school - Updating school info");
@@ -497,7 +497,6 @@ export async function PUT(req) {
 
     const formData = await req.formData();
     
-    // Handle video upload with thumbnail
     let videoUrl = existing.videoTour;
     let videoType = existing.videoType;
     let thumbnailUrl = existing.videoThumbnail;

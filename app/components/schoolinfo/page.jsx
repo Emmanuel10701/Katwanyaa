@@ -545,7 +545,7 @@ function ModernVideoUpload({
                 className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white py-3 rounded-xl hover:from-purple-600 hover:to-blue-700 transition-all duration-300 font-bold flex items-center justify-center gap-2"
               >
                 <FaEdit className="text-sm" />
-                 Thumbnail
+                <span>Upload Thumbnail</span>
               </button>
               
               <input 
@@ -1648,7 +1648,7 @@ export default function SchoolInfoPage() {
 
       {!hasSchoolInfo ? (
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-14 text-center my-8 transition-all duration-300">
-          <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-blue-100/50">
+          <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg shadow-blue-200/50">
             <FaSchool className="w-10 h-10 md:w-14 md:h-14 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600" />
           </div>
 
@@ -1936,7 +1936,7 @@ export default function SchoolInfoPage() {
                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-100">
                   <div className="flex items-center gap-2 mb-2">
                     <FaDoorOpen className="text-blue-600" />
-                    <h5 className="font-bold text-blue-700">Term Opens</h5>
+                    <h5 className="font-bold text-slate-700">Term Opens</h5>
                   </div>
                   <p className="text-lg font-black text-slate-900">{formatDate(schoolInfo.openDate)}</p>
                 </div>
