@@ -607,8 +607,19 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
     return null;
   };
 
-  // ✅ FIX: Check if modal should be open
-  if (!open || !videoPath) return null;
+  // ✅ CRITICAL FIX: Always return valid JSX, never undefined
+  if (!open || !videoPath) {
+    return null;  // ✅ Explicitly return null instead of undefined
+  }
+
+  const youtubeId = videoType === 'youtube' ? extractYouTubeId(videoPath) : null;
+
+  // ✅ CRITICAL FIX: Validate video type before rendering
+  const isValidVideo = (videoType === 'youtube' && youtubeId) || (videoType === 'file' && videoPath);
+
+  if (!isValidVideo) {
+    return null;  // ✅ Return null for invalid videos
+  }
 
   return (
     <div 
@@ -619,6 +630,7 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
         className="w-full max-w-6xl bg-black rounded-xl overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 bg-black bg-opacity-70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 hover:bg-opacity-100 transition"
@@ -626,11 +638,11 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
           ✕
         </button>
         
-        {/* ✅ FIX: Handle YouTube video */}
-        {videoType === 'youtube' && videoPath && (
+        {/* YouTube Video */}
+        {videoType === 'youtube' && youtubeId && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src={`https://www.youtube.com/embed/${extractYouTubeId(videoPath)}?autoplay=1`}
+              src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
               className="absolute top-0 left-0 w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -639,7 +651,7 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
           </div>
         )}
         
-        {/* ✅ FIX: Handle file video */}
+        {/* File Video */}
         {videoType === 'file' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <video
@@ -649,16 +661,6 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
               src={videoPath}
               poster={thumbnail}
             />
-          </div>
-        )}
-        
-        {/* ✅ FIX: Fallback if no valid video type */}
-        {!videoType || (!videoType === 'youtube' && !videoType === 'file') && (
-          <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
-            <div className="text-center">
-              <FaVideo className="text-white text-4xl mb-2 mx-auto" />
-              <p className="text-white">Video unavailable</p>
-            </div>
           </div>
         )}
       </div>
@@ -1379,7 +1381,7 @@ function ModernSchoolModal({ onClose, onSave, school, loading: parentLoading }) 
 
 // StatCard Component
 const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) => {
-  const isPositive = trend === 'up' || change > 0;
+  const isPositive = trend === 'up' || (change && change > 0);
   
   const colorMap = {
     blue: 'from-blue-500/10 to-blue-500/5 text-blue-600 border-blue-100',
@@ -1394,11 +1396,12 @@ const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) 
   
   const selectedColor = colorMap[color] || colorMap.blue;
   
-  // Ensure value is a number for toLocaleString
-  const displayValue = typeof value === 'number' ? value : parseInt(value) || 0;
+  // ✅ FIX: Safely convert value to number
+  const displayValue = typeof value === 'number' ? value : (Number(value) || 0);
+  const displayChange = typeof change === 'number' ? change : (Number(change) || 0);
   
   return (
-    <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hove overflow-hidden">
+    <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] overflow-hidden">
       
       {/* Background Decorative Glow */}
       <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${selectedColor} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity`} />
@@ -1417,14 +1420,14 @@ const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) 
           
           {/* Change & Subtitle Section */}
           <div className="flex flex-col gap-1.5">
-            {change !== undefined && (
+            {displayChange !== 0 && (
               <div className={`inline-flex items-center w-fit gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border ${
                 isPositive 
                   ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
                   : 'bg-rose-50 text-rose-600 border-rose-100'
               }`}>
                 {isPositive ? <FiTrendingUp /> : <FiTrendingDown />}
-                <span>{change > 0 ? '+' : ''}{change}%</span>
+                <span>{displayChange > 0 ? '+' : ''}{displayChange}%</span>
               </div>
             )}
             
@@ -1712,26 +1715,29 @@ export default function SchoolInfoPage() {
         <div className="space-y-6">
           {/* QUICK STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard 
-              icon={FaUserGraduate} 
-              label="Total Students" 
-              value={schoolInfo?.studentCount || 0} 
-              change={0}
-              trend="up"
-              color="green" 
-              subtitle="Enrolled students" 
-            />
-            <StatCard 
-              icon={FaUserTie} 
-              label="Staff Members" 
-              value={schoolInfo?.staffCount || 0} 
-              change={0}
-              trend="up"
-              color="blue" 
-              subtitle="Teaching & support" 
-            />
-        
-       
+            {schoolInfo?.studentCount !== undefined && schoolInfo?.studentCount !== null && (
+              <StatCard 
+                icon={FaUserGraduate} 
+                label="Total Students" 
+                value={schoolInfo.studentCount} 
+                change={0}
+                trend="up"
+                color="green" 
+                subtitle="Enrolled students" 
+              />
+            )}
+            
+            {schoolInfo?.staffCount !== undefined && schoolInfo?.staffCount !== null && (
+              <StatCard 
+                icon={FaUserTie} 
+                label="Staff Members" 
+                value={schoolInfo.staffCount} 
+                change={0}
+                trend="up"
+                color="blue" 
+                subtitle="Teaching & support" 
+              />
+            )}
           </div>
 
           {/* SCHOOL OVERVIEW */}
