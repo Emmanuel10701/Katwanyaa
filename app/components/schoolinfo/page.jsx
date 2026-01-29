@@ -1799,27 +1799,7 @@ export default function SchoolInfoPage() {
                     )}
                   </div>
 
-                  {/* Fee Information Section */}
-                  <div className="bg-gradient-to-br from-yellow-50 to-amber-50 p-4 rounded-xl border border-yellow-100">
-                    <h4 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
-                      <FaMoneyBill className="text-yellow-600" />
-                      Fee Information
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
-                        <p className="text-xs font-bold text-slate-400">Day School</p>
-                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.feesDay)}</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
-                        <p className="text-xs font-bold text-slate-400">Boarding</p>
-                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.feesBoarding)}</p>
-                      </div>
-                      <div className="bg-white p-3 rounded-lg border border-yellow-100">
-                        <p className="text-xs font-bold text-slate-400">Admission Fee</p>
-                        <p className="text-lg font-black text-slate-800">{formatCurrency(schoolInfo.admissionFee)}</p>
-                      </div>
-                    </div>
-                  </div>
+          
                 </div>
               </div>
             </div>
@@ -1832,7 +1812,7 @@ export default function SchoolInfoPage() {
                 <div className="flex items-center justify-between mb-6 relative z-10">
                   <div>
                     <h3 className="text-lg font-black text-slate-800 tracking-tight">Video Tour</h3>
-                    <p className="text-xs text-slate-400 font-medium">Campus experience</p>
+                    <p className="text-xs text-slate-400 font-medium">school experience</p>
                   </div>
                   <div className="p-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 shadow-sm">
                     <FaVideo className="text-xl" />
