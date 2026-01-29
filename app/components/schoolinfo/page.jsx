@@ -586,7 +586,7 @@ function ModernVideoUpload({
   );
 }
 
-// Video Modal Component
+// Video Modal Component - FIXED
 function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
   const extractYouTubeId = (url) => {
     if (!url) return null;
@@ -607,7 +607,8 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
     return null;
   };
 
-  if (!open) return null;
+  // ✅ FIX: Check if modal should be open
+  if (!open || !videoPath) return null;
 
   return (
     <div 
@@ -625,6 +626,7 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
           ✕
         </button>
         
+        {/* ✅ FIX: Handle YouTube video */}
         {videoType === 'youtube' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
@@ -637,6 +639,7 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
           </div>
         )}
         
+        {/* ✅ FIX: Handle file video */}
         {videoType === 'file' && videoPath && (
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <video
@@ -646,6 +649,16 @@ function VideoModal({ open, onClose, videoType, videoPath, thumbnail }) {
               src={videoPath}
               poster={thumbnail}
             />
+          </div>
+        )}
+        
+        {/* ✅ FIX: Fallback if no valid video type */}
+        {!videoType || (!videoType === 'youtube' && !videoType === 'file') && (
+          <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
+            <div className="text-center">
+              <FaVideo className="text-white text-4xl mb-2 mx-auto" />
+              <p className="text-white">Video unavailable</p>
+            </div>
           </div>
         )}
       </div>
@@ -1702,7 +1715,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaUserGraduate} 
               label="Total Students" 
-              value={schoolInfo.studentCount || 0} 
+              value={schoolInfo?.studentCount || 0} 
               change={0}
               trend="up"
               color="green" 
@@ -1711,7 +1724,7 @@ export default function SchoolInfoPage() {
             <StatCard 
               icon={FaUserTie} 
               label="Staff Members" 
-              value={schoolInfo.staffCount || 0} 
+              value={schoolInfo?.staffCount || 0} 
               change={0}
               trend="up"
               color="blue" 
@@ -1820,12 +1833,13 @@ export default function SchoolInfoPage() {
                   </div>
                 </div>
 
-                {schoolInfo.videoTour ? (
+                {schoolInfo?.videoTour ? (
                   <div className="relative z-10">
                     <div className="relative rounded-xl overflow-hidden cursor-pointer group/video" onClick={() => setShowVideoModal(true)}>
                       <div className="relative pb-[56.25%]">
+                        {/* ✅ FIX: Show thumbnail for both YouTube and file videos */}
                         <img 
-                          src={`https://img.youtube.com/vi/${schoolInfo.videoTour.split('v=')[1]}/hqdefault.jpg`}
+                          src={schoolInfo.videoThumbnail || (schoolInfo.videoType === 'youtube' ? `https://img.youtube.com/vi/${schoolInfo.videoTour?.split('v=')[1] || 'default'}/hqdefault.jpg` : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"%3E%3Crect fill="%23000" width="1280" height="720"/%3E%3C/svg%3E')}
                           alt="Video Thumbnail" 
                           className="absolute top-0 left-0 w-full h-full object-cover"
                         />
@@ -2173,15 +2187,15 @@ export default function SchoolInfoPage() {
         />
       )}
 
-      {showVideoModal && schoolInfo?.videoTour && (
+      {showVideoModal && schoolInfo?.videoTour ? (
         <VideoModal 
           open={showVideoModal}
           onClose={() => setShowVideoModal(false)}
-          videoType={schoolInfo.videoType}
+          videoType={schoolInfo.videoType || 'file'}
           videoPath={schoolInfo.videoTour}
           thumbnail={schoolInfo.videoThumbnail}
         />
-      )}
+      ) : null}
     </div>
   );
 }
