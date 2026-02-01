@@ -237,7 +237,7 @@ const router =useRouter()
 
   // Modern Loading Screen with Enhanced Design
   const LoadingScreen = () => (
-    <div className="fixed inset-0 bg-gradient-to-br from-orange-900 via-amber-900 to-red-900 z-50 flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 z-50 flex flex-col items-center justify-center">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(15)].map((_, i) => (
@@ -264,7 +264,7 @@ const router =useRouter()
           
           {/* Center Logo - Scaled for small screens (w-12), original (w-16) on md+ */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
                 src="/katz.png" 
                 alt="Katwanyaa High School Logo" 
@@ -293,7 +293,7 @@ const router =useRouter()
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-2.5 h-2.5 md:w-3 md:h-3 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full animate-bounce"
+                  className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-bounce"
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
@@ -301,7 +301,7 @@ const router =useRouter()
             
             {/* Progress Bar - Scaled width for small screens */}
             <div className="w-48 md:w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
-              <div className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 animate-gradient-loading"></div>
+              <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 animate-gradient-loading"></div>
             </div>
             
             <p className="text-white/60 text-xs md:text-sm">Loading resources...</p>
