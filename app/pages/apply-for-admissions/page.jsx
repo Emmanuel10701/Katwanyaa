@@ -831,7 +831,7 @@ const KatwanyaaAdmission = () => {
         {/* Location Information Section at TOP */}
         <div className="space-y-4 sm:space-y-6">
           <div className="flex items-center justify-between mb-1 sm:mb-2">
-            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 flex items-center">
+            <h3 className="text-base sm:text-md md:text-xl font-semibold text-gray-800 flex items-center">
               <FiMapPin className="mr-2 text-green-600" /> Location Information
             </h3>
             <div className="text-xs text-slate-900 px-2 sm:px-3 py-1 ">
@@ -992,7 +992,7 @@ const KatwanyaaAdmission = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-1 sm:space-y-2">
               <label className="block text-sm sm:text-base font-semibold text-gray-800">
-                Email Address (Optional)
+                Email Address (For Parent) *
               </label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
