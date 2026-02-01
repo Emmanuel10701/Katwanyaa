@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toaster, toast } from 'sonner';
 
+
 // React Icons from fa6 (only the ones you're actually using)
 import { 
   FaX,
@@ -129,7 +130,8 @@ export default function AdminManager() {
   const [session, setSession] = useState(null);
   const [status, setStatus] = useState('loading');
   const router = useRouter();
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   const [admins, setAdmins] = useState([]);
   const [filteredAdmins, setFilteredAdmins] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,6 +144,9 @@ export default function AdminManager() {
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [selectedAdmins, setSelectedAdmins] = useState(new Set());
   const [refreshing, setRefreshing] = useState(false);
+  // Add these states
+const [showViewModal, setShowViewModal] = useState(false);
+const [viewingAdmin, setViewingAdmin] = useState(null);
   const itemsPerPage = 8;
 
   const [adminData, setAdminData] = useState({
@@ -159,6 +164,14 @@ export default function AdminManager() {
     status: 'active'
   });
 
+
+
+
+// Handle view admin details
+const handleViewAdmin = (admin) => {
+  setViewingAdmin(admin);
+  setShowViewModal(true);
+};  
   // Check authentication on component mount - CORRECTED
   useEffect(() => {
     const checkAuth = () => {
@@ -215,69 +228,68 @@ export default function AdminManager() {
     checkAuth();
   }, [router]);
 
-  // Fetch admins from API
-  const fetchAdmins = async (showRefresh = false) => {
-    if (status !== 'authenticated') {
-      console.log('❌ Cannot fetch admins: Not authenticated');
-      return;
+const fetchAdmins = async (showRefresh = false) => {
+  if (status !== 'authenticated') {
+    console.log('❌ Cannot fetch admins: Not authenticated');
+    return;
+  }
+  
+  try {
+    console.log('📥 Fetching admins from API...');
+    if (showRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
     }
+
+    const token = localStorage.getItem('admin_token');
     
-    try {
-      console.log('📥 Fetching admins...');
-      if (showRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
+    // Fetch from your API endpoint
+    const response = await fetch('/api/register', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
+    });
 
-      // Check localStorage first for admin list
-      const storedAdmins = localStorage.getItem('adminList');
-      if (storedAdmins) {
-        console.log('📁 Found admins in localStorage');
-        const adminsData = JSON.parse(storedAdmins);
-        setAdmins(adminsData);
-        setFilteredAdmins(adminsData);
-      } else {
-        console.log('📝 Creating initial admin list from current user');
-        // Create initial list from current user
-        if (session?.user) {
-          const initialAdmins = [{
-            ...session.user,
-            id: session.user.id || 'current-user',
-            phone: session.user.phone || '+254700000000',
-            role: session.user.role || 'ADMIN',
-            status: 'active',
-            permissions: {
-              manageUsers: true,
-              manageContent: true,
-              manageSettings: true,
-              viewReports: true
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }];
-          setAdmins(initialAdmins);
-          setFilteredAdmins(initialAdmins);
-          localStorage.setItem('adminList', JSON.stringify(initialAdmins));
-          console.log('✅ Initial admin list created:', initialAdmins);
-        } else {
-          console.log('⚠️ No session user found');
-          setAdmins([]);
-          setFilteredAdmins([]);
-        }
-      }
-
-      if (showRefresh) {
-        toast.success('Admins refreshed successfully!');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching admins:', error);
-      toast.error('Failed to load admins');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Map the data to match your expected format
+      const adminsData = (data.users || []).map(user => ({
+        ...user,
+        permissions: {
+          manageUsers: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN',
+          manageContent: true,
+          manageSettings: user.role === 'SUPER_ADMIN',
+          viewReports: true
+        },
+        status: 'active' // You'll need to add status field to your User model
+      }));
+      
+      setAdmins(adminsData);
+      setFilteredAdmins(adminsData);
+      console.log('✅ Admins fetched successfully:', adminsData.length);
+    } else {
+      throw new Error(data.error || 'Failed to fetch admins');
+    }
+
+    if (showRefresh) {
+      toast.success('Admins refreshed successfully!');
+    }
+  } catch (error) {
+    console.error('❌ Error fetching admins:', error);
+    toast.error('Failed to load admins');
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+};
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -373,24 +385,43 @@ export default function AdminManager() {
     setAdminToDelete(admin);
     setShowDeleteConfirm(true);
   };
-
-  const confirmDelete = async () => {
-    if (!adminToDelete) return;
+const confirmDelete = async () => {
+  if (!adminToDelete) return;
+  
+  try {
+    const token = localStorage.getItem('admin_token');
     
-    try {
+    const response = await fetch(`/api/register/${adminToDelete.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete admin');
+    }
+
+    if (data.success) {
+      // Remove from local state
       const updatedAdmins = admins.filter(admin => admin.id !== adminToDelete.id);
       setAdmins(updatedAdmins);
-      localStorage.setItem('adminList', JSON.stringify(updatedAdmins));
       
       toast.success('Admin deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting admin:', error);
-      toast.error('Failed to delete admin');
-    } finally {
-      setShowDeleteConfirm(false);
-      setAdminToDelete(null);
+    } else {
+      throw new Error(data.error || 'Failed to delete admin');
     }
-  };
+  } catch (error) {
+    console.error('Error deleting admin:', error);
+    toast.error('Failed to delete admin');
+  } finally {
+    setShowDeleteConfirm(false);
+    setAdminToDelete(null);
+  }
+};
 
   const cancelDelete = () => {
     setShowDeleteConfirm(false);
@@ -436,91 +467,57 @@ export default function AdminManager() {
     setShowAdminModal(true);
   };
 
-  const handleSaveAdmin = async (e) => {
-    e.preventDefault();
-    setSavingAdmin(true);
+const handleSaveAdmin = async (e) => {
+  e.preventDefault();
+  setSavingAdmin(true);
 
-    try {
-      const token = localStorage.getItem('admin_token'); // Use correct key
-      const adminPayload = {
-        name: adminData.name,
-        email: adminData.email,
-        phone: adminData.phone,
-        role: adminData.role,
-        permissions: adminData.permissions,
-        status: adminData.status
-      };
+  try {
+    const token = localStorage.getItem('admin_token');
+    
+    const adminPayload = {
+      name: adminData.name,
+      email: adminData.email,
+      phone: adminData.phone,
+      role: adminData.role,
+      // Note: You'll need to add permissions and status to your User model
+      // or handle them separately
+      status: adminData.status
+    };
 
-      if (adminData.password) {
-        adminPayload.password = adminData.password;
-      }
+    if (adminData.password) {
+      adminPayload.password = adminData.password;
+    }
 
-      let response;
-      if (editingAdmin) {
-        const updatedAdmins = admins.map(admin => 
-          admin.id === editingAdmin.id 
-            ? { 
-                ...admin, 
-                ...adminPayload, 
-                updatedAt: new Date().toISOString(),
-                id: admin.id
-              }
-            : admin
-        );
-        setAdmins(updatedAdmins);
-        localStorage.setItem('adminList', JSON.stringify(updatedAdmins));
-        toast.success('Admin updated successfully!');
-      } else {
-        // For demo purposes, we'll simulate API call
-        // In production, uncomment the actual API call
-        /*
-        response = await fetch('/api/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(adminPayload),
-        });
+    let url = '/api/register';
+    let method = 'POST';
+    
+    if (editingAdmin) {
+      // Use the update endpoint for existing users
+      url = `/api/register/${editingAdmin.id}`;
+      method = 'PUT';
+    }
 
-        const data = await response.json();
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(adminPayload),
+    });
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to create admin');
-        }
+    const data = await response.json();
 
-        if (data.success) {
-          const newAdmin = {
-            ...data.user,
-            phone: adminData.phone,
-            role: adminData.role,
-            permissions: adminData.permissions,
-            status: adminData.status,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          const updatedAdmins = [...admins, newAdmin];
-          setAdmins(updatedAdmins);
-          localStorage.setItem('adminList', JSON.stringify(updatedAdmins));
-          toast.success('Admin created successfully!');
-        } else {
-          throw new Error(data.error || 'Failed to create admin');
-        }
-        */
-        
-        // Demo implementation
-        const newAdmin = {
-          id: `admin-${Date.now()}`,
-          ...adminPayload,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        const updatedAdmins = [...admins, newAdmin];
-        setAdmins(updatedAdmins);
-        localStorage.setItem('adminList', JSON.stringify(updatedAdmins));
-        toast.success('Admin created successfully!');
-      }
+    if (!response.ok) {
+      throw new Error(data.error || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
+    }
 
+    if (data.success) {
+      toast.success(`Admin ${editingAdmin ? 'updated' : 'created'} successfully!`);
+      
+      // Refresh the admin list
+      await fetchAdmins();
+      
       setShowAdminModal(false);
       setAdminData({
         name: '',
@@ -536,14 +533,17 @@ export default function AdminManager() {
         },
         status: 'active'
       });
-      
-    } catch (error) {
-      console.error('Error saving admin:', error);
-      toast.error(error.message);
-    } finally {
-      setSavingAdmin(false);
+    } else {
+      throw new Error(data.error || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
     }
-  };
+    
+  } catch (error) {
+    console.error('Error saving admin:', error);
+    toast.error(error.message);
+  } finally {
+    setSavingAdmin(false);
+  }
+};
 
   // Update permission
   const updatePermission = (permission, value) => {
@@ -648,97 +648,102 @@ export default function AdminManager() {
           </div>
           
           {/* Profile Card */}
-          {session?.user && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 min-w-[300px]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl">
-                    <User className="text-white text-lg" />
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-md">Your Profile</h2>
-                    <p className="text-blue-100 opacity-80 text-sm">Logged in as {session.user.role || 'ADMIN'}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-blue-100">Status</p>
-                  <span className="px-3 py-1 bg-green-500/20 text-orange-500  rounded-full text-xs font-bold border border-green-300/30">
-                    Active
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-3">
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl">
-                  <User className="text-blue-200 text-sm" />
-                  <div>
-                    <p className="text-xs text-blue-200">Name</p>
-                    <p className="font-semibold text-sm truncate">{session.user.name}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl">
-                  <Mail className="text-blue-200 text-sm" />
-                  <div>
-                    <p className="text-xs text-blue-200">Email</p>
-                    <p className="font-semibold text-sm truncate">{session.user.email}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl">
-                  <Phone className="text-blue-200 text-sm" />
-                  <div>
-                    <p className="text-xs text-blue-200">Phone</p>
-                    <p className="font-semibold text-sm truncate">{session.user.phone || '+254712345678'}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-white/20">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all duration-200 border border-white/30 hover:border-white/50"
-                >
-                  <LogOut className="text-sm" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              </div>
-            </div>
-          )}
+{session?.user && (
+  <div className="bg-slate-900/90 backdrop-blur-xl rounded-[2rem] p-5 sm:p-7 border border-white/10 w-full max-w-[450px] shadow-2xl relative overflow-hidden group">
+    {/* Subtle Background Glow */}
+    <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+    
+    {/* Header Section */}
+    <div className="flex items-start justify-between mb-6 relative z-10">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-emerald-400 rounded-2xl flex items-center justify-center shadow-lg rotate-3 group-hover:rotate-0 transition-transform duration-500">
+            <User className="text-white" size={20} />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-sm" />
+        </div>
+        <div>
+          <h2 className="font-black text-white text-sm uppercase tracking-widest leading-none mb-1">
+            {session.user.name.split(' ')[0]}'s Profile
+          </h2>
+          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter opacity-80">
+            {session.user.role || 'System Administrator'}
+          </p>
         </div>
       </div>
 
-      {/* Quick Actions Bar */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <button
-          onClick={() => fetchAdmins(true)}
-          disabled={refreshing}
-          className="flex-1 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 shadow-sm hover:shadow-md p-4 text-sm"
-        >
-          {refreshing ? (
-            <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <RefreshCw className="text-lg" />
-          )}
-          {refreshing ? 'Refreshing...' : 'Refresh Data'}
-        </button>
-        
-        <button
-          onClick={exportToCSV}
-          className="flex-1 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 shadow-sm hover:shadow-md p-4 text-sm"
-        >
-          <Download className="text-lg" />
-          Export CSV
-        </button>
-        
-        <button
-          onClick={handleCreateAdmin}
-          className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-xl p-4 text-sm"
-        >
-          <Plus className="text-lg" />
-          Add New Admin
-        </button>
+      {/* Modern Compact Logout */}
+      <button
+        onClick={handleLogout}
+        title="Logout"
+        className="p-2.5 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-white/10 hover:border-red-500/30 transition-all duration-300 active:scale-90"
+      >
+        <LogOut size={16} />
+      </button>
+    </div>
+
+    {/* Info Grid - Adaptive for Zooming */}
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 relative z-10">
+      {[
+        { label: 'Ident', val: session.user.name, icon: <User size={12} /> },
+        { label: 'Mail', val: session.user.email, icon: <Mail size={12} /> },
+        { label: 'Call', val: session.user.phone || '+2547...', icon: <Phone size={12} /> }
+      ].map((item, i) => (
+        <div key={i} className="flex flex-col p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
+          <div className="flex items-center gap-1.5 mb-1 text-blue-300/60 uppercase font-black text-[8px] tracking-[0.15em]">
+            {item.icon} {item.label}
+          </div>
+          <p className="text-[11px] font-bold text-slate-100 truncate tracking-tight">
+            {item.val}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    {/* Bottom Status Bar */}
+    <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
+       <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Session Active</span>
+       </div>
+       <span className="text-[9px] font-black text-slate-500 italic">v2.0.26</span>
+    </div>
+  </div>
+)}
+        </div>
       </div>
+
+{/* MODERN QUICK ACTIONS - Left Aligned & Compact */}
+<div className="flex flex-col sm:flex-row gap-3 w-fit ml-0">
+  
+  {/* Refresh Action */}
+  <button
+    onClick={() => fetchAdmins(true)}
+    disabled={refreshing}
+    className="group flex items-center gap-3 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-300 shadow-sm active:scale-95 disabled:opacity-50"
+  >
+    <div className={`${refreshing ? 'animate-spin' : 'group-hover:rotate-180'} transition-transform duration-500`}>
+      <RefreshCw size={18} className={refreshing ? 'text-blue-500' : 'text-slate-400 group-hover:text-blue-500'} />
+    </div>
+    <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">
+      {refreshing ? 'Syncing...' : 'Refresh'}
+    </span>
+  </button>
+  
+  {/* Create Action */}
+  <button
+    onClick={handleCreateAdmin}
+    className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-blue-600 shadow-xl shadow-slate-200 hover:shadow-blue-200/50 transition-all duration-300 active:scale-95"
+  >
+    <div className="bg-white/20 p-1 rounded-lg">
+      <Plus size={18} strokeWidth={3} />
+    </div>
+    <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">
+      Add Admin
+    </span>
+  </button>
+
+</div>
 
       {/* Stats Cards - Modern Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -804,7 +809,7 @@ export default function AdminManager() {
               placeholder="Search admins by name, email, or phone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+              className="w-full pl-12 pr-4 py-4 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
             />
           </div>
           
@@ -859,12 +864,16 @@ export default function AdminManager() {
                           <User className="text-blue-600" />
                         </div>
                         <div>
-                          <p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
-                            {admin.name}
-                            {session?.user && admin.id === session.user.id && (
-                              <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full font-bold">You</span>
-                            )}
-                          </p>
+                       {/* In the table row, update the admin name to be clickable */}
+<p 
+  onClick={() => handleViewAdmin(admin)}
+  className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm cursor-pointer hover:underline"
+>
+  {admin.name}
+  {session?.user && admin.id === session.user.id && (
+    <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full font-bold">You</span>
+  )}
+</p>
                           <p className="text-xs text-gray-500 mt-1">{admin.email}</p>
                           <p className="text-xs text-gray-400">{admin.phone}</p>
                         </div>
@@ -1022,7 +1031,7 @@ export default function AdminManager() {
                     required
                     value={adminData.name}
                     onChange={(e) => setAdminData({ ...adminData, name: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-4 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -1034,24 +1043,39 @@ export default function AdminManager() {
                     required
                     value={adminData.email}
                     onChange={(e) => setAdminData({ ...adminData, email: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-4 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="Enter email address"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-gray-900 font-bold mb-3 text-sm">
-                    {editingAdmin ? 'New Password (optional)' : 'Password *'}
-                  </label>
-                  <input
-                    type="password"
-                    required={!editingAdmin}
-                    value={adminData.password}
-                    onChange={(e) => setAdminData({ ...adminData, password: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-                    placeholder="Enter password"
-                  />
-                </div>
+         <div>
+  <label className="block text-gray-900 font-bold mb-3 text-sm">
+    {editingAdmin ? 'New Password (optional)' : 'Password *'}
+  </label>
+
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      required={!editingAdmin}
+      value={adminData.password}
+      onChange={(e) =>
+        setAdminData({ ...adminData, password: e.target.value })
+      }
+      className="w-full px-4 py-4 pr-12 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+      placeholder="Enter password"
+    />
+
+    {/* Eye Icon */}
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+    >
+      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+    </button>
+  </div>
+</div>
+
 
                 <div>
                   <label className="block text-gray-900 font-bold mb-3 text-sm">Phone *</label>
@@ -1060,7 +1084,7 @@ export default function AdminManager() {
                     required
                     value={adminData.phone}
                     onChange={(e) => setAdminData({ ...adminData, phone: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-4 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                     placeholder="+254700000000"
                   />
                 </div>
@@ -1071,7 +1095,7 @@ export default function AdminManager() {
                     required
                     value={adminData.role}
                     onChange={(e) => setAdminData({ ...adminData, role: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-4  font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                   >
                     <option value="ADMIN">Admin</option>
                     <option value="SUPER_ADMIN">Super Admin</option>
@@ -1085,7 +1109,7 @@ export default function AdminManager() {
                     required
                     value={adminData.status}
                     onChange={(e) => setAdminData({ ...adminData, status: e.target.value })}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-4 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -1102,7 +1126,7 @@ export default function AdminManager() {
                       type="checkbox"
                       checked={adminData.permissions.manageUsers}
                       onChange={(e) => updatePermission('manageUsers', e.target.checked)}
-                      className="w-4 h-4 rounded cursor-pointer border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded  font-bold cursor-pointer border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
                       <p className="font-bold text-gray-900 text-sm">Manage Users</p>
@@ -1115,7 +1139,7 @@ export default function AdminManager() {
                       type="checkbox"
                       checked={adminData.permissions.manageContent}
                       onChange={(e) => updatePermission('manageContent', e.target.checked)}
-                      className="w-4 h-4 rounded cursor-pointer border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded  cursor-pointer border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <div>
                       <p className="font-bold text-gray-900 text-sm">Manage Content</p>
@@ -1183,6 +1207,111 @@ export default function AdminManager() {
           </div>
         </div>
       )}
+{/* MODERN VIEW ADMIN MODAL - Compact & Refined */}
+{showViewModal && viewingAdmin && (
+  <div 
+    className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-3 z-[100]"
+    onClick={() => setShowViewModal(false)}
+  >
+    <div 
+      className="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 animate-slide-up"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header - Reduced Padding & Font */}
+      <div className="bg-slate-900 p-5 sm:p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-white/5 bg-grid-16 opacity-50"></div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                <User size={18} className="text-blue-400" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black uppercase tracking-tight">Admin Profile</h2>
+                <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold">Account Intelligence</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowViewModal(false)}
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-white"
+            >
+              <FaX size={14} />
+            </button>
+          </div>
+          
+          {/* Quick Stats Bar - Compact Labels */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-[10px] font-bold">
+              <span className="text-slate-500 mr-1">ID:</span>
+              <span className="text-slate-200">{viewingAdmin.id.substring(0, 8)}</span>
+            </div>
+            <div className={`px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-tighter ${
+              viewingAdmin.status === 'active' 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                : 'bg-red-500/10 text-red-400 border-red-500/20'
+            }`}>
+              {viewingAdmin.status}
+            </div>
+            <div className="px-3 py-1 bg-blue-500/10 rounded-lg border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-tighter">
+              {viewingAdmin.role}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content - Scaled Down Padding & Typography */}
+      <div className="p-5 sm:p-7 space-y-5 overflow-y-auto max-h-[calc(90vh-160px)]">
+        
+        {/* Personal Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[
+            { label: 'Full Name', val: viewingAdmin.name, icon: <User size={12}/> },
+            { label: 'Email Address', val: viewingAdmin.email, icon: <Mail size={12}/> },
+            { label: 'Phone Number', val: viewingAdmin.phone || 'N/A', icon: <Phone size={12}/> },
+            { label: 'Member Since', val: new Date(viewingAdmin.createdAt).toLocaleDateString(), icon: <Calendar size={12}/> }
+          ].map((field, i) => (
+            <div key={i} className="space-y-1.5">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-blue-500">{field.icon}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{field.label}</span>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors">
+                <p className="text-xs font-bold text-slate-900 truncate">{field.val}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Permissions - Compact Grid */}
+        <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Shield size={14} className="text-purple-500" /> System Permissions
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {viewingAdmin.permissions && Object.entries(viewingAdmin.permissions).map(([key, value]) => (
+              <div key={key} className={`flex items-center justify-between p-2.5 rounded-lg border text-[10px] font-bold ${
+                value ? 'bg-white border-emerald-100 text-slate-700' : 'bg-slate-50/50 border-slate-100 text-slate-400 grayscale'
+              }`}>
+                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${value ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300'}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Activity Footer */}
+        <div className="flex items-center justify-between px-2 pt-2 border-t border-slate-100">
+          <div className="flex items-center gap-2">
+             <Clock size={12} className="text-slate-400" />
+             <span className="text-[9px] font-bold text-slate-400 uppercase">Last Sync: {viewingAdmin.updatedAt ? 'Just now' : 'Original'}</span>
+          </div>
+          <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded">VERIFIED ADMIN</span>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* Modern Delete Confirmation Modal */}
       {showDeleteConfirm && (
