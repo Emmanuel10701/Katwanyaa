@@ -442,16 +442,11 @@ ${schoolData.admissionRequirements || '• KCPE: 250+ Marks\n• Age: 13-16 year
       icon: 'dollar',
       content: `💰 FEE STRUCTURE
 
-**Day School Fees (Per Term):** ${schoolData.feesDay ? `KES ${schoolData.feesDay.toLocaleString()}` : 'KES 12,000 - 15,000'}
-
-${documentData?.feesDayDistributionPdf ? `**Download Day School Fee Structure:** ${documentData.feesDayPdfName || 'Day School Fees'}` : ''}
-
+**School Fees (Per Term):**
 ${documentData?.feesDayDistributionJson ? `**Day Fee Distribution:**
 ${formatFeeDistribution(documentData.feesDayDistributionJson)}` : ''}
 
-**Boarding School Fees (Per Term):** ${schoolData.feesBoarding ? `KES ${schoolData.feesBoarding.toLocaleString()}` : 'KES 25,000 - 30,000'}
 
-${documentData?.feesBoardingDistributionPdf ? `**Download Boarding Fee Structure:** ${documentData.feesBoardingPdfName || 'Boarding School Fees'}` : ''}
 
 ${documentData?.feesBoardingDistributionJson ? `**Boarding Fee Distribution:**
 ${formatFeeDistribution(documentData.feesBoardingDistributionJson)}` : ''}
@@ -461,7 +456,7 @@ ${formatFeeDistribution(documentData.feesBoardingDistributionJson)}` : ''}
 • Multiple payment options available
 • Contact bursar for payment plans
 
-**Note:** All fees are subject to review as per school policies.`,
+Please Note: All fees are subject to review as per school policies.`,
       links: [
         ...staticCategories.fees.links,
         ...(documentData?.feesDayDistributionPdf ? [{ 
@@ -540,13 +535,11 @@ ${documentData?.kcseResultsPdf ? `**KCSE Examination Results:**
 • Download KCSE results: ${documentData.kcsePdfName || 'KCSE Results'}
 • Year: ${documentData.kcseYear || 'Latest'}
 • Description: ${documentData.kcseDescription || 'National Examination Results'}` : '**Examination Results:** Available upon request'}
+**Sports Achievements:**
+• County and regional championships
+• Athletics medals
+• Sportsmanship awards  
 
-**Additional Exam Results:**
-${documentData?.form1ResultsPdf ? `• Form 1 Results: ${documentData.form1ResultsPdfName}` : ''}
-${documentData?.form2ResultsPdf ? `• Form 2 Results: ${documentData.form2ResultsPdfName}` : ''}
-${documentData?.form3ResultsPdf ? `• Form 3 Results: ${documentData.form3ResultsPdfName}` : ''}
-${documentData?.form4ResultsPdf ? `• Form 4 Results: ${documentData.form4ResultsPdfName}` : ''}
-${documentData?.mockExamsResultsPdf ? `• Mock Exams: ${documentData.mockExamsPdfName}` : ''}
 
 **Student Success:**
 • Holistic development focus
