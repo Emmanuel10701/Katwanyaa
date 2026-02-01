@@ -834,8 +834,8 @@ const KatwanyaaAdmission = () => {
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 flex items-center">
               <FiMapPin className="mr-2 text-green-600" /> Location Information
             </h3>
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full font-bold">
-              Select from dropdowns ↓
+            <div className="text-xs text-slate-900 px-2 sm:px-3 py-1 ">
+              Select your location step-by-step
             </div>
           </div>
           
