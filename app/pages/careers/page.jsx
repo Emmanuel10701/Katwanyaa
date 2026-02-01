@@ -11,6 +11,7 @@ import {
   FiArrowUpRight,
   FiMail,
   FiPhone,
+  FiInfo,
   FiArrowRight,
   FiHeart,
   FiDownload,
