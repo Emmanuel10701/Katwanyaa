@@ -297,12 +297,11 @@ const Modern404 = () => {
           {/* Footer */}
           <footer className="mt-8 md:mt-12 lg:mt-16 text-center">
             <p className="text-slate-500 text-sm font-medium">
-              &copy; {new Date().getFullYear()} Katwanyaa High in Matungulu 
+              &copy; {new Date().getFullYear()} Katwanyaa Mixed high school in Matungulu, Machakos    
               <span className="mx-2 text-slate-300">•</span>
-               Education is Light 
-              <span className="mx-2 text-slate-300">•</span>
+               PEducation is Light               <span className="mx-2 text-slate-300">•</span>
               <a href="/" className="text-rose-600 hover:text-rose-800 transition-colors font-medium">
-                Site Map
+                Site Map homepage
               </a>
             </p>
           </footer>
