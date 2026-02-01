@@ -198,7 +198,6 @@ const PortalHeader = ({ stats = { today: 45 }, refreshing = false, fetchEvents =
                   <Plus size={14} className="xs:size-5 hidden md:flex group-hover:rotate-90 transition-transform duration-300" />
                   <span className="hidden xs:inline">START APPLICATION</span>
                   <span className="xs:hidden">APPLY Today</span>
-                  <ArrowRight size={14} className="xs:size-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
               </div>
             </div>
