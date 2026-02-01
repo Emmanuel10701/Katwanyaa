@@ -39,76 +39,60 @@ const SCHOOL_INFO = {
 
 // 2. Optimized Metadata - Cleaner version following Mary Immaculate pattern
 export const metadata = {
-  // IMPORTANT: Set this to your production domain
-  metadataBase: new URL('https://katwanyaa.vercel.app'),
+  metadataBase: new URL('https://katwanyaa.vercel.app'), 
   
   title: {
-    default: "Katwanyaa High School ",
+    default: "Katwanyaa High School | Matungulu",
     template: "%s | Katwanyaa High School"
   },
-  
-  description: "Official website for Katwanyaa High School (Katz) in Matungulu, Machakos County. A premier public county school committed to academic excellence, STEM education, and holistic development.",
+  description: "Official website for Katwanyaa High School in Matungulu, Machakos County. A premier public school committed to academic excellence and holistic development.",
   
   keywords: [
-    // Primary search terms
     "Katwanyaa High School",
-    "Katz High School",
-    "Matungulu schools",
-    "Machakos secondary schools",
-    "Katwanyaa Secondary School",
-    
-    // Academic focus
-    "KCSE Results 2024",
-    "School admissions Matungulu",
-    "Form 1 selection Machakos",
-    "Boarding schools Machakos",
-    
-    // Location-based
-    "Schools in Matungulu",
-    "Machakos county schools",
-    "Public schools Machakos",
-    "Kambusu school",
-    
-    // Programs and facilities
-    "STEM schools Kenya",
-    "Schools with computer labs",
-    "Sports facilities schools"
+    "Matungulu school",
+    "Machakos County school",
+    "Best high school in Machakos",
+    "Katwanyaa Matungulu",
+    "Public high school Kenya",
+    "KCSE performance Machakos"
   ],
   
   authors: [{ name: "Katwanyaa High School" }],
   
-  // Canonical URL
+  // Canonical URL ensures Google knows this is the "real" version of the site
   alternates: {
     canonical: '/',
   },
 
-  // Open Graph for social sharing
   openGraph: {
-    title: "Katwanyaa High School | Katz High School | Matungulu",
-    description: "A secondary education in Matungulu, Machakos County",
+    title: "Katwanyaa High School | Matungulu, Machakos",
+    description: "Building future leaders through excellence and faith.",
     url: 'https://katwanyaa.vercel.app',
     siteName: "Katwanyaa High School",
     locale: "en_KE",
     type: "website",
-    images: [
-      {
-        url: '/katz.png',
-        width: 1200,
-        height: 630,
-        alt: 'Katwanyaa High School Logo',
-      },
-    ],
   },
 
   // Twitter Card
   twitter: {
     card: "summary_large_image",
     title: "Katwanyaa High School",
-    description: "Quality education in Matungulu, Machakos County",
-    images: ['/katz.png'],
+    description: "Premier public education in Matungulu, Machakos County.",
   },
 
-  // Search Engine instructions
+  // Search Engine Bot instructions
+  robots: {
+    index: true,
+    follow: true,
+  },
+  
+  icons: {
+    icon: "/katz.png",
+    apple: "/katz.png",
+  },
+  verification: {
+    google: "googlef8123d1ff1ecb88f", // Paste ONLY the code here
+  },
   robots: {
     index: true,
     follow: true,
@@ -120,52 +104,7 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
-  
-  // Icons
-  icons: {
-    icon: "/katz.png",
-    apple: "/katz.png",
-  },
-  
-  // Verification codes (add yours here)
-  verification: {
-    google: "google8c80f424765b151e", // Add your code here
-  },
 };
-
-// Structured Data Schema for SEO
-function StructuredData() {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": SCHOOL_INFO.name,
-    "alternateName": SCHOOL_INFO.alternateName,
-    "url": "https://katwanyaa.vercel.app",
-    "logo": "https://katwanyaa.vercel.app/katz.png",
-    "description": SCHOOL_INFO.description,
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": SCHOOL_INFO.address.street,
-      "addressLocality": SCHOOL_INFO.address.locality,
-      "addressRegion": SCHOOL_INFO.address.region,
-      "addressCountry": SCHOOL_INFO.address.country,
-      "postalCode": SCHOOL_INFO.address.postalCode
-    },
-    "slogan": SCHOOL_INFO.motto,
-    "sameAs": [
-      "https://www.facebook.com/katwanyaahighschool",
-      "https://twitter.com/katwanyaahigh",
-      "https://www.instagram.com/katwanyaahigh",
-    ]
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-    />
-  );
-}
 
 export default function RootLayout({ children }) {
   return (
