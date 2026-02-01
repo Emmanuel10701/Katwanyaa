@@ -28,7 +28,10 @@ import {
   IoStatsChart,
   IoPeopleCircle,
   IoNewspaper,
-  IoSparkles
+  IoSparkles,
+  IoSchoolOutline,
+
+
 } from 'react-icons/io5';
 
 import { useRouter } from 'next/navigation';
@@ -234,7 +237,7 @@ const router =useRouter()
 
   // Modern Loading Screen with Enhanced Design
   const LoadingScreen = () => (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 z-50 flex flex-col items-center justify-center">
+    <div className="fixed inset-0 bg-gradient-to-br from-orange-900 via-amber-900 to-red-900 z-50 flex flex-col items-center justify-center p-4">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(15)].map((_, i) => (
@@ -252,19 +255,19 @@ const router =useRouter()
       </div>
 
       {/* Main Loader */}
-      <div className="relative z-10 flex flex-col items-center justify-center">
-        {/* Animated Rings */}
-        <div className="relative w-32 h-32 mb-8">
-          <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
-          <div className="absolute inset-4 border-4 border-cyan-500/30 rounded-full animate-ping"></div>
-          <div className="absolute inset-8 border-4 border-white/40 rounded-full animate-spin"></div>
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
+        {/* Animated Rings - Scaled for small screens (w-24), original (w-32) on md+ */}
+        <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 md:mb-8">
+          <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full"></div>
+          <div className="absolute inset-3 md:inset-4 border-4 border-amber-500/30 rounded-full animate-ping"></div>
+          <div className="absolute inset-6 md:inset-8 border-4 border-white/40 rounded-full animate-spin"></div>
           
-          {/* Center Logo */}
+          {/* Center Logo - Scaled for small screens (w-12), original (w-16) on md+ */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
                 src="/katz.png" 
-                alt="School Logo" 
+                alt="Katwanyaa High School Logo" 
                 className="w-full h-full object-contain p-2"
               />
             </div>
@@ -272,36 +275,36 @@ const router =useRouter()
         </div>
         
         {/* Loading Content */}
-        <div className="text-center space-y-6">
-          {/* School Name with Gradient */}
+        <div className="text-center space-y-4 md:space-y-6 px-2">
+          {/* School Name - Scaled text-xl for small screens, text-3xl for md+ */}
           <div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-xl md:text-3xl font-bold text-white mb-2 leading-tight">
               Katwanyaa High  School
             </h2>
-            <div className="h-1 w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
+            <div className="h-1 w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>
           
           {/* Loading Text */}
           <div className="space-y-4">
-            <p className="text-white/80 text-lg">Preparing an exceptional learning experience</p>
+            <p className="text-white/80 text-base md:text-lg">Preparing an exceptional learning experience</p>
             
             {/* Animated Dots */}
             <div className="flex items-center justify-center gap-2">
               {[...Array(3)].map((_, i) => (
                 <div
                   key={i}
-                  className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-bounce"
+                  className="w-2.5 h-2.5 md:w-3 md:h-3 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full animate-bounce"
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
             </div>
             
-            {/* Progress Bar */}
-            <div className="w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
-              <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 animate-gradient-loading"></div>
+            {/* Progress Bar - Scaled width for small screens */}
+            <div className="w-48 md:w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+              <div className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 animate-gradient-loading"></div>
             </div>
             
-            <p className="text-white/60 text-sm">Loading resources...</p>
+            <p className="text-white/60 text-xs md:text-sm">Loading resources...</p>
           </div>
         </div>
       </div>
@@ -700,44 +703,39 @@ const router =useRouter()
     },
   ];
 
-  // Header stats component with simple hover effect
-  const HeaderStat = ({ icon: Icon, value, label, color = 'blue', trend = 'up' }) => {
-    const colorClasses = {
-      blue: 'bg-blue-100 text-blue-600',
-      green: 'bg-green-100 text-green-600',
-      red: 'bg-red-100 text-red-600',
-      yellow: 'bg-yellow-100 text-yellow-600',
-      purple: 'bg-purple-100 text-purple-600',
-      pink: 'bg-pink-100 text-pink-600',
-      indigo: 'bg-indigo-100 text-indigo-600',
-      teal: 'bg-teal-100 text-teal-600',
-      orange: 'bg-orange-100 text-orange-600',
-      cyan: 'bg-cyan-100 text-cyan-600',
-      lime: 'bg-lime-100 text-lime-600',
-      gray: 'bg-gray-100 text-gray-600'
-    };
+const CompactSchoolHeader = () => {
+  return (
+    <div className="group cursor-default py-4">
+      {/* Container with Zooming Experience */}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 transition-all duration-500 ease-out group-hover:scale-[1.02] active:scale-95">
+        
+        {/* Left Accent Pillar */}
+        <div className="h-10 w-1 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full shadow-sm group-hover:h-12 transition-all duration-500" />
 
-    return (
-      <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-xl border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors duration-200">
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="text-lg" />
-        </div>
-        <div className="text-right">
-          <p className="text-lg font-bold text-gray-900">{value?.toLocaleString() || '0'}</p>
-          <p className="text-xs text-gray-500 capitalize">{label}</p>
-        </div>
-        {trend && (
-          <div className={`p-1 rounded ${trend === 'up' ? 'bg-green-100' : 'bg-red-100'}`}>
-            {trend === 'up' ? (
-              <FiTrendingUp className="text-green-600 text-sm" />
-            ) : (
-              <FiTrendingUp className="text-red-600 text-sm transform rotate-180" />
-            )}
+        <div className="flex flex-col">
+          {/* School Name - Compact & Sharp */}
+          <h1 className="text-lg md:text-xl font-black text-gray-900 tracking-tight leading-none uppercase italic">
+            Katwanyaa <span className="text-blue-600 group-hover:text-indigo-600 transition-colors">High</span>
+          </h1>
+          
+          {/* Motto - Clean & Minimal */}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">
+                School
+            </span>
+            <div className="h-[1px] w-4 bg-gray-200" />
+            <p className="text-[10px] md:text-xs font-bold text-gray-500 italic">
+              "Education is Light"
+            </p>
           </div>
-        )}
+        </div>
+
+        {/* Dynamic Sparkle - Only appears on zoom/hover */}
+        <IoSparkles className="hidden md:block text-yellow-400 text-sm opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500" />
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   // Show loading screen
   if (loading) {
@@ -788,22 +786,9 @@ const router =useRouter()
 
             <div className="flex items-center gap-4">
               {/* Quick Stats - Hidden on small screens */}
-              <div className="hidden xl:flex items-center gap-3">
-                <HeaderStat 
-                  icon={FiUsers} 
-                  value={realStats.totalStudent} 
-                  label="Students" 
-                  color="blue"
-                  trend="up"
-                />
-                <HeaderStat 
-                  icon={IoPeopleCircle} 
-                  value={realStats.totalStaff} 
-                  label="Staff" 
-                  color="green"
-                  trend="up"
-                />
-                               
+
+              <div className="hidden md:flex items-center gap-6">
+                <CompactSchoolHeader/>
               </div>
 
               {/* User Menu */}
