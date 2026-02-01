@@ -161,7 +161,7 @@ export default function ModernFooter() {
       icon: FiMapPin,
       text: 'Matungulu Machakos County, Kenya',
       href: 'https://maps.google.com/?q=-0.416667,36.950000',
-      detail: 'Along Mweiga Nyahururu Road'
+      detail: 'Along Tala Kangudo kanzalu road'
     },
     {
       icon: FiPhone,
@@ -177,14 +177,14 @@ export default function ModernFooter() {
     },
     {
       icon: FiMail,
-      text: 'info@maryimmaculate.sc.ke',
-      href: 'mailto:info@maryimmaculate.sc.ke',
+      text: 'info@katwanyaa.sc.ke',
+      href: 'mailto:info@katwanyaa.sc.ke',
       detail: 'General Inquiries'
     },
     {
       icon: FiMail,
-      text: 'admissions@maryimmaculate.sc.ke',
-      href: 'mailto:admissions@maryimmaculate.sc.ke',
+      text: 'admissions@katwanyaa.sc.ke',
+      href: 'mailto:admissions@katwanyaa.sc.ke',
       detail: 'Admissions'
     },
     {
@@ -197,9 +197,9 @@ export default function ModernFooter() {
 
   // Achievements
   const achievements = [
-    'Top Performing School in Nyeri County',
+    'Top Performing School in Matungulu Machakos County',
     'Excellence in Science & Mathematics',
-    '95% University Placement Rate',
+    '60% University Placement Rate',
     'Sports Excellence Award 2023',
   ];
 
