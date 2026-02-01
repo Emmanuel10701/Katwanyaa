@@ -19,7 +19,7 @@ export default function AboutPage() {
     { title: "Compassion", icon: <Heart size={16}/> },
     { title: "Innovation", icon: <Sparkles size={16}/> }
   ];
-
+const date = new Date(); // Add this line!
   return (
     <div className="bg-white text-slate-900">
       {/* Hero Section */}
@@ -47,7 +47,7 @@ export default function AboutPage() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
             </span>
             <span className="text-[10px] font-black tracking-[0.3em] text-orange-200 uppercase">
-           Registration Open • {new Date().getFullYear()} Academic Year            </span>
+           Registration Open • {new Date().getFullYear()} Academic Year      </span>
           </div>
 
           {/* Refined Title - Significantly Smaller & Tighter */}
@@ -362,7 +362,7 @@ export default function AboutPage() {
               <div>
                 <p className="text-orange-100 text-[9px] sm:text-xs uppercase font-black tracking-tighter mb-0.5 sm:mb-1 opacity-80">School  Address</p>
                 <p className="text-white text-sm sm:text-base font-bold leading-snug sm:leading-relaxed">
-                  Main School, Matungulu, Machakos 
+                 School, Matungulu, Machakos 
                 </p>
               </div>
             </div>
