@@ -290,7 +290,7 @@ const KatwanyaaAdmission = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Katwanyaa High SchoolAdmission - ${applicationNumber}`,
+          title: `Katwanyaa High School Admission - ${applicationNumber}`,
           text: `I've submitted my admission application to Katwanyaa High  School. Application Number: ${applicationNumber}`,
           url: window.location.href,
         });
@@ -553,174 +553,126 @@ const KatwanyaaAdmission = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto">
-          {step === 5 ? (
-            /* Enhanced Success Screen */
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-100 relative z-10">
-              <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 p-8 text-white">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                    <FiCheckCircle className="text-5xl" />
-                  </div>
+<div className="max-w-7xl mx-auto px-2 sm:px-4">
+  {step === 5 ? (
+    /* Enhanced Success Screen */
+    <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-100 relative z-10">
+      
+      {/* Header Section - Scale down for mobile */}
+      <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-green-600 p-6 sm:p-8 text-white">
+        <div className="flex items-center justify-center mb-3 sm:mb-4">
+          <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <FiCheckCircle className="text-3xl sm:text-5xl" />
+          </div>
+        </div>
+        <h2 className="text-xl sm:text-3xl font-bold text-center mb-1 sm:mb-2 leading-tight">
+          🎉 Application Submitted!
+        </h2>
+        <p className="text-center text-green-50 text-sm sm:text-lg font-medium opacity-90">
+          Your journey to excellence begins here
+        </p>
+      </div>
+
+      <div className="p-4 sm:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+          
+          {/* 1. Application Details Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-4 sm:p-6 border border-blue-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4 text-base sm:text-lg flex items-center">
+              <FiCheckCircle className="mr-2 text-blue-600 shrink-0" /> Details
+            </h3>
+            
+            {applicationNumber && (
+              <div className="mb-5">
+                <div className="text-[10px] sm:text-sm text-gray-500 mb-1.5 flex items-center font-black uppercase tracking-wider">
+                  <FiCopy className="mr-2" /> App Number
                 </div>
-                <h2 className="text-3xl font-bold text-center mb-2">
-                  🎉 Application Submitted Successfully!
-                </h2>
-                <p className="text-center text-green-100 text-lg font-bold">
-                  Your journey to excellence begins here
-                </p>
+                <div className="flex items-center gap-2">
+                  <div className="text-sm sm:text-2xl font-bold text-blue-800 font-mono bg-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-blue-200 flex-grow shadow-inner truncate">
+                    {applicationNumber}
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(applicationNumber)}
+                    className="p-2.5 bg-white text-blue-600 border border-blue-200 rounded-lg active:bg-blue-50 transition-colors shrink-0"
+                  >
+                    <FiCopy size={16} />
+                  </button>
+                </div>
               </div>
+            )}
 
-              <div className="p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Application Details Card */}
-                  <div className="bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl p-6 border border-blue-100 shadow-sm">
-                    <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
-                      <FiCheckCircle className="mr-2 text-blue-600" /> Application Details
-                    </h3>
-                    {applicationNumber && (
-                      <div className="mb-6">
-                        <div className="text-sm text-gray-600 mb-2 flex items-center font-bold">
-                          <FiCopy className="mr-2" /> Application Number
-                        </div>
-                        <div className="flex items-center">
-                          <div className="text-2xl font-bold text-blue-800 font-mono bg-white px-4 py-2 rounded-lg border border-blue-200 flex-grow shadow-inner">
-                            {applicationNumber}
-                          </div>
-                          <button
-                            onClick={() => copyToClipboard(applicationNumber)}
-                            className="ml-2 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <FiCopy />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {submittedData && (
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm text-gray-600 mb-1 font-bold">Applicant Name</div>
-                          <div className="font-semibold text-gray-800">
-                            {submittedData.firstName} {submittedData.lastName}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-600 mb-1 font-bold">Submitted On</div>
-                          <div className="font-semibold text-gray-800">
-                            {submittedData.submissionDate} at {submittedData.submissionTime}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Next Steps Card */}
-                  <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-6 border border-gray-100 shadow-sm">
-                    <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
-                      📋 Next Steps
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-start">
-                        <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 mt-1">
-                          1
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Email Confirmation</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-bold">
-                            Check your email ({formData.email}) for application confirmation.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start">
-                        <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 mt-1">
-                          2
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Parent Contact</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-bold">
-                            Further communication will be sent to parent/guardian contacts provided.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start">
-                        <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mr-3 mt-1">
-                          3
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-800">Document Verification</h4>
-                          <p className="text-sm text-gray-600 mt-1 font-bold">
-                            Bring original documents when requested for verification.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                        📞 Need Help?
-                      </h4>
-                      <div className="text-sm text-gray-600 space-y-2 font-bold">
-                        <p>Admissions Office: <strong>0712 345 678</strong></p>
-                        <p>Email: <strong>admissions@Katwanyaa.ac.ke</strong></p>
-                        <p>Office Hours: Mon-Fri, 8:00 AM - 5:00 PM</p>
-                      </div>
-                    </div>
+            {submittedData && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-[10px] text-gray-500 mb-0.5 font-bold uppercase">Applicant</div>
+                  <div className="text-sm font-semibold text-gray-800">
+                    {submittedData.firstName} {submittedData.lastName}
                   </div>
                 </div>
+                <div>
+                  <div className="text-[10px] text-gray-500 mb-0.5 font-bold uppercase">Date</div>
+                  <div className="text-sm font-semibold text-gray-800">
+                    {submittedData.submissionDate}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
-                {/* Action Buttons */}
-<div className="mt-8 flex flex-nowrap gap-2 sm:gap-4 justify-center">
-  <button
-    onClick={() => {
-      setStep(1);
-      setShowSuccess(false);
-    }}
-    className="
-      px-3 py-2 sm:px-6 sm:py-3
-      bg-gradient-to-r from-blue-600 to-blue-700
-      text-white
-      rounded-lg sm:rounded-xl
-      font-semibold
-      text-xs sm:text-sm
-      hover:from-blue-700 hover:to-blue-800
-      transition-all hover:shadow-lg
-      flex items-center
-      shadow-md
-      whitespace-nowrap
-    "
-  >
-    <FiUser className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-    Submit Another
-  </button>
+          {/* 2. Next Steps Card */}
+          <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4 text-base sm:text-lg">📋 Next Steps</h3>
+            <div className="space-y-4">
+              {[
+                { n: 1, c: 'blue', t: 'Email', d: `Check ${formData.email}` },
+                { n: 2, c: 'emerald', t: 'Parent Contact', d: 'Further info via phone/email' },
+                { n: 3, c: 'purple', t: 'Documents', d: 'Prepare original certificates' }
+              ].map((step) => (
+                <div key={step.n} className="flex items-start gap-3">
+                  <div className={`w-6 h-6 bg-${step.c}-100 text-${step.c}-600 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold`}>
+                    {step.n}
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-800 leading-none">{step.t}</h4>
+                    <p className="text-[11px] sm:text-sm text-gray-500 mt-1">{step.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-  <button
-    onClick={shareApplication}
-    className="
-      px-3 py-2 sm:px-6 sm:py-3
-      bg-gradient-to-r from-emerald-600 to-emerald-700
-      text-white
-      rounded-lg sm:rounded-xl
-      font-semibold
-      text-xs sm:text-sm
-      hover:from-emerald-700 hover:to-emerald-800
-      transition-all hover:shadow-lg
-      flex items-center
-      shadow-md
-      whitespace-nowrap
-    "
-  >
-    <FiShare2 className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
-    Share
-  </button>
-</div>
-
+            {/* Help Section - Slimmer on mobile */}
+            <div className="mt-6 pt-5 border-t border-gray-100">
+              <h4 className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest">Need Help?</h4>
+              <div className="text-[11px] sm:text-sm text-gray-600 space-y-1">
+                <p>Office: <span className="text-gray-900 font-bold">0712 345 678</span></p>
+                <p className="truncate">Email: <span className="text-blue-600 font-bold">admissions@Katwanyaa.ac.ke</span></p>
               </div>
             </div>
-          ) : (
-            /* Enhanced Form with Modern Design - 85% width on large screens */
+          </div>
+        </div>
+
+        {/* Action Buttons - Full width on mobile */}
+        <div className="mt-8 flex flex-row gap-2 sm:gap-4 justify-center">
+          <button
+            onClick={() => { setStep(1); setShowSuccess(false); }}
+            className="flex-1 sm:flex-none px-4 py-3 bg-blue-600 text-white rounded-xl font-bold text-[10px] sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+          >
+            <FiUser className="w-4 h-4" />
+            <span className="hidden xs:inline">Submit Another</span>
+            <span className="xs:hidden">New</span>
+          </button>
+
+          <button
+            onClick={shareApplication}
+            className="flex-1 sm:flex-none px-4 py-3 bg-emerald-600 text-white rounded-xl font-bold text-[10px] sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+          >
+            <FiShare2 className="w-4 h-4" />
+            Share
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : (
 <form
   onSubmit={handleSubmit}
   className="w-full mx-auto bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-100 relative z-10"
@@ -1633,76 +1585,75 @@ const KatwanyaaAdmission = () => {
         </div>
 
 {/* --- KATWANYAA MODERN RESPONSIVE FOOTER --- */}
-<div className="mt-16 text-center relative z-10 px-4 mb-8">
-  <div className="max-w-4xl mx-auto bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 border border-white/60 shadow-2xl shadow-blue-900/5 mb-8 transition-all duration-500 hover:bg-white/60">
+<div className="mt-8 md:mt-16 text-center relative z-10 px-4 mb-6">
+  <div className="max-w-4xl mx-auto bg-white/40 backdrop-blur-lg rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 border border-white/60 shadow-xl shadow-blue-900/5 mb-6 transition-all duration-500">
     
-    {/* Floating Header */}
-    <div className="inline-flex items-center gap-3 bg-white px-6 py-2 rounded-full shadow-sm border border-gray-100 mb-8 -mt-12 md:-mt-16 transition-transform hover:scale-105">
-      <FiPhone className="text-blue-600 animate-pulse" />
-      <h3 className="text-xs md:text-sm font-black text-gray-900 uppercase tracking-widest">
+    {/* Floating Header - Compacted for Mobile */}
+    <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm border border-gray-100 mb-6 -mt-10 md:-mt-16 transition-transform">
+      <FiPhone size={12} className="text-blue-600" />
+      <h3 className="text-[10px] md:text-sm font-bold text-gray-900 uppercase tracking-widest">
         Need Assistance?
       </h3>
     </div>
 
-    {/* Contact Info: Grid of 1 on mobile, 3 on desktop */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+    {/* Contact Info: Compact Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-6">
       
       {/* Admissions Card */}
-      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
-        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:rotate-12 transition-transform">
-          <FiPhone />
+      <div className="group flex flex-row md:flex-col items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white transition-all duration-300 active:scale-95">
+        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+          <FiPhone size={14} />
         </div>
-        <div className="text-left md:text-center">
-          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Admissions</p>
-          <p className="text-xs font-bold text-gray-900">0712 345 678</p>
+        <div className="text-left md:text-center min-w-0">
+          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">Admissions</p>
+          <p className="text-[11px] md:text-xs font-semibold text-gray-900">0712 345 678</p>
         </div>
       </div>
 
       {/* Email Card */}
-      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
-        <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 group-hover:rotate-12 transition-transform">
-          <FiMail />
+      <div className="group flex flex-row md:flex-col items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white transition-all duration-300 active:scale-95">
+        <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 shrink-0">
+          <FiMail size={14} />
         </div>
-        <div className="text-left md:text-center overflow-hidden">
-          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Email Support</p>
-          <p className="text-xs font-bold text-gray-900 truncate break-all">admissions@Katwanyaa.ac.ke</p>
+        <div className="text-left md:text-center min-w-0 overflow-hidden">
+          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">Email Support</p>
+          <p className="text-[11px] md:text-xs font-semibold text-gray-900 truncate">admissions@Katwanyaa.ac.ke</p>
         </div>
       </div>
 
       {/* Office Hours Card */}
-      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
-        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:rotate-12 transition-transform">
-          <FiHome />
+      <div className="group flex flex-row md:flex-col items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white transition-all duration-300 active:scale-95">
+        <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 shrink-0">
+          <FiHome size={14} />
         </div>
-        <div className="text-left md:text-center">
-          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Working Hours</p>
-          <p className="text-xs font-bold text-gray-900">Mon-Fri, 8AM - 5PM</p>
+        <div className="text-left md:text-center min-w-0">
+          <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight">Working Hours</p>
+          <p className="text-[11px] md:text-xs font-semibold text-gray-900">Mon-Fri, 8AM - 5PM</p>
         </div>
       </div>
 
     </div>
   </div>
   
-  {/* Copyright & Legal Section */}
-  <div className="max-w-2xl mx-auto space-y-4">
-    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
-      <p className="text-gray-900 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
+  {/* Copyright & Legal Section - Clean & Tiny */}
+  <div className="max-w-2xl mx-auto space-y-3 opacity-80">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-4">
+      <p className="text-gray-800 text-[9px] md:text-xs font-bold uppercase tracking-wider">
         © {new Date().getFullYear()} Katwanyaa High School
       </p>
-      <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full" />
-      <p className="text-blue-600 text-[10px] md:text-xs font-bold italic">
-        "Excellence Through Discipline and Diligence"
+      <p className="text-blue-600 text-[9px] md:text-xs font-medium italic">
+        "Excellence Through Discipline"
       </p>
     </div>
     
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 opacity-60">
-      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-        <FiShield className="text-blue-500 text-xs" />
+    <div className="flex items-center justify-center gap-4 opacity-50">
+      <div className="flex items-center gap-1 text-[8px] font-bold text-gray-500 uppercase">
+        <FiShield size={10} className="text-blue-500" />
         Data Protection
       </div>
-      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-        <FiCheckCircle className="text-green-500 text-xs" />
-        Privacy Compliant
+      <div className="flex items-center gap-1 text-[8px] font-bold text-gray-500 uppercase">
+        <FiCheckCircle size={10} className="text-green-500" />
+        Privacy Policy
       </div>
     </div>
   </div>

@@ -110,10 +110,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       {/* Next.js automatically adds metadata to <head> */}
-      <head>
-        {/* Structured Data for Rich Results */}
-        <StructuredData />
-        
+      <head>        
         {/* Additional meta tags */}
         <meta name="geo.region" content="KE-MKA" />
         <meta name="geo.placename" content="Matungulu, Machakos County" />
