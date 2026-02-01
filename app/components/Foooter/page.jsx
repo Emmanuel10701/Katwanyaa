@@ -466,7 +466,7 @@ export default function ModernFooter() {
               <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
                 <span>Empowering Future Leaders with</span>
                 <span className="text-lg">❤️</span>
-                <span>since 1995</span>
+                <span>since 1995..Education is Light</span>
               </div>
             </div>
           </div>
