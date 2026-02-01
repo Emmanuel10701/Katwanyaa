@@ -499,7 +499,7 @@ const LoadingScreen = () => (
         
         {/* Loading Text */}
         <div className="space-y-4">
-          <p className="text-white/70 text-sm md:text-base font-medium">Preparing your digital campus...</p>
+          <p className="text-white/70 text-sm md:text-base font-medium"> Loading School Website...</p>
           
           {/* Animated Dots - Blue Theme */}
           <div className="flex items-center justify-center gap-2">
