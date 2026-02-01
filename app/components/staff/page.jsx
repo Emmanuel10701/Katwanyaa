@@ -12,23 +12,30 @@ import {
   FiBook,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown, // Added for the new select dropdowns
   FiFilter,
   FiX,
   FiMapPin,
   FiCalendar,
   FiBriefcase,
   FiEye,
+  FiRefreshCcw,
   FiStar,
   FiShield,
   FiRotateCw,
+  FiRefreshCw, // Added for the Hero Gallery style
   FiUpload,
   FiCheck,
   FiCheckCircle,
   FiInfo,
   FiAlertTriangle,
   FiAlertCircle,
-  FiTag
+  FiTag,
+  FiUsers,
+  FiTarget,    // Added for Total Staff stat
+  FiArchive    // Added for Archive stat
 } from 'react-icons/fi';
+
 import { 
   FaEdit, 
   FaUserPlus, 
@@ -47,6 +54,7 @@ import {
   FaQuoteLeft, 
   FaQuoteRight, 
   FaStar, 
+  FaExclamationCircle, 
   FaTrophy, 
   FaClipboardCheck, 
   FaSave,
@@ -55,6 +63,7 @@ import {
   FaUpload,
   FaGraduationCap,
   FaCrown,
+  FaFolderOpen, 
   FaShieldAlt,
   FaUsers,
   FaBook,
@@ -62,12 +71,16 @@ import {
   FaCalendar,
   FaTimesCircle,
   FaHandsHelping,
-  FaChalkboardTeacher
+  FaChalkboardTeacher,
+  FaChevronRight // Used in the "Next Step" buttons
 } from 'react-icons/fa';
+
+// IONICONS (Io) - Used for specialized branding and sparkles
 import { 
   IoPeopleCircle,
   IoRocketOutline,
-  IoSchoolOutline
+  IoSchoolOutline,
+  IoSparkles // Used for the "Gallery/New" sparkle effect
 } from 'react-icons/io5';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -446,138 +459,122 @@ function Notification({
 // Modern Staff Detail Modal
 function ModernStaffDetailModal({ staff, onClose, onEdit }) {
   if (!staff) return null;
-const getImageUrl = (imagePath) => {
-  if (!imagePath || typeof imagePath !== 'string') {
-    return staff?.gender === 'female' ? '/female.png' : '/male.png';
-  }
-  
-  // Handle different image path formats
-  if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
-    return imagePath;
-  }
-  
-  if (imagePath.startsWith('data:image')) {
-    return imagePath;
-  }
-  
-  // Assume it's a relative path without leading slash
-  return `/${imagePath}`;
-};
+
+  const getImageUrl = (imagePath) => {
+    if (!imagePath || typeof imagePath !== 'string') {
+      return staff?.gender === 'female' ? '/female.png' : '/male.png';
+    }
+    if (imagePath.startsWith('http') || imagePath.startsWith('/') || imagePath.startsWith('data:image')) {
+      return imagePath;
+    }
+    return `/${imagePath}`;
+  };
+
   const imageUrl = getImageUrl(staff.image);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-700 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
-                <FiEye className="text-xl" />
-              </div>
-              <div className="px-4 py-2 sm:px-0"> 
-                <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">
-                  Staff Details
-                </h2>
-                <p className="text-xs md:text-sm text-orange-100 opacity-90 mt-0.5 md:mt-1 leading-tight">
-                  Complete overview of staff member
-                </p>
-              </div>
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-2 md:p-4">
+      {/* Animated Backdrop */}
+      <div 
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300"
+        onClick={onClose}
+      />
+      
+      {/* Main Modal Container */}
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-[1.5rem] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300 border border-white/20">
+        
+        {/* Sticky Header: Profile Summary */}
+        <div className="relative bg-slate-900 p-5 md:p-8 shrink-0 overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600/20 blur-[80px] rounded-full -mr-20 -mt-20" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-pink-600 rounded-[2rem] blur-md opacity-50 group-hover:opacity-100 transition-opacity" />
+              <img
+                src={imageUrl}
+                alt={staff.name}
+                className="relative w-24 h-24 md:w-32 md:h-32 rounded-[1.8rem] object-cover border-2 border-white/10 shadow-2xl"
+                onError={(e) => { e.target.src = '/male.png'; }}
+              />
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-           
-              <button 
-                onClick={onClose} 
-                className="p-2 bg-white/10 text-white rounded-full cursor-pointer flex-shrink-0"
-              >
-                <FiX className="text-lg sm:text-xl" />
-              </button>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-2">
+                <span className="bg-orange-600 text-[10px] font-black uppercase tracking-widest text-white px-3 py-1 rounded-full">
+                  {staff.role}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                  staff.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400'
+                }`}>
+                  {staff.status || 'active'}
+                </span>
+              </div>
+              <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none italic">
+                {staff.name}
+              </h1>
+              <p className="text-slate-400 font-bold text-sm md:text-base uppercase tracking-tight">
+                {staff.position} <span className="mx-2 opacity-30 text-white">|</span> <span className="text-orange-500">{staff.department}</span>
+              </p>
             </div>
+
+            <button 
+              onClick={onClose} 
+              className="absolute top-0 right-0 p-2 bg-white/5 hover:bg-white/10 text-white rounded-full transition-colors"
+            >
+              <FiX size={24} />
+            </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(95vh-200px)]">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="flex items-center gap-4">
-                <img
-                  src={imageUrl}
-                  alt={staff.name}
-                  className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl object-cover shadow-lg"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/male.png';
-                  }}
-                />
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{staff.name}</h1>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      staff.status === 'active' ? 'bg-green-100 text-green-800' :
-                      staff.status === 'on-leave' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {staff.status || 'active'}
-                    </span>
-                    <span className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                      {staff.role}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 font-medium">{staff.position}</p>
-                </div>
+        {/* Scrollable Content: Bento Grid Style */}
+        <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-8 scrollbar-hide">
+          
+          {/* Quick Contact Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-orange-600">
+                <FiMail size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Official Email</p>
+                <p className="text-sm font-bold text-slate-700 truncate">{staff.email}</p>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-gray-50 to-orange-50 rounded-2xl p-5 border border-gray-200 w-full lg:max-w-md shadow-sm">
-              <h3 className="text-sm font-semibold text-gray-900 mb-5 flex items-center gap-2 border-b border-orange-100 pb-2">
-                <FiBriefcase className="text-orange-600 text-xs" />
-                Contact Information
-              </h3>
-
-              <div className="grid grid-cols-1 gap-4 text-[13px]">
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-[10px] uppercase tracking-wide">Department</span>
-                  <span className="text-gray-700 font-medium">{staff.department}</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-[10px] uppercase tracking-wide">Email Address</span>
-                  <span className="text-gray-700 font-medium break-all leading-tight">{staff.email}</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-[10px] uppercase tracking-wide">Phone Number</span>
-                  <span className="text-gray-700 font-medium">{staff.phone}</span>
-                </div>
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600">
+                <FiPhone size={20} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone Line</p>
+                <p className="text-sm font-bold text-slate-700 truncate">{staff.phone}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Bio Section */}
             {staff.bio && (
-              <div>
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <FiUser className="text-blue-600" />
-                  Bio
+              <div className="space-y-3">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <span className="w-6 h-[2px] bg-orange-600" /> Professional Bio
                 </h3>
-                <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                  <p className="text-gray-700 leading-relaxed">{staff.bio}</p>
+                <div className="bg-white p-6 rounded-[2rem] border-2 border-slate-50 shadow-sm">
+                  <p className="text-slate-600 text-sm md:text-base leading-relaxed font-medium italic">
+                    "{staff.bio}"
+                  </p>
                 </div>
               </div>
             )}
 
-            {staff.expertise && staff.expertise.length > 0 && (
-              <div>
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <FiStar className="text-purple-600" />
-                  Expertise
+            {/* Expertise Section */}
+            {staff.expertise?.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <span className="w-6 h-[2px] bg-purple-600" /> Core Expertise
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {staff.expertise.map((exp, index) => (
-                    <span 
-                      key={index} 
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-2 rounded-xl text-sm font-bold"
-                    >
+                  {staff.expertise.map((exp, i) => (
+                    <span key={i} className="bg-slate-900 text-white px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-tight">
                       {exp}
                     </span>
                   ))}
@@ -586,63 +583,58 @@ const getImageUrl = (imagePath) => {
             )}
           </div>
 
-          {staff.responsibilities && staff.responsibilities.length > 0 && (
-            <div>
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <FiBriefcase className="text-green-600" />
-                Key Responsibilities
-              </h3>
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-                <ul className="space-y-2">
-                  {staff.responsibilities.map((resp, index) => (
-                    <li key={index} className="flex items-start gap-2 text-gray-700">
-                      <FiCheck className="text-green-600 mt-1 flex-shrink-0" />
-                      <span>{resp}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {staff.achievements && staff.achievements.length > 0 && (
-            <div>
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <FiAward className="text-yellow-600" />
-                Achievements
-              </h3>
-              <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
+          {/* Responsibilities & Achievements */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {staff.responsibilities?.length > 0 && (
+              <div className="p-6 bg-emerald-50/50 rounded-[2rem] border border-emerald-100">
+                <h3 className="font-black text-emerald-900 text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <FiCheckCircle className="text-emerald-600" /> Key Roles
+                </h3>
                 <ul className="space-y-3">
-                  {staff.achievements.map((achievement, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-2 rounded-xl">
-                        <FiAward className="text-sm" />
-                      </div>
-                      <span className="text-gray-700">{achievement}</span>
+                  {staff.responsibilities.map((resp, i) => (
+                    <li key={i} className="text-xs font-bold text-emerald-800 flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0" />
+                      {resp}
                     </li>
                   ))}
                 </ul>
               </div>
-            </div>
-          )}
+            )}
+
+            {staff.achievements?.length > 0 && (
+              <div className="p-6 bg-orange-50/50 rounded-[2rem] border border-orange-100">
+                <h3 className="font-black text-orange-900 text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <FiAward className="text-orange-600" /> Milestones
+                </h3>
+                <ul className="space-y-3">
+                  {staff.achievements.map((ach, i) => (
+                    <li key={i} className="text-xs font-bold text-orange-800 flex items-start gap-2">
+                      <FiStar className="text-orange-400 shrink-0 mt-0.5" />
+                      {ach}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
-<div className="p-6 border-t border-gray-200 flex justify-between items-center">
-  <button 
-    onClick={onClose} 
-    className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg cursor-pointer"
-  >
-    Close
-  </button>
-  <button 
-    onClick={() => {
-      onClose(); 
-      onEdit(staff); // Then call edit function
-    }} 
-    className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg cursor-pointer"
-  >
-    <FiEdit /> Edit Staff
-  </button>
-</div>
+
+        {/* Sticky Footer Actions */}
+        <div className="p-5 md:p-8 bg-white border-t border-slate-100 flex gap-3 shrink-0">
+          <button 
+            onClick={onClose} 
+            className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all"
+          >
+            Return
+          </button>
+          <button 
+            onClick={() => { onClose(); onEdit(staff); }} 
+            className="flex-[2] py-4 bg-slate-900 hover:bg-orange-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl flex items-center justify-center gap-2 transition-all group"
+          >
+            <FiEdit className="group-hover:rotate-12 transition-transform" /> 
+            Modify Records
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -823,6 +815,8 @@ const getImageUrl = (imagePath) => {
     </div>
   );
 }
+
+
 function ModernStaffModal({ onClose, onSave, staff, loading }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -848,7 +842,6 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(staff?.image || '');
   const [imageError, setImageError] = useState('');
-
 
   const steps = [
     { id: 'basic', label: 'Basic Info', icon: FaUser, description: 'Personal details & role' },
@@ -891,37 +884,30 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
       return;
     }
 
-    // Validate image is uploaded
     if (!imageFile && !staff?.image && !imagePreview) {
       setImageError('Staff image is required. Please upload an image.');
-      setCurrentStep(2); // Go to profile step
+      setCurrentStep(2);
       return;
     }
 
     try {
       const formDataToSend = new FormData();
       
-      // Append all form data INCLUDING gender, education, experience
       Object.keys(formData).forEach(key => {
         if (formData[key] !== null && formData[key] !== undefined) {
           if (Array.isArray(formData[key])) {
             formDataToSend.append(key, JSON.stringify(formData[key]));
-          } else if (key !== 'image') { // Don't append image as string
+          } else if (key !== 'image') {
             formDataToSend.append(key, formData[key].toString());
           }
         }
       });
       
-      // 🔹 IMAGE HANDLING: Image upload is REQUIRED
-      // Send imageFile if exists, otherwise send empty string (backend will handle validation)
       if (imageFile) {
-        // If a new file was uploaded, send it
         formDataToSend.append('image', imageFile);
       } else if (staff?.image && typeof staff.image === 'string' && staff.image.trim() !== '') {
-        // If editing and image exists, send the image path
         formDataToSend.append('image', staff.image);
       } else {
-        // For new staff, send empty string - backend will validate
         formDataToSend.append('image', '');
       }
       
@@ -947,13 +933,11 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
 
   const handleImageChange = (file) => {
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         setImageError('Please upload an image file (JPEG, PNG, etc.)');
         return;
       }
       
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setImageError('Image size should be less than 5MB');
         return;
@@ -998,7 +982,6 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
       case 1:
         return formData.email.trim() && formData.phone.trim();
       case 2:
-        // Image is required - check if we have imageFile or existing image
         return (imageFile || staff?.image || imagePreview) && !imageError;
       case 3:
         return true;
@@ -1008,49 +991,89 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-700 p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white bg-opacity-20 rounded-2xl backdrop-blur-sm">
-                {staff ? <FaEdit className="text-xl" /> : <FaUserPlus className="text-xl" />}
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">{staff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
-                <p className="text-orange-100 opacity-90 mt-1">
-                  Step {currentStep + 1} of {steps.length}: {steps[currentStep].description}
-                </p>
-              </div>
-            </div>
-            <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-xl transition-all duration-200 cursor-pointer">
-              <FaTimes className="text-xl" />
-            </button>
-          </div>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      {/* WIDER MODAL: max-w-5xl (was max-w-4xl) */}
+      <div className="w-full max-w-5xl max-h-[95vh] bg-white rounded-3xl shadow-2xl shadow-black/30 overflow-hidden border border-gray-100">
+        {/* Enhanced Header */}
+     {/* Modernized Header with Integrated Progress */}
+<div className="bg-[#0f172a] p-8 text-white relative overflow-hidden border-b border-white/5">
+  {/* Modern Ambient Glow */}
+  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] -mr-48 -mt-48" />
+  <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] -ml-32 -mb-32" />
 
-        {/* Progress Steps */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex justify-between items-center overflow-x-auto">
+  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="flex items-center gap-5">
+      {/* Icon with Glass effect */}
+      <div className="p-4 bg-white/5 backdrop-blur-xl rounded-[1.5rem] border border-white/10 shadow-2xl">
+        {staff ? (
+          <FaEdit className="text-blue-400 text-xl" />
+        ) : (
+          <FaUserPlus className="text-blue-400 text-xl" />
+        )}
+      </div>
+      
+      <div className="space-y-1.5">
+        <h2 className="text-xl font-black tracking-[0.05em] uppercase italic">
+          {staff ? 'Modification Portal' : 'Staff Onboarding'}
+        </h2>
+        
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-md border border-blue-500/30">
+             <span className="text-[9px] font-black text-blue-300 uppercase tracking-widest">
+                Step 0{currentStep + 1}
+             </span>
+          </div>
+          <p className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
+            {steps[currentStep].description}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Right Side: Step Progress Indicators */}
+    <div className="flex items-center gap-6">
+      <div className="hidden lg:flex items-center gap-2">
+        {steps.map((_, index) => (
+          <div 
+            key={index}
+            className={`h-1 rounded-full transition-all duration-500 ${
+              index <= currentStep ? 'w-8 bg-blue-500' : 'w-4 bg-white/10'
+            }`}
+          />
+        ))}
+      </div>
+
+      <button 
+        onClick={onClose} 
+        className="group p-3 bg-white/5 hover:bg-red-500/20 rounded-2xl transition-all duration-300 border border-white/10 hover:border-red-500/50"
+      >
+        <FaTimes className="text-gray-400 group-hover:text-red-400 transition-colors text-lg" />
+      </button>
+    </div>
+  </div>
+</div>
+
+        {/* Enhanced Progress Steps - BOLDER */}
+        <div className="bg-gradient-to-r from-white to-orange-50 border-b border-gray-200 p-5">
+          <div className="flex justify-between items-center overflow-x-auto gap-4">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center gap-3 flex-shrink-0">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 font-bold text-sm transition-all duration-300 ${
+              <div key={step.id} className="flex items-center gap-4 flex-shrink-0">
+                <div className={`flex items-center justify-center w-12 h-12 rounded-2xl border-3 font-black text-base transition-all duration-300 ${
                   index === currentStep 
-                    ? 'bg-orange-500 border-orange-500 text-white shadow-lg' 
+                    ? 'bg-gradient-to-br from-orange-500 to-red-600 border-orange-500 text-white shadow-lg shadow-orange-500/30' 
                     : index < currentStep
-                    ? 'bg-green-500 border-green-500 text-white'
-                    : 'bg-gray-100 border-gray-300 text-gray-500'
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 border-green-500 text-white shadow-sm'
+                    : 'bg-white border-gray-300 text-gray-500 shadow-sm'
                 }`}>
-                  {index < currentStep ? <FaCheck className="text-xs" /> : <step.icon className="text-xs" />}
+                  {index < currentStep ? <FaCheck className="text-sm" /> : <step.icon className="text-sm" />}
                 </div>
-                <div className="hidden sm:block">
-                  <div className="text-sm font-semibold text-gray-900">{step.label}</div>
-                  <div className="text-xs text-gray-500">{step.description}</div>
+                <div className="hidden sm:block min-w-0">
+                  <div className="text-base font-black text-gray-900 tracking-tight">{step.label}</div>
+                  <div className="text-sm text-gray-600 font-medium">{step.description}</div>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-8 h-0.5 mx-2 ${
-                    index < currentStep ? 'bg-green-500' : 'bg-gray-300'
+                  <div className={`w-10 h-1 mx-2 rounded-full ${
+                    index < currentStep ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gray-300'
                   }`} />
                 )}
               </div>
@@ -1058,17 +1081,18 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-200px)] overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Step 1: Basic Information */}
+        <div className="max-h-[calc(95vh-220px)] overflow-y-auto p-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step 1: Basic Information - ENHANCED */}
             {currentStep === 0 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    {/* BOLDER LABEL and LARGER INPUT */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-orange-50 to-red-50 p-3 rounded-xl border border-orange-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaUser className="text-orange-600 text-lg" /> 
-                        Full Name <span className="text-red-500">*</span>
+                        <span>Full Name <span className="text-red-900">*</span></span>
                       </label>
                       <input
                         type="text"
@@ -1076,61 +1100,88 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
                         onChange={(e) => handleChange('name', e.target.value)}
                         placeholder="Enter full name..."
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
                       />
                     </div>
 
+                    {/* ENHANCED ROLE SELECTION */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaUserTie className="text-purple-600 text-lg" /> 
-                        Role <span className="text-red-500">*</span>
+                        <span>Role <span className="text-red-900">*</span></span>
                       </label>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         {ROLES.map((role) => (
                           <div 
                             key={role.value} 
                             onClick={() => handleChange('role', role.value)}
-                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            className={`p-5 rounded-xl border-2 cursor-pointer ${
                               formData.role === role.value 
-                                ? 'border-blue-500 bg-blue-50 shadow-md' 
-                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-sm shadow-blue-200' 
+                                : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 '
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <role.icon className={`text-lg ${role.color}`} />
-                              <span className="font-bold text-gray-900 text-sm">{role.label}</span>
+                            <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-xl ${formData.role === role.value ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                                <role.icon className={`text-2xl ${role.color}`} />
+                              </div>
+                              <span className="font-black text-gray-900 text-base">{role.label}</span>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
+                    {/* ENHANCED POSITION SELECT */}
                     <div>
-                      <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-xl border border-green-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaBriefcase className="text-green-600 text-lg" /> 
-                        Position
+                        <span>Position</span>
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={formData.position}
                         onChange={(e) => handleChange('position', e.target.value)}
-                        placeholder="e.g., Head of Department, Class Teacher..."
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
-                      />
+                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
+                      >
+                        <option value="">Select a position...</option>
+                        <optgroup label="Administration" className="font-black text-green-800 bg-green-50">
+                          <option value="Chief Principal">Chief Principal</option>
+                          <option value="Deputy Principal">Deputy Principal</option>
+                          <option value="Senior Teacher">Senior Teacher</option>
+                          <option value="Head of Department">Head of Department</option>
+                        </optgroup>
+                        <optgroup label="Teaching Staff" className="font-black text-blue-800 bg-blue-50">
+                          <option value="Teacher">Teacher</option>
+                          <option value="Subject Teacher">Subject Teacher</option>
+                          <option value="Class Teacher">Class Teacher</option>
+                          <option value="Assistant Teacher">Assistant Teacher</option>
+                        </optgroup>
+                        <optgroup label="Support & Finance" className="font-black text-orange-800 bg-orange-50">
+                          <option value="Librarian">Librarian</option>
+                          <option value="Laboratory Technician">Laboratory Technician</option>
+                          <option value="Accountant">Accountant</option>
+                          <option value="Secretary">Secretary</option>
+                          <option value="Support Staff">Support Staff</option>
+                        </optgroup>
+                      </select>
+                      <p className="mt-3 text-sm text-gray-600 italic px-2 font-medium">
+                        Select the primary role held at the institution
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-6">
+                    {/* ENHANCED DEPARTMENT SELECT */}
                     <div>
-                      <label className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaBuilding className="text-blue-600 text-lg" /> 
-                        Department <span className="text-red-500">*</span>
+                        <span>Department <span className="text-red-900">*</span></span>
                       </label>
                       <select
                         value={formData.department}
                         onChange={(e) => handleChange('department', e.target.value)}
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 cursor-pointer"
+                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20  bg-white shadow-sm "
                       >
                         {DEPARTMENTS.map(dept => (
                           <option key={dept} value={dept}>{dept}</option>
@@ -1138,38 +1189,40 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
                       </select>
                     </div>
 
+                    {/* ENHANCED JOIN DATE */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 p-3 rounded-xl border border-yellow-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaCalendarAlt className="text-yellow-600 text-lg" /> 
-                        Join Date
+                        <span>Join Date</span>
                       </label>
                       <input
                         type="date"
                         value={formData.joinDate}
                         onChange={(e) => handleChange('joinDate', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                          className="w-full px-5 py-4 text-base font-bold border-3 border-gray-300 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 bg-white shadow-sm"
                       />
                     </div>
 
+                    {/* ENHANCED STATUS */}
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-pink-50 to-rose-50 p-3 rounded-xl border border-pink-200">
+                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
                         <FaUserCheck className="text-pink-600 text-lg" /> 
-                        Status
+                        <span>Status</span>
                       </label>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-3">
                         {STATUS_OPTIONS.map((status) => (
                           <div 
                             key={status.value} 
                             onClick={() => handleChange('status', status.value)}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            className={`p-4 rounded-2xl border-3 cursor-pointer transition-all duration-300 ${
                               formData.status === status.value 
-                                ? 'border-blue-500 bg-blue-50 shadow-md' 
-                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg' 
+                                : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md'
                             }`}
                           >
-                            <div className="flex flex-col items-center gap-1">
-                              <status.icon className={`text-lg ${status.color}`} />
-                              <span className="text-xs font-bold text-gray-900">{status.label}</span>
+                            <div className="flex flex-col items-center gap-2">
+                              <status.icon className={`text-2xl ${status.color}`} />
+                              <span className="text-sm font-black text-gray-900 tracking-tight">{status.label}</span>
                             </div>
                           </div>
                         ))}
@@ -1180,424 +1233,496 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
               </div>
             )}
 
-            {/* Step 2: Contact Information - WITH EDUCATION & EXPERIENCE */}
+            {/* Step 2: Contact Information - ENHANCED */}
             {currentStep === 1 && (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 border border-blue-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaPhoneAlt className="text-blue-600" />
+              <div className="space-y-8">
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-3xl p-8 border-2 border-blue-300 shadow-sm">
+                  <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                    <FaPhoneAlt className="text-blue-600 text-2xl" />
                     Contact Information
                   </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3">Email Address <span className="text-red-500">*</span></label>
+                      <label className="block text-md font-black text-gray-800 mb-4">
+                        Email Address <span className="text-red-600">*</span>
+                      </label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange('email', e.target.value)}
                         placeholder="staff@school.edu"
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3">Phone Number <span className="text-red-500">*</span></label>
+                      <label className="block text-md font-black text-gray-800 mb-4">
+                        Phone Number <span className="text-red-600">*</span>
+                      </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleChange('phone', e.target.value)}
                         placeholder="+254 700 000 000"
                         required
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
+                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Education and Experience fields - ADDED BACK */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <FaGraduationCap className="text-purple-600" />
+                {/* ENHANCED Education and Experience */}
+                  <div className="bg-white rounded-md ">
+                    <h4 className="text-md font-black text-gray-900 mb-6 flex items-center gap-3">
+                      <FaGraduationCap className="text-purple-600 text-xl" />
                       Education
                     </h4>
                     <textarea
                       value={formData.education}
                       onChange={(e) => handleChange('education', e.target.value)}
                       placeholder="Educational background, degrees, certifications..."
-                      rows="4"
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none bg-gray-50 font-medium"
+                      rows="5"
+                      className="w-full p-1 text-md border-2 border-black  font-bold border-3 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 resize-none bg-white shadow-sm transition-all"
                     />
                   </div>
 
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <FaBriefcase className="text-green-600" />
+                  <div className="bg-white rounded-md ">
+                    <h4 className="text-md font-black text-gray-900 mb-6 flex items-center gap-3">
+                      <FaBriefcase className="text-green-600 text-2xl" />
                       Experience
                     </h4>
                     <textarea
                       value={formData.experience}
                       onChange={(e) => handleChange('experience', e.target.value)}
                       placeholder="Previous experience, years of service, special achievements..."
-                      rows="4"
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none bg-gray-50 font-medium"
+                      rows="5"
+                      className="w-full p-1 text-md border-2 border-black  font-bold border-3 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 resize-none bg-white shadow-sm transition-all"
                     />
                   </div>
                 </div>
-              </div>
             )}
 
-            {/* Step 3: Profile & Bio - SIMPLIFIED WITHOUT GENDER IMAGES */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
-                  <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <FaUserCircle className="text-orange-600" />
-                    Profile Image & Information
-                  </h3>
-                  
-                  {/* Gender Selection - SIMPLIFIED WITHOUT IMAGE DEPENDENCY */}
-                  <div className="mb-6">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Select Gender:</p>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => handleGenderChange('male')}
-                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 ${
-                          formData.gender === 'male'
-                            ? 'border-blue-500 bg-blue-50 shadow-md' 
-                            : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                        } transition-colors`}
-                      >
-                        <div className={`p-3 rounded-full ${
-                          formData.gender === 'male' ? 'bg-blue-100' : 'bg-gray-100'
-                        }`}>
-                          <FaMale className={`text-lg ${
-                            formData.gender === 'male' ? 'text-blue-600' : 'text-gray-400'
-                          }`} />
-                        </div>
-                        <span className={`text-sm font-bold ${
-                          formData.gender === 'male' ? 'text-blue-700' : 'text-gray-600'
-                        }`}>
-                          Male
-                        </span>
-                      </button>
+{/* Step 3: Profile & Bio - CLEAN & ALIGNED */}
+{currentStep === 2 && (
+  <div className="space-y-6">
+    {/* Profile Image & Information Section */}
+    <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border-2 border-orange-200 shadow-sm">
+      <h3 className="text-md font-black text-gray-900 mb-6 flex items-center gap-3 uppercase tracking-wider">
+        <FaUserCircle className="text-orange-600 text-lg" />
+        Profile Image & Information
+      </h3>
+      
+{/* Modernized Gender Selection - Wide Layout */}
+<div className="mb-8">
+  <div className="flex items-center gap-2 mb-4">
+    <div className="w-1 h-3 bg-orange-500 rounded-full" />
+    <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Select Gender</p>
+  </div>
+  
+  <div className="flex flex-col sm:flex-row gap-4">
+    <button
+      type="button"
+      onClick={() => handleGenderChange('male')}
+      className={`flex-1 flex items-center justify-center gap-4 px-12 py-4 rounded-2xl border-2 transition-all duration-300 ${
+        formData.gender === 'male'
+          ? 'border-blue-500 bg-blue-50/50 shadow-sm ring-4 ring-blue-500/5' 
+          : 'border-gray-100 bg-white text-gray-400 hover:border-gray-300'
+      }`}
+    >
+      <div className={`p-2 rounded-lg ${formData.gender === 'male' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+        <FaMale className="text-xl" />
+      </div>
+      <span className={`text-xs font-black uppercase tracking-widest ${formData.gender === 'male' ? 'text-blue-900' : 'text-gray-500'}`}>
+        Male
+      </span>
+    </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleGenderChange('female')}
-                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 ${
-                          formData.gender === 'female'
-                            ? 'border-pink-500 bg-pink-50 shadow-md' 
-                            : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                        } transition-colors`}
-                      >
-                        <div className={`p-3 rounded-full ${
-                          formData.gender === 'female' ? 'bg-pink-100' : 'bg-gray-100'
-                        }`}>
-                          <FaFemale className={`text-lg ${
-                            formData.gender === 'female' ? 'text-pink-600' : 'text-gray-400'
-                          }`} />
-                        </div>
-                        <span className={`text-sm font-bold ${
-                          formData.gender === 'female' ? 'text-pink-700' : 'text-gray-600'
-                        }`}>
-                          Female
-                        </span>
-                      </button>
-                    </div>
-                  </div>
+    <button
+      type="button"
+      onClick={() => handleGenderChange('female')}
+      className={`flex-1 flex items-center justify-center gap-4 px-12 py-4 rounded-2xl border-2 transition-all duration-300 ${
+        formData.gender === 'female'
+          ? 'border-pink-500 bg-pink-50/50 shadow-sm ring-4 ring-pink-500/5' 
+          : 'border-gray-100 bg-white text-gray-400 hover:border-gray-300'
+      }`}
+    >
+      <div className={`p-2 rounded-lg ${formData.gender === 'female' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+        <FaFemale className="text-xl" />
+      </div>
+      <span className={`text-xs font-black uppercase tracking-widest ${formData.gender === 'female' ? 'text-pink-900' : 'text-gray-500'}`}>
+        Female
+      </span>
+    </button>
+  </div>
+</div>
 
-                  {/* Image Upload - REQUIRED */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        {imagePreview ? (
-                          <div className="relative">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="w-24 h-24 rounded-2xl object-cover shadow-lg border-2 border-gray-200"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '';
-                              }}
-                            />
-                            <button
-                              type="button"
-                              onClick={handleImageRemove}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
-                            >
-                              <FiX className="text-sm" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center bg-gray-50">
-                            <FiUser className="text-gray-400 text-2xl" />
-                            <span className="text-xs text-gray-500 mt-1">Upload image</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <label className="block">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageChange(e.target.files[0])}
-                            className="hidden"
-                            id="staff-image-upload"
-                            required={!staff?.image}
-                          />
-                          <div className="px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <FaUpload className="text-orange-500" />
-                            <span className="text-sm font-bold text-gray-700">
-                              {imagePreview ? 'Change Image' : 'Upload Staff Image'}
-                            </span>
-                          </div>
-                        </label>
-                        <p className="text-xs text-gray-500 mt-2">
-                          <span className="text-red-500 font-bold">* Required:</span> Upload a clear photo of the staff member (JPEG, PNG, max 5MB)
-                        </p>
-                        {imageError && (
-                          <p className="text-xs text-red-600 mt-2 font-medium">
-                            {imageError}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+     {/* Modernized Image Upload Area */}
+<div className="flex flex-col sm:flex-row items-center gap-8 p-4 bg-white/40 rounded-3xl border border-gray-100">
+  <div className="flex-shrink-0">
+    {imagePreview ? (
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-tr from-orange-500 to-blue-500 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+        <img
+          src={imagePreview}
+          alt="Preview"
+          className="relative w-32 h-32 rounded-[1.8rem] object-cover border-4 border-white shadow-xl"
+        />
+        <button
+          type="button"
+          onClick={handleImageRemove}
+          className="absolute -top-2 -right-2 bg-white text-red-600 p-2 rounded-full shadow-lg border border-red-50 hover:bg-red-50 transition-colors"
+        >
+          <FiX size={14} />
+        </button>
+      </div>
+    ) : (
+      <div className="w-32 h-32 rounded-[1.8rem] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center bg-white shadow-inner">
+        <div className="bg-gray-50 p-3 rounded-2xl mb-2">
+          <FiUser className="text-gray-300 text-3xl" />
+        </div>
+        <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">No Profile</span>
+      </div>
+    )}
+  </div>
+  
+  <div className="flex-1 w-full space-y-4">
+    <div className="space-y-1">
+      <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Profile Media</h4>
+      <p className="text-[10px] text-gray-500 font-medium">Add a professional photo for the staff directory.</p>
+    </div>
 
-                {/* Bio and Quote */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <FaQuoteLeft className="text-blue-600" />
-                      Biography
-                    </h4>
-                    <textarea
-                      value={formData.bio}
-                      onChange={(e) => handleChange('bio', e.target.value)}
-                      placeholder="Write a brief biography about the staff member..."
-                      rows="6"
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none bg-gray-50 font-medium"
-                    />
-                  </div>
+    <label className="block group cursor-pointer">
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => handleImageChange(e.target.files[0])}
+        className="hidden"
+        id="staff-image-upload"
+      />
+      <div className="px-5 py-4 border-2 border-gray-200 rounded-2xl flex items-center justify-between bg-white hover:border-orange-400 hover:bg-orange-50/30 transition-all duration-300">
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-orange-100 rounded-lg">
+            <FaUpload className="text-orange-600 text-sm" />
+          </div>
+          <div>
+            <span className="block text-[11px] font-black text-gray-900 uppercase">
+              {imagePreview ? 'Replace Image' : 'Select File'}
+            </span>
+            <span className="text-[9px] text-gray-400 font-bold">JPG, PNG or WEBP</span>
+          </div>
+        </div>
+        <FaFolderOpen className="text-blue-500 text-lg opacity-40 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </label>
 
-                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                    <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                      <FaQuoteRight className="text-purple-600" />
-                      Quote
-                    </h4>
-                    <textarea
-                      value={formData.quote}
-                      onChange={(e) => handleChange('quote', e.target.value)}
-                      placeholder="Inspirational quote or motto..."
-                      rows="3"
-                      className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none bg-gray-50 font-medium"
-                    />
-                  </div>
-                </div>
+    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50/50 rounded-lg border border-blue-100">
+      <FaExclamationCircle className="text-blue-500 text-[10px]" />
+      <p className="text-[9px] text-blue-700 font-black uppercase tracking-tight">
+        Maximum file size: 5MB
+      </p>
+    </div>
+  </div>
+</div>
+    </div>
+
+    {/* Bio and Quote - Flex Row with Education/Experience styling */}
+      <div className="bg-white rounded-md">
+        <h4 className="text-md font-black text-gray-900 mb-4 flex items-center gap-3 uppercase tracking-wider">
+          <FaQuoteLeft className="text-blue-600 text-sm" />
+          Biography
+        </h4>
+        <textarea
+          value={formData.bio}
+          onChange={(e) => handleChange('bio', e.target.value)}
+          placeholder="Professional background..."
+          rows="5"
+          className="w-full p-3 text-md border-2 border-black font-bold rounded-2xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 resize-none bg-white shadow-sm transition-all"
+        />
+      </div>
+
+      <div className="bg-white rounded-md">
+        <h4 className="text-md font-black text-gray-900 mb-4 flex items-center gap-3 uppercase tracking-wider">
+          <FaQuoteRight className="text-purple-600 text-sm" />
+          Personal Quote
+        </h4>
+        <textarea
+          value={formData.quote}
+          onChange={(e) => handleChange('quote', e.target.value)}
+          placeholder="Motto or favorite quote..."
+          rows="5"
+          className="w-full p-3 text-md border-2 border-black font-bold rounded-2xl focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 resize-none bg-white shadow-sm transition-all"
+        />
+      </div>
+    </div>
+)}
+
+
+
+
+{currentStep === 3 && (
+  <div className="space-y-8 animate-in fade-in duration-500">
+    
+    {/* SECTION 1: EXPERTISE & DUTIES INPUT */}
+    <div className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-100 shadow-sm">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-2.5 bg-orange-100 rounded-2xl">
+          <FaStar className="text-orange-600 text-lg" />
+        </div>
+        <div>
+          <h3 className="text-xs font-black text-gray-900 uppercase tracking-[0.2em]">Professional Scope</h3>
+          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">Define skills and daily roles</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <ItemInput
+          label="Expertise Areas"
+          value={formData.expertise}
+          onChange={(items) => handleArrayChange('expertise', items)}
+          placeholder="e.g. Data Analysis..."
+          icon={FiStar}
+          disabled={loading}
+          boldMode={true}
+        />
+        <ItemInput
+          label="Core Responsibilities"
+          value={formData.responsibilities}
+          onChange={(items) => handleArrayChange('responsibilities', items)}
+          placeholder="e.g. Team Lead..."
+          icon={FiBriefcase}
+          disabled={loading}
+          boldMode={true}
+        />
+      </div>
+    </div>
+
+    {/* SECTION 2: ACHIEVEMENTS INPUT */}
+    <div className="bg-white rounded-[2.5rem] p-8 border-2 border-gray-100 shadow-sm">
+      <ItemInput
+        label="Key Achievements"
+        value={formData.achievements}
+        onChange={(items) => handleArrayChange('achievements', items)}
+        placeholder="Add professional milestones..."
+        icon={FaTrophy}
+        disabled={loading}
+        boldMode={true}
+      />
+    </div>
+
+    {/* SECTION 3: THE MODERN SUMMARY PREVIEW */}
+    <div className="bg-gradient-to-br from-gray-100 to-blue-50/50 rounded-[3rem] p-1.5 border-2 border-gray-200 shadow-xl">
+      <div className="bg-white rounded-[2.8rem] p-10">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10 pb-6 border-b border-gray-50">
+          <div className="flex items-center gap-4">
+            <div className="bg-green-100 p-3 rounded-2xl">
+              <FaClipboardCheck className="text-green-600 text-xl" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.3em]">Final Staff Summary</h4>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Review all details before submission</p>
+            </div>
+          </div>
+          <div className="hidden sm:block">
+            <span className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-[9px] font-black uppercase tracking-[0.2em]">Ready to Sync</span>
+          </div>
+        </div>
+
+        {/* Columnar Data Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-16 gap-y-8 mb-12">
+          {/* Identity */}
+          <div className="space-y-5">
+            {[
+              { label: "Staff Name", value: formData.name },
+              { label: "Assigned Role", value: formData.role },
+              { label: "Department", value: formData.department },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col gap-1.5 border-l-4 border-blue-500/20 pl-5">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</span>
+                <span className="text-sm font-black text-gray-900 truncate">{item.value || 'Not Set'}</span>
               </div>
-            )}
+            ))}
+          </div>
 
-            {/* Step 4: Additional Details */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaStar className="text-orange-600" />
-                    Expertise & Achievements
-                  </h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                      <ItemInput
-                        label="Expertise"
-                        value={formData.expertise}
-                        onChange={(items) => handleArrayChange('expertise', items)}
-                        placeholder="Add expertise area..."
-                        icon={FiStar}
-                        disabled={loading}
-                      />
-                    </div>
-
-                    <div>
-                      <ItemInput
-                        label="Responsibilities"
-                        value={formData.responsibilities}
-                        onChange={(items) => handleArrayChange('responsibilities', items)}
-                        placeholder="Add responsibility..."
-                        icon={FiBriefcase}
-                        disabled={loading}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                  <ItemInput
-                    label="Achievements"
-                    value={formData.achievements}
-                    onChange={(items) => handleArrayChange('achievements', items)}
-                    placeholder="Add achievement..."
-                    icon={FaTrophy}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* Summary Preview */}
-                <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                  <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <FaClipboardCheck className="text-green-600" />
-                    Staff Summary
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Name:</span>
-                        <span className="font-bold text-gray-900 truncate">{formData.name}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Role:</span>
-                        <span className="font-bold text-gray-900">{formData.role}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Department:</span>
-                        <span className="font-bold text-gray-900">{formData.department}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Email:</span>
-                        <span className="font-bold text-gray-900 truncate">{formData.email}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Phone:</span>
-                        <span className="font-bold text-gray-900">{formData.phone}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Gender:</span>
-                        <span className="font-bold text-gray-900 capitalize">{formData.gender}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Status:</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          formData.status === 'active' ? 'bg-green-100 text-green-800' : 
-                          formData.status === 'on-leave' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {formData.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Join Date:</span>
-                        <span className="font-bold text-gray-900">{formData.joinDate}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Image:</span>
-                        <span className={`font-bold ${imageFile || imagePreview || staff?.image ? 'text-green-600' : 'text-red-600'}`}>
-                          {imageFile || imagePreview || staff?.image ? '✓ Uploaded' : '✗ Required'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {formData.expertise.length > 0 && (
-                    <div className="mt-4">
-                      <span className="text-sm text-gray-600">Expertise: </span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {formData.expertise.slice(0, 3).map((exp, index) => (
-                          <span 
-                            key={index} 
-                            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-1 rounded-lg text-xs font-bold"
-                          >
-                            {exp}
-                          </span>
-                        ))}
-                        {formData.expertise.length > 3 && (
-                          <span className="bg-gray-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                            +{formData.expertise.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* Contact & Gender */}
+          <div className="space-y-5">
+            {[
+              { label: "Email Address", value: formData.email },
+              { label: "Phone Contact", value: formData.phone },
+              { label: "Gender Identification", value: formData.gender, className: "capitalize" },
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col gap-1.5 border-l-4 border-orange-500/20 pl-5">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</span>
+                <span className={`text-sm font-black text-gray-900 truncate ${item.className}`}>{item.value || 'Not Set'}</span>
               </div>
-            )}
+            ))}
+          </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-              <div className="flex items-center gap-3 text-sm text-gray-600 font-medium">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    formData.status === 'active' ? 'bg-green-500' : 
-                    formData.status === 'on-leave' ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}></div>
-                  <span className="capitalize font-semibold">{formData.status}</span>
-                </div>
-                {currentStep === steps.length - 1 && (
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${
-                    (imageFile || staff?.image || imagePreview) 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {(imageFile || staff?.image || imagePreview) ? <FaCheck className="text-xs" /> : <FaTimes className="text-xs" />}
-                    {(imageFile || staff?.image || imagePreview) ? 'Ready to Save' : 'Image Required'}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                {currentStep > 0 && (
-                  <button 
-                    type="button"
-                    onClick={handlePrevStep}
-                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold disabled:opacity-50 cursor-pointer"
-                  >
-                    ← Previous
-                  </button>
-                )}
-                
-                {currentStep < steps.length - 1 ? (
-                  <button 
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={!isStepValid()}
-                    className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl hover:from-orange-700 hover:to-red-700 transition duration-200 font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2"
-                  >
-                    Continue →
-                  </button>
-                ) : (
-                  <button 
-                    type="submit"
-                    disabled={loading || !isStepValid()}
-                    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition duration-200 font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <Spinner size={16} color="white" />
-                        {staff ? 'Updating...' : 'Saving...'}
-                      </>
-                    ) : (
-                      <>
-                        <FaSave />
-                        {staff ? 'Update Staff' : 'Save Staff'}
-                      </>
-                    )}
-                  </button>
-                )}
+          {/* Status & Media */}
+          <div className="space-y-5">
+            <div className="flex flex-col gap-2 border-l-4 border-green-500/20 pl-5">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Employment Status</span>
+              <div>
+                <span className={`inline-flex items-center gap-2 text-[10px] font-black px-4 py-1.5 rounded-xl ${
+                  formData.status === 'active' ? 'bg-green-50 text-green-700 border border-green-100' : 
+                  formData.status === 'on-leave' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-red-50 text-red-700 border border-red-100'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${formData.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-current'}`} />
+                  {formData.status?.toUpperCase()}
+                </span>
               </div>
             </div>
+
+            <div className="flex flex-col gap-1.5 border-l-4 border-purple-500/20 pl-5">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Media Verification</span>
+              <span className={`text-[11px] font-black flex items-center gap-2 ${imageFile || imagePreview ? 'text-green-600' : 'text-red-500'}`}>
+                {imageFile || imagePreview ? '✓ PROFILE PHOTO ATTACHED' : '✗ PHOTO MISSING'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* VISIBLE MAPPED ITEMS AREA */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 pt-10 border-t border-gray-100">
+          
+          {/* Expertise Map */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Verified Expertise</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.expertise.map((exp, index) => (
+                <span key={index} className="flex items-center gap-2 bg-blue-50 text-blue-700 border border-blue-100 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight">
+                  <FiStar className="text-[11px]" />
+                  {exp}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Responsibilities Map */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Mapped Responsibilities</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {formData.responsibilities.map((res, index) => (
+                <span key={index} className="flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-100 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight">
+                  <FiBriefcase className="text-[11px]" />
+                  {res}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Achievements Map (Full Width List) */}
+        {formData.achievements.length > 0 && (
+          <div className="mt-10 pt-10 border-t border-gray-100">
+            <span className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Staff Achievements & Milestones</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {formData.achievements.map((ach, index) => (
+                <div key={index} className="flex items-start gap-4 bg-gray-50/50 p-4 rounded-[1.5rem] border border-gray-100 group hover:bg-white hover:shadow-md transition-all">
+                  <div className="bg-white p-2 rounded-lg shadow-sm">
+                    <FaTrophy className="text-yellow-500 text-xs" />
+                  </div>
+                  <p className="text-xs font-bold text-gray-700 leading-relaxed">{ach}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+            {/* ENHANCED Navigation Buttons */}
+       {/* Modernized Navigation Bar */}
+<div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6 pt-8 border-t border-gray-100">
+  
+  {/* Left Side: Status Indicators (Hidden on small mobile if too crowded, or stacked) */}
+  <div className="flex flex-wrap items-center gap-3">
+    {/* Deployment Status Pill */}
+    <div className="flex items-center gap-2.5 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+      <div className={`w-2 h-2 rounded-full animate-pulse ${
+        formData.status === 'active' ? 'bg-green-500' : 
+        formData.status === 'on-leave' ? 'bg-amber-500' : 'bg-red-500'
+      }`}></div>
+      <span className="text-[10px] font-black text-gray-700 uppercase tracking-widest">
+        {formData.status}
+      </span>
+    </div>
+
+    {/* Validation Pill (Only on Final Step) */}
+    {currentStep === steps.length - 1 && (
+      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-500 ${
+        (imageFile || staff?.image || imagePreview) 
+          ? 'bg-green-50 border-green-200 text-green-700' 
+          : 'bg-red-50 border-red-200 text-red-600'
+      }`}>
+        {(imageFile || staff?.image || imagePreview) 
+          ? <FaCheck className="text-[10px]" /> 
+          : <FaTimes className="text-[10px]" />
+        }
+        <span className="text-[10px] font-black uppercase tracking-widest">
+          {(imageFile || staff?.image || imagePreview) ? 'Assets Verified' : 'Photo Required'}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* Right Side: Action Buttons */}
+  <div className="flex items-center gap-3">
+    {currentStep > 0 && (
+      <button 
+        type="button"
+        onClick={handlePrevStep}
+        className="flex-1 md:flex-none px-6 py-3 border border-gray-200 text-gray-500 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all font-black text-[11px] uppercase tracking-[0.2em]"
+      >
+        Back
+      </button>
+    )}
+    
+    {currentStep < steps.length - 1 ? (
+      <button 
+        type="button"
+        onClick={handleNextStep}
+        disabled={!isStepValid()}
+        className="flex-1 md:flex-none px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-black transition-all font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-gray-200 disabled:opacity-30 flex items-center justify-center gap-2"
+      >
+        Next Step <FaChevronRight className="text-[9px]" />
+      </button>
+    ) : (
+      <button 
+        type="submit"
+        disabled={loading || !isStepValid()}
+        className="flex-1 md:flex-none px-10 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-blue-200 disabled:opacity-30 flex items-center justify-center gap-2"
+      >
+        {loading ? (
+          <>
+            <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span>Processing</span>
+          </>
+        ) : (
+          <>
+            <FaSave className="text-xs" />
+            <span>{staff ? 'Sync Updates' : 'Publish Staff'}</span>
+          </>
+        )}
+      </button>
+    )}
+  </div>
+</div>
           </form>
         </div>
       </div>
     </div>
   );
 }
+
 // Main Staff Manager Component
 export default function StaffManager() {
   const [staff, setStaff] = useState([]);
@@ -1946,153 +2071,159 @@ const handleSubmit = async (formData, id) => {
         loading={bulkDeleting}
       />
 
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl shadow-lg border border-orange-200 p-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Staff & BOM Management</h1>
-            <p className="text-gray-600 text-sm lg:text-base">Manage teaching staff, administration, and board members</p>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-<button 
-  onClick={() => fetchStaff(true)} 
-  disabled={refreshing}
-  className="flex items-center gap-2 bg-gray-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg disabled:opacity-70 cursor-pointer text-sm"
->
-  {refreshing ? (
-    <>
-      <div className="w-4 h-4">
-        <CircularProgress size={16} color="inherit" />
-      </div>
-      Refreshing...
-    </>
-  ) : (
-    <>
-      <FiRotateCw className="text-xs" /> Refresh
-    </>
-  )}
-</button>
-            <button onClick={handleCreate} className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm">
-              <FiPlus className="text-xs" /> Add Staff
-            </button>
-          </div>
+{/* --- DIRECTORY HERO SECTION --- */}
+<div className="relative bg-[#0F172A] rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-white overflow-hidden shadow-2xl border border-white/5 mb-6">
+  {/* Abstract Mesh Gradients */}
+  <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+  <div className="absolute bottom-[-20%] left-[-10%] w-[300px] h-[300px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+    <div className="space-y-6">
+      {/* Institutional Branding */}
+      <div className="flex items-center gap-4">
+        <div className="h-10 w-1.5 bg-orange-500 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.5)]" />
+        <div>
+          <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-orange-400">
+           katwanyaa High School 
+          </h2>
+          <p className="text-[9px] italic font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
+            "Education is Light"
+          </p>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 lg:gap-4">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">Total Staff</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
-                <FiUser className="text-lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">Teaching Staff</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.teaching}</p>
-              </div>
-              <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl">
-                <FiBook className="text-lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">Administration</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.administration}</p>
-              </div>
-              <div className="p-3 bg-green-100 text-green-600 rounded-2xl">
-                <FiAward className="text-lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">BOM Members</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.bom}</p>
-              </div>
-              <div className="p-3 bg-purple-100 text-purple-600 rounded-2xl">
-                <FiShield className="text-lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">Active</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.active}</p>
-              </div>
-              <div className="p-3 bg-green-100 text-green-600 rounded-2xl">
-                <FiCheckCircle className="text-lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">On Leave</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.onLeave}</p>
-              </div>
-              <div className="p-3 bg-yellow-100 text-yellow-600 rounded-2xl">
-                <FiCalendar className="text-lg" />
-              </div>
-            </div>
-          </div>
+      {/* Title Area */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+        <div className="p-3 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-inner w-fit">
+          <FiUsers className="text-3xl text-orange-400" />
         </div>
-      )}
-
-      {/* Filters */}
-      <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-2 relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search staff members by name, email, or department..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-gray-50"
-            />
-          </div>
-
-          <select
-            value={selectedDepartment}
-            onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 cursor-pointer text-sm"
-          >
-            <option value="all">All Departments</option>
-            {departments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 cursor-pointer text-sm"
-          >
-            <option value="all">All Roles</option>
-            {roles.map(role => (
-              <option key={role} value={role}>{role}</option>
-            ))}
-          </select>
-        </div>
+        <h1 className="text-lg md:text-2xl lg:text-3xl font-black tracking-tighter leading-none italic">
+          STAFF <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-gray-500 text-shadow-sm">DIRECTORY</span>
+        </h1>
       </div>
+
+      {/* Summary Sentence */}
+      <p className="max-w-2xl text-gray-400 text-sm md:text-base font-medium leading-relaxed">
+        Managing <span className="text-white font-bold border-b-2 border-orange-500/50 pb-0.5">{stats?.total || 0} Professional Profiles</span>. 
+        Current Status: <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black ml-1 uppercase">
+          {stats?.active || 0} Active on School
+        </span>
+      </p>
+    </div>
+
+    {/* Action Group */}
+    <div className="flex flex-col sm:flex-row gap-4">
+      <button
+        onClick={() => fetchStaff(true)}
+        disabled={refreshing}
+        className="flex items-center justify-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+      >
+        {refreshing ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <FiRotateCw />}
+        REFRESH
+      </button>
+      <button
+        onClick={handleCreate}
+        className="flex items-center justify-center gap-3 bg-white text-[#0F172A] px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-gray-100 shadow-xl shadow-white/5 active:scale-95"
+      >
+        <FiPlus className="text-lg" />
+        ADD STAFF
+      </button>
+    </div>
+  </div>
+</div>
+
+{/* --- ENLARGED SEARCH & FILTER ENGINE --- */}
+<div className="bg-white rounded-[2.5rem] p-6 shadow-2xl shadow-gray-200/50 border border-gray-100 mb-6">
+  <div className="flex flex-col gap-6">
+    <div className="flex items-center gap-3 px-2">
+      <div className="w-2 h-2 bg-orange-500 rounded-full" />
+      <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">
+        Filter Engine & Search
+      </span>
+    </div>
+
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* Large Search Bar */}
+      <div className="lg:col-span-6 relative group">
+        <FiSearch className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 text-2xl group-focus-within:text-orange-500 transition-colors" />
+        <input
+          type="text"
+          placeholder="Search by name, department or expertise..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-16 pr-8 py-6 border-black bg-gray-50 border-2 border-transparent rounded-[1.8rem] text-base font-bold placeholder:text-gray-400 focus:bg-white focus:border-orange-500/20 focus:ring-4 focus:ring-orange-500/5 transition-all outline-none"
+        />
+      </div>
+
+      {/* Dept Filter */}
+      <div className="lg:col-span-3 relative">
+        <label className="absolute -top-2.5 left-6 px-2 bg-white text-[9px] font-black text-gray-400 uppercase tracking-widest z-10">Department</label>
+        <select
+          value={selectedDepartment}
+          onChange={(e) => setSelectedDepartment(e.target.value)}
+          className="w-full px-6 py-6 bg-gray-50 border-2 border-transparent rounded-[1.8rem] text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-gray-100 focus:bg-white focus:border-blue-500/20 transition-all appearance-none outline-none"
+        >
+          <option value="all">All Departments</option>
+          {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+        </select>
+        <FiChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+      </div>
+
+      {/* Role Filter */}
+      <div className="lg:col-span-3 relative">
+        <label className="absolute -top-2.5 left-6 px-2 bg-white text-[9px] font-black text-gray-400 uppercase tracking-widest z-10">Staff Role</label>
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          className="w-full px-6 py-6 bg-gray-50 border-2 border-transparent rounded-[1.8rem] text-xs font-black uppercase tracking-widest cursor-pointer hover:bg-gray-100 focus:bg-white focus:border-blue-500/20 transition-all appearance-none outline-none"
+        >
+          <option value="all">All Roles</option>
+          {roles.map(role => <option key={role} value={role}>{role}</option>)}
+        </select>
+        <FiChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+      </div>
+<div className="lg:col-span-12">
+  <div className="border-t border-gray-100 pt-4">
+    <div 
+      onClick={() => {
+        setSearchTerm('');
+        setSelectedDepartment('all');
+        setSelectedRole('all');
+      }}
+      className="inline-flex items-center gap-2 text-xs font-black text-gray-500 uppercase tracking-widest cursor-pointer hover:text-orange-500 transition-colors"
+    >
+      <FiRefreshCcw className="text-sm" />
+      RESET FILTERS
+    </div>
+  </div>
+</div>
+
+      
+    </div>
+  </div>
+</div>
+
+{/* --- STATS GRID --- */}
+{stats && (
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+    {[
+      { label: "Teaching", val: stats.teaching, icon: FiBook, color: "from-blue-500 to-indigo-600" },
+      { label: "Admin", val: stats.administration, icon: FiAward, color: "from-emerald-500 to-teal-600" },
+      { label: "BOM Hub", val: stats.bom, icon: FiShield, color: "from-purple-500 to-pink-600" },
+      { label: "Total", val: stats.total, icon: FiTarget, color: "from-orange-500 to-red-600" },
+      { label: "Leave", val: stats.onLeave, icon: FiCalendar, color: "from-amber-400 to-orange-600" },
+      { label: "Active", val: stats.active, icon: FiCheckCircle, color: "from-green-400 to-emerald-600" },
+    ].map((item, i) => (
+      <div key={i} className="group bg-white p-6 rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all duration-300">
+        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+          <item.icon className="text-xl" />
+        </div>
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.label}</p>
+        <p className="text-2xl font-black text-gray-900 mt-1">{item.val}</p>
+      </div>
+    ))}
+  </div>
+)}
 
       {/* Bulk Actions */}
       {selectedPosts.size > 0 && (
