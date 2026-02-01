@@ -1632,33 +1632,81 @@ const KatwanyaaAdmission = () => {
           )}
         </div>
 
-        {/* Modern Footer */}
-        <div className="mt-12 text-center relative z-10">
-          <div className="bg-gradient-to-r from-blue-50/80 to-emerald-50/80 backdrop-blur-sm rounded-2xl p-8 border border-blue-100 mb-6 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-800 mb-3">📞 Need Assistance?</h3>
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700 font-bold">
-              <div className="flex items-center">
-                <FiPhone className="mr-2 text-blue-600" />
-                <span>Admissions: <strong className="text-gray-900">0712 345 678</strong></span>
-              </div>
-              <div className="flex items-center">
-                <FiMail className="mr-2 text-green-600" />
-                <span>Email: <strong className="text-gray-900">admissions@Katwanyaa.ac.ke</strong></span>
-              </div>
-              <div className="flex items-center">
-                <FiHome className="mr-2 text-purple-600" />
-                <span>Office Hours: <strong className="text-gray-900">Mon-Fri, 8:00 AM - 5:00 PM</strong></span>
-              </div>
-            </div>
-          </div>
-          
-          <p className="text-gray-600 text-sm font-semibold">
-            © {new Date().getFullYear()} Katwanyaa High  School. Excellence Through Discipline and Diligence.
-          </p>
-          <p className="text-gray-500 text-xs mt-2 font-bold">
-            All applications are processed in accordance with our privacy policy and data protection regulations.
-          </p>
+{/* --- KATWANYAA MODERN RESPONSIVE FOOTER --- */}
+<div className="mt-16 text-center relative z-10 px-4 mb-8">
+  <div className="max-w-4xl mx-auto bg-white/40 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 border border-white/60 shadow-2xl shadow-blue-900/5 mb-8 transition-all duration-500 hover:bg-white/60">
+    
+    {/* Floating Header */}
+    <div className="inline-flex items-center gap-3 bg-white px-6 py-2 rounded-full shadow-sm border border-gray-100 mb-8 -mt-12 md:-mt-16 transition-transform hover:scale-105">
+      <FiPhone className="text-blue-600 animate-pulse" />
+      <h3 className="text-xs md:text-sm font-black text-gray-900 uppercase tracking-widest">
+        Need Assistance?
+      </h3>
+    </div>
+
+    {/* Contact Info: Grid of 1 on mobile, 3 on desktop */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+      
+      {/* Admissions Card */}
+      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:rotate-12 transition-transform">
+          <FiPhone />
         </div>
+        <div className="text-left md:text-center">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Admissions</p>
+          <p className="text-xs font-bold text-gray-900">0712 345 678</p>
+        </div>
+      </div>
+
+      {/* Email Card */}
+      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
+        <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 group-hover:rotate-12 transition-transform">
+          <FiMail />
+        </div>
+        <div className="text-left md:text-center overflow-hidden">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Email Support</p>
+          <p className="text-xs font-bold text-gray-900 truncate break-all">admissions@Katwanyaa.ac.ke</p>
+        </div>
+      </div>
+
+      {/* Office Hours Card */}
+      <div className="group flex flex-row md:flex-col items-center gap-4 p-4 rounded-[1.5rem] bg-white/50 hover:bg-white transition-all duration-300 hover:shadow-md active:scale-95">
+        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:rotate-12 transition-transform">
+          <FiHome />
+        </div>
+        <div className="text-left md:text-center">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Working Hours</p>
+          <p className="text-xs font-bold text-gray-900">Mon-Fri, 8AM - 5PM</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  
+  {/* Copyright & Legal Section */}
+  <div className="max-w-2xl mx-auto space-y-4">
+    <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
+      <p className="text-gray-900 text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">
+        © {new Date().getFullYear()} Katwanyaa High School
+      </p>
+      <div className="hidden md:block w-1 h-1 bg-gray-300 rounded-full" />
+      <p className="text-blue-600 text-[10px] md:text-xs font-bold italic">
+        "Excellence Through Discipline and Diligence"
+      </p>
+    </div>
+    
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 opacity-60">
+      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+        <FiShield className="text-blue-500 text-xs" />
+        Data Protection
+      </div>
+      <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+        <FiCheckCircle className="text-green-500 text-xs" />
+        Privacy Compliant
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   );
