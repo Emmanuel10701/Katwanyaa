@@ -345,12 +345,28 @@ P.O. Box 363 – 90131 Tala, Kenya
 const buildDynamicCategories = (schoolData, documentData) => {
   if (!schoolData) return staticCategories;
 
-  // Format fee distribution for display
+  // Format fee distribution for display - UPDATED to handle array of objects
   const formatFeeDistribution = (distribution) => {
-    if (!distribution || typeof distribution !== 'object') return '';
-    return Object.entries(distribution)
-      .map(([key, value]) => `• ${key}: KES ${value.toLocaleString()}`)
-      .join('\n');
+    if (!distribution) return '';
+    
+    // Check if it's an array of objects (from API response)
+    if (Array.isArray(distribution)) {
+      return distribution
+        .map(item => {
+          const name = item.name || item.key || 'Item';
+          const amount = item.amount || item.value || 0;
+          return `• ${name}: KES ${amount.toLocaleString()}`;
+        })
+        .join('\n');
+    } 
+    // Handle object format (fallback)
+    else if (typeof distribution === 'object') {
+      return Object.entries(distribution)
+        .map(([key, value]) => `• ${key}: KES ${value.toLocaleString()}`)
+        .join('\n');
+    }
+    
+    return '';
   };
 
   return {
