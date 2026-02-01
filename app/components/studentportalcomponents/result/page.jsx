@@ -12,7 +12,7 @@ import {
   FiTrash2, FiPlus, FiX, FiCheckCircle,
   FiInfo, FiCalendar, FiUser, FiClock,
   FiBarChart2, FiPercent, FiActivity,
-  FiChevronLeft, FiChevronRight as FiChevronRightIcon, FiDownloadCloud 
+  FiChevronLeft, FiChevronRight as FiChevronRightIcon, FiDownloadCloud, FiArrowRight  
 } from 'react-icons/fi';
 
 
@@ -457,13 +457,46 @@ function ResultCard({ result, studentAdmissionNumber, onViewSubjects }) {
   );
 }
 
-// Document Card Component - Mobile Optimized
+// Add this helper function to convert Cloudinary URLs for proper PDF display
+const getDisplayablePdfUrl = (url) => {
+  if (!url) return url;
+  
+  // Check if it's a Cloudinary URL
+  if (url.includes('cloudinary.com') && url.includes('/raw/upload/')) {
+    // Remove any existing flags and add fl_attachment for PDF display
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Check if it's a PDF file
+    if (pathname.toLowerCase().endsWith('.pdf')) {
+      // Add fl_attachment flag to force browser to display PDF instead of download
+      if (url.includes('?')) {
+        return `${url}&fl_attachment`;
+      } else {
+        return `${url}?fl_attachment`;
+      }
+    }
+  }
+  
+  return url;
+};
+
+// Update the DocumentCard component to use this function
 function DocumentCard({ document, type = 'additional' }) {
   const getIcon = () => {
     const iconBase = "text-lg sm:text-xl md:text-2xl";
-    if (type === 'exam') return <FiFileText className={`${iconBase} text-rose-500`} />;
-    if (document.filetype?.includes('pdf')) return <FiFileText className={`${iconBase} text-rose-500`} />;
-    if (document.filetype?.includes('image')) return <FiImage className={`${iconBase} text-emerald-500`} />;
+    
+    // Check file extension from the name
+    const fileName = document.name || document.filename || '';
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    
+    if (fileExtension === 'pdf' || type === 'exam') {
+      return <FiFileText className={`${iconBase} text-rose-500`} />;
+    } else if (fileExtension === 'docx' || fileExtension === 'doc') {
+      return <FiFileText className={`${iconBase} text-blue-500`} />;
+    } else if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
+      return <FiImage className={`${iconBase} text-emerald-500`} />;
+    }
     return <FiFile className={`${iconBase} text-amber-500`} />;
   };
 
@@ -484,6 +517,25 @@ function DocumentCard({ document, type = 'additional' }) {
     });
   };
 
+  // Get file type from the name
+  const getFileType = () => {
+    const fileName = document.name || document.filename || '';
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    
+    if (fileExtension === 'pdf') return 'PDF Document';
+    if (fileExtension === 'docx' || fileExtension === 'doc') return 'Word Document';
+    if (fileExtension === 'jpg' || fileExtension === 'jpeg') return 'JPEG Image';
+    if (fileExtension === 'png') return 'PNG Image';
+    if (fileExtension === 'xlsx' || fileExtension === 'xls') return 'Excel Spreadsheet';
+    return 'Document';
+  };
+
+  // Get the displayable URL
+  const displayUrl = getDisplayablePdfUrl(document.pdf || document.filepath);
+  const fileName = document.name || document.filename || '';
+  const fileExtension = fileName.split('.').pop().toLowerCase();
+  const isPdf = fileExtension === 'pdf';
+
   return (
     <div className="group relative bg-white rounded-2xl p-3 sm:p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
       
@@ -496,7 +548,7 @@ function DocumentCard({ document, type = 'additional' }) {
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
             <h5 className="font-bold text-gray-800 text-sm sm:text-base leading-tight truncate pr-1">
-              {document.name || document.filename}
+              {fileName}
             </h5>
             {document.year && (
               <span className="flex-shrink-0 text-[10px] xs:text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full ml-1">
@@ -509,6 +561,12 @@ function DocumentCard({ document, type = 'additional' }) {
             <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full bg-slate-100 text-slate-600 text-[9px] xs:text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">
               {type === 'exam' ? `Form ${document.form}` : document.term || 'General'}
             </span>
+            
+            {/* File type badge */}
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[9px] xs:text-[10px] sm:text-xs font-medium">
+              {getFileType()}
+            </span>
+            
             {document.uploadDate && (
               <span className="inline-flex items-center text-gray-400 text-[9px] xs:text-[10px] sm:text-xs font-medium">
                 <FiCalendar className="mr-0.5 text-xs" />
@@ -532,17 +590,36 @@ function DocumentCard({ document, type = 'additional' }) {
         </div>
       )}
 
-      {/* Action Button */}
+      {/* Action Button - Updated with proper PDF handling */}
       <div className="mt-3 sm:mt-4">
-        <a
-          href={document.pdf || document.filepath}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1 sm:gap-2 w-full py-2 px-3 sm:py-2.5 sm:px-4 bg-gray-900 hover:bg-blue-600 text-white rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 shadow-md hover:shadow-blue-500/25 active:scale-[0.98]"
-        >
-          <span>View Document</span>
-          <FiExternalLink className="text-xs sm:text-sm" />
-        </a>
+        {isPdf ? (
+          // For PDFs: Open in new tab with proper Cloudinary flags
+          <button
+            onClick={() => {
+              // Force PDF to open in browser tab
+              const pdfWindow = window.open();
+              if (pdfWindow) {
+                pdfWindow.location.href = displayUrl;
+              }
+            }}
+            className="flex items-center justify-center gap-1 sm:gap-2 w-full py-2 px-3 sm:py-2.5 sm:px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 shadow-md hover:shadow-rose-500/25 active:scale-[0.98]"
+          >
+            <FiEye className="text-xs sm:text-sm" />
+            <span>View PDF</span>
+          </button>
+        ) : (
+          // For non-PDF files (DOCX, etc.)
+          <a
+            href={displayUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={!isPdf} // Download for non-PDF files
+            className="flex items-center justify-center gap-1 sm:gap-2 w-full py-2 px-3 sm:py-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 shadow-md hover:shadow-blue-500/25 active:scale-[0.98]"
+          >
+            <FiDownload className="text-xs sm:text-sm" />
+            <span>Download File</span>
+          </a>
+        )}
       </div>
     </div>
   );
@@ -704,74 +781,121 @@ export default function ModernResultsView({
     return ['all', ...years];
   }, [transformedResults]);
 
-  // Process exam results from documentData API
-  const prioritizedExamResults = useMemo(() => {
-    if (!documentData) return [];
-    
-    const results = [];
-    const studentForm = student?.form?.replace('Form ', '') || '4';
-    
-    // Map Form results
-    const formResults = [
-      { key: 'form1ResultsPdf', form: '1', name: 'Form 1 Results', priority: 1 },
-      { key: 'form2ResultsPdf', form: '2', name: 'Form 2 Results', priority: 2 },
-      { key: 'form3ResultsPdf', form: '3', name: 'Form 3 Results', priority: 3 },
-      { key: 'form4ResultsPdf', form: '4', name: 'Form 4 Results', priority: 4 }
-    ];
-    
-    formResults.forEach(({ key, form, name, priority }) => {
-      if (documentData[key]) {
-        results.push({
-          name: documentData[`${key.split('Pdf')[0]}PdfName`] || name,
-          pdf: documentData[key],
-          form: form,
-          type: 'exam',
-          priority: form === studentForm ? 0 : priority,
-          description: documentData[`form${form}ResultsDescription`],
-          year: documentData[`form${form}ResultsYear`],
-          term: documentData[`form${form}ResultsTerm`],
-          size: documentData[`form${form}ResultsPdfSize`],
-          uploadDate: documentData[`form${form}ResultsUploadDate`]
-        });
-      }
+// Process exam results from documentData API - FIXED VERSION
+const prioritizedExamResults = useMemo(() => {
+  if (!documentData) return [];
+  
+  const results = [];
+  const studentForm = student?.form?.replace('Form ', '') || '4';
+  
+  // Map Form results - FIXED field names
+  const formResults = [
+    { key: 'form1ResultsPdf', form: '1', name: 'Form 1 Results', priority: 1 },
+    { key: 'form2ResultsPdf', form: '2', name: 'Form 2 Results', priority: 2 },
+    { key: 'form3ResultsPdf', form: '3', name: 'Form 3 Results', priority: 3 },
+    { key: 'form4ResultsPdf', form: '4', name: 'Form 4 Results', priority: 4 }
+  ];
+  
+  formResults.forEach(({ key, form, name, priority }) => {
+    if (documentData[key]) {
+      // FIXED: Get the correct field names from your JSON structure
+      const formKey = `form${form}Results`;
+      results.push({
+        name: documentData[`${formKey}PdfName`] || name, // FIXED: Was using wrong field name
+        pdf: documentData[key],
+        form: form,
+        type: 'exam',
+        priority: form === studentForm ? 0 : priority,
+        description: documentData[`${formKey}Description`],
+        year: documentData[`${formKey}Year`],
+        term: documentData[`${formKey}Term`],
+        size: documentData[`${formKey}PdfSize`],
+        uploadDate: documentData[`${formKey}UploadDate`]
+      });
+    }
+  });
+  
+  // Add Mock Exams - FIXED field names
+  if (documentData.mockExamsResultsPdf) {
+    results.push({
+      name: documentData.mockExamsPdfName || 'Mock Exams Results',
+      pdf: documentData.mockExamsResultsPdf,
+      form: '4',
+      type: 'exam',
+      priority: 5,
+      description: documentData.mockExamsDescription,
+      year: documentData.mockExamsYear,
+      term: documentData.mockExamsTerm,
+      size: documentData.mockExamsPdfSize,
+      uploadDate: documentData.mockExamsUploadDate
     });
-    
-    // Add Mock Exams
-    if (documentData.mockExamsResultsPdf) {
-      results.push({
-        name: documentData.mockExamsPdfName || 'Mock Exams Results',
-        pdf: documentData.mockExamsResultsPdf,
-        form: '4', // Usually Form 4
-        type: 'exam',
-        priority: 5,
-        description: documentData.mockExamsDescription,
-        year: documentData.mockExamsYear,
-        term: documentData.mockExamsTerm,
-        size: documentData.mockExamsPdfSize,
-        uploadDate: documentData.mockExamsUploadDate
-      });
-    }
-    
-    // Add KCSE Results
-    if (documentData.kcseResultsPdf) {
-      results.push({
-        name: documentData.kcsePdfName || 'KCSE Results',
-        pdf: documentData.kcseResultsPdf,
-        form: '4', // KCSE is for Form 4
-        type: 'exam',
-        priority: 6,
-        description: documentData.kcseDescription,
-        year: documentData.kcseYear,
-        term: documentData.kcseTerm,
-        size: documentData.kcsePdfSize,
-        uploadDate: documentData.kcseUploadDate
-      });
-    }
-    
-    // Sort by priority (student's own form first, then others)
-    return results.sort((a, b) => a.priority - b.priority);
-  }, [documentData, student]);
-
+  }
+  
+  // Add KCSE Results - FIXED field names
+  if (documentData.kcseResultsPdf) {
+    results.push({
+      name: documentData.kcsePdfName || 'KCSE Results',
+      pdf: documentData.kcseResultsPdf,
+      form: '4',
+      type: 'exam',
+      priority: 6,
+      description: documentData.kcseDescription,
+      year: documentData.kcseYear,
+      term: documentData.kcseTerm,
+      size: documentData.kcsePdfSize,
+      uploadDate: documentData.kcseUploadDate
+    });
+  }
+  
+  // Also add other school documents (curriculum, fees, admission)
+  if (documentData.curriculumPDF) {
+    results.push({
+      name: documentData.curriculumPdfName || 'School Curriculum',
+      pdf: documentData.curriculumPDF,
+      form: 'all',
+      type: 'curriculum',
+      priority: 7,
+      description: documentData.curriculumDescription,
+      year: documentData.curriculumYear,
+      term: documentData.curriculumTerm,
+      size: documentData.curriculumPdfSize,
+      uploadDate: documentData.curriculumPdfUploadDate
+    });
+  }
+  
+  if (documentData.feesBoardingDistributionPdf) {
+    results.push({
+      name: documentData.feesBoardingPdfName || 'Boarding Fees Distribution',
+      pdf: documentData.feesBoardingDistributionPdf,
+      form: 'all',
+      type: 'fees',
+      priority: 8,
+      description: documentData.feesBoardingDescription,
+      year: documentData.feesBoardingYear,
+      term: documentData.feesBoardingTerm,
+      size: documentData.feesBoardingPdfSize,
+      uploadDate: documentData.feesBoardingPdfUploadDate
+    });
+  }
+  
+  if (documentData.admissionFeePdf) {
+    results.push({
+      name: documentData.admissionFeePdfName || 'Admission Fees',
+      pdf: documentData.admissionFeePdf,
+      form: 'all',
+      type: 'admission',
+      priority: 9,
+      description: documentData.admissionFeeDescription,
+      year: documentData.admissionFeeYear,
+      term: documentData.admissionFeeTerm,
+      size: documentData.admissionFeePdfSize,
+      uploadDate: documentData.admissionFeePdfUploadDate
+    });
+  }
+  
+  // Sort by priority (student's own form first, then others)
+  return results.sort((a, b) => a.priority - b.priority);
+}, [documentData, student]);
   // Process additional documents from documentData API
   const additionalResultsFiles = useMemo(() => {
     if (!documentData?.additionalDocuments) return [];
@@ -1068,12 +1192,31 @@ export default function ModernResultsView({
                             key={index} 
                             className={`grid grid-cols-12 gap-1 sm:gap-2 px-2 sm:px-3 md:px-6 py-2 sm:py-3 hover:bg-gray-50 transition-colors ${isStudentResult ? 'bg-blue-50' : ''}`}
                           >
-                            <div className="col-span-3">
-                              <div className="font-bold text-gray-900 text-xs sm:text-sm truncate">{result.admissionNumber}</div>
-                              {isStudentResult && (
-                                <div className="text-blue-600 text-[10px] xs:text-xs font-semibold truncate">You</div>
-                              )}
-                            </div>
+<div className="col-span-3 flex flex-col items-start gap-0.5">
+  <div className="flex items-center gap-2 max-w-full">
+    <div className="font-black text-slate-900 text-xs sm:text-sm tracking-tight truncate">
+      {result.admissionNumber}
+    </div>
+    
+    {isStudentResult && (
+      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] xs:text-[11px] font-black uppercase tracking-wider rounded-md border border-blue-100 leading-none">
+        You
+      </span>
+    )}
+  </div>
+
+  {/* Action Button: Styled as a modern text link */}
+  <button
+    onClick={() => handleViewSubjects(result)}
+    className="group flex items-center gap-1 mt-0.5 text-[11px] sm:text-xs text-blue-600 hover:text-blue-700 font-bold transition-all"
+  >
+    <span className="border-b border-blue-600/30 group-hover:border-blue-700 transition-colors">
+      View Results
+    </span>
+    <FiArrowRight  size={12} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+  </button>
+</div>
+
                             <div className="col-span-3">
                               <div className="font-bold text-gray-900 text-xs sm:text-sm truncate">{result.term}</div>
                               <div className="text-gray-600 text-[10px] xs:text-xs truncate">{result.academicYear}</div>
