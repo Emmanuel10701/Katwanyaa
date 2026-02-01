@@ -66,28 +66,28 @@ export default function ModernFooter() {
   const socialLinks = [
     {
       icon: SiFacebook,
-      href: 'https://facebook.com/maryimmaculategirls',
+      href: 'https://facebook.com/katwanyaahighschool',
       label: 'Facebook',
       color: '#1877F2', // Facebook blue
       hoverColor: '#0A5CD0'
     },
     {
       icon: SiX,
-      href: 'https://twitter.com/maryimmaculategirls',
+      href: 'https://twitter.com/katwanyaahighschool',
       label: 'Twitter',
       color: '#000000', // Twitter black
       hoverColor: '#333333'
     },
     {
       icon: SiYoutube,
-      href: 'https://youtube.com/maryimmaculategirls',
+      href: 'https://youtube.com/katwanyaahighschool',
       label: 'YouTube',
       color: '#FF0000', // YouTube red
       hoverColor: '#CC0000'
     },
     {
       icon: SiLinkedin,
-      href: 'https://linkedin.com/school/maryimmaculategirls',
+      href: 'https://linkedin.com/school/katwanyaahighschool',
       label: 'LinkedIn',
       color: '#0A66C2', // LinkedIn blue
       hoverColor: '#004182'
@@ -217,7 +217,7 @@ export default function ModernFooter() {
               <div className="flex flex-col xs:flex-row items-start gap-4">
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-white flex-shrink-0 shadow-sm">
                   <img 
-                    src="/ll.png" 
+                    src="/katz.png" 
                     alt="School Logo" 
                     className="w-full h-full object-cover"
                   />
@@ -440,7 +440,7 @@ export default function ModernFooter() {
           <div className="mt-12 lg:mt-16 pt-8 border-t border-gray-700">
             <div className="flex flex-col gap-6 w-full">
               <div className="text-gray-300 text-sm font-normal text-center break-words px-4">
-                <p>© {currentYear} Mary Immaculate Girls Secondary School, Matungulu Machakos. All rights reserved.</p>
+                <p>© {currentYear} Katwanyaa High School, Matungulu Machakos. All rights reserved.</p>
               </div>
 
               <div className="flex items-center justify-center gap-4 sm:gap-6 text-sm font-normal flex-wrap">
