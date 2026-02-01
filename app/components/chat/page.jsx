@@ -535,6 +535,7 @@ ${documentData?.kcseResultsPdf ? `**KCSE Examination Results:**
 • Download KCSE results: ${documentData.kcsePdfName || 'KCSE Results'}
 • Year: ${documentData.kcseYear || 'Latest'}
 • Description: ${documentData.kcseDescription || 'National Examination Results'}` : '**Examination Results:** Available upon request'}
+
 **Sports Achievements:**
 • County and regional championships
 • Athletics medals
@@ -559,30 +560,7 @@ ${documentData?.kcseResultsPdf ? `**KCSE Examination Results:**
           url: documentData.form1ResultsPdf,
           icon: 'download' 
         }] : []),
-        ...(documentData?.form2ResultsPdf ? [{ 
-          label: 'Form 2 Results', 
-          action: 'download', 
-          url: documentData.form2ResultsPdf,
-          icon: 'download' 
-        }] : []),
-        ...(documentData?.form3ResultsPdf ? [{ 
-          label: 'Form 3 Results', 
-          action: 'download', 
-          url: documentData.form3ResultsPdf,
-          icon: 'download' 
-        }] : []),
-        ...(documentData?.form4ResultsPdf ? [{ 
-          label: 'Form 4 Results', 
-          action: 'download', 
-          url: documentData.form4ResultsPdf,
-          icon: 'download' 
-        }] : []),
-        ...(documentData?.mockExamsResultsPdf ? [{ 
-          label: 'Mock Exams', 
-          action: 'download', 
-          url: documentData.mockExamsResultsPdf,
-          icon: 'download' 
-        }] : [])
+       
       ]
     },
     contact: {
