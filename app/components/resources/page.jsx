@@ -806,26 +806,28 @@ function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSe
   )
 }
 
-// Modern Resource Modal Component (Create/Edit) - WITH MULTIPLE FILE SUPPORT
+
 function ModernResourceModal({ onClose, onSave, resource, loading }) {
- // At the top of ModernResourceModal component, make sure you have:
-const [formData, setFormData] = useState({
-  title: resource?.title || '',
-  description: resource?.description || '',
-  subject: resource?.subject || '',
-  className: resource?.className || '',
-  teacher: resource?.teacher || '',
-  category: resource?.category || 'General',
-  accessLevel: resource?.accessLevel || 'student',
-  uploadedBy: resource?.uploadedBy || 'Admin',
-  isActive: resource?.isActive ?? true
-});
+  const [formData, setFormData] = useState({
+    title: resource?.title || '',
+    description: resource?.description || '',
+    subject: resource?.subject || '',
+    className: resource?.className || '',
+    teacher: resource?.teacher || '',
+    category: resource?.category || 'General',
+    accessLevel: resource?.accessLevel || 'student',
+    uploadedBy: resource?.uploadedBy || 'Admin',
+    isActive: resource?.isActive ?? true
+  });
 
-const [files, setFiles] = useState([]); // New files to upload
-const [existingFiles, setExistingFiles] = useState([]); // Existing files from resource
-const [filesToRemove, setFilesToRemove] = useState([]); // Files to delete
+  // File states
+  const [files, setFiles] = useState([]); // New files to upload
+  const [existingFiles, setExistingFiles] = useState([]); // Existing files from resource
+  const [filesToRemove, setFilesToRemove] = useState([]); // Files to delete
+  const [totalSizeMB, setTotalSizeMB] = useState(0); // Total file size in MB
+  const [fileSizeError, setFileSizeError] = useState(''); // Size error message
 
-// Add this useEffect to properly initialize existingFiles
+// ✅ THIS IS ALREADY IN ModernResourceModal (lines 1139-1163):
 useEffect(() => {
   if (resource?.files) {
     try {
@@ -852,6 +854,17 @@ useEffect(() => {
     }
   }
 }, [resource]);
+  // Disable submit button based on conditions
+  const isSubmitDisabled = 
+    loading || 
+    !formData.title.trim() || 
+    !formData.subject || 
+    !formData.className || 
+    !formData.teacher ||
+    (files.length === 0 && existingFiles.length === 0 && !resource) ||
+    totalSizeMB > 4.5 ||
+    fileSizeError;
+
   // Class options
   const classOptions = [
     'Form 1',
@@ -894,7 +907,86 @@ useEffect(() => {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const newFiles = selectedFiles.map(file => ({
+    
+    if (selectedFiles.length === 0) return;
+    
+    // Calculate current total size of new files
+    let currentTotalBytes = 0;
+    files.forEach(fileObj => {
+      if (fileObj.file && fileObj.file.size) {
+        currentTotalBytes += fileObj.file.size;
+      }
+    });
+    
+    // Calculate current total size of existing files (not marked for removal)
+    let existingTotalBytes = 0;
+    existingFiles.forEach((file) => {
+      if (!filesToRemove.includes(file.url)) {
+        existingTotalBytes += file.size || 0;
+      }
+    });
+    
+    // Calculate total current size
+    const currentTotalBytesAll = currentTotalBytes + existingTotalBytes;
+    
+    // Filter and validate new files
+    const validFiles = selectedFiles.filter(file => {
+      if (!file || !file.type) {
+        return false;
+      }
+      
+      // Check file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'video/mp4',
+        'audio/mpeg'
+      ];
+      
+      const isValidType = allowedTypes.some(type => file.type.startsWith(type.split('/')[0]));
+      const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB per file
+      
+      return isValidType && isValidSize;
+    });
+
+    if (validFiles.length === 0) {
+      alert('Please select valid files (max 10MB each, supported formats: PDF, DOC, PPT, XLS, Images, Videos, Audio)');
+      return;
+    }
+
+
+
+    // Calculate new total size if we add these files
+    let newFilesTotalBytes = 0;
+    validFiles.forEach(file => {
+      newFilesTotalBytes += file.size;
+    });
+
+    const newTotalBytes = currentTotalBytesAll + newFilesTotalBytes;
+    const newTotalMB = newTotalBytes / (1024 * 1024);
+    const VERCEL_LIMIT_MB = 4.5;
+
+    // Check Vercel total size limit
+    if (newTotalMB > VERCEL_LIMIT_MB) {
+      const availableSpace = VERCEL_LIMIT_MB - (currentTotalBytesAll / (1024 * 1024));
+      alert(
+        `Cannot add these files. Available space: ${availableSpace.toFixed(1)}MB\n` +
+        `Total would be: ${newTotalMB.toFixed(1)}MB (Limit: ${VERCEL_LIMIT_MB}MB)`
+      );
+      e.target.value = '';
+      return;
+    }
+
+    // Create file objects
+    const newFiles = validFiles.map(file => ({
       file,
       name: file.name,
       size: file.size,
@@ -902,89 +994,105 @@ useEffect(() => {
       preview: URL.createObjectURL(file),
       isExisting: false
     }));
+    
     setFiles(prev => [...prev, ...newFiles]);
     e.target.value = '';
   };
 
-const removeFile = (index, isExisting = false) => {
-  if (isExisting) {
-    const file = existingFiles[index];
-    if (file?.url) {
-      setFilesToRemove(prev => [...prev, file.url]);
-    }
-    setExistingFiles(prev => prev.filter((_, i) => i !== index));
-  } else {
-    // Remove preview URL if it exists
-    if (files[index]?.preview) {
-      URL.revokeObjectURL(files[index].preview);
-    }
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  }
-};
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  // Validate required fields
-  if (!formData.title.trim() || !formData.subject || !formData.className || !formData.teacher) {
-    alert('Please fill in all required fields');
-    return;
-  }
-  
-  if (files.length === 0 && existingFiles.length === 0 && !resource) {
-    alert('Please upload at least one file');
-    return;
-  }
-
-  // Create FormData for submission
-  const formDataToSend = new FormData();
-  
-  // Add form data
-  Object.keys(formData).forEach(key => {
-    if (key === 'isActive') {
-      formDataToSend.append(key, formData[key] ? 'true' : 'false');
+  const removeFile = (index, isExisting = false) => {
+    if (isExisting) {
+      const file = existingFiles[index];
+      if (file?.url) {
+        setFilesToRemove(prev => [...prev, file.url]);
+      }
+      setExistingFiles(prev => prev.filter((_, i) => i !== index));
     } else {
-      formDataToSend.append(key, formData[key]);
+      // Remove preview URL if it exists
+      if (files[index]?.preview) {
+        URL.revokeObjectURL(files[index].preview);
+      }
+      setFiles(prev => prev.filter((_, i) => i !== index));
     }
-  });
+  };
 
-  // Add action type
-  formDataToSend.append('action', 'update');
-
-  // Handle files for CREATE vs UPDATE
-  if (resource) {
-// When preparing existing files for the update:
-const filesToKeep = existingFiles
-  .filter(file => !filesToRemove.some(url => url === file.url))
-  .map(file => {
-    // Ensure file has required properties
-    return {
-      url: file.url || '',
-      name: file.name || 'Unknown File',
-      size: file.size || 0,
-      extension: file.extension || file.name?.split('.').pop()?.toLowerCase() || 'unknown',
-      uploadedAt: file.uploadedAt || new Date().toISOString()
-    };
-  });
-
-if (filesToKeep.length > 0) {
-  formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
-}
-    // Add files to remove
-    if (filesToRemove.length > 0) {
-      formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.title.trim() || !formData.subject || !formData.className || !formData.teacher) {
+      alert('Please fill in all required fields');
+      return;
     }
-  }
-
-  // Add new files (for both CREATE and UPDATE)
-  files.forEach(fileObj => {
-    if (fileObj.file && !fileObj.isExisting) {
-      formDataToSend.append('files', fileObj.file);
+    
+    if (files.length === 0 && existingFiles.length === 0 && !resource) {
+      alert('Please upload at least one file');
+      return;
     }
-  });
 
-  await onSave(formDataToSend, resource?.id);
-};
+    // Check Vercel size limit before proceeding
+    const VERCEL_LIMIT_MB = 4.5;
+    if (totalSizeMB > VERCEL_LIMIT_MB) {
+      alert(`Total file size (${totalSizeMB.toFixed(1)}MB) exceeds Vercel's ${VERCEL_LIMIT_MB}MB limit. Please remove some files.`);
+      return;
+    }
+
+    // Calculate total size for API validation (optional extra check)
+    let apiTotalBytes = 0;
+    files.forEach(fileObj => {
+      if (fileObj.file && fileObj.file.size) {
+        apiTotalBytes += fileObj.file.size;
+      }
+    });
+    const apiTotalMB = apiTotalBytes / (1024 * 1024);
+    
+    if (apiTotalMB > VERCEL_LIMIT_MB) {
+      alert(`New files total (${apiTotalMB.toFixed(1)}MB) exceeds limit. Please reduce file sizes.`);
+      return;
+    }
+
+    // Create FormData for submission
+    const formDataToSend = new FormData();
+    
+    // Add form data
+    Object.keys(formData).forEach(key => {
+      if (key === 'isActive') {
+        formDataToSend.append(key, formData[key] ? 'true' : 'false');
+      } else {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
+
+    // Add action type
+    formDataToSend.append('action', 'update');
+
+    // Handle files for CREATE vs UPDATE
+    if (resource) {
+      // Filter out files marked for removal
+      const filesToKeep = existingFiles.filter(file => !filesToRemove.includes(file.url));
+      
+      if (filesToKeep.length > 0) {
+        formDataToSend.append('existingFiles', JSON.stringify(filesToKeep));
+      }
+      
+      // Add files to remove
+      if (filesToRemove.length > 0) {
+        formDataToSend.append('filesToRemove', JSON.stringify(filesToRemove));
+      }
+    }
+
+    // Add new files (for both CREATE and UPDATE)
+    files.forEach(fileObj => {
+      if (fileObj.file && !fileObj.isExisting) {
+        formDataToSend.append('files', fileObj.file);
+      }
+    });
+
+    // Add size validation info (optional, for backend to double-check)
+    formDataToSend.append('totalSizeMB', totalSizeMB.toString());
+    formDataToSend.append('vercelLimit', '4.5');
+
+    await onSave(formDataToSend, resource?.id);
+  };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -1035,6 +1143,23 @@ if (filesToKeep.length > 0) {
 
         <div className="max-h-[calc(95vh-150px)] overflow-y-auto">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* File Size Warning */}
+            {fileSizeError && (
+              <div className="bg-gradient-to-r from-red-50 to-pink-100 border border-red-200 rounded-2xl p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <FiAlertCircle className="text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-red-700 text-sm font-bold">
+                      File Size Limit Exceeded!
+                    </p>
+                    <p className="text-red-600 text-xs mt-1">
+                      {fileSizeError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Title - Full Width */}
             <div>
               <label className="block text-base font-bold text-gray-800 mb-3">
@@ -1179,109 +1304,251 @@ if (filesToKeep.length > 0) {
               </div>
             </div>
 
-<div className="w-full lg:w-[75%] mx-auto flex flex-col space-y-8">
-  <section className="bg-white rounded-[32px] p-2 sm:p-4">
-    <div className="flex items-center gap-3 mb-6 px-2">
-      <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-      <label className="text-xl font-black text-slate-800 tracking-tight">
-        Upload Resources *
-      </label>
-    </div>
-
-    <div className="space-y-6">
-      {/* 1. Modern Dropzone Area */}
-      <div className="relative group">
-        <input
-          type="file"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-          id="resourceFiles"
-        />
-        <label 
-          htmlFor="resourceFiles" 
-          className="cursor-pointer w-full py-10 border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-400 transition-all flex flex-col items-center justify-center text-center px-6"
-        >
-          <div className="p-4 bg-white shadow-sm rounded-2xl mb-4 group-hover:scale-100 transition-transform">
-            <FiUpload className="text-blue-600 text-3xl" />
-          </div>
-          <p className="text-lg font-bold text-slate-800 mb-1">
-            Drag & drop files or <span className="text-blue-600">browse</span>
-          </p>
-          <p className="text-slate-500 text-sm max-w-xs">
-            PDF, DOC, PPT, XLS, Images, Videos, or Audio
-          </p>
-          <div className="mt-4 flex gap-3">
-             <span className="px-3 py-1 bg-white border border-slate-100 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-               Max 10MB
-             </span>
-          </div>
-        </label>
-      </div>
-
-      {/* 2. Uploaded Files List */}
-      {(files.length > 0 || existingFiles.length > 0) && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">
-              Selected Assets ({files.length + existingFiles.length})
-            </h4>
-          </div>
-
-          <div className="grid gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-            {/* New Files Segment */}
-            {files.map((fileObj, index) => (
-              <div key={`new-${index}`} className="group flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 hover:shadow-sm transition-all">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
-                    <FiFileText className="text-emerald-600 text-lg" />
+            {/* File Upload Section */}
+            <div className="w-full lg:w-[75%] mx-auto flex flex-col space-y-8">
+              <section className="bg-white rounded-[32px] p-2 sm:p-4">
+                <div className="flex items-center justify-between gap-3 mb-6 px-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                    <label className="text-xl font-black text-slate-800 tracking-tight">
+                      Upload Resources *
+                    </label>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-700 truncate">{fileObj.name}</p>
-                    <p className="text-emerald-600 text-[11px] font-bold uppercase tracking-wider">
-                      Ready to Upload • {formatFileSize(fileObj.size)}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className={`text-xs font-bold px-3 py-1.5 rounded-full ${
+                      totalSizeMB > 4.5 
+                        ? 'bg-gradient-to-r from-red-100 to-pink-100 text-red-700' 
+                        : totalSizeMB > 3.5
+                        ? 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700'
+                        : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700'
+                    }`}>
+                      {totalSizeMB.toFixed(1)} / 4.5 MB
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index, false)}
-                  className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                >
-                  <FiX className="text-lg" />
-                </button>
-              </div>
-            ))}
 
-            {/* Existing Files Segment */}
-            {existingFiles.map((file, index) => (
-              <div key={`exist-${index}`} className="group flex items-center justify-between p-4 bg-blue-50/30 border border-blue-100 rounded-2xl hover:shadow-sm transition-all">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-                    <FiFileText className="text-white text-lg" />
+                {/* Vercel Size Warning */}
+                {totalSizeMB > 4.5 && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-pink-100 border border-red-200 rounded-2xl">
+                    <div className="flex items-start gap-3">
+                      <FiAlertCircle className="text-red-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-red-700 text-sm font-bold">
+                          Vercel Size Limit Exceeded!
+                        </p>
+                        <p className="text-red-600 text-xs mt-1">
+                          Total file size ({totalSizeMB.toFixed(1)}MB) exceeds the 4.5MB limit. 
+                          Remove files to continue.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // Remove all files
+                          setFiles([]);
+                          setFilesToRemove([]);
+                        }}
+                        className="text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-red-200 to-pink-200 text-red-700 hover:from-red-300 hover:to-pink-300 transition-all"
+                      >
+                        Clear All
+                      </button>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-700 truncate">{file.name || 'Cloud Resource'}</p>
-                    <p className="text-blue-600 text-[11px] font-bold uppercase tracking-wider">
-                      Stored in Cloud • {formatFileSize(file.size)}
-                    </p>
+                )}
+
+                {/* Size Progress Bar */}
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Storage Used</span>
+                    <span className="font-bold">{totalSizeMB.toFixed(1)}MB / 4.5MB</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full transition-all duration-300 ${
+                        totalSizeMB > 4.5 
+                          ? 'bg-gradient-to-r from-red-500 to-pink-500' 
+                          : totalSizeMB > 3.5
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                      }`}
+                      style={{ width: `${Math.min((totalSizeMB / 4.5) * 100, 100)}%` }}
+                    />
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeFile(index, true)}
-                  className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                >
-                  <FiX className="text-lg" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  </section>
-</div>
+
+                <div className="space-y-6">
+                  {/* Modern Dropzone Area */}
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="resourceFiles"
+                      disabled={totalSizeMB > 4.5}
+                    />
+                    <label 
+                      htmlFor="resourceFiles" 
+                      className={`cursor-pointer w-full py-10 border-2 border-dashed rounded-[24px] flex flex-col items-center justify-center text-center px-6 transition-all ${
+                        totalSizeMB > 4.5
+                          ? 'border-red-300 bg-red-50/30 opacity-60'
+                          : 'border-slate-200 bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-400'
+                      }`}
+                    >
+                      <div className={`p-4 rounded-2xl mb-4 transition-transform ${
+                        totalSizeMB > 4.5 
+                          ? 'bg-red-100' 
+                          : 'bg-white shadow-sm group-hover:scale-100'
+                      }`}>
+                        <FiUpload className={`text-3xl ${
+                          totalSizeMB > 4.5 ? 'text-red-600' : 'text-blue-600'
+                        }`} />
+                      </div>
+                      <p className={`text-lg font-bold mb-1 ${
+                        totalSizeMB > 4.5 ? 'text-red-800' : 'text-slate-800'
+                      }`}>
+                        {totalSizeMB > 4.5 ? 'Storage Full' : 'Drag & drop files or browse'}
+                      </p>
+                      <p className="text-slate-500 text-sm max-w-xs mb-3">
+                        {totalSizeMB > 4.5 
+                          ? 'Remove files to free up space' 
+                          : 'PDF, DOC, PPT, XLS, Images, Videos, or Audio'
+                        }
+                      </p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                          totalSizeMB > 4.5
+                            ? 'bg-red-100 text-red-700 border border-red-200'
+                            : 'bg-white border border-slate-100 text-slate-400'
+                        }`}>
+                          Max 10MB per file
+                        </span>
+                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                          totalSizeMB > 4.5
+                            ? 'bg-red-100 text-red-700 border border-red-200'
+                            : 'bg-white border border-slate-100 text-slate-400'
+                        }`}>
+                          Total: 4.5MB limit
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Uploaded Files List */}
+                  {(files.length > 0 || existingFiles.length > 0) && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">
+                          Selected Assets ({files.length + existingFiles.length - filesToRemove.length})
+                        </h4>
+                        {totalSizeMB > 4.5 && (
+                          <button
+                            onClick={() => {
+                              setFiles([]);
+                              setFilesToRemove([]);
+                            }}
+                            className="text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-red-200 to-pink-200 text-red-700"
+                          >
+                            Clear All
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                        {/* New Files Segment */}
+                        {files.map((fileObj, index) => {
+                          const fileSizeMB = fileObj.size ? (fileObj.size / (1024 * 1024)).toFixed(1) : 0;
+                          
+                          return (
+                            <div key={`new-${index}`} className={`group flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                              totalSizeMB > 4.5
+                                ? 'bg-red-50/50 border-red-200'
+                                : 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-sm'
+                            }`}>
+                              <div className="flex items-center gap-4 min-w-0">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                  parseFloat(fileSizeMB) > 3
+                                    ? 'bg-red-100 text-red-600'
+                                    : parseFloat(fileSizeMB) > 1
+                                    ? 'bg-amber-100 text-amber-600'
+                                    : 'bg-emerald-100 text-emerald-600'
+                                }`}>
+                                  <FiFileText className="text-lg" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-700 truncate">
+                                    {fileObj.name}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                                      totalSizeMB > 4.5 ? 'text-red-600' : 'text-emerald-600'
+                                    }`}>
+                                      Ready to Upload • {fileSizeMB}MB
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index, false)}
+                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                              >
+                                <FiX className="text-lg" />
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                        {/* Existing Files Segment */}
+                        {existingFiles.map((file, index) => {
+                          if (filesToRemove.includes(file.url)) return null;
+                          
+                          const fileSizeMB = file.size ? (file.size / (1024 * 1024)).toFixed(1) : 0;
+                          
+                          return (
+                            <div key={`exist-${index}`} className={`group flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                              totalSizeMB > 4.5
+                                ? 'bg-red-50/30 border-red-200'
+                                : 'bg-blue-50/30 border-blue-100 hover:shadow-sm'
+                            }`}>
+                              <div className="flex items-center gap-4 min-w-0">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                  parseFloat(fileSizeMB) > 3
+                                    ? 'bg-red-600 text-white'
+                                    : parseFloat(fileSizeMB) > 1
+                                    ? 'bg-amber-600 text-white'
+                                    : 'bg-blue-600 text-white'
+                                }`}>
+                                  <FiFileText className="text-lg" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-700 truncate">
+                                    {file.name || 'Cloud Resource'}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                                      totalSizeMB > 4.5 ? 'text-red-600' : 'text-blue-600'
+                                    }`}>
+                                      Stored in Cloud • {fileSizeMB}MB
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index, true)}
+                                className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                              >
+                                <FiX className="text-lg" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
 
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
@@ -1296,8 +1563,8 @@ if (filesToKeep.length > 0) {
               
               <button 
                 type="submit"
-                disabled={loading}
-                className="px-6 py-3 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-sm"
+                disabled={isSubmitDisabled}
+                className="px-6 py-3 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-sm hover:from-blue-700 hover:to-cyan-700 transition-all"
               >
                 {loading ? (
                   <>
@@ -1318,6 +1585,9 @@ if (filesToKeep.length > 0) {
     </Modal>
   );
 }
+  
+
+
 
 // Main Resources Manager Component
 export default function ResourcesManager() {
@@ -1342,13 +1612,13 @@ export default function ResourcesManager() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [stats, setStats] = useState(null);
-  
+
   // NEW: Bulk delete states
   const [selectedResources, setSelectedResources] = useState(new Set());
   const [deleteType, setDeleteType] = useState('single');
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Notification state
   const [notification, setNotification] = useState({
     open: false,
@@ -1437,6 +1707,8 @@ export default function ResourcesManager() {
       message
     });
   };
+
+
 
   // Map API data to our component structure
   const mapResourceData = (apiResource) => {
@@ -1571,6 +1843,7 @@ export default function ResourcesManager() {
     fetchResources();
   }, []);
 
+
   // Filter resources
   useEffect(() => {
     let filtered = resources;
@@ -1620,6 +1893,8 @@ export default function ResourcesManager() {
     setFilteredResources(filtered);
     setCurrentPage(1);
   }, [searchTerm, selectedType, selectedSubject, selectedCategory, selectedClass, selectedAccessLevel, selectedStatus, resources]);
+
+
 
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
