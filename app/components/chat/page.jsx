@@ -135,6 +135,7 @@ Steps:
 
 **Technology Partnership:**
 • Angaza Center technology partnership
+• A.I.C  katwanyaa  Church support
 • Fully equipped computer lab
 • Internet access for all students`,
     links: [

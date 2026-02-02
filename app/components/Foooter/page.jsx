@@ -18,6 +18,8 @@ import {
   FiLock,
   FiShield,
   FiAward,
+  FiGithub,
+  
   FiTarget,
   FiBriefcase,
   FiActivity,
