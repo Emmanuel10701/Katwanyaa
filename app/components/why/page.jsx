@@ -152,14 +152,14 @@ const ModernSchoolLayout = () => {
                      <p className="text-white/70 text-xs md:text-sm font-bold uppercase tracking-wider">Matungulu, Machakos County</p>
                   </div>
                </div>
-               <div className="overflow-hidden rounded-[1.5rem] md:rounded-[1.8rem]">
-                  <img 
-                    src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1000" 
-                    className="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110" 
-                    alt="Katwanyaa  High School Tour"
-                    loading="lazy"
+             <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square">
+                       <Image
+                    src="/hero/katz4.jpeg"
+                    alt="School "
+                    fill
+                    priority
                   />
-               </div>
+                </div>
             </div>
           </div>
         </section>
