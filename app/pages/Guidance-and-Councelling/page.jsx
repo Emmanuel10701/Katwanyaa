@@ -473,11 +473,15 @@ const ModernSupportTeamCard = ({ member, onView, onContact, viewMode = 'grid' })
       >
         {/* 1. Static Image Header - EXACTLY like Event Card */}
         <div className="relative h-52 w-full shrink-0 overflow-hidden">
-          <img
-            src={member.image || '/default-avatar.jpg'}
-            alt={member.name}
-            className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
-          />
+<img
+  src={member.image || '/default-avatar.jpg'}
+  alt={member.name}
+  className="w-full h-full object-cover"
+  onError={(e) => {
+    e.target.src = '/default-avatar.jpg';
+    e.target.onerror = null; // Prevent infinite loop
+  }}
+/>
           
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -1313,7 +1317,7 @@ const fetchGuidanceSessions = async () => {
   }
 };
 
-// Fetch team members from API
+// In your fetchTeamMembers function, add URL transformation:
 const fetchTeamMembers = async () => {
   try {
     const response = await fetch('/api/guidanceteam');
@@ -1326,7 +1330,13 @@ const fetchTeamMembers = async () => {
       // Process team members to ensure image paths are complete
       return data.members.map(member => ({
         ...member,
-        image: member.image ? member.image.startsWith('/') ? member.image : `/${member.image}` : null,
+        // Fix Cloudinary URL
+        image: member.image ? 
+          member.image.replace(
+            /https:\/\/res\.cloudinary\.com\/dftzsfiqc\/image\/upload\/v\d+\/school_team\/\d+-images__\d+_\d+\.jpg/,
+            'https://res.cloudinary.com/dftzsfiqc/image/upload/w_400,h_400,c_fill,g_face/school_team/' + 
+            member.image.split('/').pop()
+          ) : null,
         isSupport: member.role === 'teacher' || member.role === 'matron' || member.role === 'patron'
       }));
     }
@@ -1337,7 +1347,6 @@ const fetchTeamMembers = async () => {
     return [];
   }
 };
-
 // Transform API data to match session format
 const transformApiDataToSessions = (apiEvents) => {
   return apiEvents.map(event => ({
@@ -1391,7 +1400,7 @@ const DEFAULT_SESSIONS = [
     priority: 'high',
     image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80',
     featured: true,
-    location: 'Katwanyaa Church'
+    location: 'Mary Immculate Girls Church'
   }
 ];
 
@@ -1584,46 +1593,6 @@ export default function StudentCounseling() {
     }
   };
 
-  // SidebarAction Component
-const SidebarAction = ({ icon: Icon, label, sub, color = 'emerald' }) => {
-  const colorClasses = {
-    red: 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20',
-    emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20',
-    teal: 'bg-teal-500/10 border-teal-500/20 text-teal-400 hover:bg-teal-500/20',
-    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
-  };
-
-  return (
-    <div className={`flex items-center gap-4 p-4 rounded-2xl border transition-colors cursor-pointer ${colorClasses[color]}`}>
-      <div className="p-2 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
-        <Icon className="text-lg" />
-      </div>
-      <div>
-        <h4 className="font-bold text-sm">{label}</h4>
-        <p className="text-white/40 text-xs">{sub}</p>
-      </div>
-    </div>
-  );
-};
-
-// StatusRow Component
-const StatusRow = ({ label, value, color = 'emerald' }) => {
-  const colorClasses = {
-    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    teal: 'text-teal-600 bg-teal-50 border-teal-100',
-    slate: 'text-slate-600 bg-slate-50 border-slate-100'
-  };
-
-  return (
-    <div className={`flex items-center justify-between p-4 rounded-xl border ${colorClasses[color]}`}>
-      <span className="font-semibold text-sm">{label}</span>
-      <span className="font-black text-xs uppercase tracking-wider px-2 py-1 rounded-lg bg-white/50 border border-white/50">
-        {value}
-      </span>
-    </div>
-  );
-};
-
   // Function to add new session from modal
   const addSessionToCalendar = (newSessionData) => {
     // Transform the new session data to match our format
@@ -1720,304 +1689,461 @@ if (loading) {
   );
 }
 
-
-const GuidanceHeroBanner = ({ stats, onRefresh }) => {
-  return (
-    <div className="relative bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 rounded-2xl md:rounded-[2.5rem] p-4 sm:p-6 md:p-10 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
-      {/* Abstract Mesh Gradient Background */}
-      <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-emerald-600/30 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-teal-600/20 rounded-full blur-[100px] pointer-events-none" />
-      
-      <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div>
-            {/* Institutional Branding */}
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <div className="h-6 sm:h-8 w-1 bg-emerald-400 rounded-full shadow-[0_0_15px_rgba(52,211,153,0.5)]" />
-              <div>
-                <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-emerald-300">
-                 Katwanyaa High School
-                </h2>
-                <p className="text-[8px] sm:text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
-                  "Guiding Future Leaders"               
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-1 sm:mb-2">
-              <div className="p-1.5 sm:p-2 md:p-3 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl md:rounded-2xl border border-white/10 w-fit">
-                <FiUsers className="text-xl sm:text-2xl md:text-3xl text-emerald-300 drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              </div>
-              <h1 className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-                Guidance & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-teal-200">Counseling</span>
-              </h1>
-            </div>
-          </div>
-          
-          {/* Modern Action Button */}
-          <button
-            onClick={onRefresh}
-            className="flex items-center justify-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-xl border border-white/20 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm tracking-wide transition-all hover:bg-white/20 w-full sm:w-fit"
-          >
-            <FiBookOpen className="text-base sm:text-lg" />
-            <span>SCHEDULE SESSION</span>
-          </button>
-        </div>
-        
-        {/* Summary Text */}
-        <div className="mb-6 sm:mb-8">
-          <p className="text-emerald-100/80 text-sm sm:text-base md:text-md font-medium leading-relaxed">
-            Get personalized support from <span className="text-white font-bold underline decoration-emerald-500/50 decoration-2 underline-offset-4">{stats.counselors || 5} certified counselors</span> 
-            across <span className="text-white font-bold underline decoration-teal-500/50 decoration-2 underline-offset-4 mx-1 sm:mx-2">{stats.specialties || 8} specialties</span> 
-            to navigate academic and personal growth. This month: <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-0.5 md:px-2.5 md:py-0.5 rounded-md sm:rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/20 mx-1">{stats.availableSlots || 24} available slots</span>.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 p-4 md:p-6">
       <Toaster position="top-right" richColors />
-<div className="max-w-7xl mx-auto space-y-8">
-  {/* Header - Overhauled with Emerald Branding */}
-  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
-    <div>
-      <div className="inline-flex items-center gap-3 px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100 mb-4 shadow-sm">
-        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-emerald-800 font-black text-xs uppercase tracking-[0.2em]">
-          Katwanyaa High Support
-        </span>
-      </div>
-      <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight mb-3">
-        Guidance & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Counseling</span>
-      </h1>
-      <p className="text-slate-500 text-lg max-w-2xl font-medium leading-relaxed">
-        Empowering students through <span className="text-emerald-600 font-bold">academic excellence</span>, emotional resilience, and spiritual growth.
-      </p>
-    </div>
-    
-    <div className="flex items-center gap-4">
-      <button
-        onClick={refreshData}
-        disabled={refreshing}
-        className="inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white text-emerald-900 border-2 border-emerald-50 font-black text-sm shadow-xl shadow-emerald-900/5 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-      >
-        {refreshing ? (
-          <CircularProgress size={18} thickness={6} sx={{ color: "#059669" }} />
-        ) : <FiZap className="text-emerald-500" />}
-        <span className="tracking-widest uppercase">{refreshing ? "Syncing..." : "Refresh"}</span>
-      </button>
       
-      <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
-        <button
-          onClick={() => setViewMode('grid')}
-          className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          <FiGrid size={20} />
-        </button>
-        <button
-          onClick={() => setViewMode('list')}
-          className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white text-emerald-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          <FiList size={20} />
-        </button>
-      </div>
-    </div>
-  </div>
-
-  {/* Dynamic Stats - Emerald Themed */}
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-    {stats.map((stat, index) => (
-      <ModernStatCard key={index} stat={stat} color="emerald" />
-    ))}
-  </div>
-
-  {/* 24/7 Support Team Section - Refined Glassmorphism */}
-  <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 rounded-[2.5rem] p-8 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden mb-12">
-    <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-400/10 blur-[100px] pointer-events-none" />
-    
-    <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between mb-10">
-      <div className="flex items-center gap-6">
-        <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl">
-          <FiPhoneCall className="text-emerald-300 text-3xl" />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-white tracking-tight">Support Team</h2>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-[10px] font-black bg-emerald-400 text-emerald-950 px-2 py-0.5 rounded uppercase tracking-tighter">
-              {teamMembers.length} Professionals
-            </span>
-            <span className="text-emerald-200/50 text-[10px] uppercase font-bold tracking-widest">API Endpoint Active</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    {teamMembers.length === 0 ? (
-      <div className="bg-white/5 backdrop-blur-md rounded-[2rem] p-12 text-center border border-white/10 border-dashed">
-        <FiUsers className="mx-auto text-emerald-400/30 text-5xl mb-4" />
-        <h3 className="text-lg font-bold text-white/80 tracking-widest uppercase">Initializing Team Data...</h3>
-      </div>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {teamMembers.map((member) => (
-          <ModernSupportTeamCard
-            key={member.id}
-            member={member}
-            onView={() => { setSelectedMember(member); setIsTeamModalOpen(true); }}
-            onContact={handleContactSupport}
-          />
-        ))}
-      </div>
-    )}
-  </div>
-
-  {/* Main Content Layout */}
-  <div className="flex flex-col lg:flex-row gap-10">
-    <div className="flex-1 min-w-0 space-y-8">
-      {/* Sessions Header */}
-      <div className="flex items-center gap-5 px-1">
-        <div className="p-3.5 bg-slate-900 rounded-2xl shadow-xl shadow-slate-200">
-          <FiHeart className="text-emerald-400 text-2xl" />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Counseling Sessions</h2>
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
-            {filteredSessions.length} Available Slots
-          </p>
-        </div>
-      </div>
-
-      {/* Modern Search & Filter Section */}
-      <div className="bg-white p-4 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row items-center gap-4">
-        <div className="relative w-full flex-1 group">
-          <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
-          <input
-            type="text"
-            placeholder="Search sessions or topics..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl font-bold text-slate-900 focus:outline-none focus:border-emerald-500/20 focus:bg-white transition-all"
-          />
-        </div>
-
-        <select 
-          value={activeTab}
-          onChange={(e) => setActiveTab(e.target.value)}
-          className="w-full md:w-56 px-6 py-4 bg-slate-50 border-none rounded-2xl font-black text-xs uppercase tracking-widest text-slate-600 cursor-pointer focus:ring-4 focus:ring-emerald-500/5 transition-all"
-        >
-          {categoryOptions.map((category) => (
-            <option key={category.id} value={category.id}>{category.name}</option>
-          ))}
-        </select>
-
-        <button
-          onClick={() => { setSearchTerm(''); setActiveTab('all'); }}
-          className="px-8 py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all active:scale-95"
-        >
-          Reset
-        </button>
-      </div>
-
-      {/* Sessions Grid */}
-      <div className="relative">
-        {filteredSessions.length === 0 ? (
-          <div className="bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200 py-20 text-center">
-            <FiSearch className="mx-auto text-slate-200 text-6xl mb-4" />
-            <h3 className="text-xl font-black text-slate-400 tracking-widest uppercase">No Match Found</h3>
-          </div>
-        ) : (
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : 'space-y-6'}>
-            {filteredSessions.map((session, index) => (
-              <ModernCounselingCard 
-                key={session.id || index} 
-                session={session} 
-                onView={setSelectedSession}
-                viewMode={viewMode}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* Right Column: Sidebar Actions */}
-    <div className="lg:w-[400px] space-y-6">
-      <div className="lg:sticky lg:top-8 space-y-6">
-        
-        {/* Quick Actions Card - Dark UI */}
-        <div className="bg-slate-900 rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30">
-              <FiZap className="text-emerald-400 text-2xl" />
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-full border border-purple-200 mb-3">
+              <FiHeart className="text-purple-500" />
+              <span className="text-purple-700 font-bold text-sm uppercase tracking-wider">
+                Student Support
+              </span>
             </div>
-            <h2 className="text-2xl font-black tracking-tight">Quick Actions</h2>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight mb-2">
+              Guidance & <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Counseling</span>
+            </h1>
+            <p className="text-slate-600 text-lg max-w-2xl">
+              Professional support for academic, emotional, and spiritual well-being
+            </p>
           </div>
-
-          <div className="space-y-4">
-            <SidebarAction icon={FiPhoneCall} label="Emergency" sub="Immediate Response" color="red" />
-            <SidebarAction icon={FiCalendar} label="Book Session" sub="Schedule Appointment" color="emerald" />
-            <SidebarAction icon={FiBookOpen} label="Guides" sub="Mental Health Library" color="teal" />
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={refreshData}
+              disabled={refreshing}
+              className="
+                inline-flex items-center gap-2
+                px-4 sm:px-5
+                py-2.5 sm:py-3
+                rounded-xl
+                bg-white text-slate-700
+                border border-slate-200
+                font-medium text-sm sm:text-base
+                shadow-sm
+                transition-all duration-300
+                hover:shadow-md
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+            >
+              {refreshing && (
+                <CircularProgress
+                  size={18}
+                  thickness={4}
+                  sx={{
+                    color: "#0284c7", // tailwind cyan-600
+                  }}
+                />
+              )}
+            
+              <span className="whitespace-nowrap">
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </span>
+            </button>
+            
+            <div className="flex bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-3 ${viewMode === 'grid' ? 'bg-purple-50 text-purple-600' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                <FiGrid />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-3 ${viewMode === 'list' ? 'bg-purple-50 text-purple-600' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                <FiList />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Data Source Summary - Tech Info */}
-        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-          <h4 className="font-black text-slate-900 text-sm uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">
-            System Status
-          </h4>
-          <div className="space-y-4">
-            <StatusRow label="Guidance Sessions" value={`API (${guidanceSessions.length})`} color="emerald" />
-            <StatusRow label="Support Team" value={`API (${teamMembers.length})`} color="teal" />
-            <StatusRow label="Devotion Content" value="Static" color="slate" />
-          </div>
+        {/* Dynamic Stats from Team Data */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mb-10">
+          {stats.map((stat, index) => (
+            <ModernStatCard key={index} stat={stat} />
+          ))}
         </div>
 
-        {/* Professional Ethics Banner */}
-        <div className="bg-gradient-to-br from-slate-900 to-emerald-950 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
-          <FiShield className="text-emerald-400 text-4xl mb-6" />
-          <h4 className="text-xl font-black mb-3 tracking-tight">100% Confidential</h4>
-          <p className="text-emerald-100/40 text-sm leading-relaxed mb-6 font-medium">
-            At Katwanyaa High, your privacy is our sacred trust. All sessions adhere to international counseling ethics.
-          </p>
-          <div className="space-y-3">
-            {['End-to-End Privacy', 'No Judgment Policy', 'Expert Counselors'].map((item) => (
-              <div key={item} className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-emerald-300">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                {item}
+        {/* 24/7 Support Team Section - Dynamic from API */}
+        <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-3xl p-6 md:p-8 border border-emerald-100 shadow-sm mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8">
+            <div className="flex items-center gap-4 mb-4 lg:mb-0">
+              <div className="p-3 bg-emerald-500 rounded-2xl shadow-lg">
+                <FiPhoneCall className="text-white text-2xl" />
               </div>
-            ))}
+              <div>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Guidance & Counseling Team</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  {teamMembers.length} Dedicated Professionals
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  • Fetched from /api/guidanceteam • Dynamic statistics above
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {teamMembers.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 text-center border border-emerald-100">
+              <div className="text-emerald-300 text-4xl mb-4">
+                <FiUsers />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">No Team Members Available</h3>
+              <p className="text-slate-500 text-sm">Team information will be loaded soon.</p>
+            </div>
+          ) : (
+        // In your main component, update the team members section:
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {teamMembers.map((member) => (
+    <ModernSupportTeamCard
+      key={member.id}
+      member={member}
+      onView={() => {
+        setSelectedMember(member);
+        setIsTeamModalOpen(true);
+      }}
+      onContact={handleContactSupport}
+    />
+  ))}
+</div>
+
+
+          )}
+        </div>
+
+        {/* Main Content Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Left Column: Counseling Sessions */}
+          <div className="flex-1 min-w-0 space-y-8">
+            
+            {/* Header Section */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-1">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-900 rounded-2xl shadow-lg">
+                  <FiHeart className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Counseling Sessions</h2>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    {filteredSessions.length} Sessions Available
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    • First 2 sessions (Devotion) are static • Guidance sessions loaded from API
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modern Search & Filter Section */}
+            <div className="bg-white/80 backdrop-blur-md border border-slate-200/60 p-3 rounded-[28px] shadow-sm">
+              <div className="flex flex-col md:flex-row items-center gap-3">
+                {/* Search */}
+                <div className="relative w-full flex-1 group">
+                  <div className="relative flex items-center bg-white border border-slate-200 rounded-2xl shadow-sm transition-all focus-within:border-slate-900 focus-within:ring-4 focus-within:ring-slate-900/5">
+                    <div className="pl-5 pr-3 flex items-center justify-center pointer-events-none">
+                      <FiSearch className="text-slate-400 group-focus-within:text-slate-900 transition-colors" size={18} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search sessions, counselors, or topics..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full py-4 bg-transparent text-slate-900 placeholder:text-slate-400 font-semibold text-sm focus:outline-none"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="pr-4 text-slate-400 hover:text-slate-600"
+                      >
+                        <FiX size={18} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category Selector */}
+                <div className="relative w-full md:w-auto">
+                  <select 
+                    value={activeTab}
+                    onChange={(e) => setActiveTab(e.target.value)}
+                    className="w-full md:w-48 appearance-none px-5 py-3.5 bg-slate-50 border-none rounded-2xl font-semibold text-slate-600 text-sm cursor-pointer focus:ring-2 focus:ring-purple-500/20 transition-all"
+                  >
+                    {categoryOptions.map((category) => {
+                      const Icon = category.icon;
+                      return (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+
+                {/* Reset Button */}
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setActiveTab('all');
+                  }}
+                  className="px-6 py-3.5 bg-purple-600 text-white rounded-2xl font-bold text-sm shadow-md shadow-purple-200 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <FiFilter size={16} />
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            {/* Modern Category Pills */}
+            <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar -mx-2 px-2">
+              {categoryOptions.map((category) => {
+                const Icon = category.icon;
+                const isActive = activeTab === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveTab(category.id)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all border ${
+                      isActive 
+                        ? "bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-100" 
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    }`}
+                  >
+                    {Icon && <Icon className={isActive ? "text-white" : "text-slate-400"} />}
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sessions Grid */}
+            <div className="relative">
+              {filteredSessions.length === 0 ? (
+                <div className="bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200 py-16 text-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <FiHeart className="text-slate-300 text-2xl" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900">No sessions found</h3>
+                  <p className="text-slate-500 text-sm mt-1 mb-6">Try adjusting your filters or search.</p>
+                  <button 
+                    onClick={() => { setSearchTerm(''); setActiveTab('all'); }}
+                    className="px-6 py-2.5 bg-white border border-slate-200 rounded-full font-bold text-slate-700 hover:bg-slate-50 transition-all text-sm"
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-4'}>
+                  {filteredSessions.map((session, index) => (
+                    <ModernCounselingCard 
+                      key={session.id || index} 
+                      session={session} 
+                      onView={setSelectedSession}
+                      onBookmark={handleBookmark}
+                      viewMode={viewMode}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column: Quick Actions & Info */}
+          <div className="lg:w-[380px] space-y-6">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              
+              {/* Quick Actions Card */}
+              <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                    <FiZap className="text-purple-600 text-xl" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-900">Quick Actions</h2>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => toast.info('Emergency contact feature coming soon!')}
+                    className="w-full p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 flex items-center justify-between hover:bg-red-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-100 rounded-xl">
+                        <FiPhoneCall className="text-red-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">Emergency Contact</p>
+                        <p className="text-xs text-red-600">Immediate assistance</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-red-400" />
+                  </button>
+
+                  <button
+                    onClick={() => toast.info('Schedule session feature coming soon!')}
+                    className="w-full p-4 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-xl">
+                        <FiCalendar className="text-blue-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">Schedule Session</p>
+                        <p className="text-xs text-blue-600">Book appointment</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-blue-400" />
+                  </button>
+
+                  <button
+                    onClick={() => toast.info('Resources feature coming soon!')}
+                    className="w-full p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100 flex items-center justify-between hover:bg-emerald-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-100 rounded-xl">
+                        <FiBookOpen className="text-emerald-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold">Resources</p>
+                        <p className="text-xs text-emerald-600">Self-help guides</p>
+                      </div>
+                    </div>
+                    <FiArrowRight className="text-emerald-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Session Info Banner */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-[32px] p-6 border border-blue-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2.5 bg-blue-100 rounded-xl">
+                    <FiBookOpen className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900">Session Types</h4>
+                    <p className="text-sm text-slate-600">Loaded from different sources</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                      <span className="text-sm font-medium text-slate-700">Devotion Sessions</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600">Static</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      <span className="text-sm font-medium text-slate-700">24/7 Support</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600">Static</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                      <span className="text-sm font-medium text-slate-700">Guidance Sessions</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600">API ({guidanceSessions.length})</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <span className="text-sm font-medium text-slate-700">Team Members</span>
+                    </div>
+                    <span className="text-xs font-bold text-blue-600">API ({teamMembers.length})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Confidentiality Banner */}
+              <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-[32px] p-6 text-white overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 blur-[50px]" />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-4">
+                    <FiShield className="text-white text-xl" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2">100% Confidential</h4>
+                  <p className="text-sm text-purple-200 mb-4">
+                    All sessions are private and secure. Your information is protected.
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>Secure conversations</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>No judgment policy</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span>Professional ethics</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Banner */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-purple-900 to-indigo-800 rounded-3xl p-5 md:p-8 shadow-xl">
+          {/* Abstract Background */}
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 blur-[80px] rounded-full -mr-24 -mt-24" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 blur-[80px] rounded-full -ml-24 -mb-24" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+            
+            {/* Icon */}
+            <div className="shrink-0">
+              <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+                <FiHeart className="text-purple-600 text-2xl md:text-3xl" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-lg md:text-xl font-black text-white mb-2 tracking-tight">
+                Your Well-being Matters.
+              </h3>
+              <p className="text-purple-200 text-sm md:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
+  At Katwanyaa Secondary, we believe that true education extends beyond academics. Our Guidance and Counseling Department is dedicated to nurturing the complete student—mind, body, and spirit. We provide a safe, confidential space where you can explore challenges, discover strengths, and develop resilience.              </p>
+
+              {/* Feature Grid */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+                {[
+                  { label: 'Confidential', icon: FiShield, color: 'text-blue-300', bg: 'bg-blue-400/10' },
+                  { label: '24/7 Support', icon: FiPhoneCall, color: 'text-emerald-300', bg: 'bg-emerald-400/10' },
+                  { label: 'Professional', icon: FiUser, color: 'text-purple-300', bg: 'bg-purple-400/10' },
+                  { label: 'Holistic', icon: FiHeart, color: 'text-pink-300', bg: 'bg-pink-400/10' }
+                ].map((feature, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10"
+                  >
+                    <div className={`p-1.5 rounded-md ${feature.bg} ${feature.color} shrink-0`}>
+                      <feature.icon size={16} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-200 truncate">
+                      {feature.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  {/* Feature Banner - Bottom CTA */}
-  <div className="relative overflow-hidden bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-900 rounded-[3rem] p-12 md:p-20 text-center shadow-2xl">
-    <div className="relative z-10 max-w-3xl mx-auto">
-      <div className="inline-flex p-5 bg-white/10 rounded-3xl border border-white/10 mb-8 backdrop-blur-xl">
-        <FiHeart className="text-emerald-300 text-5xl" />
-      </div>
-      <h3 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter">
-        Your Well-being Matters.
-      </h3>
-      <p className="text-emerald-100/60 text-lg md:text-xl font-medium mb-10">
-        Holistic support for your academic journey and personal growth.
-      </p>
-      
-      <div className="flex flex-wrap justify-center gap-4">
-        {['Secure', 'Professional', 'Available 24/7'].map((tag) => (
-          <div key={tag} className="px-6 py-2 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">
-            {tag}
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</div>
 
       {/* Session Detail Modal */}
       {selectedSession && (

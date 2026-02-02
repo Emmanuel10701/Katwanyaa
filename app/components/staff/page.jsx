@@ -2072,22 +2072,22 @@ const handleSubmit = async (formData, id) => {
       />
 
 {/* --- DIRECTORY HERO SECTION --- */}
-<div className="relative bg-[#0F172A] rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-white overflow-hidden shadow-2xl border border-white/5 mb-6">
+<div className="relative bg-[#0F172A] rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
   {/* Abstract Mesh Gradients */}
-  <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
-  <div className="absolute bottom-[-20%] left-[-10%] w-[300px] h-[300px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none" />
+  <div className="absolute top-[-30%] right-[-10%] w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none" />
+  <div className="absolute bottom-[-20%] left-[-10%] w-[300px] h-[300px] bg-pink-500/10 rounded-full blur-[100px] pointer-events-none" />
 
   <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
     <div className="space-y-6">
       {/* Institutional Branding */}
       <div className="flex items-center gap-4">
-        <div className="h-10 w-1.5 bg-orange-500 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.5)]" />
+        <div className="h-10 w-1.5 bg-purple-500 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.5)]" />
         <div>
-          <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-orange-400">
-           katwanyaa High School 
+          <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-purple-400">
+            Katwanyaa High School
           </h2>
           <p className="text-[9px] italic font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
-            "Education is Light"
+            Student Support Services
           </p>
         </div>
       </div>
@@ -2095,43 +2095,54 @@ const handleSubmit = async (formData, id) => {
       {/* Title Area */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-5">
         <div className="p-3 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-inner w-fit">
-          <FiUsers className="text-3xl text-orange-400" />
+          <FiHeart className="text-3xl text-purple-400" />
         </div>
-        <h1 className="text-lg md:text-2xl lg:text-3xl font-black tracking-tighter leading-none italic">
-          STAFF <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-gray-500 text-shadow-sm">DIRECTORY</span>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tighter leading-none italic">
+          GUIDANCE & <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-100 via-white to-pink-400">COUNSELING</span>
         </h1>
       </div>
 
       {/* Summary Sentence */}
-      <p className="max-w-2xl text-gray-400 text-sm md:text-base font-medium leading-relaxed">
-        Managing <span className="text-white font-bold border-b-2 border-orange-500/50 pb-0.5">{stats?.total || 0} Professional Profiles</span>. 
-        Current Status: <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-black ml-1 uppercase">
-          {stats?.active || 0} Active on School
-        </span>
+      <p className="max-w-xl text-gray-400 text-sm md:text-base font-medium leading-relaxed">
+        Professional support for <span className="text-white font-bold border-b-2 border-purple-500/50 pb-0.5">Academic & Emotional Well-being</span>. 
+        Providing a safe space for every student to grow and thrive.
       </p>
     </div>
 
     {/* Action Group */}
-    <div className="flex flex-col sm:flex-row gap-4">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
+      {/* View Toggle */}
+      <div className="flex bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-1">
+        <button
+          onClick={() => setViewMode('grid')}
+          className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+        >
+          <FiGrid size={20} />
+        </button>
+        <button
+          onClick={() => setViewMode('list')}
+          className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+        >
+          <FiList size={20} />
+        </button>
+      </div>
+
+      {/* Refresh Button */}
       <button
-        onClick={() => fetchStaff(true)}
+        onClick={refreshData}
         disabled={refreshing}
-        className="flex items-center justify-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
+        className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white text-[#0F172A] px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-gray-100 shadow-xl shadow-white/5 active:scale-95 disabled:opacity-50"
       >
-        {refreshing ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <FiRotateCw />}
-        REFRESH
-      </button>
-      <button
-        onClick={handleCreate}
-        className="flex items-center justify-center gap-3 bg-white text-[#0F172A] px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-gray-100 shadow-xl shadow-white/5 active:scale-95"
-      >
-        <FiPlus className="text-lg" />
-        ADD STAFF
+        {refreshing ? (
+          <div className="w-4 h-4 border-2 border-[#0F172A]/20 border-t-[#0F172A] rounded-full animate-spin" />
+        ) : (
+          <FiRotateCw className="text-lg" />
+        )}
+        {refreshing ? "LOADING" : "REFRESH"}
       </button>
     </div>
   </div>
 </div>
-
 {/* --- ENLARGED SEARCH & FILTER ENGINE --- */}
 <div className="bg-white rounded-[2.5rem] p-6 shadow-2xl shadow-gray-200/50 border border-gray-100 mb-6">
   <div className="flex flex-col gap-6">
