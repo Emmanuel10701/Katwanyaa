@@ -29,7 +29,7 @@ const date = new Date(); // Add this line!
         <div className="absolute inset-0 group">
           <div className="absolute inset-0 bg-gradient-to-b from-orange-950/40 via-orange-950/80 to-orange-950 z-10"></div>
           <Image
-            src="/ii.jpg"
+            src="/hero/katz8.jpeg"
             alt="School "
             fill
             className="object-cover opacity-50 transition-transform duration-[10s] ease-out group-hover:scale-101"
@@ -193,10 +193,11 @@ const date = new Date(); // Add this line!
       
       <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl bg-white p-2 sm:p-3">
         <div className="overflow-hidden rounded-[1.6rem] sm:rounded-[1.8rem]">
-          <img 
-            src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=1000" 
-            className="w-full aspect-square object-cover transition-transform duration-[1.5s] group-hover:scale-101" 
-            alt="Innovative Learning"
+               <Image
+            src="/hero/katz3.jpeg"
+            alt="School "
+            fill
+            priority
           />
         </div>
 
@@ -225,10 +226,11 @@ const date = new Date(); // Add this line!
       <div className="relative group px-2">
         <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
         <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl aspect-square sm:aspect-video lg:aspect-square">
-          <img 
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1000" 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-100" 
-            alt="Students collaborating"
+               <Image
+            src="/hero/katz4.jpeg"
+            alt="School "
+            fill
+            priority
           />
         </div>
       </div>
@@ -319,11 +321,12 @@ const date = new Date(); // Add this line!
       
       {/* Main Image Container */}
       <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border-[4px] sm:border-[8px] border-white">
-        <img 
-          src="https://images.unsplash.com/photo-1511629091441-ee46146481b6?auto=format&fit=crop&q=80&w=1000" 
-          className="w-full aspect-square sm:aspect-[4/5] object-cover transition-transform duration-1000 group-hover:scale-100" 
-          alt="Culture and community"
-        />
+            <Image
+            src="/hero/katz5.jpeg"
+            alt="School "
+            fill
+            priority
+          />
         
         {/* Floating Detail Badge - Scaled for Mobile */}
         <div className="absolute top-4 right-4 sm:top-6 sm:right-6 bg-white/95 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl shadow-xl border border-white/20">

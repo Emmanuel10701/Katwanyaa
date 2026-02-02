@@ -247,7 +247,7 @@ export default function ContactPage() {
           {/* Background Image with reduced file size */}
           <div className="absolute inset-0 bg-gradient-to-br from-orange-900/90 via-amber-900/95 to-red-900/90">
             <Image
-              src="/ii.jpg"
+            src="/hero/katz8.jpeg"
               alt="Campus"
               fill
               priority
@@ -535,12 +535,9 @@ export default function ContactPage() {
                   >
                     <h4 className="font-bold text-white text-base mb-1">{dept.name}</h4>
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-orange-500  flex items-center gap-2">
-                        <Mail size={12} /> {dept.email}
-                      </span>
-                      <span className="text-xs text-orange-500  flex items-center gap-2">
-                        <Phone size={12} /> {dept.phone}
-                      </span>
+                     <button className="px-2 py-1 text-xs text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg flex items-center gap-1 transition-colors">
+  View them
+</button>
                     </div>
                   </div>
                 ))}
