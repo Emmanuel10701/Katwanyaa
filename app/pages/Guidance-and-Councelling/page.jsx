@@ -1548,37 +1548,51 @@ if (loading) {
     </div>
 
     {/* Action Group */}
-    <div className="flex flex-col sm:flex-row items-center gap-4">
-      {/* View Toggle */}
-      <div className="flex bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-1">
-        <button
-          onClick={() => setViewMode('grid')}
-          className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-        >
-          <FiGrid size={20} />
-        </button>
-        <button
-          onClick={() => setViewMode('list')}
-          className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-        >
-          <FiList size={20} />
-        </button>
-      </div>
+ <div className="flex flex-row items-center justify-between sm:justify-start gap-2 sm:gap-4 w-full sm:w-auto">
+  {/* View Toggle - Slimmer on mobile */}
+  <div className="flex bg-white/5 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/10 p-1">
+    <button
+      onClick={() => setViewMode('grid')}
+      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+        viewMode === 'grid' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'
+      }`}
+    >
+      <FiGrid size={16} className="sm:w-[20px] sm:h-[20px]" />
+    </button>
+    <button
+      onClick={() => setViewMode('list')}
+      className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+        viewMode === 'list' ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-white'
+      }`}
+    >
+      <FiList size={16} className="sm:w-[20px] sm:h-[20px]" />
+    </button>
+  </div>
 
-      {/* Refresh Button */}
-      <button
-        onClick={refreshData}
-        disabled={refreshing}
-        className="w-full sm:w-auto flex items-center justify-center gap-3 bg-white text-[#0F172A] px-8 py-4 rounded-2xl font-black text-[11px] tracking-[0.2em] uppercase transition-all hover:bg-gray-100 shadow-xl shadow-white/5 active:scale-95 disabled:opacity-50"
-      >
-        {refreshing ? (
-          <div className="w-4 h-4 border-2 border-[#0F172A]/20 border-t-[#0F172A] rounded-full animate-spin" />
-        ) : (
-          <FiRotateCw className="text-lg" />
-        )}
-        {refreshing ? "LOADING" : "REFRESH"}
-      </button>
-    </div>
+  {/* Refresh Button - No longer full width, much tighter on mobile */}
+  <button
+    onClick={refreshData}
+    disabled={refreshing}
+    className="
+      flex-1 sm:flex-none
+      flex items-center justify-center gap-2 sm:gap-3 
+      bg-white text-[#0F172A] 
+      px-4 sm:px-8 
+      py-2.5 sm:py-4 
+      rounded-xl sm:rounded-2xl 
+      font-black text-[9px] sm:text-[11px] 
+      tracking-[0.15em] sm:tracking-[0.2em] 
+      uppercase transition-all active:scale-95 disabled:opacity-50
+    "
+  >
+    {refreshing ? (
+      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-[#0F172A]/20 border-t-[#0F172A] rounded-full animate-spin" />
+    ) : (
+      <FiRotateCw className="text-sm sm:text-lg" />
+    )}
+    <span>{refreshing ? "LOADING" : "REFRESH"}</span>
+  </button>
+</div>
   </div>
 </div>
         {/* Dynamic Stats from Team Data */}
@@ -1707,16 +1721,26 @@ if (loading) {
                 </div>
 
                 {/* Reset Button */}
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setActiveTab('all');
-                  }}
-                  className="px-6 py-3.5 bg-purple-600 text-white rounded-2xl font-bold text-sm shadow-md shadow-purple-200 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <FiFilter size={16} />
-                  Reset
-                </button>
+            <button
+  onClick={() => {
+    setSearchTerm('');
+    setActiveTab('all');
+  }}
+  className="
+    px-3 sm:px-6 
+    py-2 sm:py-3.5 
+    bg-purple-600 text-white 
+    rounded-xl sm:rounded-2xl 
+    font-bold 
+    text-xs sm:text-sm 
+    shadow-md shadow-purple-200 
+    hover:bg-purple-700 active:scale-95 transition-all 
+    flex items-center justify-center gap-1.5 sm:gap-2
+  "
+>
+  <FiFilter size={14} className="sm:w-[16px] sm:h-[16px]" />
+  <span className="inline">Reset</span>
+</button>
               </div>
             </div>
 
