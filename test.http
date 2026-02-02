@@ -1,112 +1,67 @@
-### Update School Information (PUT Request)
-PUT https://katwanyaa.vercel.app/api/school
+### 1. Create University Placement Session (No Image)
+POST https://katwanyaa.vercel.app/api/guidance
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="name"
+Content-Disposition: form-data; name="counselor"
 
-Katwanyaa High School
+Dr. Jane Mwangi
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="category"
+
+Academics
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="description"
 
-Katwanyaa High School is a premier educational institution committed to academic excellence and holistic development of students. We provide a nurturing environment that fosters intellectual growth, character building, and leadership skills.
+University placement guidance for form four students
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="motto"
+Content-Disposition: form-data; name="date"
 
-Education is Light and Knowledge is Power
+2026-02-15
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="vision"
+Content-Disposition: form-data; name="time"
 
-To be a center of excellence in education that produces globally competitive, morally upright, and socially responsible citizens.
+10:00
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="mission"
+Content-Disposition: form-data; name="type"
 
-To provide quality education through innovative teaching methods, modern facilities, and a supportive learning environment that enables students to achieve their full potential.
+Counseling
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="studentCount"
+Content-Disposition: form-data; name="priority"
 
-1200
+High
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 2. Create Drugs Counseling Session (No Image)
+POST https://katwanyaa.vercel.app/api/guidance
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="staffCount"
+Content-Disposition: form-data; name="counselor"
 
-120
+Mr. David Omondi
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="feesDay"
+Content-Disposition: form-data; name="category"
 
-35000
+Drugs
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="feesBoarding"
+Content-Disposition: form-data; name="description"
 
-65000
+Substance abuse prevention and healthy relationships
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionFee"
+Content-Disposition: form-data; name="date"
 
-5000
+2026-02-10
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="openDate"
+Content-Disposition: form-data; name="time"
 
-2026-01-07
+14:30
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="closeDate"
+Content-Disposition: form-data; name="type"
 
-2026-05-26
+Group Session
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="subjects"
+Content-Disposition: form-data; name="priority"
 
-["Mathematics", "Physics", "Chemistry", "Biology", "English", "Kiswahili", "History", "Geography", "CRE", "Business Studies", "Computer Studies", "French", "German", "Physical Education", "Music", "Art and Design"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="departments"
-
-["Mathematics", "Sciences", "Languages", "Humanities", "Technical", "Guidance and Counseling", "Administration", "Sports"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionOpenDate"
-
-2026-01-20
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionCloseDate"
-
-2026-05-06
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionRequirements"
-
-1. Completed application form
-2. KCPE result slip/certificate
-3. Birth certificate
-4. Two recent passport photos
-5. Leaving certificate from previous school
-6. Medical report form
-7. Parent/Guardian national ID copy
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionCapacity"
-
-200
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionContactEmail"
-
-admissions@katwanyaa.sch.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionContactPhone"
-
-+254700000000
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionWebsite"
-
-https://katwanyaa.sch.ke
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionLocation"
-
-Katwanyaa, along Nairobi-Nakuru Highway, Nakuru County
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionOfficeHours"
-
-Monday - Friday: 8:00 AM - 5:00 PM
-Saturday: 9:00 AM - 1:00 PM
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="admissionDocumentsRequired"
-
-["Birth Certificate", "KCPE Results Slip", "Leaving Certificate", "Medical Report", "Parent ID Copy", "Passport Photos"]
-------WebKitFormBoundary7MA4YWxkTrZu0gW
-Content-Disposition: form-data; name="youtubeLink"
-
-
+Medium
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--

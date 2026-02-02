@@ -865,11 +865,14 @@ const handleSaveAdmin = async (e) => {
                         </div>
                         <div>
                        {/* In the table row, update the admin name to be clickable */}
-<p 
-  onClick={() => handleViewAdmin(admin)}
-  className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm cursor-pointer hover:underline"
->
-  {admin.name} View profile
+<p className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm">
+  {admin.name}
+  <button
+    onClick={() => handleViewAdmin(admin)}
+    className="ml-2 text-blue-600 hover:text-blue-800 font-medium hover:underline cursor-pointer text-sm"
+  >
+    View profile
+  </button>
   {session?.user && admin.id === session.user.id && (
     <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full font-bold">You</span>
   )}
