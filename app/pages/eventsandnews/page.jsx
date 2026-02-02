@@ -237,18 +237,22 @@ if (viewMode === 'grid') {
           </div>
         </div>
 
-       <button className="
-  w-fit sm:w-full 
-  py-2 sm:py-4 
-  bg-slate-900 text-white 
-  rounded-xl sm:rounded-2xl 
-  font-normal sm:font-bold 
-  text-xs sm:text-sm 
-  flex items-center justify-center gap-2 
-  active:scale-[0.98] transition-transform
-">
-  View details 
+ <button
+  className="
+    w-fit sm:w-full
+    px-4 py-2 sm:py-3
+    bg-slate-900
+    text-white
+    rounded-lg
+    text-sm
+    flex items-center justify-center
+    transition
+    active:scale-95
+  "
+>
+  View details
 </button>
+
       </div>
     </div>
   );
@@ -1195,72 +1199,88 @@ if (loading) {
       
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-<div className="flex flex-col gap-4 mb-6 sm:mb-10">
-  {/* Header Section */}
-  <div className="space-y-2">
-    {/* Minimalist Badge - Shrunk for Mobile */}
-    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
-      <IoSparkles className="text-blue-400 text-[10px] sm:text-sm animate-pulse" />
-      <span className="text-blue-300 font-black text-[8px] sm:text-xs uppercase tracking-[0.15em]">
-        Latest Updates
-      </span>
-    </div>
-    
-    <div className="flex flex-col gap-3">
-      {/* Title & Subtitle - Tighter Line Heights */}
-      <div className="max-w-full">
-        <h1 className="text-xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.1]">
-          School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Events & News</span>
-        </h1>
-        <p className="text-slate-500 text-[10px] sm:text-lg mt-1 font-medium leading-relaxed max-w-[90%]">
-          Stay updated with happenings at Katwanyaa High.
-        </p>
-      </div>
+{/* Main Wrapper with Background - Add 'relative' and 'bg-slate-950' to the root */}
+<div className="relative min-h-screen bg-slate-950 p-4 sm:p-8 overflow-hidden">
+  
+  {/* Optional: Atmospheric Background Glows (The "Katwanyaa" look) */}
+  <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+  <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* MOBILE UTILITY ROW: Refresh and Toggle side-by-side */}
-      <div className="flex items-center gap-2 w-full sm:w-auto">
-        {/* Refresh Button - High Contrast */}
-        <button
-          onClick={refreshData}
-          disabled={refreshing}
-          className="
-            flex-1 sm:flex-none
-            inline-flex items-center justify-center gap-2
-            px-3 py-2 sm:px-6 sm:py-3.5
-            rounded-xl sm:rounded-2xl
-            bg-white text-slate-900
-            font-black text-[9px] sm:text-xs
-            uppercase tracking-widest
-            transition-all active:scale-95
-            disabled:opacity-50
-          "
-        >
-          {refreshing ? (
-            <div className="w-3 h-3 border-2 border-slate-900/20 border-t-slate-900 rounded-full animate-spin" />
-          ) : (
-            <FiRotateCw className="text-[10px] sm:text-base" />
-          )}
-          <span>{refreshing ? "..." : "REFRESH"}</span>
-        </button>
+  <div className="max-w-7xl mx-auto relative z-10">
+    <div className="flex flex-col gap-4 mb-6 sm:mb-10">
+      {/* Header Section */}
+      <div className="space-y-3">
+        
+        {/* Minimalist Badge - Increased opacity for visibility */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-xl rounded-full border border-white/20 shadow-2xl">
+          <IoSparkles className="text-blue-400 text-[10px] sm:text-sm animate-pulse" />
+          <span className="text-blue-100 font-black text-[8px] sm:text-xs uppercase tracking-[0.2em]">
+            Latest Updates
+          </span>
+        </div>
+        
+        <div className="flex flex-col gap-3">
+          {/* Title & Subtitle */}
+          <div className="max-w-full">
+            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-white tracking-tighter leading-[1.1]">
+              School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-purple-400">Events & News</span>
+            </h1>
+            <p className="text-slate-400 text-xs sm:text-lg mt-2 font-medium leading-relaxed max-w-2xl opacity-80">
+              Stay updated with the heartbeat and happenings at Katwanyaa High.
+            </p>
+          </div>
 
-        {/* View Toggle - Compact Glass Style */}
-        <div className="flex bg-slate-800/40 backdrop-blur-xl rounded-xl sm:rounded-2xl p-0.5 sm:p-1 border border-white/5 shrink-0">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl transition-all ${
-              viewMode === 'grid' ? 'bg-white/10 text-blue-400 shadow-lg' : 'text-slate-500'
-            }`}
-          >
-            <FiGrid size={14} className="sm:w-[20px] sm:h-[20px]" />
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl transition-all ${
-              viewMode === 'list' ? 'bg-white/10 text-blue-400 shadow-lg' : 'text-slate-500'
-            }`}
-          >
-            <FiList size={14} className="sm:w-[20px] sm:h-[20px]" />
-          </button>
+          {/* MOBILE UTILITY ROW */}
+          <div className="flex items-center gap-3 w-full sm:w-auto mt-2">
+            
+            {/* Refresh Button - High Contrast Dark/Light Toggle */}
+            <button
+              onClick={refreshData}
+              disabled={refreshing}
+              className="
+                flex-1 sm:flex-none
+                inline-flex items-center justify-center gap-2
+                px-4 py-3 sm:px-8 sm:py-4
+                rounded-xl sm:rounded-2xl
+                bg-white hover:bg-blue-50 text-slate-950
+                font-black text-[10px] sm:text-xs
+                uppercase tracking-widest
+                transition-all active:scale-95
+                disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)]
+              "
+            >
+              {refreshing ? (
+                <div className="w-3 h-3 border-2 border-slate-900/20 border-t-slate-900 rounded-full animate-spin" />
+              ) : (
+                <FiRotateCw className="text-[12px] sm:text-base" />
+              )}
+              <span>{refreshing ? "Updating..." : "REFRESH"}</span>
+            </button>
+
+            {/* View Toggle - Darker Glass for better visibility */}
+            <div className="flex bg-slate-900/80 backdrop-blur-2xl rounded-xl sm:rounded-2xl p-1 border border-white/10 shadow-2xl">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+                  viewMode === 'grid' 
+                  ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' 
+                  : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <FiGrid size={16} className="sm:w-[22px] sm:h-[22px]" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all ${
+                  viewMode === 'list' 
+                  ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]' 
+                  : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <FiList size={16} className="sm:w-[22px] sm:h-[22px]" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
