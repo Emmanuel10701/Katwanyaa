@@ -87,8 +87,8 @@ export const metadata = {
   },
   
   icons: {
-    icon: "/katz.png",
-    apple: "/katz.png",
+    icon: "/ll.png",
+    apple: "/ll.png",
   },
   verification: {
     google: "googlef8123d1ff1ecb88f", // Paste ONLY the code here
