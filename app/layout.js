@@ -74,7 +74,7 @@ openGraph: {
 
   images: [
     {
-      url: "https://katwanyaa.vercel.app/katz.png",
+      url: "https://katwanyaa.vercel.app/ll.png",
       width: 1200,
       height: 630,
       alt: "Katwanyaa High School",
@@ -87,7 +87,7 @@ twitter: {
   card: "summary_large_image",
   title: "Katwanyaa High School",
   description: "Premier public education in Matungulu, Machakos County.",
-  images: ["https://katwanyaa.vercel.app/katz.png"],
+  images: ["https://katwanyaa.vercel.app/ll.png"],
 },
 
 
@@ -98,8 +98,8 @@ twitter: {
   },
   
   icons: {
-    icon: "/katz.png",
-    apple: "/katz.png",
+    icon: "/ll.png",
+    apple: "/ll.png",
   },
   verification: {
     google: "googlef8123d1ff1ecb88f", // Paste ONLY the code here
