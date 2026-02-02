@@ -28,21 +28,26 @@ const getImageUrl = (imagePath) => {
     return null;
   }
   
-  if (imagePath.includes('cloudinary.com')) {
-    return imagePath;
+  // Handle null, undefined, or empty string after trim
+  const trimmedPath = imagePath.trim();
+  if (!trimmedPath) {
+    return null;
   }
   
-  if (imagePath.startsWith('/') || imagePath.startsWith('http')) {
-    return imagePath;
+  if (trimmedPath.includes('cloudinary.com')) {
+    return trimmedPath;
   }
   
-  if (imagePath.startsWith('data:image')) {
-    return imagePath;
+  if (trimmedPath.startsWith('/') || trimmedPath.startsWith('http')) {
+    return trimmedPath;
   }
   
-  return imagePath;
+  if (trimmedPath.startsWith('data:image')) {
+    return trimmedPath;
+  }
+  
+  return trimmedPath;
 };
-
 const ModernStaffLeadership = () => {
   const [staff, setStaff] = useState([]);
   const [principal, setPrincipal] = useState(null);
@@ -257,63 +262,67 @@ const ModernStaffLeadership = () => {
               </div>
             )}
 
-            {/* Image Section - 80% height */}
-            <div className="relative h-[80vh] overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
-              
-              {featuredStaff.image ? (
-                <img
-                  src={getImageUrl(featuredStaff.image)}
-                  alt={featuredStaff.name}
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredStaff.name)}&background=4f46e5&color=fff&bold=true&size=256`;
-                  }}
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
-                  <div className="text-white text-center p-4 sm:p-6 md:p-8">
-                    <GiGraduateCap className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mx-auto opacity-40" />
-                    <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-black tracking-tight">{featuredStaff.name}</p>
-                    <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm md:text-base font-medium opacity-80 uppercase tracking-widest">{getRoleTitle(featuredStaff)}</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Overlay */}
-              <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-                <div className="transform transition-transform duration-500 hover:translate-x-2">
-                  <span className={`px-3 sm:px-4 py-1 ${getRoleColor(featuredStaff.role)} text-white text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] rounded-sm inline-block mb-2 sm:mb-3 shadow-lg`}>
-                    {getRoleTitle(featuredStaff)}
-                  </span>
-                  
-                  {/* Name */}
-                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-white leading-tight tracking-tighter">
-                    {featuredStaff.name.split(' ')[0]} 
-                    <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-                      {featuredStaff.name.split(' ').slice(1).join(' ')}
-                    </span>
-                  </h2>
+     {/* Image Section - 80% height */}
+<div className="relative h-[80vh] overflow-hidden">
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
+  
+  {getImageUrl(featuredStaff?.image) ? (
+    <img
+      src={getImageUrl(featuredStaff.image)}
+      alt={featuredStaff?.name || 'Staff Member'}
+      className="w-full h-full object-cover object-top"
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredStaff?.name || 'Staff')}&background=4f46e5&color=fff&bold=true&size=256`;
+      }}
+    />
+  ) : (
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
+      <div className="text-white text-center p-4 sm:p-6 md:p-8">
+        <GiGraduateCap className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mx-auto opacity-40" />
+        <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-black tracking-tight">
+          {featuredStaff?.name || 'School Leadership'}
+        </p>
+        <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm md:text-base font-medium opacity-80 uppercase tracking-widest">
+          {featuredStaff ? getRoleTitle(featuredStaff) : 'Leadership Team'}
+        </p>
+      </div>
+    </div>
+  )}
+  
+  {/* Overlay */}
+  <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
+    <div className="transform transition-transform duration-500 hover:translate-x-2">
+      <span className={`px-3 sm:px-4 py-1 ${getRoleColor(featuredStaff?.role)} text-white text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] rounded-sm inline-block mb-2 sm:mb-3 shadow-lg`}>
+        {featuredStaff ? getRoleTitle(featuredStaff) : 'School Leader'}
+      </span>
+      
+      {/* Name */}
+      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-white leading-tight tracking-tighter">
+        {featuredStaff?.name?.split(' ')[0] || 'School'} 
+        <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+          {featuredStaff?.name?.split(' ').slice(1).join(' ') || 'Leadership'}
+        </span>
+      </h2>
 
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-4 text-white/80 font-medium">
-                    <span className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base">
-                      <FiMapPin className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
-                      {featuredStaff.department || 'Administration'}
-                    </span>
-                    {featuredStaff.phone && (
-                      <>
-                        <span className="hidden sm:inline w-1 h-1 sm:w-1.5 sm:h-1.5 bg-blue-500 rounded-full"></span>
-                        <a href={`tel:${featuredStaff.phone}`} className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base hover:text-white transition-colors">
-                          <FiPhone className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
-                          {formatPhone(featuredStaff.phone)}
-                        </a>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-4 text-white/80 font-medium">
+        <span className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base">
+          <FiMapPin className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
+          {featuredStaff?.department || 'Administration'}
+        </span>
+        {featuredStaff?.phone && (
+          <>
+            <span className="hidden sm:inline w-1 h-1 sm:w-1.5 sm:h-1.5 bg-blue-500 rounded-full"></span>
+            <a href={`tel:${featuredStaff.phone}`} className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base hover:text-white transition-colors">
+              <FiPhone className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
+              {formatPhone(featuredStaff.phone)}
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Content Section - Keep your original content section exactly as it was */}
             {/* [Your entire content section remains unchanged] */}
