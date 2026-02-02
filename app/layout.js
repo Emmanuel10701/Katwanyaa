@@ -75,7 +75,7 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: "https://katwanyaa.vercel.app/katz.png", // Make sure this is 1200x630 px
+        url: "https://katwanyaa.vercel.app/ll.png", // Make sure this is 1200x630 px
         width: 1200,
         height: 630,
         alt: "Katwanyaa High School",
@@ -89,7 +89,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Katwanyaa High School",
     description: "Premier public education in Matungulu, Machakos County.",
-    images: ["https://katwanyaa.vercel.app/katz.png"], // string format works for Twitter
+    images: ["https://katwanyaa.vercel.app/ll.png"], // string format works for Twitter
   },
 
   // Search Engine Bot instructions
@@ -107,8 +107,8 @@ export const metadata = {
 
   // Icons
   icons: {
-    icon: "/katz.png",
-    apple: "/katz.png",
+    icon: "/ll.png",
+    apple: "/ll.png",
   },
 
   // Verification codes
