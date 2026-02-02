@@ -1200,7 +1200,7 @@ if (loading) {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
 {/* Main Wrapper with Background - Add 'relative' and 'bg-slate-950' to the root */}
-<div className="relative min-h-screen bg-slate-950 p-4 sm:p-8 overflow-hidden">
+<div className="relative  bg-slate-950 p-4 sm:p-8 overflow-hidden">
   
   {/* Optional: Atmospheric Background Glows (The "Katwanyaa" look) */}
   <div className="absolute top-0 left-1/4 w-64 h-64 bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
