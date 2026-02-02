@@ -897,7 +897,7 @@ if (!student || !token) {
                 </span>
                 <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold text-blue-600 
                   tracking-[0.1em] xs:tracking-[0.15em] sm:tracking-[0.2em] uppercase">
-                  High School Portal
+                   Student Portal
                 </span>
               </div>
             </div>
@@ -912,7 +912,7 @@ if (!student || !token) {
             </div>
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg 
+            <button  onClick={router.back} className="md:hidden flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg 
               bg-slate-100 hover:bg-slate-200 transition-colors active:scale-95">
               <FaBars className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
             </button>
