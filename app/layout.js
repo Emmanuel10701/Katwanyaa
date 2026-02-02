@@ -64,21 +64,32 @@ export const metadata = {
     canonical: '/',
   },
 
-  openGraph: {
-    title: "Katwanyaa High School | Matungulu, Machakos",
-    description: "Building future leaders through excellence and faith.",
-    url: 'https://katwanyaa.vercel.app',
-    siteName: "Katwanyaa High School",
-    locale: "en_KE",
-    type: "website",
-  },
+openGraph: {
+  title: "Katwanyaa High School | Matungulu, Machakos",
+  description: "Building future leaders through excellence and faith.",
+  url: 'https://katwanyaa.vercel.app',
+  siteName: "Katwanyaa High School",
+  locale: "en_KE",
+  type: "website",
 
-  // Twitter Card
-  twitter: {
-    card: "summary_large_image",
-    title: "Katwanyaa High School",
-    description: "Premier public education in Matungulu, Machakos County.",
-  },
+  images: [
+    {
+      url: "https://katwanyaa.vercel.app/katz.png",
+      width: 1200,
+      height: 630,
+      alt: "Katwanyaa High School",
+    },
+  ],
+},
+
+
+twitter: {
+  card: "summary_large_image",
+  title: "Katwanyaa High School",
+  description: "Premier public education in Matungulu, Machakos County.",
+  images: ["https://katwanyaa.vercel.app/katz.png"],
+},
+
 
   // Search Engine Bot instructions
   robots: {
@@ -87,8 +98,8 @@ export const metadata = {
   },
   
   icons: {
-    icon: "/ll.png",
-    apple: "/ll.png",
+    icon: "/katz.png",
+    apple: "/katz.png",
   },
   verification: {
     google: "googlef8123d1ff1ecb88f", // Paste ONLY the code here
