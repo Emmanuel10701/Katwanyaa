@@ -1350,70 +1350,57 @@ export default function ModernGallery() {
     }, 1000);
   };
 
-  if (loading) {
-    return (
-      <Box 
-        className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
+if (loading) {
+  return (
+    <Box 
+      className="min-h-[70vh] flex items-center justify-center p-4 bg-transparent"
+    >
+      <Stack 
+        spacing={2} 
+        alignItems="center"
+        className="w-full transition-all duration-500"
       >
-        <Stack 
-          spacing={3} 
-          alignItems="center"
-          className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
-        >
-          {/* Modern Layered Loader */}
-          <Box className="relative flex items-center justify-center">
-            {/* Background Ring */}
-            <CircularProgress
-              variant="determinate"
-              value={100}
-              size={64}
-              thickness={4}
-              sx={{ color: '#f1f5f9' }}
-            />
-            {/* Actual Animated Loader */}
-            <CircularProgress
-              variant="indeterminate"
-              disableShrink
-              size={64}
-              thickness={4}
-              sx={{
-                color: '#2563eb',
-                animationDuration: '800ms',
-                position: 'absolute',
-                left: 0,
-                [`& .MuiCircularProgress-circle`]: {
-                  strokeLinecap: 'round',
-                },
-              }}
-            />
-            {/* Center Icon */}
-            <Box className="absolute">
-              <IoSparkles className="text-blue-500 text-xl animate-pulse" />
-            </Box>
+        {/* Modern Layered Loader - Responsive sizing */}
+        <Box className="relative flex items-center justify-center scale-90 sm:scale-110">
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size={48} 
+            thickness={4.5}
+            sx={{ color: '#f1f5f9' }} 
+          />
+          <CircularProgress
+            variant="indeterminate"
+            disableShrink
+            size={48}
+            thickness={4.5}
+            sx={{
+              color: '#0f172a', // Matches your dark slate theme
+              animationDuration: '1000ms',
+              position: 'absolute',
+              [`& .MuiCircularProgress-circle`]: {
+                strokeLinecap: 'round',
+              },
+            }}
+          />
+          <Box className="absolute">
+            <IoSparkles className="text-blue-600 text-sm animate-pulse" />
           </Box>
+        </Box>
 
-          {/* Clean Typography */}
-          <Stack spacing={0.5} alignItems="center">
-            <Typography 
-              variant="body1" 
-              fontWeight="600" 
-              color="text.primary"
-              sx={{ letterSpacing: '-0.01em' }}
-            >
-              Loading School Gallery...
-            </Typography>
-            <Typography 
-              variant="caption" 
-              color="text.secondary"
-              className="flex items-center gap-1"
-            >
-              Fetching memories and moments
-            </Typography>
-          </Stack>
-        </Stack>
-      </Box>
-    );
-  }
+        {/* Minimalist Typography */}
+        <div className="text-center px-4">
+          <p className="text-slate-900 font-medium text-sm sm:text-base tracking-tight italic">
+            Loading school galleries...
+          </p>
+          <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-widest mt-1 font-bold">
+            Katwanyaa High School
+          </p>
+        </div>
+      </Stack>
+    </Box>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 p-4 md:p-6">
