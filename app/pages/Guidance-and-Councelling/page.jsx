@@ -1636,31 +1636,31 @@ export default function StudentCounseling() {
 if (loading) {
   return (
     <Box 
-      className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
+      className="min-h-[80vh] flex flex-col items-center justify-center p-4 bg-transparent"
     >
       <Stack 
-        spacing={3} 
+        spacing={2} 
         alignItems="center"
-        className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
+        className="w-full max-w-xs"
       >
-        {/* Modern Layered Loader */}
-        <Box className="relative flex items-center justify-center">
+        {/* Modern Layered Loader - Scaled for Mobile */}
+        <Box className="relative flex items-center justify-center scale-75 sm:scale-100 transition-transform">
           {/* Background Ring */}
           <CircularProgress
             variant="determinate"
             value={100}
-            size={64}
+            size={56} // Smaller base size for mobile
             thickness={4}
-            sx={{ color: '#f1f5f9' }} // Very light gray track
+            sx={{ color: '#e2e8f0' }} 
           />
           {/* Actual Animated Loader */}
           <CircularProgress
             variant="indeterminate"
             disableShrink
-            size={64}
+            size={56}
             thickness={4}
             sx={{
-              color: '#2563eb', // Modern Blue
+              color: '#6366f1', // Indigo/Purple vibe to match your Counseling theme
               animationDuration: '800ms',
               position: 'absolute',
               left: 0,
@@ -1671,28 +1671,19 @@ if (loading) {
           />
           {/* Center Icon */}
           <Box className="absolute">
-            <IoSparkles className="text-blue-500 text-xl animate-pulse" />
+            <IoSparkles className="text-indigo-500 text-lg animate-pulse" />
           </Box>
         </Box>
 
-        {/* Clean Typography */}
-        <Stack spacing={0.5} alignItems="center">
-          <Typography 
-            variant="body1" 
-            fontWeight="600" 
-            color="text.primary"
-            sx={{ letterSpacing: '-0.01em' }}
-          >
-            Loading Guidance and Counseling sessions...
-          </Typography>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            className="flex items-center gap-1"
-          >
-            Fetching latest sessions and team information
-          </Typography>
-        </Stack>
+        {/* Clean Typography - No Box, Centered, Smaller on Mobile */}
+        <div className="text-center space-y-1">
+          <h3 className="text-slate-900 font-semibold text-sm sm:text-base tracking-tight leading-tight">
+            Loading sessions...
+          </h3>
+          <p className="text-slate-500 text-[10px] sm:text-xs font-medium max-w-[200px] mx-auto">
+            Fetching latest guidance and team info
+          </p>
+        </div>
       </Stack>
     </Box>
   );

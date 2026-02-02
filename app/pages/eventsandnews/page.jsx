@@ -1138,67 +1138,53 @@ const fetchNews = async (showRefresh = false) => {
   };
 
 
-
 if (loading) {
   return (
     <Box 
-      className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
+      className="min-h-[70vh] flex items-center justify-center p-4 bg-transparent"
     >
       <Stack 
-        spacing={3} 
+        spacing={2} 
         alignItems="center"
-        className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
+        className="w-full transition-all duration-500"
       >
-        {/* Modern Layered Loader */}
-        <Box className="relative flex items-center justify-center">
-          {/* Background Ring */}
+        {/* Modern Layered Loader - Responsive sizing */}
+        <Box className="relative flex items-center justify-center scale-90 sm:scale-110">
           <CircularProgress
             variant="determinate"
             value={100}
-            size={64}
-            thickness={4}
-            sx={{ color: '#f1f5f9' }} // Very light gray track
+            size={48} 
+            thickness={4.5}
+            sx={{ color: '#f1f5f9' }} 
           />
-          {/* Actual Animated Loader */}
           <CircularProgress
             variant="indeterminate"
             disableShrink
-            size={64}
-            thickness={4}
+            size={48}
+            thickness={4.5}
             sx={{
-              color: '#2563eb', // Modern Blue
-              animationDuration: '800ms',
+              color: '#0f172a', // Matches your dark slate theme
+              animationDuration: '1000ms',
               position: 'absolute',
-              left: 0,
               [`& .MuiCircularProgress-circle`]: {
                 strokeLinecap: 'round',
               },
             }}
           />
-          {/* Center Icon */}
           <Box className="absolute">
-            <IoSparkles className="text-blue-500 text-xl animate-pulse" />
+            <IoSparkles className="text-blue-600 text-sm animate-pulse" />
           </Box>
         </Box>
 
-        {/* Clean Typography */}
-        <Stack spacing={0.5} alignItems="center">
-          <Typography 
-            variant="body1" 
-            fontWeight="600" 
-            color="text.primary"
-            sx={{ letterSpacing: '-0.01em' }}
-          >
-Loading for our school latest news and events to stay updated
-          </Typography>
-          <Typography 
-            variant="caption" 
-            color="text.secondary"
-            className="flex items-center gap-1"
-          >
-            Fetching latest events & news
-          </Typography>
-        </Stack>
+        {/* Minimalist Typography */}
+        <div className="text-center px-4">
+          <p className="text-slate-900 font-medium text-sm sm:text-base tracking-tight italic">
+            Updating news & events...
+          </p>
+          <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-widest mt-1 font-bold">
+            Katwanyaa High School
+          </p>
+        </div>
       </Stack>
     </Box>
   );

@@ -865,70 +865,57 @@ export default function ModernCareersPage() {
     setActiveTab('all');
   };
 
- if (loading) {
-   return (
-     <Box 
-       className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-6"
-     >
-       <Stack 
-         spacing={3} 
-         alignItems="center"
-         className="bg-white p-10 rounded-[32px] shadow-sm border border-gray-100"
-       >
-         {/* Modern Layered Loader */}
-         <Box className="relative flex items-center justify-center">
-           {/* Background Ring */}
-           <CircularProgress
-             variant="determinate"
-             value={100}
-             size={64}
-             thickness={4}
-             sx={{ color: '#f1f5f9' }} // Very light gray track
-           />
-           {/* Actual Animated Loader */}
-           <CircularProgress
-             variant="indeterminate"
-             disableShrink
-             size={64}
-             thickness={4}
-             sx={{
-               color: '#2563eb', // Modern Blue
-               animationDuration: '800ms',
-               position: 'absolute',
-               left: 0,
-               [`& .MuiCircularProgress-circle`]: {
-                 strokeLinecap: 'round',
-               },
-             }}
-           />
-           {/* Center Icon */}
-           <Box className="absolute">
-             <IoSparkles className="text-blue-500 text-xl animate-pulse" />
-           </Box>
-         </Box>
- 
-         {/* Clean Typography */}
-         <Stack spacing={0.5} alignItems="center">
-           <Typography 
-             variant="body1" 
-             fontWeight="600" 
-             color="text.primary"
-             sx={{ letterSpacing: '-0.01em' }}
-           >
- Loading for our school latest Jobs Careers to stay updated
-           </Typography>
-           <Typography 
-             variant="caption" 
-             color="text.secondary"
-             className="flex items-center gap-1"
-           >
-             Fetching latest latest Careers in Our School
-           </Typography>
-         </Stack>
-       </Stack>
-     </Box>
-   );
- }
+if (loading) {
+  return (
+    <Box 
+      className="min-h-[70vh] flex items-center justify-center p-4 bg-transparent"
+    >
+      <Stack 
+        spacing={2.5} 
+        alignItems="center"
+        className="w-full transition-opacity duration-500"
+      >
+        {/* Modern Layered Loader - Scaled down for mobile */}
+        <Box className="relative flex items-center justify-center scale-90 sm:scale-100">
+          <CircularProgress
+            variant="determinate"
+            value={100}
+            size={52} 
+            thickness={4.5}
+            sx={{ color: '#f1f5f9' }} 
+          />
+          <CircularProgress
+            variant="indeterminate"
+            disableShrink
+            size={52}
+            thickness={4.5}
+            sx={{
+              color: '#0f172a', // Slate 900 to match your theme
+              animationDuration: '900ms',
+              position: 'absolute',
+              [`& .MuiCircularProgress-circle`]: {
+                strokeLinecap: 'round',
+              },
+            }}
+          />
+          <Box className="absolute">
+            <IoSparkles className="text-blue-600 text-base animate-pulse" />
+          </Box>
+        </Box>
+
+        {/* Minimalist Typography */}
+        <div className="text-center px-6">
+          <p className="text-slate-900 font-semibold text-sm sm:text-base tracking-tight leading-tight italic">
+            Searching for opportunities...
+          </p>
+          <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-[0.2em] font-black mt-1.5">
+            Careers & Jobs
+          </p>
+        </div>
+      </Stack>
+    </Box>
+  );
+}
 
 return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 p-3 sm:p-4 md:p-6">
