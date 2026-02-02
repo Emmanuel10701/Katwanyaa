@@ -463,7 +463,7 @@ const date = new Date(); // Add this line!
     </button>
   </Link>
 
-  <Link href="/pages/Guidance-and-Coucelling" className="w-auto">
+  <Link href="/pages/Guidance-and-Councelling" className="w-auto">
     <button className="px-5 sm:px-10 py-3.5 bg-slate-900/40 text-white font-black text-[9px] sm:text-[11px] uppercase tracking-[0.2em] rounded-2xl border border-white/20 backdrop-blur-md active:scale-95 transition-all hover:bg-white/10 whitespace-nowrap">
       Guidance
     </button>

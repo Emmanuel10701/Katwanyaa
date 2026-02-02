@@ -268,7 +268,7 @@ useEffect(() => {
             )}
 
             {/* Image Section - 80% height */}
-            <div className="relative h-[80vh] overflow-hidden">
+      <div className="relative h-[60vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
               
               {getImageUrl(featuredStaff?.image) ? (

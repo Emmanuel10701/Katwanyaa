@@ -91,58 +91,51 @@ const Modern404 = () => {
                   Let's guide you back to your studies with the options below.
                 </p>
               </div>
-<div className="flex flex-nowrap gap-3 sm:gap-4 pt-4 w-full">
+<div className="flex flex-row items-center gap-2 sm:gap-4 pt-4 w-full">
+  {/* Back to Assembly - Primary Emerald */}
   <a
     href="/"
     className="
       group
-      flex items-center justify-center gap-2 sm:gap-3
-      w-full sm:w-auto
-      bg-gradient-to-r from-rose-600 to-purple-600
-      hover:from-rose-700 hover:to-purple-700
+      flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-3
+      bg-gradient-to-r from-emerald-600 to-teal-600
+      hover:from-emerald-700 hover:to-teal-700
       text-white
-      px-4 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4
-      rounded-lg sm:rounded-xl md:rounded-2xl
-      text-sm sm:text-base
-      font-semibold
+      px-2 sm:px-6 py-2.5 sm:py-3 md:px-8 md:py-4
+      rounded-xl md:rounded-2xl
       transition-all duration-300
-      shadow-lg shadow-rose-200
-      hover:shadow-xl hover:shadow-purple-300
+      shadow-lg shadow-emerald-200/50
       active:scale-95
     "
   >
-    <FiHome className="text-lg sm:text-xl group-hover:scale-110 transition-transform duration-300" />
-    <span className="whitespace-nowrap">Back to Assembly</span>
-    <FiChevronRight className="
-      text-base sm:text-lg
-      opacity-0 group-hover:opacity-100
-      transform group-hover:translate-x-1
-      transition-all duration-300
-    " />
+    <FiHome className="text-sm sm:text-xl group-hover:scale-110 transition-transform" />
+    <span className="whitespace-nowrap font-black uppercase tracking-tighter sm:tracking-widest text-[10px] sm:text-sm md:text-base">
+      <span className="hidden xs:inline">Back to </span>Assembly
+    </span>
+    <FiChevronRight className="hidden md:block text-lg opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1 transition-all" />
   </a>
 
-  {/* Previous Lesson */}
+  {/* Previous Lesson - Secondary Outline */}
   <button
     onClick={() => window.history.back()}
     className="
       group
-      flex items-center justify-center gap-2 sm:gap-3
-      w-full sm:w-auto
+      flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-3
       bg-white
-      border-2 border-slate-200
-      hover:border-purple-200 hover:bg-purple-50
+      border-2 border-slate-100
+      hover:border-emerald-200 hover:bg-emerald-50
       text-slate-700
-      px-4 py-2.5 sm:px-6 sm:py-3 md:px-8 md:py-4
-      rounded-lg sm:rounded-xl md:rounded-2xl
-      text-sm sm:text-base
-      font-semibold
+      px-2 sm:px-6 py-2.5 sm:py-3 md:px-8 md:py-4
+      rounded-xl md:rounded-2xl
       transition-all duration-300
-      shadow-md hover:shadow-lg
+      shadow-sm hover:shadow-md
       active:scale-95
     "
   >
-    <FiArrowLeft className="text-lg sm:text-xl group-hover:-translate-x-1 transition-transform duration-300" />
-    <span className="whitespace-nowrap">Previous Lesson</span>
+    <FiArrowLeft className="text-sm sm:text-xl group-hover:-translate-x-1 transition-transform" />
+    <span className="whitespace-nowrap font-black uppercase tracking-tighter sm:tracking-widest text-[10px] sm:text-sm md:text-base">
+      <span className="hidden xs:inline">Prev</span> Lesson
+    </span>
   </button>
 </div>
 

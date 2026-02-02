@@ -1584,6 +1584,46 @@ export default function StudentCounseling() {
     }
   };
 
+  // SidebarAction Component
+const SidebarAction = ({ icon: Icon, label, sub, color = 'emerald' }) => {
+  const colorClasses = {
+    red: 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20',
+    emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20',
+    teal: 'bg-teal-500/10 border-teal-500/20 text-teal-400 hover:bg-teal-500/20',
+    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20'
+  };
+
+  return (
+    <div className={`flex items-center gap-4 p-4 rounded-2xl border transition-colors cursor-pointer ${colorClasses[color]}`}>
+      <div className="p-2 bg-white/5 rounded-xl backdrop-blur-sm border border-white/10">
+        <Icon className="text-lg" />
+      </div>
+      <div>
+        <h4 className="font-bold text-sm">{label}</h4>
+        <p className="text-white/40 text-xs">{sub}</p>
+      </div>
+    </div>
+  );
+};
+
+// StatusRow Component
+const StatusRow = ({ label, value, color = 'emerald' }) => {
+  const colorClasses = {
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    teal: 'text-teal-600 bg-teal-50 border-teal-100',
+    slate: 'text-slate-600 bg-slate-50 border-slate-100'
+  };
+
+  return (
+    <div className={`flex items-center justify-between p-4 rounded-xl border ${colorClasses[color]}`}>
+      <span className="font-semibold text-sm">{label}</span>
+      <span className="font-black text-xs uppercase tracking-wider px-2 py-1 rounded-lg bg-white/50 border border-white/50">
+        {value}
+      </span>
+    </div>
+  );
+};
+
   // Function to add new session from modal
   const addSessionToCalendar = (newSessionData) => {
     // Transform the new session data to match our format
