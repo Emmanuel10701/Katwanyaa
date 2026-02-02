@@ -48,6 +48,7 @@ const getImageUrl = (imagePath) => {
   
   return trimmedPath;
 };
+
 const ModernStaffLeadership = () => {
   const [staff, setStaff] = useState([]);
   const [principal, setPrincipal] = useState(null);
@@ -216,15 +217,56 @@ const ModernStaffLeadership = () => {
 
   // Get role title for display
   const getRoleTitle = (staffMember) => {
+    if (!staffMember) return 'Staff Member';
     if (staffMember.position) return staffMember.position;
     if (staffMember.role) return staffMember.role;
     return 'Staff Member';
   };
 
-  // Rest of your loading and error states remain the same...
-  // [Keep all your existing loading, error, and empty state code exactly as it was]
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-center">
+          <CircularProgress className="text-blue-600" size={60} />
+          <p className="mt-4 text-slate-600 font-medium">Loading leadership team...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Return statement with only the specific changes:
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-center p-8">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Error Loading Data</h3>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!featuredStaff || !principal) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-center p-8">
+          <div className="text-slate-400 text-6xl mb-4">👨‍🏫</div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">No Staff Data Available</h3>
+          <p className="text-slate-600">Please check back later.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-sans p-3 sm:p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -262,70 +304,66 @@ const ModernStaffLeadership = () => {
               </div>
             )}
 
-     {/* Image Section - 80% height */}
-<div className="relative h-[80vh] overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
-  
-  {getImageUrl(featuredStaff?.image) ? (
-    <img
-      src={getImageUrl(featuredStaff.image)}
-      alt={featuredStaff?.name || 'Staff Member'}
-      className="w-full h-full object-cover object-top"
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredStaff?.name || 'Staff')}&background=4f46e5&color=fff&bold=true&size=256`;
-      }}
-    />
-  ) : (
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
-      <div className="text-white text-center p-4 sm:p-6 md:p-8">
-        <GiGraduateCap className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mx-auto opacity-40" />
-        <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-black tracking-tight">
-          {featuredStaff?.name || 'School Leadership'}
-        </p>
-        <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm md:text-base font-medium opacity-80 uppercase tracking-widest">
-          {featuredStaff ? getRoleTitle(featuredStaff) : 'Leadership Team'}
-        </p>
-      </div>
-    </div>
-  )}
-  
-  {/* Overlay */}
-  <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
-    <div className="transform transition-transform duration-500 hover:translate-x-2">
-      <span className={`px-3 sm:px-4 py-1 ${getRoleColor(featuredStaff?.role)} text-white text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] rounded-sm inline-block mb-2 sm:mb-3 shadow-lg`}>
-        {featuredStaff ? getRoleTitle(featuredStaff) : 'School Leader'}
-      </span>
-      
-      {/* Name */}
-      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-white leading-tight tracking-tighter">
-        {featuredStaff?.name?.split(' ')[0] || 'School'} 
-        <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-          {featuredStaff?.name?.split(' ').slice(1).join(' ') || 'Leadership'}
-        </span>
-      </h2>
+            {/* Image Section - 80% height */}
+            <div className="relative h-[80vh] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
+              
+              {getImageUrl(featuredStaff?.image) ? (
+                <img
+                  src={getImageUrl(featuredStaff.image)}
+                  alt={featuredStaff?.name || 'Staff Member'}
+                  className="w-full h-full object-cover object-top"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredStaff?.name || 'Staff')}&background=4f46e5&color=fff&bold=true&size=256`;
+                  }}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center">
+                  <div className="text-white text-center p-4 sm:p-6 md:p-8">
+                    <GiGraduateCap className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl mx-auto opacity-40" />
+                    <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-black tracking-tight">{featuredStaff?.name || 'School Leadership'}</p>
+                    <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm md:text-base font-medium opacity-80 uppercase tracking-widest">{getRoleTitle(featuredStaff)}</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Overlay */}
+              <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
+                <div className="transform transition-transform duration-500 hover:translate-x-2">
+                  <span className={`px-3 sm:px-4 py-1 ${getRoleColor(featuredStaff?.role)} text-white text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] rounded-sm inline-block mb-2 sm:mb-3 shadow-lg`}>
+                    {getRoleTitle(featuredStaff)}
+                    {viewMode === 'other' && ' (Viewing)'}
+                  </span>
+                  
+                  {/* Name */}
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-white leading-tight tracking-tighter">
+                    {featuredStaff?.name?.split(' ')[0] || 'School'} 
+                    <span className="block bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                      {featuredStaff?.name?.split(' ').slice(1).join(' ') || 'Leadership'}
+                    </span>
+                  </h2>
 
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-4 text-white/80 font-medium">
-        <span className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base">
-          <FiMapPin className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
-          {featuredStaff?.department || 'Administration'}
-        </span>
-        {featuredStaff?.phone && (
-          <>
-            <span className="hidden sm:inline w-1 h-1 sm:w-1.5 sm:h-1.5 bg-blue-500 rounded-full"></span>
-            <a href={`tel:${featuredStaff.phone}`} className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base hover:text-white transition-colors">
-              <FiPhone className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
-              {formatPhone(featuredStaff.phone)}
-            </a>
-          </>
-        )}
-      </div>
-    </div>
-  </div>
-</div>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-4 text-white/80 font-medium">
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base">
+                      <FiMapPin className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
+                      {featuredStaff?.department || 'Administration'}
+                    </span>
+                    {featuredStaff?.phone && (
+                      <>
+                        <span className="hidden sm:inline w-1 h-1 sm:w-1.5 sm:h-1.5 bg-blue-500 rounded-full"></span>
+                        <a href={`tel:${featuredStaff.phone}`} className="flex items-center gap-1.5 text-xs sm:text-sm md:text-base hover:text-white transition-colors">
+                          <FiPhone className="text-blue-400 w-3 h-3 sm:w-4 sm:h-4" />
+                          {formatPhone(featuredStaff.phone)}
+                        </a>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            {/* Content Section - Keep your original content section exactly as it was */}
-            {/* [Your entire content section remains unchanged] */}
+            {/* Content Section */}
             <div className="flex-grow p-3 sm:p-4 md:p-6 lg:p-8 -mt-2 sm:-mt-3 md:-mt-4 bg-white relative rounded-t-xl sm:rounded-t-2xl md:rounded-t-3xl shadow-[0_-15px_30px_rgba(0,0,0,0.03)] sm:shadow-[0_-20px_40px_rgba(0,0,0,0.03)] z-30">
               
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5 md:gap-6 lg:gap-8">
@@ -338,22 +376,22 @@ const ModernStaffLeadership = () => {
                         <FiUser className="text-blue-500 w-3 h-3 sm:w-4 sm:h-4" /> Professional Biography
                       </h4>
                       <p className="text-slate-600 leading-relaxed text-sm sm:text-base lg:text-lg">
-                        {featuredStaff.bio || `${featuredStaff.name} is a dedicated member of our school's leadership team with a passion for education and student development.`}
+                        {featuredStaff?.bio || `${featuredStaff?.name || 'This staff member'} is a dedicated member of our school's leadership team with a passion for education and student development.`}
                       </p>
                     </div>
 
-                    {featuredStaff.quote && (
+                    {featuredStaff?.quote && (
                       <div className="relative p-3 sm:p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-600 rounded-r-lg sm:rounded-r-xl md:rounded-r-2xl">
                         <div className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 text-blue-200">
                           <FiAward className="text-lg sm:text-xl md:text-2xl lg:text-3xl" />
                         </div>
                         <p className="relative z-10 text-slate-700 italic font-medium leading-relaxed text-sm sm:text-base">
-                          "{featuredStaff.quote}"
+                          "{featuredStaff?.quote}"
                         </p>
                       </div>
                     )}
 
-                    {featuredStaff.expertise && featuredStaff.expertise.length > 0 && (
+                    {featuredStaff?.expertise && featuredStaff.expertise.length > 0 && (
                       <div>
                         <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-2 sm:mb-3 md:mb-4 flex items-center gap-1.5 sm:gap-2">
                           <FiStar className="text-yellow-500 w-3 h-3 sm:w-4 sm:h-4" /> Areas of Expertise
@@ -373,7 +411,7 @@ const ModernStaffLeadership = () => {
                 {/* Right Column: Responsibilities & Contact */}
                 <div className="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6 lg:space-y-8">
                   <div className="space-y-3 sm:space-y-4 md:space-y-6">
-                    {featuredStaff.responsibilities && featuredStaff.responsibilities.length > 0 && (
+                    {featuredStaff?.responsibilities && featuredStaff.responsibilities.length > 0 && (
                       <div>
                         <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-2 sm:mb-3 md:mb-4 flex items-center gap-1.5 sm:gap-2">
                           <FiBriefcase className="text-green-500 w-3 h-3 sm:w-4 sm:h-4" /> Key Responsibilities
@@ -394,7 +432,7 @@ const ModernStaffLeadership = () => {
                         <IoRibbonOutline className="text-amber-500 w-3 h-3 sm:w-4 sm:h-4" /> Notable Achievements
                       </h4>
                       <ul className="space-y-1.5 sm:space-y-2 md:space-y-3">
-                        {(featuredStaff.achievements && featuredStaff.achievements.length > 0) ? (
+                        {(featuredStaff?.achievements && featuredStaff.achievements.length > 0) ? (
                           featuredStaff.achievements.slice(0, 3).map((item, i) => (
                             <li key={i} className="text-xs md:text-sm text-slate-700 font-medium flex items-start gap-2 md:gap-3">
                               <div className="w-1.5 h-1.5 md:w-2 md:h-2 mt-1 md:mt-1.5 lg:mt-2 rounded-full bg-amber-500 flex-shrink-0"></div>
@@ -418,15 +456,15 @@ const ModernStaffLeadership = () => {
                           <div className="min-w-0 flex-1">
                             <p className="text-xs text-slate-500">Email Address</p>
                             <a 
-                              href={`mailto:${featuredStaff.email}`}
+                              href={`mailto:${featuredStaff?.email || ''}`}
                               className="text-blue-600 hover:text-blue-700 font-medium text-xs sm:text-xs md:text-sm break-all truncate block"
                             >
-                              {featuredStaff.email}
+                              {featuredStaff?.email || 'Email not available'}
                             </a>
                           </div>
                         </div>
                         
-                        {featuredStaff.phone && (
+                        {featuredStaff?.phone && (
                           <div className="flex items-center gap-2 md:gap-3">
                             <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg sm:rounded-lg md:rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
                               <FiPhone className="text-green-600 text-xs sm:text-xs md:text-sm" />
@@ -453,12 +491,10 @@ const ModernStaffLeadership = () => {
 
           {/* Sub-Card Sidebar */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
-            {/* Principal Card - Always shown but WITHOUT "Currently Viewing" when Principal is in main card */}
+            {/* Principal Card */}
             {principal && (
               <button
                 onClick={() => {
-                  // Principal is already in main card, so we don't need to do anything
-                  // But we can keep the click handler for consistency
                   if (viewMode !== 'principal') {
                     setFeaturedStaff(principal);
                     setViewMode('principal');
@@ -493,7 +529,6 @@ const ModernStaffLeadership = () => {
                       <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-br from-slate-800 via-indigo-900 to-purple-900 bg-fixed text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
                         Principal
                       </span>
-                      {/* REMOVED: The "Currently Viewing" indicator */}
                     </div>
                     <h3 className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors truncate text-sm sm:text-base md:text-lg">
                       {principal.name}
@@ -663,7 +698,7 @@ const ModernStaffLeadership = () => {
               </button>
             )}
 
-            {/* Stats Card - Keep as is */}
+            {/* Stats Card */}
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 text-white">
               <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
                 <div className="p-1.5 sm:p-2 md:p-3 bg-white/20 rounded-lg sm:rounded-xl md:rounded-2xl">
