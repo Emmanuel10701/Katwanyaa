@@ -869,7 +869,7 @@ const handleSaveAdmin = async (e) => {
   onClick={() => handleViewAdmin(admin)}
   className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm cursor-pointer hover:underline"
 >
-  {admin.name}
+  {admin.name} View profile
   {session?.user && admin.id === session.user.id && (
     <span className="ml-2 text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full font-bold">You</span>
   )}
