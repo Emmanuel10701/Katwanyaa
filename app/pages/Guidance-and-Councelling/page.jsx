@@ -471,145 +471,96 @@ const ModernSupportTeamCard = ({ member, onView, onContact, viewMode = 'grid' })
 
   const roleStyle = getRoleStyle(member.role);
   
-  // Grid View (EXACTLY like the Event Card)
-  if (viewMode === 'grid') {
-    return (
-      <div 
-        onClick={() => onView(member)}
-        className="relative bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden cursor-pointer group"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        {/* 1. Static Image Header - EXACTLY like Event Card */}
-        <div className="relative h-52 w-full shrink-0 overflow-hidden">
-<img
-  src={member.image || '/default-avatar.jpg'}
-  alt={member.name}
-  className="w-full h-full object-cover"
-  onError={(e) => {
-    e.target.src = '/default-avatar.jpg';
-    e.target.onerror = null; // Prevent infinite loop
-  }}
-/>
-          
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          
-          {/* Permanent Badges (Top Left) - EXACTLY like Event Card */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2">
-            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border backdrop-blur-sm ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
-              {roleStyle.label}
-            </span>
-            
-            {/* Priority Badge for Support Staff */}
-            {(member.role === 'teacher' || member.role === 'matron' || member.role === 'patron') && (
-              <span className="px-3 py-1 bg-emerald-500/90 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm border border-emerald-300/20">
-                <FiClock className="text-white" size={12} /> 24/7 Available
-              </span>
-            )}
-          </div>
+if (viewMode === 'grid') {
+  const isSupport = ['teacher', 'matron', 'patron'].includes(member.role);
 
-          {/* Bookmark Button (Top Right) - EXACTLY like Event Card */}
-          <div className="absolute top-4 right-4">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsBookmarked(!isBookmarked);
-                // You can add bookmark functionality for staff if needed
-              }}
-              className={`p-2.5 rounded-xl backdrop-blur-md border shadow-sm transition-all ${
-                isBookmarked 
-                  ? 'bg-amber-500 border-amber-500 text-white' 
-                  : 'bg-white/90 border-white/10 text-slate-700 hover:bg-white'
-              }`}
-            >
-              <FiUserPlus className={isBookmarked ? 'fill-current' : ''} size={16} />
-            </button>
-          </div>
-
-          {/* Staff Title (Bottom) */}
-          <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-black/40 to-transparent flex items-end p-4">
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest">
-              {member.title || roleStyle.label}
+  return (
+    <div 
+      onClick={() => onView(member)}
+      className="relative bg-white rounded-[24px] sm:rounded-[32px] border border-slate-100 shadow-sm overflow-hidden cursor-pointer group transition-all"
+    >
+      {/* 1. Header: Reduced height on mobile */}
+      <div className="relative h-40 sm:h-52 w-full overflow-hidden">
+        <img
+          src={member.image || '/default-avatar.jpg'}
+          alt={member.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        
+        {/* Badges: Kept only the essential role on mobile */}
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-1.5">
+          <span className={`px-2.5 py-1 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
+            {roleStyle.label}
+          </span>
+          {/* Hide 24/7 label on tiny screens to save space */}
+          {isSupport && (
+            <span className="hidden sm:flex px-3 py-1 bg-emerald-500/90 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-widest items-center gap-1 border border-emerald-300/20">
+              <FiClock size={12} /> 24/7 Available
             </span>
-          </div>
+          )}
         </div>
 
-        {/* 2. Content Area - EXACTLY like Event Card */}
-        <div className="p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-1 leading-tight">
-            {member.name}
-          </h3>
-          
-          <p className="text-slate-500 text-sm mb-6 line-clamp-2 leading-relaxed">
-            {member.bio || 'Dedicated professional providing guidance and support to students.'}
-          </p>
+        {/* Bookmark: Reduced size on mobile */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setIsBookmarked(!isBookmarked); }}
+          className={`absolute top-3 right-3 p-2 sm:p-2.5 rounded-xl backdrop-blur-md border transition-all ${
+            isBookmarked ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white/80 border-white/10 text-slate-700'
+          }`}
+        >
+          <FiUserPlus size={14} className={isBookmarked ? 'fill-current' : ''} />
+        </button>
 
-          {/* 3. Bento-Style Info Grid - EXACTLY like Event Card */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            {member.phone && (
-              <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
-                <div className={`p-1.5 rounded-lg ${roleStyle.iconBg}`}>
-                  <FiPhone className={`${roleStyle.iconColor}`} size={14} />
-                </div>
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">
-                  {member.phone}
-                </span>
-              </div>
-            )}
-
-            {member.email && (
-              <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
-                <div className={`p-1.5 rounded-lg ${roleStyle.iconBg}`}>
-                  <FiMail className={`${roleStyle.iconColor}`} size={14} />
-                </div>
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">
-                  Email
-                </span>
-              </div>
-            )}
-
-            <div className="col-span-2 flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
-              <div className={`p-1.5 rounded-lg ${roleStyle.iconBg}`}>
-                <FiUser className={`${roleStyle.iconColor}`} size={14} />
-              </div>
-              <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight truncate">
-                {member.role || 'Support Staff'}
-              </span>
-            </div>
-          </div>
-
-          {/* 4. Status Indicator */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${
-                (member.role === 'teacher' || member.role === 'matron' || member.role === 'patron') 
-                  ? 'bg-emerald-500 animate-pulse' 
-                  : 'bg-blue-500'
-              }`} />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                {(member.role === 'teacher' || member.role === 'matron' || member.role === 'patron') 
-                  ? '24/7 Support' 
-                  : 'Available'}
-              </span>
-            </div>
-            
-            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border bg-emerald-50 text-emerald-700 border-emerald-200`}>
-              Active
-            </div>
-          </div>
-
-          {/* 5. Final Action Button - EXACTLY like Event Card */}
-          <button 
-                 onClick={() => onView(member)}
-
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform hover:shadow-lg"
-          >
-View profile    </button>
+        {/* Mobile Name Overlay: Helps reduce content area height */}
+        <div className="absolute bottom-3 left-3 sm:hidden">
+          <h3 className="text-white font-black text-sm uppercase tracking-tight">{member.name}</h3>
         </div>
       </div>
-    );
-  }
+
+      {/* 2. Content Area: Aggressively reduced padding */}
+      <div className="p-4 sm:p-6">
+        {/* Hide name here on mobile since it's now in the image overlay */}
+        <h3 className="hidden sm:block text-xl font-bold text-slate-900 mb-2 line-clamp-1">{member.name}</h3>
+        
+        {/* Reduced Bio: Shorter line clamp on mobile */}
+        <p className="text-slate-500 text-[11px] sm:text-sm mb-4 sm:mb-6 line-clamp-1 sm:line-clamp-2 leading-relaxed">
+          {member.bio || 'Dedicated professional providing guidance and support.'}
+        </p>
+
+        {/* 3. Bento Grid: Hidden on mobile, replaced by a single minimalist line */}
+        <div className="hidden sm:grid grid-cols-2 gap-3 mb-6">
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-100/50 truncate">
+             <FiPhone className={roleStyle.iconColor} size={14} />
+             <span className="text-[11px] font-bold text-slate-700 truncate">{member.phone || 'No Phone'}</span>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-50 border border-slate-100/50">
+             <FiMail className={roleStyle.iconColor} size={14} />
+             <span className="text-[11px] font-bold text-slate-700 uppercase">Email</span>
+          </div>
+        </div>
+
+        {/* 4. Status: Compacted for phone */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-1.5 h-1.5 rounded-full ${isSupport ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'}`} />
+            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              {isSupport ? '24/7' : 'Active'}
+            </span>
+          </div>
+          <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md sm:hidden">PROFILE</span>
+        </div>
+
+        {/* 5. Final Action Button */}
+        <button 
+          onClick={() => onView(member)}
+          className="w-full py-2.5 sm:py-4 bg-slate-900 sm:bg-slate-900 text-white rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+        >
+          View Profile
+        </button>
+      </div>
+    </div>
+  );
+}
 
   // List View (if needed, matches Event Card list view)
   return (
