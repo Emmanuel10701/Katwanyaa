@@ -237,11 +237,19 @@ if (viewMode === 'grid') {
           </div>
         </div>
 
-        {/* 4. Final Action Button */}
-        <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-          View Event Details
-          <FiArrowRight size={18} />
-        </button>
+       <button className="
+  w-fit sm:w-full 
+  py-2 sm:py-4 
+  bg-slate-900 text-white 
+  rounded-xl sm:rounded-2xl 
+  font-normal sm:font-bold 
+  text-xs sm:text-sm 
+  flex items-center justify-center gap-2 
+  active:scale-[0.98] transition-transform
+">
+  View Event Details
+  <FiArrowRight size={14} className="sm:w-[18px] sm:h-[18px]" />
+</button>
       </div>
     </div>
   );

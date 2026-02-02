@@ -298,12 +298,21 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
             </div>
           </div>
 
-          {/* 5. Final Action Button */}
-          <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-            View Details
-            <FiArrowRight size={18} />
-          </button>
-        </div>
+<button className="
+  w-fit sm:w-full 
+  mx-auto
+  px-6 sm:px-4
+  py-2.5 sm:py-4 
+  bg-slate-900 text-white 
+  rounded-xl sm:rounded-2xl 
+  font-bold 
+  text-xs sm:text-sm 
+  flex items-center justify-center gap-2 
+  active:scale-[0.98] transition-transform
+">
+  View Details
+  <FiArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
+</button>        </div>
       </div>
     );
   }
