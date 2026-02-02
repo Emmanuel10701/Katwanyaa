@@ -20,7 +20,7 @@ const heroSlides = [
     gradient: "from-blue-500 via-cyan-400 to-purple-600",
     description: "Katwanyaa High School is a public secondary school located in Matungulu sub-county, Machakos County, Kenya. The school is committed to providing quality education and holistic development to students from the region.",
     background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1000",
+    image: "/hero/katz8.jpeg",
     stats: { 
       students: "Public School", 
       excellence: "Quality Education", 
@@ -39,7 +39,7 @@ const heroSlides = [
     gradient: "from-emerald-500 via-teal-400 to-green-600",
     description: "The school emphasizes all-round development through sports, clubs, and community engagement. Students are encouraged to participate in various activities to develop leadership and life skills.",
     background: "bg-gradient-to-br from-emerald-900/90 via-green-900/80 to-teal-900/70",
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=2170&auto=format&fit=crop",
+    image: "/hero/katz1.jpeg",
     stats: { 
       teams: "Sports Programs", 
       clubs: "Student Societies", 
@@ -58,7 +58,7 @@ const heroSlides = [
     gradient: "from-cyan-500 via-blue-400 to-indigo-600",
     description: "As a community-based institution in Matungulu, Katwanyaa High School works closely with parents and local stakeholders to provide relevant education that addresses community needs.",
     background: "bg-gradient-to-br from-cyan-900/90 via-blue-900/80 to-indigo-900/70",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop",
+    image: "/hero/katz3.jpeg",
     stats: { 
       labs: "Practical Learning", 
       tech: "Skill Development", 
@@ -304,7 +304,7 @@ const ModernHero = () => {
       ))}
 
       {/* Welcome Banner - Mobile Responsive */}
-      <div className="absolute top-4 sm:top-6 left-0 right-0 z-30 flex justify-center px-2 sm:px-4">
+      <div className="absolute top-4 sm:top-6 left-0 right-0 z-30 flex justify-center px-2 ">
         <div className="relative inline-flex items-center gap-2 sm:gap-4 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 
           bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30
           backdrop-blur-xl rounded-full border border-white/30 shadow-lg sm:shadow-2xl
@@ -317,7 +317,7 @@ const ModernHero = () => {
           <span className="text-white text-xs sm:text-sm md:text-base 
             font-semibold italic tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
             Welcome to <span className="font-bold hidden sm:inline">Katwanyaa High School</span>
-            <span className="font-bold inline sm:hidden">KHS</span>
+            <span className="font-bold inline sm:hidden">Katwanyaa high</span>
           </span>
 
           {/* Live Indicator */}

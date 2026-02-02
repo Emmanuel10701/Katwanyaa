@@ -34,7 +34,7 @@ const ModernSchoolLayout = () => {
       title: "Academic Excellence",
       gradient: "from-blue-500 to-cyan-500",
       description: "Consistently ranked among top-performing schools in Nyeri County with impressive KCSE results year after year.",
-      metrics: "Top Nyeri County School"
+      metrics: "Top Machakos Extra County School "
     },
     {
       title: "Holistic Development",

@@ -1,349 +1,112 @@
-### Staff API Testing - Katwanyaa High School
-### Images are optional - you can test without them
-@baseUrl = https://katwanyaa.vercel.app/api
-@staffEndpoint = {{baseUrl}}/staff
+### Update School Information (PUT Request)
+PUT https://katwanyaa.vercel.app/api/school
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
-### 1. GET ALL NEWS
-GET {{baseUrl}}/news
-Content-Type: application/json
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="name"
 
-### 2. GET ALL EVENTS
-GET {{baseUrl}}/events
-Content-Type: application/json
-
-### 3. CREATE EVENT 1: SCIENCE FAIR
-POST {{baseUrl}}/events
-Content-Type: multipart/form-data; boundary=boundary123
-
---boundary123
-Content-Disposition: form-data; name="title"
-
-Annual Science & Innovation Expo 2026
---boundary123
+Katwanyaa High School
+------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="description"
 
-Katwanyaa High School presents its 5th Annual Science Fair showcasing student innovations, robotics demonstrations, and environmental projects.
---boundary123
-Content-Disposition: form-data; name="fullContent"
-
-The Annual Science & Innovation Expo 2026 is our flagship event that brings together the brightest young minds from across the region. This year's theme is "Sustainable Solutions for Tomorrow" focusing on climate change mitigation, renewable energy, and smart agriculture technologies.
-
-Featured Exhibitions:
-1. Solar-powered irrigation systems developed by Form 4 students
-2. AI-assisted learning tools for mathematics
-3. Biodegradable plastics from agricultural waste
-4. Water purification systems for rural communities
-5. Robotics and automation demonstrations
-
-Guest Judges:
-- Dr. Emily Njeri (Kenyatta University)
-- Prof. Samuel Kimani (JKUAT)
-- Eng. David Ochieng (Kenya Power)
-
-Prizes:
-🥇 1st Place: KSh 50,000 + Trophy
-🥈 2nd Place: KSh 30,000 + Medal
-🥉 3rd Place: KSh 20,000 + Certificate
-
-Open to public from 10:00 AM onwards. Media partners: Nation Media Group & Citizen TV.
---boundary123
-Content-Disposition: form-data; name="date"
-
-2026-04-15
---boundary123
-Content-Disposition: form-data; name="time"
-
-9:00 AM - 5:00 PM
---boundary123
-Content-Disposition: form-data; name="location"
-
-School Main Hall & Science Laboratories
---boundary123
-Content-Disposition: form-data; name="category"
-
-academic
---boundary123
-Content-Disposition: form-data; name="attendees"
-
-all
---boundary123
-Content-Disposition: form-data; name="speaker"
-
-Prof. Mary Wanjiku (Head of Sciences)
---boundary123
-Content-Disposition: form-data; name="type"
-
-external
---boundary123
-Content-Disposition: form-data; name="featured"
-
-true
---boundary123
-Content-Disposition: form-data; name="image"; filename="science-fair.jpg"
-
-< ./sample-images/science-fair.jpg
---boundary123--
-
-### 4. CREATE EVENT 2: CAREER DAY
-POST {{baseUrl}}/events
-Content-Type: multipart/form-data; boundary=boundary456
-
---boundary456
-Content-Disposition: form-data; name="title"
-
-Career Guidance & University Expo 2026
---boundary456
-Content-Disposition: form-data; name="description"
-
-Annual career fair featuring 30+ universities, professional associations, and industry experts to guide Form 3 & 4 students.
---boundary456
-Content-Disposition: form-data; name="fullContent"
-
-Katwanyaa High School's Career Day 2026 is the largest career guidance event in the county. We bring together universities, colleges, professional bodies, and industry leaders to help students make informed career choices.
-
-Participating Institutions:
-- University of Nairobi
-- Kenyatta University
-- Strathmore University
-- Jomo Kenyatta University of Agriculture & Technology
-- Technical University of Kenya
-- Kenya Medical Training College
-- Kenya Institute of Management
-
-Industry Partners:
-- Safaricom PLC
-- KCB Group
-- Kenya Airways
-- Microsoft Kenya
-- Nation Media Group
-- Deloitte Kenya
-
-Workshop Sessions:
-1. "Future of Work: Digital Skills for 2030" (10:00 AM)
-2. "Scholarships & Financial Aid" (11:30 AM)
-3. "Entrepreneurship in Kenya" (1:00 PM)
-4. "Study Abroad Opportunities" (2:30 PM)
-
-Registration required for Form 3 & 4 students. Parents are encouraged to attend.
---boundary456
-Content-Disposition: form-data; name="date"
-
-2026-04-22
---boundary456
-Content-Disposition: form-data; name="time"
-
-8:00 AM - 4:00 PM
---boundary456
-Content-Disposition: form-data; name="location"
-
-School Sports Field & Classrooms
---boundary456
-Content-Disposition: form-data; name="category"
-
-academic
---boundary456
-Content-Disposition: form-data; name="attendees"
-
-students
---boundary456
-Content-Disposition: form-data; name="speaker"
-
-Career Guidance Department
---boundary456
-Content-Disposition: form-data; name="type"
-
-internal
---boundary456
-Content-Disposition: form-data; name="featured"
-
-true
---boundary456
-Content-Disposition: form-data; name="image"; filename="career-day.jpg"
-
-< ./sample-images/career-day.jpg
---boundary456--
-### BASE URL
-
-### 1. CREATE NEWS 1: KCSE ACHIEVEMENT
-POST {{baseUrl}}/news
-Content-Type: multipart/form-data; boundary=boundary123
-
---boundary123
-Content-Disposition: form-data; name="title"
-
-Katwanyaa High School Sets New KCSE Record with 85% University Entry
---boundary123
-Content-Disposition: form-data; name="excerpt"
-
-Our school celebrates historic performance in 2025 KCSE exams, with 3 students scoring straight A's and 85% qualifying for university.
---boundary123
-Content-Disposition: form-data; name="description"
-
-Breaking records and setting new standards! Katwanyaa High School has achieved its best KCSE results ever in the 2025 national examinations.
---boundary123
-Content-Disposition: form-data; name="fullContent"
-
-## HISTORIC ACHIEVEMENT
-
-Katwanyaa High School has made history in the 2025 Kenya Certificate of Secondary Education (KCSE) examinations, recording the best performance since the school's establishment in 1980.
-
-### KEY STATISTICS:
-- **85%** of candidates qualified for university (Mean Score: 8.2)
-- **3 students** scored straight A's (A plain)
-- **45 students** scored A- and above
-- **92%** of students attained C+ and above
-- **100%** transition rate to higher education
-
-### TOP PERFORMERS:
-1. **Brian Kipchumba** - A (85 points)
-   Subjects: Mathematics (A), Physics (A), Chemistry (A), Biology (A), English (A), Kiswahili (A), Geography (A), Business Studies (A)
-   
-2. **Faith Chebet** - A (84 points)
-   Subjects: Mathematics (A), Physics (A), Chemistry (A), Biology (A), English (A), Kiswahili (A), History (A), CRE (A)
-   
-3. **Samuel Omondi** - A (83 points)
-   Subjects: Mathematics (A), Physics (A), Chemistry (A), Biology (A), English (A), Kiswahili (A), Agriculture (A), Computer Studies (A)
-
-### SCHOOL RECOGNITIONS:
-- Best Performing School in the County
-- Top 10 in National Science Performance
-- Best Improvement Award (from 6.8 to 8.2 mean score)
-
-### HEADMASTER'S STATEMENT:
-"This remarkable achievement is a testament to the hard work of our students, dedication of our teachers, and support from parents. We are proud to continue our legacy of academic excellence and character formation."
-
-The school will hold a celebration ceremony on April 10, 2026, where top performers will receive scholarships and awards.
---boundary123
-Content-Disposition: form-data; name="date"
-
-2026-04-05
---boundary123
-Content-Disposition: form-data; name="category"
-
-achievement
---boundary123
-Content-Disposition: form-data; name="author"
-
-School Communications Office
---boundary123
-Content-Disposition: form-data; name="featured"
-
-true
---boundary123
-Content-Disposition: form-data; name="image"; filename="kcse-results.jpg"
-Content-Type: image/jpeg
-
-< /path/to/your/image.jpg
---boundary123--
-
-### 2. CREATE NEWS 2: INFRASTRUCTURE DEVELOPMENT
-POST {{baseUrl}}/news
-Content-Type: multipart/form-data; boundary=boundary456
-
---boundary456
-Content-Disposition: form-data; name="title"
-
-New STEM Center Opens: KSh 50 Million Digital Learning Facility
---boundary456
-Content-Disposition: form-data; name="excerpt"
-
-Governor commissions state-of-the-art STEM center with robotics lab, 3D printing facilities, and digital classrooms.
---boundary456
-Content-Disposition: form-data; name="description"
-
-A new era of digital learning begins at Katwanyaa High School with the commissioning of our KSh 50 million STEM Innovation Center.
---boundary456
-Content-Disposition: form-data; name="fullContent"
-
-## REVOLUTIONIZING EDUCATION THROUGH TECHNOLOGY
-
-Katwanyaa High School has officially opened its KSh 50 million STEM Innovation Center, marking a significant milestone in our commitment to 21st-century education.
-
-### FACILITIES INCLUDE:
-
-**1. Robotics & AI Lab**
-- 20 programmable robots
-- AI programming workstations
-- Drone technology station
-- Internet of Things (IoT) kits
-
-**2. Digital Media Center**
-- Professional recording studio
-- Video editing suites
-- Graphic design workstations
-- Photography studio
-
-**3. Science & Research Labs**
-- Advanced chemistry laboratory
-- Physics experimentation zone
-- Biotechnology section
-- Environmental science station
-
-**4. 3D Printing & Design Studio**
-- 5 industrial 3D printers
-- CAD/CAM software
-- Prototyping materials
-- Product design stations
-
-**5. Digital Classrooms**
-- Smart boards in all rooms
-- High-speed Wi-Fi (1Gbps)
-- Video conferencing facilities
-- E-learning platforms
-
-### FUNDING PARTNERS:
-- County Government (KSh 25M)
-- Ministry of Education (KSh 15M)
-- Safaricom Foundation (KSh 5M)
-- Alumni Association (KSh 5M)
-
-### GOVERNOR'S REMARKS:
-"This STEM center positions Katwanyaa High School as a regional leader in technology education. Our students will now have access to facilities that rival top international schools."
-
-### TRAINING PROGRAM:
-The center will offer:
-- Weekend coding clubs
-- Holiday STEM camps
-- Teacher training programs
-- Community outreach sessions
-
-The facility is open to students from 7:00 AM to 9:00 PM daily, including weekends for special programs.
---boundary456
-Content-Disposition: form-data; name="date"
-
-2026-04-18
---boundary456
-Content-Disposition: form-data; name="category"
-
-infrastructure
---boundary456
-Content-Disposition: form-data; name="author"
-
-ICT Department
---boundary456
-Content-Disposition: form-data; name="featured"
-
-true
---boundary456
-Content-Disposition: form-data; name="image"; filename="stem-center.jpg"
-Content-Type: image/jpeg
-
-< /path/to/your/image.jpg
---boundary456--
-
-### 3. GET ALL NEWS (Test after creation)
-GET {{baseUrl}}/news
-Content-Type: application/json
-
-### 4. GET SINGLE NEWS (Replace :id with actual ID)
-GET {{baseUrl}}/news/1
-Content-Type: application/json
-
-### 5. UPDATE NEWS (Replace :id with actual ID)
-PUT {{baseUrl}}/news/1
-Content-Type: multipart/form-data; boundary=update123
-
---update123
-Content-Disposition: form-data; name="title"
-
-Updated: Katwanyaa Breaks KCSE Records Again!
+Katwanyaa High School is a premier educational institution committed to academic excellence and holistic development of students. We provide a nurturing environment that fosters intellectual growth, character building, and leadership skills.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="motto"
+
+Education is Light and Knowledge is Power
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="vision"
+
+To be a center of excellence in education that produces globally competitive, morally upright, and socially responsible citizens.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="mission"
+
+To provide quality education through innovative teaching methods, modern facilities, and a supportive learning environment that enables students to achieve their full potential.
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="studentCount"
+
+1200
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="staffCount"
+
+120
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="feesDay"
+
+35000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="feesBoarding"
+
+65000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionFee"
+
+5000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="openDate"
+
+2026-01-07
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="closeDate"
+
+2026-05-26
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="subjects"
+
+["Mathematics", "Physics", "Chemistry", "Biology", "English", "Kiswahili", "History", "Geography", "CRE", "Business Studies", "Computer Studies", "French", "German", "Physical Education", "Music", "Art and Design"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="departments"
+
+["Mathematics", "Sciences", "Languages", "Humanities", "Technical", "Guidance and Counseling", "Administration", "Sports"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionOpenDate"
+
+2026-01-20
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionCloseDate"
+
+2026-05-06
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionRequirements"
+
+1. Completed application form
+2. KCPE result slip/certificate
+3. Birth certificate
+4. Two recent passport photos
+5. Leaving certificate from previous school
+6. Medical report form
+7. Parent/Guardian national ID copy
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionCapacity"
+
+200
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionContactEmail"
+
+admissions@katwanyaa.sch.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionContactPhone"
+
++254700000000
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionWebsite"
+
+https://katwanyaa.sch.ke
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionLocation"
+
+Katwanyaa, along Nairobi-Nakuru Highway, Nakuru County
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionOfficeHours"
+
+Monday - Friday: 8:00 AM - 5:00 PM
+Saturday: 9:00 AM - 1:00 PM
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="admissionDocumentsRequired"
+
+["Birth Certificate", "KCPE Results Slip", "Leaving Certificate", "Medical Report", "Parent ID Copy", "Passport Photos"]
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="youtubeLink"
+
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
