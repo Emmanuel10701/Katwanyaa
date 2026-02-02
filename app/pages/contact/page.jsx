@@ -535,7 +535,7 @@ export default function ContactPage() {
                   >
                     <h4 className="font-bold text-white text-base mb-1">{dept.name}</h4>
                     <div className="flex flex-col gap-1">
-                     <button className="px-2 py-1 text-xs text-orange-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg flex items-center gap-1 transition-colors">
+                     <button className="px-2 py-1 text-base text-white bg-white/10 hover:bg-white/20 rounded-lg flex items-center gap-1 transition-colors">
   View them
 </button>
                     </div>

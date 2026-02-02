@@ -74,32 +74,32 @@ const GlassCard = ({ children, className = '', hover = true }) => (
 // Modern Hero Banner Component
 const ModernHeroBanner = ({ stats, onRefresh }) => {
   return (
-    <div className="relative bg-[#0F172A] rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
+    <div className="relative bg-[#0F172A] rounded-2xl md:rounded-[2.5rem] p-4 sm:p-6 md:p-10 text-white overflow-hidden shadow-2xl border border-white/5 mb-8">
       {/* Abstract Mesh Gradient Background */}
       <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-blue-600/30 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[250px] h-[250px] md:w-[400px] md:h-[400px] bg-purple-600/20 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div>
             {/* Institutional Branding */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="h-6 sm:h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
               <div>
-                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
+                <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-blue-400">
                  Katwanyaa High School
                 </h2>
-                <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
-                  "Education is Light "               
-                   </p>
+                <p className="text-[8px] sm:text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
+                  "Education is Light"               
+                </p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
-              <div className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 w-fit">
-                <IoSparkles className="text-2xl sm:text-3xl text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.6)]" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-1 sm:mb-2">
+              <div className="p-1.5 sm:p-2 md:p-3 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl md:rounded-2xl border border-white/10 w-fit">
+                <IoSparkles className="text-xl sm:text-2xl md:text-3xl text-yellow-300 drop-shadow-[0_0_8px_rgba(253,224,71,0.6)]" />
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+              <h1 className="text-lg sm:text-xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
                 School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-blue-200">Gallery</span>
               </h1>
             </div>
@@ -108,19 +108,19 @@ const ModernHeroBanner = ({ stats, onRefresh }) => {
           {/* Modern Glass Refresh Button */}
           <button
             onClick={onRefresh}
-            className="flex items-center justify-center gap-3 bg-white/10 backdrop-blur-xl border border-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 w-full sm:w-fit"
+            className="flex items-center justify-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-xl border border-white/20 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 rounded-lg sm:rounded-xl md:rounded-2xl font-bold text-xs sm:text-sm tracking-wide transition-all hover:bg-white/20 w-full sm:w-fit"
           >
-            <FiRefreshCw className="text-lg" />
+            <FiRefreshCw className="text-base sm:text-lg" />
             <span>REFRESH GALLERY</span>
           </button>
         </div>
         
         {/* Summary Text */}
-        <div className="mb-8">
-          <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
+        <div className="mb-6 sm:mb-8">
+          <p className="text-blue-100/80 text-sm sm:text-base md:text-md font-medium leading-relaxed">
             Explore <span className="text-white font-bold underline decoration-blue-500/50 decoration-2 underline-offset-4">{stats.totalFiles} media files</span> 
-            across <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4 mx-2">{stats.totalCategories} categories</span> 
-            capturing our school's journey. This month: <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/20 mx-1">{stats.thisMonth} new galleries</span>.
+            across <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4 mx-1 sm:mx-2">{stats.totalCategories} categories</span> 
+            capturing our school's journey. This month: <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-0.5 md:px-2.5 md:py-0.5 rounded-md sm:rounded-lg bg-yellow-400/20 text-yellow-300 border border-yellow-400/20 mx-1">{stats.thisMonth} new galleries</span>.
           </p>
         </div>
       </div>
@@ -1150,7 +1150,7 @@ const ModernGalleryDetailModal = ({ gallery, onClose, onDownload, onShare }) => 
 };
 
 export default function ModernGallery() {
-  const [activeCategory, setActiveCategory] = useState('GENERAL');
+  const [activeCategory, setActiveCategory] = useState('all'); // This is already correct
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGallery, setSelectedGallery] = useState(null);
   const [favorites, setFavorites] = useState(new Set());

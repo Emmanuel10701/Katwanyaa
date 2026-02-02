@@ -304,29 +304,29 @@ const ModernHero = () => {
       ))}
 
       {/* Welcome Banner - Mobile Responsive */}
-      <div className="absolute top-4 sm:top-6 left-0 right-0 z-30 flex justify-center px-2 ">
-        <div className="relative inline-flex items-center gap-2 sm:gap-4 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 
-          bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30
-          backdrop-blur-xl rounded-full border border-white/30 shadow-lg sm:shadow-2xl
-          max-w-[90%] sm:max-w-none overflow-hidden">
+  <div className="absolute top-2 sm:top-6 left-0 right-0 z-30 flex justify-center px-2">
+  <div className="relative inline-flex items-center gap-1 sm:gap-3 px-3 sm:px-6 md:px-8 py-1.5 sm:py-3 md:py-4
+    bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30
+    backdrop-blur-xl rounded-full border border-white/30 shadow-lg sm:shadow-2xl
+    max-w-[90%] sm:max-w-none overflow-hidden">
 
-          {/* Glow */}
-          <div className="absolute inset-0 rounded-full bg-white/10 blur-xl -z-10" />
+    {/* Glow */}
+    <div className="absolute inset-0 rounded-full bg-white/10 blur-xl -z-10" />
 
-          {/* Text - Reduced size */}
-          <span className="text-white text-xs sm:text-sm md:text-base 
-            font-semibold italic tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
-            Welcome to <span className="font-bold hidden sm:inline">Katwanyaa High School</span>
-            <span className="font-bold inline sm:hidden">Katwanyaa high</span>
-          </span>
+    {/* Text - Reduced size only on mobile */}
+    <span className="text-white text-xs sm:text-sm md:text-base 
+      font-semibold italic tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
+      Welcome to <span className="font-bold hidden sm:inline">Katwanyaa High School</span>
+      <span className="font-bold inline sm:hidden">Katwanyaa high</span>
+    </span>
 
-          {/* Live Indicator */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400 rounded-full animate-pulse" />
-            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400/50 rounded-full animate-ping" />
-          </div>
-        </div>
-      </div>
+    {/* Live Indicator */}
+    <div className="flex items-center gap-1 flex-shrink-0">
+      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400/50 rounded-full animate-ping" />
+    </div>
+  </div>
+</div>
 
       {/* Main Content Area - Responsive adjustments */}
       <div className="relative z-20 h-full flex flex-col mt-[5%] items-center justify-center px-3 sm:px-4 md:px-6 lg:px-12 text-center">

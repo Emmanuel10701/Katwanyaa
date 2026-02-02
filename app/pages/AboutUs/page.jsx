@@ -191,27 +191,16 @@ const date = new Date(); // Add this line!
     <div className="relative order-1 lg:order-2 group px-2 sm:px-0">
       <div className="absolute -inset-6 bg-gradient-to-tr from-orange-100 to-amber-100 rounded-full opacity-40 blur-3xl -z-10"></div>
       
-      <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl bg-white p-2 sm:p-3">
-        <div className="overflow-hidden rounded-[1.6rem] sm:rounded-[1.8rem]">
+    
+      <div className="relative group px-2">
+        <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
+        <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square">
                <Image
-            src="/hero/katz3.jpeg"
+            src="/hero/katz4.jpeg"
             alt="School "
             fill
             priority
           />
-        </div>
-
-        {/* Scaled Stat Card for Mobile */}
-        <div className="absolute bottom-6 left-6 sm:bottom-10 sm:left-10 bg-white/95 backdrop-blur-md p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-xl border border-white/20 -rotate-2">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-1.5 h-8 sm:h-10 bg-amber-600 rounded-full"></div>
-            <div>
-<div className="text-lg sm:text-2xl font-black text-slate-900 leading-none">
-  {date.getFullYear()}
-</div>
-              <div className="text-[8px] sm:text-[10px] uppercase font-black text-slate-500 tracking-widest mt-1">Vision Target</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -225,7 +214,7 @@ const date = new Date(); // Add this line!
       
       <div className="relative group px-2">
         <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
-        <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] shadow-2xl aspect-square sm:aspect-video lg:aspect-square">
+        <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square">
                <Image
             src="/hero/katz4.jpeg"
             alt="School "
@@ -319,19 +308,15 @@ const date = new Date(); // Add this line!
       {/* Background decoration - dimmed for mobile focus */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] bg-orange-100/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -z-10"></div>
       
-      {/* Main Image Container */}
-      <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border-[4px] sm:border-[8px] border-white">
-            <Image
-            src="/hero/katz5.jpeg"
+      <div className="relative group px-2">
+        <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
+        <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square">
+               <Image
+            src="/hero/katz4.jpeg"
             alt="School "
             fill
             priority
           />
-        
-        {/* Floating Detail Badge - Scaled for Mobile */}
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6 bg-white/95 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-4 rounded-xl sm:rounded-2xl shadow-xl border border-white/20">
-          <div className="text-orange-600 font-black text-xl sm:text-2xl tracking-tighter">100%</div>
-          <div className="text-[8px] sm:text-[10px] uppercase font-black text-slate-500 tracking-widest">Commitment</div>
         </div>
       </div>
     </div>
