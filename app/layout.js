@@ -109,15 +109,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* Next.js automatically adds metadata to <head> */}
-      <head>        
-        {/* Additional meta tags */}
-        <meta name="geo.region" content="KE-MKA" />
-        <meta name="geo.placename" content="Matungulu, Machakos County" />
-        <meta name="geo.position" content="-1.2156, 37.1328" />
-        <meta name="ICBM" content="-1.2156, 37.1328" />
-      </head>
-      
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-orange-50 via-white to-amber-50 text-gray-900`}
       >
