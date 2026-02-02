@@ -73,112 +73,75 @@ const ModernStaffLeadership = () => {
   }, []);
 
   // Fetch staff data from API
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/staff');
-        const data = await response.json();
-        
-        if (data.success && data.staff && Array.isArray(data.staff)) {
-          setStaff(data.staff);
-          
-          // Find Principal - ALWAYS IN MAIN CARD
-          const foundPrincipal = data.staff.find(s => 
-            (s.role && s.role.toLowerCase().includes('principal')) ||
-            (s.position && s.position.toLowerCase().includes('principal'))
-          ) || data.staff[0];
-          
-          setPrincipal(foundPrincipal);
-          setFeaturedStaff(foundPrincipal); // Principal is always the initial featured staff
-          
-          // Find Deputy Principal
-          const deputy = data.staff.find(s => 
-            (s.role && s.role.toLowerCase().includes('deputy')) ||
-            (s.position && s.position.toLowerCase().includes('deputy'))
-          ) || data.staff.find(s => 
-            s.role && s.role.toLowerCase().includes('administration') && 
-            s.id !== foundPrincipal?.id
-          );
-          
-          setDeputyPrincipal(deputy);
-          
-          // Find Teaching Staff
-          const teachingStaff = data.staff.filter(s => 
-            (s.role && (s.role.toLowerCase().includes('teacher') || 
-                       s.role.toLowerCase().includes('teaching'))) &&
-            s.id !== foundPrincipal?.id && 
-            s.id !== deputy?.id
-          );
-          
-          // Random Teaching Staff
-          if (teachingStaff.length > 0) {
-            const randomIndex = Math.floor(Math.random() * teachingStaff.length);
-            setRandomStaff(teachingStaff[randomIndex]);
-          } else {
-            const otherStaff = data.staff.filter(s => 
-              s.id !== foundPrincipal?.id && 
-              s.id !== deputy?.id
-            );
-            if (otherStaff.length > 0) {
-              const randomIndex = Math.floor(Math.random() * otherStaff.length);
-              setRandomStaff(otherStaff[randomIndex]);
-            }
-          }
-          
-          // Find BOM Members
-          const bomMembers = data.staff.filter(s => 
-            (s.role && s.role.toLowerCase().includes('bom')) ||
-            (s.department && s.department.toLowerCase().includes('bom'))
-          );
-          
-          const availableBOM = bomMembers.filter(s => 
-            s.id !== foundPrincipal?.id && 
-            s.id !== deputy?.id
-          );
-          
-          if (availableBOM.length > 0) {
-            const randomBomIndex = Math.floor(Math.random() * availableBOM.length);
-            setRandomBOM(availableBOM[randomBomIndex]);
-          } else {
-            const supportStaff = data.staff.filter(s => 
-              s.role && s.role.toLowerCase().includes('support') &&
-              s.id !== foundPrincipal?.id && 
-              s.id !== deputy?.id &&
-              s.id !== randomStaff?.id
-            );
-            
-            if (supportStaff.length > 0) {
-              const randomSupportIndex = Math.floor(Math.random() * supportStaff.length);
-              setRandomBOM(supportStaff[randomSupportIndex]);
-            } else {
-              const remainingStaff = data.staff.filter(s => 
-                s.id !== foundPrincipal?.id && 
-                s.id !== deputy?.id &&
-                s.id !== randomStaff?.id
-              );
-              
-              if (remainingStaff.length > 0) {
-                const randomRemainingIndex = Math.floor(Math.random() * remainingStaff.length);
-                setRandomBOM(remainingStaff[randomRemainingIndex]);
-              }
-            }
-          }
-          
-        } else {
-          throw new Error('Invalid staff data format');
-        }
-      } catch (err) {
-        console.error('Error fetching staff:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchStaff();
-  }, []);
+useEffect(() => {
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/staff');
+      const data = await response.json();
 
+      if (data.success && Array.isArray(data.staff)) {
+        const allStaff = data.staff;
+        setStaff(allStaff);
+
+        // 1. Identify Principal (Mr. Muange) - Strict check to avoid Deputy overlap
+        const foundPrincipal = allStaff.find(s => 
+          s.position?.toLowerCase() === 'chief principal' || 
+          s.role?.toLowerCase() === 'principal'
+        ) || allStaff[0];
+
+        setPrincipal(foundPrincipal);
+        setFeaturedStaff(foundPrincipal);
+
+        // 2. Identify Deputy Principal (Mr. Paul Mwanzia)
+        const deputy = allStaff.find(s => 
+          s.id !== foundPrincipal?.id && 
+          (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
+        );
+        setDeputyPrincipal(deputy);
+
+        // 3. Filter out Admins to find Teaching and BOM staff
+        const nonAdminStaff = allStaff.filter(s => s.id !== foundPrincipal?.id && s.id !== deputy?.id);
+
+        // 4. Categorize Teaching Staff
+        const teachingStaff = nonAdminStaff.filter(s => 
+          s.role?.toLowerCase().includes('teacher') || 
+          s.department?.toLowerCase().includes('science') || // Catching HODs
+          s.expertise?.some(exp => exp.toLowerCase().includes('teacher'))
+        );
+
+        // 5. Categorize BOM/Support Staff
+        const bomStaff = allStaff.filter(s => 
+          s.role?.toLowerCase().includes('bom') || 
+          s.department?.toLowerCase().includes('administration') && s.id !== foundPrincipal?.id && s.id !== deputy?.id
+        );
+
+        // 6. Set Random Featured Staff (Randomization Logic)
+        if (teachingStaff.length > 0) {
+          setRandomStaff(teachingStaff[Math.floor(Math.random() * teachingStaff.length)]);
+        }
+
+        if (bomStaff.length > 0) {
+          setRandomBOM(bomStaff[Math.floor(Math.random() * bomStaff.length)]);
+        } else {
+          // Fallback if no specific BOM found
+          const remaining = nonAdminStaff.filter(s => s.id !== randomStaff?.id);
+          if (remaining.length > 0) setRandomBOM(remaining[0]);
+        }
+
+      } else {
+        throw new Error('Format error: Expected successful staff array');
+      }
+    } catch (err) {
+      console.error('Fetch Error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchStaff();
+}, []);
   // Handle subcard click
   const handleStaffClick = (staffMember) => {
     if (principal?.id === staffMember.id) {
