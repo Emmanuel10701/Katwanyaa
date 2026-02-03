@@ -324,7 +324,7 @@ function Notification({
   )
 }
 
-// Modern Item Detail Moda
+// Clean View Detail Modal Component
 function ModernItemDetailModal({ item, type, onClose, onEdit }) {
   if (!item) return null;
 
@@ -338,185 +338,183 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
     return `/${imagePath}`;
   };
 
-  const categories = {
-    news: {
-      achievement: { label: 'Achievements', color: 'emerald' },
-      sports: { label: 'Sports', color: 'blue' },
-      academic: { label: 'Academic', color: 'purple' },
-      infrastructure: { label: 'Infrastructure', color: 'orange' },
-      community: { label: 'Community', color: 'rose' }
-    },
-    events: {
-      academic: { label: 'Academic', color: 'purple' },
-      sports: { label: 'Sports', color: 'blue' },
-      cultural: { label: 'Cultural', color: 'emerald' },
-      social: { label: 'Social', color: 'orange' }
-    }
-  };
-
-  const categoryInfo = categories[type][item.category];
   const themeGradient = type === 'news' 
-    ? 'from-indigo-600 via-purple-600 to-pink-600' 
-    : 'from-blue-600 via-cyan-600 to-emerald-600';
+    ? 'from-purple-700 via-pink-600 to-rose-600' 
+    : 'from-blue-700 via-cyan-600 to-teal-600';
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-4xl max-h-screen sm:max-h-[95vh] bg-slate-50 sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border border-white/20">
+    <Modal open={true} onClose={onClose}>
+      <Box sx={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        width: '95%', maxWidth: '900px', maxHeight: '95vh',
+        bgcolor: '#ffffff', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+        overflow: 'hidden', outline: 'none'
+      }}>
         
-        {/* Modern Glass Header */}
-        <div className={`relative p-6 sm:p-10 text-white bg-gradient-to-br ${themeGradient}`}>
-          {/* Subtle Abstract Background Pattern */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white rounded-full blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-black rounded-full blur-3xl" />
-          </div>
-
-          <div className="relative flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4 sm:gap-6">
-              <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl shadow-inner border border-white/20 shrink-0 hidden sm:block">
+        {/* Header - Matching Create Modal */}
+        <div className={`p-8 text-white bg-gradient-to-r ${themeGradient}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
                 {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
               </div>
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Official {type}</span>
-                  <div className="h-1 w-1 rounded-full bg-white/40" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Katwanyaa High</span>
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-black tracking-tighter leading-tight italic uppercase">
-                  {type === 'news' ? 'Article Insight' : 'Event Spotlight'}
+                <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
+                  {item.title}
                 </h2>
+                <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
+                  {type === 'news' ? 'News Article Details' : 'Event Details'}
+                </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => onEdit(item)} 
-                className="group flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-slate-100 active:scale-95 shadow-xl"
-              >
-                <FiEdit className="group-hover:rotate-12 transition-transform" />
-                <span className="hidden sm:inline">Edit</span>
-              </button>
-              <button 
-                onClick={onClose} 
-                className="p-3 bg-black/20 hover:bg-black/40 text-white rounded-xl transition-all active:scale-90 border border-white/10"
-              >
-                <FiX size={20} />
-              </button>
-            </div>
+            <button onClick={onClose} className="p-3 bg-black/10 hover:bg-black/20 rounded-full transition-all active:scale-90">
+              <FiX size={24} />
+            </button>
           </div>
         </div>
 
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto bg-white/50 backdrop-blur-sm">
-          <div className="p-6 sm:p-10 space-y-10">
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
+          <div className="p-8 sm:p-12 space-y-8">
             
-            {/* Hero Section: Image & Title */}
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              <div className="relative group w-full lg:w-48 shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-[2rem] blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
-                <img
-               src={getImageUrl(item.image)}
-                  alt={item.title}
-                  className="relative w-full aspect-square lg:w-48 lg:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]"
-                />
-              </div>
+            {/* Hero Section with Image */}
+            <div className="relative rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
+              <img
+                src={getImageUrl(item.image)}
+                alt={item.title}
+                className="w-full h-64 object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
+                }}
+              />
+              {item.featured && (
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg">
+                  Featured
+                </div>
+              )}
+            </div>
 
-              <div className="flex-1 space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
-                    categoryInfo 
-                      ? `bg-${categoryInfo.color}-50 text-${categoryInfo.color}-700 border-${categoryInfo.color}-200` 
-                      : 'bg-slate-100 text-slate-700 border-slate-200'
-                  }`}>
-                    {categoryInfo?.label || item.category}
-                  </span>
-                  {item.featured && (
-                    <span className="bg-amber-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md animate-pulse">
-                      Featured Piece
-                    </span>
+            {/* Details Grid - Clean Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Basic Info Card */}
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Basic Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Category</span>
+                    <p className="text-sm font-bold text-slate-800 mt-1">{item.category}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Date</span>
+                    <p className="text-sm font-bold text-slate-800 mt-1">
+                      {new Date(item.date).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                  {type === 'news' && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Author</span>
+                      <p className="text-sm font-bold text-slate-800 mt-1">{item.author}</p>
+                    </div>
                   )}
                 </div>
-
-                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter leading-none">
-                  {item.title}
-                </h1>
-
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
-                  <FiClock className="text-blue-500" />
-                  {new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-               {[
-                 { label: 'Date', val: new Date(item.date).toLocaleDateString(), icon: <FiClock />, show: true },
-                 { label: 'Time', val: item.time, icon: <FiInfo />, show: type === 'events' && item.time },
-                 { label: 'Venue', val: item.location, icon: <FiMapPin />, show: type === 'events' && item.location },
-                 { label: 'Author', val: item.author, icon: <FiUser />, show: type === 'news' && item.author },
-                 { label: 'Speaker', val: item.speaker, icon: <FiUser />, show: type === 'events' && item.speaker },
-                 { label: 'Target', val: item.attendees, icon: <FiUsers />, show: type === 'events' && item.attendees },
-               ].filter(i => i.show).map((stat, idx) => (
-                 <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-tighter mb-1">
-                      {stat.icon} {stat.label}
-                    </div>
-                    <div className="text-slate-800 font-bold truncate">{stat.val}</div>
-                 </div>
-               ))}
-            </div>
-
-            {/* Content Blocks */}
-            <div className="space-y-8">
-              {/* Description Block */}
-              <div className="relative p-6 sm:p-8 bg-slate-50 rounded-[2rem] border border-slate-100 group transition-all hover:bg-white hover:shadow-xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-500 text-white rounded-lg"><FiBook /></div>
-                  <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Brief Overview</h3>
-                </div>
-                <p className="text-slate-600 leading-relaxed text-lg font-medium italic">
-                  "{item.description || item.excerpt || 'No description provided.'}"
-                </p>
               </div>
 
-              {/* Full Content Block (News Only) */}
-              {type === 'news' && item.fullContent && (
-                <div className="p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-purple-500 text-white rounded-lg"><FiBook /></div>
-                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Full Story</h3>
+              {/* Event Specific Info or Status */}
+              {type === 'events' ? (
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Event Details</h3>
+                  <div className="space-y-4">
+                    {item.time && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Time</span>
+                        <p className="text-sm font-bold text-slate-800 mt-1">{item.time}</p>
+                      </div>
+                    )}
+                    {item.location && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Location</span>
+                        <p className="text-sm font-bold text-slate-800 mt-1">{item.location}</p>
+                      </div>
+                    )}
+                    {item.speaker && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Speaker</span>
+                        <p className="text-sm font-bold text-slate-800 mt-1">{item.speaker}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-slate-700 leading-relaxed space-y-4 whitespace-pre-line font-medium">
-                    {item.fullContent}
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Status</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Status</span>
+                      <p className="text-sm font-bold text-slate-800 mt-1">{item.status || 'Published'}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Featured</span>
+                      <p className="text-sm font-bold text-slate-800 mt-1">{item.featured ? 'Yes' : 'No'}</p>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Description */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Description</h3>
+              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                {item.description || item.excerpt || 'No description available.'}
+              </p>
+            </div>
+
+            {/* Full Content for News */}
+            {type === 'news' && item.fullContent && (
+              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Full Content</h3>
+                <div className="text-slate-700 leading-relaxed whitespace-pre-line">
+                  {item.fullContent}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-8 border-t border-slate-100">
+              <button 
+                onClick={onClose} 
+                className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
+              >
+                Close
+              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={onClose} 
+                  className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
+                >
+                  Back to List
+                </button>
+                <button 
+                  onClick={() => onEdit(item)} 
+                  className={`px-6 py-3 text-white rounded-2xl font-bold text-sm shadow-lg transition-all bg-gradient-to-r ${themeGradient} hover:brightness-110`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FiEdit /> Edit {type === 'news' ? 'Article' : 'Event'}
+                  </div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Footer Actions */}
-        <div className="p-6 sm:p-8 bg-white border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-          <button 
-            onClick={onClose} 
-            className="flex-1 px-8 py-4 rounded-2xl bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs transition-all hover:bg-slate-200 active:scale-95"
-          >
-            Close Details
-          </button>
-          <button 
-            onClick={() => onEdit(item)} 
-            className={`flex-[2] px-8 py-4 rounded-2xl text-white font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg bg-gradient-to-r ${themeGradient} hover:brightness-110`}
-          >
-            Edit {type === 'news' ? 'Article' : 'Event'} Entry
-          </button>
-        </div>
-      </div>
-    </div>
+      </Box>
+    </Modal>
   );
 }
-
-// MODERN CARD COMPONENT (Matching Staff Style)
 // Modern Item Card Component with better data handling
 function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
   const [imageError, setImageError] = useState(false)
