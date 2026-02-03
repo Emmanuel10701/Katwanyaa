@@ -2,6 +2,147 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
 
+// ==================== AUTHENTICATION UTILITIES ====================
+
+// Device Token Manager
+class DeviceTokenManager {
+  static validateTokensFromHeaders(headers, options = {}) {
+    try {
+      // Extract tokens from headers
+      const adminToken = headers.get('x-admin-token') || headers.get('authorization')?.replace('Bearer ', '');
+      const deviceToken = headers.get('x-device-token');
+
+      if (!adminToken) {
+        return { valid: false, reason: 'no_admin_token', message: 'Admin token is required' };
+      }
+
+      if (!deviceToken) {
+        return { valid: false, reason: 'no_device_token', message: 'Device token is required' };
+      }
+
+      // Validate admin token format (basic check)
+      const adminParts = adminToken.split('.');
+      if (adminParts.length !== 3) {
+        return { valid: false, reason: 'invalid_admin_token_format', message: 'Invalid admin token format' };
+      }
+
+      // Validate device token
+      const deviceValid = this.validateDeviceToken(deviceToken);
+      if (!deviceValid.valid) {
+        return { 
+          valid: false, 
+          reason: `device_${deviceValid.reason}`,
+          message: `Device token ${deviceValid.reason}: ${deviceValid.error || ''}`
+        };
+      }
+
+      // Parse admin token payload
+      let adminPayload;
+      try {
+        adminPayload = JSON.parse(atob(adminParts[1]));
+        
+        // Check expiration
+        const currentTime = Date.now() / 1000;
+        if (adminPayload.exp < currentTime) {
+          return { valid: false, reason: 'admin_token_expired', message: 'Admin token has expired' };
+        }
+        
+        // Check user role - only admins can manage school info
+        const userRole = adminPayload.role || adminPayload.userRole;
+        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL'];
+        
+        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+          return { 
+            valid: false, 
+            reason: 'invalid_role', 
+            message: 'User does not have permission to manage school information' 
+          };
+        }
+        
+      } catch (error) {
+        return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
+      }
+
+      console.log('✅ School management authentication successful for user:', adminPayload.name || 'Unknown');
+      
+      return { 
+        valid: true, 
+        user: {
+          id: adminPayload.userId || adminPayload.id,
+          name: adminPayload.name,
+          email: adminPayload.email,
+          role: adminPayload.role || adminPayload.userRole
+        },
+        deviceInfo: deviceValid.payload
+      };
+
+    } catch (error) {
+      console.error('❌ Token validation error:', error);
+      return { 
+        valid: false, 
+        reason: 'validation_error', 
+        message: 'Authentication validation failed',
+        error: error.message 
+      };
+    }
+  }
+
+  // Validate device token
+  static validateDeviceToken(token) {
+    try {
+      // Handle base64 decoding safely
+      const payloadStr = Buffer.from(token, 'base64').toString('utf-8');
+      const payload = JSON.parse(payloadStr);
+      
+      // Check expiration
+      if (payload.exp && payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired', payload, error: 'Device token has expired' };
+      }
+      
+      // Check age (30 days max)
+      const createdAt = new Date(payload.createdAt || payload.iat * 1000);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      if (createdAt < thirtyDaysAgo) {
+        return { valid: false, reason: 'age_expired', payload, error: 'Device token is too old' };
+      }
+      
+      return { valid: true, payload };
+    } catch (error) {
+      return { valid: false, reason: 'invalid_format', error: error.message };
+    }
+  }
+}
+
+// Authentication middleware for protected requests
+const authenticateRequest = (req) => {
+  const headers = req.headers;
+  
+  // Validate tokens
+  const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
+  
+  if (!validationResult.valid) {
+    return {
+      authenticated: false,
+      response: NextResponse.json(
+        { 
+          success: false, 
+          error: "Access Denied",
+          message: "Authentication required to manage school information.",
+          details: validationResult.message
+        },
+        { status: 401 }
+      )
+    };
+  }
+
+  return {
+    authenticated: true,
+    user: validationResult.user,
+    deviceInfo: validationResult.devInfo
+  };
+};
+
 // ============ HELPER FUNCTIONS ============
 
 // Validate YouTube URL
@@ -323,7 +464,7 @@ const validateRequiredFieldsUpdate = (formData) => {
 
 // ============ API ROUTES ============
 
-// 🟡 GET school info
+// 🟡 GET school info (PUBLIC - no authentication required)
 export async function GET() {
   try {
     console.log("🔍 GET /api/school - Fetching school info");
@@ -363,10 +504,17 @@ export async function GET() {
   }
 }
 
-// 🟢 CREATE School Info (POST - CREATE ONLY)
+// 🟢 CREATE School Info (POST - CREATE ONLY) (PROTECTED - authentication required)
 export async function POST(req) {
   try {
+    // Authenticate the request
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
     console.log("📝 POST /api/school - Creating school info");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
     
     const formData = await req.formData();
     
@@ -391,7 +539,8 @@ export async function POST(req) {
       return NextResponse.json(
         { 
           success: false, 
-          error: validationError.message 
+          error: validationError.message,
+          authenticated: true
         },
         { status: 400 }
       );
@@ -421,7 +570,8 @@ export async function POST(req) {
       return NextResponse.json(
         { 
           success: false, 
-          error: videoError.message 
+          error: videoError.message,
+          authenticated: true
         },
         { status: 400 }
       );
@@ -443,7 +593,8 @@ export async function POST(req) {
       return NextResponse.json(
         { 
           success: false, 
-          error: parseError.message 
+          error: parseError.message,
+          authenticated: true
         },
         { status: 400 }
       );
@@ -478,18 +629,27 @@ export async function POST(req) {
       admissionLocation: formData.get("admissionLocation") || null,
       admissionOfficeHours: formData.get("admissionOfficeHours") || null,
       admissionDocumentsRequired,
+      // Audit trail
+      createdBy: auth.user.id,
+      createdByName: auth.user.name,
+      createdByRole: auth.user.role,
+      updatedBy: auth.user.id,
+      updatedByName: auth.user.name,
+      updatedByRole: auth.user.role,
     };
 
     const school = await prisma.schoolInfo.create({
       data: schoolData,
     });
     
-    console.log("✅ School created successfully:", school.name);
+    console.log(`✅ School created successfully by ${auth.user.name}: ${school.name}`);
     
     return NextResponse.json({ 
       success: true, 
       message: "School information created successfully",
-      school: cleanSchoolResponse(school)
+      school: cleanSchoolResponse(school),
+      createdBy: auth.user.name,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
@@ -498,17 +658,25 @@ export async function POST(req) {
       { 
         success: false, 
         error: error.message || "Internal server error",
-        message: "Failed to create school information"
+        message: "Failed to create school information",
+        authenticated: true
       }, 
       { status: 500 }
     );
   }
 }
 
-// 🔵 UPDATE School Info (PUT - UPDATE ONLY)
+// 🔵 UPDATE School Info (PUT - UPDATE ONLY) (PROTECTED - authentication required)
 export async function PUT(req) {
   try {
+    // Authenticate the request
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
     console.log("✏️ PUT /api/school - Updating school info");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
     
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
@@ -516,7 +684,8 @@ export async function PUT(req) {
         { 
           success: false, 
           error: "No school information found to update.",
-          message: "No school info to update. Create school first."
+          message: "No school info to update. Create school first.",
+          authenticated: true
         }, 
         { status: 404 }
       );
@@ -531,7 +700,8 @@ export async function PUT(req) {
       return NextResponse.json(
         { 
           success: false, 
-          error: validationError.message 
+          error: validationError.message,
+          authenticated: true
         },
         { status: 400 }
       );
@@ -574,7 +744,8 @@ export async function PUT(req) {
       return NextResponse.json(
         { 
           success: false, 
-          error: videoError.message 
+          error: videoError.message,
+          authenticated: true
         },
         { status: 400 }
       );
@@ -656,15 +827,21 @@ export async function PUT(req) {
         
         // Update timestamp
         updatedAt: new Date(),
+        // Audit trail
+        updatedBy: auth.user.id,
+        updatedByName: auth.user.name,
+        updatedByRole: auth.user.role,
       },
     });
 
-    console.log("✅ School updated successfully:", updated.name);
+    console.log(`✅ School updated successfully by ${auth.user.name}: ${updated.name}`);
     
     return NextResponse.json({ 
       success: true, 
       message: "School information updated successfully",
-      school: cleanSchoolResponse(updated)
+      school: cleanSchoolResponse(updated),
+      updatedBy: auth.user.name,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
@@ -673,17 +850,50 @@ export async function PUT(req) {
       { 
         success: false, 
         error: error.message || "Internal server error",
-        message: "Failed to update school information"
+        message: "Failed to update school information",
+        authenticated: true
       }, 
       { status: 500 }
     );
   }
 }
 
-// 🔴 DELETE all school info
+// 🔴 DELETE all school info (PROTECTED - authentication required)
 export async function DELETE() {
   try {
+    // Authenticate the request (need to pass headers)
+    // Since DELETE doesn't have req parameter in this function signature,
+    // we need to modify the function to accept it
+    const req = {}; // We'll need to adjust function signature
+    // This will require changing the route handler signature
+    
+    // For now, I'll add a helper function that checks auth
+    // But let me adjust the function signature first:
+  } catch (error) {
+    console.error("❌ DELETE Error:", error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: "Authentication error",
+        message: "Authentication required",
+        authenticated: false
+      }, 
+      { status: 401 }
+    );
+  }
+}
+
+// 🔴 DELETE all school info (PROTECTED - authentication required) - UPDATED SIGNATURE
+export async function DELETE(req) {
+  try {
+    // Authenticate the request
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
     console.log("🗑️ DELETE /api/school - Deleting school info");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
     
     const existing = await prisma.schoolInfo.findFirst();
     if (!existing) {
@@ -691,7 +901,8 @@ export async function DELETE() {
         { 
           success: false, 
           error: "No school information found to delete",
-          message: "No school info to delete" 
+          message: "No school info to delete",
+          authenticated: true
         }, 
         { status: 404 }
       );
@@ -709,11 +920,14 @@ export async function DELETE() {
 
     await prisma.schoolInfo.deleteMany();
     
-    console.log("✅ School deleted successfully");
+    console.log(`✅ School deleted successfully by ${auth.user.name}: ${existing.name}`);
     
     return NextResponse.json({ 
       success: true, 
-      message: "School information deleted successfully" 
+      message: "School information deleted successfully",
+      deletedBy: auth.user.name,
+      deletedSchool: existing.name,
+      timestamp: new Date().toISOString()
     });
     
   } catch (error) {
@@ -722,7 +936,8 @@ export async function DELETE() {
       { 
         success: false, 
         error: error.message || "Internal server error",
-        message: "Failed to delete school information"
+        message: "Failed to delete school information",
+        authenticated: true
       }, 
       { status: 500 }
     );
