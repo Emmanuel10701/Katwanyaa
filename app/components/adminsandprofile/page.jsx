@@ -837,7 +837,6 @@ const handleSaveAdmin = async (e) => {
       setEditingAdmin(null);
       setShowAdminModal(false);
       
-      // Refresh the admin list from server to ensure data consistency
       await fetchAdmins();
       
     } else {

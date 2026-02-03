@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Mail, 
   Lock, 
@@ -18,7 +18,12 @@ import {
   Network,
   Smartphone,
   CheckCircle,
-  Globe
+  Globe,
+  X,
+  RefreshCw,
+  AlertCircle,
+  ShieldAlert,
+  Clock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast, Toaster } from 'react-hot-toast';
@@ -34,7 +39,24 @@ export default function AdminLoginPage() {
     password: ''
   });
 
+  // Verification Modal States
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [verificationReason, setVerificationReason] = useState('');
+
   const router = useRouter();
+
+  // Countdown timer for resend button
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -112,62 +134,93 @@ export default function AdminLoginPage() {
       toast.dismiss(loadingToast);
 
       if (response.ok && data.success) {
-        // Store token in localStorage or cookies
-        if (data.token) {
-          localStorage.setItem('admin_token', data.token);
-          localStorage.setItem('admin_user', JSON.stringify(data.user));
+        if (data.requiresVerification) {
+          // Show verification modal
+          setVerificationEmail(data.email || formData.email);
+          setVerificationReason(data.reason || 'new_device');
+          setShowVerificationModal(true);
+          setCountdown(60); // 60 seconds countdown for resend
+          
+          toast.info('Security verification required. Check your email.', {
+            duration: 4000,
+            icon: '🔐',
+            style: {
+              background: '#e0f2fe',
+              color: '#0369a1',
+              border: '1px solid #7dd3fc',
+            }
+          });
+        } else {
+          // Normal login successful
+          if (data.token) {
+            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('admin_user', JSON.stringify(data.user));
+          }
+
+          // Success toast
+          toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`, {
+            duration: 3000,
+            icon: '✅',
+            style: {
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '14px',
+              padding: '18px 22px',
+              fontSize: '15px',
+              fontWeight: '600',
+              boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
+            },
+            iconTheme: {
+              primary: 'white',
+              secondary: '#059669',
+            },
+          });
+
+          // Delay redirect to show success message
+          setTimeout(() => {
+            router.push('/MainDashboard');
+          }, 1500);
         }
-
-        // Success toast - modernized
-        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`, {
-          duration: 3000,
-          icon: '✅',
-          style: {
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '14px',
-            padding: '18px 22px',
-            fontSize: '15px',
-            fontWeight: '600',
-            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
-          },
-          iconTheme: {
-            primary: 'white',
-            secondary: '#059669',
-          },
-        });
-
-        // Delay redirect to show success message
-        setTimeout(() => {
-          router.push('/MainDashboard');
-        }, 1500);
       } else {
-        // Error toast - modernized
-        toast.error(data.error || 'Login failed. Please try again.', {
-          duration: 4000,
-          icon: '⚠️',
-          style: {
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '14px',
-            padding: '18px 22px',
-            fontSize: '15px',
-            fontWeight: '600',
-            boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
-          },
-          iconTheme: {
-            primary: 'white',
-            secondary: '#dc2626',
-          },
-        });
+        // Check if verification is required due to failed attempts
+        if (data.requiresVerification) {
+          setVerificationEmail(formData.email);
+          setVerificationReason('multiple_failed_attempts');
+          setShowVerificationModal(true);
+          setCountdown(60);
+          
+          toast.info('Security verification required. Check your email.', {
+            duration: 4000,
+            icon: '🔐',
+          });
+        } else {
+          // Error toast
+          toast.error(data.error || 'Login failed. Please try again.', {
+            duration: 4000,
+            icon: '⚠️',
+            style: {
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '14px',
+              padding: '18px 22px',
+              fontSize: '15px',
+              fontWeight: '600',
+              boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
+            },
+            iconTheme: {
+              primary: 'white',
+              secondary: '#dc2626',
+            },
+          });
+        }
       }
     } catch (error) {
       // Dismiss loading toast
       toast.dismiss(loadingToast);
       
-      // Network error toast - modernized
+      // Network error toast
       toast.error('Network error. Please check your connection.', {
         duration: 4000,
         icon: '📡',
@@ -192,6 +245,151 @@ export default function AdminLoginPage() {
     }
   };
 
+  // Handle verification code input
+  const handleVerificationCodeChange = (index, value) => {
+    if (value.length > 1) return; // Prevent multiple characters
+    
+    const newCode = [...verificationCode];
+    newCode[index] = value.replace(/\D/g, ''); // Only allow numbers
+    
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`verification-input-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+    
+    setVerificationCode(newCode);
+  };
+
+  // Handle backspace
+  const handleVerificationKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+      const prevInput = document.getElementById(`verification-input-${index - 1}`);
+      if (prevInput) prevInput.focus();
+    }
+  };
+
+  // Verify the code
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      toast.error('Please enter the complete 6-digit code', {
+        duration: 3000,
+        icon: '🔢',
+      });
+      return;
+    }
+
+    setVerificationLoading(true);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          verificationCode: code,
+          action: 'verify'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store token and user data
+        if (data.token) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(data.user));
+        }
+
+        toast.success('Verification successful! Welcome back.', {
+          duration: 3000,
+          icon: '✅',
+        });
+
+        setShowVerificationModal(false);
+        setVerificationCode(['', '', '', '', '', '']);
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          router.push('/MainDashboard');
+        }, 1000);
+      } else {
+        toast.error(data.error || 'Invalid verification code', {
+          duration: 4000,
+          icon: '❌',
+        });
+        // Clear code on error
+        setVerificationCode(['', '', '', '', '', '']);
+        document.getElementById('verification-input-0').focus();
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.', {
+        duration: 4000,
+        icon: '📡',
+      });
+      console.error('Verification error:', error);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  // Resend verification code
+  const handleResendCode = async () => {
+    if (countdown > 0) return;
+    
+    setResendLoading(true);
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          action: 'resend'
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('New verification code sent! Check your email.', {
+          duration: 4000,
+          icon: '📧',
+        });
+        setCountdown(60); // Reset countdown
+        setVerificationCode(['', '', '', '', '', '']); // Clear input
+        document.getElementById('verification-input-0').focus();
+      } else {
+        toast.error(data.error || 'Failed to resend code', {
+          duration: 4000,
+          icon: '❌',
+        });
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.', {
+        duration: 4000,
+        icon: '📡',
+      });
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // Close verification modal
+  const closeVerificationModal = () => {
+    setShowVerificationModal(false);
+    setVerificationCode(['', '', '', '', '', '']);
+    setVerificationLoading(false);
+  };
+
+  // Security features and system metrics (keep your existing arrays)
   const securityFeatures = [
     { icon: <Shield className="w-4 h-4" />, label: "Secure Student Data", color: "emerald" },
     { icon: <Cpu className="w-4 h-4" />, label: "Automated Fee Tracking", color: "blue" },
@@ -208,7 +406,7 @@ export default function AdminLoginPage() {
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
@@ -268,6 +466,152 @@ export default function AdminLoginPage() {
         }}
       />
 
+      {/* ============================ */}
+      {/* VERIFICATION MODAL */}
+      {/* ============================ */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fade-in">
+          <div className="relative w-full max-w-md bg-gradient-to-br from-white to-slate-50 rounded-2xl sm:rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="relative p-6 sm:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
+              {/* Close Button */}
+              <button
+                onClick={closeVerificationModal}
+                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black">Security Verification</h3>
+                  <p className="text-blue-100 text-sm mt-1">Verify your identity to continue</p>
+                </div>
+              </div>
+              
+              {/* Reason Badge */}
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-xs font-bold">
+                  {verificationReason === 'new_device' 
+                    ? 'New Device Detected' 
+                    : 'Multiple Failed Attempts'}
+                </span>
+              </div>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-6 sm:p-8">
+              {/* Instructions */}
+              <div className="mb-6">
+                <p className="text-slate-600 text-sm mb-4">
+                  A 6-digit verification code has been sent to:
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-blue-800 font-bold text-center">{verificationEmail}</p>
+                </div>
+                <p className="text-slate-500 text-xs mt-3 text-center">
+                  Enter the code below to verify your identity
+                </p>
+              </div>
+              
+              {/* Code Inputs */}
+              <form onSubmit={handleVerifyCode}>
+                <div className="mb-8">
+                  <div className="flex justify-center gap-2 sm:gap-3 mb-4">
+                    {verificationCode.map((digit, index) => (
+                      <input
+                        key={index}
+                        id={`verification-input-${index}`}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                        onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                        className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl sm:text-3xl font-bold bg-white border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                        autoFocus={index === 0}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Countdown Timer */}
+                  <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-6">
+                    <Clock className="w-4 h-4" />
+                    <span>Code expires in: </span>
+                    <span className="font-bold text-blue-600">
+                      {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resendLoading || countdown > 0}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendLoading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : countdown > 0 ? (
+                      `Resend in ${countdown}s`
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        Resend Code
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    disabled={verificationLoading || verificationCode.join('').length !== 6}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {verificationLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Verify & Continue
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+              
+              {/* Security Note */}
+              <div className="mt-8 pt-6 border-t border-slate-200">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Security Notice</p>
+                    <p className="text-xs text-slate-600 mt-1">
+                      This extra step ensures your account stays secure. Never share verification codes with anyone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================ */}
+      {/* MAIN LOGIN PAGE */}
+      {/* ============================ */}
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
         {/* Modern Glass Container */}
         <div className="max-w-6xl w-full bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] shadow-xl sm:shadow-2xl shadow-slate-900/10 border border-white/40 overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[600px] md:min-h-[720px]">
