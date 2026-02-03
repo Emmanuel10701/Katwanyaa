@@ -20,6 +20,153 @@ const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_PHONE = '+254720123456';
 const CONTACT_EMAIL = 'admissions@katwanyaahighSchool.sc.ke';
 
+// ==================== AUTHENTICATION UTILITIES ====================
+
+// Device Token Manager
+class DeviceTokenManager {
+  static KEYS = {
+    DEVICE_TOKEN: 'device_token',
+    DEVICE_FINGERPRINT: 'device_fingerprint',
+    LOGIN_COUNT: 'login_count',
+    LAST_LOGIN: 'last_login'
+  };
+
+  // Validate both admin token and device token from headers
+  static validateTokensFromHeaders(headers) {
+    try {
+      // Extract tokens from headers
+      const adminToken = headers.get('x-admin-token') || headers.get('authorization')?.replace('Bearer ', '');
+      const deviceToken = headers.get('x-device-token');
+
+      if (!adminToken) {
+        return { valid: false, reason: 'no_admin_token', message: 'Admin token is required' };
+      }
+
+      if (!deviceToken) {
+        return { valid: false, reason: 'no_device_token', message: 'Device token is required' };
+      }
+
+      // Validate admin token format (basic check)
+      const adminParts = adminToken.split('.');
+      if (adminParts.length !== 3) {
+        return { valid: false, reason: 'invalid_admin_token_format', message: 'Invalid admin token format' };
+      }
+
+      // Validate device token
+      const deviceValid = this.validateDeviceToken(deviceToken);
+      if (!deviceValid.valid) {
+        return { 
+          valid: false, 
+          reason: `device_${deviceValid.reason}`,
+          message: `Device token ${deviceValid.reason}: ${deviceValid.error || ''}`
+        };
+      }
+
+      // Parse admin token payload
+      let adminPayload;
+      try {
+        adminPayload = JSON.parse(atob(adminParts[1]));
+        
+        // Check expiration
+        const currentTime = Date.now() / 1000;
+        if (adminPayload.exp < currentTime) {
+          return { valid: false, reason: 'admin_token_expired', message: 'Admin token has expired' };
+        }
+        
+        // Check user role
+        const userRole = adminPayload.role || adminPayload.userRole;
+        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL', 'ADMISSIONS_OFFICER'];
+        
+        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+          return { valid: false, reason: 'invalid_role', message: 'User does not have required permissions' };
+        }
+        
+      } catch (error) {
+        return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
+      }
+
+      console.log('✅ Authentication successful for user:', adminPayload.name || 'Unknown');
+      
+      return { 
+        valid: true, 
+        adminToken: adminToken,
+        deviceToken: deviceToken,
+        user: {
+          id: adminPayload.id,
+          name: adminPayload.name,
+          email: adminPayload.email,
+          role: adminPayload.role || adminPayload.userRole
+        },
+        deviceInfo: deviceValid.payload
+      };
+
+    } catch (error) {
+      console.error('❌ Token validation error:', error);
+      return { 
+        valid: false, 
+        reason: 'validation_error', 
+        message: 'Authentication validation failed',
+        error: error.message 
+      };
+    }
+  }
+
+  // Validate device token
+  static validateDeviceToken(token) {
+    try {
+      // Handle base64 decoding safely
+      const payloadStr = Buffer.from(token, 'base64').toString('utf-8');
+      const payload = JSON.parse(payloadStr);
+      
+      // Check expiration
+      if (payload.exp && payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired', payload, error: 'Device token has expired' };
+      }
+      
+      // Check age (30 days max)
+      const createdAt = new Date(payload.createdAt || payload.iat * 1000);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      if (createdAt < thirtyDaysAgo) {
+        return { valid: false, reason: 'age_expired', payload, error: 'Device token is too old' };
+      }
+      
+      return { valid: true, payload };
+    } catch (error) {
+      return { valid: false, reason: 'invalid_format', error: error.message };
+    }
+  }
+}
+
+// Authentication middleware for PATCH and DELETE
+const authenticateRequest = (req) => {
+  const headers = req.headers;
+  
+  // Validate tokens
+  const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
+  
+  if (!validationResult.valid) {
+    return {
+      authenticated: false,
+      response: NextResponse.json(
+        { 
+          success: false, 
+          error: "Access Denied",
+          message: "It seems you're not authenticated to automate this action. Please login again.",
+          details: validationResult.message
+        },
+        { status: 401 }
+      )
+    };
+  }
+
+  return {
+    authenticated: true,
+    user: validationResult.user,
+    deviceInfo: validationResult.deviceInfo
+  };
+};
+
 // ====================================================================
 // UTILITY FUNCTIONS
 // ====================================================================
@@ -2085,7 +2232,7 @@ function getDeletionNotificationTemplate(application, deletedBy) {
 }
 
 // ====================================================================
-// POST HANDLER - CREATE APPLICATION
+// POST HANDLER - CREATE APPLICATION (PUBLIC)
 // ====================================================================
 
 export async function POST(req) {
@@ -2221,7 +2368,7 @@ export async function POST(req) {
 }
 
 // ====================================================================
-// GET HANDLER - RETRIEVE APPLICATIONS
+// GET HANDLER - RETRIEVE APPLICATIONS (PUBLIC)
 // ====================================================================
 
 export async function GET(req) {
@@ -2321,11 +2468,20 @@ export async function GET(req) {
 }
 
 // ====================================================================
-// PATCH HANDLER - UPDATE APPLICATION
+// PATCH HANDLER - UPDATE APPLICATION (PROTECTED)
 // ====================================================================
 
 export async function PATCH(req) {
   try {
+    // Step 1: Authenticate the request
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    // Log authentication info
+    console.log(`✏️ Application update request from: ${auth.user.name} (${auth.user.role})`);
+
     const url = new URL(req.url);
     const pathSegments = url.pathname.split('/');
     const id = pathSegments[pathSegments.length - 1];
@@ -2373,7 +2529,7 @@ export async function PATCH(req) {
       // Handle status-specific updates
       if (data.status === 'ACCEPTED' || data.status === 'CONDITIONAL_ACCEPTANCE') {
         updateData.decisionDate = new Date();
-        updateData.admissionOfficer = data.admissionOfficer || 'System';
+        updateData.admissionOfficer = auth.user.name || 'System';
         if (data.decisionNotes) updateData.decisionNotes = data.decisionNotes;
         
         if (data.assignedStream) updateData.assignedStream = data.assignedStream;
@@ -2393,14 +2549,14 @@ export async function PATCH(req) {
         updateData.rejectionReason = data.rejectionReason || null;
         updateData.alternativeSuggestions = data.alternativeSuggestions || null;
         updateData.decisionNotes = data.decisionNotes || null;
-        updateData.admissionOfficer = data.admissionOfficer || 'System';
+        updateData.admissionOfficer = auth.user.name || 'System';
       }
       
       else if (data.status === 'WAITLISTED') {
         updateData.waitlistPosition = data.waitlistPosition || null;
         updateData.waitlistNotes = data.waitlistNotes || null;
         updateData.decisionNotes = data.decisionNotes || null;
-        updateData.admissionOfficer = data.admissionOfficer || 'System';
+        updateData.admissionOfficer = auth.user.name || 'System';
       }
       
       else if (data.status === 'INTERVIEW_SCHEDULED' || data.status === 'INTERVIEWED') {
@@ -2408,7 +2564,7 @@ export async function PATCH(req) {
         if (data.interviewTime) updateData.interviewTime = data.interviewTime;
         if (data.interviewVenue) updateData.interviewVenue = data.interviewVenue;
         if (data.interviewNotes) updateData.interviewNotes = data.interviewNotes;
-        updateData.admissionOfficer = data.admissionOfficer || 'System';
+        updateData.admissionOfficer = auth.user.name || 'System';
         
         if (data.status === 'INTERVIEWED') {
           updateData.decisionNotes = data.decisionNotes || null;
@@ -2418,7 +2574,7 @@ export async function PATCH(req) {
 
     // Update other fields
     if (data.decisionNotes !== undefined) updateData.decisionNotes = data.decisionNotes;
-    if (data.admissionOfficer !== undefined) updateData.admissionOfficer = data.admissionOfficer;
+    if (data.admissionOfficer !== undefined) updateData.admissionOfficer = auth.user.name;
     if (data.documentsVerified !== undefined) updateData.documentsVerified = data.documentsVerified;
     if (data.documentsNotes !== undefined) updateData.documentsNotes = data.documentsNotes;
 
@@ -2456,6 +2612,7 @@ export async function PATCH(req) {
         name: `${updatedApplication.firstName} ${updatedApplication.lastName}`,
         status: getStatusLabel(updatedApplication.status),
         updatedAt: updatedApplication.updatedAt,
+        updatedBy: auth.user.name
       }
     });
 
@@ -2481,11 +2638,20 @@ export async function PATCH(req) {
 }
 
 // ====================================================================
-// DELETE HANDLER - DELETE APPLICATION
+// DELETE HANDLER - DELETE APPLICATION (PROTECTED)
 // ====================================================================
 
 export async function DELETE(req) {
   try {
+    // Step 1: Authenticate the request
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    // Log authentication info
+    console.log(`🗑️ Application deletion request from: ${auth.user.name} (${auth.user.role})`);
+
     const url = new URL(req.url);
     const pathSegments = url.pathname.split('/');
     const id = pathSegments[pathSegments.length - 1];
@@ -2509,9 +2675,9 @@ export async function DELETE(req) {
       );
     }
 
-    // Get the user who is deleting (from request headers or body)
+    // Get deletion reason from request body
     const data = await req.json().catch(() => ({}));
-    const deletedBy = data.deletedBy || 'System Administrator';
+    const deletedBy = auth.user.name || 'System Administrator';
     const reason = data.reason || 'Administrative action';
 
     // Store application data before deletion for notification
