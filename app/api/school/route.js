@@ -858,30 +858,7 @@ export async function PUT(req) {
   }
 }
 
-// 🔴 DELETE all school info (PROTECTED - authentication required)
-export async function DELETE() {
-  try {
-    // Authenticate the request (need to pass headers)
-    // Since DELETE doesn't have req parameter in this function signature,
-    // we need to modify the function to accept it
-    const req = {}; // We'll need to adjust function signature
-    // This will require changing the route handler signature
-    
-    // For now, I'll add a helper function that checks auth
-    // But let me adjust the function signature first:
-  } catch (error) {
-    console.error("❌ DELETE Error:", error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: "Authentication error",
-        message: "Authentication required",
-        authenticated: false
-      }, 
-      { status: 401 }
-    );
-  }
-}
+
 
 // 🔴 DELETE all school info (PROTECTED - authentication required) - UPDATED SIGNATURE
 export async function DELETE(req) {
