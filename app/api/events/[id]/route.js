@@ -506,6 +506,8 @@ export async function DELETE(req, { params }) {
       }
     });
 
+    
+
     // Step 6: Return success response
     return NextResponse.json({ 
       success: true, 
