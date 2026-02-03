@@ -50,19 +50,7 @@ export default function AdminLoginPage() {
 
   const router = useRouter();
 
-  // Check localStorage on component mount
-  useEffect(() => {
-    const checkLocalStorage = () => {
-      const check = LocalStorageManager.checkVerificationRequirement();
-      console.log('Device verification status:', check);
-      
-      if (check.requiresVerification && check.reason === 'expired') {
-        console.log('Device token expired - will require verification');
-      }
-    };
-    
-    checkLocalStorage();
-  }, []);
+
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -326,107 +314,102 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!isForgotMode) {
-      if (!agreedToTerms) {
-        toast.error("Verification Required: Please accept the Terms of Access before proceeding."); // Changed to sonner
-        return;
-      }
-
-      if (!formData.email || !formData.password) {
-        toast.error("Please fill in all required fields"); // Changed to sonner
-        return;
-      }
-    } else {
-      if (!formData.email) {
-        toast.error("Please enter your email address"); // Changed to sonner
-        return;
-      }
-      
-      const loadingToast = toast.loading("Sending recovery instructions..."); // Changed to sonner
-      setTimeout(() => {
-        toast.dismiss(loadingToast);
-        toast.success("Recovery email sent! Check your inbox."); // Changed to sonner
-        setIsForgotMode(false);
-      }, 2000);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  e.stopPropagation(); // Prevent any auto-submit behavior
+  
+  if (!isForgotMode) {
+    if (!agreedToTerms) {
+      toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
       return;
     }
 
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    console.log('LocalStorage verification check:', localStorageCheck);
-    
-    const deviceFingerprint = DeviceFingerprint.generate();
-    
-    setIsLoading(true);
-    
-    const loadingToast = toast.loading('Authenticating...'); // Changed to sonner
-
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          clientDeviceToken: localStorageCheck.deviceToken,
-          clientLoginCount: localStorageCheck.loginCount,
-          clientDeviceHash: deviceFingerprint.hash
-        }),
-      });
-
-      const data = await response.json();
-
-      toast.dismiss(loadingToast);
-
-      if (response.ok && data.success) {
-        if (data.requiresVerification) {
-          setVerificationEmail(data.email || formData.email);
-          setVerificationReason(data.reason || localStorageCheck.reason || 'new_device');
-          setShowVerificationModal(true);
-          setCountdown(60);
-          
-          toast.info('Security verification required. Check your email.'); // Changed to sonner
-        } else {
-          if (data.storeInLocalStorage && data.deviceToken) {
-            LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
-          }
-          
-          if (data.token) {
-            localStorage.setItem('admin_token', data.token);
-            localStorage.setItem('admin_user', JSON.stringify(data.user));
-          }
-
-          toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`); // Changed to sonner
-
-          setTimeout(() => {
-            router.push('/MainDashboard');
-          }, 1500);
-        }
-      } else {
-        if (data.requiresVerification) {
-          setVerificationEmail(formData.email);
-          setVerificationReason(data.reason || 'multiple_failed_attempts');
-          setShowVerificationModal(true);
-          setCountdown(60);
-          
-          toast.info('Security verification required. Check your email.'); // Changed to sonner
-        } else {
-          toast.error(data.error || 'Login failed. Please try again.'); // Changed to sonner
-        }
-      }
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error('Network error. Please check your connection.'); // Changed to sonner
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all required fields");
+      return;
     }
-  };
+  } else {
+    if (!formData.email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    const loadingToast = toast.loading("Sending recovery instructions...");
+    setTimeout(() => {
+      toast.dismiss(loadingToast);
+      toast.success("Recovery email sent! Check your inbox.");
+      setIsForgotMode(false);
+    }, 2000);
+    return;
+  }
 
+  // NO automatic checks here - wait for button click
+  setIsLoading(true);
+  
+  const loadingToast = toast.loading('Authenticating...');
+
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        // Don't send any device info that might auto-trigger verification
+      }),
+    });
+
+    const data = await response.json();
+
+    toast.dismiss(loadingToast);
+
+    if (response.ok && data.success) {
+      // VERIFICATION WILL ONLY HAPPEN IF SERVER EXPLICITLY SAYS SO
+      if (data.requiresVerification === true) {
+        // Show verification modal ONLY when server requires it
+        setVerificationEmail(data.email || formData.email);
+        setVerificationReason(data.reason || 'security_check');
+        setShowVerificationModal(true);
+        setCountdown(60);
+        
+        toast.info('Security verification required. Check your email.');
+      } else {
+        // Direct login - no verification needed
+        if (data.token) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(data.user));
+        }
+
+        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
+
+        setTimeout(() => {
+          router.push('/MainDashboard');
+        }, 1500);
+      }
+    } else {
+      // Login failed - only show verification if server explicitly says to
+      if (data.requiresVerification === true) {
+        setVerificationEmail(formData.email);
+        setVerificationReason(data.reason || 'suspicious_activity');
+        setShowVerificationModal(true);
+        setCountdown(60);
+        
+        toast.info('Security verification required. Check your email.');
+      } else {
+        // Regular login error
+        toast.error(data.error || 'Login failed. Please try again.');
+      }
+    }
+  } catch (error) {
+    toast.dismiss(loadingToast);
+    toast.error('Network error. Please check your connection.');
+    console.error('Login error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Close verification modal
   const closeVerificationModal = () => {
     setShowVerificationModal(false);
