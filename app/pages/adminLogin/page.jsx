@@ -26,7 +26,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast, Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'sonner'; // Changed to sonner
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -50,22 +50,19 @@ export default function AdminLoginPage() {
 
   const router = useRouter();
 
-
-// Check localStorage on component mount
-useEffect(() => {
-  const checkLocalStorage = () => {
-    const check = LocalStorageManager.checkVerificationRequirement();
-    console.log('Device verification status:', check);
+  // Check localStorage on component mount
+  useEffect(() => {
+    const checkLocalStorage = () => {
+      const check = LocalStorageManager.checkVerificationRequirement();
+      console.log('Device verification status:', check);
+      
+      if (check.requiresVerification && check.reason === 'expired') {
+        console.log('Device token expired - will require verification');
+      }
+    };
     
-    // Optional: You could use this to pre-fill email or show different UI
-    if (check.requiresVerification && check.reason === 'expired') {
-      console.log('Device token expired - will require verification');
-    }
-  };
-  
-  checkLocalStorage();
-}, []);
-
+    checkLocalStorage();
+  }, []);
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -83,150 +80,135 @@ useEffect(() => {
     }));
   };
 
-
-
   // Device Fingerprint Generator
-class DeviceFingerprint {
-  static generate() {
-    const fingerprint = {
-      userAgent: navigator.userAgent,
-      screen: {
-        width: screen.width,
-        height: screen.height,
-        colorDepth: screen.colorDepth,
-        pixelRatio: window.devicePixelRatio
-      },
-      language: navigator.language || navigator.userLanguage,
-      platform: navigator.platform,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      languages: navigator.languages
-    };
-
-    return {
-      raw: fingerprint,
-      hash: this.hashFingerprint(fingerprint)
-    };
-  }
-
-  static hashFingerprint(fingerprint) {
-    const str = JSON.stringify(fingerprint);
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36);
-  }
-}
-
-// LocalStorage Manager
-class LocalStorageManager {
-  static KEYS = {
-    DEVICE_FINGERPRINT: 'device_fingerprint',
-    DEVICE_TOKEN: 'device_token',
-    LOGIN_COUNT: 'login_count',
-    LAST_LOGIN: 'last_login'
-  };
-
-  // Check if verification is needed
-  static checkVerificationRequirement() {
-    try {
-      // Check device token exists
-      const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
-      if (!deviceToken) {
-        return { requiresVerification: true, reason: 'no_device_token' };
-      }
-
-      // Parse and validate token
-      const tokenValid = this.validateDeviceToken(deviceToken);
-      if (!tokenValid.valid) {
-        return { 
-          requiresVerification: true, 
-          reason: tokenValid.reason,
-          deviceToken: deviceToken 
-        };
-      }
-
-      // Check login count (auto-expire after 15 logins)
-      if (tokenValid.payload.loginCount >= 15) {
-        return { requiresVerification: true, reason: 'max_logins_reached' };
-      }
-
-      // Compare device fingerprint
-      const currentFingerprint = DeviceFingerprint.generate();
-      const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
-      
-      if (storedFingerprint !== currentFingerprint.hash) {
-        return { requiresVerification: true, reason: 'device_mismatch' };
-      }
-
-      return { 
-        requiresVerification: false, 
-        deviceToken, 
-        loginCount: tokenValid.payload.loginCount || 0,
-        deviceHash: currentFingerprint.hash 
+  class DeviceFingerprint {
+    static generate() {
+      const fingerprint = {
+        userAgent: navigator.userAgent,
+        screen: {
+          width: screen.width,
+          height: screen.height,
+          colorDepth: screen.colorDepth,
+          pixelRatio: window.devicePixelRatio
+        },
+        language: navigator.language || navigator.userLanguage,
+        platform: navigator.platform,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        languages: navigator.languages
       };
-    } catch (error) {
-      console.error('LocalStorage check error:', error);
-      return { requiresVerification: true, reason: 'storage_error' };
-    }
-  }
 
-  // Validate device token
-  static validateDeviceToken(token) {
-    try {
-      const payloadStr = decodeURIComponent(escape(atob(token)));
-      const payload = JSON.parse(payloadStr);
-      
-      // Check expiration (30 days)
-      if (payload.exp * 1000 <= Date.now()) {
-        return { valid: false, reason: 'expired' };
+      return {
+        raw: fingerprint,
+        hash: this.hashFingerprint(fingerprint)
+      };
+    }
+
+    static hashFingerprint(fingerprint) {
+      const str = JSON.stringify(fingerprint);
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
       }
-      
-      return { valid: true, payload };
-    } catch (error) {
-      return { valid: false, reason: 'invalid_token' };
+      return Math.abs(hash).toString(36);
     }
   }
 
-  // Store device data after successful verification
-  static storeDeviceData(deviceToken, deviceHash) {
-    try {
-      localStorage.setItem(this.KEYS.DEVICE_TOKEN, deviceToken);
-      localStorage.setItem(this.KEYS.DEVICE_FINGERPRINT, deviceHash);
-      localStorage.setItem(this.KEYS.LAST_LOGIN, new Date().toISOString());
-      
-      // Parse token to get login count
-      const payload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
-      localStorage.setItem(this.KEYS.LOGIN_COUNT, payload.loginCount || '1');
-    } catch (error) {
-      console.error('Error storing device data:', error);
+  // LocalStorage Manager
+  class LocalStorageManager {
+    static KEYS = {
+      DEVICE_FINGERPRINT: 'device_fingerprint',
+      DEVICE_TOKEN: 'device_token',
+      LOGIN_COUNT: 'login_count',
+      LAST_LOGIN: 'last_login'
+    };
+
+    static checkVerificationRequirement() {
+      try {
+        const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
+        if (!deviceToken) {
+          return { requiresVerification: true, reason: 'no_device_token' };
+        }
+
+        const tokenValid = this.validateDeviceToken(deviceToken);
+        if (!tokenValid.valid) {
+          return { 
+            requiresVerification: true, 
+            reason: tokenValid.reason,
+            deviceToken: deviceToken 
+          };
+        }
+
+        if (tokenValid.payload.loginCount >= 15) {
+          return { requiresVerification: true, reason: 'max_logins_reached' };
+        }
+
+        const currentFingerprint = DeviceFingerprint.generate();
+        const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
+        
+        if (storedFingerprint !== currentFingerprint.hash) {
+          return { requiresVerification: true, reason: 'device_mismatch' };
+        }
+
+        return { 
+          requiresVerification: false, 
+          deviceToken, 
+          loginCount: tokenValid.payload.loginCount || 0,
+          deviceHash: currentFingerprint.hash 
+        };
+      } catch (error) {
+        console.error('LocalStorage check error:', error);
+        return { requiresVerification: true, reason: 'storage_error' };
+      }
+    }
+
+    static validateDeviceToken(token) {
+      try {
+        const payloadStr = decodeURIComponent(escape(atob(token)));
+        const payload = JSON.parse(payloadStr);
+        
+        if (payload.exp * 1000 <= Date.now()) {
+          return { valid: false, reason: 'expired' };
+        }
+        
+        return { valid: true, payload };
+      } catch (error) {
+        return { valid: false, reason: 'invalid_token' };
+      }
+    }
+
+    static storeDeviceData(deviceToken, deviceHash) {
+      try {
+        localStorage.setItem(this.KEYS.DEVICE_TOKEN, deviceToken);
+        localStorage.setItem(this.KEYS.DEVICE_FINGERPRINT, deviceHash);
+        localStorage.setItem(this.KEYS.LAST_LOGIN, new Date().toISOString());
+        
+        const payload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+        localStorage.setItem(this.KEYS.LOGIN_COUNT, payload.loginCount || '1');
+      } catch (error) {
+        console.error('Error storing device data:', error);
+      }
+    }
+
+    static clearLoginData() {
+      try {
+        localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
+        localStorage.removeItem(this.KEYS.LOGIN_COUNT);
+        localStorage.removeItem(this.KEYS.LAST_LOGIN);
+      } catch (error) {
+        console.error('Error clearing login data:', error);
+      }
     }
   }
-
-  // Clear all login data (on logout)
-  static clearLoginData() {
-    try {
-      localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
-      localStorage.removeItem(this.KEYS.LOGIN_COUNT);
-      localStorage.removeItem(this.KEYS.LAST_LOGIN);
-      // Keep device fingerprint for recognition
-    } catch (error) {
-      console.error('Error clearing login data:', error);
-    }
-  }
-}
-
 
   // Handle verification code input
   const handleVerificationCodeChange = (index, value) => {
-    if (value.length > 1) return; // Prevent multiple characters
+    if (value.length > 1) return;
     
     const newCode = [...verificationCode];
-    newCode[index] = value.replace(/\D/g, ''); // Only allow numbers
+    newCode[index] = value.replace(/\D/g, '');
     
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`verification-input-${index + 1}`);
       if (nextInput) nextInput.focus();
@@ -243,330 +225,207 @@ class LocalStorageManager {
     }
   };
 
-// Verify the code
-const handleVerifyCode = async (e) => {
-  e.preventDefault();
-  
-  const code = verificationCode.join('');
-  if (code.length !== 6) {
-    toast.error('Please enter the complete 6-digit code', {
-      duration: 3000,
-      icon: '🔢',
-    });
-    return;
-  }
-
-  setVerificationLoading(true);
-
-  try {
-    // Check localStorage for login count
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    const deviceFingerprint = DeviceFingerprint.generate();
+  // Verify the code
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
     
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: verificationEmail,
-        verificationCode: code,
-        action: 'verify',
-        clientLoginCount: localStorageCheck.loginCount,
-        clientDeviceHash: deviceFingerprint.hash
-      }),
-    });
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      toast.error('Please enter the complete 6-digit code'); // Changed to sonner
+      return;
+    }
 
-    const data = await response.json();
+    setVerificationLoading(true);
 
-    if (response.ok && data.success) {
-      // Store device token in localStorage
-      if (data.deviceToken) {
-        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
-      }
+    try {
+      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+      const deviceFingerprint = DeviceFingerprint.generate();
       
-      // Store auth token
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_user', JSON.stringify(data.user));
-      }
-
-      toast.success('Verification successful! Welcome back.', {
-        duration: 3000,
-        icon: '✅',
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          verificationCode: code,
+          action: 'verify',
+          clientLoginCount: localStorageCheck.loginCount,
+          clientDeviceHash: deviceFingerprint.hash
+        }),
       });
 
-      setShowVerificationModal(false);
-      setVerificationCode(['', '', '', '', '', '']);
-      
-      // Redirect to dashboard
-      setTimeout(() => {
-        router.push('/MainDashboard');
-      }, 1000);
-    } else {
-      toast.error(data.error || 'Invalid verification code', {
-        duration: 4000,
-        icon: '❌',
-      });
-      // Clear code on error
-      setVerificationCode(['', '', '', '', '', '']);
-      document.getElementById('verification-input-0').focus();
-    }
-  } catch (error) {
-    toast.error('Network error. Please try again.', {
-      duration: 4000,
-      icon: '📡',
-    });
-    console.error('Verification error:', error);
-  } finally {
-    setVerificationLoading(false);
-  }
-};
+      const data = await response.json();
 
-// Resend verification code
-const handleResendCode = async () => {
-  if (countdown > 0) return;
-  
-  setResendLoading(true);
-
-  try {
-    const deviceFingerprint = DeviceFingerprint.generate();
-    
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: verificationEmail,
-        action: 'resend',
-        clientDeviceHash: deviceFingerprint.hash
-      }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok && data.success) {
-      toast.success('New verification code sent! Check your email.', {
-        duration: 4000,
-        icon: '📧',
-      });
-      setCountdown(60); // Reset countdown
-      setVerificationCode(['', '', '', '', '', '']); // Clear input
-      document.getElementById('verification-input-0').focus();
-    } else {
-      toast.error(data.error || 'Failed to resend code', {
-        duration: 4000,
-        icon: '❌',
-      });
-    }
-  } catch (error) {
-    toast.error('Network error. Please try again.', {
-      duration: 4000,
-      icon: '📡',
-    });
-  } finally {
-    setResendLoading(false);
-  }
-};
-
-
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!isForgotMode) {
-    if (!agreedToTerms) {
-      toast.error("Verification Required: Please accept the Terms of Access before proceeding.", {
-        duration: 5000,
-        icon: '⚠️',
-        style: {
-          background: '#fef3c7',
-          color: '#92400e',
-          border: '1px solid #fbbf24',
-        }
-      });
-      return;
-    }
-
-    // Validate form data
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all required fields", {
-        duration: 3000,
-        icon: '📝',
-      });
-      return;
-    }
-  } else {
-    // Handle forgot password mode
-    if (!formData.email) {
-      toast.error("Please enter your email address", {
-        duration: 3000,
-        icon: '📧',
-      });
-      return;
-    }
-    
-    toast.loading("Sending recovery instructions...", { duration: 2000 });
-    setTimeout(() => {
-      toast.success("Recovery email sent! Check your inbox.", {
-        duration: 4000,
-        icon: '✅',
-      });
-      setIsForgotMode(false);
-    }, 2000);
-    return;
-  }
-
-  // Check localStorage first
-  const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-  console.log('LocalStorage verification check:', localStorageCheck);
-  
-  // Generate device fingerprint
-  const deviceFingerprint = DeviceFingerprint.generate();
-  
-  setIsLoading(true);
-  
-  // Show loading toast
-  const loadingToast = toast.loading('Authenticating...', {
-    duration: Infinity,
-  });
-
-  try {
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-        clientDeviceToken: localStorageCheck.deviceToken,
-        clientLoginCount: localStorageCheck.loginCount,
-        clientDeviceHash: deviceFingerprint.hash
-      }),
-    });
-
-    const data = await response.json();
-
-    // Dismiss loading toast
-    toast.dismiss(loadingToast);
-
-    if (response.ok && data.success) {
-      if (data.requiresVerification) {
-        // Show verification modal
-        setVerificationEmail(data.email || formData.email);
-        setVerificationReason(data.reason || localStorageCheck.reason || 'new_device');
-        setShowVerificationModal(true);
-        setCountdown(60); // 60 seconds countdown for resend
-        
-        toast.info('Security verification required. Check your email.', {
-          duration: 4000,
-          icon: '🔐',
-          style: {
-            background: '#e0f2fe',
-            color: '#0369a1',
-            border: '1px solid #7dd3fc',
-          }
-        });
-      } else {
-        // Store device token in localStorage if provided
-        if (data.storeInLocalStorage && data.deviceToken) {
+      if (response.ok && data.success) {
+        if (data.deviceToken) {
           LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
         }
         
-        // Store auth token
         if (data.token) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(data.user));
         }
 
-        // Success toast
-        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`, {
-          duration: 3000,
-          icon: '✅',
-          style: {
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '14px',
-            padding: '18px 22px',
-            fontSize: '15px',
-            fontWeight: '600',
-            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
-          },
-          iconTheme: {
-            primary: 'white',
-            secondary: '#059669',
-          },
-        });
+        toast.success('Verification successful! Welcome back.'); // Changed to sonner
 
-        // Delay redirect to show success message
+        setShowVerificationModal(false);
+        setVerificationCode(['', '', '', '', '', '']);
+        
         setTimeout(() => {
           router.push('/MainDashboard');
-        }, 1500);
+        }, 1000);
+      } else {
+        toast.error(data.error || 'Invalid verification code'); // Changed to sonner
+        setVerificationCode(['', '', '', '', '', '']);
+        document.getElementById('verification-input-0').focus();
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.'); // Changed to sonner
+      console.error('Verification error:', error);
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  // Resend verification code
+  const handleResendCode = async () => {
+    if (countdown > 0) return;
+    
+    setResendLoading(true);
+
+    try {
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          action: 'resend',
+          clientDeviceHash: deviceFingerprint.hash
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success('New verification code sent! Check your email.'); // Changed to sonner
+        setCountdown(60);
+        setVerificationCode(['', '', '', '', '', '']);
+        document.getElementById('verification-input-0').focus();
+      } else {
+        toast.error(data.error || 'Failed to resend code'); // Changed to sonner
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.'); // Changed to sonner
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!isForgotMode) {
+      if (!agreedToTerms) {
+        toast.error("Verification Required: Please accept the Terms of Access before proceeding."); // Changed to sonner
+        return;
+      }
+
+      if (!formData.email || !formData.password) {
+        toast.error("Please fill in all required fields"); // Changed to sonner
+        return;
       }
     } else {
-      // Check if verification is required due to failed attempts
-      if (data.requiresVerification) {
-        setVerificationEmail(formData.email);
-        setVerificationReason(data.reason || 'multiple_failed_attempts');
-        setShowVerificationModal(true);
-        setCountdown(60);
-        
-        toast.info('Security verification required. Check your email.', {
-          duration: 4000,
-          icon: '🔐',
-        });
-      } else {
-        // Error toast
-        toast.error(data.error || 'Login failed. Please try again.', {
-          duration: 4000,
-          icon: '⚠️',
-          style: {
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '14px',
-            padding: '18px 22px',
-            fontSize: '15px',
-            fontWeight: '600',
-            boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
-          },
-          iconTheme: {
-            primary: 'white',
-            secondary: '#dc2626',
-          },
-        });
+      if (!formData.email) {
+        toast.error("Please enter your email address"); // Changed to sonner
+        return;
       }
+      
+      const loadingToast = toast.loading("Sending recovery instructions..."); // Changed to sonner
+      setTimeout(() => {
+        toast.dismiss(loadingToast);
+        toast.success("Recovery email sent! Check your inbox."); // Changed to sonner
+        setIsForgotMode(false);
+      }, 2000);
+      return;
     }
-  } catch (error) {
-    // Dismiss loading toast
-    toast.dismiss(loadingToast);
+
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    console.log('LocalStorage verification check:', localStorageCheck);
     
-    // Network error toast
-    toast.error('Network error. Please check your connection.', {
-      duration: 4000,
-      icon: '📡',
-      style: {
-        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        color: 'white',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        borderRadius: '14px',
-        padding: '18px 22px',
-        fontSize: '15px',
-        fontWeight: '600',
-        boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)',
-      },
-      iconTheme: {
-        primary: 'white',
-        secondary: '#d97706',
-      },
-    });
-    console.error('Login error:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+    const deviceFingerprint = DeviceFingerprint.generate();
+    
+    setIsLoading(true);
+    
+    const loadingToast = toast.loading('Authenticating...'); // Changed to sonner
+
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          clientDeviceToken: localStorageCheck.deviceToken,
+          clientLoginCount: localStorageCheck.loginCount,
+          clientDeviceHash: deviceFingerprint.hash
+        }),
+      });
+
+      const data = await response.json();
+
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.success) {
+        if (data.requiresVerification) {
+          setVerificationEmail(data.email || formData.email);
+          setVerificationReason(data.reason || localStorageCheck.reason || 'new_device');
+          setShowVerificationModal(true);
+          setCountdown(60);
+          
+          toast.info('Security verification required. Check your email.'); // Changed to sonner
+        } else {
+          if (data.storeInLocalStorage && data.deviceToken) {
+            LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+          }
+          
+          if (data.token) {
+            localStorage.setItem('admin_token', data.token);
+            localStorage.setItem('admin_user', JSON.stringify(data.user));
+          }
+
+          toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`); // Changed to sonner
+
+          setTimeout(() => {
+            router.push('/MainDashboard');
+          }, 1500);
+        }
+      } else {
+        if (data.requiresVerification) {
+          setVerificationEmail(formData.email);
+          setVerificationReason(data.reason || 'multiple_failed_attempts');
+          setShowVerificationModal(true);
+          setCountdown(60);
+          
+          toast.info('Security verification required. Check your email.'); // Changed to sonner
+        } else {
+          toast.error(data.error || 'Login failed. Please try again.'); // Changed to sonner
+        }
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Network error. Please check your connection.'); // Changed to sonner
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Close verification modal
   const closeVerificationModal = () => {
@@ -575,7 +434,7 @@ const handleResendCode = async () => {
     setVerificationLoading(false);
   };
 
-  // Security features and system metrics (keep your existing arrays)
+  // Security features and system metrics
   const securityFeatures = [
     { icon: <Shield className="w-4 h-4" />, label: "Secure Student Data", color: "emerald" },
     { icon: <Cpu className="w-4 h-4" />, label: "Automated Fee Tracking", color: "blue" },
@@ -605,51 +464,12 @@ const handleResendCode = async () => {
 
   return (
     <>
-      {/* Toast Notifications */}
+      {/* Sonner Toaster */}
       <Toaster
         position={isMobile ? "top-center" : "top-right"}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#fff',
-            color: '#374151',
-            borderRadius: '12px',
-            border: '1px solid #e5e7eb',
-            padding: '14px',
-            boxShadow: '0 8px 20px -5px rgba(0, 0, 0, 0.1)',
-            maxWidth: isMobile ? 'calc(100vw - 32px)' : 'auto',
-            fontSize: isMobile ? '14px' : '16px',
-          },
-          success: {
-            style: {
-              background: '#d1fae5',
-              color: '#065f46',
-              border: '1px solid #10b981',
-            },
-            iconTheme: {
-              primary: '#10b981',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            style: {
-              background: '#fee2e2',
-              color: '#991b1b',
-              border: '1px solid #f87171',
-            },
-            iconTheme: {
-              primary: '#f87171',
-              secondary: '#fff',
-            },
-          },
-          loading: {
-            style: {
-              background: '#f0f9ff',
-              color: '#0369a1',
-              border: '1px solid #0ea5e9',
-            },
-          },
-        }}
+        expand={false}
+        richColors
+        closeButton
       />
 
       {/* ============================ */}
@@ -661,7 +481,6 @@ const handleResendCode = async () => {
             
             {/* Modal Header */}
             <div className="relative p-6 sm:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-              {/* Close Button */}
               <button
                 onClick={closeVerificationModal}
                 className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-colors"
@@ -679,26 +498,24 @@ const handleResendCode = async () => {
                 </div>
               </div>
               
-{/* Reason Badge */}
-<div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-  <AlertCircle className="w-4 h-4" />
-  <span className="text-xs font-bold">
-    {verificationReason === 'new_device' 
-      ? 'New Device Detected' 
-      : verificationReason === 'max_logins_reached'
-      ? 'Max Login Attempts Reached'
-      : verificationReason === 'expired'
-      ? 'Token Expired'
-      : verificationReason === 'device_mismatch'
-      ? 'Device Changed'
-      : 'Verification Required'}
-  </span>
-</div>
+              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-xs font-bold">
+                  {verificationReason === 'new_device' 
+                    ? 'New Device Detected' 
+                    : verificationReason === 'max_logins_reached'
+                    ? 'Max Login Attempts Reached'
+                    : verificationReason === 'expired'
+                    ? 'Token Expired'
+                    : verificationReason === 'device_mismatch'
+                    ? 'Device Changed'
+                    : 'Verification Required'}
+                </span>
+              </div>
             </div>
             
             {/* Modal Content */}
             <div className="p-6 sm:p-8">
-              {/* Instructions */}
               <div className="mb-6">
                 <p className="text-slate-600 text-sm mb-4">
                   A 6-digit verification code has been sent to:
@@ -711,7 +528,6 @@ const handleResendCode = async () => {
                 </p>
               </div>
               
-              {/* Code Inputs */}
               <form onSubmit={handleVerifyCode}>
                 <div className="mb-8">
                   <div className="flex justify-center gap-2 sm:gap-3 mb-4">
@@ -731,7 +547,6 @@ const handleResendCode = async () => {
                     ))}
                   </div>
                   
-                  {/* Countdown Timer */}
                   <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-6">
                     <Clock className="w-4 h-4" />
                     <span>Code expires in: </span>
@@ -741,7 +556,6 @@ const handleResendCode = async () => {
                   </div>
                 </div>
                 
-                {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
@@ -784,7 +598,6 @@ const handleResendCode = async () => {
                 </div>
               </form>
               
-              {/* Security Note */}
               <div className="mt-8 pt-6 border-t border-slate-200">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
@@ -805,17 +618,14 @@ const handleResendCode = async () => {
       {/* MAIN LOGIN PAGE */}
       {/* ============================ */}
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
-        {/* Modern Glass Container */}
         <div className="max-w-6xl w-full bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] shadow-xl sm:shadow-2xl shadow-slate-900/10 border border-white/40 overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[600px] md:min-h-[720px]">
           
-          {/* Left Panel: Cyberpunk Security Interface - Hidden on small mobile */}
+          {/* Left Panel */}
           <div className="hidden md:flex md:w-[45%] bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950 relative overflow-hidden p-8 md:p-10 flex-col justify-between">
-            {/* Animated Background Elements */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 animate-pulse"></div>
             <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
             <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
             
-            {/* Grid Pattern */}
             <div className="absolute inset-0 opacity-5" style={{
               backgroundImage: `linear-gradient(90deg, #fff 1px, transparent 1px),
                                 linear-gradient(180deg, #fff 1px, transparent 1px)`,
@@ -823,12 +633,10 @@ const handleResendCode = async () => {
             }}></div>
 
             <div className="relative z-10">
-              {/* Title - School name updated */}
               <h1 className="text-2xl sm:text-2xl lg:text-2xl font-black text-white mb-6 sm:mb-8 tracking-tighter leading-[0.95]">
                 Katz  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-white">Admin Portal</span>
               </h1>
 
-              {/* Security Features Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-8 sm:mb-10">
                 {securityFeatures.map((feature, index) => (
                   <div 
@@ -845,7 +653,6 @@ const handleResendCode = async () => {
                 ))}
               </div>
 
-              {/* System Metrics */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mt-[14%]">
                   <div className="w-1 h-6 bg-gradient-to-b from-blue-400 to-cyan-400 rounded-full "></div>
@@ -865,7 +672,6 @@ const handleResendCode = async () => {
               </div>
             </div>
 
-            {/* Bottom Status */}
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -881,7 +687,6 @@ const handleResendCode = async () => {
 
           {/* Right Panel: Login Interface */}
           <div className="flex-1 p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 flex flex-col justify-center bg-white relative">
-            {/* Mobile Header - Only shown on small screens */}
             <div className="md:hidden flex flex-col items-center mb-6 sm:mb-8">
               <div className="relative mb-4 sm:mb-6">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg sm:shadow-xl shadow-blue-500/30">
@@ -891,13 +696,11 @@ const handleResendCode = async () => {
                   <Key className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
-              {/* Mobile title updated */}
               <h2 className="text-lg sm:text-xl font-black text-slate-900 text-center">Katz Admin Portal</h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2 text-center">Secure Admin Access</p>
             </div>
 
             <div className="max-w-md mx-auto w-full px-2 sm:px-0">
-              {/* Header */}
               <div className="mb-8 sm:mb-10 md:mb-12 text-center md:text-left">
                 <div className="flex items-center gap-3 mb-3 sm:mb-4 justify-center md:justify-start">
                   <div className="w-2 h-4 sm:h-6 bg-gradient-to-b from-blue-500 to-cyan-400 rounded-full"></div>
@@ -912,9 +715,7 @@ const handleResendCode = async () => {
                 </p>
               </div>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-                {/* Email Field */}
                 <div className="group">
                   <div className="flex items-center gap-2 mb-2 sm:mb-3">
                     <Mail className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
@@ -936,7 +737,6 @@ const handleResendCode = async () => {
                   </div>
                 </div>
 
-                {/* Password Field */}
                 {!isForgotMode && (
                   <div className="group">
                     <div className="flex justify-between items-center mb-2 sm:mb-3">
@@ -981,10 +781,8 @@ const handleResendCode = async () => {
                   </div>
                 )}
 
-                {/* Security Options */}
                 {!isForgotMode && (
                   <div className="space-y-4 sm:space-y-6">
-                    {/* Terms */}
                     <div className="p-3 sm:p-4 md:p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl sm:rounded-2xl border border-blue-100">
                       <label className="flex items-start gap-3 sm:gap-4 cursor-pointer group">
                         <div className="relative flex-shrink-0 mt-0.5">
@@ -1006,7 +804,6 @@ const handleResendCode = async () => {
                       </label>
                     </div>
 
-                    {/* Remember Device */}
                     <div className="flex items-center justify-between p-3 sm:p-4 bg-slate-50 rounded-xl sm:rounded-2xl">
                       <div className="flex items-center gap-2 sm:gap-3">
                         <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
@@ -1033,7 +830,6 @@ const handleResendCode = async () => {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <button 
                   type="submit"
                   disabled={isLoading}
@@ -1059,7 +855,6 @@ const handleResendCode = async () => {
                   </div>
                 </button>
 
-                {/* Back to Login */}
                 {isForgotMode && (
                   <button 
                     type="button"
@@ -1071,7 +866,6 @@ const handleResendCode = async () => {
                 )}
               </form>
 
-              {/* Security Footer */}
               <div className="mt-8 sm:mt-12 md:mt-16 pt-4 sm:pt-6 md:pt-8 border-t border-slate-200">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -1097,7 +891,6 @@ const handleResendCode = async () => {
           </div>
         </div>
 
-        {/* Floating Security Elements - Adjusted for mobile */}
         <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 animate-pulse z-50"></div>
         <div className={`fixed ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-50`}>
           <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 bg-slate-900/90 backdrop-blur-md rounded-full border border-white/10">
