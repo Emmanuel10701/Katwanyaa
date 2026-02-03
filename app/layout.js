@@ -51,7 +51,7 @@ export const metadata = {
 
   /* ✅ Open Graph (WhatsApp / Facebook) */
   openGraph: {
-    title: "Katwanyaa High School | Matungulu, Machakos",
+    title: "Katwanyaa High School",
     description: "Building future leaders through excellence and faith.",
     url: "https://katwanyaa.vercel.app",
     siteName: "Katwanyaa High School",
