@@ -50,6 +50,23 @@ export default function AdminLoginPage() {
 
   const router = useRouter();
 
+
+// Check localStorage on component mount
+useEffect(() => {
+  const checkLocalStorage = () => {
+    const check = LocalStorageManager.checkVerificationRequirement();
+    console.log('Device verification status:', check);
+    
+    // Optional: You could use this to pre-fill email or show different UI
+    if (check.requiresVerification && check.reason === 'expired') {
+      console.log('Device token expired - will require verification');
+    }
+  };
+  
+  checkLocalStorage();
+}, []);
+
+
   // Countdown timer for resend button
   useEffect(() => {
     if (countdown > 0) {
@@ -66,184 +83,141 @@ export default function AdminLoginPage() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!isForgotMode) {
-      if (!agreedToTerms) {
-        toast.error("Verification Required: Please accept the Terms of Access before proceeding.", {
-          duration: 5000,
-          icon: '⚠️',
-          style: {
-            background: '#fef3c7',
-            color: '#92400e',
-            border: '1px solid #fbbf24',
-          }
-        });
-        return;
-      }
 
-      // Validate form data
-      if (!formData.email || !formData.password) {
-        toast.error("Please fill in all required fields", {
-          duration: 3000,
-          icon: '📝',
-        });
-        return;
-      }
-    } else {
-      // Handle forgot password mode
-      if (!formData.email) {
-        toast.error("Please enter your email address", {
-          duration: 3000,
-          icon: '📧',
-        });
-        return;
-      }
-      
-      toast.loading("Sending recovery instructions...", { duration: 2000 });
-      setTimeout(() => {
-        toast.success("Recovery email sent! Check your inbox.", {
-          duration: 4000,
-          icon: '✅',
-        });
-        setIsForgotMode(false);
-      }, 2000);
-      return;
+
+  // Device Fingerprint Generator
+class DeviceFingerprint {
+  static generate() {
+    const fingerprint = {
+      userAgent: navigator.userAgent,
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth,
+        pixelRatio: window.devicePixelRatio
+      },
+      language: navigator.language || navigator.userLanguage,
+      platform: navigator.platform,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      languages: navigator.languages
+    };
+
+    return {
+      raw: fingerprint,
+      hash: this.hashFingerprint(fingerprint)
+    };
+  }
+
+  static hashFingerprint(fingerprint) {
+    const str = JSON.stringify(fingerprint);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
     }
+    return Math.abs(hash).toString(36);
+  }
+}
 
-    setIsLoading(true);
-    
-    // Show loading toast
-    const loadingToast = toast.loading('Authenticating...', {
-      duration: Infinity,
-    });
-
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-
-      if (response.ok && data.success) {
-        if (data.requiresVerification) {
-          // Show verification modal
-          setVerificationEmail(data.email || formData.email);
-          setVerificationReason(data.reason || 'new_device');
-          setShowVerificationModal(true);
-          setCountdown(60); // 60 seconds countdown for resend
-          
-          toast.info('Security verification required. Check your email.', {
-            duration: 4000,
-            icon: '🔐',
-            style: {
-              background: '#e0f2fe',
-              color: '#0369a1',
-              border: '1px solid #7dd3fc',
-            }
-          });
-        } else {
-          // Normal login successful
-          if (data.token) {
-            localStorage.setItem('admin_token', data.token);
-            localStorage.setItem('admin_user', JSON.stringify(data.user));
-          }
-
-          // Success toast
-          toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`, {
-            duration: 3000,
-            icon: '✅',
-            style: {
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '14px',
-              padding: '18px 22px',
-              fontSize: '15px',
-              fontWeight: '600',
-              boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
-            },
-            iconTheme: {
-              primary: 'white',
-              secondary: '#059669',
-            },
-          });
-
-          // Delay redirect to show success message
-          setTimeout(() => {
-            router.push('/MainDashboard');
-          }, 1500);
-        }
-      } else {
-        // Check if verification is required due to failed attempts
-        if (data.requiresVerification) {
-          setVerificationEmail(formData.email);
-          setVerificationReason('multiple_failed_attempts');
-          setShowVerificationModal(true);
-          setCountdown(60);
-          
-          toast.info('Security verification required. Check your email.', {
-            duration: 4000,
-            icon: '🔐',
-          });
-        } else {
-          // Error toast
-          toast.error(data.error || 'Login failed. Please try again.', {
-            duration: 4000,
-            icon: '⚠️',
-            style: {
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              borderRadius: '14px',
-              padding: '18px 22px',
-              fontSize: '15px',
-              fontWeight: '600',
-              boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
-            },
-            iconTheme: {
-              primary: 'white',
-              secondary: '#dc2626',
-            },
-          });
-        }
-      }
-    } catch (error) {
-      // Dismiss loading toast
-      toast.dismiss(loadingToast);
-      
-      // Network error toast
-      toast.error('Network error. Please check your connection.', {
-        duration: 4000,
-        icon: '📡',
-        style: {
-          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-          color: 'white',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '14px',
-          padding: '18px 22px',
-          fontSize: '15px',
-          fontWeight: '600',
-          boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)',
-        },
-        iconTheme: {
-          primary: 'white',
-          secondary: '#d97706',
-        },
-      });
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
+// LocalStorage Manager
+class LocalStorageManager {
+  static KEYS = {
+    DEVICE_FINGERPRINT: 'device_fingerprint',
+    DEVICE_TOKEN: 'device_token',
+    LOGIN_COUNT: 'login_count',
+    LAST_LOGIN: 'last_login'
   };
+
+  // Check if verification is needed
+  static checkVerificationRequirement() {
+    try {
+      // Check device token exists
+      const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
+      if (!deviceToken) {
+        return { requiresVerification: true, reason: 'no_device_token' };
+      }
+
+      // Parse and validate token
+      const tokenValid = this.validateDeviceToken(deviceToken);
+      if (!tokenValid.valid) {
+        return { 
+          requiresVerification: true, 
+          reason: tokenValid.reason,
+          deviceToken: deviceToken 
+        };
+      }
+
+      // Check login count (auto-expire after 15 logins)
+      if (tokenValid.payload.loginCount >= 15) {
+        return { requiresVerification: true, reason: 'max_logins_reached' };
+      }
+
+      // Compare device fingerprint
+      const currentFingerprint = DeviceFingerprint.generate();
+      const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
+      
+      if (storedFingerprint !== currentFingerprint.hash) {
+        return { requiresVerification: true, reason: 'device_mismatch' };
+      }
+
+      return { 
+        requiresVerification: false, 
+        deviceToken, 
+        loginCount: tokenValid.payload.loginCount || 0,
+        deviceHash: currentFingerprint.hash 
+      };
+    } catch (error) {
+      console.error('LocalStorage check error:', error);
+      return { requiresVerification: true, reason: 'storage_error' };
+    }
+  }
+
+  // Validate device token
+  static validateDeviceToken(token) {
+    try {
+      const payloadStr = decodeURIComponent(escape(atob(token)));
+      const payload = JSON.parse(payloadStr);
+      
+      // Check expiration (30 days)
+      if (payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired' };
+      }
+      
+      return { valid: true, payload };
+    } catch (error) {
+      return { valid: false, reason: 'invalid_token' };
+    }
+  }
+
+  // Store device data after successful verification
+  static storeDeviceData(deviceToken, deviceHash) {
+    try {
+      localStorage.setItem(this.KEYS.DEVICE_TOKEN, deviceToken);
+      localStorage.setItem(this.KEYS.DEVICE_FINGERPRINT, deviceHash);
+      localStorage.setItem(this.KEYS.LAST_LOGIN, new Date().toISOString());
+      
+      // Parse token to get login count
+      const payload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+      localStorage.setItem(this.KEYS.LOGIN_COUNT, payload.loginCount || '1');
+    } catch (error) {
+      console.error('Error storing device data:', error);
+    }
+  }
+
+  // Clear all login data (on logout)
+  static clearLoginData() {
+    try {
+      localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
+      localStorage.removeItem(this.KEYS.LOGIN_COUNT);
+      localStorage.removeItem(this.KEYS.LAST_LOGIN);
+      // Keep device fingerprint for recognition
+    } catch (error) {
+      console.error('Error clearing login data:', error);
+    }
+  }
+}
+
 
   // Handle verification code input
   const handleVerificationCodeChange = (index, value) => {
@@ -269,118 +243,330 @@ export default function AdminLoginPage() {
     }
   };
 
-  // Verify the code
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
+// Verify the code
+const handleVerifyCode = async (e) => {
+  e.preventDefault();
+  
+  const code = verificationCode.join('');
+  if (code.length !== 6) {
+    toast.error('Please enter the complete 6-digit code', {
+      duration: 3000,
+      icon: '🔢',
+    });
+    return;
+  }
+
+  setVerificationLoading(true);
+
+  try {
+    // Check localStorage for login count
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    const deviceFingerprint = DeviceFingerprint.generate();
     
-    const code = verificationCode.join('');
-    if (code.length !== 6) {
-      toast.error('Please enter the complete 6-digit code', {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: verificationEmail,
+        verificationCode: code,
+        action: 'verify',
+        clientLoginCount: localStorageCheck.loginCount,
+        clientDeviceHash: deviceFingerprint.hash
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      // Store device token in localStorage
+      if (data.deviceToken) {
+        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+      }
+      
+      // Store auth token
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+      }
+
+      toast.success('Verification successful! Welcome back.', {
         duration: 3000,
-        icon: '🔢',
+        icon: '✅',
+      });
+
+      setShowVerificationModal(false);
+      setVerificationCode(['', '', '', '', '', '']);
+      
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push('/MainDashboard');
+      }, 1000);
+    } else {
+      toast.error(data.error || 'Invalid verification code', {
+        duration: 4000,
+        icon: '❌',
+      });
+      // Clear code on error
+      setVerificationCode(['', '', '', '', '', '']);
+      document.getElementById('verification-input-0').focus();
+    }
+  } catch (error) {
+    toast.error('Network error. Please try again.', {
+      duration: 4000,
+      icon: '📡',
+    });
+    console.error('Verification error:', error);
+  } finally {
+    setVerificationLoading(false);
+  }
+};
+
+// Resend verification code
+const handleResendCode = async () => {
+  if (countdown > 0) return;
+  
+  setResendLoading(true);
+
+  try {
+    const deviceFingerprint = DeviceFingerprint.generate();
+    
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: verificationEmail,
+        action: 'resend',
+        clientDeviceHash: deviceFingerprint.hash
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+      toast.success('New verification code sent! Check your email.', {
+        duration: 4000,
+        icon: '📧',
+      });
+      setCountdown(60); // Reset countdown
+      setVerificationCode(['', '', '', '', '', '']); // Clear input
+      document.getElementById('verification-input-0').focus();
+    } else {
+      toast.error(data.error || 'Failed to resend code', {
+        duration: 4000,
+        icon: '❌',
+      });
+    }
+  } catch (error) {
+    toast.error('Network error. Please try again.', {
+      duration: 4000,
+      icon: '📡',
+    });
+  } finally {
+    setResendLoading(false);
+  }
+};
+
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  if (!isForgotMode) {
+    if (!agreedToTerms) {
+      toast.error("Verification Required: Please accept the Terms of Access before proceeding.", {
+        duration: 5000,
+        icon: '⚠️',
+        style: {
+          background: '#fef3c7',
+          color: '#92400e',
+          border: '1px solid #fbbf24',
+        }
       });
       return;
     }
 
-    setVerificationLoading(true);
-
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: verificationEmail,
-          verificationCode: code,
-          action: 'verify'
-        }),
+    // Validate form data
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all required fields", {
+        duration: 3000,
+        icon: '📝',
       });
+      return;
+    }
+  } else {
+    // Handle forgot password mode
+    if (!formData.email) {
+      toast.error("Please enter your email address", {
+        duration: 3000,
+        icon: '📧',
+      });
+      return;
+    }
+    
+    toast.loading("Sending recovery instructions...", { duration: 2000 });
+    setTimeout(() => {
+      toast.success("Recovery email sent! Check your inbox.", {
+        duration: 4000,
+        icon: '✅',
+      });
+      setIsForgotMode(false);
+    }, 2000);
+    return;
+  }
 
-      const data = await response.json();
+  // Check localStorage first
+  const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+  console.log('LocalStorage verification check:', localStorageCheck);
+  
+  // Generate device fingerprint
+  const deviceFingerprint = DeviceFingerprint.generate();
+  
+  setIsLoading(true);
+  
+  // Show loading toast
+  const loadingToast = toast.loading('Authenticating...', {
+    duration: Infinity,
+  });
 
-      if (response.ok && data.success) {
-        // Store token and user data
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        clientDeviceToken: localStorageCheck.deviceToken,
+        clientLoginCount: localStorageCheck.loginCount,
+        clientDeviceHash: deviceFingerprint.hash
+      }),
+    });
+
+    const data = await response.json();
+
+    // Dismiss loading toast
+    toast.dismiss(loadingToast);
+
+    if (response.ok && data.success) {
+      if (data.requiresVerification) {
+        // Show verification modal
+        setVerificationEmail(data.email || formData.email);
+        setVerificationReason(data.reason || localStorageCheck.reason || 'new_device');
+        setShowVerificationModal(true);
+        setCountdown(60); // 60 seconds countdown for resend
+        
+        toast.info('Security verification required. Check your email.', {
+          duration: 4000,
+          icon: '🔐',
+          style: {
+            background: '#e0f2fe',
+            color: '#0369a1',
+            border: '1px solid #7dd3fc',
+          }
+        });
+      } else {
+        // Store device token in localStorage if provided
+        if (data.storeInLocalStorage && data.deviceToken) {
+          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+        }
+        
+        // Store auth token
         if (data.token) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(data.user));
         }
 
-        toast.success('Verification successful! Welcome back.', {
+        // Success toast
+        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`, {
           duration: 3000,
           icon: '✅',
+          style: {
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '14px',
+            padding: '18px 22px',
+            fontSize: '15px',
+            fontWeight: '600',
+            boxShadow: '0 10px 25px rgba(16, 185, 129, 0.3)',
+          },
+          iconTheme: {
+            primary: 'white',
+            secondary: '#059669',
+          },
         });
 
-        setShowVerificationModal(false);
-        setVerificationCode(['', '', '', '', '', '']);
-        
-        // Redirect to dashboard
+        // Delay redirect to show success message
         setTimeout(() => {
           router.push('/MainDashboard');
-        }, 1000);
-      } else {
-        toast.error(data.error || 'Invalid verification code', {
-          duration: 4000,
-          icon: '❌',
-        });
-        // Clear code on error
-        setVerificationCode(['', '', '', '', '', '']);
-        document.getElementById('verification-input-0').focus();
+        }, 1500);
       }
-    } catch (error) {
-      toast.error('Network error. Please try again.', {
-        duration: 4000,
-        icon: '📡',
-      });
-      console.error('Verification error:', error);
-    } finally {
-      setVerificationLoading(false);
+    } else {
+      // Check if verification is required due to failed attempts
+      if (data.requiresVerification) {
+        setVerificationEmail(formData.email);
+        setVerificationReason(data.reason || 'multiple_failed_attempts');
+        setShowVerificationModal(true);
+        setCountdown(60);
+        
+        toast.info('Security verification required. Check your email.', {
+          duration: 4000,
+          icon: '🔐',
+        });
+      } else {
+        // Error toast
+        toast.error(data.error || 'Login failed. Please try again.', {
+          duration: 4000,
+          icon: '⚠️',
+          style: {
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: 'white',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '14px',
+            padding: '18px 22px',
+            fontSize: '15px',
+            fontWeight: '600',
+            boxShadow: '0 10px 25px rgba(239, 68, 68, 0.3)',
+          },
+          iconTheme: {
+            primary: 'white',
+            secondary: '#dc2626',
+          },
+        });
+      }
     }
-  };
-
-  // Resend verification code
-  const handleResendCode = async () => {
-    if (countdown > 0) return;
+  } catch (error) {
+    // Dismiss loading toast
+    toast.dismiss(loadingToast);
     
-    setResendLoading(true);
-
-    try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: verificationEmail,
-          action: 'resend'
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        toast.success('New verification code sent! Check your email.', {
-          duration: 4000,
-          icon: '📧',
-        });
-        setCountdown(60); // Reset countdown
-        setVerificationCode(['', '', '', '', '', '']); // Clear input
-        document.getElementById('verification-input-0').focus();
-      } else {
-        toast.error(data.error || 'Failed to resend code', {
-          duration: 4000,
-          icon: '❌',
-        });
-      }
-    } catch (error) {
-      toast.error('Network error. Please try again.', {
-        duration: 4000,
-        icon: '📡',
-      });
-    } finally {
-      setResendLoading(false);
-    }
-  };
+    // Network error toast
+    toast.error('Network error. Please check your connection.', {
+      duration: 4000,
+      icon: '📡',
+      style: {
+        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        color: 'white',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        borderRadius: '14px',
+        padding: '18px 22px',
+        fontSize: '15px',
+        fontWeight: '600',
+        boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)',
+      },
+      iconTheme: {
+        primary: 'white',
+        secondary: '#d97706',
+      },
+    });
+    console.error('Login error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Close verification modal
   const closeVerificationModal = () => {
@@ -493,15 +679,21 @@ export default function AdminLoginPage() {
                 </div>
               </div>
               
-              {/* Reason Badge */}
-              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-xs font-bold">
-                  {verificationReason === 'new_device' 
-                    ? 'New Device Detected' 
-                    : 'Multiple Failed Attempts'}
-                </span>
-              </div>
+{/* Reason Badge */}
+<div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+  <AlertCircle className="w-4 h-4" />
+  <span className="text-xs font-bold">
+    {verificationReason === 'new_device' 
+      ? 'New Device Detected' 
+      : verificationReason === 'max_logins_reached'
+      ? 'Max Login Attempts Reached'
+      : verificationReason === 'expired'
+      ? 'Token Expired'
+      : verificationReason === 'device_mismatch'
+      ? 'Device Changed'
+      : 'Verification Required'}
+  </span>
+</div>
             </div>
             
             {/* Modal Content */}

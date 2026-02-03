@@ -109,6 +109,194 @@ export default function AdminDashboard() {
 
 const router =useRouter()
 
+// Device Token Validation Functions
+class DeviceTokenManager {
+  static KEYS = {
+    DEVICE_TOKEN: 'device_token',
+    DEVICE_FINGERPRINT: 'device_fingerprint',
+    LOGIN_COUNT: 'login_count',
+    LAST_LOGIN: 'last_login'
+  };
+
+  // Validate both admin token and device token
+  static validateTokens() {
+    try {
+      // Check admin token
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        console.log('❌ Admin token not found');
+        return { valid: false, reason: 'no_admin_token' };
+      }
+
+      // Check device token
+      const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
+      if (!deviceToken) {
+        console.log('❌ Device token not found');
+        return { valid: false, reason: 'no_device_token' };
+      }
+
+      // Validate admin token format (basic check)
+      const adminParts = adminToken.split('.');
+      if (adminParts.length !== 3) {
+        console.log('❌ Invalid admin token format');
+        return { valid: false, reason: 'invalid_admin_token_format' };
+      }
+
+      // Validate device token
+      const deviceValid = this.validateDeviceToken(deviceToken);
+      if (!deviceValid.valid) {
+        console.log('❌ Device token invalid:', deviceValid.reason);
+        return { 
+          valid: false, 
+          reason: `device_${deviceValid.reason}`,
+          details: deviceValid 
+        };
+      }
+
+      // Generate current device fingerprint
+      const currentFingerprint = this.generateDeviceFingerprint();
+      const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
+      
+      // Compare fingerprints
+      if (storedFingerprint !== currentFingerprint.hash) {
+        console.log('❌ Device fingerprint mismatch');
+        return { valid: false, reason: 'device_fingerprint_mismatch' };
+      }
+
+      // Check login count (optional, if you want to limit per device)
+      const loginCount = parseInt(localStorage.getItem(this.KEYS.LOGIN_COUNT) || '0');
+      if (loginCount >= 50) { // High limit for admin panel
+        console.log('⚠️ High login count detected:', loginCount);
+        // You could force re-verification here if needed
+      }
+
+      console.log('✅ Both tokens are valid');
+      return { 
+        valid: true, 
+        adminToken: adminToken,
+        deviceToken: deviceToken,
+        loginCount: loginCount,
+        deviceInfo: deviceValid.payload
+      };
+
+    } catch (error) {
+      console.error('❌ Token validation error:', error);
+      return { valid: false, reason: 'validation_error', error: error.message };
+    }
+  }
+
+  // Generate device fingerprint
+  static generateDeviceFingerprint() {
+    const fingerprint = {
+      userAgent: navigator.userAgent,
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth,
+        pixelRatio: window.devicePixelRatio
+      },
+      language: navigator.language || navigator.userLanguage,
+      platform: navigator.platform,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    };
+
+    return {
+      raw: fingerprint,
+      hash: this.hashFingerprint(fingerprint)
+    };
+  }
+
+  // Hash fingerprint
+  static hashFingerprint(fingerprint) {
+    const str = JSON.stringify(fingerprint);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+  }
+
+  // Validate device token
+  static validateDeviceToken(token) {
+    try {
+      const payloadStr = decodeURIComponent(escape(atob(token)));
+      const payload = JSON.parse(payloadStr);
+      
+      // Check expiration (30 days from creation)
+      if (payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired', payload };
+      }
+      
+      // Check if token was created more than 30 days ago
+      const createdAt = new Date(payload.createdAt || payload.iat * 1000);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      if (createdAt < thirtyDaysAgo) {
+        return { valid: false, reason: 'age_expired', payload };
+      }
+      
+      return { valid: true, payload };
+    } catch (error) {
+      return { valid: false, reason: 'invalid_format', error: error.message };
+    }
+  }
+
+  // Clear all tokens (for logout)
+  static clearAllTokens() {
+    try {
+      // Clear admin tokens
+      const adminKeys = ['admin_token', 'admin_user'];
+      adminKeys.forEach(key => localStorage.removeItem(key));
+      
+      // Clear device tokens
+      Object.values(this.KEYS).forEach(key => localStorage.removeItem(key));
+      
+      console.log('✅ All tokens cleared');
+      return true;
+    } catch (error) {
+      console.error('❌ Error clearing tokens:', error);
+      return false;
+    }
+  }
+
+  // Force token refresh (for verification requirement)
+  static forceTokenRefresh() {
+    try {
+      // Remove device token to force re-verification
+      localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
+      localStorage.removeItem(this.KEYS.LOGIN_COUNT);
+      console.log('✅ Tokens refreshed - verification required');
+      return true;
+    } catch (error) {
+      console.error('❌ Error refreshing tokens:', error);
+      return false;
+    }
+  }
+
+  // Get device info from token
+  static getDeviceInfo() {
+    try {
+      const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
+      if (!deviceToken) return null;
+      
+      const valid = this.validateDeviceToken(deviceToken);
+      if (!valid.valid) return null;
+      
+      return {
+        createdAt: valid.payload.createdAt,
+        lastLogin: localStorage.getItem(this.KEYS.LAST_LOGIN),
+        loginCount: localStorage.getItem(this.KEYS.LOGIN_COUNT),
+        userId: valid.payload.userId,
+        deviceHash: valid.payload.deviceHash
+      };
+    } catch (error) {
+      return null;
+    }
+  }
+}
+
 
   // Mobile Warning Modal Component
   const MobileWarningModal = () => (
@@ -408,7 +596,70 @@ const router =useRouter()
       const schoolDocs = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
 
 
+  // Generate device fingerprint
+function generateDeviceFingerprint() {
+  const fingerprint = {
+    userAgent: navigator.userAgent,
+    screen: {
+      width: screen.width,
+      height: screen.height,
+      colorDepth: screen.colorDepth,
+      pixelRatio: window.devicePixelRatio
+    },
+    language: navigator.language || navigator.userLanguage,
+    platform: navigator.platform,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    languages: navigator.languages
+  };
+
+  return {
+    raw: fingerprint,
+    hash: hashFingerprint(fingerprint)
+  };
+}
+
+// Hash fingerprint
+function hashFingerprint(fingerprint) {
+  const str = JSON.stringify(fingerprint);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+
+
+const handleLogout = () => {
+  // Show logout confirmation
+  toast.loading('Logging out...', { duration: 1000 });
   
+  setTimeout(() => {
+    // Clear all possible auth keys
+    const allAuthKeys = [
+      'admin_user', 'user', 'currentUser', 'auth_user',
+      'admin_token', 'token', 'auth_token', 'jwt_token',
+      'device_token', 'deviceToken',
+      'device_fingerprint', 'deviceFingerprint',
+      'login_count', 'last_login', 'last_dashboard_access'
+    ];
+    
+    allAuthKeys.forEach(key => localStorage.removeItem(key));
+    
+    toast.success('Logged out successfully. All tokens cleared.', {
+      duration: 2000,
+      icon: '👋'
+    });
+    
+    // Redirect to login
+    setTimeout(() => {
+      window.location.href = '/pages/adminLogin';
+    }, 500);
+  }, 500);
+};
+
       
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
       
@@ -440,98 +691,302 @@ const router =useRouter()
     }
   };
 
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      setLoading(true);
+useEffect(() => {
+  const initializeDashboard = async () => {
+    setLoading(true);
+    
+    try {
+      console.log('🔍 Starting dashboard initialization...');
       
-      try {
-        console.log('🔍 Checking localStorage for user data...');
-        
-        // Check ALL possible localStorage keys for user data
-        const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
-        const possibleTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
-        
-        let userData = null;
-        let token = null;
-        
-        // Find user data in any possible key
-        for (const key of possibleUserKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found user data in key: ${key}`, data);
-            userData = data;
-            break;
-          }
+      // Check ALL possible localStorage keys for user data
+      const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
+      const possibleAdminTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
+      const deviceTokenKeys = ['device_token', 'deviceToken'];
+      const deviceFingerprintKeys = ['device_fingerprint', 'deviceFingerprint'];
+      
+      let userData = null;
+      let adminToken = null;
+      let deviceToken = null;
+      let deviceFingerprint = null;
+      
+      // Find user data in any possible key
+      for (const key of possibleUserKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found user data in key: ${key}`);
+          userData = data;
+          break;
         }
-        
-        // Find token in any possible key
-        for (const key of possibleTokenKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found token in key: ${key}`);
-            token = data;
-            break;
-          }
-        }
-        
-        if (!userData) {
-          console.log('❌ No user data found in localStorage');
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-
-        // Parse user data
-        const user = JSON.parse(userData);
-        console.log('📋 Parsed user data:', user);
-        
-        // Verify token is still valid (if available)
-        if (token) {
-          try {
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const currentTime = Date.now() / 1000;
-            
-            if (tokenPayload.exp < currentTime) {
-              console.log('❌ Token expired');
-              // Clear all auth data
-              possibleUserKeys.forEach(key => localStorage.removeItem(key));
-              possibleTokenKeys.forEach(key => localStorage.removeItem(key));
-              window.location.href = '/pages/adminLogin';
-              return;
-            }
-            console.log('✅ Token is valid');
-          } catch (tokenError) {
-            console.log('⚠️ Token validation skipped:', tokenError.message);
-          }
-        }
-
-        // Check if user has valid role
-        const userRole = user.role;
-        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL'];
-        
-        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
-          console.log('❌ User does not have valid role:', userRole);
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-
-        console.log('✅ User authenticated successfully:', user.name);
-        setUser(user);
-
-        // Fetch real counts from APIs
-        await fetchRealCounts();
-        
-      } catch (error) {
-        console.error('❌ Error initializing dashboard:', error);
-        // Clear all auth data on error
-        localStorage.clear();
-        window.location.href = '/pages/adminLogin';
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      // Find admin token in any possible key
+      for (const key of possibleAdminTokenKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found admin token in key: ${key}`);
+          adminToken = data;
+          break;
+        }
+      }
+      
+      // Find device token in any possible key
+      for (const key of deviceTokenKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found device token in key: ${key}`);
+          deviceToken = data;
+          break;
+        }
+      }
+      
+      // Find device fingerprint in any possible key
+      for (const key of deviceFingerprintKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found device fingerprint in key: ${key}`);
+          deviceFingerprint = data;
+          break;
+        }
+      }
+      
+      // ====================
+      // TOKEN VALIDATION
+      // ====================
+      
+      // 1. Check if user data exists
+      if (!userData) {
+        console.log('❌ No user data found in localStorage');
+        toast.error('Please login to access the dashboard', {
+          duration: 3000,
+          icon: '🔒'
+        });
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // 2. Check if admin token exists
+      if (!adminToken) {
+        console.log('❌ No admin token found');
+        toast.error('Authentication required. Please login again.', {
+          duration: 3000,
+          icon: '⚠️'
+        });
+        
+        // Clear all auth data
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // 3. Check if device token exists
+      if (!deviceToken) {
+        console.log('❌ No device token found');
+        toast.error('Device verification required. Please login with verification.', {
+          duration: 4000,
+          icon: '📱'
+        });
+        
+        // Clear all auth data to force full re-authentication
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // ====================
+      // TOKEN VERIFICATION
+      // ====================
+      
+      // Parse user data
+      const user = JSON.parse(userData);
+      console.log('📋 Parsed user data:', user);
+      
+      // Verify admin token is still valid
+      try {
+        const tokenPayload = JSON.parse(atob(adminToken.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+        
+        if (tokenPayload.exp < currentTime) {
+          console.log('❌ Admin token expired');
+          toast.error('Session expired. Please login again.', {
+            duration: 3000,
+            icon: '⏰'
+          });
+          
+          // Clear all auth data
+          possibleUserKeys.forEach(key => localStorage.removeItem(key));
+          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
+        console.log('✅ Admin token is valid');
+      } catch (tokenError) {
+        console.log('⚠️ Admin token validation error:', tokenError.message);
+        toast.error('Invalid authentication. Please login again.', {
+          duration: 3000,
+          icon: '❌'
+        });
+        
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // Verify device token
+      try {
+        const devicePayloadStr = decodeURIComponent(escape(atob(deviceToken)));
+        const devicePayload = JSON.parse(devicePayloadStr);
+        
+        // Check expiration (30 days from creation)
+        if (devicePayload.exp * 1000 <= Date.now()) {
+          console.log('❌ Device token expired');
+          toast.error('Device verification expired. Please login with verification.', {
+            duration: 4000,
+            icon: '📱'
+          });
+          
+          // Clear device token but keep admin token for faster login
+          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+          localStorage.setItem('requires_verification', 'true');
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
+        
+        // Check if token was created more than 30 days ago
+        const createdAt = new Date(devicePayload.createdAt || devicePayload.iat * 1000);
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        
+        if (createdAt < thirtyDaysAgo) {
+          console.log('❌ Device token too old');
+          toast.error('Device verification expired. Please login again.', {
+            duration: 4000,
+            icon: '📱'
+          });
+          
+          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+          localStorage.setItem('requires_verification', 'true');
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
+        
+        console.log('✅ Device token is valid');
+        
+        // Verify device fingerprint matches
+        if (deviceFingerprint) {
+          // Generate current device fingerprint
+          const currentFingerprint = generateDeviceFingerprint();
+          
+          if (deviceFingerprint !== currentFingerprint.hash) {
+            console.log('❌ Device fingerprint mismatch');
+            toast.error('Device changed. Verification required.', {
+              duration: 4000,
+              icon: '🔄'
+            });
+            
+            deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+            deviceFingerprintKeys.forEach(key => localStorage.removeItem(key));
+            localStorage.setItem('requires_verification', 'true');
+            window.location.href = '/pages/adminLogin';
+            return;
+          }
+          console.log('✅ Device fingerprint matches');
+        }
+        
+      } catch (deviceTokenError) {
+        console.log('⚠️ Device token validation error:', deviceTokenError.message);
+        toast.error('Invalid device token. Please login with verification.', {
+          duration: 4000,
+          icon: '❌'
+        });
+        
+        deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+        deviceFingerprintKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // ====================
+      // USER ROLE VALIDATION
+      // ====================
+      
+      // Check if user has valid role
+      const userRole = user.role;
+      const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL'];
+      
+      if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+        console.log('❌ User does not have valid role:', userRole);
+        toast.error('Unauthorized access. Please login with admin credentials.', {
+          duration: 4000,
+          icon: '🚫'
+        });
+        
+        // Clear all auth data
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        deviceTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      console.log('✅ User role verified:', userRole);
+      
+      // ====================
+      // SUCCESS - SET USER
+      // ====================
+      
+      console.log('✅ User authenticated successfully:', user.name);
+      console.log('✅ Both tokens validated successfully');
+      
+      // Update last login timestamp
+      localStorage.setItem('last_dashboard_access', new Date().toISOString());
+      
+      // Log device info for security audit
+      const loginCount = parseInt(localStorage.getItem('login_count') || '0');
+      console.log('📱 Security audit:', {
+        user: user.name,
+        role: user.role,
+        deviceLoginCount: loginCount,
+        lastLogin: localStorage.getItem('last_login'),
+        dashboardAccess: new Date().toISOString()
+      });
+      
+      setUser(user);
+      
+      // Fetch real counts from APIs
+      console.log('📊 Fetching dashboard statistics...');
+      await fetchRealCounts();
+      
+      // Show welcome message
+      toast.success(`Welcome back, ${user.name}!`, {
+        duration: 3000,
+        icon: '👋'
+      });
+      
+    } catch (error) {
+      console.error('❌ Error initializing dashboard:', error);
+      
+      // Show error toast
+      toast.error('Failed to load dashboard. Please try again.', {
+        duration: 4000,
+        icon: '❌'
+      });
+      
+      // Clear all auth data on error
+      localStorage.clear();
+      window.location.href = '/pages/adminLogin';
+      
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    initializeDashboard();
-  }, []);
+  initializeDashboard();
+}, []);
 
   // Refresh counts when tab changes
   useEffect(() => {

@@ -1,4 +1,3 @@
-// /api/login/route.js - COMPLETE WITH VERIFICATION
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../libs/prisma';
 import { verifyPassword, generateToken, sanitizeUser } from '../../../libs/auth';
@@ -7,8 +6,10 @@ import nodemailer from 'nodemailer';
 
 // Constants
 const MAX_FAILED_ATTEMPTS = 8;
+const MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY = 15; // Auto-expire after 15 logins
 const VERIFICATION_CODE_EXPIRY_MINUTES = 15;
 const VERIFICATION_CODE_LENGTH = 6;
+const DEVICE_TOKEN_EXPIRY_DAYS = 30; // Token expires after 30 days
 
 // Email Transporter
 const transporter = nodemailer.createTransport({
@@ -144,12 +145,16 @@ function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Generate device hash
+// Generate device hash with more parameters
 function generateDeviceHash(req) {
   const userAgent = req.headers.get('user-agent') || '';
   const accept = req.headers.get('accept') || '';
   const language = req.headers.get('accept-language') || '';
-  const deviceString = `${userAgent}|${accept}|${language}`;
+  const platform = req.headers.get('sec-ch-ua-platform') || '';
+  const screen = req.headers.get('sec-ch-ua-resolution') || 'unknown';
+  
+  // Include more device info for better fingerprint
+  const deviceString = `${userAgent}|${accept}|${language}|${platform}|${screen}`;
   return crypto.createHash('sha256').update(deviceString).digest('hex').substring(0, 32);
 }
 
@@ -211,7 +216,115 @@ async function sendVerificationEmail(user, verificationCode) {
   }
 }
 
-// Check device trust
+// Generate device token for localStorage (30 days expiry)
+function generateDeviceToken(userId, deviceHash) {
+  const payload = {
+    userId: userId,
+    deviceHash: deviceHash,
+    loginCount: 1, // Start at 1
+    createdAt: new Date().toISOString(),
+    exp: Math.floor(Date.now() / 1000) + (DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60), // 30 days expiry
+    iat: Math.floor(Date.now() / 1000)
+  };
+  
+  const payloadStr = JSON.stringify(payload);
+  return btoa(unescape(encodeURIComponent(payloadStr)));
+}
+
+// Verify device token from localStorage
+function verifyDeviceToken(token, deviceHash) {
+  try {
+    const payloadStr = decodeURIComponent(escape(atob(token)));
+    const payload = JSON.parse(payloadStr);
+    
+    // Check expiration
+    if (payload.exp * 1000 <= Date.now()) {
+      return { valid: false, reason: 'expired' };
+    }
+    
+    // Check device hash matches
+    if (payload.deviceHash !== deviceHash) {
+      return { valid: false, reason: 'device_mismatch' };
+    }
+    
+    return { valid: true, payload };
+  } catch (error) {
+    return { valid: false, reason: 'invalid_token' };
+  }
+}
+
+// Check if device needs verification
+async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0, clientDeviceToken = null) {
+  // First verify client token if provided
+  if (clientDeviceToken) {
+    const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
+    if (!tokenValid.valid) {
+      return { requiresVerification: true, reason: tokenValid.reason };
+    }
+    
+    // Check login count from client token
+    if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+      return { requiresVerification: true, reason: 'max_login_attempts_reached' };
+    }
+  }
+  
+  // Check database for trusted device
+  const device = await prisma.deviceToken.findFirst({
+    where: {
+      userId: userId,
+      deviceHash: deviceHash,
+      isTrusted: true,
+      expiresAt: { gt: new Date() },
+      isBlocked: false
+    }
+  });
+  
+  if (!device) {
+    return { requiresVerification: true, reason: 'new_device' };
+  }
+  
+  // Check database login count
+  if (device.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+    return { requiresVerification: true, reason: 'max_login_attempts_reached' };
+  }
+  
+  return { requiresVerification: false };
+}
+
+// Update device login count
+async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
+  const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+  
+  const device = await prisma.deviceToken.upsert({
+    where: {
+      userId_deviceHash: {
+        userId: userId,
+        deviceHash: deviceHash
+      }
+    },
+    update: {
+      lastUsed: new Date(),
+      expiresAt: expiresAt,
+      isTrusted: true,
+      loginCount: {
+        increment: 1
+      }
+    },
+    create: {
+      userId: userId,
+      deviceHash: deviceHash,
+      deviceName: userAgent.substring(0, 100),
+      lastUsed: new Date(),
+      expiresAt: expiresAt,
+      isTrusted: true,
+      loginCount: 1
+    }
+  });
+  
+  return device;
+}
+
+// Check device trust (for existing logic)
 async function checkDeviceTrust(userId, deviceHash) {
   const device = await prisma.deviceToken.findFirst({
     where: {
@@ -226,7 +339,7 @@ async function checkDeviceTrust(userId, deviceHash) {
   return device;
 }
 
-// Store trusted device
+// Store trusted device (for existing logic)
 async function storeTrustedDevice(userId, deviceHash, userAgent) {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
   
@@ -255,9 +368,9 @@ async function storeTrustedDevice(userId, deviceHash, userAgent) {
 }
 
 // ====================
-// VERIFICATION ENDPOINT (Inside login API)
+// VERIFICATION ENDPOINT
 // ====================
-async function handleVerification(email, code, deviceHash, req) {
+async function handleVerification(email, code, deviceHash, req, clientLoginCount = 0) {
   try {
     // Find verification code
     const verificationToken = await prisma.verificationToken.findFirst({
@@ -289,24 +402,33 @@ async function handleVerification(email, code, deviceHash, req) {
 
     const userAgent = req.headers.get('user-agent') || 'unknown';
     
-    // Store device as trusted
-    await storeTrustedDevice(user.id, deviceHash, userAgent);
+    // Store/update device in database
+    const device = await updateDeviceLoginCount(user.id, deviceHash, userAgent);
     
     // Delete used verification code
     await prisma.verificationToken.delete({
       where: { token: code }
     });
 
-    // Generate JWT token
-    const token = generateToken(user);
+    // Generate tokens
+    const authToken = generateToken(user);
+    const deviceToken = generateDeviceToken(user.id, deviceHash);
+    
+    // Update login count in device token
+    const deviceTokenPayload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+    deviceTokenPayload.loginCount = (clientLoginCount || 0) + 1;
+    const updatedDeviceToken = btoa(unescape(encodeURIComponent(JSON.stringify(deviceTokenPayload))));
+    
     const userData = sanitizeUser(user);
 
     return {
       success: true,
       message: 'Verification successful',
       user: userData,
-      token: token,
-      deviceTrusted: true
+      token: authToken,
+      deviceToken: updatedDeviceToken,
+      storeInLocalStorage: true,
+      loginCount: deviceTokenPayload.loginCount
     };
 
   } catch (error) {
@@ -323,16 +445,32 @@ async function handleVerification(email, code, deviceHash, req) {
 // ====================
 export async function POST(request) {
   try {
-    const { email, password, verificationCode, action } = await request.json();
+    const { 
+      email, 
+      password, 
+      verificationCode, 
+      action,
+      clientDeviceToken, // Token from localStorage
+      clientLoginCount,  // Login count from localStorage
+      clientDeviceHash   // Device hash from frontend
+    } = await request.json();
+    
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
-    const deviceHash = generateDeviceHash(request);
+    const serverDeviceHash = generateDeviceHash(request);
+    const deviceHash = clientDeviceHash || serverDeviceHash;
 
     // ====================
     // 1. VERIFICATION FLOW
     // ====================
     if (action === 'verify' && verificationCode) {
-      const verificationResult = await handleVerification(email, verificationCode, deviceHash, request);
+      const verificationResult = await handleVerification(
+        email, 
+        verificationCode, 
+        deviceHash, 
+        request,
+        clientLoginCount
+      );
       
       if (verificationResult.success) {
         // Log successful verification
@@ -451,7 +589,8 @@ export async function POST(request) {
           success: false,
           requiresVerification: true,
           message: 'Multiple failed attempts detected. Verification code sent to your email.',
-          email: user.email
+          email: user.email,
+          reason: 'failed_attempts'
         }, { status: 401 });
       }
       
@@ -476,7 +615,7 @@ export async function POST(request) {
       }
     });
 
-    // Check if we should require verification
+    // Check if we should require verification (for admins/suspicious patterns)
     const shouldRequireVerification = () => {
       // Always verify admins on new devices
       if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
@@ -492,10 +631,15 @@ export async function POST(request) {
       return false;
     };
 
-    // Check device trust
-    const trustedDevice = await checkDeviceTrust(user.id, deviceHash);
+    // Check device verification
+    const verificationCheck = await checkDeviceVerification(
+      user.id, 
+      deviceHash, 
+      clientLoginCount,
+      clientDeviceToken
+    );
     
-    if (!trustedDevice || shouldRequireVerification()) {
+    if (verificationCheck.requiresVerification || shouldRequireVerification()) {
       // Generate verification code
       const verificationCode = generateVerificationCode();
       await storeVerificationCode(user.email, verificationCode, deviceHash);
@@ -506,13 +650,36 @@ export async function POST(request) {
         requiresVerification: true,
         message: 'Verification code sent to your email. Please enter it to continue.',
         email: user.email,
-        isAdmin: (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')
+        reason: verificationCheck.reason || 'security_check'
       }, { status: 200 });
     }
 
-    // Device is trusted - generate JWT token
+    // Device is trusted - proceed with login
+    // Update device login count
+    const device = await updateDeviceLoginCount(user.id, deviceHash, userAgent);
+    
+    // Generate new device token with updated login count
+    const newLoginCount = (clientLoginCount || device.loginCount) + 1;
+    const deviceToken = generateDeviceToken(user.id, deviceHash);
+    const deviceTokenPayload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+    deviceTokenPayload.loginCount = newLoginCount;
+    const updatedDeviceToken = btoa(unescape(encodeURIComponent(JSON.stringify(deviceTokenPayload))));
+    
+    // Generate auth token
     const token = generateToken(user);
-    await storeTrustedDevice(user.id, deviceHash, userAgent);
+    
+    // Log successful login
+    await prisma.loginAttempt.create({
+      data: {
+        userId: user.id,
+        email: user.email,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceHash: deviceHash,
+        status: 'success',
+        reason: 'password_correct'
+      }
+    });
     
     const userData = sanitizeUser(user);
 
@@ -521,6 +688,9 @@ export async function POST(request) {
       message: 'Login successful',
       user: userData,
       token: token,
+      deviceToken: updatedDeviceToken,
+      storeInLocalStorage: true,
+      loginCount: newLoginCount,
       deviceTrusted: true
     }, { status: 200 });
 
@@ -543,8 +713,10 @@ export async function GET() {
       message: 'Login endpoint with verification',
       security: {
         maxFailedAttempts: MAX_FAILED_ATTEMPTS,
+        maxLoginAttemptsBeforeVerify: MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY,
         verificationCodeLength: VERIFICATION_CODE_LENGTH,
-        verificationExpiryMinutes: VERIFICATION_CODE_EXPIRY_MINUTES
+        verificationExpiryMinutes: VERIFICATION_CODE_EXPIRY_MINUTES,
+        deviceTokenExpiryDays: DEVICE_TOKEN_EXPIRY_DAYS
       }
     }, { status: 200 });
   } catch (error) {
