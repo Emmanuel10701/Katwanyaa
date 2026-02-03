@@ -1,41 +1,49 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
+
+// Feather Icons (Consolidated)
 import { 
-  FiPlus, 
-  FiSearch, 
-  FiCalendar,
-  FiMapPin,
-  FiUsers,
-  FiClock,
-  FiTag,
-  FiChevronLeft,
-  FiChevronRight,
-  FiShare2,
-  FiX,
-  FiImage,
-  FiBook,
-  FiUpload,
-  FiRotateCw,
-  FiTrendingUp,
+  FiAlertCircle,
+  FiAlertTriangle,
   FiAward,
-  FiZap,
-  FiEdit,
-  FiTrash2,
-  FiEye,
-  FiInfo, 
+  FiBell,
+  FiBook,
+  FiBriefcase,
+  FiCalendar,
   FiCheck,
   FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiEdit,
+  FiEye,
   FiGlobe,
-  FiBell,
+  FiImage,
+  FiInfo, 
+  FiMapPin,
+  FiPlus, 
+  FiRotateCw,
+  FiSearch, 
+  FiShare2,
+  FiStar,
+  FiTag,
+  FiTrash2,
+  FiTrendingUp,
+  FiUpload,
   FiUser,
-  FiAlertTriangle,
-  FiAlertCircle,
-  FiBriefcase 
+  FiUsers,
+  FiX,
+  FiZap
 } from 'react-icons/fi';
+
+// IonIcons (Consolidated)
 import { 
-  IoNewspaperOutline,
+  IoNewspaperOutline, 
   IoCalendarClearOutline 
 } from 'react-icons/io5';
+
+// Material UI (Consolidated)
 import { Modal, Box, CircularProgress } from '@mui/material';
 
 // Modern Loading Spinner Component
@@ -316,261 +324,196 @@ function Notification({
   )
 }
 
-// Modern Item Detail Modal
+// Modern Item Detail Moda
 function ModernItemDetailModal({ item, type, onClose, onEdit }) {
-  if (!item) return null
+  if (!item) return null;
 
   const getImageUrl = (imagePath) => {
     if (!imagePath || typeof imagePath !== 'string') {
       return type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
     }
-    
-    // If it's already a full URL or starts with /, return as is
-    if (imagePath.startsWith('http') || imagePath.startsWith('/')) {
+    if (imagePath.startsWith('http') || imagePath.startsWith('/') || imagePath.startsWith('data:image')) {
       return imagePath;
     }
-    
-    // If it's a base64 string (from file upload), return as is
-    if (imagePath.startsWith('data:image')) {
-      return imagePath;
-    }
-    
-    // If it's a path from API (without leading slash), add it
-    if (imagePath.startsWith('news/') || imagePath.startsWith('events/')) {
-      return `/${imagePath}`;
-    }
-    
-    // Default fallback
-    return type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
+    return `/${imagePath}`;
   };
 
-  const imageUrl = getImageUrl(item.image);
-  
   const categories = {
     news: {
-      'achievement': { label: 'Achievements', color: 'emerald' },
-      'sports': { label: 'Sports', color: 'blue' },
-      'academic': { label: 'Academic', color: 'purple' },
-      'infrastructure': { label: 'Infrastructure', color: 'orange' },
-      'community': { label: 'Community', color: 'rose' }
+      achievement: { label: 'Achievements', color: 'emerald' },
+      sports: { label: 'Sports', color: 'blue' },
+      academic: { label: 'Academic', color: 'purple' },
+      infrastructure: { label: 'Infrastructure', color: 'orange' },
+      community: { label: 'Community', color: 'rose' }
     },
     events: {
-      'academic': { label: 'Academic', color: 'purple' },
-      'sports': { label: 'Sports', color: 'blue' },
-      'cultural': { label: 'Cultural', color: 'emerald' },
-      'social': { label: 'Social', color: 'orange' }
+      academic: { label: 'Academic', color: 'purple' },
+      sports: { label: 'Sports', color: 'blue' },
+      cultural: { label: 'Cultural', color: 'emerald' },
+      social: { label: 'Social', color: 'orange' }
     }
   };
 
   const categoryInfo = categories[type][item.category];
+  const themeGradient = type === 'news' 
+    ? 'from-indigo-600 via-purple-600 to-pink-600' 
+    : 'from-blue-600 via-cyan-600 to-emerald-600';
 
   return (
-    <Modal open={true} onClose={onClose}>
-      <Box sx={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '90%',
-        maxWidth: '800px',
-        maxHeight: '95vh', bgcolor: 'background.paper',
-        borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #fef3f7 100%)'
-      }}>
-        {/* Header */}
-        <div className={`p-6 text-white ${
-          type === 'news' 
-            ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-rose-700'
-            : 'bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-700'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
-                {type === 'news' ? 
-                  <IoNewspaperOutline className="text-xl" /> : 
-                  <IoCalendarClearOutline className="text-xl" />
-                }
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-4xl max-h-screen sm:max-h-[95vh] bg-slate-50 sm:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col border border-white/20">
+        
+        {/* Modern Glass Header */}
+        <div className={`relative p-6 sm:p-10 text-white bg-gradient-to-br ${themeGradient}`}>
+          {/* Subtle Abstract Background Pattern */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-10 pointer-events-none">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-black rounded-full blur-3xl" />
+          </div>
+
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="p-4 bg-white/10 backdrop-blur-xl rounded-2xl shadow-inner border border-white/20 shrink-0 hidden sm:block">
+                {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{type === 'news' ? 'News' : 'Event'} Details</h2>
-                <p className="text-white/90 opacity-90 mt-1">
-                  Complete overview of {type === 'news' ? 'news article' : 'event'}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Official {type}</span>
+                  <div className="h-1 w-1 rounded-full bg-white/40" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Katwanyaa High</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black tracking-tighter leading-tight italic uppercase">
+                  {type === 'news' ? 'Article Insight' : 'Event Spotlight'}
+                </h2>
               </div>
             </div>
+
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => onEdit(item)} 
-                className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg cursor-pointer"
+                className="group flex items-center gap-2 bg-white text-slate-900 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:bg-slate-100 active:scale-95 shadow-xl"
               >
-                <FiEdit /> Edit
+                <FiEdit className="group-hover:rotate-12 transition-transform" />
+                <span className="hidden sm:inline">Edit</span>
               </button>
               <button 
                 onClick={onClose} 
-                className="p-2 bg-white/10 text-white rounded-full cursor-pointer"
+                className="p-3 bg-black/20 hover:bg-black/40 text-white rounded-xl transition-all active:scale-90 border border-white/10"
               >
-                <FiX className="text-xl" />
+                <FiX size={20} />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-200px)] overflow-y-auto">
-          <div className="p-6 space-y-6">
-            {/* Image and Basic Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={imageUrl}
-                    alt={item.title}
-                    className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl object-cover shadow-lg"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
-                    }}
-                  />
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{item.title}</h1>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        categoryInfo ? `bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800` : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {categoryInfo?.label || item.category}
-                      </span>
-                      {item.featured && (
-                        <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 font-medium">
-                      {new Date(item.date).toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                </div>
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto bg-white/50 backdrop-blur-sm">
+          <div className="p-6 sm:p-10 space-y-10">
+            
+            {/* Hero Section: Image & Title */}
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              <div className="relative group w-full lg:w-48 shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-[2rem] blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
+                <img
+                  src={imageUrl}
+                  alt={item.title}
+                  className="relative w-full aspect-square lg:w-48 lg:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]"
+                />
               </div>
-              
-              <div className="bg-gradient-to-br from-gray-50 to-purple-50 rounded-2xl p-5 border border-gray-200">
-                <h3 className="text-sm font-semibold text-gray-900 mb-5 flex items-center gap-2 border-b border-purple-100 pb-2">
-                  <FiBriefcase className="text-purple-600 text-xs" />
-                  {type === 'news' ? 'Article' : 'Event'} Information
-                </h3>
 
-                <div className="grid grid-cols-1 gap-4 text-[13px]">
-                  {/* Date */}
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-[10px] uppercase tracking-wide">Date</span>
-                    <span className="text-gray-700 font-medium">
-                      {new Date(item.date).toLocaleDateString()}
+              <div className="flex-1 space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
+                    categoryInfo 
+                      ? `bg-${categoryInfo.color}-50 text-${categoryInfo.color}-700 border-${categoryInfo.color}-200` 
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    {categoryInfo?.label || item.category}
+                  </span>
+                  {item.featured && (
+                    <span className="bg-amber-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md animate-pulse">
+                      Featured Piece
                     </span>
-                  </div>
-
-                  {/* Time for Events */}
-                  {type === 'events' && item.time && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-[10px] uppercase tracking-wide">Time</span>
-                      <span className="text-gray-700 font-medium">{item.time}</span>
-                    </div>
                   )}
+                </div>
 
-                  {/* Location for Events */}
-                  {type === 'events' && item.location && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-[10px] uppercase tracking-wide">Location</span>
-                      <span className="text-gray-700 font-medium">{item.location}</span>
-                    </div>
-                  )}
+                <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tighter leading-none">
+                  {item.title}
+                </h1>
 
-                  {/* Author for News */}
-                  {type === 'news' && item.author && (
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-[10px] uppercase tracking-wide">Author</span>
-                      <span className="text-gray-700 font-medium">{item.author}</span>
-                    </div>
-                  )}
+                <div className="flex items-center gap-2 text-slate-500 font-bold text-sm">
+                  <FiClock className="text-blue-500" />
+                  {new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
               </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <FiBook className="text-blue-600" />
-                Description
-              </h3>
-              <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                <p className="text-gray-700 leading-relaxed">
-                  {item.description || item.excerpt || 'No description available.'}
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+               {[
+                 { label: 'Date', val: new Date(item.date).toLocaleDateString(), icon: <FiClock />, show: true },
+                 { label: 'Time', val: item.time, icon: <FiInfo />, show: type === 'events' && item.time },
+                 { label: 'Venue', val: item.location, icon: <FiMapPin />, show: type === 'events' && item.location },
+                 { label: 'Author', val: item.author, icon: <FiUser />, show: type === 'news' && item.author },
+                 { label: 'Speaker', val: item.speaker, icon: <FiUser />, show: type === 'events' && item.speaker },
+                 { label: 'Target', val: item.attendees, icon: <FiUsers />, show: type === 'events' && item.attendees },
+               ].filter(i => i.show).map((stat, idx) => (
+                 <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-2 text-slate-400 text-[10px] font-black uppercase tracking-tighter mb-1">
+                      {stat.icon} {stat.label}
+                    </div>
+                    <div className="text-slate-800 font-bold truncate">{stat.val}</div>
+                 </div>
+               ))}
+            </div>
+
+            {/* Content Blocks */}
+            <div className="space-y-8">
+              {/* Description Block */}
+              <div className="relative p-6 sm:p-8 bg-slate-50 rounded-[2rem] border border-slate-100 group transition-all hover:bg-white hover:shadow-xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-500 text-white rounded-lg"><FiBook /></div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Brief Overview</h3>
+                </div>
+                <p className="text-slate-600 leading-relaxed text-lg font-medium italic">
+                  "{item.description || item.excerpt || 'No description provided.'}"
                 </p>
               </div>
-            </div>
 
-            {/* Full Content for News */}
-            {type === 'news' && item.fullContent && (
-              <div>
-                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <FiBook className="text-purple-600" />
-                  Full Content
-                </h3>
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
-                  <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+              {/* Full Content Block (News Only) */}
+              {type === 'news' && item.fullContent && (
+                <div className="p-8 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-purple-500 text-white rounded-lg"><FiBook /></div>
+                    <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Full Story</h3>
+                  </div>
+                  <div className="text-slate-700 leading-relaxed space-y-4 whitespace-pre-line font-medium">
                     {item.fullContent}
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Additional Info for Events */}
-            {type === 'events' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {item.speaker && (
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <FiUser className="text-green-600" />
-                      Speaker
-                    </h3>
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
-                      <p className="text-gray-700 font-medium">{item.speaker}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {item.attendees && (
-                  <div>
-                    <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <FiUsers className="text-orange-600" />
-                      Attendees
-                    </h3>
-                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-200">
-                      <p className="text-gray-700 font-medium capitalize">{item.attendees}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="p-6 border-t border-gray-200 flex justify-between items-center">
-            <button 
-              onClick={onClose} 
-              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg cursor-pointer"
-            >
-              Close
-            </button>
-            <button 
-              onClick={() => onEdit(item)} 
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg cursor-pointer"
-            >
-              <FiEdit /> Edit {type === 'news' ? 'News' : 'Event'}
-            </button>
+              )}
+            </div>
           </div>
         </div>
-      </Box>
-    </Modal>
-  )
+
+        {/* Footer Actions */}
+        <div className="p-6 sm:p-8 bg-white border-t border-slate-100 flex flex-col sm:flex-row gap-3">
+          <button 
+            onClick={onClose} 
+            className="flex-1 px-8 py-4 rounded-2xl bg-slate-100 text-slate-600 font-black uppercase tracking-widest text-xs transition-all hover:bg-slate-200 active:scale-95"
+          >
+            Close Details
+          </button>
+          <button 
+            onClick={() => onEdit(item)} 
+            className={`flex-[2] px-8 py-4 rounded-2xl text-white font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-lg bg-gradient-to-r ${themeGradient} hover:brightness-110`}
+          >
+            Edit {type === 'news' ? 'Article' : 'Event'} Entry
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // MODERN CARD COMPONENT (Matching Staff Style)
@@ -774,6 +717,7 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
   );
 }
 // Modern Item Modal Component
+
 function ModernItemModal({ onClose, onSave, item, type, loading }) {
   const [formData, setFormData] = useState({
     title: item?.title || '',
@@ -787,14 +731,13 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
     image: item?.image || '',
     featured: item?.featured || false,
     status: item?.status || 'draft',
-    // Event specific fields
     type: item?.type || 'internal',
     attendees: item?.attendees || 'students',
     speaker: item?.speaker || ''
   });
 
-  const [imageFile, setImageFile] = useState(null)
-  const [imagePreview, setImagePreview] = useState(item?.image || '')
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(item?.image || '');
 
   const categories = {
     news: [
@@ -819,12 +762,8 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
         if (imgPath.startsWith('/') || imgPath.startsWith('http') || imgPath.startsWith('data:image')) {
           return imgPath;
         }
-        if (imgPath.startsWith('news/') || imgPath.startsWith('events/')) {
-          return `/${imgPath}`;
-        }
-        return '';
+        return `/${imgPath}`;
       };
-      
       setImagePreview(getPreviewUrl(item.image));
     }
   }, [item]);
@@ -834,348 +773,232 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
     if (file) {
       setImageFile(file);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
+      reader.onload = (e) => setImagePreview(e.target.result);
       reader.readAsDataURL(file);
     }
   };
 
+  const handleChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Prepare form data
     const submitData = new FormData();
-    
-    // Common fields
-    submitData.append('title', formData.title.trim());
-    submitData.append('category', formData.category);
-    submitData.append('date', formData.date);
-    submitData.append('featured', formData.featured.toString());
-    submitData.append('description', formData.description.trim());
-    
-    // Type specific fields
-    if (type === 'news') {
-      submitData.append('excerpt', formData.description.trim());
-      submitData.append('fullContent', (formData.content || formData.description).trim());
-      submitData.append('author', formData.author.trim());
-    } else {
-      submitData.append('time', formData.time.trim());
-      submitData.append('location', formData.location.trim());
-      submitData.append('type', formData.type);
-      submitData.append('attendees', formData.attendees);
-      submitData.append('speaker', formData.speaker.trim());
-    }
-    
-    // Handle image
-    if (imageFile) {
-      submitData.append('image', imageFile);
-    }
-    
+    Object.keys(formData).forEach(key => {
+      if (key === 'description' && type === 'news') {
+        submitData.append('excerpt', formData[key].trim());
+      }
+      submitData.append(key, formData[key]);
+    });
+    if (imageFile) submitData.append('image', imageFile);
     await onSave(submitData, item?.id);
   };
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+  const themeGradient = type === 'news' 
+    ? 'from-purple-700 via-pink-600 to-rose-600' 
+    : 'from-blue-700 via-cyan-600 to-teal-600';
 
   return (
     <Modal open={true} onClose={loading ? undefined : onClose}>
       <Box sx={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '90%',
-        maxWidth: '1000px',
-        maxHeight: '95vh', bgcolor: 'background.paper',
-        borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #faf5ff 100%)'
+        width: '95%', maxWidth: '1100px', maxHeight: '95vh',
+        bgcolor: '#ffffff', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+        overflow: 'hidden', outline: 'none'
       }}>
+        
         {/* Header */}
-        <div className={`p-6 text-white ${
-          type === 'news' 
-            ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-rose-700'
-            : 'bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-700'
-        }`}>
+        <div className={`p-8 text-white bg-gradient-to-r ${themeGradient}`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
-                {type === 'news' ? 
-                  <IoNewspaperOutline className="text-xl" /> : 
-                  <IoCalendarClearOutline className="text-xl" />
-                }
+            <div className="flex items-center gap-5">
+              <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
+                {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
               </div>
               <div>
-                <h2 className="text-2xl font-bold">{item ? 'Edit' : 'Create'} {type === 'news' ? 'News' : 'Event'}</h2>
-                <p className="text-white/90 opacity-90 mt-1">
-                  Manage {type === 'news' ? 'news article' : 'event'} information
+                <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">
+                  {item ? 'Modify' : 'Launch'} {type}
+                </h2>
+                <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
+                  Katwanyaa Content Management System
                 </p>
               </div>
             </div>
             {!loading && (
-              <button onClick={onClose} className="p-2 hover:bg-white hover:bg-opacity-20 rounded-xl cursor-pointer">
-                <FiX className="text-xl" />
+              <button onClick={onClose} className="p-3 bg-black/10 hover:bg-black/20 rounded-full transition-all active:scale-90">
+                <FiX size={24} />
               </button>
             )}
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-200px)] overflow-y-auto">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-6">
-                {/* Image Upload */}
-                <div>
-                  <label className=" text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
-                    <FiImage className="text-purple-600 text-lg" /> 
-                    Featured Image
-                  </label>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        {imagePreview ? (
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-20 h-20 rounded-2xl object-cover shadow-lg border border-gray-200"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            {type === 'news' ? 
-                              <IoNewspaperOutline className="text-2xl text-gray-400" /> : 
-                              <IoCalendarClearOutline className="text-2xl text-gray-400" />
-                            }
-                          </div>
-                        )}
+        <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
+          <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
+            
+            {/* 1. HERO TITLE INPUT (FULL WIDTH) */}
+            <div className="space-y-4">
+              <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
+                <FiStar className="text-amber-500" /> Content Headline
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full px-0 py-4 bg-transparent border-b-4 border-slate-200 focus:border-purple-500 transition-colors text-3xl sm:text-5xl font-black text-slate-900 placeholder:text-slate-200 outline-none"
+                placeholder="Enter a catchy title..."
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              {/* Left Column - Visuals & Media */}
+              <div className="lg:col-span-4 space-y-8">
+                <div className="relative group">
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Featured Media</label>
+                  <div className="relative aspect-video sm:aspect-square rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                         <FiImage size={48} className="opacity-20" />
+                         <span className="text-[10px] font-bold">NO IMAGE SELECTED</span>
                       </div>
-                      <div className="flex-1">
-                        <label className="block">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                          />
-                          <div className="px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer flex items-center gap-2 bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <FiUpload className="text-purple-500" />
-                            <span className="text-sm font-bold text-gray-700">
-                              {imageFile ? 'Change Image' : 'Upload Image'}
-                            </span>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
+                    )}
+                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
+                      <FiUpload size={30} />
+                      <span className="font-black text-xs mt-2 uppercase tracking-widest">Replace Photo</span>
+                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                    </label>
                   </div>
                 </div>
 
-                {/* Title */}
-                <div>
-                  <label className=" text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 p-3 rounded-xl border border-blue-200">
-                    <FiBook className="text-blue-600 text-lg" /> 
-                    Title *
-                  </label>
+                {/* Featured Toggle */}
+                <div 
+                  onClick={() => handleChange('featured', !formData.featured)}
+                  className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                    formData.featured ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:border-slate-200'
+                  }`}
+                >
+                  <div>
+                    <p className={`font-black text-sm uppercase ${formData.featured ? 'text-amber-700' : 'text-slate-700'}`}>Promote to Featured</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Displays in homepage slider</p>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.featured ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
+                    <FiStar />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Bold Data Fields */}
+              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                
+                {/* Category Selection */}
+                <div className="sm:col-span-1">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => handleChange('category', e.target.value)}
+                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all"
+                  >
+                    {categories[type].map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
+                  </select>
+                </div>
+
+                {/* Date Input */}
+                <div className="sm:col-span-1">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Scheduled Date</label>
                   <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => handleChange('title', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                    placeholder={`Enter ${type === 'news' ? 'news' : 'event'} title`}
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => handleChange('date', e.target.value)}
+                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all"
                   />
                 </div>
 
-                {/* Category and Date */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-3">Category *</label>
-                    <select
-                      required
-                      value={formData.category}
-                      onChange={(e) => handleChange('category', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                    >
-                      {categories[type].map(category => (
-                        <option key={category.value} value={category.value}>
-                          {category.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-3">Date *</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.date}
-                      onChange={(e) => handleChange('date', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                    />
-                  </div>
-                </div>
-
-                {/* Event Specific Fields */}
-                {type === 'events' && (
+                {/* Conditional Inputs based on Type */}
+                {type === 'events' ? (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-3">Time</label>
-                        <input
-                          type="text"
-                          value={formData.time}
-                          onChange={(e) => handleChange('time', e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
-                          placeholder="e.g., 9:00 AM - 5:00 PM"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-3">Type</label>
-                        <select
-                          value={formData.type}
-                          onChange={(e) => handleChange('type', e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                        >
-                          <option value="internal">Internal</option>
-                          <option value="external">External</option>
-                          <option value="online">Online</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-bold text-gray-800 mb-3">Location</label>
+                    <div className="sm:col-span-1">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Event Time</label>
                       <input
                         type="text"
-                        value={formData.location}
-                        onChange={(e) => handleChange('location', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50"
-                        placeholder="Enter event location"
+                        placeholder="e.g. 08:00 AM - 04:00 PM"
+                        value={formData.time}
+                        onChange={(e) => handleChange('time', e.target.value)}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
                       />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-3">Attendees</label>
-                        <select
-                          value={formData.attendees}
-                          onChange={(e) => handleChange('attendees', e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
-                        >
-                          <option value="students">Students</option>
-                          <option value="staff">Staff</option>
-                          <option value="parents">Parents</option>
-                          <option value="all">All</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-bold text-gray-800 mb-3">Speaker</label>
-                        <input
-                          type="text"
-                          value={formData.speaker}
-                          onChange={(e) => handleChange('speaker', e.target.value)}
-                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                          placeholder="Enter speaker name"
-                        />
-                      </div>
+                    <div className="sm:col-span-1">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Venue / Location</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. School Main Hall"
+                        value={formData.location}
+                        onChange={(e) => handleChange('location', e.target.value)}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
+                      />
                     </div>
                   </>
-                )}
-
-                {/* Author for News */}
-                {type === 'news' && (
-                  <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-3">Author</label>
+                ) : (
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Article Author</label>
                     <input
                       type="text"
                       value={formData.author}
                       onChange={(e) => handleChange('author', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                      placeholder="Enter author name"
+                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all"
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200">
-                    <FiBook className="text-purple-600 text-lg" /> 
-                    Description *
-                  </label>
-                  <textarea
-                    required
-                    value={formData.description}
-                    onChange={(e) => handleChange('description', e.target.value)}
-                    rows="4"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50"
-                    placeholder={`Write a brief description...`}
-                  />
-                </div>
-
-                {/* Full Content (News only) */}
-                {type === 'news' && (
+                {/* Long Text Areas */}
+                <div className="sm:col-span-2 space-y-6">
                   <div>
-                    <label className="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-blue-50 p-3 rounded-xl border border-indigo-200">
-                      <FiBook className="text-indigo-600 text-lg" /> 
-                      Full Content
-                    </label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Short Description</label>
                     <textarea
-                      value={formData.content}
-                      onChange={(e) => handleChange('content', e.target.value)}
-                      rows="4"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
-                      placeholder="Write the full article content..."
+                      rows="3"
+                      value={formData.description}
+                      onChange={(e) => handleChange('description', e.target.value)}
+                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all placeholder:text-slate-300"
+                      placeholder="Write a brief summary of this item..."
                     />
                   </div>
-                )}
-
-                {/* Featured */}
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.featured}
-                      onChange={(e) => handleChange('featured', e.target.checked)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                    />
-                    <span className="text-sm font-bold text-gray-700">Featured Item</span>
-                  </label>
+                  {type === 'news' && (
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Full Story Content</label>
+                      <textarea
+                        rows="6"
+                        value={formData.content}
+                        onChange={(e) => handleChange('content', e.target.value)}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-medium text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
+                        placeholder="Elaborate on the news item here..."
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-10 border-t border-slate-100">
               <button 
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all active:scale-95"
               >
-                Cancel
+                Cancel Changes
               </button>
               
               <button 
                 type="submit"
                 disabled={loading}
-                className={`px-8 py-3 text-white rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2 ${
-                  type === 'news' 
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-600'
-                }`}
+                className={`w-full sm:w-auto px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 bg-gradient-to-r ${themeGradient} hover:brightness-110`}
               >
                 {loading ? (
-                  <>
-                    <CircularProgress size={16} className="text-white" />
-                    {item ? 'Updating...' : 'Creating...'}
-                  </>
+                  <CircularProgress size={18} thickness={6} sx={{ color: 'white' }} />
                 ) : (
                   <>
-                    <FiCheck />
-                    {item ? 'Update' : 'Create'} {type === 'news' ? 'News' : 'Event'}
+                    <FiCheck size={18} />
+                    Confirm & {item ? 'Save Updates' : `Post ${type}`}
                   </>
                 )}
               </button>
@@ -1184,9 +1007,8 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
         </div>
       </Box>
     </Modal>
-  )
+  );
 }
-
 // Helper function to get authentication headers from localStorage
 const getAuthHeaders = () => {
   try {
