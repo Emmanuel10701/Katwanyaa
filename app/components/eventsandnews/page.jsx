@@ -415,7 +415,7 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
               <div className="relative group w-full lg:w-48 shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-purple-600 rounded-[2rem] blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
                 <img
-                  src={imageUrl}
+               src={getImageUrl(item.image)}
                   alt={item.title}
                   className="relative w-full aspect-square lg:w-48 lg:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]"
                 />
