@@ -87,7 +87,7 @@ export const metadata = {
     },
   },
 
-  /* ✅ Icons (fallback image for WhatsApp) */
+
   icons: {
     icon: "/katz.png",
     apple: "/katz.png",

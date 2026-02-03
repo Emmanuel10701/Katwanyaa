@@ -228,6 +228,104 @@ const handleViewAdmin = (admin) => {
     checkAuth();
   }, [router]);
 
+
+  // Add these states
+const [confirmPassword, setConfirmPassword] = useState('');
+const [passwordStrength, setPasswordStrength] = useState({
+  score: 0,
+  hasMinLength: false,
+  hasUpperCase: false,
+  hasLowerCase: false,
+  hasNumbers: false,
+  hasSpecialChar: false,
+  matches: false
+});
+
+// Password validation function
+const validatePassword = (password, confirm = confirmPassword) => {
+  const validations = {
+    hasMinLength: password.length >= 8,
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+    hasNumbers: /\d/.test(password),
+    hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    matches: password === confirm && password.length > 0
+  };
+
+  const score = Object.values(validations).filter(Boolean).length;
+  
+  setPasswordStrength({
+    ...validations,
+    score
+  });
+};
+
+// Update password field handler
+const handlePasswordChange = (password) => {
+  setAdminData({ ...adminData, password });
+  validatePassword(password);
+};
+
+const handleConfirmPasswordChange = (confirm) => {
+  setConfirmPassword(confirm);
+  validatePassword(adminData.password, confirm);
+};
+
+// Password strength indicator component
+const PasswordStrengthIndicator = () => {
+  const { score, hasMinLength, hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar, matches } = passwordStrength;
+  
+  const getStrengthColor = () => {
+    if (score <= 2) return 'bg-red-500';
+    if (score <= 4) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getStrengthText = () => {
+    if (score <= 2) return 'Weak';
+    if (score <= 4) return 'Medium';
+    return 'Strong';
+  };
+
+  return (
+    <div className="mt-3 space-y-3">
+      {/* Strength Bar */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold text-gray-700">Password Strength:</span>
+        <span className={`text-xs font-bold px-2 py-1 rounded ${score <= 2 ? 'text-red-600 bg-red-50' : score <= 4 ? 'text-yellow-600 bg-yellow-50' : 'text-green-600 bg-green-50'}`}>
+          {getStrengthText()}
+        </span>
+      </div>
+      <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div 
+          className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+          style={{ width: `${(score / 6) * 100}%` }}
+        />
+      </div>
+
+      {/* Validation Rules */}
+      <div className="grid grid-cols-2 gap-2 mt-4">
+        {[
+          { label: '8+ characters', valid: hasMinLength },
+          { label: 'Uppercase letter', valid: hasUpperCase },
+          { label: 'Lowercase letter', valid: hasLowerCase },
+          { label: 'Number (0-9)', valid: hasNumbers },
+          { label: 'Special character', valid: hasSpecialChar },
+          { label: 'Passwords match', valid: matches }
+        ].map((rule, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${rule.valid ? 'bg-green-500' : 'bg-gray-300'}`} />
+            <span className={`text-xs ${rule.valid ? 'text-green-600 font-bold' : 'text-gray-500'}`}>
+              {rule.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
 const fetchAdmins = async (showRefresh = false) => {
   if (status !== 'authenticated') {
     console.log('❌ Cannot fetch admins: Not authenticated');
@@ -428,75 +526,222 @@ const confirmDelete = async () => {
     setAdminToDelete(null);
   };
 
-  // Handle admin creation/editing
-  const handleCreateAdmin = () => {
-    setAdminData({
-      name: '',
-      email: '',
-      password: '',
-      phone: '+254',
-      role: 'ADMIN',
-      permissions: {
-        manageUsers: false,
-        manageContent: true,
-        manageSettings: false,
-        viewReports: true
-      },
-      status: 'active'
-    });
-    setEditingAdmin(null);
-    setShowAdminModal(true);
-  };
+// In your handleCreateAdmin function:
+const handleCreateAdmin = () => {
+  setAdminData({
+    name: '',
+    email: '',
+    password: '',
+    phone: '+254',
+    role: 'ADMIN',
+    permissions: {
+      manageUsers: false,
+      manageContent: true,
+      manageSettings: false,
+      viewReports: true
+    },
+    status: 'active'
+  });
+  setConfirmPassword(''); // ADD THIS
+  setPasswordStrength({
+    score: 0,
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumbers: false,
+    hasSpecialChar: false,
+    matches: false
+  });
+  setEditingAdmin(null);
+  setShowAdminModal(true);
+};
 
-  const handleEditAdmin = (admin) => {
-    setAdminData({
-      name: admin.name || '',
-      email: admin.email || '',
-      password: '',
-      phone: admin.phone || '+254',
-      role: admin.role || 'ADMIN',
-      permissions: admin.permissions || {
-        manageUsers: false,
-        manageContent: true,
-        manageSettings: false,
-        viewReports: true
-      },
-      status: admin.status || 'active'
-    });
-    setEditingAdmin(admin);
-    setShowAdminModal(true);
-  };
-
+// In your handleEditAdmin function:
+const handleEditAdmin = (admin) => {
+  setAdminData({
+    name: admin.name || '',
+    email: admin.email || '',
+    password: '',
+    phone: admin.phone || '+254',
+    role: admin.role || 'ADMIN',
+    permissions: admin.permissions || {
+      manageUsers: false,
+      manageContent: true,
+      manageSettings: false,
+      viewReports: true
+    },
+    status: admin.status || 'active'
+  });
+  setConfirmPassword(''); // ADD THIS
+  setPasswordStrength({
+    score: 0,
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumbers: false,
+    hasSpecialChar: false,
+    matches: false
+  });
+  setEditingAdmin(admin);
+  setShowAdminModal(true);
+};
 const handleSaveAdmin = async (e) => {
   e.preventDefault();
   setSavingAdmin(true);
-
+  
   try {
+    // ====================
+    // 1. FORM VALIDATION
+    // ====================
+    
+    // Check required fields
+    if (!adminData.name.trim()) {
+      toast.error('Name is required');
+      setSavingAdmin(false);
+      return;
+    }
+    
+    if (!adminData.email.trim()) {
+      toast.error('Email is required');
+      setSavingAdmin(false);
+      return;
+    }
+    
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(adminData.email)) {
+      toast.error('Please enter a valid email address');
+      setSavingAdmin(false);
+      return;
+    }
+    
+    if (!adminData.phone.trim()) {
+      toast.error('Phone number is required');
+      setSavingAdmin(false);
+      return;
+    }
+    
+    // Phone number validation (Kenyan format)
+    const phoneRegex = /^\+254[17]\d{8}$/;
+    if (!phoneRegex.test(adminData.phone)) {
+      toast.error('Phone number must be in format: +2547XXXXXXXX or +2541XXXXXXXX');
+      setSavingAdmin(false);
+      return;
+    }
+    
+    // ====================
+    // 2. PASSWORD VALIDATION
+    // ====================
+    
+    // For NEW admin creation
+    if (!editingAdmin) {
+      // Password required for new admin
+      if (!adminData.password.trim()) {
+        toast.error('Password is required for new admin');
+        setSavingAdmin(false);
+        return;
+      }
+      
+      // Password length check
+      if (adminData.password.length < 8) {
+        toast.error('Password must be at least 8 characters long');
+        setSavingAdmin(false);
+        return;
+      }
+      
+      // Password complexity check
+      const hasUpperCase = /[A-Z]/.test(adminData.password);
+      const hasLowerCase = /[a-z]/.test(adminData.password);
+      const hasNumbers = /\d/.test(adminData.password);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(adminData.password);
+      
+      if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+        toast.error('Password must contain uppercase, lowercase, numbers, and special characters');
+        setSavingAdmin(false);
+        return;
+      }
+      
+      // Confirm password check
+      if (adminData.password !== confirmPassword) {
+        toast.error('Passwords do not match');
+        setSavingAdmin(false);
+        return;
+      }
+    }
+    
+    // For EXISTING admin editing (if changing password)
+    if (editingAdmin && adminData.password.trim()) {
+      // If password is being changed, validate it
+      if (adminData.password.length < 8) {
+        toast.error('New password must be at least 8 characters long');
+        setSavingAdmin(false);
+        return;
+      }
+      
+      const hasUpperCase = /[A-Z]/.test(adminData.password);
+      const hasLowerCase = /[a-z]/.test(adminData.password);
+      const hasNumbers = /\d/.test(adminData.password);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(adminData.password);
+      
+      if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+        toast.error('New password must contain uppercase, lowercase, numbers, and special characters');
+        setSavingAdmin(false);
+        return;
+      }
+      
+      if (adminData.password !== confirmPassword) {
+        toast.error('Passwords do not match');
+        setSavingAdmin(false);
+        return;
+      }
+    }
+    
+    // ====================
+    // 3. PREPARE API PAYLOAD
+    // ====================
+    
     const token = localStorage.getItem('admin_token');
+    if (!token) {
+      toast.error('Authentication token missing. Please login again.');
+      router.push('/adminLogin');
+      setSavingAdmin(false);
+      return;
+    }
     
     const adminPayload = {
-      name: adminData.name,
-      email: adminData.email,
-      phone: adminData.phone,
+      name: adminData.name.trim(),
+      email: adminData.email.trim().toLowerCase(),
+      phone: adminData.phone.trim(),
       role: adminData.role,
-      // Note: You'll need to add permissions and status to your User model
-      // or handle them separately
-      status: adminData.status
+      status: adminData.status,
+      // Only send password if it's provided (for new admin or password change)
+      ...(adminData.password.trim() && { password: adminData.password }),
+      // Include permissions if your backend supports it
+      permissions: adminData.permissions
     };
-
-    if (adminData.password) {
-      adminPayload.password = adminData.password;
-    }
-
+    
+    // ====================
+    // 4. MAKE API REQUEST
+    // ====================
+    
     let url = '/api/register';
     let method = 'POST';
+    let successMessage = 'Admin created successfully!';
     
     if (editingAdmin) {
-      // Use the update endpoint for existing users
+      // Update existing admin
       url = `/api/register/${editingAdmin.id}`;
       method = 'PUT';
+      successMessage = 'Admin updated successfully!';
+      
+      // Don't send password field if empty (not changing password)
+      if (!adminData.password.trim()) {
+        delete adminPayload.password;
+      }
     }
-
+    
+    console.log(`Sending ${method} request to ${url}`, adminPayload);
+    
     const response = await fetch(url, {
       method: method,
       headers: {
@@ -505,20 +750,66 @@ const handleSaveAdmin = async (e) => {
       },
       body: JSON.stringify(adminPayload),
     });
-
+    
     const data = await response.json();
-
+    
+    // ====================
+    // 5. HANDLE RESPONSE
+    // ====================
+    
     if (!response.ok) {
-      throw new Error(data.error || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
+      // Handle specific HTTP error codes
+      if (response.status === 401) {
+        toast.error('Session expired. Please login again.');
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        router.push('/adminLogin');
+        return;
+      }
+      
+      if (response.status === 409) {
+        toast.error('Email already exists. Please use a different email.');
+        return;
+      }
+      
+      if (response.status === 403) {
+        toast.error('You do not have permission to perform this action');
+        return;
+      }
+      
+      throw new Error(data.error || data.message || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
     }
-
+    
     if (data.success) {
-      toast.success(`Admin ${editingAdmin ? 'updated' : 'created'} successfully!`);
+      toast.success(successMessage);
       
-      // Refresh the admin list
-      await fetchAdmins();
+      // ====================
+      // 6. UPDATE LOCAL STATE
+      // ====================
       
-      setShowAdminModal(false);
+      if (editingAdmin) {
+        // Update existing admin in state
+        const updatedAdmins = admins.map(admin => 
+          admin.id === editingAdmin.id 
+            ? { ...admin, ...adminPayload, updatedAt: new Date().toISOString() }
+            : admin
+        );
+        setAdmins(updatedAdmins);
+      } else {
+        // Add new admin to state
+        const newAdmin = {
+          id: data.user?.id || `admin_${Date.now()}`,
+          ...adminPayload,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        setAdmins(prev => [newAdmin, ...prev]);
+      }
+      
+      // ====================
+      // 7. RESET FORM & CLOSE MODAL
+      // ====================
+      
       setAdminData({
         name: '',
         email: '',
@@ -533,13 +824,43 @@ const handleSaveAdmin = async (e) => {
         },
         status: 'active'
       });
+      setConfirmPassword('');
+      setPasswordStrength({
+        score: 0,
+        hasMinLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumbers: false,
+        hasSpecialChar: false,
+        matches: false
+      });
+      setEditingAdmin(null);
+      setShowAdminModal(false);
+      
+      // Refresh the admin list from server to ensure data consistency
+      await fetchAdmins();
+      
     } else {
-      throw new Error(data.error || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
+      throw new Error(data.error || data.message || `Failed to ${editingAdmin ? 'update' : 'create'} admin`);
     }
     
   } catch (error) {
     console.error('Error saving admin:', error);
-    toast.error(error.message);
+    
+    // Handle specific error types
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      toast.error('Network error. Please check your connection.');
+    } else if (error.message.includes('Email already exists')) {
+      toast.error('Email already exists. Please use a different email.');
+    } else if (error.message.includes('Session expired')) {
+      toast.error('Session expired. Please login again.');
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      router.push('/adminLogin');
+    } else {
+      toast.error(error.message || 'An unexpected error occurred');
+    }
+    
   } finally {
     setSavingAdmin(false);
   }
@@ -1052,31 +1373,60 @@ const handleSaveAdmin = async (e) => {
                 </div>
 
          <div>
-  <label className="block text-gray-900 font-bold mb-3 text-sm">
-    {editingAdmin ? 'New Password (optional)' : 'Password *'}
-  </label>
-
-  <div className="relative">
-    <input
-      type={showPassword ? "text" : "password"}
-      required={!editingAdmin}
-      value={adminData.password}
-      onChange={(e) =>
-        setAdminData({ ...adminData, password: e.target.value })
-      }
-      className="w-full px-4 py-4 pr-12 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
-      placeholder="Enter password"
-    />
-
-    {/* Eye Icon */}
-    <button
-      type="button"
-      onClick={() => setShowPassword(!showPassword)}
-      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-    >
-      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-    </button>
+<div className="space-y-4">
+  {/* Password Field */}
+  <div>
+    <label className="block text-gray-900 font-bold mb-3 text-sm">
+      {editingAdmin ? 'New Password (optional)' : 'Password *'}
+      <span className="text-gray-500 text-xs font-normal ml-2">Must contain 8+ chars, uppercase, lowercase, number & special char</span>
+    </label>
+    <div className="relative">
+      <input
+        type={showPassword ? "text" : "password"}
+        required={!editingAdmin}
+        value={adminData.password}
+        onChange={(e) => handlePasswordChange(e.target.value)}
+        className="w-full px-4 py-4 pr-12 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+        placeholder="Enter secure password"
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(!showPassword)}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+      >
+        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
   </div>
+
+  {/* Confirm Password Field (Only for new admin or password change) */}
+  {(adminData.password || !editingAdmin) && (
+    <div>
+      <label className="block text-gray-900 font-bold mb-3 text-sm">
+        Confirm Password *
+      </label>
+      <div className="relative">
+        <input
+          type={showPassword ? "text" : "password"}
+          required={!editingAdmin || adminData.password}
+          value={confirmPassword}
+          onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+          className="w-full px-4 py-4 pr-12 font-bold bg-gray-50 border border-gray-300 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm"
+          placeholder="Re-enter password"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
+    </div>
+  )}
+
+  {adminData.password && <PasswordStrengthIndicator />}
+</div>
 </div>
 
 
