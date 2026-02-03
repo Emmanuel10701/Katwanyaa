@@ -74,6 +74,7 @@ model DeviceToken {
   expiresAt  DateTime
   isTrusted  Boolean  @default(false)
   isBlocked  Boolean  @default(false)
+  loginCount Int      @default(1) // Added this field
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

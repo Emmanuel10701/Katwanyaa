@@ -441,7 +441,9 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
 }
 
 // ====================
-// MAIN LOGIN HANDLER
+
+// ====================
+// MAIN LOGIN HANDLER - FIXED VERSION
 // ====================
 export async function POST(request) {
   try {
@@ -460,10 +462,19 @@ export async function POST(request) {
     const serverDeviceHash = generateDeviceHash(request);
     const deviceHash = clientDeviceHash || serverDeviceHash;
 
+    console.log('🔍 Login attempt:', { 
+      email, 
+      action,
+      hasClientToken: !!clientDeviceToken,
+      clientLoginCount,
+      hasClientHash: !!clientDeviceHash 
+    });
+
     // ====================
     // 1. VERIFICATION FLOW
     // ====================
     if (action === 'verify' && verificationCode) {
+      console.log('🔐 Verification flow for:', email);
       const verificationResult = await handleVerification(
         email, 
         verificationCode, 
@@ -473,6 +484,7 @@ export async function POST(request) {
       );
       
       if (verificationResult.success) {
+        console.log('✅ Verification successful for:', email);
         // Log successful verification
         await prisma.loginAttempt.create({
           data: {
@@ -488,6 +500,7 @@ export async function POST(request) {
         
         return NextResponse.json(verificationResult, { status: 200 });
       } else {
+        console.log('❌ Verification failed for:', email);
         // Log failed verification attempt
         await prisma.loginAttempt.create({
           data: {
@@ -500,7 +513,7 @@ export async function POST(request) {
           }
         });
         
-        return NextResponse.json(verificationResult, { status: 401 });
+        return NextResponse.json(verificationResult, { status: 400 }); // Changed to 400
       }
     }
 
@@ -508,6 +521,7 @@ export async function POST(request) {
     // 2. RESEND CODE FLOW
     // ====================
     if (action === 'resend') {
+      console.log('🔄 Resend code for:', email);
       const user = await prisma.user.findUnique({ 
         where: { email: email.toLowerCase().trim() } 
       });
@@ -534,13 +548,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    console.log('🔑 Normal login for:', email);
+
     // Find user
     const user = await prisma.user.findUnique({ 
       where: { email: email.toLowerCase().trim() } 
     });
     
     if (!user) {
-      // Log failed attempt
+      console.log('❌ User not found:', email);
+      // Log failed attempt but don't reveal user doesn't exist
       await prisma.loginAttempt.create({
         data: {
           email: email.toLowerCase(),
@@ -552,8 +569,13 @@ export async function POST(request) {
         }
       });
       
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ 
+        error: 'Invalid email or password',
+        status: 'failed'
+      }, { status: 401 });
     }
+
+    console.log('👤 User found:', user.id, 'Role:', user.role);
 
     // Check password
     if (!user.password) {
@@ -563,6 +585,7 @@ export async function POST(request) {
     const isPasswordValid = await verifyPassword(password, user.password);
     
     if (!isPasswordValid) {
+      console.log('❌ Invalid password for:', email);
       // Log failed attempt
       await prisma.loginAttempt.create({
         data: {
@@ -580,6 +603,7 @@ export async function POST(request) {
       const failedCount = await checkFailedAttempts(user.email);
       
       if (failedCount >= MAX_FAILED_ATTEMPTS - 1) {
+        console.log('⚠️ Too many failed attempts for:', email);
         // Generate verification code
         const verificationCode = generateVerificationCode();
         await storeVerificationCode(user.email, verificationCode, deviceHash);
@@ -591,15 +615,18 @@ export async function POST(request) {
           message: 'Multiple failed attempts detected. Verification code sent to your email.',
           email: user.email,
           reason: 'failed_attempts'
-        }, { status: 401 });
+        }, { status: 200 }); // Changed to 200 with requiresVerification
       }
       
       return NextResponse.json({ 
         error: 'Invalid email or password',
-        attemptsLeft: MAX_FAILED_ATTEMPTS - failedCount - 1
+        attemptsLeft: MAX_FAILED_ATTEMPTS - failedCount - 1,
+        status: 'failed'
       }, { status: 401 });
     }
 
+    console.log('✅ Password correct for:', email);
+    
     // ✅ PASSWORD IS CORRECT!
     
     // Log successful attempt
@@ -615,31 +642,81 @@ export async function POST(request) {
       }
     });
 
-    // Check if we should require verification (for admins/suspicious patterns)
-    const shouldRequireVerification = () => {
-      // Always verify admins on new devices
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-        return true;
-      }
-      
-      // Check for suspicious patterns
-      const failedCount = checkFailedAttempts(user.email);
-      if (failedCount >= 3) {
-        return true;
-      }
-      
-      return false;
-    };
-
-    // Check device verification
-    const verificationCheck = await checkDeviceVerification(
-      user.id, 
-      deviceHash, 
-      clientLoginCount,
-      clientDeviceToken
-    );
+    // ====================
+    // DEVICE VERIFICATION LOGIC - SIMPLIFIED
+    // ====================
+    console.log('🔍 Checking device verification...');
+    let requiresVerification = false;
+    let verificationReason = 'security_check';
     
-    if (verificationCheck.requiresVerification || shouldRequireVerification()) {
+    // 1. Check if client has a device token
+    if (clientDeviceToken) {
+      console.log('📱 Client has device token');
+      const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
+      if (!tokenValid.valid) {
+        console.log('❌ Device token invalid:', tokenValid.reason);
+        requiresVerification = true;
+        verificationReason = tokenValid.reason || 'invalid_token';
+      } else if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+        console.log('⚠️ Max login attempts reached');
+        requiresVerification = true;
+        verificationReason = 'max_login_attempts_reached';
+      }
+    } else {
+      console.log('📱 No client device token - new device');
+      requiresVerification = true;
+      verificationReason = 'new_device';
+    }
+    
+    // 2. Check database for existing device
+    if (!requiresVerification) {
+      console.log('🔍 Checking database for existing device...');
+      const existingDevice = await prisma.deviceToken.findFirst({
+        where: {
+          userId: user.id,
+          deviceHash: deviceHash,
+          isTrusted: true,
+          expiresAt: { gt: new Date() },
+          isBlocked: false
+        }
+      });
+      
+      if (!existingDevice) {
+        console.log('❌ No trusted device found in database');
+        requiresVerification = true;
+        verificationReason = 'new_device';
+      } else if (existingDevice.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+        console.log('⚠️ Max login attempts reached in database');
+        requiresVerification = true;
+        verificationReason = 'max_login_attempts_reached';
+      }
+    }
+    
+    // 3. Always verify admins on new devices
+    if (!requiresVerification) {
+      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        console.log('👑 Admin user - checking for recent device...');
+        const recentDevice = await prisma.deviceToken.findFirst({
+          where: {
+            userId: user.id,
+            deviceHash: deviceHash,
+            lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
+          }
+        });
+        
+        if (!recentDevice) {
+          console.log('⚠️ Admin on potentially new device');
+          requiresVerification = true;
+          verificationReason = 'admin_security_check';
+        }
+      }
+    }
+    
+    // ====================
+    // HANDLE VERIFICATION OR LOGIN
+    // ====================
+    if (requiresVerification) {
+      console.log('🔐 Verification required for:', email, 'Reason:', verificationReason);
       // Generate verification code
       const verificationCode = generateVerificationCode();
       await storeVerificationCode(user.email, verificationCode, deviceHash);
@@ -650,16 +727,32 @@ export async function POST(request) {
         requiresVerification: true,
         message: 'Verification code sent to your email. Please enter it to continue.',
         email: user.email,
-        reason: verificationCheck.reason || 'security_check'
+        reason: verificationReason,
+        deviceHash: deviceHash // Send back for reference
       }, { status: 200 });
     }
 
+    console.log('✅ Device trusted, proceeding with login');
+    
     // Device is trusted - proceed with login
     // Update device login count
     const device = await updateDeviceLoginCount(user.id, deviceHash, userAgent);
     
-    // Generate new device token with updated login count
-    const newLoginCount = (clientLoginCount || device.loginCount) + 1;
+    // Calculate new login count
+    let newLoginCount = 1;
+    if (clientDeviceToken) {
+      try {
+        const payloadStr = decodeURIComponent(escape(atob(clientDeviceToken)));
+        const payload = JSON.parse(payloadStr);
+        newLoginCount = (payload.loginCount || 0) + 1;
+      } catch (error) {
+        newLoginCount = (clientLoginCount || 0) + 1;
+      }
+    } else {
+      newLoginCount = device.loginCount || 1;
+    }
+    
+    // Generate new device token
     const deviceToken = generateDeviceToken(user.id, deviceHash);
     const deviceTokenPayload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
     deviceTokenPayload.loginCount = newLoginCount;
@@ -683,6 +776,8 @@ export async function POST(request) {
     
     const userData = sanitizeUser(user);
 
+    console.log('🎉 Login successful for:', user.email);
+
     return NextResponse.json({
       success: true,
       message: 'Login successful',
@@ -691,13 +786,18 @@ export async function POST(request) {
       deviceToken: updatedDeviceToken,
       storeInLocalStorage: true,
       loginCount: newLoginCount,
-      deviceTrusted: true
+      deviceTrusted: true,
+      deviceHash: deviceHash
     }, { status: 200 });
 
   } catch (error) {
     console.error('❌ Error during login:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
@@ -717,7 +817,8 @@ export async function GET() {
         verificationCodeLength: VERIFICATION_CODE_LENGTH,
         verificationExpiryMinutes: VERIFICATION_CODE_EXPIRY_MINUTES,
         deviceTokenExpiryDays: DEVICE_TOKEN_EXPIRY_DAYS
-      }
+      },
+      status: 'operational'
     }, { status: 200 });
   } catch (error) {
     console.error('❌ Error fetching login info:', error);
