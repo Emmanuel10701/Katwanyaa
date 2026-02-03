@@ -457,145 +457,154 @@ const handleSubmit = async (e) => {
 
       {/* ============================ */}
       {/* VERIFICATION MODAL */}
-      {/* ============================ */}
-      {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-[9999] animate-fade-in">
-          <div className="relative w-full max-w-md bg-gradient-to-br from-white to-slate-50 rounded-2xl sm:rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className="relative p-6 sm:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-              <button
-                onClick={closeVerificationModal}
-                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black">Security Verification</h3>
-                  <p className="text-blue-100 text-sm mt-1">Verify your identity to continue</p>
-                </div>
-              </div>
-              
-              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                <AlertCircle className="w-4 h-4" />
-                <span className="text-xs font-bold">
-                  {verificationReason === 'new_device' 
-                    ? 'New Device Detected' 
-                    : verificationReason === 'max_logins_reached'
-                    ? 'Max Login Attempts Reached'
-                    : verificationReason === 'expired'
-                    ? 'Token Expired'
-                    : verificationReason === 'device_mismatch'
-                    ? 'Device Changed'
-                    : 'Verification Required'}
-                </span>
-              </div>
+{/* ============================ */}
+{/* VERIFICATION MODAL - RESPONSIVE */}
+{/* ============================ */}
+{showVerificationModal && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999] animate-fade-in">
+    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-gradient-to-br from-white to-slate-50 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden mx-2 sm:mx-4">
+      
+      {/* Modal Header */}
+      <div className="relative p-4 sm:p-6 md:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
+        <button
+          onClick={closeVerificationModal}
+          className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl transition-colors"
+        >
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-xl flex items-center justify-center">
+            <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg md:text-xl font-black">Security Verification</h3>
+            <p className="text-blue-100 text-xs sm:text-sm md:text-sm mt-0.5 sm:mt-1">Verify your identity to continue</p>
+          </div>
+        </div>
+        
+        <div className="mt-2 sm:mt-3 md:mt-4 inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="text-xs sm:text-xs font-bold">
+            {verificationReason === 'new_device' 
+              ? 'New Device Detected' 
+              : verificationReason === 'max_logins_reached'
+              ? 'Max Login Attempts Reached'
+              : verificationReason === 'expired'
+              ? 'Token Expired'
+              : verificationReason === 'device_mismatch'
+              ? 'Device Changed'
+              : 'Verification Required'}
+          </span>
+        </div>
+      </div>
+      
+      {/* Modal Content */}
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="mb-4 sm:mb-5 md:mb-6">
+          <p className="text-slate-600 text-xs sm:text-sm mb-2 sm:mb-3 md:mb-4">
+            A 6-digit verification code has been sent to:
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4">
+            <p className="text-blue-800 font-bold text-center text-sm sm:text-base">{verificationEmail}</p>
+          </div>
+          <p className="text-slate-500 text-xs mt-2 sm:mt-3 text-center">
+            Enter the code below to verify your identity
+          </p>
+        </div>
+        
+        <form onSubmit={handleVerifyCode}>
+          <div className="mb-4 sm:mb-6 md:mb-8">
+            <div className="flex justify-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
+              {verificationCode.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`verification-input-${index}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                  className="w-8 h-10 sm:w-10 sm:h-12 md:w-12 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-bold bg-white border-2 border-slate-300 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  autoFocus={index === 0}
+                />
+              ))}
             </div>
             
-            {/* Modal Content */}
-            <div className="p-6 sm:p-8">
-              <div className="mb-6">
-                <p className="text-slate-600 text-sm mb-4">
-                  A 6-digit verification code has been sent to:
-                </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-blue-800 font-bold text-center">{verificationEmail}</p>
-                </div>
-                <p className="text-slate-500 text-xs mt-3 text-center">
-                  Enter the code below to verify your identity
-                </p>
-              </div>
-              
-              <form onSubmit={handleVerifyCode}>
-                <div className="mb-8">
-                  <div className="flex justify-center gap-2 sm:gap-3 mb-4">
-                    {verificationCode.map((digit, index) => (
-                      <input
-                        key={index}
-                        id={`verification-input-${index}`}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
-                        onKeyDown={(e) => handleVerificationKeyDown(index, e)}
-                        className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl sm:text-3xl font-bold bg-white border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                        autoFocus={index === 0}
-                      />
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center justify-center gap-2 text-sm text-slate-500 mb-6">
-                    <Clock className="w-4 h-4" />
-                    <span>Code expires in: </span>
-                    <span className="font-bold text-blue-600">
-                      {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="button"
-                    onClick={handleResendCode}
-                    disabled={resendLoading || countdown > 0}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {resendLoading ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : countdown > 0 ? (
-                      `Resend in ${countdown}s`
-                    ) : (
-                      <>
-                        <RefreshCw className="w-4 h-4" />
-                        Resend Code
-                      </>
-                    )}
-                  </button>
-                  
-                  <button
-                    type="submit"
-                    disabled={verificationLoading || verificationCode.join('').length !== 6}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {verificationLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Verifying...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="w-4 h-4" />
-                        Verify & Continue
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-              
-              <div className="mt-8 pt-6 border-t border-slate-200">
-                <div className="flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">Security Notice</p>
-                    <p className="text-xs text-slate-600 mt-1">
-                      This extra step ensures your account stays secure. Never share verification codes with anyone.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500 mb-4 sm:mb-5 md:mb-6">
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Code expires in: </span>
+              <span className="font-bold text-blue-600">
+                {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={resendLoading || countdown > 0}
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resendLoading ? (
+                <>
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                  <span className="hidden xs:inline">Sending...</span>
+                  <span className="xs:hidden">Sending...</span>
+                </>
+              ) : countdown > 0 ? (
+                <>
+                  <span className="hidden xs:inline">Resend in {countdown}s</span>
+                  <span className="xs:hidden">{countdown}s</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline">Resend Code</span>
+                  <span className="xs:hidden">Resend</span>
+                </>
+              )}
+            </button>
+            
+            <button
+              type="submit"
+              disabled={verificationLoading || verificationCode.join('').length !== 6}
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {verificationLoading ? (
+                <>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span className="hidden xs:inline">Verifying...</span>
+                  <span className="xs:hidden">Checking...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline">Verify & Continue</span>
+                  <span className="xs:hidden">Verify</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+        
+        <div className="mt-4 sm:mt-6 md:mt-8 pt-3 sm:pt-4 md:pt-6 border-t border-slate-200">
+          <div className="flex items-start gap-2 sm:gap-3">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-slate-800">Security Notice</p>
+              <p className="text-xs text-slate-600 mt-0.5 sm:mt-1">
+                This extra step ensures your account stays secure. Never share verification codes with anyone.
+              </p>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* ============================ */}
       {/* MAIN LOGIN PAGE */}
