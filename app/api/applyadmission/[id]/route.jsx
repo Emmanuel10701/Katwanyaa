@@ -2371,95 +2371,139 @@ export async function POST(req) {
 // GET HANDLER - RETRIEVE APPLICATIONS (PUBLIC)
 // ====================================================================
 
-export async function GET(req) {
+
+// ==============================================================
+
+// ====================================================================
+// GET SINGLE APPLICATION HANDLER
+// ====================================================================
+
+export async function GET(req, { params }) {
   try {
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
+    const { id } = params;
     
-    // Build filter conditions
-    const where = {};
-    
-    if (searchParams.has('status')) {
-      where.status = searchParams.get('status');
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Application ID is required" },
+        { status: 400 }
+      );
     }
-    
-    if (searchParams.has('stream')) {
-      where.preferredStream = searchParams.get('stream');
-    }
-    
-    if (searchParams.has('search')) {
-      const searchTerm = searchParams.get('search');
-      where.OR = [
-        { firstName: { contains: searchTerm, mode: 'insensitive' } },
-        { lastName: { contains: searchTerm, mode: 'insensitive' } },
-        { applicationNumber: { contains: searchTerm, mode: 'insensitive' } },
-        { email: { contains: searchTerm, mode: 'insensitive' } },
-      ];
-    }
-    
-    // Pagination
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const skip = (page - 1) * limit;
-    
-    // Get total count
-    const totalCount = await prisma.admissionApplication.count({ where });
-    
-    // Get applications with pagination
-    const applications = await prisma.admissionApplication.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        middleName: true,
-        dateOfBirth: true,
-        gender: true,
-        email: true,
-        phone: true,
-        preferredStream: true,
-        previousSchool: true,
-        kcpeMarks: true,
-        applicationNumber: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true
-      }
+
+    // Get single application by ID
+    const application = await prisma.admissionApplication.findUnique({
+      where: { id }
     });
-    
-    // Format response data
-    const formattedApplications = applications.map(app => ({
-      ...app,
-      age: calculateAge(app.dateOfBirth),
-      statusLabel: getStatusLabel(app.status),
-      streamLabel: getStreamLabel(app.preferredStream)
-    }));
-    
+
+    if (!application) {
+      return NextResponse.json(
+        { success: false, error: "Application not found" },
+        { status: 404 }
+      );
+    }
+
+    // Format the response
+    const formattedApplication = {
+      // Basic Information
+      id: application.id,
+      applicationNumber: application.applicationNumber,
+      firstName: application.firstName,
+      lastName: application.lastName,
+      middleName: application.middleName,
+      gender: application.gender,
+      dateOfBirth: application.dateOfBirth,
+      nationality: application.nationality,
+      county: application.county,
+      constituency: application.constituency,
+      ward: application.ward,
+      village: application.village,
+      
+      // Contact Information
+      email: application.email,
+      phone: application.phone,
+      alternativePhone: application.alternativePhone,
+      postalAddress: application.postalAddress,
+      postalCode: application.postalCode,
+      
+      // Parent/Guardian Information
+      fatherName: application.fatherName,
+      fatherPhone: application.fatherPhone,
+      fatherEmail: application.fatherEmail,
+      fatherOccupation: application.fatherOccupation,
+      motherName: application.motherName,
+      motherPhone: application.motherPhone,
+      motherEmail: application.motherEmail,
+      motherOccupation: application.motherOccupation,
+      guardianName: application.guardianName,
+      guardianPhone: application.guardianPhone,
+      guardianEmail: application.guardianEmail,
+      guardianOccupation: application.guardianOccupation,
+      
+      // Academic Information
+      previousSchool: application.previousSchool,
+      previousClass: application.previousClass,
+      kcpeYear: application.kcpeYear,
+      kcpeIndex: application.kcpeIndex,
+      kcpeMarks: application.kcpeMarks,
+      meanGrade: application.meanGrade,
+      
+      // Medical Information
+      medicalCondition: application.medicalCondition,
+      allergies: application.allergies,
+      bloodGroup: application.bloodGroup,
+      
+      // Extracurricular
+      sportsInterests: application.sportsInterests,
+      clubsInterests: application.clubsInterests,
+      talents: application.talents,
+      
+      // Admission Decision Information
+      status: application.status,
+      decisionNotes: application.decisionNotes,
+      admissionOfficer: application.admissionOfficer,
+      decisionDate: application.decisionDate,
+      admissionDate: application.admissionDate,
+      assignedStream: application.assignedStream,
+      reportingDate: application.reportingDate,
+      admissionLetterSent: application.admissionLetterSent,
+      rejectionDate: application.rejectionDate,
+      rejectionReason: application.rejectionReason,
+      alternativeSuggestions: application.alternativeSuggestions,
+      waitlistPosition: application.waitlistPosition,
+      waitlistNotes: application.waitlistNotes,
+      interviewDate: application.interviewDate,
+      interviewTime: application.interviewTime,
+      interviewVenue: application.interviewVenue,
+      interviewNotes: application.interviewNotes,
+      conditions: application.conditions,
+      conditionDeadline: application.conditionDeadline,
+      houseAssigned: application.houseAssigned,
+      admissionClass: application.admissionClass,
+      admissionType: application.admissionType,
+      documentsVerified: application.documentsVerified,
+      documentsNotes: application.documentsNotes,
+      
+      // Timestamps
+      createdAt: application.createdAt,
+      updatedAt: application.updatedAt,
+      
+      // Computed Fields
+      fullName: `${application.firstName} ${application.middleName ? application.middleName + ' ' : ''}${application.lastName}`,
+      age: calculateAge(application.dateOfBirth),
+      statusLabel: getStatusLabel(application.status)
+    };
+
     return NextResponse.json({
       success: true,
-      data: formattedApplications,
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNextPage: page * limit < totalCount,
-        hasPreviousPage: page > 1
-      }
+      data: formattedApplication
     });
-    
+
   } catch (error) {
-    console.error("Get applications error:", error);
+    console.error("Get single application error:", error);
     
     return NextResponse.json(
       { 
         success: false, 
-        error: "Failed to retrieve applications",
+        error: "Failed to retrieve application",
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
       { status: 500 }
