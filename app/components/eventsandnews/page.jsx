@@ -718,27 +718,130 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
   );
 }
 // Modern Item Modal Component
-
 function ModernItemModal({ onClose, onSave, item, type, loading }) {
+  // Initialize state with ALL possible fields
   const [formData, setFormData] = useState({
-    title: item?.title || '',
-    date: item?.date || new Date().toISOString().split('T')[0],
-    time: item?.time || '',
-    location: item?.location || '',
-    category: item?.category || (type === 'news' ? 'achievement' : 'academic'),
-    description: item?.description || (item?.excerpt || ''),
-    content: item?.content || (item?.fullContent || ''),
-    author: item?.author || 'School Administration',
-    image: item?.image || '',
-    featured: item?.featured || false,
-    status: item?.status || 'draft',
-    type: item?.type || 'internal',
-    attendees: item?.attendees || 'students',
-    speaker: item?.speaker || ''
+    // Common fields
+    title: '',
+    date: new Date().toISOString().split('T')[0],
+    category: type === 'news' ? 'achievement' : 'academic',
+    image: '',
+    featured: false,
+    status: 'published',
+    
+    // News fields (using proper API field names)
+    excerpt: '',
+    fullContent: '',
+    author: '',
+    
+    // Event fields
+    description: '',
+    time: '',
+    location: '',
+    speaker: '',
+    attendees: 'students',
+    type: 'internal'
   });
 
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(item?.image || '');
+  const [imagePreview, setImagePreview] = useState('');
+
+  // 🔥 CRITICAL FIX: Load ALL existing data when editing
+  useEffect(() => {
+    console.log('🔄 Loading item for editing:', item);
+    
+    if (item) {
+      // Create a copy of initial state
+      const newFormData = {
+        // Start with default values
+        title: '',
+        date: new Date().toISOString().split('T')[0],
+        category: type === 'news' ? 'achievement' : 'academic',
+        image: '',
+        featured: false,
+        status: 'published',
+        excerpt: '',
+        fullContent: '',
+        author: '',
+        description: '',
+        time: '',
+        location: '',
+        speaker: '',
+        attendees: 'students',
+        type: 'internal'
+      };
+
+      // 🚨 IMPORTANT: Map ALL fields from the item
+      // Map title
+      if (item.title) newFormData.title = item.title;
+      
+      // Map date properly
+      if (item.date) {
+        try {
+          const dateObj = new Date(item.date);
+          if (!isNaN(dateObj.getTime())) {
+            newFormData.date = dateObj.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error('Error parsing date:', e);
+        }
+      }
+      
+      // Map category
+      if (item.category) newFormData.category = item.category;
+      
+      // Map image
+      if (item.image) {
+        newFormData.image = item.image;
+        setImagePreview(item.image);
+      }
+      
+      // Map featured
+      if (item.featured !== undefined) newFormData.featured = item.featured;
+      
+      // Map status
+      if (item.status) newFormData.status = item.status;
+      
+      // 🚨 CRITICAL: For NEWS - Map excerpt/fullContent/author
+      if (type === 'news') {
+        // Map excerpt from either excerpt or description
+        if (item.excerpt) {
+          newFormData.excerpt = item.excerpt;
+        } else if (item.description) {
+          newFormData.excerpt = item.description;
+        }
+        
+        // Map fullContent from either fullContent or content
+        if (item.fullContent) {
+          newFormData.fullContent = item.fullContent;
+        } else if (item.content) {
+          newFormData.fullContent = item.content;
+        }
+        
+        // Map author
+        if (item.author) newFormData.author = item.author;
+      } 
+      // 🚨 CRITICAL: For EVENTS - Map event-specific fields
+      else if (type === 'events') {
+        // Map description
+        if (item.description) {
+          newFormData.description = item.description;
+        } else if (item.excerpt) {
+          newFormData.description = item.excerpt;
+        }
+        
+        // Map other event fields
+        if (item.time) newFormData.time = item.time;
+        if (item.location) newFormData.location = item.location;
+        if (item.speaker) newFormData.speaker = item.speaker;
+        if (item.attendees) newFormData.attendees = item.attendees;
+        if (item.type) newFormData.type = item.type;
+      }
+      
+      console.log('✅ Form data loaded:', newFormData);
+      setFormData(newFormData);
+    }
+  }, [item, type]);
 
   const categories = {
     news: [
@@ -746,28 +849,17 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
       { value: 'sports', label: 'Sports', color: 'blue' },
       { value: 'academic', label: 'Academic', color: 'purple' },
       { value: 'infrastructure', label: 'Infrastructure', color: 'orange' },
-      { value: 'community', label: 'Community', color: 'rose' }
+      { value: 'community', label: 'Community', color: 'rose' },
+      { value: 'general', label: 'General', color: 'gray' }
     ],
     events: [
       { value: 'academic', label: 'Academic', color: 'purple' },
       { value: 'sports', label: 'Sports', color: 'blue' },
       { value: 'cultural', label: 'Cultural', color: 'emerald' },
-      { value: 'social', label: 'Social', color: 'orange' }
+      { value: 'social', label: 'Social', color: 'orange' },
+      { value: 'general', label: 'General', color: 'gray' }
     ]
   };
-
-  useEffect(() => {
-    if (item?.image) {
-      const getPreviewUrl = (imgPath) => {
-        if (!imgPath) return '';
-        if (imgPath.startsWith('/') || imgPath.startsWith('http') || imgPath.startsWith('data:image')) {
-          return imgPath;
-        }
-        return `/${imgPath}`;
-      };
-      setImagePreview(getPreviewUrl(item.image));
-    }
-  }, [item]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -779,18 +871,68 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
     }
   };
 
-  const handleChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (field, value) => {
+    console.log(`Changing ${field} to:`, value);
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
+  // 🔥 FIXED: Proper form submission with ALL data
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Submitting form with data:', formData);
+    
     const submitData = new FormData();
-    Object.keys(formData).forEach(key => {
-      if (key === 'description' && type === 'news') {
-        submitData.append('excerpt', formData[key].trim());
+    
+    // 🚨 CRITICAL: For NEWS, send proper API field names
+    if (type === 'news') {
+      // Always include these fields
+      submitData.append('title', formData.title.trim());
+      submitData.append('excerpt', formData.excerpt.trim());
+      submitData.append('fullContent', formData.fullContent.trim());
+      submitData.append('category', formData.category);
+      submitData.append('author', formData.author.trim());
+      submitData.append('date', formData.date);
+      
+      // Optional fields
+      if (formData.featured !== undefined) {
+        submitData.append('featured', formData.featured.toString());
       }
-      submitData.append(key, formData[key]);
-    });
-    if (imageFile) submitData.append('image', imageFile);
+      if (formData.status) {
+        submitData.append('status', formData.status);
+      }
+    } 
+    // 🚨 For EVENTS, send event fields
+    else if (type === 'events') {
+      submitData.append('title', formData.title.trim());
+      submitData.append('description', formData.description.trim());
+      submitData.append('category', formData.category);
+      submitData.append('date', formData.date);
+      
+      // Event-specific fields
+      if (formData.time) submitData.append('time', formData.time);
+      if (formData.location) submitData.append('location', formData.location);
+      if (formData.speaker) submitData.append('speaker', formData.speaker);
+      if (formData.attendees) submitData.append('attendees', formData.attendees);
+      if (formData.type) submitData.append('type', formData.type);
+      if (formData.featured !== undefined) {
+        submitData.append('featured', formData.featured.toString());
+      }
+      if (formData.status) {
+        submitData.append('status', formData.status);
+      }
+    }
+    
+    // Add image if changed
+    if (imageFile) {
+      submitData.append('image', imageFile);
+    }
+    
+    // Debug: Show what's being sent
+    console.log('📤 Sending to API:');
+    for (let [key, value] of submitData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
+    }
+    
     await onSave(submitData, item?.id);
   };
 
@@ -816,10 +958,10 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
               </div>
               <div>
                 <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
-                  {item ? 'Modify' : 'Launch'} {type}
+                  {item ? `EDITING: ${item.title?.substring(0, 30)}${item.title?.length > 30 ? '...' : ''}` : `CREATE NEW ${type.toUpperCase()}`}
                 </h2>
                 <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
-                  Katwanyaa Content Management System
+                  {item ? 'Edit existing content' : 'Add new content'}
                 </p>
               </div>
             </div>
@@ -834,43 +976,44 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
         <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
           <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
             
-   {/* INPUT-FIRST HORIZONTAL FIELD */}
-<div className="flex items-center gap-4">
-  <label className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400 shrink-0">
-    <FiStar className="text-amber-500 text-xs" />
-    Headline
-  </label>
+            {/* Title Input */}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400 shrink-0">
+                <FiStar className="text-amber-500 text-xs" />
+                Headline
+              </label>
 
-  <input
-    type="text"
-    required
-    value={formData.title}
-    onChange={(e) => handleChange("title", e.target.value)}
-    className="
-      flex-1
-      px-4 py-3
-      bg-transparent
-      border border-slate-300
-      rounded-lg
-      focus:border-purple-500
-      focus:ring-1 focus:ring-purple-500
-      transition
-      text-lg sm:text-xl
-      font-semibold
-      text-slate-900
-      placeholder:text-slate-400
-      outline-none
-    "
-    placeholder="Enter a catchy title..."
-  />
-</div>
-
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="
+                  flex-1
+                  px-4 py-3
+                  bg-transparent
+                  border border-slate-300
+                  rounded-lg
+                  focus:border-purple-500
+                  focus:ring-1 focus:ring-purple-500
+                  transition
+                  text-lg sm:text-xl
+                  font-semibold
+                  text-slate-900
+                  placeholder:text-slate-400
+                  outline-none
+                "
+                placeholder="Enter a catchy title..."
+              />
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               {/* Left Column - Visuals & Media */}
               <div className="lg:col-span-4 space-y-8">
                 <div className="relative group">
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Featured Media</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
+                    Featured Media {formData.image && '(Existing image loaded)'}
+                  </label>
                   <div className="relative aspect-video sm:aspect-square rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
                     {imagePreview ? (
                       <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -882,7 +1025,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                     )}
                     <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
                       <FiUpload size={30} />
-                      <span className="font-black text-xs mt-2 uppercase tracking-widest">Replace Photo</span>
+                      <span className="font-black text-xs mt-2 uppercase tracking-widest">Change Photo</span>
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
                   </div>
@@ -905,7 +1048,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 </div>
               </div>
 
-              {/* Right Column - Bold Data Fields */}
+              {/* Right Column - Form Fields */}
               <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
                 
                 {/* Category Selection */}
@@ -931,7 +1074,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                   />
                 </div>
 
-                {/* Conditional Inputs based on Type */}
+                {/* Type-specific fields */}
                 {type === 'events' ? (
                   <>
                     <div className="sm:col-span-1">
@@ -970,13 +1113,15 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 {/* Long Text Areas */}
                 <div className="sm:col-span-2 space-y-6">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Short Description</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                      {type === 'news' ? 'Excerpt (Short Description)' : 'Description'}
+                    </label>
                     <textarea
                       rows="3"
-                      value={formData.description}
-                      onChange={(e) => handleChange('description', e.target.value)}
+                      value={type === 'news' ? formData.excerpt : formData.description}
+                      onChange={(e) => handleChange(type === 'news' ? 'excerpt' : 'description', e.target.value)}
                       className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all placeholder:text-slate-300"
-                      placeholder="Write a brief summary of this item..."
+                      placeholder={type === 'news' ? 'Write a brief summary of this news article...' : 'Write a brief description...'}
                     />
                   </div>
                   {type === 'news' && (
@@ -984,8 +1129,8 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Full Story Content</label>
                       <textarea
                         rows="6"
-                        value={formData.content}
-                        onChange={(e) => handleChange('content', e.target.value)}
+                        value={formData.fullContent}
+                        onChange={(e) => handleChange('fullContent', e.target.value)}
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-medium text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
                         placeholder="Elaborate on the news item here..."
                       />
@@ -1016,7 +1161,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 ) : (
                   <>
                     <FiCheck size={18} />
-                    Confirm & {item ? 'Save Updates' : `Post ${type}`}
+                    {item ? 'Save Updates' : `Create ${type === 'news' ? 'News' : 'Event'}`}
                   </>
                 )}
               </button>
