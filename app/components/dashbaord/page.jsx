@@ -1887,11 +1887,11 @@ const QuickTourModal = () => (
       
       <div className="p-6 space-y-6">
         {/* Welcome Section */}
-<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 hover:scale-[1.01]">
+<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 ">
   
   {/* Abstract Mesh Gradient Background (Reacts to Hover) */}
-  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-blue-600/25 rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-purple-600/15 rounded-full blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-blue-600/25 rounded-full blur-[100px] pointer-events-none  transition-transform duration-700" />
+  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-purple-600/15 rounded-full blur-[80px] pointer-events-none  transition-transform duration-700" />
   
   <div className="relative z-10">
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">

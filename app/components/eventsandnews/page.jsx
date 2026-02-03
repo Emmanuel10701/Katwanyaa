@@ -589,7 +589,6 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
   
   return (
     <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 w-full max-w-md overflow-hidden transition-none">
-      {/* Image Section */}
   {/* Image Section */}
 <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
   {!imageError ? (
