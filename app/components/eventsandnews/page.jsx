@@ -1187,6 +1187,27 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
   )
 }
 
+// Helper function to get authentication headers from localStorage
+const getAuthHeaders = () => {
+  try {
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    if (!adminToken || !deviceToken) {
+      console.error('❌ Authentication tokens not found in localStorage');
+      return {};
+    }
+    
+    return {
+      'x-admin-token': adminToken,
+      'x-device-token': deviceToken
+    };
+  } catch (error) {
+    console.error('❌ Error getting auth headers:', error);
+    return {};
+  }
+};
+
 // Main News & Events Manager Component
 export default function NewsEventsManager() {
   const [activeSection, setActiveSection] = useState('news');
@@ -1355,42 +1376,53 @@ const fetchNews = async () => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
+  // UPDATED: Delete function with authentication headers
+const confirmDelete = async () => {
+  if (!itemToDelete) return;
+  
+  setDeleting(true);
+  try {
+    const endpoint = activeSection === 'news' 
+      ? `/api/news/${itemToDelete.id}` 
+      : `/api/events/${itemToDelete.id}`;
     
-    setDeleting(true);
-    try {
-      const endpoint = activeSection === 'news' 
-        ? `/api/news/${itemToDelete.id}` 
-        : `/api/events/${itemToDelete.id}`;
-      
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        await fetchData();
-        showNotification('success', 'Deleted', `${activeSection === 'news' ? 'News' : 'Event'} deleted successfully!`);
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error(`Error deleting ${activeSection}:`, error);
-      showNotification('error', 'Delete Failed', `Failed to delete ${activeSection}`);
-    } finally {
-      setDeleting(false);
-      setShowDeleteModal(false);
-      setItemToDelete(null);
+    // Get authentication headers
+    const authHeaders = getAuthHeaders();
+    
+    const response = await fetch(endpoint, {
+      method: 'DELETE',
+      headers: {
+        ...authHeaders,
+      },
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      await fetchData();
+      showNotification('success', 'Deleted', `${activeSection === 'news' ? 'News' : 'Event'} deleted successfully!`);
+    } else {
+      throw new Error(result.error || result.message);
     }
-  };
+  } catch (error) {
+    console.error(`Error deleting ${activeSection}:`, error);
+    showNotification('error', 'Delete Failed', error.message || `Failed to delete ${activeSection}`);
+  } finally {
+    setDeleting(false);
+    setShowDeleteModal(false);
+    setItemToDelete(null);
+  }
+};
 
+  // UPDATED: Submit function with authentication headers
 const handleSubmit = async (formData, id) => {
   setSaving(true);
   try {
     let response;
     let endpoint;
+    
+    // Get authentication headers
+    const authHeaders = getAuthHeaders();
     
     // Add loading notification
     showNotification('info', 'Saving', `${id ? 'Updating' : 'Creating'} ${activeSection}...`);
@@ -1399,12 +1431,18 @@ const handleSubmit = async (formData, id) => {
       endpoint = activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`;
       response = await fetch(endpoint, {
         method: 'PUT',
+        headers: {
+          ...authHeaders,
+        },
         body: formData,
       });
     } else {
       endpoint = activeSection === 'news' ? '/api/news' : '/api/events';
       response = await fetch(endpoint, {
         method: 'POST',
+        headers: {
+          ...authHeaders,
+        },
         body: formData,
       });
     }
@@ -1422,7 +1460,7 @@ const handleSubmit = async (formData, id) => {
         `${activeSection === 'news' ? 'News' : 'Event'} ${id ? 'updated' : 'created'} successfully!`
       );
     } else {
-      throw new Error(result.error || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+      throw new Error(result.error || result.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
     }
   } catch (error) {
     console.error(`Error saving ${activeSection}:`, error);
@@ -1431,6 +1469,7 @@ const handleSubmit = async (formData, id) => {
     setSaving(false);
   }
 };
+
   useEffect(() => {
     const calculatedStats = {
       totalNews: news.length,
