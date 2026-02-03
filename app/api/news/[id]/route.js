@@ -310,6 +310,7 @@ export async function PUT(req, { params }) {
         id: true,
         title: true,
         excerpt: true,
+        fullContent: true,
         date: true,
         category: true,
         author: true,

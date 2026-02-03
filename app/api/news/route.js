@@ -158,6 +158,7 @@ export async function GET(req) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { excerpt: { contains: search, mode: 'insensitive' } },
+
         { author: { contains: search, mode: 'insensitive' } },
         { fullContent: { contains: search, mode: 'insensitive' } },
       ];
@@ -173,6 +174,7 @@ export async function GET(req) {
           id: true,
           title: true,
           excerpt: true,
+          fullContent: true,
           date: true,
           category: true,
           author: true,
