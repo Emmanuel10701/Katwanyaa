@@ -1430,99 +1430,32 @@ const confirmDelete = async () => {
 const handleSubmit = async (formData, id) => {
   setSaving(true);
   try {
-    let response;
-    let endpoint;
+    // Debug: Show what's received from modal
+    console.log('📥 Received from modal:', formData);
     
     // Get authentication headers
     const authHeaders = getAuthHeaders();
     
-    // Add loading notification
     showNotification('info', 'Saving', `${id ? 'Updating' : 'Creating'} ${activeSection}...`);
     
-    if (id) {
-      endpoint = activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`;
-      
-      // Prepare FormData for UPDATE (PUT)
-      const submitData = new FormData();
-      
-      // Map fields from modal to API expected fields
-      if (activeSection === 'news') {
-        // For news updates, map fields properly
-        submitData.append('title', formData.title || '');
-        submitData.append('excerpt', formData.description || '');
-        submitData.append('fullContent', formData.content || '');
-        submitData.append('category', formData.category || 'general');
-        submitData.append('author', formData.author || 'School Administration');
-        submitData.append('date', formData.date || new Date().toISOString().split('T')[0]);
-        
-        // Handle image if present
-        if (formData.image && formData.image instanceof File) {
-          submitData.append('image', formData.image);
-        }
-        
-        // Handle featured if needed
-        if (formData.featured !== undefined) {
-          // Your API doesn't handle featured, but if you add it later
-          // submitData.append('featured', formData.featured.toString());
-        }
-      } else {
-        // For events (similar approach)
-        Object.keys(formData).forEach(key => {
-          if (formData[key] !== undefined && formData[key] !== null) {
-            submitData.append(key, formData[key]);
-          }
-        });
-      }
-      
-      response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: {
-          ...authHeaders,
-          // Don't set Content-Type for FormData
-        },
-        body: submitData,
-      });
-    } else {
-      endpoint = activeSection === 'news' ? '/api/news' : '/api/events';
-      
-      // Prepare FormData for CREATE (POST)
-      const submitData = new FormData();
-      
-      if (activeSection === 'news') {
-        // For news creation
-        submitData.append('title', formData.title || '');
-        submitData.append('excerpt', formData.description || '');
-        submitData.append('fullContent', formData.content || '');
-        submitData.append('category', formData.category || 'general');
-        submitData.append('author', formData.author || 'School Administration');
-        submitData.append('date', formData.date || new Date().toISOString().split('T')[0]);
-        
-        // Handle image if present
-        if (formData.image && formData.image instanceof File) {
-          submitData.append('image', formData.image);
-        }
-      } else {
-        // For events creation
-        Object.keys(formData).forEach(key => {
-          if (formData[key] !== undefined && formData[key] !== null) {
-            submitData.append(key, formData[key]);
-          }
-        });
-      }
-      
-      response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          ...authHeaders,
-          // Don't set Content-Type for FormData
-        },
-        body: submitData,
-      });
-    }
+    const endpoint = id 
+      ? (activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`)
+      : (activeSection === 'news' ? '/api/news' : '/api/events');
+    
+    const method = id ? 'PUT' : 'POST';
+    
+    // Use formData directly (it's already FormData from the modal)
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        ...authHeaders,
+        // Don't set Content-Type, let browser set it with boundary
+      },
+      body: formData,
+    });
 
     const result = await response.json();
-    
-    console.log('API Response:', result);
+    console.log('✅ API Response:', result);
 
     if (result.success) {
       await fetchData();
