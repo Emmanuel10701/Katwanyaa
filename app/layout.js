@@ -1,7 +1,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import ClientLayoutWrapper from "./-app";
-import { SessionProvider } from './session/sessiowrapper';
+import { SessionProvider } from "./session/sessiowrapper";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,46 +15,30 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-// 1. Separate Viewport export (Matching Mary Immaculate pattern)
+/* ✅ Viewport */
 export const viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  themeColor: '#ea580c', // Orange color from your theme
-}
-
-// School information constants
-const SCHOOL_INFO = {
-  name: "Katwanyaa High School",
-  alternateName: "Katz High School",
-  description: "Katwanyaa High School (Katz) is a  public county school in Matungulu, Machakos County offering quality KCSE education with STEM programs, modern facilities, and comprehensive extracurricular activities.",
-  address: {
-    street: "Kambusu",
-    locality: "Matungulu",
-    region: "Machakos County",
-    country: "Kenya",
-    postalCode: "90100",
-  },
-  motto: "Education is Light",
+  themeColor: "#ea580c",
 };
 
-// 2. Optimized Metadata - Cleaner version following Mary Immaculate pattern
+/* ✅ Metadata */
 export const metadata = {
-  // Base URL of your site (important for OG images)
-  metadataBase: new URL('https://katwanyaa.vercel.app'),
+  metadataBase: new URL("https://katwanyaa.vercel.app"),
 
   title: {
     default: "Katwanyaa High School | Matungulu",
     template: "%s | Katwanyaa High School",
   },
 
-  description: "Official website for Katwanyaa High School in Matungulu, Machakos County. A premier public school committed to academic excellence and holistic development.",
+  description:
+    "Official website for Katwanyaa High School in Matungulu, Machakos County. A premier public school committed to academic excellence and holistic development.",
 
   keywords: [
     "Katwanyaa High School",
     "Matungulu school",
     "Machakos County school",
     "Best high school in Machakos",
-    "Katwanyaa Matungulu",
     "Public high school Kenya",
     "KCSE performance Machakos",
   ],
@@ -65,7 +49,7 @@ export const metadata = {
     canonical: "/",
   },
 
-  // Open Graph metadata (WhatsApp/Facebook)
+  /* ✅ Open Graph (WhatsApp / Facebook) */
   openGraph: {
     title: "Katwanyaa High School | Matungulu, Machakos",
     description: "Building future leaders through excellence and faith.",
@@ -75,48 +59,44 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: "https://katwanyaa.vercel.app/katz.png", // Make sure this is 1200x630 px
+        url: "/katz.png", // 🔑 relative path + metadataBase = safest
         width: 1200,
         height: 630,
         alt: "Katwanyaa High School",
-        type: "image/png", // Critical for social platforms
       },
     ],
   },
 
-  // Twitter Card
+  /* ✅ Twitter */
   twitter: {
     card: "summary_large_image",
     title: "Katwanyaa High School",
     description: "Premier public education in Matungulu, Machakos County.",
-    images: ["https://katwanyaa.vercel.app/katz.png"], // string format works for Twitter
+    images: ["/katz.png"],
   },
 
-  // Search Engine Bot instructions
+  /* ✅ Robots */
   robots: {
     index: true,
     follow: true,
     googleBot: {
       index: true,
       follow: true,
-      "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
     },
   },
 
-  // Icons
+  /* ✅ Icons (fallback image for WhatsApp) */
   icons: {
     icon: "/katz.png",
     apple: "/katz.png",
   },
 
-  // Verification codes
   verification: {
     google: "googlef8123d1ff1ecb88f",
   },
 };
-
 
 export default function RootLayout({ children }) {
   return (
