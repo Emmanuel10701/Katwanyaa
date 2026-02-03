@@ -592,13 +592,15 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
       {/* Image Section */}
       <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
         {!imageError ? (
-          <img 
-            src={imageUrl} 
-            alt={itemData.title} 
-            onClick={() => onView(itemData)}
-            className="w-full h-full object-cover object-top cursor-pointer hover:scale-100 transition-transform duration-300"
-            onError={() => setImageError(true)} 
-          />
+    <img
+  src={getImageUrl(item.image)}  // ✅ Correct - use the getImageUrl function
+  alt={item.title}
+  className="relative w-full aspect-square lg:w-48 lg:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]"
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
+  }}
+/>
         ) : (
           <div 
             onClick={() => onView(itemData)} 
@@ -1086,27 +1088,32 @@ export default function NewsEventsManager() {
   };
 
   // Fetch news from API
+// Fetch news from API
 const fetchNews = async () => {
   try {
     const response = await fetch('/api/news');
     const data = await response.json();
     
+    console.log('News API Response:', data); // Debug log
+    
     if (data.success) {
       // Map API response to component expected structure
-      const mappedNews = (data.data || data.news || []).map(item => ({
+      const newsArray = data.data || []; // Use data.data, not data.news
+      const mappedNews = newsArray.map(item => ({
         id: item.id,
         title: item.title,
         excerpt: item.excerpt || item.description || '',
         description: item.excerpt || item.description || '',
-        fullContent: item.fullContent || item.content || '',
+        fullContent: item.content || item.fullContent || item.excerpt || '', // Added content field
         date: item.date,
         category: item.category || 'general',
-        author: item.author || 'Admin',
+        author: item.author || 'School Administration', // Updated default
         image: item.image || '',
         featured: item.featured || false,
         status: item.status || 'published'
       }));
       
+      console.log('Mapped News:', mappedNews); // Debug log
       setNews(mappedNews);
     } else {
       throw new Error(data.error || 'Failed to fetch news');
@@ -1118,21 +1125,44 @@ const fetchNews = async () => {
   }
 };
   // Fetch events from API
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('/api/events');
-      const data = await response.json();
-      if (data.success) {
-        setEvents(data.events || []);
-      } else {
-        throw new Error(data.error || 'Failed to fetch events');
-      }
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      setEvents([]);
-      showNotification('error', 'Fetch Error', 'Failed to fetch events');
+// Fetch events from API
+const fetchEvents = async () => {
+  try {
+    const response = await fetch('/api/events');
+    const data = await response.json();
+    
+    console.log('Events API Response:', data); // Debug log
+    
+    if (data.success) {
+      // Handle both "events" and "data" property names
+      const eventsArray = data.events || data.data || [];
+      const mappedEvents = eventsArray.map(item => ({
+        id: item.id,
+        title: item.title,
+        excerpt: item.description || item.excerpt || '',
+        description: item.description || item.excerpt || '',
+        date: item.date,
+        category: item.category || 'general',
+        image: item.image || '',
+        featured: item.featured || false,
+        time: item.time || '',
+        location: item.location || '',
+        speaker: item.speaker || '',
+        attendees: item.attendees || 'students',
+        status: item.status || 'published'
+      }));
+      
+      console.log('Mapped Events:', mappedEvents); // Debug log
+      setEvents(mappedEvents);
+    } else {
+      throw new Error(data.error || 'Failed to fetch events');
     }
-  };
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    setEvents([]);
+    showNotification('error', 'Fetch Error', 'Failed to fetch events');
+  }
+};
 
   const fetchData = async () => {
     setLoading(true);
