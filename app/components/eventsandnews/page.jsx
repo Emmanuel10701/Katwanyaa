@@ -590,48 +590,50 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
   return (
     <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 w-full max-w-md overflow-hidden transition-none">
       {/* Image Section */}
-      <div className="relative h-64 w-full bg-gray-50 overflow-hidden">
-        {!imageError ? (
+  {/* Image Section */}
+<div className="relative h-64 w-full bg-gray-50 overflow-hidden">
+  {!imageError ? (
     <img
-  src={getImageUrl(item.image)}  // ✅ Correct - use the getImageUrl function
-  alt={item.title}
-  className="relative w-full aspect-square lg:w-48 lg:h-48 rounded-[2rem] object-cover shadow-2xl border-4 border-white transition-transform duration-500 group-hover:scale-[1.02]"
-  onError={(e) => {
-    e.target.onerror = null;
-    e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
-  }}
-/>
-        ) : (
-          <div 
-            onClick={() => onView(itemData)} 
-            className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-gray-400 cursor-pointer"
-          >
-            {type === 'news' ? (
-              <IoNewspaperOutline className="text-5xl mb-3" />
-            ) : (
-              <IoCalendarClearOutline className="text-5xl mb-3" />
-            )}
-            <span className="text-sm font-medium">No Image</span>
-          </div>
-        )}
+      src={getImageUrl(item.image)}
+      alt={item.title}
+      /* Cleaned up classes: removed fixed width/height and internal rounding */
+      className="w-full h-full object-cover shadow-2xl transition-transform duration-500 hover:scale-[1.05]"
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';
+      }}
+    />
+  ) : (
+    <div 
+      onClick={() => onView(itemData)} 
+      className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-gray-400 cursor-pointer"
+    >
+      {type === 'news' ? (
+        <IoNewspaperOutline className="text-5xl mb-3" />
+      ) : (
+        <IoCalendarClearOutline className="text-5xl mb-3" />
+      )}
+      <span className="text-sm font-medium">No Image</span>
+    </div>
+  )}
 
-        {/* Overlay: Category & Featured */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
-          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm pointer-events-auto">
-            <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              categoryInfo ? `bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 border border-${categoryInfo.color}-200` : 'bg-gray-100 text-gray-800 border border-gray-200'
-            }`}>
-              {categoryInfo?.label || itemData.category}
-            </span>
-          </div>
-          
-          {itemData.featured && (
-            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border border-yellow-200 pointer-events-auto">
-              Featured
-            </span>
-          )}
-        </div>
-      </div>
+  {/* Overlay: Category & Featured - These stay absolutely positioned over the full-width image */}
+  <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
+    <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm pointer-events-auto">
+      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+        categoryInfo ? `bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 border border-${categoryInfo.color}-200` : 'bg-gray-100 text-gray-800 border border-gray-200'
+      }`}>
+        {categoryInfo?.label || itemData.category}
+      </span>
+    </div>
+    
+    {itemData.featured && (
+      <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border border-yellow-200 pointer-events-auto">
+        Featured
+      </span>
+    )}
+  </div>
+</div>
 
       {/* Information Section */}
       <div className="p-6">
@@ -816,7 +818,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
               </div>
               <div>
-                <h2 className="text-3xl font-black italic tracking-tighter uppercase leading-none">
+                <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
                   {item ? 'Modify' : 'Launch'} {type}
                 </h2>
                 <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
@@ -835,20 +837,37 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
         <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
           <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
             
-            {/* 1. HERO TITLE INPUT (FULL WIDTH) */}
-            <div className="space-y-4">
-              <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 ml-1">
-                <FiStar className="text-amber-500" /> Content Headline
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                className="w-full px-0 py-4 bg-transparent border-b-4 border-slate-200 focus:border-purple-500 transition-colors text-3xl sm:text-5xl font-black text-slate-900 placeholder:text-slate-200 outline-none"
-                placeholder="Enter a catchy title..."
-              />
-            </div>
+   {/* INPUT-FIRST HORIZONTAL FIELD */}
+<div className="flex items-center gap-4">
+  <label className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400 shrink-0">
+    <FiStar className="text-amber-500 text-xs" />
+    Headline
+  </label>
+
+  <input
+    type="text"
+    required
+    value={formData.title}
+    onChange={(e) => handleChange("title", e.target.value)}
+    className="
+      flex-1
+      px-4 py-3
+      bg-transparent
+      border border-slate-300
+      rounded-lg
+      focus:border-purple-500
+      focus:ring-1 focus:ring-purple-500
+      transition
+      text-lg sm:text-xl
+      font-semibold
+      text-slate-900
+      placeholder:text-slate-400
+      outline-none
+    "
+    placeholder="Enter a catchy title..."
+  />
+</div>
+
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               {/* Left Column - Visuals & Media */}
