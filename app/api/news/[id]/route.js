@@ -227,7 +227,6 @@ export async function PUT(req, { params }) {
         id: true,
         title: true,
         image: true,
-        createdBy: true,
       }
     });
 
@@ -364,7 +363,6 @@ export async function DELETE(req, { params }) {
         id: true,
         title: true,
         image: true,
-        createdBy: true,
       }
     });
 

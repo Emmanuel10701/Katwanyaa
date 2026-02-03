@@ -296,7 +296,6 @@ export async function PUT(req, { params }) {
         image: true,
         attendees: true,
         speaker: true,
-        createdBy: true, // For permission checking
       }
     });
 
@@ -397,7 +396,6 @@ export async function PUT(req, { params }) {
         speaker: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true,
         createdByName: true,
         updatedBy: true,
         updatedByName: true,
@@ -458,7 +456,6 @@ export async function DELETE(req, { params }) {
         id: true,
         title: true,
         image: true,
-        createdBy: true, // For permission checking
       }
     });
 
@@ -506,7 +503,7 @@ export async function DELETE(req, { params }) {
       }
     });
 
-    
+
 
     // Step 6: Return success response
     return NextResponse.json({ 
