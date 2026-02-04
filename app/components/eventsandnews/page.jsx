@@ -485,7 +485,7 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
       <div className="flex items-center gap-3 mb-4">
         <div className="w-1 h-4 bg-blue-500 rounded-full" />
         <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
-          Full Story
+          Full Content
         </h3>
       </div>
       <div className="text-slate-700 leading-relaxed whitespace-pre-line">
@@ -511,6 +511,8 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
                   Back to List
                 </button>
                 <button 
+                 onClick={onClose} 
+
                   onClick={() => onEdit(item)} 
                   className={`px-6 py-3 text-white rounded-2xl font-bold text-sm shadow-lg transition-all bg-gradient-to-r ${themeGradient} hover:brightness-110`}
                 >
@@ -1250,6 +1252,7 @@ export default function NewsEventsManager() {
 
   // Fetch news from API
 // Fetch news from API
+// Fetch news from API - FIXED MAPPING
 const fetchNews = async () => {
   try {
     const response = await fetch('/api/news');
@@ -1258,23 +1261,24 @@ const fetchNews = async () => {
     console.log('News API Response:', data); // Debug log
     
     if (data.success) {
-      // Map API response to component expected structure
-      const newsArray = data.data || []; // Use data.data, not data.news
+      const newsArray = data.data || [];
+      
+      // 🚨 FIX: News has both excerpt AND fullContent
       const mappedNews = newsArray.map(item => ({
         id: item.id,
         title: item.title,
-        excerpt: item.excerpt || item.description || '',
-        description: item.excerpt || item.description || '',
-        fullContent: item.content || item.fullContent || item.excerpt || '', // Added content field
+        excerpt: item.excerpt || '', // News has excerpt
+        description: item.excerpt || '', // Also use excerpt as description
+        fullContent: item.fullContent || '', // News has fullContent
         date: item.date,
         category: item.category || 'general',
-        author: item.author || 'School Administration', // Updated default
+        author: item.author || 'School Administration',
         image: item.image || '',
-        featured: item.featured || false,
+        featured: false, // News doesn't have featured
         status: item.status || 'published'
       }));
       
-      console.log('Mapped News:', mappedNews); // Debug log
+      console.log('Mapped News (Fixed):', mappedNews);
       setNews(mappedNews);
     } else {
       throw new Error(data.error || 'Failed to fetch news');
