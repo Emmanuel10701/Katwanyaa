@@ -1,3 +1,4 @@
+// /app/api/login/route.js
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../libs/prisma';
 import { verifyPassword, generateToken, sanitizeUser } from '../../../libs/auth';
@@ -239,13 +240,7 @@ function generateDeviceToken(userId, deviceHash, currentLoginCount = 1) {
   };
   
   const payloadStr = JSON.stringify(payload);
-  console.log('🔐 Generating device token:', {
-    userId,
-    loginCount: currentLoginCount,
-    expiresInDays: DEVICE_TOKEN_EXPIRY_DAYS
-  });
-  
-  return btoa(unescape(encodeURIComponent(payloadStr)));
+  return base64Encode(payloadStr);
 }
 
 // Verify device token from localStorage
@@ -270,74 +265,103 @@ function verifyDeviceToken(token, deviceHash) {
   }
 }
 
-// Check if device needs verification (ONLY FOR VALID LOGINS)
-// Check if device needs verification
+// Check if device needs verification (FIXED VERSION)
 async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0, clientDeviceToken = null) {
-  // First verify client token if provided
-  if (clientDeviceToken) {
+  try {
+    console.log('🔍 Device verification check:', { userId, deviceHash, hasToken: !!clientDeviceToken });
+    
+    // CASE 1: No client device token - treat as new device
+    if (!clientDeviceToken) {
+      console.log('📱 No client device token - new device');
+      return { 
+        requiresVerification: true, 
+        reason: 'new_device' 
+      };
+    }
+
+    // CASE 2: Validate client device token
     const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
+    
     if (!tokenValid.valid) {
+      console.log('❌ Client token invalid:', tokenValid.reason);
       return { 
         requiresVerification: true, 
         reason: tokenValid.reason 
       };
     }
-    
-    // Check login count from client token
-    if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+
+    // CASE 3: Check if token has expired (within 1 day of expiry)
+    const oneDayFromNow = Date.now() + (1 * 24 * 60 * 60 * 1000);
+    if (tokenValid.payload.exp * 1000 <= oneDayFromNow) {
+      console.log('⚠️ Token expiring soon - requiring verification');
       return { 
         requiresVerification: true, 
-        reason: 'max_login_attempts_reached' 
+        reason: 'token_expiring_soon' 
       };
     }
-  } else {
-    // No client token - always verify on new device
-    return { 
-      requiresVerification: true, 
-      reason: 'new_device' 
-    };
-  }
-  
-  // Check database for trusted device
-  const device = await prisma.deviceToken.findFirst({
-    where: {
-      userId: userId,
-      deviceHash: deviceHash,
-      isTrusted: true,
-      expiresAt: { gt: new Date() },
-      isBlocked: false
+
+    // CASE 4: Check database for trusted device status
+    const device = await prisma.deviceToken.findFirst({
+      where: {
+        userId: userId,
+        deviceHash: deviceHash,
+        isBlocked: false
+      }
+    });
+
+    // No device record found in database
+    if (!device) {
+      console.log('📱 No device record in database');
+      return { 
+        requiresVerification: true, 
+        reason: 'no_device_record' 
+      };
     }
-  });
-  
-  if (!device) {
+
+    // Device is not trusted
+    if (!device.isTrusted) {
+      console.log('🔐 Device not trusted');
+      return { 
+        requiresVerification: true, 
+        reason: 'device_not_trusted' 
+      };
+    }
+
+    // Check if device token has expired in database
+    if (device.expiresAt <= new Date()) {
+      console.log('⏰ Device token expired in database');
+      return { 
+        requiresVerification: true, 
+        reason: 'device_expired' 
+      };
+    }
+
+    // Check max login attempts
+    if (device.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+      console.log('🚫 Max login attempts reached:', device.loginCount);
+      return { 
+        requiresVerification: true, 
+        reason: 'max_logins_reached' 
+      };
+    }
+
+    // DEVICE IS TRUSTED AND VALID - NO VERIFICATION NEEDED
+    console.log('✅ Device trusted - no verification required. Login count:', device.loginCount);
+    return { 
+      requiresVerification: false,
+      deviceId: device.id,
+      currentLoginCount: device.loginCount,
+      expiresAt: device.expiresAt
+    };
+
+  } catch (error) {
+    console.error('❌ Error checking device verification:', error);
+    // On error, require verification for security
     return { 
       requiresVerification: true, 
-      reason: 'new_device' 
+      reason: 'verification_error' 
     };
   }
-  
-  // Check database login count
-  if (device.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-    return { 
-      requiresVerification: true, 
-      reason: 'max_login_attempts_reached' 
-    };
-  }
-  
-  // Check if token is about to expire (within 2 days)
-  const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-  if (device.expiresAt < twoDaysFromNow) {
-    return { 
-      requiresVerification: true, 
-      reason: 'token_expiring_soon' 
-    };
-  }
-  
-  return { 
-    requiresVerification: false,
-    deviceId: device.id,
-    currentLoginCount: device.loginCount
-  };
 }
 
 // Update device login count
@@ -555,7 +579,8 @@ export async function POST(request) {
       email: email ? `${email.substring(0, 3)}...` : 'none', 
       action,
       hasVerificationCode: !!verificationCode,
-      hasPassword: !!password
+      hasPassword: !!password,
+      hasDeviceToken: !!clientDeviceToken
     });
 
     // ====================
@@ -913,7 +938,7 @@ export async function POST(request) {
     });
 
     // ====================
-    // DEVICE VERIFICATION CHECK
+    // DEVICE VERIFICATION CHECK (FIXED)
     // ====================
     console.log('🔍 Checking device verification...');
     
@@ -930,23 +955,12 @@ export async function POST(request) {
     let requiresVerification = deviceVerificationCheck.requiresVerification;
     let verificationReason = deviceVerificationCheck.reason || 'security_check';
     
-    // Always verify admins on new devices
-    if (!requiresVerification && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
-      console.log('👑 Admin user - checking for recent device...');
-      const recentDevice = await prisma.deviceToken.findFirst({
-        where: {
-          userId: user.id,
-          deviceHash: finalDeviceHash,
-          lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
-        }
-      });
-      
-      if (!recentDevice) {
-        console.log('⚠️ Admin on potentially new device');
-        requiresVerification = true;
-        verificationReason = 'admin_security_check';
-      }
-    }
+    console.log('📊 Device verification result:', {
+      requiresVerification,
+      verificationReason,
+      clientLoginCount,
+      hasDeviceToken: !!clientDeviceToken
+    });
     
     // ====================
     // HANDLE VERIFICATION OR LOGIN

@@ -72,230 +72,207 @@ export default function AdminLoginPage() {
     }));
   };
 
-// Device Fingerprint Generator
-class DeviceFingerprint {
-  static generate() {
-    const fingerprint = {
-      userAgent: navigator.userAgent,
-      screen: {
-        width: screen.width,
-        height: screen.height,
-        colorDepth: screen.colorDepth,
-        pixelRatio: window.devicePixelRatio
-      },
-      language: navigator.language || navigator.userLanguage,
-      platform: navigator.platform,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      languages: navigator.languages,
-      hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
-      // Add timestamp to ensure uniqueness but stable within session
-      sessionId: sessionStorage.getItem('session_id') || this.generateSessionId()
-    };
-
-    return {
-      raw: fingerprint,
-      hash: this.hashFingerprint(fingerprint)
-    };
-  }
-
-  static generateSessionId() {
-    const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    sessionStorage.setItem('session_id', sessionId);
-    return sessionId;
-  }
-
-  static hashFingerprint(fingerprint) {
-    // Create a stable string representation
-    const str = JSON.stringify({
-      userAgent: fingerprint.userAgent,
-      screenWidth: fingerprint.screen.width,
-      screenHeight: fingerprint.screen.height,
-      language: fingerprint.language,
-      platform: fingerprint.platform,
-      timezone: fingerprint.timezone,
-      hardwareConcurrency: fingerprint.hardwareConcurrency
-    });
-    
-    // Simple hash function
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36);
-  }
-}
-
- // LocalStorage Manager
-class LocalStorageManager {
-  static KEYS = {
-    DEVICE_FINGERPRINT: 'device_fingerprint',
-    DEVICE_TOKEN: 'device_token',
-    LOGIN_COUNT: 'login_count',
-    LAST_LOGIN: 'last_login'
-  };
-
-  static checkVerificationRequirement() {
-    try {
-      // Get device token from localStorage
-      const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
-      const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
-      
-      // If no device token exists, verification is required
-      if (!deviceToken || !storedFingerprint) {
-        console.log('📱 No device token or fingerprint found, verification required');
-        return { 
-          requiresVerification: true, 
-          reason: 'no_device_token',
-          deviceToken: null,
-          loginCount: 0
-        };
-      }
-
-      // Validate the device token
-      const tokenValid = this.validateDeviceToken(deviceToken);
-      
-      if (!tokenValid.valid) {
-        console.log('📱 Device token invalid:', tokenValid.reason);
-        return { 
-          requiresVerification: true, 
-          reason: tokenValid.reason,
-          deviceToken: deviceToken,
-          loginCount: tokenValid.payload?.loginCount || 0
-        };
-      }
-
-      // Check login count from token
-      const currentLoginCount = tokenValid.payload.loginCount || 1;
-      if (currentLoginCount >= 15) {
-        console.log('📱 Max login attempts reached:', currentLoginCount);
-        return { 
-          requiresVerification: true, 
-          reason: 'max_logins_reached',
-          deviceToken: deviceToken,
-          loginCount: currentLoginCount
-        };
-      }
-
-      // Generate current device fingerprint
-      const currentFingerprint = DeviceFingerprint.generate();
-      
-      // Check if device fingerprint matches
-      if (storedFingerprint !== currentFingerprint.hash) {
-        console.log('📱 Device mismatch detected');
-        console.log('Stored:', storedFingerprint?.substring(0, 20));
-        console.log('Current:', currentFingerprint.hash?.substring(0, 20));
-        return { 
-          requiresVerification: true, 
-          reason: 'device_mismatch',
-          deviceToken: deviceToken,
-          loginCount: currentLoginCount,
-          deviceHash: currentFingerprint.hash 
-        };
-      }
-
-      // Check if token is about to expire (within 2 days)
-      const tokenExpiry = new Date(tokenValid.payload.exp * 1000);
-      const twoDaysFromNow = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
-      
-      if (tokenExpiry <= twoDaysFromNow) {
-        console.log('📱 Token expiring soon');
-        return { 
-          requiresVerification: true, 
-          reason: 'token_expiring_soon',
-          deviceToken: deviceToken,
-          loginCount: currentLoginCount,
-          deviceHash: currentFingerprint.hash 
-        };
-      }
-
-      // All checks passed - device is trusted
-      console.log('📱 Device is trusted, no verification required');
-      return { 
-        requiresVerification: false, 
-        deviceToken: deviceToken,
-        loginCount: currentLoginCount,
-        deviceHash: currentFingerprint.hash 
+  // Device Fingerprint Generator
+  class DeviceFingerprint {
+    static generate() {
+      const fingerprint = {
+        userAgent: navigator.userAgent,
+        screen: {
+          width: screen.width,
+          height: screen.height,
+          colorDepth: screen.colorDepth,
+          pixelRatio: window.devicePixelRatio
+        },
+        language: navigator.language || navigator.userLanguage,
+        platform: navigator.platform,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        languages: navigator.languages
       };
-      
-    } catch (error) {
-      console.error('📱 LocalStorage check error:', error);
-      return { 
-        requiresVerification: true, 
-        reason: 'storage_error',
-        deviceToken: null,
-        loginCount: 0
+
+      return {
+        raw: fingerprint,
+        hash: this.hashFingerprint(fingerprint)
       };
     }
-  }
 
-  static validateDeviceToken(token) {
-    try {
-      // Decode base64 token
-      const payloadStr = atob(token);
-      const payload = JSON.parse(payloadStr);
-      
-      console.log('📱 Token payload:', {
-        userId: payload.userId,
-        loginCount: payload.loginCount,
-        expires: new Date(payload.exp * 1000).toLocaleString(),
-        now: new Date().toLocaleString()
-      });
-      
-      // Check expiration
-      if (payload.exp * 1000 <= Date.now()) {
-        console.log('📱 Token expired');
-        return { valid: false, reason: 'expired', payload };
+    static hashFingerprint(fingerprint) {
+      const str = JSON.stringify(fingerprint);
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
       }
-      
-      return { valid: true, payload };
-    } catch (error) {
-      console.error('📱 Token validation error:', error);
-      return { valid: false, reason: 'invalid_token' };
+      return Math.abs(hash).toString(36);
     }
   }
 
-  static storeDeviceData(deviceToken, deviceHash) {
-    try {
-      console.log('📱 Storing device data:', {
-        token: deviceToken?.substring(0, 50) + '...',
-        hash: deviceHash?.substring(0, 20) + '...'
-      });
-      
-      localStorage.setItem(this.KEYS.DEVICE_TOKEN, deviceToken);
-      localStorage.setItem(this.KEYS.DEVICE_FINGERPRINT, deviceHash);
-      localStorage.setItem(this.KEYS.LAST_LOGIN, new Date().toISOString());
-      
-      // Parse token to get login count
+  // LocalStorage Manager
+  class LocalStorageManager {
+    static KEYS = {
+      DEVICE_FINGERPRINT: 'device_fingerprint',
+      DEVICE_TOKEN: 'device_token',
+      LOGIN_COUNT: 'login_count',
+      LAST_LOGIN: 'last_login',
+      ADMIN_TOKEN: 'admin_token',
+      ADMIN_USER: 'admin_user'
+    };
+
+    static checkVerificationRequirement() {
       try {
-        const payloadStr = atob(deviceToken);
-        const payload = JSON.parse(payloadStr);
-        localStorage.setItem(this.KEYS.LOGIN_COUNT, payload.loginCount || '1');
-        console.log('📱 Stored login count:', payload.loginCount);
-      } catch (e) {
-        console.error('📱 Error parsing token for login count:', e);
-        localStorage.setItem(this.KEYS.LOGIN_COUNT, '1');
+        console.log('🔍 Checking localStorage for device data...');
+        
+        const deviceToken = localStorage.getItem(this.KEYS.DEVICE_TOKEN);
+        const storedFingerprint = localStorage.getItem(this.KEYS.DEVICE_FINGERPRINT);
+        const currentFingerprint = DeviceFingerprint.generate();
+        
+        console.log('📱 Device data:', {
+          hasDeviceToken: !!deviceToken,
+          hasStoredFingerprint: !!storedFingerprint,
+          currentFingerprint: currentFingerprint.hash,
+          storedFingerprint: storedFingerprint
+        });
+
+        // No device token at all - new device
+        if (!deviceToken) {
+          console.log('📱 No device token found - new device');
+          return { 
+            requiresVerification: true, 
+            reason: 'new_device',
+            deviceToken: null,
+            loginCount: 0,
+            deviceHash: currentFingerprint.hash
+          };
+        }
+
+        // Validate device token
+        const tokenValid = this.validateDeviceToken(deviceToken);
+        if (!tokenValid.valid) {
+          console.log('❌ Device token invalid:', tokenValid.reason);
+          return { 
+            requiresVerification: true, 
+            reason: tokenValid.reason,
+            deviceToken: deviceToken,
+            loginCount: tokenValid.payload?.loginCount || 0,
+            deviceHash: currentFingerprint.hash
+          };
+        }
+
+        // Check fingerprint matches
+        if (storedFingerprint !== currentFingerprint.hash) {
+          console.log('⚠️ Device fingerprint mismatch');
+          console.log('Stored:', storedFingerprint);
+          console.log('Current:', currentFingerprint.hash);
+          return { 
+            requiresVerification: true, 
+            reason: 'device_mismatch',
+            deviceToken: deviceToken,
+            loginCount: tokenValid.payload?.loginCount || 0,
+            deviceHash: currentFingerprint.hash
+          };
+        }
+
+        // Check max login attempts
+        if (tokenValid.payload.loginCount >= 15) {
+          console.log('🚫 Max login attempts reached:', tokenValid.payload.loginCount);
+          return { 
+            requiresVerification: true, 
+            reason: 'max_logins_reached',
+            deviceToken: deviceToken,
+            loginCount: tokenValid.payload.loginCount,
+            deviceHash: currentFingerprint.hash
+          };
+        }
+
+        console.log('✅ Device is trusted - no verification required');
+        return { 
+          requiresVerification: false, 
+          deviceToken, 
+          loginCount: tokenValid.payload.loginCount || 0,
+          deviceHash: currentFingerprint.hash 
+        };
+      } catch (error) {
+        console.error('❌ LocalStorage check error:', error);
+        return { 
+          requiresVerification: true, 
+          reason: 'storage_error',
+          deviceToken: null,
+          loginCount: 0,
+          deviceHash: null
+        };
       }
-      
-      console.log('📱 Device data stored successfully');
-    } catch (error) {
-      console.error('📱 Error storing device data:', error);
+    }
+
+    static validateDeviceToken(token) {
+      try {
+        // Decode base64
+        const decodedStr = atob(token);
+        // Convert from base64 string to JSON
+        const payload = JSON.parse(decodedStr);
+        
+        console.log('🔑 Token payload:', payload);
+        
+        // Check expiration
+        if (payload.exp * 1000 <= Date.now()) {
+          return { valid: false, reason: 'expired', payload };
+        }
+        
+        return { valid: true, payload };
+      } catch (error) {
+        console.error('❌ Token validation error:', error);
+        return { valid: false, reason: 'invalid_token', payload: null };
+      }
+    }
+
+    static storeDeviceData(deviceToken, deviceHash) {
+      try {
+        console.log('💾 Storing device data:', {
+          deviceToken: deviceToken ? `${deviceToken.substring(0, 20)}...` : 'empty',
+          deviceHash: deviceHash
+        });
+        
+        localStorage.setItem(this.KEYS.DEVICE_TOKEN, deviceToken);
+        localStorage.setItem(this.KEYS.DEVICE_FINGERPRINT, deviceHash);
+        localStorage.setItem(this.KEYS.LAST_LOGIN, new Date().toISOString());
+        
+        // Parse token to get login count
+        try {
+          const decodedStr = atob(deviceToken);
+          const payload = JSON.parse(decodedStr);
+          localStorage.setItem(this.KEYS.LOGIN_COUNT, payload.loginCount || '1');
+          console.log('📊 Login count stored:', payload.loginCount);
+        } catch (e) {
+          console.warn('⚠️ Could not parse token for login count');
+        }
+        
+        console.log('✅ Device data stored successfully');
+      } catch (error) {
+        console.error('❌ Error storing device data:', error);
+      }
+    }
+
+    static storeAuthData(authToken, userData) {
+      try {
+        localStorage.setItem(this.KEYS.ADMIN_TOKEN, authToken);
+        localStorage.setItem(this.KEYS.ADMIN_USER, JSON.stringify(userData));
+        console.log('🔐 Auth data stored');
+      } catch (error) {
+        console.error('❌ Error storing auth data:', error);
+      }
+    }
+
+    static clearLoginData() {
+      try {
+        localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
+        localStorage.removeItem(this.KEYS.LOGIN_COUNT);
+        localStorage.removeItem(this.KEYS.LAST_LOGIN);
+        console.log('🧹 Cleared device login data');
+      } catch (error) {
+        console.error('❌ Error clearing login data:', error);
+      }
     }
   }
 
-  static clearLoginData() {
-    try {
-      localStorage.removeItem(this.KEYS.DEVICE_TOKEN);
-      localStorage.removeItem(this.KEYS.LOGIN_COUNT);
-      localStorage.removeItem(this.KEYS.LAST_LOGIN);
-      localStorage.removeItem(this.KEYS.DEVICE_FINGERPRINT);
-      console.log('📱 Login data cleared');
-    } catch (error) {
-      console.error('📱 Error clearing login data:', error);
-    }
-  }
-}
   // Handle verification code input
   const handleVerificationCodeChange = (index, value) => {
     if (value.length > 1) return;
@@ -319,91 +296,92 @@ class LocalStorageManager {
     }
   };
 
-
-const handleVerifyCode = async (e) => {
-  if (e) e.preventDefault();
-  
-  const code = verificationCode.join('');
-  if (code.length !== 6) {
-    toast.error('Please enter the complete 6-digit code');
-    return;
-  }
-
-  setVerificationLoading(true);
-
-  try {
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    const deviceFingerprint = DeviceFingerprint.generate();
+  // Handle OTP verification
+  const handleVerifyCode = async (e) => {
+    if (e) e.preventDefault();
     
-    // Always use the stored verificationEmail (set when OTP was sent)
-    const emailToUse = verificationEmail || formData.email;
-    
-    if (!emailToUse) {
-      toast.error('Email not found. Please try logging in again.');
-      setVerificationLoading(false);
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      toast.error('Please enter the complete 6-digit code');
       return;
     }
-    
-    // **FIXED: Always use 'verify' action since password was already validated**
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: emailToUse, // Use the email that received the OTP
-        verificationCode: code,
-        action: 'verify', // **CHANGED FROM 'verify_password' to 'verify'**
-        clientLoginCount: localStorageCheck.loginCount,
-        clientDeviceHash: deviceFingerprint.hash
-      }),
-    });
 
-    const data = await response.json();
+    setVerificationLoading(true);
 
-    if (response.ok && data.success) {
-      // Store tokens and login
-      if (data.deviceToken) {
-        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+    try {
+      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      // Always use the stored verificationEmail (set when OTP was sent)
+      const emailToUse = verificationEmail || formData.email;
+      
+      if (!emailToUse) {
+        toast.error('Email not found. Please try logging in again.');
+        setVerificationLoading(false);
+        return;
       }
       
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_user', JSON.stringify(data.user));
-      }
+      console.log('🔐 Verifying OTP for:', emailToUse);
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: emailToUse,
+          verificationCode: code,
+          action: 'verify',
+          clientLoginCount: localStorageCheck.loginCount,
+          clientDeviceHash: deviceFingerprint.hash
+        }),
+      });
 
-      toast.success(`Login successful! Welcome back ${data.user?.name || ''}.`);
-      
-      // Clear all verification states
-      setShowVerificationModal(false);
-      setVerificationCode(['', '', '', '', '', '']);
-      setVerificationEmail('');
-      setPasswordAfterVerification('');
-      setRequiresPasswordAfterVerification(false);
-      
-      // Redirect to dashboard
-      setTimeout(() => {
-        router.push('/MainDashboard');
-      }, 1000);
-    } else {
-      // Check if password is required after verification
-      if (data.requiresPassword === true) {
-        setRequiresPasswordAfterVerification(true);
-        setVerificationEmail(emailToUse);
-        toast.info('Please enter your password to continue.');
-      } else {
-        toast.error(data.error || 'Invalid verification code');
+      const data = await response.json();
+      console.log('📩 OTP verification response:', data);
+
+      if (response.ok && data.success) {
+        // Store tokens and login
+        if (data.deviceToken) {
+          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+        }
+        
+        if (data.token) {
+          LocalStorageManager.storeAuthData(data.token, data.user);
+        }
+
+        toast.success(`Login successful! Welcome back ${data.user?.name || ''}.`);
+        
+        // Clear all verification states
+        setShowVerificationModal(false);
         setVerificationCode(['', '', '', '', '', '']);
-        document.getElementById('verification-input-0').focus();
+        setVerificationEmail('');
+        setPasswordAfterVerification('');
+        setRequiresPasswordAfterVerification(false);
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          router.push('/MainDashboard');
+        }, 1000);
+      } else {
+        // Check if password is required after verification
+        if (data.requiresPassword === true) {
+          setRequiresPasswordAfterVerification(true);
+          setVerificationEmail(emailToUse);
+          toast.info('Please enter your password to continue.');
+        } else {
+          toast.error(data.error || 'Invalid verification code');
+          setVerificationCode(['', '', '', '', '', '']);
+          document.getElementById('verification-input-0').focus();
+        }
       }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+      console.error('❌ Verification error:', error);
+    } finally {
+      setVerificationLoading(false);
     }
-  } catch (error) {
-    toast.error('Network error. Please try again.');
-    console.error('Verification error:', error);
-  } finally {
-    setVerificationLoading(false);
-  }
-};
+  };
 
   // Resend verification code
   const handleResendCode = async () => {
@@ -442,97 +420,127 @@ const handleVerifyCode = async (e) => {
       setResendLoading(false);
     }
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  
-  if (!isForgotMode) {
-    if (!agreedToTerms) {
-      toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
-      return;
-    }
 
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-  }
-
-  setIsLoading(true);
-  
-  const loadingToast = toast.loading('Authenticating...');
-
-  try {
-    console.log('🔍 Starting login process for:', formData.email);
+  // Handle main login form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Check localStorage for device verification
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    console.log('📱 LocalStorage check result:', localStorageCheck);
+    console.log('🚀 Login form submitted');
     
-    const deviceFingerprint = DeviceFingerprint.generate();
-    console.log('📱 Device fingerprint hash:', deviceFingerprint.hash?.substring(0, 20) + '...');
-    
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-        clientDeviceToken: localStorageCheck.deviceToken || null,
-        clientLoginCount: localStorageCheck.loginCount || 0,
-        clientDeviceHash: deviceFingerprint.hash,
-        action: 'login'
-      }),
-    });
-
-    const data = await response.json();
-    console.log('🔍 API response:', data);
-
-    toast.dismiss(loadingToast);
-
-    if (response.ok && data.requiresVerification === true) {
-      console.log('📱 OTP required, reason:', data.reason);
-      setVerificationReason(data.reason || 'security_check');
-      setVerificationEmail(data.email || formData.email);
-      setShowVerificationModal(true);
-      setCountdown(60);
-      
-      setRequiresPasswordAfterVerification(false);
-      setPasswordAfterVerification('');
-      
-      toast.info('Device verification required. Check your email.');
-    } else if (data.success) {
-      console.log('✅ Direct login successful');
-      
-      if (data.token) {
-        localStorage.setItem('admin_token', data.token);
-        localStorage.setItem('admin_user', JSON.stringify(data.user));
+    if (!isForgotMode) {
+      if (!agreedToTerms) {
+        toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
+        return;
       }
 
-      if (data.deviceToken) {
-        console.log('📱 Storing device token from successful login');
-        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+      if (!formData.email || !formData.password) {
+        toast.error("Please fill in all required fields");
+        return;
       }
-
-      toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
-
-      setTimeout(() => {
-        router.push('/MainDashboard');
-      }, 1500);
     } else {
-      console.log('❌ Login failed:', data.error);
-      toast.error(data.error || 'Login failed. Please try again.');
+      if (!formData.email) {
+        toast.error("Please enter your email address");
+        return;
+      }
+      
+      const loadingToast = toast.loading("Sending recovery instructions...");
+      setTimeout(() => {
+        toast.dismiss(loadingToast);
+        toast.success("Recovery email sent! Check your inbox.");
+        setIsForgotMode(false);
+      }, 2000);
+      return;
     }
-  } catch (error) {
-    toast.dismiss(loadingToast);
-    toast.error('Network error. Please check your connection.');
-    console.error('Login error:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    setIsLoading(true);
+    
+    const loadingToast = toast.loading('Authenticating...');
+
+    try {
+      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      console.log('📊 Login request details:', {
+        email: formData.email,
+        hasDeviceToken: !!localStorageCheck.deviceToken,
+        deviceToken: localStorageCheck.deviceToken ? `${localStorageCheck.deviceToken.substring(0, 20)}...` : 'none',
+        loginCount: localStorageCheck.loginCount,
+        deviceHash: deviceFingerprint.hash,
+        requiresVerification: localStorageCheck.requiresVerification,
+        reason: localStorageCheck.reason
+      });
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          clientDeviceToken: localStorageCheck.deviceToken || null,
+          clientLoginCount: localStorageCheck.loginCount || 0,
+          clientDeviceHash: deviceFingerprint.hash,
+          action: 'login'
+        }),
+      });
+
+      const data = await response.json();
+      
+      console.log('📩 Login response:', {
+        success: data.success,
+        requiresVerification: data.requiresVerification,
+        reason: data.reason,
+        hasToken: !!data.token,
+        hasDeviceToken: !!data.deviceToken
+      });
+
+      toast.dismiss(loadingToast);
+
+      if (response.ok && data.requiresVerification === true) {
+        console.log('🔐 Verification required, reason:', data.reason);
+        
+        setVerificationReason(data.reason || 'security_check');
+        setVerificationEmail(data.email || formData.email);
+        setShowVerificationModal(true);
+        setCountdown(60);
+        
+        // Clear the verification reason
+        setRequiresPasswordAfterVerification(false);
+        setPasswordAfterVerification('');
+        
+        toast.info('Device verification required. Check your email.');
+      } else if (data.success) {
+        // Direct login successful
+        console.log('✅ Direct login successful');
+        
+        if (data.token) {
+          LocalStorageManager.storeAuthData(data.token, data.user);
+        }
+
+        if (data.deviceToken) {
+          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+        }
+
+        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
+
+        setTimeout(() => {
+          router.push('/MainDashboard');
+        }, 1500);
+      } else {
+        // Login failed - password was wrong
+        console.log('❌ Login failed:', data.error);
+        toast.error(data.error || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Network error. Please check your connection.');
+      console.error('❌ Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Close verification modal
   const closeVerificationModal = () => {
@@ -549,7 +557,60 @@ const handleSubmit = async (e) => {
       toast.error('Please enter your password');
       return;
     }
-    await handleVerifyCode();
+    
+    setVerificationLoading(true);
+    
+    try {
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          password: passwordAfterVerification,
+          verificationCode: verificationCode.join(''),
+          action: 'verify_password'
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Store tokens and login
+        if (data.deviceToken) {
+          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+        }
+        
+        if (data.token) {
+          LocalStorageManager.storeAuthData(data.token, data.user);
+        }
+
+        toast.success('Login successful!');
+        
+        // Clear all verification states
+        setShowVerificationModal(false);
+        setVerificationCode(['', '', '', '', '', '']);
+        setVerificationEmail('');
+        setPasswordAfterVerification('');
+        setRequiresPasswordAfterVerification(false);
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          router.push('/MainDashboard');
+        }, 1000);
+      } else {
+        toast.error(data.error || 'Invalid credentials');
+        setPasswordAfterVerification('');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+      console.error('❌ Password verification error:', error);
+    } finally {
+      setVerificationLoading(false);
+    }
   };
 
   // Security features and system metrics
