@@ -337,6 +337,8 @@ async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
 // ====================
 // VERIFICATION ENDPOINT - FIXED
 // ====================
+// VERIFICATION ENDPOINT - FIXED
+// ====================
 async function handleVerification(email, code, deviceHash, req, clientLoginCount = 0, password = null) {
   try {
     // Find verification code
@@ -387,7 +389,7 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
           requiresPassword: true,
           message: 'Please enter your password to continue.',
           email: email,
-          verificationCompleted: true
+          user: sanitizeUser(user) // ADD THIS LINE - include user data
         };
       }
       
@@ -478,6 +480,8 @@ export async function POST(request) {
 
     // ====================
     // 1. PASSWORD + VERIFICATION FLOW
+     // ====================
+    // 1. PASSWORD + VERIFICATION FLOW
     // ====================
     if (action === 'verify_password' && verificationCode) {
       console.log('🔐 Password + Verification flow for:', email);
@@ -492,6 +496,19 @@ export async function POST(request) {
       );
       
       if (verificationResult.success) {
+        // Check if password is required after verification
+        if (verificationResult.requiresPassword === true) {
+          // Frontend needs to show password field
+          return NextResponse.json({
+            success: true,
+            requiresPassword: true,
+            message: verificationResult.message,
+            email: email,
+            user: verificationResult.user
+          }, { status: 200 });
+        }
+        
+        // Password was provided and correct, complete login
         // Log successful login
         await prisma.loginAttempt.create({
           data: {
