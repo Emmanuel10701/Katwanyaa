@@ -457,10 +457,6 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
                       <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Status</span>
                       <p className="text-sm font-bold text-slate-800 mt-1">{item.status || 'Published'}</p>
                     </div>
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Featured</span>
-                      <p className="text-sm font-bold text-slate-800 mt-1">{item.featured ? 'Yes' : 'No'}</p>
-                    </div>
                   </div>
                 </div>
               )}
@@ -468,7 +464,7 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
 
             {/* Description */}
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Description</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-4">Description</h3>
               <p className="text-slate-700 leading-relaxed whitespace-pre-line">
                 {item.description || item.excerpt || 'No description available.'}
               </p>
@@ -477,9 +473,9 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
             {/* Full Content for News */}
             {type === 'news' && item.fullContent && (
               <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 mb-4">Full Content</h3>
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-4">Full Content</h3>
                 <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                  {item.fullContent}
+                  {item.fullContent || 'No additional content available.'}
                 </div>
               </div>
             )}
@@ -614,22 +610,23 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
     </div>
   )}
 
-  {/* Overlay: Category & Featured - These stay absolutely positioned over the full-width image */}
-  <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
-    <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm pointer-events-auto">
-      <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-        categoryInfo ? `bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 border border-${categoryInfo.color}-200` : 'bg-gray-100 text-gray-800 border border-gray-200'
-      }`}>
-        {categoryInfo?.label || itemData.category}
-      </span>
-    </div>
-    
-    {itemData.featured && (
-      <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border border-yellow-200 pointer-events-auto">
-        Featured
-      </span>
-    )}
+{/* Overlay: Category & Featured - ONLY for Events */}
+<div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
+  <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm pointer-events-auto">
+    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+      categoryInfo ? `bg-${categoryInfo.color}-100 text-${categoryInfo.color}-800 border border-${categoryInfo.color}-200` : 'bg-gray-100 text-gray-800 border border-gray-200'
+    }`}>
+      {categoryInfo?.label || itemData.category}
+    </span>
   </div>
+  
+  {/* ✅ Featured badge ONLY for Events */}
+  {type === 'events' && itemData.featured && (
+    <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border border-yellow-200 pointer-events-auto">
+      Featured
+    </span>
+  )}
+</div>
 </div>
 
       {/* Information Section */}
@@ -893,13 +890,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
       submitData.append('author', formData.author.trim());
       submitData.append('date', formData.date);
       
-      // Optional fields
-      if (formData.featured !== undefined) {
-        submitData.append('featured', formData.featured.toString());
-      }
-      if (formData.status) {
-        submitData.append('status', formData.status);
-      }
+   
     } 
     // 🚨 For EVENTS, send event fields
     else if (type === 'events') {
@@ -1032,20 +1023,22 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 </div>
 
                 {/* Featured Toggle */}
-                <div 
-                  onClick={() => handleChange('featured', !formData.featured)}
-                  className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-                    formData.featured ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:border-slate-200'
-                  }`}
-                >
-                  <div>
-                    <p className={`font-black text-sm uppercase ${formData.featured ? 'text-amber-700' : 'text-slate-700'}`}>Promote to Featured</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Displays in homepage slider</p>
-                  </div>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.featured ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
-                    <FiStar />
-                  </div>
-                </div>
+{type === 'events' && (
+  <div 
+    onClick={() => handleChange('featured', !formData.featured)}
+    className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+      formData.featured ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:border-slate-200'
+    }`}
+  >
+    <div>
+      <p className={`font-black text-sm uppercase ${formData.featured ? 'text-amber-700' : 'text-slate-700'}`}>Promote to Featured</p>
+      <p className="text-[10px] text-slate-400 font-bold uppercase">Displays in homepage slider</p>
+    </div>
+    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.featured ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
+      <FiStar />
+    </div>
+  </div>
+)}
               </div>
 
               {/* Right Column - Form Fields */}
@@ -1113,7 +1106,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                 {/* Long Text Areas */}
                 <div className="sm:col-span-2 space-y-6">
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">
                       {type === 'news' ? 'Excerpt (Short Description)' : 'Description'}
                     </label>
                     <textarea
@@ -1126,7 +1119,7 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
                   </div>
                   {type === 'news' && (
                     <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Full Story Content</label>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">Full Story Content</label>
                       <textarea
                         rows="6"
                         value={formData.fullContent}
@@ -1553,7 +1546,7 @@ const handleSubmit = async (formData, id) => {
           <p className="text-gray-700 text-lg mt-4 font-medium">
             Loading Events and News
           </p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-800 text-sm mt-1">
             Please wait while we fetch school Events and News articles.
           </p>
         </div>
@@ -1644,17 +1637,7 @@ const handleSubmit = async (formData, id) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs lg:text-sm font-bold text-gray-600 mb-1">Featured News</p>
-                <p className="text-xl lg:text-2xl font-bold text-gray-900">{stats.featuredNews}</p>
-              </div>
-              <div className="p-3 bg-yellow-100 text-yellow-600 rounded-2xl">
-                <FiAward className="text-lg" />
-              </div>
-            </div>
-          </div>
+ 
 
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between">

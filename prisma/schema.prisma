@@ -187,6 +187,7 @@ model News {
   fullContent String?  @db.Text
   date        DateTime
   category    String
+  isFeatured  Boolean  @default(false)
   author      String
   likes       Int      @default(0)
   image       String?
