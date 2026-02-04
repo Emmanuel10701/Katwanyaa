@@ -343,12 +343,21 @@ const handleSubmit = async (e) => {
     return;
   }
 
-  // NO automatic checks here - wait for button click
   setIsLoading(true);
   
   const loadingToast = toast.loading('Authenticating...');
 
   try {
+    // ✅ FIX 1: Check localStorage for device info
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    const deviceFingerprint = DeviceFingerprint.generate();
+    
+    console.log('📱 Device check:', {
+      hasToken: !!localStorageCheck.deviceToken,
+      loginCount: localStorageCheck.loginCount,
+      deviceHash: deviceFingerprint.hash
+    });
+
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
@@ -357,7 +366,11 @@ const handleSubmit = async (e) => {
       body: JSON.stringify({
         email: formData.email,
         password: formData.password,
-        // Don't send any device info that might auto-trigger verification
+        // ✅ CRITICAL FIX: Send device information
+        clientDeviceToken: localStorageCheck.deviceToken || null,
+        clientLoginCount: localStorageCheck.loginCount || 0,
+        clientDeviceHash: deviceFingerprint.hash,
+        action: 'login'
       }),
     });
 
@@ -366,7 +379,6 @@ const handleSubmit = async (e) => {
     toast.dismiss(loadingToast);
 
     if (response.ok && data.success) {
-      // VERIFICATION WILL ONLY HAPPEN IF SERVER EXPLICITLY SAYS SO
       if (data.requiresVerification === true) {
         // Show verification modal ONLY when server requires it
         setVerificationEmail(data.email || formData.email);
@@ -380,6 +392,11 @@ const handleSubmit = async (e) => {
         if (data.token) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(data.user));
+        }
+
+        // ✅ FIX 2: Store device token if returned
+        if (data.deviceToken) {
+          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
         }
 
         toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
@@ -410,6 +427,7 @@ const handleSubmit = async (e) => {
     setIsLoading(false);
   }
 };
+
   // Close verification modal
   const closeVerificationModal = () => {
     setShowVerificationModal(false);

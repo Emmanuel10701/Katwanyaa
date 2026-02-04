@@ -757,27 +757,48 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
-  const handleLogout = () => {
-    toast.loading('Logging out...'); // Using sonner toast
-    
-    setTimeout(() => {
-      const allAuthKeys = [
-        'admin_user', 'user', 'currentUser', 'auth_user',
-        'admin_token', 'token', 'auth_token', 'jwt_token',
-        'device_token', 'deviceToken',
-        'device_fingerprint', 'deviceFingerprint',
-        'login_count', 'last_login', 'last_dashboard_access'
-      ];
+const handleLogout = () => {
+  toast.loading('Logging out...');
+  
+  setTimeout(() => {
+    try {
+      // Save device tokens before clearing session
+      const deviceToken = localStorage.getItem('device_token') || 
+                         localStorage.getItem('deviceToken');
+      const deviceFingerprint = localStorage.getItem('device_fingerprint') || 
+                               localStorage.getItem('deviceFingerprint');
+      const loginCount = localStorage.getItem('login_count');
       
-      allAuthKeys.forEach(key => localStorage.removeItem(key));
+      // Clear only session data
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('last_login');
+      localStorage.removeItem('last_dashboard_access');
       
-      toast.success('Logged out successfully. All tokens cleared.'); // Using sonner toast
+      // Restore device tokens (if they existed)
+      if (deviceToken) {
+        localStorage.setItem('device_token', deviceToken);
+      }
+      if (deviceFingerprint) {
+        localStorage.setItem('device_fingerprint', deviceFingerprint);
+      }
+      if (loginCount) {
+        localStorage.setItem('login_count', loginCount);
+      }
+      
+      toast.success('Logged out. Your device is still recognized.');
       
       setTimeout(() => {
         window.location.href = '/pages/adminLogin';
       }, 500);
-    }, 500);
-  };
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed. Please try again.');
+    }
+  }, 500);
+};
+
 
   const renderContent = () => {
     if (loading) return null;

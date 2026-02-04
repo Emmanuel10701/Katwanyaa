@@ -217,14 +217,15 @@ async function sendVerificationEmail(user, verificationCode) {
 }
 
 // Generate device token for localStorage (30 days expiry)
-function generateDeviceToken(userId, deviceHash) {
+function generateDeviceToken(userId, deviceHash, currentLoginCount = 1) {
   const payload = {
     userId: userId,
     deviceHash: deviceHash,
-    loginCount: 1, // Start at 1
+    loginCount: currentLoginCount, // Use current count
     createdAt: new Date().toISOString(),
-    exp: Math.floor(Date.now() / 1000) + (DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60), // 30 days expiry
-    iat: Math.floor(Date.now() / 1000)
+    exp: Math.floor(Date.now() / 1000) + (DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60),
+    iat: Math.floor(Date.now() / 1000),
+    version: '1.0' // Add version for future updates
   };
   
   const payloadStr = JSON.stringify(payload);
@@ -642,39 +643,43 @@ export async function POST(request) {
       }
     });
 
-    // ====================
-    // DEVICE VERIFICATION LOGIC - SIMPLIFIED
-    // ====================
-    console.log('🔍 Checking device verification...');
-    let requiresVerification = false;
-    let verificationReason = 'security_check';
+   // ====================
+// DEVICE VERIFICATION LOGIC - FIXED
+// ====================
+console.log('🔍 Checking device verification...');
+console.log('📱 Device info from client:', {
+  hasToken: !!clientDeviceToken,
+  tokenLength: clientDeviceToken?.length || 0,
+  clientLoginCount,
+  clientDeviceHash: clientDeviceHash?.substring(0, 10) + '...'
+});
+
+let requiresVerification = false;
+let verificationReason = 'security_check';
+let existingDevice = null;
+
+// Use client's device hash if provided, otherwise use server-generated
+const finalDeviceHash = clientDeviceHash || deviceHash;
+
+// 1. Check if client has a device token
+if (clientDeviceToken) {
+  console.log('📱 Client has device token');
+  const tokenValid = verifyDeviceToken(clientDeviceToken, finalDeviceHash);
+  
+  if (tokenValid.valid) {
+    console.log('✅ Device token is valid, login count:', tokenValid.payload.loginCount);
     
-    // 1. Check if client has a device token
-    if (clientDeviceToken) {
-      console.log('📱 Client has device token');
-      const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
-      if (!tokenValid.valid) {
-        console.log('❌ Device token invalid:', tokenValid.reason);
-        requiresVerification = true;
-        verificationReason = tokenValid.reason || 'invalid_token';
-      } else if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-        console.log('⚠️ Max login attempts reached');
-        requiresVerification = true;
-        verificationReason = 'max_login_attempts_reached';
-      }
-    } else {
-      console.log('📱 No client device token - new device');
+    // Check if login count exceeded
+    if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+      console.log('⚠️ Max login attempts reached');
       requiresVerification = true;
-      verificationReason = 'new_device';
-    }
-    
-    // 2. Check database for existing device
-    if (!requiresVerification) {
-      console.log('🔍 Checking database for existing device...');
-      const existingDevice = await prisma.deviceToken.findFirst({
+      verificationReason = 'max_login_attempts_reached';
+    } else {
+      // Check database for existing trusted device
+      existingDevice = await prisma.deviceToken.findFirst({
         where: {
           userId: user.id,
-          deviceHash: deviceHash,
+          deviceHash: finalDeviceHash,
           isTrusted: true,
           expiresAt: { gt: new Date() },
           isBlocked: false
@@ -691,26 +696,53 @@ export async function POST(request) {
         verificationReason = 'max_login_attempts_reached';
       }
     }
-    
-    // 3. Always verify admins on new devices
-    if (!requiresVerification) {
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-        console.log('👑 Admin user - checking for recent device...');
-        const recentDevice = await prisma.deviceToken.findFirst({
-          where: {
-            userId: user.id,
-            deviceHash: deviceHash,
-            lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
-          }
-        });
-        
-        if (!recentDevice) {
-          console.log('⚠️ Admin on potentially new device');
-          requiresVerification = true;
-          verificationReason = 'admin_security_check';
-        }
-      }
+  } else {
+    console.log('❌ Device token invalid:', tokenValid.reason);
+    requiresVerification = true;
+    verificationReason = tokenValid.reason || 'invalid_token';
+  }
+} else {
+  console.log('📱 No client device token - checking database...');
+  
+  // Check database for existing device
+  existingDevice = await prisma.deviceToken.findFirst({
+    where: {
+      userId: user.id,
+      deviceHash: finalDeviceHash,
+      isTrusted: true,
+      expiresAt: { gt: new Date() },
+      isBlocked: false
     }
+  });
+  
+  if (!existingDevice) {
+    console.log('❌ No trusted device found');
+    requiresVerification = true;
+    verificationReason = 'new_device';
+  } else if (existingDevice.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
+    console.log('⚠️ Max login attempts reached in database');
+    requiresVerification = true;
+    verificationReason = 'max_login_attempts_reached';
+  }
+}
+
+// 3. Always verify admins on new devices
+if (!requiresVerification && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
+  console.log('👑 Admin user - checking for recent device...');
+  const recentDevice = await prisma.deviceToken.findFirst({
+    where: {
+      userId: user.id,
+      deviceHash: finalDeviceHash,
+      lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
+    }
+  });
+  
+  if (!recentDevice) {
+    console.log('⚠️ Admin on potentially new device');
+    requiresVerification = true;
+    verificationReason = 'admin_security_check';
+  }
+}
     
     // ====================
     // HANDLE VERIFICATION OR LOGIN
