@@ -52,9 +52,7 @@ export async function POST(req) {
       },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 
-                   process.env.NEXTAUTH_URL || 
-                   'https://katwanyaa.vercel.app';
+    const baseUrl = 'https://katwanyaa.vercel.app';
     
     const resetLink = `${baseUrl}/pages/resetpassword?token=${token}`;
     
