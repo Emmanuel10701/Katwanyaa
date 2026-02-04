@@ -15,16 +15,16 @@ import {
 
 /**
  * ConditionItem Component
- * Modernized for mobile responsiveness with a compact layout.
+ * Mobile optimized with better spacing and text size
  */
 const ConditionItem = ({ condition, text }) => (
-  <li className="flex items-center gap-2 py-1 sm:py-0.5">
+  <li className="flex items-center gap-2 py-1.5">
     {condition ? (
-      <CheckCircle size={16} className="text-green-500 shrink-0" />
+      <CheckCircle size={14} className="text-green-500 shrink-0" />
     ) : (
-      <XCircle size={16} className="text-white/20 shrink-0" />
+      <XCircle size={14} className="text-white/30 shrink-0" />
     )}
-    <span className={`text-[11px] sm:text-xs transition-colors duration-300 ${
+    <span className={`text-xs sm:text-sm transition-colors duration-300 ${
       condition ? "text-green-300 font-medium" : "text-gray-400"
     }`}>
       {text}
@@ -106,14 +106,16 @@ const ResetPasswordContent = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 flex items-center justify-center p-6">
-        <div className="max-w-md w-full p-8 backdrop-blur-xl bg-white/5 rounded-[2.5rem] border border-white/10 shadow-2xl text-center">
-          <AlertCircle size={64} className="text-red-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-black text-white mb-2">Expired Link</h2>
-          <p className="text-gray-400 text-sm mb-8">This password reset link is invalid or has expired.</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-sm sm:max-w-md p-6 sm:p-8 backdrop-blur-xl bg-white/5 rounded-3xl sm:rounded-[2.5rem] border border-white/10 shadow-2xl text-center mx-2">
+          <AlertCircle size={48} className="text-red-500 mx-auto mb-4 sm:mb-6" />
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Expired Link</h2>
+          <p className="text-gray-400 text-xs sm:text-sm mb-6 sm:mb-8 px-2">
+            This password reset link is invalid or has expired.
+          </p>
           <button 
             onClick={() => router.push("/forgot-password")}
-            className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-indigo-500/20"
+            className="w-full py-3 sm:py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl sm:rounded-2xl font-semibold transition-all shadow-lg shadow-indigo-500/20 text-sm sm:text-base"
           >
             Request New Link
           </button>
@@ -123,16 +125,17 @@ const ResetPasswordContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-center p-4 sm:p-8 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-center px-4 py-6 sm:py-8">
       <motion.div 
-        className="max-w-md lg:max-w-xl w-full mx-auto p-6 sm:p-10 backdrop-blur-2xl bg-white/5 rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-white/10"
+        className="w-full max-w-sm sm:max-w-md lg:max-w-xl mx-auto p-5 sm:p-8 lg:p-10 backdrop-blur-2xl bg-white/5 rounded-3xl sm:rounded-[2.5rem] shadow-2xl relative overflow-hidden border border-white/10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        style={{ maxWidth: "95vw" }}
       >
-        {/* Animated Background Accents */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-[60px] animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
+        {/* Animated Background Accents - Reduced size for mobile */}
+        <div className="absolute -top-10 -left-10 w-24 h-24 sm:w-32 sm:h-32 bg-indigo-500/20 rounded-full blur-[40px] sm:blur-[60px] animate-pulse" />
+        <div className="absolute -bottom-10 -right-10 w-24 h-24 sm:w-32 sm:h-32 bg-purple-500/20 rounded-full blur-[40px] sm:blur-[60px] animate-pulse" style={{ animationDelay: '2s' }} />
 
         <AnimatePresence mode="wait">
           {resetSuccess ? (
@@ -140,100 +143,136 @@ const ResetPasswordContent = () => {
               key="success"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="text-center py-8"
+              className="text-center py-6 sm:py-8 px-2"
             >
-              <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-black text-white mb-2">All Set!</h2>
-              <p className="text-gray-400 text-sm mb-8">Your password has been reset. Sending you to login now...</p>
-              <div className="flex justify-center items-center gap-3">
-                <LoaderCircle className="animate-spin text-indigo-400" size={24} />
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">Redirecting</span>
+              <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">All Set!</h2>
+              <p className="text-gray-400 text-xs sm:text-sm mb-6 px-2">
+                Your password has been reset. Sending you to login now...
+              </p>
+              <div className="flex justify-center items-center gap-2">
+                <LoaderCircle className="animate-spin text-indigo-400" size={20} />
+                <span className="text-xs font-medium uppercase tracking-widest text-indigo-400">
+                  Redirecting
+                </span>
               </div>
             </motion.div>
           ) : (
             <motion.div key="form" className="relative z-10">
-              <div className="text-center mb-8">
-                <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
-                  <KeyRound className="text-white" size={32} />
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="bg-white/10 w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10">
+                  <KeyRound className="text-white w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-2">Reset Password</h1>
-                <p className="text-sm text-gray-400 px-4">Choose a strong password to protect your account.</p>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight mb-2 px-2">
+                  Reset Password
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-400 px-2">
+                  Choose a strong password to protect your account.
+                </p>
               </div>
 
               {error && (
                 <motion.div 
                   initial={{ opacity: 0, y: -10 }} 
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3"
+                  className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-xl sm:rounded-2xl flex items-start gap-2 sm:gap-3"
                 >
-                  <AlertCircle size={18} className="text-red-400 shrink-0" />
-                  <p className="text-red-200 text-xs font-medium">{error}</p>
+                  <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                  <p className="text-red-200 text-xs sm:text-sm font-medium text-left flex-1">
+                    {error}
+                  </p>
                 </motion.div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                <div className="space-y-4">
-                  <div className="relative">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="New Password"
-                      className="w-full h-14 pl-12 pr-12 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm"
-                      required
-                    />
-                    <button 
-                      type="button" 
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                <div className="space-y-3 sm:space-y-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+                      New Password
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                        className="w-full h-12 sm:h-14 pl-10 sm:pl-12 pr-10 sm:pr-12 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm"
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Requirements Grid - Mobile Optimized */}
-                  <div className="p-4 rounded-2xl bg-black/20 border border-white/5">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-3">Requirements</h3>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
-                      <ConditionItem condition={validity.min} text="8+ Characters" />
-                      <ConditionItem condition={validity.num} text="Contain Number" />
-                      <ConditionItem condition={validity.let} text="Contain Letter" />
-                      <ConditionItem condition={validity.match} text="Passwords Match" />
+                  {/* Requirements Grid - Stack on mobile */}
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-black/20 border border-white/5">
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-indigo-400 mb-2 sm:mb-3">
+                      Password Requirements
+                    </h3>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2">
+                      <ConditionItem condition={validity.min} text="8+ characters" />
+                      <ConditionItem condition={validity.num} text="Contains a number" />
+                      <ConditionItem condition={validity.let} text="Contains a letter" />
+                      <ConditionItem condition={validity.match} text="Passwords match" />
                     </ul>
                   </div>
 
-                  <div className="relative">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={18} />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm New Password"
-                      className="w-full h-14 pl-12 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm"
-                      required
-                    />
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                        className="w-full h-12 sm:h-14 pl-10 sm:pl-12 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-sm"
+                        required
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading || !Object.values(validity).every(Boolean)}
-                  className={`w-full h-14 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all active:scale-95 shadow-xl flex items-center justify-center gap-3 ${
+                  className={`w-full h-12 sm:h-14 rounded-xl sm:rounded-2xl font-semibold uppercase tracking-wider text-xs sm:text-sm transition-all flex items-center justify-center gap-2 ${
                     loading || !Object.values(validity).every(Boolean)
-                      ? "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"
-                      : "bg-indigo-600 text-white shadow-indigo-500/20 hover:bg-indigo-700"
+                      ? "bg-white/5 text-white/30 cursor-not-allowed border border-white/5"
+                      : "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 active:scale-[0.98]"
                   }`}
                 >
                   {loading ? (
                     <>
-                      <LoaderCircle className="animate-spin" size={18} />
-                      Updating...
+                      <LoaderCircle className="animate-spin w-4 h-4" />
+                      <span>Updating...</span>
                     </>
                   ) : (
                     "Reset Password"
                   )}
                 </button>
+
+                {/* Progress indicator - Only show on mobile */}
+                <div className="sm:hidden mt-4">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <span>Password strength</span>
+                    <span>{Object.values(validity).filter(Boolean).length}/4</span>
+                  </div>
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
+                      style={{ width: `${(Object.values(validity).filter(Boolean).length / 4) * 100}%` }}
+                    />
+                  </div>
+                </div>
               </form>
             </motion.div>
           )}
@@ -248,7 +287,7 @@ const ResetPasswordPage = () => {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <LoaderCircle className="animate-spin text-indigo-500" size={48} />
+        <LoaderCircle className="animate-spin text-indigo-500 w-10 h-10 sm:w-12 sm:h-12" />
       </div>
     }>
       <ResetPasswordContent />
