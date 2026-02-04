@@ -230,12 +230,7 @@ export async function GET(req, { params }) {
         image: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true,
-        createdByName: true,
-        createdByRole: true,
-        updatedBy: true,
-        updatedByName: true,
-        updatedByRole: true,
+   
       }
     });
     
@@ -310,9 +305,6 @@ export async function PUT(req, { params }) {
       priority: formData.get("priority")?.trim() || existingEvent.priority,
       updatedAt: new Date(),
       // Audit trail
-      updatedBy: auth.user.id,
-      updatedByName: auth.user.name,
-      updatedByRole: auth.user.role,
     };
 
     // Handle date if provided
@@ -394,12 +386,7 @@ export async function PUT(req, { params }) {
         image: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true,
-        createdByName: true,
-        createdByRole: true,
-        updatedBy: true,
-        updatedByName: true,
-        updatedByRole: true,
+       
       }
     });
     
@@ -409,7 +396,6 @@ export async function PUT(req, { params }) {
       success: true, 
       message: "Event updated successfully", 
       event: updatedEvent,
-      updatedBy: auth.user.name,
       timestamp: new Date().toISOString()
     }, { status: 200 });
   } catch (error) {
@@ -487,7 +473,6 @@ export async function DELETE(req, { params }) {
         category: existingEvent.category,
         description: existingEvent.description,
       },
-      deletedBy: auth.user.name,
       timestamp: new Date().toISOString()
     }, { status: 200 });
   } catch (error) {

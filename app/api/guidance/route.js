@@ -335,13 +335,6 @@ export async function POST(req) {
         type,
         priority,
         image: imageUrl, // Cloudinary URL
-        // Audit trail
-        createdBy: auth.user.id,
-        createdByName: auth.user.name,
-        createdByRole: auth.user.role,
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
       },
       select: {
         id: true,
@@ -356,9 +349,7 @@ export async function POST(req) {
         image: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true,
-        createdByName: true,
-        createdByRole: true,
+     
       }
     });
 
