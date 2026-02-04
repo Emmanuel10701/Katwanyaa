@@ -462,23 +462,38 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
               )}
             </div>
 
-            {/* Description */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-4">Description</h3>
-              <p className="text-slate-700 leading-relaxed whitespace-pre-line">
-                {item.description || item.excerpt || 'No description available.'}
-              </p>
-            </div>
+      {/* Description - Updated to prioritize excerpt since API doesn't have 'description' */}
+<div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden">
+  <div className="p-8 bg-slate-50/50">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-1 h-4 bg-purple-500 rounded-full" />
+      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
+        Quick Summary
+      </h3>
+    </div>
+    <p className="text-slate-600 font-medium leading-relaxed whitespace-pre-line italic">
+      "{item.excerpt || 'No summary available.'}"
+    </p>
+  </div>
 
-            {/* Full Content for News */}
-            {type === 'news' && item.fullContent && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 mb-4">Full Content</h3>
-                <div className="text-slate-700 leading-relaxed whitespace-pre-line">
-                  {item.fullContent || 'No additional content available.'}
-                </div>
-              </div>
-            )}
+  {/* Visual Divider */}
+  <div className="border-t border-dashed border-slate-200" />
+
+  {/* Full Content Section */}
+  {type === 'news' && item.fullContent && (
+    <div className="p-8">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-1 h-4 bg-blue-500 rounded-full" />
+        <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
+          Full Story
+        </h3>
+      </div>
+      <div className="text-slate-700 leading-relaxed whitespace-pre-line">
+        {item.fullContent}
+      </div>
+    </div>
+  )}
+</div>
 
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-8 border-t border-slate-100">
