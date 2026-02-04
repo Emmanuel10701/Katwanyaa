@@ -5,11 +5,11 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
 // Constants
-const MAX_FAILED_ATTEMPTS = 8;
-const MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY = 15; // Auto-expire after 15 logins
+const MAX_FAILED_ATTEMPTS = 3;
+const MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY = 5; // Auto-expire after 15 logins
 const VERIFICATION_CODE_EXPIRY_MINUTES = 15;
 const VERIFICATION_CODE_LENGTH = 6;
-const DEVICE_TOKEN_EXPIRY_DAYS = 30; // Token expires after 30 days
+const DEVICE_TOKEN_EXPIRY_DAYS = 10; // Token expires after 30 days
 
 // Email Transporter
 const transporter = nodemailer.createTransport({
