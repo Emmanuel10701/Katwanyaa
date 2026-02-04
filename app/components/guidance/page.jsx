@@ -2389,8 +2389,6 @@ const handleSubmit = async (e) => {
 };
 
 
-
-
   const updateMemberField = (memberType, field, value, isAssistant = false) => {
     setFormData(prev => {
       if (isAssistant) {
