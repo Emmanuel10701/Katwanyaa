@@ -271,8 +271,6 @@ export async function PUT(req, { params }) {
         contactEmail: data.contactEmail || null,
         contactPhone: data.contactPhone || null,
         // Track who updated
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
         updatedAt: new Date()
       },
     });
@@ -379,7 +377,6 @@ export async function DELETE(req, { params }) {
       success: true, 
       message: "Job deleted successfully", 
       job,
-      deletedBy: auth.user.name,
       authenticated: true
     });
   } catch (error) {
