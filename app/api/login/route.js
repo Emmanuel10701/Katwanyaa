@@ -243,126 +243,207 @@ function generateDeviceToken(userId, deviceHash, currentLoginCount = 1) {
   return base64Encode(payloadStr);
 }
 
-// Verify device token from localStorage
 function verifyDeviceToken(token, deviceHash) {
-  try {
-    const payloadStr = base64Decode(token);
-    const payload = JSON.parse(payloadStr);
-    
-    // Check expiration
-    if (payload.exp * 1000 <= Date.now()) {
-      return { valid: false, reason: 'expired' };
+    try {
+        console.log('🔐 Verifying token format...');
+        let payloadStr;
+        
+        // Check if it's a JWT (has dots)
+        if (token.includes('.')) {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                // JWT format - decode the payload (middle part)
+                payloadStr = Buffer.from(parts[1], 'base64').toString('utf-8');
+                console.log('📝 Token is JWT format');
+            } else {
+                return { valid: false, reason: 'invalid_jwt_format' };
+            }
+        } else {
+            // Try as simple base64
+            try {
+                payloadStr = Buffer.from(token, 'base64').toString('utf-8');
+                console.log('📝 Token is simple base64');
+            } catch (e) {
+                // Try URL-safe base64
+                try {
+                    payloadStr = Buffer.from(token.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8');
+                    console.log('📝 Token is URL-safe base64');
+                } catch (e2) {
+                    return { valid: false, reason: 'invalid_base64' };
+                }
+            }
+        }
+        
+        const payload = JSON.parse(payloadStr);
+        
+        console.log('📊 Token payload:', {
+            userId: payload.userId,
+            deviceHash: payload.deviceHash ? `${payload.deviceHash.substring(0, 10)}...` : 'missing',
+            loginCount: payload.loginCount,
+            exp: payload.exp,
+            createdAt: payload.createdAt
+        });
+        
+        // Check expiration
+        if (!payload.exp) {
+            return { valid: false, reason: 'missing_expiry' };
+        }
+        
+        if (payload.exp * 1000 <= Date.now()) {
+            return { valid: false, reason: 'expired' };
+        }
+        
+        // Check device hash matches
+        if (payload.deviceHash && payload.deviceHash !== deviceHash) {
+            return { valid: false, reason: 'device_mismatch' };
+        }
+        
+        return { valid: true, payload };
+    } catch (error) {
+        console.error('❌ Token verification error:', error);
+        return { valid: false, reason: 'invalid_token' };
     }
-    
-    // Check device hash matches
-    if (payload.deviceHash !== deviceHash) {
-      return { valid: false, reason: 'device_mismatch' };
-    }
-    
-    return { valid: true, payload };
-  } catch (error) {
-    return { valid: false, reason: 'invalid_token' };
-  }
 }
 
-// Check if device needs verification (FIXED VERSION)
+// In your backend API (/app/api/login/route.js)
+// Update the checkDeviceVerification function:
+
 async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0, clientDeviceToken = null) {
-  try {
-    console.log('🔍 Device verification check:', { userId, deviceHash, hasToken: !!clientDeviceToken });
-    
-    // CASE 1: No client device token - treat as new device
-    if (!clientDeviceToken) {
-      console.log('📱 No client device token - new device');
-      return { 
-        requiresVerification: true, 
-        reason: 'new_device' 
-      };
+    try {
+        console.log('🔍 Device verification check:', { 
+            userId, 
+            deviceHash: deviceHash.substring(0, 10) + '...',
+            hasToken: !!clientDeviceToken,
+            tokenLength: clientDeviceToken ? clientDeviceToken.length : 0
+        });
+        
+        // CASE 1: No client device token - treat as new device
+        if (!clientDeviceToken) {
+            console.log('📱 No client device token - new device');
+            return { 
+                requiresVerification: true, 
+                reason: 'new_device' 
+            };
+        }
+
+        // CASE 2: Validate client device token
+        console.log('🔐 Token to verify:', clientDeviceToken.substring(0, 50) + '...');
+        const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
+        
+        if (!tokenValid.valid) {
+            console.log('❌ Client token invalid:', tokenValid.reason);
+            return { 
+                requiresVerification: true, 
+                reason: tokenValid.reason 
+            };
+        }
+
+        console.log('✅ Token structure valid, payload:', {
+            userId: tokenValid.payload.userId,
+            loginCount: tokenValid.payload.loginCount,
+            expiresAt: new Date(tokenValid.payload.exp * 1000).toLocaleString()
+        });
+
+        // CASE 3: Check if token has expired or expiring soon
+        const currentTime = Math.floor(Date.now() / 1000);
+        const tokenExpiry = tokenValid.payload.exp;
+        
+        // Already expired
+        if (tokenExpiry <= currentTime) {
+            console.log('⏰ Token expired:', {
+                expiry: new Date(tokenExpiry * 1000).toLocaleString(),
+                current: new Date(currentTime * 1000).toLocaleString()
+            });
+            return { 
+                requiresVerification: true, 
+                reason: 'expired' 
+            };
+        }
+
+        // Check if expiring within 1 day
+        const oneDayInSeconds = 24 * 60 * 60;
+        if (tokenExpiry <= (currentTime + oneDayInSeconds)) {
+            console.log('⚠️ Token expiring soon');
+            return { 
+                requiresVerification: true, 
+                reason: 'token_expiring_soon' 
+            };
+        }
+
+        // CASE 4: Check max login attempts from token
+        const loginCount = tokenValid.payload.loginCount || 0;
+        if (loginCount >= 15) {
+            console.log('🚫 Max login attempts reached in token:', loginCount);
+            return { 
+                requiresVerification: true, 
+                reason: 'max_logins_reached' 
+            };
+        }
+
+        // CASE 5: Check database for device trust status
+        const device = await prisma.deviceToken.findFirst({
+            where: {
+                userId: userId,
+                deviceHash: deviceHash,
+                isBlocked: false
+            }
+        });
+
+        // No device record found in database - new device
+        if (!device) {
+            console.log('📱 No device record in database');
+            return { 
+                requiresVerification: true, 
+                reason: 'no_device_record' 
+            };
+        }
+
+        // Device is not trusted
+        if (!device.isTrusted) {
+            console.log('🔐 Device not trusted in database');
+            return { 
+                requiresVerification: true, 
+                reason: 'device_not_trusted' 
+            };
+        }
+
+        // Check if device token has expired in database
+        if (device.expiresAt <= new Date()) {
+            console.log('⏰ Device token expired in database');
+            return { 
+                requiresVerification: true, 
+                reason: 'device_expired' 
+            };
+        }
+
+        // Check database login count
+        if (device.loginCount >= 15) {
+            console.log('🚫 Max login attempts reached in database:', device.loginCount);
+            return { 
+                requiresVerification: true, 
+                reason: 'max_logins_reached' 
+            };
+        }
+
+        // DEVICE IS TRUSTED AND VALID - NO VERIFICATION NEEDED
+        console.log('✅ Device trusted - no verification required. Login count:', device.loginCount);
+        return { 
+            requiresVerification: false,
+            deviceId: device.id,
+            currentLoginCount: device.loginCount,
+            expiresAt: device.expiresAt
+        };
+
+    } catch (error) {
+        console.error('❌ Error checking device verification:', error);
+        // On error, require verification for security
+        return { 
+            requiresVerification: true, 
+            reason: 'verification_error' 
+        };
     }
-
-    // CASE 2: Validate client device token
-    const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
-    
-    if (!tokenValid.valid) {
-      console.log('❌ Client token invalid:', tokenValid.reason);
-      return { 
-        requiresVerification: true, 
-        reason: tokenValid.reason 
-      };
-    }
-
-    // CASE 3: Check if token has expired (within 1 day of expiry)
-    const oneDayFromNow = Date.now() + (1 * 24 * 60 * 60 * 1000);
-    if (tokenValid.payload.exp * 1000 <= oneDayFromNow) {
-      console.log('⚠️ Token expiring soon - requiring verification');
-      return { 
-        requiresVerification: true, 
-        reason: 'token_expiring_soon' 
-      };
-    }
-
-    // CASE 4: Check database for trusted device status
-    const device = await prisma.deviceToken.findFirst({
-      where: {
-        userId: userId,
-        deviceHash: deviceHash,
-        isBlocked: false
-      }
-    });
-
-    // No device record found in database
-    if (!device) {
-      console.log('📱 No device record in database');
-      return { 
-        requiresVerification: true, 
-        reason: 'no_device_record' 
-      };
-    }
-
-    // Device is not trusted
-    if (!device.isTrusted) {
-      console.log('🔐 Device not trusted');
-      return { 
-        requiresVerification: true, 
-        reason: 'device_not_trusted' 
-      };
-    }
-
-    // Check if device token has expired in database
-    if (device.expiresAt <= new Date()) {
-      console.log('⏰ Device token expired in database');
-      return { 
-        requiresVerification: true, 
-        reason: 'device_expired' 
-      };
-    }
-
-    // Check max login attempts
-    if (device.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-      console.log('🚫 Max login attempts reached:', device.loginCount);
-      return { 
-        requiresVerification: true, 
-        reason: 'max_logins_reached' 
-      };
-    }
-
-    // DEVICE IS TRUSTED AND VALID - NO VERIFICATION NEEDED
-    console.log('✅ Device trusted - no verification required. Login count:', device.loginCount);
-    return { 
-      requiresVerification: false,
-      deviceId: device.id,
-      currentLoginCount: device.loginCount,
-      expiresAt: device.expiresAt
-    };
-
-  } catch (error) {
-    console.error('❌ Error checking device verification:', error);
-    // On error, require verification for security
-    return { 
-      requiresVerification: true, 
-      reason: 'verification_error' 
-    };
-  }
 }
+
 
 // Update device login count
 async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
