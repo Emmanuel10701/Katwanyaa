@@ -743,102 +743,82 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
 
-  // 🔥 CRITICAL FIX: Load ALL existing data when editing
-  useEffect(() => {
-    console.log('🔄 Loading item for editing:', item);
+useEffect(() => {
+  console.log('🔄 Loading item for editing:', item);
+  
+  if (item) {
+    const newFormData = { ...formData };
     
-    if (item) {
-      // Create a copy of initial state
-      const newFormData = {
-        // Start with default values
-        title: '',
-        date: new Date().toISOString().split('T')[0],
-        category: type === 'news' ? 'achievement' : 'academic',
-        image: '',
-        featured: false,
-        status: 'published',
-        excerpt: '',
-        fullContent: '',
-        author: '',
-        description: '',
-        time: '',
-        location: '',
-        speaker: '',
-        attendees: 'students',
-        type: 'internal'
-      };
-
-      // 🚨 IMPORTANT: Map ALL fields from the item
-      // Map title
-      if (item.title) newFormData.title = item.title;
-      
-      // Map date properly
-      if (item.date) {
-        try {
-          const dateObj = new Date(item.date);
-          if (!isNaN(dateObj.getTime())) {
-            newFormData.date = dateObj.toISOString().split('T')[0];
-          }
-        } catch (e) {
-          console.error('Error parsing date:', e);
+    if (item.title) newFormData.title = item.title;
+    
+    if (item.date) {
+      try {
+        const dateObj = new Date(item.date);
+        if (!isNaN(dateObj.getTime())) {
+          newFormData.date = dateObj.toISOString().split('T')[0];
         }
+      } catch (e) {
+        console.error('Error parsing date:', e);
       }
-      
-      // Map category
-      if (item.category) newFormData.category = item.category;
-      
-      // Map image
-      if (item.image) {
-        newFormData.image = item.image;
-        setImagePreview(item.image);
-      }
-      
-      // Map featured
-      if (item.featured !== undefined) newFormData.featured = item.featured;
-      
-      // Map status
-      if (item.status) newFormData.status = item.status;
-      
-      // 🚨 CRITICAL: For NEWS - Map excerpt/fullContent/author
-      if (type === 'news') {
-        // Map excerpt from either excerpt or description
-        if (item.excerpt) {
-          newFormData.excerpt = item.excerpt;
-        } else if (item.description) {
-          newFormData.excerpt = item.description;
-        }
-        
-        // Map fullContent from either fullContent or content
-        if (item.fullContent) {
-          newFormData.fullContent = item.fullContent;
-        } else if (item.content) {
-          newFormData.fullContent = item.content;
-        }
-        
-        // Map author
-        if (item.author) newFormData.author = item.author;
-      } 
-      // 🚨 CRITICAL: For EVENTS - Map event-specific fields
-      else if (type === 'events') {
-        // Map description
-        if (item.description) {
-          newFormData.description = item.description;
-        } else if (item.excerpt) {
-          newFormData.description = item.excerpt;
-        }
-        
-        // Map other event fields
-        if (item.time) newFormData.time = item.time;
-        if (item.location) newFormData.location = item.location;
-        if (item.speaker) newFormData.speaker = item.speaker;
-        if (item.attendees) newFormData.attendees = item.attendees;
-        if (item.type) newFormData.type = item.type;
-      }
-      
-      console.log('✅ Form data loaded:', newFormData);
-      setFormData(newFormData);
     }
-  }, [item, type]);
+    
+    // Map category
+    if (item.category) newFormData.category = item.category;
+    
+    // Map image
+    if (item.image) {
+      newFormData.image = item.image;
+      setImagePreview(item.image);
+    }
+    
+    // Map featured ONLY for events
+    if (type === 'events' && item.featured !== undefined) {
+      newFormData.featured = item.featured;
+    }
+    
+    // Map status
+    if (item.status) newFormData.status = item.status;
+    
+    // 🚨 CRITICAL: For NEWS - PRESERVE existing excerpt and fullContent
+    if (type === 'news') {
+      // Map excerpt from either excerpt or description
+      if (item.excerpt) {
+        newFormData.excerpt = item.excerpt;
+      } else if (item.description) {
+        newFormData.excerpt = item.description;
+      }
+      
+      // Map fullContent from either fullContent or content
+      if (item.fullContent) {
+        newFormData.fullContent = item.fullContent;
+      } else if (item.content) {
+        newFormData.fullContent = item.content;
+      }
+      
+      // Map author
+      if (item.author) newFormData.author = item.author;
+    } 
+    // 🚨 CRITICAL: For EVENTS - PRESERVE existing description
+    else if (type === 'events') {
+      // Map description
+      if (item.description) {
+        newFormData.description = item.description;
+      } else if (item.excerpt) {
+        newFormData.description = item.excerpt;
+      }
+      
+      // Map other event fields
+      if (item.time) newFormData.time = item.time;
+      if (item.location) newFormData.location = item.location;
+      if (item.speaker) newFormData.speaker = item.speaker;
+      if (item.attendees) newFormData.attendees = item.attendees;
+      if (item.type) newFormData.type = item.type;
+    }
+    
+    console.log('✅ Form data loaded (preserved existing content):', newFormData);
+    setFormData(newFormData);
+  }
+}, [item, type]);
 
   const categories = {
     news: [
@@ -874,58 +854,65 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
   };
 
   // 🔥 FIXED: Proper form submission with ALL data
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('🚀 Submitting form with data:', formData);
+// In ModernItemModal component, update the formData initialization
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log('🚀 Submitting form with data:', formData);
+  
+  const submitData = new FormData();
+  
+  // 🚨 CRITICAL: For NEWS, ALWAYS include both excerpt and fullContent
+  if (type === 'news') {
+    // Always include these fields - empty fields will be handled by backend
+    submitData.append('title', formData.title.trim());
+    submitData.append('excerpt', formData.excerpt.trim());
+    submitData.append('fullContent', formData.fullContent.trim());
+    submitData.append('category', formData.category);
+    submitData.append('author', formData.author.trim());
+    submitData.append('date', formData.date);
     
-    const submitData = new FormData();
+    // If editing, include the ID
+    if (item?.id) {
+      submitData.append('id', item.id.toString());
+    }
+  } 
+  // 🚨 For EVENTS, send event fields
+  else if (type === 'events') {
+    submitData.append('title', formData.title.trim());
+    submitData.append('description', formData.description.trim());
+    submitData.append('category', formData.category);
+    submitData.append('date', formData.date);
     
-    // 🚨 CRITICAL: For NEWS, send proper API field names
-    if (type === 'news') {
-      // Always include these fields
-      submitData.append('title', formData.title.trim());
-      submitData.append('excerpt', formData.excerpt.trim());
-      submitData.append('fullContent', formData.fullContent.trim());
-      submitData.append('category', formData.category);
-      submitData.append('author', formData.author.trim());
-      submitData.append('date', formData.date);
-      
-   
-    } 
-    // 🚨 For EVENTS, send event fields
-    else if (type === 'events') {
-      submitData.append('title', formData.title.trim());
-      submitData.append('description', formData.description.trim());
-      submitData.append('category', formData.category);
-      submitData.append('date', formData.date);
-      
-      // Event-specific fields
-      if (formData.time) submitData.append('time', formData.time);
-      if (formData.location) submitData.append('location', formData.location);
-      if (formData.speaker) submitData.append('speaker', formData.speaker);
-      if (formData.attendees) submitData.append('attendees', formData.attendees);
-      if (formData.type) submitData.append('type', formData.type);
-      if (formData.featured !== undefined) {
-        submitData.append('featured', formData.featured.toString());
-      }
-      if (formData.status) {
-        submitData.append('status', formData.status);
-      }
+    // Event-specific fields
+    if (formData.time) submitData.append('time', formData.time);
+    if (formData.location) submitData.append('location', formData.location);
+    if (formData.speaker) submitData.append('speaker', formData.speaker);
+    if (formData.attendees) submitData.append('attendees', formData.attendees);
+    if (formData.type) submitData.append('type', formData.type);
+    
+    // ✅ ONLY for events: Include featured field
+    if (formData.featured !== undefined) {
+      submitData.append('featured', formData.featured.toString());
     }
     
-    // Add image if changed
-    if (imageFile) {
-      submitData.append('image', imageFile);
+    // If editing, include the ID
+    if (item?.id) {
+      submitData.append('id', item.id.toString());
     }
-    
-    // Debug: Show what's being sent
-    console.log('📤 Sending to API:');
-    for (let [key, value] of submitData.entries()) {
-      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
-    }
-    
-    await onSave(submitData, item?.id);
-  };
+  }
+  
+  // Add image if changed
+  if (imageFile) {
+    submitData.append('image', imageFile);
+  }
+  
+  console.log('📤 Sending form data to parent:');
+  for (let [key, value] of submitData.entries()) {
+    console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
+  }
+  
+  await onSave(submitData, item?.id);
+};
 
   const themeGradient = type === 'news' 
     ? 'from-purple-700 via-pink-600 to-rose-600' 
@@ -1423,7 +1410,6 @@ const confirmDelete = async () => {
 const handleSubmit = async (formData, id) => {
   setSaving(true);
   try {
-    // Debug: Show what's received from modal
     console.log('📥 Received from modal:', formData);
     
     // Get authentication headers
@@ -1437,12 +1423,45 @@ const handleSubmit = async (formData, id) => {
     
     const method = id ? 'PUT' : 'POST';
     
-    // Use formData directly (it's already FormData from the modal)
+    // 🚨 CRITICAL: Ensure ALL existing data is included when updating
+    if (id && editingItem) {
+      console.log('🔄 Including existing data for update:', editingItem);
+      
+      // For News - ensure excerpt and fullContent are preserved if not changed
+      if (activeSection === 'news') {
+        const excerpt = formData.get('excerpt');
+        const fullContent = formData.get('fullContent');
+        
+        // If excerpt is empty but we have existing excerpt, use existing
+        if (!excerpt && editingItem.excerpt) {
+          formData.set('excerpt', editingItem.excerpt);
+        }
+        
+        // If fullContent is empty but we have existing fullContent, use existing
+        if (!fullContent && editingItem.fullContent) {
+          formData.set('fullContent', editingItem.fullContent);
+        }
+      }
+      
+      // For Events - ensure description is preserved if not changed
+      if (activeSection === 'events') {
+        const description = formData.get('description');
+        if (!description && editingItem.description) {
+          formData.set('description', editingItem.description);
+        }
+      }
+    }
+    
+    // Debug: Show what's being sent
+    console.log('📤 Sending to API:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
+    }
+    
     const response = await fetch(endpoint, {
       method,
       headers: {
         ...authHeaders,
-        // Don't set Content-Type, let browser set it with boundary
       },
       body: formData,
     });
@@ -1451,8 +1470,12 @@ const handleSubmit = async (formData, id) => {
     console.log('✅ API Response:', result);
 
     if (result.success) {
-      await fetchData();
+      // 🚨 AUTO-CLOSE MODAL on success
       setShowModal(false);
+      
+      // 🚨 Refresh data
+      await fetchData();
+      
       showNotification(
         'success',
         id ? 'Updated' : 'Created',
