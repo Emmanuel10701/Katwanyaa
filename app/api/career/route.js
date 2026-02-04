@@ -221,8 +221,6 @@ export async function POST(req) {
         contactEmail: data.contactEmail || null,
         contactPhone: data.contactPhone || null,
         // Optional: Track who created this job
-        createdBy: auth.user.id,
-        createdByName: auth.user.name
       },
     });
 
@@ -231,7 +229,6 @@ export async function POST(req) {
       success: true,
       message: "Job created successfully",
       job,
-      createdBy: auth.user.name
     });
     
   } catch (error) {

@@ -225,7 +225,7 @@ export async function PUT(req, { params }) {
     // Step 3: Check if job exists
     const existingJob = await prisma.careerJob.findUnique({
       where: { id },
-      select: { id: true, createdBy: true }
+      select: { id: true }
     });
 
     if (!existingJob) {
@@ -331,7 +331,6 @@ export async function DELETE(req, { params }) {
       select: { 
         id: true, 
         jobTitle: true,
-        createdBy: true 
       }
     });
 
