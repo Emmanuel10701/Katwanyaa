@@ -336,7 +336,6 @@ export async function POST(req) {
         speaker: true,
         createdAt: true,
         updatedAt: true,
-        createdByName: true,
         createdByRole: true
       }
     });

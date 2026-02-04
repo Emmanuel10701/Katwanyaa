@@ -396,7 +396,6 @@ export async function PUT(req, { params }) {
         speaker: true,
         createdAt: true,
         updatedAt: true,
-        createdByName: true,
         updatedBy: true,
         updatedByName: true,
         updatedByRole: true
