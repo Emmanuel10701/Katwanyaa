@@ -26,7 +26,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Toaster, toast } from 'sonner'; // Changed to sonner
+import { Toaster, toast } from 'sonner';
 
 export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -47,10 +47,14 @@ export default function AdminLoginPage() {
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [verificationReason, setVerificationReason] = useState('');
+  const [requiresPasswordAfterVerification, setRequiresPasswordAfterVerification] = useState(false);
+  const [passwordAfterVerification, setPasswordAfterVerification] = useState('');
+
+  // Password Reset Modal
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [resetLink, setResetLink] = useState('');
 
   const router = useRouter();
-
-
 
   // Countdown timer for resend button
   useEffect(() => {
@@ -213,51 +217,44 @@ export default function AdminLoginPage() {
     }
   };
 
-// In your handleVerifyCode function, replace with:
-const handleVerifyCode = async (e) => {
-  e.preventDefault();
-  
-  const code = verificationCode.join('');
-  if (code.length !== 6) {
-    toast.error('Please enter the complete 6-digit code');
-    return;
-  }
-
-  setVerificationLoading(true);
-
-  try {
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    const deviceFingerprint = DeviceFingerprint.generate();
+  // Complete verification with password check
+  const handleVerifyCode = async (e) => {
+    if (e) e.preventDefault();
     
-    // Send verification code for checking
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: verificationEmail,
-        verificationCode: code,
-        action: 'verify_password', // Changed to new action
-        clientLoginCount: localStorageCheck.loginCount,
-        clientDeviceHash: deviceFingerprint.hash
-      }),
-    });
+    const code = verificationCode.join('');
+    if (code.length !== 6) {
+      toast.error('Please enter the complete 6-digit code');
+      return;
+    }
 
-    const data = await response.json();
+    setVerificationLoading(true);
 
-    if (response.ok && data.success) {
-      if (data.requiresPassword === true) {
-        // Code is valid but password is required
-        toast.info('Code verified! Please enter your password to continue.');
-        
-        // Show password input modal/field
-        setShowPasswordAfterVerification(true);
-        setVerificationCode(['', '', '', '', '', '']);
-        setShowVerificationModal(false);
-        
-      } else {
-        // Direct login - no password needed (new device, etc.)
+    try {
+      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      // Determine API action based on verification reason
+      const apiAction = verificationReason === 'failed_attempts' ? 'verify_password' : 'verify';
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          verificationCode: code,
+          action: apiAction,
+          password: passwordAfterVerification || null,
+          clientLoginCount: localStorageCheck.loginCount,
+          clientDeviceHash: deviceFingerprint.hash
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Store tokens and login
         if (data.deviceToken) {
           LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
         }
@@ -267,30 +264,38 @@ const handleVerifyCode = async (e) => {
           localStorage.setItem('admin_user', JSON.stringify(data.user));
         }
 
-        toast.success('Verification successful! Welcome back.');
+        toast.success('Login successful! Welcome back.');
         setShowVerificationModal(false);
         setVerificationCode(['', '', '', '', '', '']);
+        setPasswordAfterVerification('');
         
         setTimeout(() => {
           router.push('/MainDashboard');
         }, 1000);
+      } else {
+        // Check if password reset is forced
+        if (data.forcePasswordReset) {
+          setResetLink(data.resetLink || '/pages/forgotpassword');
+          setShowPasswordResetModal(true);
+          setShowVerificationModal(false);
+        } 
+        // Check if password is required after verification
+        else if (data.requiresPassword === true) {
+          setRequiresPasswordAfterVerification(true);
+          toast.info('Please enter your password to continue.');
+        } else {
+          toast.error(data.error || 'Invalid verification code');
+          setVerificationCode(['', '', '', '', '', '']);
+          document.getElementById('verification-input-0').focus();
+        }
       }
-    } else {
-      toast.error(data.error || 'Invalid verification code');
-      setVerificationCode(['', '', '', '', '', '']);
-      document.getElementById('verification-input-0').focus();
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+      console.error('Verification error:', error);
+    } finally {
+      setVerificationLoading(false);
     }
-  } catch (error) {
-    toast.error('Network error. Please try again.');
-    console.error('Verification error:', error);
-  } finally {
-    setVerificationLoading(false);
-  }
-};
-
-// Add this new state and modal for password after verification
-const [showPasswordAfterVerification, setShowPasswordAfterVerification] = useState(false);
-const [passwordAfterVerification, setPasswordAfterVerification] = useState('');
+  };
 
   // Resend verification code
   const handleResendCode = async () => {
@@ -316,101 +321,92 @@ const [passwordAfterVerification, setPasswordAfterVerification] = useState('');
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success('New verification code sent! Check your email.'); // Changed to sonner
+        toast.success('New verification code sent! Check your email.');
         setCountdown(60);
         setVerificationCode(['', '', '', '', '', '']);
         document.getElementById('verification-input-0').focus();
       } else {
-        toast.error(data.error || 'Failed to resend code'); // Changed to sonner
+        toast.error(data.error || 'Failed to resend code');
       }
     } catch (error) {
-      toast.error('Network error. Please try again.'); // Changed to sonner
+      toast.error('Network error. Please try again.');
     } finally {
       setResendLoading(false);
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  e.stopPropagation(); // Prevent any auto-submit behavior
-  
-  if (!isForgotMode) {
-    if (!agreedToTerms) {
-      toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
+  // Handle main login form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isForgotMode) {
+      if (!agreedToTerms) {
+        toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
+        return;
+      }
+
+      if (!formData.email || !formData.password) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+    } else {
+      if (!formData.email) {
+        toast.error("Please enter your email address");
+        return;
+      }
+      
+      const loadingToast = toast.loading("Sending recovery instructions...");
+      setTimeout(() => {
+        toast.dismiss(loadingToast);
+        toast.success("Recovery email sent! Check your inbox.");
+        setIsForgotMode(false);
+      }, 2000);
       return;
     }
 
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-  } else {
-    if (!formData.email) {
-      toast.error("Please enter your email address");
-      return;
-    }
+    setIsLoading(true);
     
-    const loadingToast = toast.loading("Sending recovery instructions...");
-    setTimeout(() => {
+    const loadingToast = toast.loading('Authenticating...');
+
+    try {
+      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+      const deviceFingerprint = DeviceFingerprint.generate();
+      
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          clientDeviceToken: localStorageCheck.deviceToken || null,
+          clientLoginCount: localStorageCheck.loginCount || 0,
+          clientDeviceHash: deviceFingerprint.hash,
+          action: 'login'
+        }),
+      });
+
+      const data = await response.json();
+
       toast.dismiss(loadingToast);
-      toast.success("Recovery email sent! Check your inbox.");
-      setIsForgotMode(false);
-    }, 2000);
-    return;
-  }
 
-  setIsLoading(true);
-  
-  const loadingToast = toast.loading('Authenticating...');
-
-  try {
-    // ✅ FIX 1: Check localStorage for device info
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-    const deviceFingerprint = DeviceFingerprint.generate();
-    
-    console.log('📱 Device check:', {
-      hasToken: !!localStorageCheck.deviceToken,
-      loginCount: localStorageCheck.loginCount,
-      deviceHash: deviceFingerprint.hash
-    });
-
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-        // ✅ CRITICAL FIX: Send device information
-        clientDeviceToken: localStorageCheck.deviceToken || null,
-        clientLoginCount: localStorageCheck.loginCount || 0,
-        clientDeviceHash: deviceFingerprint.hash,
-        action: 'login'
-      }),
-    });
-
-    const data = await response.json();
-
-    toast.dismiss(loadingToast);
-
-    if (response.ok && data.success) {
-      if (data.requiresVerification === true) {
-        // Show verification modal ONLY when server requires it
-        setVerificationEmail(data.email || formData.email);
+      if (response.ok && data.requiresVerification === true) {
+        // Store the reason for verification
         setVerificationReason(data.reason || 'security_check');
+        setVerificationEmail(data.email || formData.email);
         setShowVerificationModal(true);
         setCountdown(60);
         
         toast.info('Security verification required. Check your email.');
-      } else {
-        // Direct login - no verification needed
+      } else if (data.success) {
+        // Direct login successful
         if (data.token) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(data.user));
         }
 
-        // ✅ FIX 2: Store device token if returned
         if (data.deviceToken) {
           LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
         }
@@ -420,35 +416,35 @@ const handleSubmit = async (e) => {
         setTimeout(() => {
           router.push('/MainDashboard');
         }, 1500);
-      }
-    } else {
-      // Login failed - only show verification if server explicitly says to
-      if (data.requiresVerification === true) {
-        setVerificationEmail(formData.email);
-        setVerificationReason(data.reason || 'suspicious_activity');
-        setShowVerificationModal(true);
-        setCountdown(60);
-        
-        toast.info('Security verification required. Check your email.');
       } else {
-        // Regular login error
+        // Login failed
         toast.error(data.error || 'Login failed. Please try again.');
       }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error('Network error. Please check your connection.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    toast.dismiss(loadingToast);
-    toast.error('Network error. Please check your connection.');
-    console.error('Login error:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   // Close verification modal
   const closeVerificationModal = () => {
     setShowVerificationModal(false);
     setVerificationCode(['', '', '', '', '', '']);
     setVerificationLoading(false);
+    setRequiresPasswordAfterVerification(false);
+    setPasswordAfterVerification('');
+  };
+
+  // Handle password submit after verification
+  const handlePasswordAfterVerification = async () => {
+    if (!passwordAfterVerification) {
+      toast.error('Please enter your password');
+      return;
+    }
+    await handleVerifyCode();
   };
 
   // Security features and system metrics
@@ -489,160 +485,222 @@ const handleSubmit = async (e) => {
         closeButton
       />
 
-      {/* ============================ */}
-      {/* VERIFICATION MODAL */}
-{/* ============================ */}
-{/* VERIFICATION MODAL - RESPONSIVE */}
-{/* ============================ */}
-{showVerificationModal && (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999] animate-fade-in">
-    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-gradient-to-br from-white to-slate-50 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden mx-2 sm:mx-4">
-      
-      {/* Modal Header */}
-      <div className="relative p-4 sm:p-6 md:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-        <button
-          onClick={closeVerificationModal}
-          className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl transition-colors"
-        >
-          <X className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-        
-        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-xl flex items-center justify-center">
-            <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-black">Security Verification</h3>
-            <p className="text-blue-100 text-xs sm:text-sm md:text-sm mt-0.5 sm:mt-1">Verify your identity to continue</p>
-          </div>
-        </div>
-        
-        <div className="mt-2 sm:mt-3 md:mt-4 inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-          <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="text-xs sm:text-xs font-bold">
-            {verificationReason === 'new_device' 
-              ? 'New Device Detected' 
-              : verificationReason === 'max_logins_reached'
-              ? 'Max Login Attempts Reached'
-              : verificationReason === 'expired'
-              ? 'Token Expired'
-              : verificationReason === 'device_mismatch'
-              ? 'Device Changed'
-              : 'Verification Required'}
-          </span>
-        </div>
-      </div>
-      
-      {/* Modal Content */}
-      <div className="p-4 sm:p-6 md:p-8">
-        <div className="mb-4 sm:mb-5 md:mb-6">
-          <p className="text-slate-600 text-xs sm:text-sm mb-2 sm:mb-3 md:mb-4">
-            A 6-digit verification code has been sent to:
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4">
-            <p className="text-blue-800 font-bold text-center text-sm sm:text-base">{verificationEmail}</p>
-          </div>
-          <p className="text-slate-500 text-xs mt-2 sm:mt-3 text-center">
-            Enter the code below to verify your identity
-          </p>
-        </div>
-        
-        <form onSubmit={handleVerifyCode}>
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <div className="flex justify-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
-              {verificationCode.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`verification-input-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleVerificationKeyDown(index, e)}
-                  className="w-8 h-10 sm:w-10 sm:h-12 md:w-12 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-bold bg-white border-2 border-slate-300 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                  autoFocus={index === 0}
-                />
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500 mb-4 sm:mb-5 md:mb-6">
-              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Code expires in: </span>
-              <span className="font-bold text-blue-600">
-                {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={handleResendCode}
-              disabled={resendLoading || countdown > 0}
-              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {resendLoading ? (
-                <>
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                  <span className="hidden xs:inline">Sending...</span>
-                  <span className="xs:hidden">Sending...</span>
-                </>
-              ) : countdown > 0 ? (
-                <>
-                  <span className="hidden xs:inline">Resend in {countdown}s</span>
-                  <span className="xs:hidden">{countdown}s</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">Resend Code</span>
-                  <span className="xs:hidden">Resend</span>
-                </>
-              )}
-            </button>
-            
-            <button
-              type="submit"
-              disabled={verificationLoading || verificationCode.join('').length !== 6}
-              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {verificationLoading ? (
-                <>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span className="hidden xs:inline">Verifying...</span>
-                  <span className="xs:hidden">Checking...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">Verify & Continue</span>
-                  <span className="xs:hidden">Verify</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-        
-        <div className="mt-4 sm:mt-6 md:mt-8 pt-3 sm:pt-4 md:pt-6 border-t border-slate-200">
-          <div className="flex items-start gap-2 sm:gap-3">
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs sm:text-sm font-bold text-slate-800">Security Notice</p>
-              <p className="text-xs text-slate-600 mt-0.5 sm:mt-1">
-                This extra step ensures your account stays secure. Never share verification codes with anyone.
+      {/* Password Reset Modal */}
+      {showPasswordResetModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999]">
+          <div className="relative w-full max-w-sm bg-white rounded-xl shadow-xl p-6">
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShieldAlert className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
+                Password Reset Required
+              </h3>
+              <p className="text-slate-600">
+                Multiple incorrect password attempts detected. For security reasons, you must reset your password.
               </p>
             </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  router.push(resetLink);
+                  setShowPasswordResetModal(false);
+                }}
+                className="w-full py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700"
+              >
+                Reset Password Now
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowPasswordResetModal(false);
+                  setFormData({ email: '', password: '' });
+                }}
+                className="w-full py-3 border border-slate-300 text-slate-700 rounded-lg font-bold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
-      {/* ============================ */}
-      {/* MAIN LOGIN PAGE */}
-      {/* ============================ */}
+      {/* Verification Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999] animate-fade-in">
+          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-gradient-to-br from-white to-slate-50 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden mx-2 sm:mx-4">
+            
+            {/* Modal Header */}
+            <div className="relative p-4 sm:p-6 md:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
+              <button
+                onClick={closeVerificationModal}
+                className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl transition-colors"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-xl flex items-center justify-center">
+                  <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg md:text-xl font-black">
+                    {requiresPasswordAfterVerification ? 'Enter Password' : 'Security Verification'}
+                  </h3>
+                  <p className="text-blue-100 text-xs sm:text-sm md:text-sm mt-0.5 sm:mt-1">
+                    {requiresPasswordAfterVerification ? 'Complete your login' : 'Verify your identity to continue'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="mt-2 sm:mt-3 md:mt-4 inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
+                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-xs font-bold">
+                  {verificationReason === 'failed_attempts' 
+                    ? 'Password Required' 
+                    : verificationReason === 'new_device' 
+                    ? 'New Device Detected' 
+                    : verificationReason === 'max_logins_reached'
+                    ? 'Max Login Attempts Reached'
+                    : verificationReason === 'expired'
+                    ? 'Token Expired'
+                    : verificationReason === 'device_mismatch'
+                    ? 'Device Changed'
+                    : 'Verification Required'}
+                </span>
+              </div>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-4 sm:p-6 md:p-8">
+              {!requiresPasswordAfterVerification ? (
+                <>
+                  <div className="mb-4 sm:mb-5 md:mb-6">
+                    <p className="text-slate-600 text-xs sm:text-sm mb-2 sm:mb-3 md:mb-4">
+                      A 6-digit verification code has been sent to:
+                    </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4">
+                      <p className="text-blue-800 font-bold text-center text-sm sm:text-base">{verificationEmail}</p>
+                    </div>
+                    <p className="text-slate-500 text-xs mt-2 sm:mt-3 text-center">
+                      Enter the code below to verify your identity
+                    </p>
+                  </div>
+                  
+                  <div className="mb-4 sm:mb-6 md:mb-8">
+                    <div className="flex justify-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
+                      {verificationCode.map((digit, index) => (
+                        <input
+                          key={index}
+                          id={`verification-input-${index}`}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                          onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                          className="w-8 h-10 sm:w-10 sm:h-12 md:w-12 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-bold bg-white border-2 border-slate-300 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          autoFocus={index === 0}
+                        />
+                      ))}
+                    </div>
+                    
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500 mb-4 sm:mb-5 md:mb-6">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>Code expires in: </span>
+                      <span className="font-bold text-blue-600">
+                        {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <p className="text-slate-600 text-sm mb-4">
+                      Code verified! Please enter your password to complete login.
+                    </p>
+                    <div className="relative">
+                      <input
+                        type="password"
+                        value={passwordAfterVerification}
+                        onChange={(e) => setPasswordAfterVerification(e.target.value)}
+                        placeholder="Enter your password"
+                        className="w-full p-4 border-2 border-slate-300 rounded-xl focus:outline-none focus:border-blue-500"
+                        autoFocus
+                      />
+                      <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                {!requiresPasswordAfterVerification && (
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resendLoading || countdown > 0}
+                    className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendLoading ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                        <span>Sending...</span>
+                      </>
+                    ) : countdown > 0 ? (
+                      <span>Resend in {countdown}s</span>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span>Resend Code</span>
+                      </>
+                    )}
+                  </button>
+                )}
+                
+                <button
+                  type="button"
+                  onClick={requiresPasswordAfterVerification ? handlePasswordAfterVerification : handleVerifyCode}
+                  disabled={verificationLoading || 
+                    (!requiresPasswordAfterVerification && verificationCode.join('').length !== 6) ||
+                    (requiresPasswordAfterVerification && !passwordAfterVerification)}
+                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {verificationLoading ? (
+                    <>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>{requiresPasswordAfterVerification ? 'Verifying...' : 'Checking...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>{requiresPasswordAfterVerification ? 'Continue' : 'Verify & Continue'}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              <div className="mt-4 sm:mt-6 md:mt-8 pt-3 sm:pt-4 md:pt-6 border-t border-slate-200">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs sm:text-sm font-bold text-slate-800">Security Notice</p>
+                    <p className="text-xs text-slate-600 mt-0.5 sm:mt-1">
+                      {requiresPasswordAfterVerification 
+                        ? 'Enter your password to complete the secure login process.'
+                        : 'This extra step ensures your account stays secure. Never share verification codes with anyone.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MAIN LOGIN PAGE - UNCHANGED UI */}
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
         <div className="max-w-6xl w-full bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] shadow-xl sm:shadow-2xl shadow-slate-900/10 border border-white/40 overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[600px] md:min-h-[720px]">
           
@@ -762,82 +820,6 @@ const handleSubmit = async (e) => {
                     <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-
-                {/* Password After Verification Modal */}
-{showPasswordAfterVerification && (
-  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999]">
-    <div className="relative w-full max-w-sm bg-white rounded-xl shadow-xl p-6">
-      <h3 className="text-lg font-bold text-slate-900 mb-4">
-        Enter Password to Continue
-      </h3>
-      <p className="text-slate-600 mb-4">
-        Verification successful. Please enter your password to complete login.
-      </p>
-      
-      <div className="relative mb-6">
-        <input 
-          type="password"
-          value={passwordAfterVerification}
-          onChange={(e) => setPasswordAfterVerification(e.target.value)}
-          placeholder="Enter your password"
-          className="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
-          autoFocus
-        />
-      </div>
-      
-      <div className="flex gap-3">
-        <button
-          onClick={() => {
-            setShowPasswordAfterVerification(false);
-            setPasswordAfterVerification('');
-            setShowVerificationModal(true);
-          }}
-          className="flex-1 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200"
-        >
-          Back
-        </button>
-        <button
-          onClick={async () => {
-            // Send password to complete login
-            const response = await fetch('/api/login', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: verificationEmail,
-                password: passwordAfterVerification,
-                verificationCode: verificationCode.join(''),
-                action: 'verify_password',
-                clientDeviceHash: DeviceFingerprint.generate().hash
-              }),
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-              toast.success('Login successful!');
-              // Store tokens and redirect
-              if (data.token) {
-                localStorage.setItem('admin_token', data.token);
-                localStorage.setItem('admin_user', JSON.stringify(data.user));
-              }
-              if (data.deviceToken) {
-                LocalStorageManager.storeDeviceData(data.deviceToken, DeviceFingerprint.generate().hash);
-              }
-              router.push('/MainDashboard');
-            } else {
-              toast.error(data.error || 'Invalid password');
-            }
-          }}
-          className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
-        >
-          Continue
-        </button>
-      </div>
-    </div>
-  </div>
-)}
 
                 {!isForgotMode && (
                   <div className="group">
