@@ -1125,18 +1125,7 @@ const handleSubmit = async (e) => {
                       placeholder={type === 'news' ? 'Write a brief summary of this news article...' : 'Write a brief description...'}
                     />
                   </div>
-                  {type === 'news' && (
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">Full Story Content</label>
-                      <textarea
-                        rows="10"
-                        value={formData.fullContent}
-                        onChange={(e) => handleChange('fullContent', e.target.value)}
-                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-medium text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
-                        placeholder="Elaborate on the news item here..."
-                      />
-                    </div>
-                  )}
+        
                 </div>
               </div>
             </div>
