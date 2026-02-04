@@ -1149,7 +1149,6 @@ const handleSubmit = async (e) => {
 <button 
   type="submit"
   disabled={loading}
-  onClick={onClose}
 
   // Removed hover:brightness-110 and transition-all
   className={`w-full sm:w-auto px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active:scale-95 flex items-center justify-center gap-3 bg-gradient-to-r ${themeGradient} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
