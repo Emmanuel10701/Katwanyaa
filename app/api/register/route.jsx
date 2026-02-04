@@ -714,7 +714,7 @@ function getRegistrationSuccessTemplate(user) {
           <div class="cta-box">
             <h3 class="cta-title">🚀 Get Started Now</h3>
             <p style="margin: 0 0 14px 0; font-size: 14px; color: #0369a1;">Access your dashboard and start managing the school system</p>
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://yourdomain.com'}/dashboard" class="cta-btn">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'hhttps://katwanyaa.vercel.app'}/MainDashboard" class="cta-btn">
               Open Dashboard
             </a>
           </div>
