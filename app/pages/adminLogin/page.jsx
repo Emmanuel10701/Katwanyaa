@@ -217,85 +217,104 @@ export default function AdminLoginPage() {
     }
   };
 
-  // Complete verification with password check
-  const handleVerifyCode = async (e) => {
-    if (e) e.preventDefault();
+const handleVerifyCode = async (e) => {
+  if (e) e.preventDefault();
+  
+  const code = verificationCode.join('');
+  if (code.length !== 6) {
+    toast.error('Please enter the complete 6-digit code');
+    return;
+  }
+
+  setVerificationLoading(true);
+
+  try {
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    const deviceFingerprint = DeviceFingerprint.generate();
     
-    const code = verificationCode.join('');
-    if (code.length !== 6) {
-      toast.error('Please enter the complete 6-digit code');
+    // Always use the stored verificationEmail (set when OTP was sent)
+    const emailToUse = verificationEmail || formData.email;
+    
+    if (!emailToUse) {
+      toast.error('Email not found. Please try logging in again.');
+      setVerificationLoading(false);
       return;
     }
+    
+    // Determine API action based on verification reason
+    const apiAction = verificationReason === 'failed_attempts' ? 'verify_password' : 'verify';
+    
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: emailToUse, // Use the email that received the OTP
+        verificationCode: code,
+        action: apiAction,
+        password: passwordAfterVerification || null,
+        clientLoginCount: localStorageCheck.loginCount,
+        clientDeviceHash: deviceFingerprint.hash
+      }),
+    });
 
-    setVerificationLoading(true);
+    const data = await response.json();
 
-    try {
-      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-      const deviceFingerprint = DeviceFingerprint.generate();
+    if (response.ok && data.success) {
+      // Always use email from response, fallback to stored email
+      const userEmail = data.email || data.user?.email || emailToUse;
       
-      // Determine API action based on verification reason
-      const apiAction = verificationReason === 'failed_attempts' ? 'verify_password' : 'verify';
-      
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: verificationEmail,
-          verificationCode: code,
-          action: apiAction,
-          password: passwordAfterVerification || null,
-          clientLoginCount: localStorageCheck.loginCount,
-          clientDeviceHash: deviceFingerprint.hash
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Store tokens and login
-        if (data.deviceToken) {
-          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
-        }
-        
-        if (data.token) {
-          localStorage.setItem('admin_token', data.token);
-          localStorage.setItem('admin_user', JSON.stringify(data.user));
-        }
-
-        toast.success('Login successful! Welcome back.');
-        setShowVerificationModal(false);
-        setVerificationCode(['', '', '', '', '', '']);
-        setPasswordAfterVerification('');
-        
-        setTimeout(() => {
-          router.push('/MainDashboard');
-        }, 1000);
-      } else {
-        // Check if password reset is forced
-        if (data.forcePasswordReset) {
-          setResetLink(data.resetLink || '/pages/forgotpassword');
-          setShowPasswordResetModal(true);
-          setShowVerificationModal(false);
-        } 
-        // Check if password is required after verification
-        else if (data.requiresPassword === true) {
-          setRequiresPasswordAfterVerification(true);
-          toast.info('Please enter your password to continue.');
-        } else {
-          toast.error(data.error || 'Invalid verification code');
-          setVerificationCode(['', '', '', '', '', '']);
-          document.getElementById('verification-input-0').focus();
-        }
+      // Store tokens and login
+      if (data.deviceToken) {
+        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
       }
-    } catch (error) {
-      toast.error('Network error. Please try again.');
-      console.error('Verification error:', error);
-    } finally {
-      setVerificationLoading(false);
+      
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+        
+        // Ensure user data has email
+        const userData = data.user || {};
+        if (!userData.email && userEmail) {
+          userData.email = userEmail;
+        }
+        localStorage.setItem('admin_user', JSON.stringify(userData));
+      }
+
+      toast.success(`Login successful! Welcome back ${data.user?.name || ''}.`);
+      setShowVerificationModal(false);
+      setVerificationCode(['', '', '', '', '', '']);
+      setPasswordAfterVerification('');
+      setVerificationEmail(''); // Clear stored email
+      
+      setTimeout(() => {
+        router.push('/MainDashboard');
+      }, 1000);
+    } else {
+      // Check if password reset is forced
+      if (data.forcePasswordReset) {
+        setResetLink(data.resetLink || '/pages/forgotpassword');
+        setShowPasswordResetModal(true);
+        setShowVerificationModal(false);
+      } 
+      // Check if password is required after verification
+      else if (data.requiresPassword === true) {
+        setRequiresPasswordAfterVerification(true);
+        setVerificationEmail(emailToUse); // Keep email for password verification
+        toast.info('Please enter your password to continue.');
+      } else {
+        toast.error(data.error || 'Invalid verification code');
+        setVerificationCode(['', '', '', '', '', '']);
+        document.getElementById('verification-input-0').focus();
+      }
     }
-  };
+  } catch (error) {
+    toast.error('Network error. Please try again.');
+    console.error('Verification error:', error);
+  } finally {
+    setVerificationLoading(false);
+  }
+};
 
   // Resend verification code
   const handleResendCode = async () => {

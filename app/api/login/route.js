@@ -400,26 +400,91 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       };
     }
 
-    // If password is provided, verify it
-    if (password) {
+    // Check if this verification was triggered by multiple failed attempts
+    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    
+    const recentFailedPasswordAttempts = await prisma.loginAttempt.count({
+      where: {
+        email: email.toLowerCase(),
+        status: 'failed',
+        reason: 'wrong_password',
+        attemptedAt: { gte: fifteenMinutesAgo }
+      }
+    });
+
+    // If verification was triggered by wrong password attempts, check password NOW
+    if (recentFailedPasswordAttempts > 0) {
+      if (!password) {
+        return {
+          success: true,
+          requiresPassword: true,
+          message: 'Please enter your password to complete login.',
+          email: email,
+          user: sanitizeUser(user),
+          verificationCodeValid: true
+        };
+      }
+      
+      // Verify the password
       const isPasswordValid = await verifyPassword(password, user.password);
       
       if (!isPasswordValid) {
-        // Password is wrong - force password reset
+        // Password is STILL wrong after OTP verification
         return {
           success: false,
-          forcePasswordReset: true,
-          error: 'Incorrect password. Please reset your password.',
-          resetLink: '/pages/forgotpassword'
+          passwordInvalid: true,
+          error: 'Incorrect password. Please try again.',
+          email: email,
+          requiresPassword: true
+        };
+      }
+      
+      // Password is correct - continue with login
+    } else if (password) {
+      // Password was provided but not required - verify it anyway for security
+      const isPasswordValid = await verifyPassword(password, user.password);
+      
+      if (!isPasswordValid) {
+        return {
+          success: false,
+          passwordInvalid: true,
+          error: 'Incorrect password. Please try again.',
+          email: email,
+          requiresPassword: true
         };
       }
     }
 
-    // User is verified, proceed with login
+    // Regular login flow (password was correct or no password needed)
     const userAgent = req.headers.get('user-agent') || 'unknown';
     
     // Store/update device in database
-    const device = await updateDeviceLoginCount(user.id, deviceHash, userAgent);
+    const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    const device = await prisma.deviceToken.upsert({
+      where: {
+        userId_deviceHash: {
+          userId: user.id,
+          deviceHash: deviceHash
+        }
+      },
+      update: {
+        lastUsed: new Date(),
+        expiresAt: expiresAt,
+        isTrusted: true,
+        loginCount: {
+          increment: 1
+        }
+      },
+      create: {
+        userId: user.id,
+        deviceHash: deviceHash,
+        deviceName: userAgent.substring(0, 100),
+        lastUsed: new Date(),
+        expiresAt: expiresAt,
+        isTrusted: true,
+        loginCount: 1
+      }
+    });
     
     // Delete used verification code
     await prisma.verificationToken.delete({
@@ -432,7 +497,7 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
     
     // Update login count in device token
     const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
-    deviceTokenPayload.loginCount = (clientLoginCount || 0) + 1;
+    deviceTokenPayload.loginCount = device.loginCount;
     const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
     
     const userData = sanitizeUser(user);
@@ -441,22 +506,24 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       success: true,
       message: 'Login successful',
       user: userData,
+      email: user.email, // Always include email
       token: authToken,
       deviceToken: updatedDeviceToken,
       storeInLocalStorage: true,
-      loginCount: deviceTokenPayload.loginCount
+      loginCount: device.loginCount,
+      verificationCompleted: true
     };
 
   } catch (error) {
     console.error('❌ Verification error:', error);
     return {
       success: false,
-      error: 'Verification failed'
+      error: 'Verification failed. Please try again.',
+      email: email
     };
   }
 }
 
-// ====================
 // ====================
 // MAIN LOGIN HANDLER - FIXED VERSION
 // ====================
@@ -480,10 +547,128 @@ export async function POST(request) {
     // ====================
     // 1. PASSWORD + VERIFICATION FLOW
     // ====================
-    if (action === 'verify_password' && verificationCode) {
-      // ... existing code remains the same ...
+// ====================
+// 1. PASSWORD + VERIFICATION FLOW - COMPLETE FIXED VERSION
+// ====================
+if (action === 'verify_password' && verificationCode) {
+  console.log('🔐 Password + Verification flow for:', email);
+  
+  const verificationResult = await handleVerification(
+    email, 
+    verificationCode, 
+    deviceHash, 
+    request,
+    clientLoginCount,
+    password
+  );
+  
+  if (verificationResult.success) {
+    // Check if password is required after verification
+    if (verificationResult.requiresPassword === true) {
+      // Frontend needs to show password field
+      return NextResponse.json({
+        success: true,
+        requiresPassword: true,
+        message: verificationResult.message || 'Please enter your password to continue.',
+        email: email,
+        userEmail: email, // Explicit email field
+        user: verificationResult.user || null,
+        verificationComplete: true,
+        canProceed: true
+      }, { status: 200 });
     }
-
+    
+    // Password was provided and correct, complete login
+    // Log successful login
+    await prisma.loginAttempt.create({
+      data: {
+        userId: verificationResult.user.id,
+        email: verificationResult.user.email || email,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceHash: deviceHash,
+        status: 'success',
+        reason: 'password_correct_after_verification'
+      }
+    });
+    
+    // Ensure all required fields are included in the response
+    const finalResponse = {
+      success: true,
+      message: verificationResult.message || 'Login successful',
+      user: verificationResult.user,
+      email: verificationResult.user?.email || email, // Always include email
+      token: verificationResult.token,
+      deviceToken: verificationResult.deviceToken,
+      storeInLocalStorage: verificationResult.storeInLocalStorage || true,
+      loginCount: verificationResult.loginCount || 1,
+      deviceTrusted: true,
+      deviceHash: deviceHash,
+      verificationCompleted: true
+    };
+    
+    return NextResponse.json(finalResponse, { status: 200 });
+  } else {
+    // Check if we need to force password reset
+    if (verificationResult.forcePasswordReset) {
+      console.log('🚨 Force password reset for:', email);
+      
+      return NextResponse.json({
+        success: false,
+        forcePasswordReset: true,
+        error: verificationResult.error || 'Password reset required',
+        resetLink: verificationResult.resetLink || '/pages/forgotpassword',
+        email: email,
+        userEmail: email
+      }, { status: 403 });
+    }
+    
+    // Check if this was a password verification failure
+    if (verificationResult.passwordInvalid) {
+      // Log failed verification due to wrong password
+      await prisma.loginAttempt.create({
+        data: {
+          email: email,
+          ipAddress: ipAddress,
+          userAgent: userAgent,
+          deviceHash: deviceHash,
+          status: 'failed',
+          reason: 'wrong_password_after_verification'
+        }
+      });
+      
+      return NextResponse.json({
+        success: false,
+        error: verificationResult.error || 'Incorrect password. Please try again.',
+        email: email,
+        requiresPassword: true,
+        passwordInvalid: true
+      }, { status: 400 });
+    }
+    
+    // Generic verification failure
+    console.log('❌ Verification failed for:', email, verificationResult.error);
+    
+    // Log failed verification attempt
+    await prisma.loginAttempt.create({
+      data: {
+        email: email,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceHash: deviceHash,
+        status: 'failed',
+        reason: 'wrong_verification_code_or_password'
+      }
+    });
+    
+    return NextResponse.json({
+      success: false,
+      error: verificationResult.error || 'Invalid verification code or password',
+      email: email,
+      codeInvalid: true
+    }, { status: 400 });
+  }
+}
     // ====================
     // 2. RESEND CODE FLOW
     // ====================
@@ -625,25 +810,27 @@ export async function POST(request) {
     // ====================
     // HANDLE VERIFICATION OR LOGIN
     // ====================
-    if (requiresVerification) {
-      console.log('🔐 Verification required for:', email, 'Reason:', verificationReason);
-      // Generate verification code
-      const verificationCode = generateVerificationCode();
-      await storeVerificationCode(user.email, verificationCode, deviceHash);
-      await sendVerificationEmail(user, verificationCode);
-      
-      // **FIXED: No password required after verification since password is already correct**
-      return NextResponse.json({
-        success: false,
-        requiresVerification: true,
-        message: 'Verification code sent to your email. Please enter it to continue.',
-        email: user.email,
-        reason: verificationReason,
-        deviceHash: deviceHash,
-        actionRequired: 'verify', // Changed from 'verify_password' to 'verify'
-        passwordRequired: false // Always false since password is already correct
-      }, { status: 200 });
-    }
+// In the normal login flow - when password is correct and verification is required:
+if (requiresVerification) {
+  console.log('🔐 Verification required for:', email, 'Reason:', verificationReason);
+  // Generate verification code
+  const verificationCode = generateVerificationCode();
+  await storeVerificationCode(user.email, verificationCode, deviceHash);
+  await sendVerificationEmail(user, verificationCode);
+  
+  return NextResponse.json({
+    success: false,
+    requiresVerification: true,
+    message: 'Verification code sent to your email. Please enter it to continue.',
+    email: user.email, // **Always include email**
+    userEmail: user.email, // **Alternative field for clarity**
+    user: sanitizeUser(user), // **Include user data**
+    reason: verificationReason,
+    deviceHash: deviceHash,
+    actionRequired: 'verify',
+    passwordRequired: false
+  }, { status: 200 });
+}
 
     console.log('✅ Device trusted, proceeding with login');
     
