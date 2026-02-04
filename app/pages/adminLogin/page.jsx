@@ -216,6 +216,7 @@ export default function AdminLoginPage() {
       if (prevInput) prevInput.focus();
     }
   };
+  
 
 const handleVerifyCode = async (e) => {
   if (e) e.preventDefault();
@@ -241,9 +242,7 @@ const handleVerifyCode = async (e) => {
       return;
     }
     
-    // Determine API action based on verification reason
-    const apiAction = verificationReason === 'failed_attempts' ? 'verify_password' : 'verify';
-    
+    // **FIXED: Always use 'verify' action since password was already validated**
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
@@ -252,8 +251,7 @@ const handleVerifyCode = async (e) => {
       body: JSON.stringify({
         email: emailToUse, // Use the email that received the OTP
         verificationCode: code,
-        action: apiAction,
-        password: passwordAfterVerification || null,
+        action: 'verify', // **CHANGED FROM 'verify_password' to 'verify'**
         clientLoginCount: localStorageCheck.loginCount,
         clientDeviceHash: deviceFingerprint.hash
       }),
@@ -262,9 +260,6 @@ const handleVerifyCode = async (e) => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      // Always use email from response, fallback to stored email
-      const userEmail = data.email || data.user?.email || emailToUse;
-      
       // Store tokens and login
       if (data.deviceToken) {
         LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
@@ -272,35 +267,27 @@ const handleVerifyCode = async (e) => {
       
       if (data.token) {
         localStorage.setItem('admin_token', data.token);
-        
-        // Ensure user data has email
-        const userData = data.user || {};
-        if (!userData.email && userEmail) {
-          userData.email = userEmail;
-        }
-        localStorage.setItem('admin_user', JSON.stringify(userData));
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
       }
 
       toast.success(`Login successful! Welcome back ${data.user?.name || ''}.`);
+      
+      // Clear all verification states
       setShowVerificationModal(false);
       setVerificationCode(['', '', '', '', '', '']);
+      setVerificationEmail('');
       setPasswordAfterVerification('');
-      setVerificationEmail(''); // Clear stored email
+      setRequiresPasswordAfterVerification(false);
       
+      // Redirect to dashboard
       setTimeout(() => {
         router.push('/MainDashboard');
       }, 1000);
     } else {
-      // Check if password reset is forced
-      if (data.forcePasswordReset) {
-        setResetLink(data.resetLink || '/pages/forgotpassword');
-        setShowPasswordResetModal(true);
-        setShowVerificationModal(false);
-      } 
       // Check if password is required after verification
-      else if (data.requiresPassword === true) {
+      if (data.requiresPassword === true) {
         setRequiresPasswordAfterVerification(true);
-        setVerificationEmail(emailToUse); // Keep email for password verification
+        setVerificationEmail(emailToUse);
         toast.info('Please enter your password to continue.');
       } else {
         toast.error(data.error || 'Invalid verification code');
