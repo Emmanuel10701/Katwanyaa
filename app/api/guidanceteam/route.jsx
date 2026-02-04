@@ -289,12 +289,6 @@ export async function POST(req) {
         bio,
         image: imageUrl,
         // Audit trail
-        createdBy: auth.user.id,
-        createdByName: auth.user.name,
-        createdByRole: auth.user.role,
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
       }
     });
 
@@ -304,7 +298,6 @@ export async function POST(req) {
       success: true,
       message: "Team member created successfully",
       member: newMember,
-      createdBy: auth.user.name,
       timestamp: new Date().toISOString()
     }, { status: 201 });
     

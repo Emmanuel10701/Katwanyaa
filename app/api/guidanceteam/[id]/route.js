@@ -368,10 +368,7 @@ export async function PUT(req, { params }) {
         bio,
         image,
         // Audit trail
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
-        updatedAt: new Date(),
+               updatedAt: new Date(),
       }
     });
 
@@ -381,7 +378,6 @@ export async function PUT(req, { params }) {
       success: true,
       message: "Team member updated successfully",
       member: updatedMember,
-      updatedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -476,7 +472,6 @@ export async function DELETE(req, { params }) {
       success: true,
       message: "Team member deleted successfully",
       deletedMember: existingMember.name,
-      deletedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
