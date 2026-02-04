@@ -495,33 +495,37 @@ function ModernItemDetailModal({ item, type, onClose, onEdit }) {
   )}
 </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-8 border-t border-slate-100">
-              <button 
-                onClick={onClose} 
-                className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
-              >
-                Close
-              </button>
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={onClose} 
-                  className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-all"
-                >
-                  Back to List
-                </button>
-                <button 
-                 onClick={onClose} 
-
-                  onClick={() => onEdit(item)} 
-                  className={`px-6 py-3 text-white rounded-2xl font-bold text-sm shadow-lg transition-all bg-gradient-to-r ${themeGradient} hover:brightness-110`}
-                >
-                  <div className="flex items-center gap-2">
-                    <FiEdit /> Edit {type === 'news' ? 'Article' : 'Event'}
-                  </div>
-                </button>
-              </div>
-            </div>
+    {/* Action Buttons */}
+<div className="flex items-center justify-between pt-8 border-t border-slate-100">
+  <button 
+    onClick={onClose} 
+    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm active:bg-slate-200 transition-colors"
+  >
+    Close
+  </button>
+  
+  <div className="flex items-center gap-3">
+    <button 
+      onClick={onClose} 
+      className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm active:bg-slate-200 transition-colors"
+    >
+      Back to List
+    </button>
+    
+    <button 
+      onClick={() => {
+        onClose();      // First: Close the view modal
+        onEdit(item);   // Second: Trigger the edit logic
+      }} 
+      /* Removed hover:brightness-110 per previous preference */
+      className={`px-6 py-3 text-white rounded-2xl font-bold text-sm shadow-lg active:scale-95 bg-gradient-to-r ${themeGradient}`}
+    >
+      <div className="flex items-center gap-2">
+        <FiEdit /> Edit {type === 'news' ? 'Article' : 'Event'}
+      </div>
+    </button>
+  </div>
+</div>
           </div>
         </div>
       </Box>
