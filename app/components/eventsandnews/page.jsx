@@ -1118,7 +1118,7 @@ const handleSubmit = async (e) => {
                       {type === 'news' ? 'Excerpt (Short Description)' : 'Description'}
                     </label>
                     <textarea
-                      rows="3"
+                      rows="8"
                       value={type === 'news' ? formData.excerpt : formData.description}
                       onChange={(e) => handleChange(type === 'news' ? 'excerpt' : 'description', e.target.value)}
                       className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all placeholder:text-slate-300"
@@ -1129,7 +1129,7 @@ const handleSubmit = async (e) => {
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">Full Story Content</label>
                       <textarea
-                        rows="6"
+                        rows="10"
                         value={formData.fullContent}
                         onChange={(e) => handleChange('fullContent', e.target.value)}
                         className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-medium text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-300"
