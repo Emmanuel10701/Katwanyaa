@@ -213,39 +213,51 @@ export default function AdminLoginPage() {
     }
   };
 
-  // Verify the code
-  const handleVerifyCode = async (e) => {
-    e.preventDefault();
+// In your handleVerifyCode function, replace with:
+const handleVerifyCode = async (e) => {
+  e.preventDefault();
+  
+  const code = verificationCode.join('');
+  if (code.length !== 6) {
+    toast.error('Please enter the complete 6-digit code');
+    return;
+  }
+
+  setVerificationLoading(true);
+
+  try {
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    const deviceFingerprint = DeviceFingerprint.generate();
     
-    const code = verificationCode.join('');
-    if (code.length !== 6) {
-      toast.error('Please enter the complete 6-digit code'); // Changed to sonner
-      return;
-    }
+    // Send verification code for checking
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: verificationEmail,
+        verificationCode: code,
+        action: 'verify_password', // Changed to new action
+        clientLoginCount: localStorageCheck.loginCount,
+        clientDeviceHash: deviceFingerprint.hash
+      }),
+    });
 
-    setVerificationLoading(true);
+    const data = await response.json();
 
-    try {
-      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-      const deviceFingerprint = DeviceFingerprint.generate();
-      
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: verificationEmail,
-          verificationCode: code,
-          action: 'verify',
-          clientLoginCount: localStorageCheck.loginCount,
-          clientDeviceHash: deviceFingerprint.hash
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
+    if (response.ok && data.success) {
+      if (data.requiresPassword === true) {
+        // Code is valid but password is required
+        toast.info('Code verified! Please enter your password to continue.');
+        
+        // Show password input modal/field
+        setShowPasswordAfterVerification(true);
+        setVerificationCode(['', '', '', '', '', '']);
+        setShowVerificationModal(false);
+        
+      } else {
+        // Direct login - no password needed (new device, etc.)
         if (data.deviceToken) {
           LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
         }
@@ -255,26 +267,30 @@ export default function AdminLoginPage() {
           localStorage.setItem('admin_user', JSON.stringify(data.user));
         }
 
-        toast.success('Verification successful! Welcome back.'); // Changed to sonner
-
+        toast.success('Verification successful! Welcome back.');
         setShowVerificationModal(false);
         setVerificationCode(['', '', '', '', '', '']);
         
         setTimeout(() => {
           router.push('/MainDashboard');
         }, 1000);
-      } else {
-        toast.error(data.error || 'Invalid verification code'); // Changed to sonner
-        setVerificationCode(['', '', '', '', '', '']);
-        document.getElementById('verification-input-0').focus();
       }
-    } catch (error) {
-      toast.error('Network error. Please try again.'); // Changed to sonner
-      console.error('Verification error:', error);
-    } finally {
-      setVerificationLoading(false);
+    } else {
+      toast.error(data.error || 'Invalid verification code');
+      setVerificationCode(['', '', '', '', '', '']);
+      document.getElementById('verification-input-0').focus();
     }
-  };
+  } catch (error) {
+    toast.error('Network error. Please try again.');
+    console.error('Verification error:', error);
+  } finally {
+    setVerificationLoading(false);
+  }
+};
+
+// Add this new state and modal for password after verification
+const [showPasswordAfterVerification, setShowPasswordAfterVerification] = useState(false);
+const [passwordAfterVerification, setPasswordAfterVerification] = useState('');
 
   // Resend verification code
   const handleResendCode = async () => {
@@ -746,6 +762,82 @@ const handleSubmit = async (e) => {
                     <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
+
+                {/* Password After Verification Modal */}
+{showPasswordAfterVerification && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999]">
+    <div className="relative w-full max-w-sm bg-white rounded-xl shadow-xl p-6">
+      <h3 className="text-lg font-bold text-slate-900 mb-4">
+        Enter Password to Continue
+      </h3>
+      <p className="text-slate-600 mb-4">
+        Verification successful. Please enter your password to complete login.
+      </p>
+      
+      <div className="relative mb-6">
+        <input 
+          type="password"
+          value={passwordAfterVerification}
+          onChange={(e) => setPasswordAfterVerification(e.target.value)}
+          placeholder="Enter your password"
+          className="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+          autoFocus
+        />
+      </div>
+      
+      <div className="flex gap-3">
+        <button
+          onClick={() => {
+            setShowPasswordAfterVerification(false);
+            setPasswordAfterVerification('');
+            setShowVerificationModal(true);
+          }}
+          className="flex-1 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold hover:bg-slate-200"
+        >
+          Back
+        </button>
+        <button
+          onClick={async () => {
+            // Send password to complete login
+            const response = await fetch('/api/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: verificationEmail,
+                password: passwordAfterVerification,
+                verificationCode: verificationCode.join(''),
+                action: 'verify_password',
+                clientDeviceHash: DeviceFingerprint.generate().hash
+              }),
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              toast.success('Login successful!');
+              // Store tokens and redirect
+              if (data.token) {
+                localStorage.setItem('admin_token', data.token);
+                localStorage.setItem('admin_user', JSON.stringify(data.user));
+              }
+              if (data.deviceToken) {
+                LocalStorageManager.storeDeviceData(data.deviceToken, DeviceFingerprint.generate().hash);
+              }
+              router.push('/MainDashboard');
+            } else {
+              toast.error(data.error || 'Invalid password');
+            }
+          }}
+          className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
                 {!isForgotMode && (
                   <div className="group">
