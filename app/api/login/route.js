@@ -140,6 +140,15 @@ function getVerificationEmailTemplate(user, verificationCode) {
 // HELPER FUNCTIONS
 // ====================
 
+// Node.js compatible base64 functions
+function base64Encode(str) {
+  return Buffer.from(str, 'utf-8').toString('base64');
+}
+
+function base64Decode(str) {
+  return Buffer.from(str, 'base64').toString('utf-8');
+}
+
 // Generate 6-digit verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -216,26 +225,26 @@ async function sendVerificationEmail(user, verificationCode) {
   }
 }
 
-// Generate device token for localStorage (30 days expiry)
+// Generate device token for localStorage
 function generateDeviceToken(userId, deviceHash, currentLoginCount = 1) {
   const payload = {
     userId: userId,
     deviceHash: deviceHash,
-    loginCount: currentLoginCount, // Use current count
+    loginCount: currentLoginCount,
     createdAt: new Date().toISOString(),
     exp: Math.floor(Date.now() / 1000) + (DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60),
     iat: Math.floor(Date.now() / 1000),
-    version: '1.0' // Add version for future updates
+    version: '1.0'
   };
   
   const payloadStr = JSON.stringify(payload);
-  return btoa(unescape(encodeURIComponent(payloadStr)));
+  return base64Encode(payloadStr);
 }
 
 // Verify device token from localStorage
 function verifyDeviceToken(token, deviceHash) {
   try {
-    const payloadStr = decodeURIComponent(escape(atob(token)));
+    const payloadStr = base64Decode(token);
     const payload = JSON.parse(payloadStr);
     
     // Check expiration
@@ -325,53 +334,8 @@ async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
   return device;
 }
 
-// Check device trust (for existing logic)
-async function checkDeviceTrust(userId, deviceHash) {
-  const device = await prisma.deviceToken.findFirst({
-    where: {
-      userId: userId,
-      deviceHash: deviceHash,
-      isTrusted: true,
-      expiresAt: { gt: new Date() },
-      isBlocked: false
-    }
-  });
-  
-  return device;
-}
-
-// Store trusted device (for existing logic)
-async function storeTrustedDevice(userId, deviceHash, userAgent) {
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-  
-  const device = await prisma.deviceToken.upsert({
-    where: {
-      userId_deviceHash: {
-        userId: userId,
-        deviceHash: deviceHash
-      }
-    },
-    update: {
-      lastUsed: new Date(),
-      expiresAt: expiresAt,
-      isTrusted: true
-    },
-    create: {
-      userId: userId,
-      deviceHash: deviceHash,
-      deviceName: userAgent.substring(0, 100),
-      expiresAt: expiresAt,
-      isTrusted: true
-    }
-  });
-  
-  return device;
-}
-
 // ====================
-// VERIFICATION ENDPOINT
-// ====================
-// VERIFICATION ENDPOINT - FIXED: NEVER ALLOW WRONG PASSWORD
+// VERIFICATION ENDPOINT - FIXED
 // ====================
 async function handleVerification(email, code, deviceHash, req, clientLoginCount = 0, password = null) {
   try {
@@ -403,8 +367,7 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       };
     }
 
-    // CRITICAL: Check if this verification was triggered by incorrect password
-    // Look for recent failed password attempts
+    // Check if this verification was triggered by incorrect password
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
     
     const recentFailedPasswordAttempts = await prisma.loginAttempt.count({
@@ -421,7 +384,7 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       if (!password) {
         return {
           success: true,
-          requiresPassword: true, // Frontend must provide password
+          requiresPassword: true,
           message: 'Please enter your password to continue.',
           email: email,
           verificationCompleted: true
@@ -435,19 +398,16 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
         // Password is STILL wrong - force password reset
         return {
           success: false,
-          forcePasswordReset: true, // NEW: Force password reset
+          forcePasswordReset: true,
           error: 'Incorrect password. Please reset your password.',
-          resetLink: '/pages/forgotpassword' // Reset page route
+          resetLink: '/pages/forgotpassword'
         };
       }
       
       // Password is correct - continue with login
     }
 
-    // If we get here, either:
-    // 1. Password was correct after verification
-    // 2. Verification was for other reasons (new device, etc.)
-    
+    // Regular login flow (password was correct or no password needed)
     const userAgent = req.headers.get('user-agent') || 'unknown';
     
     // Store/update device in database
@@ -463,9 +423,9 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
     const deviceToken = generateDeviceToken(user.id, deviceHash);
     
     // Update login count in device token
-    const deviceTokenPayload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+    const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
     deviceTokenPayload.loginCount = (clientLoginCount || 0) + 1;
-    const updatedDeviceToken = btoa(unescape(encodeURIComponent(JSON.stringify(deviceTokenPayload))));
+    const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
     
     const userData = sanitizeUser(user);
 
@@ -488,11 +448,8 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
   }
 }
 
-
 // ====================
-
-// ====================
-// MAIN LOGIN HANDLER - FIXED VERSION
+// MAIN LOGIN HANDLER
 // ====================
 export async function POST(request) {
   try {
@@ -501,9 +458,9 @@ export async function POST(request) {
       password, 
       verificationCode, 
       action,
-      clientDeviceToken, // Token from localStorage
-      clientLoginCount,  // Login count from localStorage
-      clientDeviceHash   // Device hash from frontend
+      clientDeviceToken,
+      clientLoginCount,
+      clientDeviceHash
     } = await request.json();
     
     const ipAddress = request.headers.get('x-forwarded-for') || 'unknown';
@@ -525,14 +482,13 @@ export async function POST(request) {
     if (action === 'verify_password' && verificationCode) {
       console.log('🔐 Password + Verification flow for:', email);
       
-      // First verify the code and check password
       const verificationResult = await handleVerification(
         email, 
         verificationCode, 
         deviceHash, 
         request,
         clientLoginCount,
-        password // Pass password to verification handler
+        password
       );
       
       if (verificationResult.success) {
@@ -609,14 +565,12 @@ export async function POST(request) {
     if (action === 'verify' && verificationCode) {
       console.log('🔐 Verification only for:', email);
       
-      // For new device verification (no password check needed)
       const verificationResult = await handleVerification(
         email, 
         verificationCode, 
         deviceHash, 
         request,
         clientLoginCount
-        // No password parameter - for new device verification
       );
       
       if (verificationResult.success) {
@@ -727,7 +681,6 @@ export async function POST(request) {
           message: 'Multiple failed attempts detected. Verification code sent to your email.',
           email: user.email,
           reason: 'failed_attempts',
-          // CRITICAL: Tell frontend to use verify_password action
           actionRequired: 'verify_password',
           passwordRequired: true
         }, { status: 200 });
@@ -757,100 +710,42 @@ export async function POST(request) {
       }
     });
 
-   // ====================
-   // DEVICE VERIFICATION LOGIC
-   // ====================
-   console.log('🔍 Checking device verification...');
-   
-   let requiresVerification = false;
-   let verificationReason = 'security_check';
-   let existingDevice = null;
-
-   // Use client's device hash if provided, otherwise use server-generated
-   const finalDeviceHash = clientDeviceHash || deviceHash;
-
-   // 1. Check if client has a device token
-   if (clientDeviceToken) {
-     console.log('📱 Client has device token');
-     const tokenValid = verifyDeviceToken(clientDeviceToken, finalDeviceHash);
-     
-     if (tokenValid.valid) {
-       console.log('✅ Device token is valid, login count:', tokenValid.payload.loginCount);
-       
-       // Check if login count exceeded
-       if (tokenValid.payload.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-         console.log('⚠️ Max login attempts reached');
-         requiresVerification = true;
-         verificationReason = 'max_login_attempts_reached';
-       } else {
-         // Check database for existing trusted device
-         existingDevice = await prisma.deviceToken.findFirst({
-           where: {
-             userId: user.id,
-             deviceHash: finalDeviceHash,
-             isTrusted: true,
-             expiresAt: { gt: new Date() },
-             isBlocked: false
-           }
-         });
-         
-         if (!existingDevice) {
-           console.log('❌ No trusted device found in database');
-           requiresVerification = true;
-           verificationReason = 'new_device';
-         } else if (existingDevice.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-           console.log('⚠️ Max login attempts reached in database');
-           requiresVerification = true;
-           verificationReason = 'max_login_attempts_reached';
-         }
-       }
-     } else {
-       console.log('❌ Device token invalid:', tokenValid.reason);
-       requiresVerification = true;
-       verificationReason = tokenValid.reason || 'invalid_token';
-     }
-   } else {
-     console.log('📱 No client device token - checking database...');
-     
-     // Check database for existing device
-     existingDevice = await prisma.deviceToken.findFirst({
-       where: {
-         userId: user.id,
-         deviceHash: finalDeviceHash,
-         isTrusted: true,
-         expiresAt: { gt: new Date() },
-         isBlocked: false
-       }
-     });
-     
-     if (!existingDevice) {
-       console.log('❌ No trusted device found');
-       requiresVerification = true;
-       verificationReason = 'new_device';
-     } else if (existingDevice.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
-       console.log('⚠️ Max login attempts reached in database');
-       requiresVerification = true;
-       verificationReason = 'max_login_attempts_reached';
-     }
-   }
-
-   // 3. Always verify admins on new devices
-   if (!requiresVerification && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
-     console.log('👑 Admin user - checking for recent device...');
-     const recentDevice = await prisma.deviceToken.findFirst({
-       where: {
-         userId: user.id,
-         deviceHash: finalDeviceHash,
-         lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
-       }
-     });
-     
-     if (!recentDevice) {
-       console.log('⚠️ Admin on potentially new device');
-       requiresVerification = true;
-       verificationReason = 'admin_security_check';
-     }
-   }
+    // ====================
+    // DEVICE VERIFICATION LOGIC
+    // ====================
+    console.log('🔍 Checking device verification...');
+    
+    // Use client's device hash if provided, otherwise use server-generated
+    const finalDeviceHash = clientDeviceHash || deviceHash;
+    
+    // Check device verification status
+    const deviceVerificationCheck = await checkDeviceVerification(
+      user.id,
+      finalDeviceHash,
+      clientLoginCount,
+      clientDeviceToken
+    );
+    
+    let requiresVerification = deviceVerificationCheck.requiresVerification;
+    let verificationReason = deviceVerificationCheck.reason || 'security_check';
+    
+    // Always verify admins on new devices
+    if (!requiresVerification && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
+      console.log('👑 Admin user - checking for recent device...');
+      const recentDevice = await prisma.deviceToken.findFirst({
+        where: {
+          userId: user.id,
+          deviceHash: finalDeviceHash,
+          lastUsed: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } // 30 days
+        }
+      });
+      
+      if (!recentDevice) {
+        console.log('⚠️ Admin on potentially new device');
+        requiresVerification = true;
+        verificationReason = 'admin_security_check';
+      }
+    }
     
     // ====================
     // HANDLE VERIFICATION OR LOGIN
@@ -862,6 +757,10 @@ export async function POST(request) {
       await storeVerificationCode(user.email, verificationCode, deviceHash);
       await sendVerificationEmail(user, verificationCode);
       
+      // Determine if password will be required after verification
+      const passwordRequired = verificationReason === 'failed_attempts' ? true : false;
+      const actionRequired = passwordRequired ? 'verify_password' : 'verify';
+      
       return NextResponse.json({
         success: false,
         requiresVerification: true,
@@ -869,9 +768,8 @@ export async function POST(request) {
         email: user.email,
         reason: verificationReason,
         deviceHash: deviceHash,
-        // CRITICAL: Tell frontend to use regular verify action (no password)
-        actionRequired: 'verify',
-        passwordRequired: false
+        actionRequired: actionRequired,
+        passwordRequired: passwordRequired
       }, { status: 200 });
     }
 
@@ -885,9 +783,12 @@ export async function POST(request) {
     let newLoginCount = 1;
     if (clientDeviceToken) {
       try {
-        const payloadStr = decodeURIComponent(escape(atob(clientDeviceToken)));
-        const payload = JSON.parse(payloadStr);
-        newLoginCount = (payload.loginCount || 0) + 1;
+        const tokenValid = verifyDeviceToken(clientDeviceToken, deviceHash);
+        if (tokenValid.valid) {
+          newLoginCount = (tokenValid.payload.loginCount || 0) + 1;
+        } else {
+          newLoginCount = (clientLoginCount || 0) + 1;
+        }
       } catch (error) {
         newLoginCount = (clientLoginCount || 0) + 1;
       }
@@ -897,9 +798,9 @@ export async function POST(request) {
     
     // Generate new device token
     const deviceToken = generateDeviceToken(user.id, deviceHash);
-    const deviceTokenPayload = JSON.parse(decodeURIComponent(escape(atob(deviceToken))));
+    const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
     deviceTokenPayload.loginCount = newLoginCount;
-    const updatedDeviceToken = btoa(unescape(encodeURIComponent(JSON.stringify(deviceTokenPayload))));
+    const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
     
     // Generate auth token
     const token = generateToken(user);
