@@ -239,7 +239,13 @@ function generateDeviceToken(userId, deviceHash, currentLoginCount = 1) {
   };
   
   const payloadStr = JSON.stringify(payload);
-  return base64Encode(payloadStr);
+  console.log('🔐 Generating device token:', {
+    userId,
+    loginCount: currentLoginCount,
+    expiresInDays: DEVICE_TOKEN_EXPIRY_DAYS
+  });
+  
+  return btoa(unescape(encodeURIComponent(payloadStr)));
 }
 
 // Verify device token from localStorage
