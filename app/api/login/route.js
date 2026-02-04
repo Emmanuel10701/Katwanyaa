@@ -150,6 +150,23 @@ function base64Decode(str) {
   return Buffer.from(str, 'base64').toString('utf-8');
 }
 
+// Base64 URL decode
+function base64UrlDecode(str) {
+  // Replace URL-safe characters
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  
+  // Add padding if needed
+  const pad = str.length % 4;
+  if (pad) {
+    if (pad === 1) {
+      throw new Error('Invalid base64 string');
+    }
+    str += '==='.slice(pad);
+  }
+  
+  return Buffer.from(str, 'base64').toString('utf-8');
+}
+
 // Generate 6-digit verification code
 function generateVerificationCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -305,8 +322,58 @@ function verifyDeviceToken(token, deviceHash) {
     }
 }
 
-// In your backend API (/app/api/login/route.js)
-// Update the checkDeviceVerification function:
+// ====================
+// RESET DEVICE COUNTS FUNCTION
+// ====================
+async function resetDeviceCounts(userId, deviceHash) {
+    try {
+        console.log('🔄 Resetting device counts for:', { 
+            userId, 
+            deviceHash: deviceHash.substring(0, 10) + '...' 
+        });
+        
+        const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+        
+        const device = await prisma.deviceToken.upsert({
+            where: {
+                userId_deviceHash: {
+                    userId: userId,
+                    deviceHash: deviceHash
+                }
+            },
+            update: {
+                lastUsed: new Date(),
+                expiresAt: expiresAt,
+                isTrusted: true,
+                loginCount: 1, // RESET to 1 (current login)
+                countsResetAt: new Date(), // Track when counts were reset
+                isCountsReset: true
+            },
+            create: {
+                userId: userId,
+                deviceHash: deviceHash,
+                deviceName: 'Device after verification',
+                lastUsed: new Date(),
+                expiresAt: expiresAt,
+                isTrusted: true,
+                loginCount: 1,
+                countsResetAt: new Date(),
+                isCountsReset: true
+            }
+        });
+        
+        console.log('✅ Device counts reset:', {
+            loginCount: device.loginCount,
+            expiresAt: device.expiresAt.toISOString(),
+            countsResetAt: device.countsResetAt.toISOString()
+        });
+        
+        return device;
+    } catch (error) {
+        console.error('❌ Error resetting device counts:', error);
+        throw error;
+    }
+}
 
 async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0, clientDeviceToken = null) {
     try {
@@ -322,7 +389,8 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('📱 No client device token - new device');
             return { 
                 requiresVerification: true, 
-                reason: 'new_device' 
+                reason: 'new_device',
+                shouldResetAfterVerification: true
             };
         }
 
@@ -334,7 +402,8 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('❌ Client token invalid:', tokenValid.reason);
             return { 
                 requiresVerification: true, 
-                reason: tokenValid.reason 
+                reason: tokenValid.reason,
+                shouldResetAfterVerification: tokenValid.reason === 'expired' || tokenValid.reason === 'max_logins_reached'
             };
         }
 
@@ -356,7 +425,8 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             });
             return { 
                 requiresVerification: true, 
-                reason: 'expired' 
+                reason: 'expired',
+                shouldResetAfterVerification: true
             };
         }
 
@@ -366,17 +436,19 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('⚠️ Token expiring soon');
             return { 
                 requiresVerification: true, 
-                reason: 'token_expiring_soon' 
+                reason: 'token_expiring_soon',
+                shouldResetAfterVerification: false
             };
         }
 
         // CASE 4: Check max login attempts from token
         const loginCount = tokenValid.payload.loginCount || 0;
-        if (loginCount >= 15) {
+        if (loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
             console.log('🚫 Max login attempts reached in token:', loginCount);
             return { 
                 requiresVerification: true, 
-                reason: 'max_logins_reached' 
+                reason: 'max_logins_reached',
+                shouldResetAfterVerification: true
             };
         }
 
@@ -394,7 +466,8 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('📱 No device record in database');
             return { 
                 requiresVerification: true, 
-                reason: 'no_device_record' 
+                reason: 'no_device_record',
+                shouldResetAfterVerification: true
             };
         }
 
@@ -403,7 +476,8 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('🔐 Device not trusted in database');
             return { 
                 requiresVerification: true, 
-                reason: 'device_not_trusted' 
+                reason: 'device_not_trusted',
+                shouldResetAfterVerification: false
             };
         }
 
@@ -412,16 +486,18 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             console.log('⏰ Device token expired in database');
             return { 
                 requiresVerification: true, 
-                reason: 'device_expired' 
+                reason: 'device_expired',
+                shouldResetAfterVerification: true
             };
         }
 
         // Check database login count
-        if (device.loginCount >= 15) {
+        if (device.loginCount >= MAX_LOGIN_ATTEMPTS_BEFORE_VERIFY) {
             console.log('🚫 Max login attempts reached in database:', device.loginCount);
             return { 
                 requiresVerification: true, 
-                reason: 'max_logins_reached' 
+                reason: 'max_logins_reached',
+                shouldResetAfterVerification: true
             };
         }
 
@@ -431,23 +507,36 @@ async function checkDeviceVerification(userId, deviceHash, clientLoginCount = 0,
             requiresVerification: false,
             deviceId: device.id,
             currentLoginCount: device.loginCount,
-            expiresAt: device.expiresAt
+            expiresAt: device.expiresAt,
+            shouldResetAfterVerification: false
         };
 
     } catch (error) {
         console.error('❌ Error checking device verification:', error);
-        // On error, require verification for security
         return { 
             requiresVerification: true, 
-            reason: 'verification_error' 
+            reason: 'verification_error',
+            shouldResetAfterVerification: false
         };
     }
 }
 
-
-// Update device login count
-async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
+// Update device login count (regular increment)
+async function updateDeviceLoginCount(userId, deviceHash, userAgent, shouldReset = false) {
   const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+  
+  const updateData = {
+    lastUsed: new Date(),
+    expiresAt: expiresAt,
+    isTrusted: true,
+    loginCount: shouldReset ? 1 : { increment: 1 }
+  };
+  
+  // If resetting, add reset tracking
+  if (shouldReset) {
+    updateData.countsResetAt = new Date();
+    updateData.isCountsReset = true;
+  }
   
   const device = await prisma.deviceToken.upsert({
     where: {
@@ -456,14 +545,7 @@ async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
         deviceHash: deviceHash
       }
     },
-    update: {
-      lastUsed: new Date(),
-      expiresAt: expiresAt,
-      isTrusted: true,
-      loginCount: {
-        increment: 1
-      }
-    },
+    update: updateData,
     create: {
       userId: userId,
       deviceHash: deviceHash,
@@ -471,7 +553,9 @@ async function updateDeviceLoginCount(userId, deviceHash, userAgent) {
       lastUsed: new Date(),
       expiresAt: expiresAt,
       isTrusted: true,
-      loginCount: 1
+      loginCount: 1,
+      countsResetAt: shouldReset ? new Date() : null,
+      isCountsReset: shouldReset || false
     }
   });
   
@@ -549,8 +633,6 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
           requiresPassword: true
         };
       }
-      
-      // Password is correct - continue with login
     } else if (password) {
       // Password was provided but not required - verify it anyway for security
       const isPasswordValid = await verifyPassword(password, user.password);
@@ -569,44 +651,37 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
     // Regular login flow (password was correct or no password needed)
     const userAgent = req.headers.get('user-agent') || 'unknown';
     
-    // Store/update device in database
-    const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-    const device = await prisma.deviceToken.upsert({
-      where: {
-        userId_deviceHash: {
-          userId: user.id,
-          deviceHash: deviceHash
-        }
-      },
-      update: {
-        lastUsed: new Date(),
-        expiresAt: expiresAt,
-        isTrusted: true,
-        loginCount: {
-          increment: 1
-        }
-      },
-      create: {
-        userId: user.id,
-        deviceHash: deviceHash,
-        deviceName: userAgent.substring(0, 100),
-        lastUsed: new Date(),
-        expiresAt: expiresAt,
-        isTrusted: true,
-        loginCount: 1
-      }
-    });
+    // Check if we need to reset counts (check device verification status)
+    const deviceVerificationCheck = await checkDeviceVerification(
+      user.id,
+      deviceHash,
+      clientLoginCount,
+      null // Don't pass token to force fresh check
+    );
+    
+    const shouldResetCounts = deviceVerificationCheck.shouldResetAfterVerification || 
+                             deviceVerificationCheck.reason === 'max_logins_reached' ||
+                             deviceVerificationCheck.reason === 'expired' ||
+                             deviceVerificationCheck.reason === 'device_expired';
+    
+    // Store/update device in database WITH RESET if needed
+    const device = await updateDeviceLoginCount(
+      user.id,
+      deviceHash,
+      userAgent,
+      shouldResetCounts
+    );
     
     // Delete used verification code
     await prisma.verificationToken.delete({
       where: { token: code }
     });
 
-    // Generate tokens
+    // Generate tokens with RESET login count
     const authToken = generateToken(user);
     const deviceToken = generateDeviceToken(user.id, deviceHash);
     
-    // Update login count in device token
+    // Update login count in device token (use reset value if applicable)
     const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
     deviceTokenPayload.loginCount = device.loginCount;
     const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
@@ -617,12 +692,13 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       success: true,
       message: 'Login successful',
       user: userData,
-      email: user.email, // Always include email
+      email: user.email,
       token: authToken,
       deviceToken: updatedDeviceToken,
       storeInLocalStorage: true,
       loginCount: device.loginCount,
-      verificationCompleted: true
+      verificationCompleted: true,
+      countsWereReset: shouldResetCounts
     };
 
   } catch (error) {
@@ -705,49 +781,35 @@ export async function POST(request) {
         }, { status: 404 });
       }
 
-      // OTP is valid - complete login
+      // OTP is valid - complete login with RESET COUNTS
       const userAgent = request.headers.get('user-agent') || 'unknown';
       
-      // Store/update device in database as trusted
-      const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-      const device = await prisma.deviceToken.upsert({
-        where: {
-          userId_deviceHash: {
-            userId: user.id,
-            deviceHash: deviceHash
-          }
-        },
-        update: {
-          lastUsed: new Date(),
-          expiresAt: expiresAt,
-          isTrusted: true,
-          loginCount: {
-            increment: 1
-          }
-        },
-        create: {
-          userId: user.id,
-          deviceHash: deviceHash,
-          deviceName: userAgent.substring(0, 100),
-          lastUsed: new Date(),
-          expiresAt: expiresAt,
-          isTrusted: true,
-          loginCount: 1
-        }
-      });
+      // Check device status to see if we should reset counts
+      const deviceVerificationCheck = await checkDeviceVerification(
+        user.id,
+        deviceHash,
+        0,
+        clientDeviceToken
+      );
+      
+      const shouldResetCounts = deviceVerificationCheck.shouldResetAfterVerification || 
+                               deviceVerificationCheck.requiresVerification;
+      
+      // RESET device counts (start fresh from 1)
+      const device = await resetDeviceCounts(user.id, deviceHash);
       
       // Delete used verification code
       await prisma.verificationToken.delete({
         where: { token: verificationCode }
       });
 
-      // Generate tokens
+      // Generate tokens with RESET login count (1)
       const authToken = generateToken(user);
       const deviceToken = generateDeviceToken(user.id, deviceHash);
       
       // Update login count in device token
       const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
-      deviceTokenPayload.loginCount = device.loginCount;
+      deviceTokenPayload.loginCount = 1; // Always reset to 1 after verification
       const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
       
       const userData = sanitizeUser(user);
@@ -761,22 +823,23 @@ export async function POST(request) {
           userAgent: userAgent,
           deviceHash: deviceHash,
           status: 'success',
-          reason: 'otp_verified'
+          reason: 'otp_verified_counts_reset'
         }
       });
 
-      console.log('✅ OTP verification successful for:', user.email);
+      console.log('✅ OTP verification successful with RESET counts for:', user.email);
 
       return NextResponse.json({
         success: true,
-        message: 'Login successful',
+        message: 'Login successful! Device verification counts have been reset.',
         user: userData,
         email: user.email,
         token: authToken,
         deviceToken: updatedDeviceToken,
         storeInLocalStorage: true,
-        loginCount: device.loginCount,
-        directLogin: true
+        loginCount: 1, // Always 1 after reset
+        directLogin: true,
+        countsWereReset: true
       }, { status: 200 });
     }
 
@@ -825,49 +888,24 @@ export async function POST(request) {
         }, { status: 401 });
       }
 
-      // Password is correct - complete login
+      // Password is correct - complete login with RESET COUNTS
       const userAgent = request.headers.get('user-agent') || 'unknown';
       
-      // Store/update device in database
-      const expiresAt = new Date(Date.now() + DEVICE_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
-      const device = await prisma.deviceToken.upsert({
-        where: {
-          userId_deviceHash: {
-            userId: user.id,
-            deviceHash: deviceHash
-          }
-        },
-        update: {
-          lastUsed: new Date(),
-          expiresAt: expiresAt,
-          isTrusted: true,
-          loginCount: {
-            increment: 1
-          }
-        },
-        create: {
-          userId: user.id,
-          deviceHash: deviceHash,
-          deviceName: userAgent.substring(0, 100),
-          lastUsed: new Date(),
-          expiresAt: expiresAt,
-          isTrusted: true,
-          loginCount: 1
-        }
-      });
+      // RESET device counts (start fresh from 1)
+      const device = await resetDeviceCounts(user.id, deviceHash);
       
       // Delete used verification code
       await prisma.verificationToken.delete({
         where: { token: verificationCode }
       });
 
-      // Generate tokens
+      // Generate tokens with RESET login count (1)
       const authToken = generateToken(user);
       const deviceToken = generateDeviceToken(user.id, deviceHash);
       
       // Update login count in device token
       const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
-      deviceTokenPayload.loginCount = device.loginCount;
+      deviceTokenPayload.loginCount = 1; // Always reset to 1 after verification
       const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
       
       const userData = sanitizeUser(user);
@@ -881,22 +919,23 @@ export async function POST(request) {
           userAgent: userAgent,
           deviceHash: deviceHash,
           status: 'success',
-          reason: 'password_correct_after_otp'
+          reason: 'password_correct_after_otp_counts_reset'
         }
       });
 
-      console.log('✅ Password + OTP verification successful for:', user.email);
+      console.log('✅ Password + OTP verification successful with RESET counts for:', user.email);
 
       return NextResponse.json({
         success: true,
-        message: 'Login successful',
+        message: 'Login successful! Device verification counts have been reset.',
         user: userData,
         email: user.email,
         token: authToken,
         deviceToken: updatedDeviceToken,
         storeInLocalStorage: true,
-        loginCount: device.loginCount,
-        directLogin: true
+        loginCount: 1, // Always 1 after reset
+        directLogin: true,
+        countsWereReset: true
       }, { status: 200 });
     }
 
@@ -1019,7 +1058,7 @@ export async function POST(request) {
     });
 
     // ====================
-    // DEVICE VERIFICATION CHECK (FIXED)
+    // DEVICE VERIFICATION CHECK
     // ====================
     console.log('🔍 Checking device verification...');
     
@@ -1035,10 +1074,12 @@ export async function POST(request) {
     
     let requiresVerification = deviceVerificationCheck.requiresVerification;
     let verificationReason = deviceVerificationCheck.reason || 'security_check';
+    let shouldResetAfterVerification = deviceVerificationCheck.shouldResetAfterVerification || false;
     
     console.log('📊 Device verification result:', {
       requiresVerification,
       verificationReason,
+      shouldResetAfterVerification,
       clientLoginCount,
       hasDeviceToken: !!clientDeviceToken
     });
@@ -1048,22 +1089,29 @@ export async function POST(request) {
     // ====================
     if (requiresVerification) {
       console.log('🔐 Verification required for:', email, 'Reason:', verificationReason);
+      
       // Generate verification code
       const verificationCode = generateVerificationCode();
       await storeVerificationCode(user.email, verificationCode, deviceHash);
       await sendVerificationEmail(user, verificationCode);
       
+      // If max attempts reached or expired, tell frontend to reset counts after verification
+      const resetHint = shouldResetAfterVerification ? 
+        'Counts will be reset after verification.' : 
+        'Regular verification required.';
+      
       return NextResponse.json({
         success: false,
         requiresVerification: true,
-        message: 'Verification code sent to your email. Please enter it to continue.',
+        message: `Verification code sent to your email. ${resetHint}`,
         email: user.email,
         userEmail: user.email,
         user: sanitizeUser(user),
         reason: verificationReason,
         deviceHash: deviceHash,
-        actionRequired: 'verify', // Regular verify action (no password needed)
-        passwordRequired: false // Password already verified
+        shouldResetAfterVerification: shouldResetAfterVerification,
+        actionRequired: 'verify',
+        passwordRequired: false
       }, { status: 200 });
     }
 
@@ -1165,7 +1213,8 @@ export async function GET() {
         verificationCodeLength: VERIFICATION_CODE_LENGTH,
         verificationExpiryMinutes: VERIFICATION_CODE_EXPIRY_MINUTES,
         deviceTokenExpiryDays: DEVICE_TOKEN_EXPIRY_DAYS,
-        otpPolicy: 'OTP only sent on valid credentials + device verification required'
+        otpPolicy: 'OTP only sent on valid credentials + device verification required',
+        resetPolicy: 'Login counts and expiration reset to 0 after successful verification'
       },
       status: 'operational'
     }, { status: 200 });

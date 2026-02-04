@@ -66,24 +66,24 @@ model LoginAttempt {
 }
 
 model DeviceToken {
-  id         String   @id @default(cuid())
-  userId     String
-  deviceHash String // Unique per device
-  deviceName String? // "Chrome on Windows", "Safari on iPhone"
-  lastUsed   DateTime @default(now())
-  expiresAt  DateTime
-  isTrusted  Boolean  @default(false)
-  isBlocked  Boolean  @default(false)
-  loginCount Int      @default(1) // Added this field
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id            String   @id @default(cuid())
+  userId        String
+  deviceHash    String
+  deviceName    String?
+  lastUsed      DateTime @default(now())
+  expiresAt     DateTime
+  isTrusted     Boolean  @default(false)
+  isBlocked     Boolean  @default(false)
+  loginCount    Int      @default(1)
+  countsResetAt DateTime?  // NEW: When counts were last reset
+  isCountsReset Boolean  @default(false)  // NEW: Flag indicating counts were reset
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
   @@unique([userId, deviceHash])
+  @@index([userId])
   @@index([deviceHash])
   @@index([expiresAt])
-  @@map("device_tokens")
 }
-
 
 
 model Subscriber {
