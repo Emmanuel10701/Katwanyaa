@@ -152,16 +152,40 @@ export default function AdminSidebar({ activeTab, setActiveTab, sidebarOpen, set
     return () => window.removeEventListener('resize', checkScreenSize);
   }, [setSidebarOpen]);
 
-  const handleLogout = () => {
-    // Clear ALL possible auth data - same as dashboard
-    const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
-    const possibleTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
-    
-    possibleUserKeys.forEach(key => localStorage.removeItem(key));
-    possibleTokenKeys.forEach(key => localStorage.removeItem(key));
-    
-    window.location.href = '/pages/adminLogin';
-  };
+const handleLogout = () => {
+  const deviceToken = localStorage.getItem('device_token') || 
+                     localStorage.getItem('deviceToken');
+  const deviceFingerprint = localStorage.getItem('device_fingerprint') || 
+                           localStorage.getItem('deviceFingerprint');
+  const loginCount = localStorage.getItem('login_count');
+  
+  // Clear only session-specific data
+  const sessionKeys = [
+    'admin_user', 'user', 'currentUser', 'auth_user',
+    'admin_token', 'token', 'auth_token', 'jwt_token',
+    'last_login', 'last_dashboard_access'
+  ];
+  
+  sessionKeys.forEach(key => localStorage.removeItem(key));
+  
+  // Restore device tokens (if they existed)
+  if (deviceToken) {
+    localStorage.setItem('device_token', deviceToken);
+  }
+  if (deviceFingerprint) {
+    localStorage.setItem('device_fingerprint', deviceFingerprint);
+  }
+  if (loginCount) {
+    localStorage.setItem('login_count', loginCount);
+  }
+  
+  // Optional: Show a toast notification
+  if (typeof window !== 'undefined' && window.toast) {
+    window.toast.success('Logged out. Device remains trusted.');
+  }
+  
+  window.location.href = '/pages/adminLogin';
+};
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
