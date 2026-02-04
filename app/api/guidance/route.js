@@ -359,7 +359,6 @@ export async function POST(req) {
       success: true,
       message: "Counseling event recorded successfully",
       event: newEvent,
-      recordedBy: auth.user.name,
       timestamp: new Date().toISOString()
     }, { status: 201 });
   } catch (error) {
