@@ -336,98 +336,102 @@ export default function AdminLoginPage() {
   };
 
   // Handle main login form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isForgotMode) {
-      if (!agreedToTerms) {
-        toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
-        return;
-      }
-
-      if (!formData.email || !formData.password) {
-        toast.error("Please fill in all required fields");
-        return;
-      }
-    } else {
-      if (!formData.email) {
-        toast.error("Please enter your email address");
-        return;
-      }
-      
-      const loadingToast = toast.loading("Sending recovery instructions...");
-      setTimeout(() => {
-        toast.dismiss(loadingToast);
-        toast.success("Recovery email sent! Check your inbox.");
-        setIsForgotMode(false);
-      }, 2000);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  if (!isForgotMode) {
+    if (!agreedToTerms) {
+      toast.error("Verification Required: Please accept the Terms of Access before proceeding.");
       return;
     }
 
-    setIsLoading(true);
-    
-    const loadingToast = toast.loading('Authenticating...');
-
-    try {
-      const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
-      const deviceFingerprint = DeviceFingerprint.generate();
-      
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          clientDeviceToken: localStorageCheck.deviceToken || null,
-          clientLoginCount: localStorageCheck.loginCount || 0,
-          clientDeviceHash: deviceFingerprint.hash,
-          action: 'login'
-        }),
-      });
-
-      const data = await response.json();
-
-      toast.dismiss(loadingToast);
-
-      if (response.ok && data.requiresVerification === true) {
-        // Store the reason for verification
-        setVerificationReason(data.reason || 'security_check');
-        setVerificationEmail(data.email || formData.email);
-        setShowVerificationModal(true);
-        setCountdown(60);
-        
-        toast.info('Security verification required. Check your email.');
-      } else if (data.success) {
-        // Direct login successful
-        if (data.token) {
-          localStorage.setItem('admin_token', data.token);
-          localStorage.setItem('admin_user', JSON.stringify(data.user));
-        }
-
-        if (data.deviceToken) {
-          LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
-        }
-
-        toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
-
-        setTimeout(() => {
-          router.push('/MainDashboard');
-        }, 1500);
-      } else {
-        // Login failed
-        toast.error(data.error || 'Login failed. Please try again.');
-      }
-    } catch (error) {
-      toast.dismiss(loadingToast);
-      toast.error('Network error. Please check your connection.');
-      console.error('Login error:', error);
-    } finally {
-      setIsLoading(false);
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all required fields");
+      return;
     }
-  };
+  } else {
+    if (!formData.email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    
+    const loadingToast = toast.loading("Sending recovery instructions...");
+    setTimeout(() => {
+      toast.dismiss(loadingToast);
+      toast.success("Recovery email sent! Check your inbox.");
+      setIsForgotMode(false);
+    }, 2000);
+    return;
+  }
+
+  setIsLoading(true);
+  
+  const loadingToast = toast.loading('Authenticating...');
+
+  try {
+    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
+    const deviceFingerprint = DeviceFingerprint.generate();
+    
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+        clientDeviceToken: localStorageCheck.deviceToken || null,
+        clientLoginCount: localStorageCheck.loginCount || 0,
+        clientDeviceHash: deviceFingerprint.hash,
+        action: 'login'
+      }),
+    });
+
+    const data = await response.json();
+
+    toast.dismiss(loadingToast);
+
+    if (response.ok && data.requiresVerification === true) {
+      // **FIXED: No password field needed since password was already correct**
+      setVerificationReason(data.reason || 'security_check');
+      setVerificationEmail(data.email || formData.email);
+      setShowVerificationModal(true);
+      setCountdown(60);
+      
+      // **FIXED: Clear the verification reason**
+      setRequiresPasswordAfterVerification(false);
+      setPasswordAfterVerification('');
+      
+      toast.info('Device verification required. Check your email.');
+    } else if (data.success) {
+      // Direct login successful
+      if (data.token) {
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+      }
+
+      if (data.deviceToken) {
+        LocalStorageManager.storeDeviceData(data.deviceToken, deviceFingerprint.hash);
+      }
+
+      toast.success(`Welcome back, ${data.user.name || 'Admin'}! 🎉`);
+
+      setTimeout(() => {
+        router.push('/MainDashboard');
+      }, 1500);
+    } else {
+      // Login failed - password was wrong
+      toast.error(data.error || 'Login failed. Please try again.');
+    }
+  } catch (error) {
+    toast.dismiss(loadingToast);
+    toast.error('Network error. Please check your connection.');
+    console.error('Login error:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Close verification modal
   const closeVerificationModal = () => {
