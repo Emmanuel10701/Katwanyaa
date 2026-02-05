@@ -980,8 +980,6 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
             academicYear: normalizedYear,
             deletedCount: deleteResult.count,
             deletionReason: 'replace_upload',
-            deletedBy: uploaderInfo.id,
-            deletedByName: uploaderInfo.name,
             deletedAt: new Date()
           }
         });
@@ -2010,9 +2008,6 @@ export async function POST(request) {
         id: batchId,
         fileName: file.name,
         fileType: fileExtension,
-        uploadedBy: auth.user.name,
-        uploadedById: auth.user.id,
-        uploadedByRole: auth.user.role,
         status: 'processing',
         targetForm: normalizedForm,
         term: uploadType === 'update' ? term : parsedData[0]?.term,
@@ -2179,6 +2174,10 @@ export async function PUT(request) {
 
     console.log(`✅ Individual fee updated by ${auth.user.name}: Student ${updatedFee.student?.firstName} ${updatedFee.student?.lastName} (${updatedFee.admissionNumber})`);
     
+
+
+
+
     return NextResponse.json({
       success: true,
       message: 'Fee balance updated successfully',
