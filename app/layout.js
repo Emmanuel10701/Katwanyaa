@@ -27,7 +27,7 @@ export const metadata = {
   metadataBase: new URL("https://katwanyaa.vercel.app"),
 
   title: {
-    default: "Katwanyaa High School | Matungulu",
+    default: "A.I.C Katwanyaa High School",
     template: "%s | Katwanyaa High School",
   },
 
@@ -64,7 +64,7 @@ export const metadata = {
 
   /* ✅ Open Graph (WhatsApp / Facebook) */
   openGraph: {
-    title: "Katwanyaa High School",
+    title: "A.I.C Katwanyaa High School",
     description: "Building future leaders through excellence and faith.",
     url: "https://katwanyaa.vercel.app",
     siteName: "Katwanyaa High School",

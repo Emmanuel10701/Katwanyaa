@@ -422,6 +422,9 @@ const cleanSchoolResponse = (school) => {
       // Timestamps
       createdAt: school.createdAt,
       updatedAt: school.updatedAt
+
+
+
     };
   } catch (error) {
     console.error("Error cleaning school response:", error);
@@ -630,12 +633,7 @@ export async function POST(req) {
       admissionOfficeHours: formData.get("admissionOfficeHours") || null,
       admissionDocumentsRequired,
       // Audit trail
-      createdBy: auth.user.id,
-      createdByName: auth.user.name,
-      createdByRole: auth.user.role,
-      updatedBy: auth.user.id,
-      updatedByName: auth.user.name,
-      updatedByRole: auth.user.role,
+
     };
 
     const school = await prisma.schoolInfo.create({
@@ -648,7 +646,6 @@ export async function POST(req) {
       success: true, 
       message: "School information created successfully",
       school: cleanSchoolResponse(school),
-      createdBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
     
@@ -828,9 +825,6 @@ export async function PUT(req) {
         // Update timestamp
         updatedAt: new Date(),
         // Audit trail
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
       },
     });
 
@@ -840,7 +834,6 @@ export async function PUT(req) {
       success: true, 
       message: "School information updated successfully",
       school: cleanSchoolResponse(updated),
-      updatedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
     
@@ -902,7 +895,6 @@ export async function DELETE(req) {
     return NextResponse.json({ 
       success: true, 
       message: "School information deleted successfully",
-      deletedBy: auth.user.name,
       deletedSchool: existing.name,
       timestamp: new Date().toISOString()
     });
