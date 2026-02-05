@@ -168,15 +168,34 @@ function sanitizeContent(content) {
   return safeContent;
 }
 
-// COMPLETE EMAIL TEMPLATE FUNCTION
+// COMPLETE EMAIL TEMPLATE FUNCTION WITH INLINE STYLING
 function getModernEmailTemplate({ 
   subject = '', 
   content = '',
   senderName = 'School Administration',
-  recipientType = 'all'
+  recipientType = 'all',
+  attachments = []
 }) {
   const recipientTypeLabel = getRecipientTypeLabel(recipientType);
   const sanitizedContent = sanitizeContent(content);
+  
+  // Generate attachments HTML if there are attachments
+  const attachmentsHTML = attachments && attachments.length > 0 ? `
+    <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0;">
+      <div style="font-size: 15px; font-weight: 600; color: #1e3c72; margin-bottom: 14px;">📎 Attachments</div>
+      <ul style="list-style: none;">
+        ${attachments.map(attachment => `
+          <li style="display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 18px;">📄</span>
+            <div style="flex: 1; min-width: 0;">
+              <a href="${attachment.url}" target="_blank" style="color: #1e3c72; text-decoration: none; font-weight: 500; font-size: 13px; word-break: break-word;">${attachment.originalName || attachment.filename}</a>
+              <small style="color: #64748b; font-size: 12px; display: block; margin-top: 2px;">${attachment.fileType ? attachment.fileType.toUpperCase() : 'File'} • ${formatFileSize(attachment.fileSize)}</small>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  ` : '';
   
   return `
 <!DOCTYPE html>
@@ -185,636 +204,29 @@ function getModernEmailTemplate({
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${subject} • ${SCHOOL_NAME}</title>
-    <style>
-        /* Reset and Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f8fafc;
-            padding: 16px;
-            margin: 0;
-        }
-        
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e2e8f0;
-        }
-        
-        /* Header Styles */
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            padding: 32px 20px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            opacity: 0.1;
-        }
-        
-        .school-logo {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .school-motto {
-            font-size: 14px;
-            opacity: 0.95;
-            margin-bottom: 16px;
-            font-weight: 500;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .email-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            padding: 6px 16px;
-            border-radius: 24px;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Content Styles */
-        .content {
-            padding: 28px 20px;
-        }
-        
-        .subject {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1e3c72;
-            margin-bottom: 20px;
-            line-height: 1.4;
-            border-left: 4px solid #4c7cf3;
-            padding-left: 16px;
-        }
-        
-        .message-content {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            border: 1px solid #e2e8f0;
-            line-height: 1.7;
-            font-size: 14px;
-        }
-        
-        .message-content p {
-            margin-bottom: 14px;
-            word-break: break-word;
-        }
-        
-        .message-content p:last-child {
-            margin-bottom: 0;
-        }
-        
-        /* Recipient Info */
-        .recipient-info {
-            background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%);
-            border-radius: 12px;
-            padding: 16px;
-            margin: 20px 0;
-            border: 1px solid #dbeafe;
-        }
-        
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-        
-        .info-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .info-icon {
-            width: 18px;
-            height: 18px;
-            color: #4c7cf3;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-        
-        .info-text {
-            font-size: 13px;
-            color: #475569;
-        }
-        
-        /* Attachments Section */
-        .attachments-section {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .attachments-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #1e3c72;
-            margin-bottom: 14px;
-        }
-        
-        .attachments-list {
-            list-style: none;
-        }
-        
-        .attachment-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .attachment-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .attachment-icon {
-            font-size: 18px;
-        }
-        
-        .attachment-name {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .attachment-name a {
-            color: #1e3c72;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 13px;
-            word-break: break-word;
-        }
-        
-        .attachment-name a:hover {
-            text-decoration: underline;
-        }
-        
-        .attachment-name small {
-            color: #64748b;
-            font-size: 12px;
-            display: block;
-            margin-top: 2px;
-        }
-        
-        /* Footer Styles */
-        .footer {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: #cbd5e1;
-            padding: 28px 20px;
-            text-align: center;
-        }
-        
-        .school-header {
-            margin-bottom: 20px;
-        }
-        
-        .school-header h3 {
-            font-size: 20px;
-            font-weight: 900;
-            color: white;
-            margin-bottom: 6px;
-            letter-spacing: -0.025em;
-        }
-        
-        .location-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            color: #94a3b8;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        
-        .contact-details {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .contact-card {
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-        }
-        
-        .contact-card:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-        }
-        
-        .contact-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .contact-icon.email {
-            background: #e0f2fe;
-            color: #0ea5e9;
-        }
-        
-        .contact-icon.phone {
-            background: #f0fdf4;
-            color: #22c55e;
-        }
-        
-        .contact-icon.web {
-            background: #fce7f3;
-            color: #db2777;
-        }
-        
-        .contact-content {
-            min-width: 0;
-            flex: 1;
-        }
-        
-        .contact-label {
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #94a3b8;
-            letter-spacing: 0.05em;
-            margin-bottom: 2px;
-        }
-        
-        .contact-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1e293b;
-            word-break: break-word;
-        }
-        
-        .contact-card.email .contact-label {
-            color: #0ea5e9;
-        }
-        
-        .contact-card.phone .contact-label {
-            color: #22c55e;
-        }
-        
-        .contact-card.web .contact-label {
-            color: #db2777;
-        }
-        
-        /* Social Media */
-        .social-media {
-            margin-bottom: 20px;
-            padding: 16px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .social-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 14px;
-            font-weight: 700;
-            color: #94a3b8;
-        }
-        
-        .social-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .social-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            border: 2px solid #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 12px;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            color: white;
-        }
-        
-        .social-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        .social-btn.facebook {
-            background: #1877F2;
-            border-color: #1877F2;
-        }
-        
-        .social-btn.youtube {
-            background: #FF0000;
-            border-color: #FF0000;
-        }
-        
-        .social-btn.linkedin {
-            background: #0A66C2;
-            border-color: #0A66C2;
-        }
-        
-        .social-btn.twitter {
-            background: #000000;
-            border-color: #000000;
-        }
-        
-        /* Sender Info */
-        .sender-info {
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 12px;
-            color: #94a3b8;
-        }
-        
-        .sender-info p {
-            margin-bottom: 3px;
-        }
-        
-        .important-notice {
-            background: rgba(234, 179, 8, 0.1);
-            border: 1px solid rgba(234, 179, 8, 0.3);
-            border-radius: 8px;
-            padding: 14px;
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .important-notice p {
-            font-size: 12px;
-            color: #92400e;
-            margin: 0;
-            word-break: break-word;
-        }
-        
-        /* Mobile Responsive Design */
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .email-container {
-                border-radius: 12px;
-            }
-            
-            .header {
-                padding: 24px 16px;
-            }
-            
-            .school-logo {
-                font-size: 20px;
-                margin-bottom: 6px;
-            }
-            
-            .school-motto {
-                font-size: 12px;
-                margin-bottom: 12px;
-            }
-            
-            .email-badge {
-                font-size: 10px;
-                padding: 5px 12px;
-            }
-            
-            .content {
-                padding: 20px 16px;
-            }
-            
-            .subject {
-                font-size: 18px;
-                margin-bottom: 16px;
-                padding-left: 12px;
-                border-left-width: 3px;
-            }
-            
-            .message-content {
-                padding: 16px;
-                margin: 16px 0;
-                font-size: 13px;
-            }
-            
-            .message-content p {
-                margin-bottom: 12px;
-            }
-            
-            .recipient-info {
-                padding: 14px;
-                margin: 16px 0;
-            }
-            
-            .info-item {
-                gap: 8px;
-                margin-bottom: 8px;
-                font-size: 12px;
-            }
-            
-            .attachments-section {
-                padding: 16px;
-                margin: 16px 0;
-            }
-            
-            .attachments-title {
-                font-size: 14px;
-                margin-bottom: 12px;
-            }
-            
-            .attachment-item {
-                padding: 8px;
-                margin-bottom: 6px;
-                gap: 8px;
-            }
-            
-            .attachment-icon {
-                font-size: 16px;
-            }
-            
-            .attachment-name a {
-                font-size: 12px;
-            }
-            
-            .footer {
-                padding: 20px 16px;
-            }
-            
-            .school-header h3 {
-                font-size: 18px;
-                margin-bottom: 4px;
-            }
-            
-            .location-info {
-                font-size: 12px;
-            }
-            
-            .contact-details {
-                gap: 10px;
-                margin-bottom: 16px;
-            }
-            
-            .contact-card {
-                padding: 12px;
-                gap: 10px;
-                border-radius: 10px;
-            }
-            
-            .contact-icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 8px;
-            }
-            
-            .contact-label {
-                font-size: 10px;
-            }
-            
-            .contact-value {
-                font-size: 13px;
-            }
-            
-            .social-media {
-                margin-bottom: 16px;
-                padding: 12px 0;
-            }
-            
-            .social-title {
-                font-size: 11px;
-                margin-bottom: 12px;
-            }
-            
-            .social-buttons {
-                gap: 8px;
-            }
-            
-            .social-btn {
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
-                font-size: 10px;
-            }
-            
-            .sender-info {
-                font-size: 11px;
-            }
-            
-            .important-notice {
-                padding: 12px;
-                margin: 16px 0;
-            }
-            
-            .important-notice p {
-                font-size: 11px;
-            }
-        }
-        
-        /* Tablet/Medium Screens */
-        @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-            
-            .header {
-                padding: 28px 18px;
-            }
-            
-            .school-logo {
-                font-size: 24px;
-            }
-            
-            .content {
-                padding: 24px 18px;
-            }
-            
-            .subject {
-                font-size: 20px;
-                margin-bottom: 18px;
-            }
-            
-            .contact-details {
-                gap: 11px;
-            }
-            
-            .footer {
-                padding: 24px 18px;
-            }
-        }
-    </style>
 </head>
-<body>
-    <div class="email-container">
+<body style="margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc;">
+    <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0;">
         <!-- Header -->
-        <div class="header">
-            <h1 class="school-logo">${SCHOOL_NAME}</h1>
-            <p class="school-motto">${SCHOOL_MOTTO}</p>
-            <div class="email-badge">${recipientTypeLabel}</div>
+        <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 32px 20px; text-align: center; position: relative; overflow: hidden;">
+            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; position: relative; z-index: 1;">${SCHOOL_NAME}</h1>
+            <p style="font-size: 14px; opacity: 0.95; margin-bottom: 16px; font-weight: 500; position: relative; z-index: 1;">${SCHOOL_MOTTO}</p>
+            <div style="display: inline-block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 6px 16px; border-radius: 24px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); position: relative; z-index: 1;">${recipientTypeLabel}</div>
         </div>
         
         <!-- Content -->
-        <div class="content">
-            <h2 class="subject">${subject}</h2>
+        <div style="padding: 28px 20px;">
+            <h2 style="font-size: 22px; font-weight: 700; color: #1e3c72; margin-bottom: 20px; line-height: 1.4; border-left: 4px solid #4c7cf3; padding-left: 16px;">${subject}</h2>
             
             <!-- Recipient Information -->
-            <div class="recipient-info">
-                <div class="info-item">
-                    <span class="info-icon">👤</span>
-                    <span class="info-text">For: <strong>${recipientTypeLabel}</strong></span>
+            <div style="background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%); border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #dbeafe;">
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px;">
+                    <span style="width: 18px; height: 18px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;">👤</span>
+                    <span style="font-size: 13px; color: #475569;">For: <strong>${recipientTypeLabel}</strong></span>
                 </div>
-                <div class="info-item">
-                    <span class="info-icon">📅</span>
-                    <span class="info-text">Date: <strong>${new Date().toLocaleDateString('en-US', { 
+                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px;">
+                    <span style="width: 18px; height: 18px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;">📅</span>
+                    <span style="font-size: 13px; color: #475569;">Date: <strong>${new Date().toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'short', 
                         day: 'numeric' 
@@ -823,68 +235,69 @@ function getModernEmailTemplate({
             </div>
             
             <!-- Message Content -->
-            <div class="message-content">
+            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0; line-height: 1.7; font-size: 14px;">
                 ${sanitizedContent}
             </div>
             
+            <!-- Attachments Section -->
+            ${attachmentsHTML}
+            
             <!-- Important Notice -->
-            <div class="important-notice">
-                <p>📧 Official communication from ${SCHOOL_NAME}. Do not reply to this email.</p>
+            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 14px; margin: 20px 0; text-align: center;">
+                <p style="font-size: 12px; color: #92400e; margin: 0; word-break: break-word;">📧 Official communication from ${SCHOOL_NAME}. Do not reply to this email.</p>
             </div>
         </div>
         
         <!-- Footer -->
-        <div class="footer">
+        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #cbd5e1; padding: 28px 20px; text-align: center;">
             <!-- School Information -->
-            <div class="school-header">
-                <h3>${SCHOOL_NAME}</h3>
-                <div class="location-info">
-                    📍 ${SCHOOL_LOCATION}
-                </div>
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 20px; font-weight: 900; color: white; margin-bottom: 6px; letter-spacing: -0.025em;">${SCHOOL_NAME}</h3>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; color: #94a3b8; font-size: 13px; font-weight: 500;">📍 ${SCHOOL_LOCATION}</div>
             </div>
             
             <!-- Contact Details -->
-            <div class="contact-details">
-                <a href="mailto:${CONTACT_EMAIL}" class="contact-card email">
-                    <div class="contact-icon email">✉</div>
-                    <div class="contact-content">
-                        <div class="contact-label">Email</div>
-                        <div class="contact-value">${CONTACT_EMAIL}</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <a href="mailto:${CONTACT_EMAIL}" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #e0f2fe; color: #0ea5e9;">✉</div>
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0ea5e9; letter-spacing: 0.05em; margin-bottom: 2px;">Email</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">${CONTACT_EMAIL}</div>
                     </div>
                 </a>
                 
-                <a href="tel:${CONTACT_PHONE}" class="contact-card phone">
-                    <div class="contact-icon phone">☎</div>
-                    <div class="contact-content">
-                        <div class="contact-label">Call Us</div>
-                        <div class="contact-value">${CONTACT_PHONE}</div>
+                <a href="tel:${CONTACT_PHONE}" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f0fdf4; color: #22c55e;">☎</div>
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #22c55e; letter-spacing: 0.05em; margin-bottom: 2px;">Call Us</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">${CONTACT_PHONE}</div>
                     </div>
                 </a>
                 
-                <a href="${SCHOOL_WEBSITE}" target="_blank" class="contact-card web">
-                    <div class="contact-icon web">🌐</div>
-                    <div class="contact-content">
-                        <div class="contact-label">Visit</div>
-                        <div class="contact-value">Our Website</div>
+                <a href="${SCHOOL_WEBSITE}" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce7f3; color: #db2777;">🌐</div>
+                    <div style="min-width: 0; flex: 1;">
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #db2777; letter-spacing: 0.05em; margin-bottom: 2px;">Visit</div>
+                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">Our Website</div>
                     </div>
                 </a>
             </div>
             
             <!-- Social Media Buttons -->
-            <div class="social-media">
-                <div class="social-title">Follow Us</div>
-                <div class="social-buttons">
-                    <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" class="social-btn facebook" title="Facebook">f</a>
-                    <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" class="social-btn youtube" title="YouTube">▶</a>
-                    <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" class="social-btn linkedin" title="LinkedIn">in</a>
-                    <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" class="social-btn twitter" title="Twitter">𝕏</a>
+            <div style="margin-bottom: 20px; padding: 16px 0; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; font-weight: 700; color: #94a3b8;">Follow Us</div>
+                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #1877F2; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #1877F2;" title="Facebook">f</a>
+                    <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #FF0000; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #FF0000;" title="YouTube">▶</a>
+                    <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #0A66C2; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #0A66C2;" title="LinkedIn">in</a>
+                    <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #000000; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #000000;" title="Twitter">𝕏</a>
                 </div>
             </div>
             
             <!-- Sender Information -->
-            <div class="sender-info">
-                <p>Sent by: <strong>${senderName}</strong></p>
-                <p>${SCHOOL_NAME}</p>
+            <div style="padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 12px; color: #94a3b8;">
+                <p style="margin-bottom: 3px;">Sent by: <strong>${senderName}</strong></p>
+                <p style="margin-bottom: 3px;">${SCHOOL_NAME}</p>
                 <p style="margin-top: 8px; color: #64748b;"><em>Confidential communication for authorized recipients only.</em></p>
             </div>
         </div>
@@ -938,15 +351,13 @@ async function sendModernEmails(campaign) {
   for (const recipient of recipients) {
     try {
       // Generate email content with attachments section
-      let htmlContent = getModernEmailTemplate({
+      const htmlContent = getModernEmailTemplate({
         subject: campaign.subject,
         content: campaign.content,
         senderName: 'School Administration',
-        recipientType: recipientType
+        recipientType: recipientType,
+        attachments: attachmentsArray
       });
-
-      // Add attachments section if there are attachments
-
 
       const mailOptions = {
         from: `"${SCHOOL_NAME} Administration" <${process.env.EMAIL_USER}>`,
