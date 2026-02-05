@@ -238,9 +238,7 @@ export async function PUT(request, context) {
         email, 
         name: name || null,
         active: active !== undefined ? active : true,
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role
+        updatedAt: new Date(),
       },
     });
 
@@ -249,7 +247,6 @@ export async function PUT(request, context) {
         success: true,
         message: "Subscriber updated successfully",
         subscriber: updatedSubscriber,
-        updatedBy: auth.user.name,
         timestamp: new Date().toISOString()
       },
       { status: 200 }
@@ -309,7 +306,6 @@ export async function DELETE(request, context) {
         success: true, 
         message: "Subscriber deleted successfully",
         deletedEmail: existingSubscriber.email,
-        deletedBy: auth.user.name,
         timestamp: new Date().toISOString()
       },
       { status: 200 }
