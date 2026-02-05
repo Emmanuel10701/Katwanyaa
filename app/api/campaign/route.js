@@ -218,91 +218,105 @@ const emailTemplates = {
         <html>
         <head>
           <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1.0">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); padding: 40px 30px; text-align: center; }
-            .content { padding: 40px 30px; }
-            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
-            .cta-button { display: inline-block; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-            .agenda-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #3b82f6; }
-            .custom-message { background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #f59e0b; }
-          </style>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+          <title>Admissions Open - ${SCHOOL_NAME}</title>
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">🎓 Admissions Open</h1>
-              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
-              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+        <body style="margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; line-height: 1.6; color: #333; -webkit-text-size-adjust: 100%;">
+          <!-- Container -->
+          <div style="max-width: 100%; width: 100%; min-width: 320px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); padding: 10% 5% 8%; text-align: center; color: white;">
+              <h1 style="color: white; font-size: clamp(24px, 6vw, 32px); font-weight: 700; margin: 0 0 8px; line-height: 1.2;">🎓 Admissions Open</h1>
+              <p style="color: rgba(255,255,255,0.95); font-size: clamp(14px, 4vw, 18px); margin: 0 0 4px; font-weight: 500;">${SCHOOL_NAME}</p>
+              <p style="color: rgba(255,255,255,0.85); font-size: clamp(12px, 3vw, 14px); margin: 0; font-weight: 400;">${SCHOOL_LOCATION}</p>
             </div>
             
-            <div class="content">
-              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">Begin Your Educational Journey</h2>
+            <!-- Content -->
+            <div style="padding: 8% 5%;">
+              <h2 style="color: #1e293b; font-size: clamp(20px, 5vw, 28px); font-weight: 600; margin: 0 0 5%; line-height: 1.3;">Begin Your Educational Journey</h2>
               
               ${customMessage ? `
-                <div class="custom-message">
-                  <h3 style="color:#92400e; font-size: 16px; font-weight: 600; margin: 0 0 10px;">Additional Message:</h3>
-                  <p style="color:#78350f; font-size: 14px; line-height: 1.6; margin: 0;">${customMessage}</p>
+                <!-- Custom Message -->
+                <div style="background: #fef3c7; border-radius: 12px; padding: 5%; margin: 0 0 5%; border-left: 4px solid #f59e0b;">
+                  <h3 style="color: #92400e; font-size: clamp(16px, 4vw, 18px); font-weight: 600; margin: 0 0 3%;">Additional Message:</h3>
+                  <p style="color: #78350f; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.5; margin: 0;">${customMessage}</p>
                 </div>
               ` : ''}
               
-              <div class="agenda-card">
-                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 15px;">📚 Admissions Information</h3>
+              <!-- Admissions Information -->
+              <div style="background: #f8fafc; border-radius: 12px; padding: 5%; margin: 0 0 5%; border-left: 4px solid #3b82f6;">
+                <h3 style="color: #1e40af; font-size: clamp(18px, 4.5vw, 22px); font-weight: 600; margin: 0 0 4%;">📚 Admissions Information</h3>
                 
                 ${admission.title ? `
-                  <p style="color:#1e40af; font-size: 16px; font-weight: 600; margin: 10px 0 5px;">
+                  <p style="color: #1e40af; font-size: clamp(16px, 4vw, 20px); font-weight: 600; margin: 0 0 2%;">
                     ${admission.title}
                   </p>
                 ` : ''}
                 
-                <p style="color:#475569; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+                <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0 0 4%;">
                   We are thrilled to announce that admissions for the <strong>${data.schoolYear || admission.schoolYear || '2025'}</strong> 
                   academic year are now open! Join our community of excellence at our Public Mixed Day and Boarding School.
                 </p>
                 
                 ${admission.deadline ? `
-                  <p style="color:#059669; font-size: 15px; font-weight: 600; margin: 15px 0;">
+                  <p style="color: #059669; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 4% 0;">
                     📅 Application Deadline: ${formatDate(admission.deadline)}
                   </p>
                 ` : data.deadline ? `
-                  <p style="color:#059669; font-size: 15px; font-weight: 600; margin: 15px 0;">
+                  <p style="color: #059669; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 4% 0;">
                     📅 Application Deadline: ${data.deadline}
                   </p>
                 ` : ''}
                 
                 ${admission.date ? `
-                  <p style="color:#475569; font-size: 14px; margin: 10px 0;">
+                  <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 3% 0 0;">
                     📆 Admission Date: ${formatDate(admission.date)}
                   </p>
                 ` : ''}
               </div>
               
-              <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0; border-left: 4px solid #3b82f6;">
-                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Quick Facts:</h3>
-                <ul style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-                  <li>Public Mixed Day and Boarding School in Matungulu, Machakos</li>
-                  <li>1200+ students community</li>
-                  <li>8-4-4 Curriculum System</li>
-                  <li>Quality education for all</li>
+              <!-- Quick Facts -->
+              <div style="background: #f0f9ff; border-radius: 12px; padding: 5%; margin: 0 0 6%; border-left: 4px solid #3b82f6;">
+                <h3 style="color: #1e40af; font-size: clamp(18px, 4.5vw, 22px); font-weight: 600; margin: 0 0 4%;">Quick Facts:</h3>
+                <ul style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0; padding-left: 5%;">
+                  <li style="margin: 0 0 2%;">Public Mixed Day and Boarding School in Matungulu, Machakos</li>
+                  <li style="margin: 0 0 2%;">1200+ students community</li>
+                  <li style="margin: 0 0 2%;">8-4-4 Curriculum System</li>
+                  <li style="margin: 0;">Quality education for all</li>
                 </ul>
               </div>
               
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="/pages/admissions" class="cta-button">Apply Now →</a>
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 8% 0;">
+                <a href="/pages/admissions" 
+                   style="display: inline-block; 
+                          width: 100%; 
+                          max-width: 280px; 
+                          background: linear-gradient(135deg, #059669 0%, #047857 100%); 
+                          color: white; 
+                          padding: 16px 8px; 
+                          text-decoration: none; 
+                          border-radius: 8px; 
+                          font-weight: 600; 
+                          font-size: clamp(16px, 4vw, 18px); 
+                          margin: 0 auto; 
+                          text-align: center;
+                          border: none;
+                          cursor: pointer;">Apply Now →</a>
               </div>
               
-              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+              <!-- Contact Info -->
+              <p style="color: #64748b; font-size: clamp(13px, 3.2vw, 15px); line-height: 1.6; margin: 6% 0 0; text-align: center;">
                 For more information, contact our admissions office at <strong>${SCHOOL_PHONE}</strong> or email <strong>${SCHOOL_EMAIL}</strong>
               </p>
             </div>
 
-            <div class="footer">
-              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
-              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
-              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            <!-- Footer -->
+            <div style="background: #f1f5f9; padding: 8% 5%; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #1e293b; font-size: clamp(16px, 4vw, 20px); font-weight: 600; margin: 0 0 3%;">${SCHOOL_NAME}</p>
+              <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 3%; font-style: italic;">${SCHOOL_MOTTO}</p>
+              <p style="color: #94a3b8; font-size: clamp(11px, 2.8vw, 13px); margin: 3% 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -321,47 +335,42 @@ const emailTemplates = {
         <html>
         <head>
           <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1.0">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); padding: 40px 30px; text-align: center; }
-            .content { padding: 40px 30px; }
-            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
-            .agenda-item { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 15px 0; border-left: 4px solid; }
-            .announcement { border-left-color: #f59e0b; }
-            .event { border-left-color: #10b981; }
-            .admission { border-left-color: #3b82f6; }
-          </style>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+          <title>${data.month || 'Monthly'} Newsletter - ${SCHOOL_NAME}</title>
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">📰 ${data.month || 'This Month'}'s Newsletter</h1>
-              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
-              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+        <body style="margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; line-height: 1.6; color: #333; -webkit-text-size-adjust: 100%;">
+          <!-- Container -->
+          <div style="max-width: 100%; width: 100%; min-width: 320px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); padding: 10% 5% 8%; text-align: center; color: white;">
+              <h1 style="color: white; font-size: clamp(24px, 6vw, 32px); font-weight: 700; margin: 0 0 8px; line-height: 1.2;">📰 ${data.month || 'This Month'}'s Newsletter</h1>
+              <p style="color: rgba(255,255,255,0.95); font-size: clamp(14px, 4vw, 18px); margin: 0 0 4px; font-weight: 500;">${SCHOOL_NAME}</p>
+              <p style="color: rgba(255,255,255,0.85); font-size: clamp(12px, 3vw, 14px); margin: 0; font-weight: 400;">${SCHOOL_LOCATION}</p>
             </div>
             
-            <div class="content">
-              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">Monthly Updates & Announcements</h2>
+            <!-- Content -->
+            <div style="padding: 8% 5%;">
+              <h2 style="color: #1e293b; font-size: clamp(20px, 5vw, 28px); font-weight: 600; margin: 0 0 5%; line-height: 1.3;">Monthly Updates & Announcements</h2>
               
               ${customMessage ? `
-                <p style="color:#475569; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                <!-- Custom Message -->
+                <p style="color: #475569; font-size: clamp(15px, 3.8vw, 17px); line-height: 1.6; margin: 0 0 6%; padding: 0 2%;">
                   ${customMessage}
                 </p>
               ` : ''}
               
               ${announcementDetails ? `
-                <div class="agenda-item announcement">
-                  <h3 style="color:#92400e; font-size: 18px; font-weight: 600; margin: 0 0 10px;">📢 ${announcementDetails.title || 'Important Announcement'}</h3>
+                <!-- Announcement -->
+                <div style="background: #f8fafc; border-radius: 12px; padding: 5%; margin: 0 0 5%; border-left: 4px solid #f59e0b;">
+                  <h3 style="color: #92400e; font-size: clamp(17px, 4.2vw, 20px); font-weight: 600; margin: 0 0 3%;">📢 ${announcementDetails.title || 'Important Announcement'}</h3>
                   ${announcementDetails.date ? `
-                    <p style="color:#b45309; font-size: 14px; margin: 5px 0 15px;">
+                    <p style="color: #b45309; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 4%;">
                       Date: ${formatDate(announcementDetails.date)}
                     </p>
                   ` : ''}
                   ${announcementDetails.description ? `
-                    <p style="color:#78350f; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <p style="color: #78350f; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0;">
                       ${announcementDetails.description}
                     </p>
                   ` : ''}
@@ -369,25 +378,26 @@ const emailTemplates = {
               ` : ''}
               
               ${eventDetails ? `
-                <div class="agenda-item event">
-                  <h3 style="color:#065f46; font-size: 18px; font-weight: 600; margin: 0 0 10px;">🎉 ${eventDetails.title || 'Upcoming Event'}</h3>
+                <!-- Event -->
+                <div style="background: #f8fafc; border-radius: 12px; padding: 5%; margin: 0 0 5%; border-left: 4px solid #10b981;">
+                  <h3 style="color: #065f46; font-size: clamp(17px, 4.2vw, 20px); font-weight: 600; margin: 0 0 3%;">🎉 ${eventDetails.title || 'Upcoming Event'}</h3>
                   ${eventDetails.date ? `
-                    <p style="color:#047857; font-size: 14px; margin: 5px 0 5px;">
+                    <p style="color: #047857; font-size: clamp(14px, 3.5vw, 16px); margin: 2% 0;">
                       📅 Date: ${formatDate(eventDetails.date)}
                     </p>
                   ` : ''}
                   ${eventDetails.time ? `
-                    <p style="color:#047857; font-size: 14px; margin: 5px 0 5px;">
+                    <p style="color: #047857; font-size: clamp(14px, 3.5vw, 16px); margin: 2% 0;">
                       ⏰ Time: ${eventDetails.time}
                     </p>
                   ` : ''}
                   ${eventDetails.location ? `
-                    <p style="color:#047857; font-size: 14px; margin: 5px 0 15px;">
+                    <p style="color: #047857; font-size: clamp(14px, 3.5vw, 16px); margin: 2% 0 4%;">
                       📍 Location: ${eventDetails.location}
                     </p>
                   ` : ''}
                   ${eventDetails.description ? `
-                    <p style="color:#065f46; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <p style="color: #065f46; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0;">
                       ${eventDetails.description}
                     </p>
                   ` : ''}
@@ -395,33 +405,36 @@ const emailTemplates = {
               ` : ''}
               
               ${admissionDetails ? `
-                <div class="agenda-item admission">
-                  <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">🎓 ${admissionDetails.title || 'Admissions Update'}</h3>
+                <!-- Admission -->
+                <div style="background: #f8fafc; border-radius: 12px; padding: 5%; margin: 0 0 5%; border-left: 4px solid #3b82f6;">
+                  <h3 style="color: #1e40af; font-size: clamp(17px, 4.2vw, 20px); font-weight: 600; margin: 0 0 3%;">🎓 ${admissionDetails.title || 'Admissions Update'}</h3>
                   ${admissionDetails.deadline ? `
-                    <p style="color:#1d4ed8; font-size: 14px; margin: 5px 0 15px;">
+                    <p style="color: #1d4ed8; font-size: clamp(14px, 3.5vw, 16px); margin: 2% 0 4%;">
                       📅 Deadline: ${formatDate(admissionDetails.deadline)}
                     </p>
                   ` : ''}
                   ${admissionDetails.description ? `
-                    <p style="color:#1e3a8a; font-size: 14px; line-height: 1.6; margin: 0;">
+                    <p style="color: #1e3a8a; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0;">
                       ${admissionDetails.description}
                     </p>
                   ` : ''}
                 </div>
               ` : ''}
               
-              <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0;">
-                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Stay Connected</h3>
-                <p style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0;">
+              <!-- Stay Connected -->
+              <div style="background: #f0f9ff; border-radius: 12px; padding: 5%; margin: 6% 0;">
+                <h3 style="color: #1e40af; font-size: clamp(18px, 4.5vw, 22px); font-weight: 600; margin: 0 0 4%;">Stay Connected</h3>
+                <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); line-height: 1.6; margin: 0;">
                   Follow us on social media for daily updates, photos, and more exciting news from our school community.
                 </p>
               </div>
             </div>
 
-            <div class="footer">
-              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
-              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
-              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            <!-- Footer -->
+            <div style="background: #f1f5f9; padding: 8% 5%; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #1e293b; font-size: clamp(16px, 4vw, 20px); font-weight: 600; margin: 0 0 3%;">${SCHOOL_NAME}</p>
+              <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 3%; font-style: italic;">${SCHOOL_MOTTO}</p>
+              <p style="color: #94a3b8; font-size: clamp(11px, 2.8vw, 13px); margin: 3% 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -441,78 +454,96 @@ const emailTemplates = {
         <html>
         <head>
           <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1.0">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center; }
-            .content { padding: 40px 30px; }
-            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
-            .cta-button { display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-            .event-details { background: #f0fdf4; border-radius: 12px; padding: 25px; margin: 20px 0; }
-          </style>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+          <title>Event Invitation - ${SCHOOL_NAME}</title>
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">🎉 You're Invited!</h1>
-              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
-              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+        <body style="margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; line-height: 1.6; color: #333; -webkit-text-size-adjust: 100%;">
+          <!-- Container -->
+          <div style="max-width: 100%; width: 100%; min-width: 320px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 10% 5% 8%; text-align: center; color: white;">
+              <h1 style="color: white; font-size: clamp(24px, 6vw, 32px); font-weight: 700; margin: 0 0 8px; line-height: 1.2;">🎉 You're Invited!</h1>
+              <p style="color: rgba(255,255,255,0.95); font-size: clamp(14px, 4vw, 18px); margin: 0 0 4px; font-weight: 500;">${SCHOOL_NAME}</p>
+              <p style="color: rgba(255,255,255,0.85); font-size: clamp(12px, 3vw, 14px); margin: 0; font-weight: 400;">${SCHOOL_LOCATION}</p>
             </div>
             
-            <div class="content">
-              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">${data.eventName || event.title || 'Special School Event'}</h2>
+            <!-- Content -->
+            <div style="padding: 8% 5%;">
+              <h2 style="color: #1e293b; font-size: clamp(20px, 5vw, 28px); font-weight: 600; margin: 0 0 5%; line-height: 1.3;">${data.eventName || event.title || 'Special School Event'}</h2>
               
               ${customMessage ? `
-                <p style="color:#475569; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                <!-- Custom Message -->
+                <p style="color: #475569; font-size: clamp(15px, 3.8vw, 17px); line-height: 1.6; margin: 0 0 6%;">
                   ${customMessage}
                 </p>
               ` : ''}
               
-              <div class="event-details">
-                <h3 style="color:#065f46; font-size: 20px; font-weight: 600; margin: 0 0 20px;">Event Details</h3>
+              <!-- Event Details -->
+              <div style="background: #f0fdf4; border-radius: 12px; padding: 5%; margin: 0 0 6%;">
+                <h3 style="color: #065f46; font-size: clamp(18px, 4.5vw, 22px); font-weight: 600; margin: 0 0 5%;">Event Details</h3>
                 
-                <div style="margin-bottom: 15px;">
-                  <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📅 Date:</p>
-                  <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${formatDate(event.date || data.date || 'To be announced')}</p>
+                <!-- Date -->
+                <div style="margin: 0 0 4%;">
+                  <p style="color: #065f46; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 0 0 2%;">📅 Date:</p>
+                  <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0;">${formatDate(event.date || data.date || 'To be announced')}</p>
                 </div>
                 
                 ${(event.time || data.time) ? `
-                  <div style="margin-bottom: 15px;">
-                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">⏰ Time:</p>
-                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${event.time || data.time}</p>
+                  <!-- Time -->
+                  <div style="margin: 0 0 4%;">
+                    <p style="color: #065f46; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 0 0 2%;">⏰ Time:</p>
+                    <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0;">${event.time || data.time}</p>
                   </div>
                 ` : ''}
                 
                 ${(event.location || data.location) ? `
-                  <div style="margin-bottom: 15px;">
-                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📍 Location:</p>
-                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${event.location || data.location || SCHOOL_NAME}</p>
+                  <!-- Location -->
+                  <div style="margin: 0 0 4%;">
+                    <p style="color: #065f46; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 0 0 2%;">📍 Location:</p>
+                    <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0;">${event.location || data.location || SCHOOL_NAME}</p>
                   </div>
                 ` : ''}
                 
                 ${event.description ? `
-                  <div style="margin-bottom: 15px;">
-                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📝 Description:</p>
-                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px; line-height: 1.6;">${event.description}</p>
+                  <!-- Description -->
+                  <div style="margin: 4% 0 0;">
+                    <p style="color: #065f46; font-size: clamp(15px, 3.8vw, 17px); font-weight: 600; margin: 0 0 2%;">📝 Description:</p>
+                    <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0; line-height: 1.6;">${event.description}</p>
                   </div>
                 ` : ''}
               </div>
               
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="/pages/events" class="cta-button">View Event Details →</a>
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 8% 0;">
+                <a href="/pages/events" 
+                   style="display: inline-block; 
+                          width: 100%; 
+                          max-width: 280px; 
+                          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
+                          color: white; 
+                          padding: 16px 8px; 
+                          text-decoration: none; 
+                          border-radius: 8px; 
+                          font-weight: 600; 
+                          font-size: clamp(16px, 4vw, 18px); 
+                          margin: 0 auto; 
+                          text-align: center;
+                          border: none;
+                          cursor: pointer;">View Event Details →</a>
               </div>
               
-              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+              <!-- Contact Info -->
+              <p style="color: #64748b; font-size: clamp(13px, 3.2vw, 15px); line-height: 1.6; margin: 6% 0 0; text-align: center;">
                 We look forward to seeing you at this exciting event! For any questions, please contact us at <strong>${SCHOOL_PHONE}</strong>
               </p>
             </div>
 
-            <div class="footer">
-              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
-              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
-              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            <!-- Footer -->
+            <div style="background: #f1f5f9; padding: 8% 5%; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #1e293b; font-size: clamp(16px, 4vw, 20px); font-weight: 600; margin: 0 0 3%;">${SCHOOL_NAME}</p>
+              <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 3%; font-style: italic;">${SCHOOL_MOTTO}</p>
+              <p style="color: #94a3b8; font-size: clamp(11px, 2.8vw, 13px); margin: 3% 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -531,88 +562,90 @@ const emailTemplates = {
         <html>
         <head>
           <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width,initial-scale=1.0">
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); padding: 40px 30px; text-align: center; }
-            .content { padding: 40px 30px; }
-            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
-            .agenda-section { margin: 25px 0; }
-            .agenda-item { background: #f8fafc; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #3b82f6; }
-          </style>
+          <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+          <title>Message from ${SCHOOL_NAME}</title>
         </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">📧 Message from ${SCHOOL_NAME}</h1>
-              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_LOCATION}</p>
+        <body style="margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: #f8fafc; line-height: 1.6; color: #333; -webkit-text-size-adjust: 100%;">
+          <!-- Container -->
+          <div style="max-width: 100%; width: 100%; min-width: 320px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); padding: 10% 5% 8%; text-align: center; color: white;">
+              <h1 style="color: white; font-size: clamp(24px, 6vw, 32px); font-weight: 700; margin: 0 0 8px; line-height: 1.2;">📧 Message from ${SCHOOL_NAME}</h1>
+              <p style="color: rgba(255,255,255,0.95); font-size: clamp(14px, 4vw, 18px); margin: 0 0 4px; font-weight: 500;">${SCHOOL_LOCATION}</p>
             </div>
             
-            <div class="content">
-              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">${data.subject || 'Important Message'}</h2>
+            <!-- Content -->
+            <div style="padding: 8% 5%;">
+              <h2 style="color: #1e293b; font-size: clamp(20px, 5vw, 28px); font-weight: 600; margin: 0 0 5%; line-height: 1.3;">${data.subject || 'Important Message'}</h2>
               
-              <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 0 0 30px;">
-                <p style="color:#92400e; font-size: 16px; line-height: 1.6; margin: 0;">
+              <!-- Main Message -->
+              <div style="background: #fef3c7; border-radius: 12px; padding: 5%; margin: 0 0 6%;">
+                <p style="color: #92400e; font-size: clamp(15px, 3.8vw, 17px); line-height: 1.6; margin: 0;">
                   ${customMessage || 'This is an important message from the school administration.'}
                 </p>
               </div>
               
-              <div class="agenda-section">
+              <!-- Related Information -->
+              <div style="margin: 6% 0;">
                 ${admissionDetails || eventDetails || announcementDetails ? `
-                  <h3 style="color:#1e293b; font-size: 20px; font-weight: 600; margin: 0 0 15px;">📅 Related Information</h3>
+                  <h3 style="color: #1e293b; font-size: clamp(18px, 4.5vw, 22px); font-weight: 600; margin: 0 0 4%;">📅 Related Information</h3>
                 ` : ''}
                 
                 ${admissionDetails ? `
-                  <div class="agenda-item">
-                    <h4 style="color:#1e40af; font-size: 16px; font-weight: 600; margin: 0 0 8px;">🎓 ${admissionDetails.title || 'Admissions'}</h4>
+                  <!-- Admission Item -->
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 4%; margin: 0 0 4%; border-left: 4px solid #3b82f6;">
+                    <h4 style="color: #1e40af; font-size: clamp(16px, 4vw, 18px); font-weight: 600; margin: 0 0 3%;">🎓 ${admissionDetails.title || 'Admissions'}</h4>
                     ${admissionDetails.deadline ? `
-                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Deadline: ${formatDate(admissionDetails.deadline)}</p>
+                      <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 2%;">Deadline: ${formatDate(admissionDetails.deadline)}</p>
                     ` : ''}
                     ${admissionDetails.description ? `
-                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${admissionDetails.description}</p>
+                      <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0; line-height: 1.5;">${admissionDetails.description}</p>
                     ` : ''}
                   </div>
                 ` : ''}
                 
                 ${eventDetails ? `
-                  <div class="agenda-item">
-                    <h4 style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 8px;">🎉 ${eventDetails.title || 'Event'}</h4>
+                  <!-- Event Item -->
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 4%; margin: 0 0 4%; border-left: 4px solid #10b981;">
+                    <h4 style="color: #065f46; font-size: clamp(16px, 4vw, 18px); font-weight: 600; margin: 0 0 3%;">🎉 ${eventDetails.title || 'Event'}</h4>
                     ${eventDetails.date ? `
-                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Date: ${formatDate(eventDetails.date)}</p>
+                      <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 2%;">Date: ${formatDate(eventDetails.date)}</p>
                     ` : ''}
                     ${eventDetails.time ? `
-                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Time: ${eventDetails.time}</p>
+                      <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 2%;">Time: ${eventDetails.time}</p>
                     ` : ''}
                     ${eventDetails.description ? `
-                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${eventDetails.description}</p>
+                      <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0; line-height: 1.5;">${eventDetails.description}</p>
                     ` : ''}
                   </div>
                 ` : ''}
                 
                 ${announcementDetails ? `
-                  <div class="agenda-item">
-                    <h4 style="color:#92400e; font-size: 16px; font-weight: 600; margin: 0 0 8px;">📢 ${announcementDetails.title || 'Announcement'}</h4>
+                  <!-- Announcement Item -->
+                  <div style="background: #f8fafc; border-radius: 8px; padding: 4%; margin: 0 0 4%; border-left: 4px solid #f59e0b;">
+                    <h4 style="color: #92400e; font-size: clamp(16px, 4vw, 18px); font-weight: 600; margin: 0 0 3%;">📢 ${announcementDetails.title || 'Announcement'}</h4>
                     ${announcementDetails.date ? `
-                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Date: ${formatDate(announcementDetails.date)}</p>
+                      <p style="color: #475569; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 2%;">Date: ${formatDate(announcementDetails.date)}</p>
                     ` : ''}
                     ${announcementDetails.description ? `
-                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${announcementDetails.description}</p>
+                      <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0; line-height: 1.5;">${announcementDetails.description}</p>
                     ` : ''}
                   </div>
                 ` : ''}
               </div>
               
-              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 30px 0 0;">
+              <!-- Closing Message -->
+              <p style="color: #64748b; font-size: clamp(13px, 3.2vw, 15px); line-height: 1.6; margin: 6% 0 0; text-align: center;">
                 Thank you for being part of our school community. For any questions, please contact us at <strong>${SCHOOL_PHONE}</strong> or <strong>${SCHOOL_EMAIL}</strong>
               </p>
             </div>
 
-            <div class="footer">
-              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
-              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
-              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            <!-- Footer -->
+            <div style="background: #f1f5f9; padding: 8% 5%; text-align: center; border-top: 1px solid #e2e8f0;">
+              <p style="color: #1e293b; font-size: clamp(16px, 4vw, 20px); font-weight: 600; margin: 0 0 3%;">${SCHOOL_NAME}</p>
+              <p style="color: #64748b; font-size: clamp(14px, 3.5vw, 16px); margin: 0 0 3%; font-style: italic;">${SCHOOL_MOTTO}</p>
+              <p style="color: #94a3b8; font-size: clamp(11px, 2.8vw, 13px); margin: 3% 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
             </div>
           </div>
         </body>
