@@ -1144,9 +1144,9 @@ export default function SubscriberManager() {
                           templateData: {
                             ...emailData.templateData,
                             selectedAdmissionDate: e.target.value,
-                            deadline: e.target.value ? agendaData.admissionDates.find(
-                              ad => ad.id === e.target.value
-                            )?.deadline || ''
+                         deadline: e.target.value ? (
+                          agendaData.admissionDates.find(ad => ad.id === e.target.value)?.deadline || ''
+                        ) : ''
                           }
                         })}
                         className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
