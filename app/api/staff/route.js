@@ -426,9 +426,6 @@ export async function POST(req) {
         expertise,
         achievements,
         // Track who created this staff record
-        createdBy: auth.user.id,
-        createdByName: auth.user.name,
-        createdByRole: auth.user.role
       },
     });
 
@@ -438,7 +435,6 @@ export async function POST(req) {
       { 
         success: true, 
         staff: newStaff,
-        createdBy: auth.user.name,
         timestamp: new Date().toISOString()
       },
       { status: 201 }

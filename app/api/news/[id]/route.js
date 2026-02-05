@@ -297,10 +297,6 @@ export async function PUT(req, { params }) {
       console.log(`🗑️ Image removed by ${auth.user.name}`);
     }
 
-    // Add audit info
-    updateData.updatedBy = auth.user.id;
-    updateData.updatedByName = auth.user.name;
-    updateData.updatedByRole = auth.user.role;
     updateData.updatedAt = new Date();
 
     const updatedNews = await prisma.news.update({
