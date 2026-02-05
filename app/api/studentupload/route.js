@@ -1489,6 +1489,7 @@ export async function POST(request) {
   }
 }
 
+
 // PUT - Update student with transaction (PROTECTED - authentication required)
 export async function PUT(request) {
   try {
