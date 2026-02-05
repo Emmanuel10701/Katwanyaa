@@ -1125,7 +1125,6 @@ export async function GET(request) {
           fileName: true,
           fileType: true,
           status: true,
-          uploadedBy: true,
           uploadDate: true,
           processedDate: true,
           totalRows: true,
@@ -1338,20 +1337,12 @@ export async function POST(request) {
         id: batchId,
         fileName: file.name,
         fileType: fileExtension,
-        uploadedBy: auth.user.name,
-        uploadedById: auth.user.id,
-        uploadedByRole: auth.user.role,
         status: 'processing',
         metadata: {
           uploadType,
           selectedForms,
           targetForm: uploadType === 'update' ? targetForm : null,
-          uploadedBy: {
-            name: auth.user.name,
-            id: auth.user.id,
-            role: auth.user.role,
-            deviceInfo: auth.deviceInfo
-          }
+      
         }
       }
     });
@@ -1527,7 +1518,6 @@ export async function POST(request) {
         validation: finalStats.validation,
         processingStats: processingStats,
         authenticated: true,
-        uploadedBy: auth.user.name,
         errors: processingStats.errors.slice(0, 20)
       });
       
@@ -1674,7 +1664,7 @@ export async function PUT(request) {
         validation: finalStats.validation
       },
       authenticated: true,
-      updatedBy: auth.user.name
+
     });
 
   } catch (error) {
