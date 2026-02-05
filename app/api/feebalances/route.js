@@ -949,9 +949,7 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
             oldAmount: fee.amount,
             oldAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-            uploadedBy: uploaderInfo.id,
-            uploadedByName: uploaderInfo.name,
-            uploadedByRole: uploaderInfo.role,
+
             timestamp: new Date()
           }))
         });
@@ -1061,9 +1059,7 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
             newAmount: fee.amount,
             newAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-            uploadedBy: uploaderInfo.id,
-            uploadedByName: uploaderInfo.name,
-            uploadedByRole: uploaderInfo.role,
+             uploadedBy: 'System Upload',
             timestamp: new Date()
           }))
         });
@@ -1092,7 +1088,7 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
       validationErrors: stats.errorRows,
       netChange: stats.created - stats.replaced,
       timestamp: new Date().toISOString(),
-      uploadedBy: uploaderInfo.name
+      uploadedBy: 'System Upload'
     };
     
     console.log('\n📊 REPLACE OPERATION COMPLETE:', stats.metadata);
@@ -1239,9 +1235,9 @@ const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploader
             newAmount: fee.amount,
             newAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-            uploadedBy: uploaderInfo.id,
-            uploadedByName: uploaderInfo.name,
-            uploadedByRole: uploaderInfo.role,
+            uploadedBy: 'System Upload',
+            uploadedByName: 'System',
+            uploadedByRole: 'SYSTEM',
             timestamp: new Date()
           }))
         });
@@ -1257,7 +1253,7 @@ const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploader
       duplicatesSkipped: stats.skippedDuplicates,
       totalProcessed: stats.validRows,
       timestamp: new Date().toISOString(),
-      uploadedBy: uploaderInfo.name
+        uploadedBy: 'System Upload',
     };
     
     console.log('\n📊 NEW UPLOAD COMPLETE:', stats.metadata);
