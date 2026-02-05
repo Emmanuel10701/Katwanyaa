@@ -250,6 +250,38 @@ export default function SubscriberManager() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const response = await fetch('/api/campaign', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-admin-token': 'your-admin-token',
+    'x-device-token': 'your-device-token'
+  },
+  body: JSON.stringify({
+    subscribers: selectedSubscribers,
+    template: emailData.template, // 'admission', 'newsletter', 'event', 'custom'
+    subject: emailData.subject,
+    customMessage: emailData.customMessage,
+    templateData: emailData.templateData, // All dynamic fields
+    agendaData: agendaData // Admission dates, announcements, events
+  })
+});
+
+
   // New state for agenda data
   const [agendaData, setAgendaData] = useState({
     admissionDates: [],

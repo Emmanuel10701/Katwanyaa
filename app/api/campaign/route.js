@@ -155,8 +155,472 @@ const transporter = nodemailer.createTransport({
 const SCHOOL_NAME = 'Katwanyaa High School';
 const SCHOOL_LOCATION = 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = 'Education is Light';
+const SCHOOL_EMAIL = 'info@katwanyaahighschool.sc.ke';
+const SCHOOL_PHONE = '+254720123456';
 
-// Email templates (keep your existing templates, just adding authentication wrapper)
+// Format date function
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+// Extract dynamic data from template data
+const extractAgendaData = (templateData, agendaData) => {
+  const result = {
+    admissionDetails: null,
+    announcementDetails: null,
+    eventDetails: null
+  };
+
+  if (templateData.selectedAdmissionDate && agendaData.admissionDates) {
+    result.admissionDetails = agendaData.admissionDates.find(
+      ad => ad.id === templateData.selectedAdmissionDate
+    );
+  }
+
+  if (templateData.selectedAnnouncement && agendaData.announcements) {
+    result.announcementDetails = agendaData.announcements.find(
+      ann => ann.id === templateData.selectedAnnouncement
+    );
+  }
+
+  if (templateData.selectedEvent && agendaData.schoolEvents) {
+    result.eventDetails = agendaData.schoolEvents.find(
+      ev => ev.id === templateData.selectedEvent
+    );
+  }
+
+  return result;
+};
+
+// Email templates with dynamic data from React component
+const emailTemplates = {
+  admission: (data, customMessage = '', agendaData = {}) => {
+    const { admissionDetails, eventDetails, announcementDetails } = extractAgendaData(data, agendaData);
+    const admission = admissionDetails || {};
+    const event = eventDetails || {};
+    const announcement = announcementDetails || {};
+
+    return {
+      subject: data.subject || `🎓 Admissions Now Open for ${data.schoolYear || '2025'} - ${SCHOOL_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); padding: 40px 30px; text-align: center; }
+            .content { padding: 40px 30px; }
+            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+            .agenda-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+            .custom-message { background: #fef3c7; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #f59e0b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">🎓 Admissions Open</h1>
+              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
+              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+            </div>
+            
+            <div class="content">
+              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">Begin Your Educational Journey</h2>
+              
+              ${customMessage ? `
+                <div class="custom-message">
+                  <h3 style="color:#92400e; font-size: 16px; font-weight: 600; margin: 0 0 10px;">Additional Message:</h3>
+                  <p style="color:#78350f; font-size: 14px; line-height: 1.6; margin: 0;">${customMessage}</p>
+                </div>
+              ` : ''}
+              
+              <div class="agenda-card">
+                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 15px;">📚 Admissions Information</h3>
+                
+                ${admission.title ? `
+                  <p style="color:#1e40af; font-size: 16px; font-weight: 600; margin: 10px 0 5px;">
+                    ${admission.title}
+                  </p>
+                ` : ''}
+                
+                <p style="color:#475569; font-size: 14px; line-height: 1.6; margin: 10px 0;">
+                  We are thrilled to announce that admissions for the <strong>${data.schoolYear || admission.schoolYear || '2025'}</strong> 
+                  academic year are now open! Join our community of excellence at our Public Mixed Day and Boarding School.
+                </p>
+                
+                ${admission.deadline ? `
+                  <p style="color:#059669; font-size: 15px; font-weight: 600; margin: 15px 0;">
+                    📅 Application Deadline: ${formatDate(admission.deadline)}
+                  </p>
+                ` : data.deadline ? `
+                  <p style="color:#059669; font-size: 15px; font-weight: 600; margin: 15px 0;">
+                    📅 Application Deadline: ${data.deadline}
+                  </p>
+                ` : ''}
+                
+                ${admission.date ? `
+                  <p style="color:#475569; font-size: 14px; margin: 10px 0;">
+                    📆 Admission Date: ${formatDate(admission.date)}
+                  </p>
+                ` : ''}
+              </div>
+              
+              <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Quick Facts:</h3>
+                <ul style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                  <li>Public Mixed Day and Boarding School in Matungulu, Machakos</li>
+                  <li>1200+ students community</li>
+                  <li>8-4-4 Curriculum System</li>
+                  <li>Quality education for all</li>
+                </ul>
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="/pages/admissions" class="cta-button">Apply Now →</a>
+              </div>
+              
+              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+                For more information, contact our admissions office at <strong>${SCHOOL_PHONE}</strong> or email <strong>${SCHOOL_EMAIL}</strong>
+              </p>
+            </div>
+
+            <div class="footer">
+              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
+              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
+              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+  },
+
+  newsletter: (data, customMessage = '', agendaData = {}) => {
+    const { admissionDetails, eventDetails, announcementDetails } = extractAgendaData(data, agendaData);
+    
+    return {
+      subject: data.subject || `📰 ${data.month || new Date().toLocaleString('default', { month: 'long' })} Newsletter - ${SCHOOL_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); padding: 40px 30px; text-align: center; }
+            .content { padding: 40px 30px; }
+            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+            .agenda-item { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 15px 0; border-left: 4px solid; }
+            .announcement { border-left-color: #f59e0b; }
+            .event { border-left-color: #10b981; }
+            .admission { border-left-color: #3b82f6; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">📰 ${data.month || 'This Month'}'s Newsletter</h1>
+              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
+              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+            </div>
+            
+            <div class="content">
+              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">Monthly Updates & Announcements</h2>
+              
+              ${customMessage ? `
+                <p style="color:#475569; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                  ${customMessage}
+                </p>
+              ` : ''}
+              
+              ${announcementDetails ? `
+                <div class="agenda-item announcement">
+                  <h3 style="color:#92400e; font-size: 18px; font-weight: 600; margin: 0 0 10px;">📢 ${announcementDetails.title || 'Important Announcement'}</h3>
+                  ${announcementDetails.date ? `
+                    <p style="color:#b45309; font-size: 14px; margin: 5px 0 15px;">
+                      Date: ${formatDate(announcementDetails.date)}
+                    </p>
+                  ` : ''}
+                  ${announcementDetails.description ? `
+                    <p style="color:#78350f; font-size: 14px; line-height: 1.6; margin: 0;">
+                      ${announcementDetails.description}
+                    </p>
+                  ` : ''}
+                </div>
+              ` : ''}
+              
+              ${eventDetails ? `
+                <div class="agenda-item event">
+                  <h3 style="color:#065f46; font-size: 18px; font-weight: 600; margin: 0 0 10px;">🎉 ${eventDetails.title || 'Upcoming Event'}</h3>
+                  ${eventDetails.date ? `
+                    <p style="color:#047857; font-size: 14px; margin: 5px 0 5px;">
+                      📅 Date: ${formatDate(eventDetails.date)}
+                    </p>
+                  ` : ''}
+                  ${eventDetails.time ? `
+                    <p style="color:#047857; font-size: 14px; margin: 5px 0 5px;">
+                      ⏰ Time: ${eventDetails.time}
+                    </p>
+                  ` : ''}
+                  ${eventDetails.location ? `
+                    <p style="color:#047857; font-size: 14px; margin: 5px 0 15px;">
+                      📍 Location: ${eventDetails.location}
+                    </p>
+                  ` : ''}
+                  ${eventDetails.description ? `
+                    <p style="color:#065f46; font-size: 14px; line-height: 1.6; margin: 0;">
+                      ${eventDetails.description}
+                    </p>
+                  ` : ''}
+                </div>
+              ` : ''}
+              
+              ${admissionDetails ? `
+                <div class="agenda-item admission">
+                  <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">🎓 ${admissionDetails.title || 'Admissions Update'}</h3>
+                  ${admissionDetails.deadline ? `
+                    <p style="color:#1d4ed8; font-size: 14px; margin: 5px 0 15px;">
+                      📅 Deadline: ${formatDate(admissionDetails.deadline)}
+                    </p>
+                  ` : ''}
+                  ${admissionDetails.description ? `
+                    <p style="color:#1e3a8a; font-size: 14px; line-height: 1.6; margin: 0;">
+                      ${admissionDetails.description}
+                    </p>
+                  ` : ''}
+                </div>
+              ` : ''}
+              
+              <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0;">
+                <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Stay Connected</h3>
+                <p style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0;">
+                  Follow us on social media for daily updates, photos, and more exciting news from our school community.
+                </p>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
+              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
+              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+  },
+
+  event: (data, customMessage = '', agendaData = {}) => {
+    const { eventDetails } = extractAgendaData(data, agendaData);
+    const event = eventDetails || {};
+    
+    return {
+      subject: data.subject || `🎉 Event Invitation: ${data.eventName || event.title || 'School Event'} - ${SCHOOL_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center; }
+            .content { padding: 40px 30px; }
+            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+            .cta-button { display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+            .event-details { background: #f0fdf4; border-radius: 12px; padding: 25px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">🎉 You're Invited!</h1>
+              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
+              <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
+            </div>
+            
+            <div class="content">
+              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">${data.eventName || event.title || 'Special School Event'}</h2>
+              
+              ${customMessage ? `
+                <p style="color:#475569; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
+                  ${customMessage}
+                </p>
+              ` : ''}
+              
+              <div class="event-details">
+                <h3 style="color:#065f46; font-size: 20px; font-weight: 600; margin: 0 0 20px;">Event Details</h3>
+                
+                <div style="margin-bottom: 15px;">
+                  <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📅 Date:</p>
+                  <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${formatDate(event.date || data.date || 'To be announced')}</p>
+                </div>
+                
+                ${(event.time || data.time) ? `
+                  <div style="margin-bottom: 15px;">
+                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">⏰ Time:</p>
+                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${event.time || data.time}</p>
+                  </div>
+                ` : ''}
+                
+                ${(event.location || data.location) ? `
+                  <div style="margin-bottom: 15px;">
+                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📍 Location:</p>
+                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px;">${event.location || data.location || SCHOOL_NAME}</p>
+                  </div>
+                ` : ''}
+                
+                ${event.description ? `
+                  <div style="margin-bottom: 15px;">
+                    <p style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 5px;">📝 Description:</p>
+                    <p style="color:#475569; font-size: 15px; margin: 0 0 15px; line-height: 1.6;">${event.description}</p>
+                  </div>
+                ` : ''}
+              </div>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="/pages/events" class="cta-button">View Event Details →</a>
+              </div>
+              
+              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
+                We look forward to seeing you at this exciting event! For any questions, please contact us at <strong>${SCHOOL_PHONE}</strong>
+              </p>
+            </div>
+
+            <div class="footer">
+              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
+              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
+              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+  },
+
+  custom: (data, customMessage = '', agendaData = {}) => {
+    const { admissionDetails, eventDetails, announcementDetails } = extractAgendaData(data, agendaData);
+    
+    return {
+      subject: data.subject || `📧 Message from ${SCHOOL_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1.0">
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
+            .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); padding: 40px 30px; text-align: center; }
+            .content { padding: 40px 30px; }
+            .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+            .agenda-section { margin: 25px 0; }
+            .agenda-item { background: #f8fafc; border-radius: 8px; padding: 15px; margin: 10px 0; border-left: 4px solid #3b82f6; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">📧 Message from ${SCHOOL_NAME}</h1>
+              <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_LOCATION}</p>
+            </div>
+            
+            <div class="content">
+              <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">${data.subject || 'Important Message'}</h2>
+              
+              <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin: 0 0 30px;">
+                <p style="color:#92400e; font-size: 16px; line-height: 1.6; margin: 0;">
+                  ${customMessage || 'This is an important message from the school administration.'}
+                </p>
+              </div>
+              
+              <div class="agenda-section">
+                ${admissionDetails || eventDetails || announcementDetails ? `
+                  <h3 style="color:#1e293b; font-size: 20px; font-weight: 600; margin: 0 0 15px;">📅 Related Information</h3>
+                ` : ''}
+                
+                ${admissionDetails ? `
+                  <div class="agenda-item">
+                    <h4 style="color:#1e40af; font-size: 16px; font-weight: 600; margin: 0 0 8px;">🎓 ${admissionDetails.title || 'Admissions'}</h4>
+                    ${admissionDetails.deadline ? `
+                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Deadline: ${formatDate(admissionDetails.deadline)}</p>
+                    ` : ''}
+                    ${admissionDetails.description ? `
+                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${admissionDetails.description}</p>
+                    ` : ''}
+                  </div>
+                ` : ''}
+                
+                ${eventDetails ? `
+                  <div class="agenda-item">
+                    <h4 style="color:#065f46; font-size: 16px; font-weight: 600; margin: 0 0 8px;">🎉 ${eventDetails.title || 'Event'}</h4>
+                    ${eventDetails.date ? `
+                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Date: ${formatDate(eventDetails.date)}</p>
+                    ` : ''}
+                    ${eventDetails.time ? `
+                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Time: ${eventDetails.time}</p>
+                    ` : ''}
+                    ${eventDetails.description ? `
+                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${eventDetails.description}</p>
+                    ` : ''}
+                  </div>
+                ` : ''}
+                
+                ${announcementDetails ? `
+                  <div class="agenda-item">
+                    <h4 style="color:#92400e; font-size: 16px; font-weight: 600; margin: 0 0 8px;">📢 ${announcementDetails.title || 'Announcement'}</h4>
+                    ${announcementDetails.date ? `
+                      <p style="color:#475569; font-size: 14px; margin: 0 0 5px;">Date: ${formatDate(announcementDetails.date)}</p>
+                    ` : ''}
+                    ${announcementDetails.description ? `
+                      <p style="color:#64748b; font-size: 14px; margin: 0; line-height: 1.5;">${announcementDetails.description}</p>
+                    ` : ''}
+                  </div>
+                ` : ''}
+              </div>
+              
+              <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 30px 0 0;">
+                Thank you for being part of our school community. For any questions, please contact us at <strong>${SCHOOL_PHONE}</strong> or <strong>${SCHOOL_EMAIL}</strong>
+              </p>
+            </div>
+
+            <div class="footer">
+              <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
+              <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
+              <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© ${new Date().getFullYear()} ${SCHOOL_NAME}. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+  }
+};
 
 export async function POST(request) {
   try {
@@ -168,8 +632,16 @@ export async function POST(request) {
 
     console.log(`📧 Email campaign request from: ${auth.user.name} (${auth.user.role})`);
 
-    // Step 2: Parse request body
-    const { subscribers, template, subject, customMessage, templateData } = await request.json();
+    // Step 2: Parse request body (including agenda data)
+    const body = await request.json();
+    const { 
+      subscribers, 
+      template, 
+      subject, 
+      customMessage, 
+      templateData,
+      agendaData = {}  // Include agenda data from frontend
+    } = body;
 
     // Step 3: Validate required fields
     if (!subscribers || !Array.isArray(subscribers) || subscribers.length === 0) {
@@ -196,7 +668,7 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    // Validate maximum number of recipients to prevent abuse
+    // Validate maximum number of recipients
     const MAX_RECIPIENTS = 1000;
     if (subscribers.length > MAX_RECIPIENTS) {
       return NextResponse.json({ 
@@ -234,90 +706,20 @@ export async function POST(request) {
       console.warn(`⚠️ Found ${invalidEmails.length} invalid email addresses:`, invalidEmails);
     }
 
-    // Step 4: Get email template
-    const emailTemplates = {
-      admission: (data) => ({
-        subject: `🎓 Admissions Now Open for ${data.schoolYear || '2025'} - ${SCHOOL_NAME}`,
-        html: `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1.0">
-            <style>
-              @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-              body { margin:0; padding:0; font-family: 'Inter', sans-serif; background: #f8fafc; }
-              .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-              .header { background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); padding: 40px 30px; text-align: center; }
-              .content { padding: 40px 30px; }
-              .footer { background: #f1f5f9; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
-              .cta-button { display: inline-block; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 20px 0; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1 style="color:white; font-size: 28px; font-weight: 700; margin: 0;">🎓 Admissions Open</h1>
-                <p style="color:rgba(255,255,255,0.9); font-size: 16px; margin: 8px 0 0;">${SCHOOL_NAME}</p>
-                <p style="color:rgba(255,255,255,0.8); font-size: 14px; margin: 4px 0 0;">${SCHOOL_LOCATION}</p>
-              </div>
-              
-              <div class="content">
-                <h2 style="color:#1e293b; font-size: 24px; font-weight: 600; margin: 0 0 20px;">Begin Your Educational Journey</h2>
-                <p style="color:#475569; font-size: 16px; line-height: 1.6;">
-                  We are thrilled to announce that admissions for the <strong>${data.schoolYear || '2025'}</strong> academic year are now open! 
-                  Join our community of excellence and embark on an educational journey that shapes futures at our Public Mixed  Day and Boarding School.
-                </p>
-                
-                <div style="background: #f0f9ff; border-radius: 12px; padding: 20px; margin: 25px 0; border-left: 4px solid #3b82f6;">
-                  <h3 style="color:#1e40af; font-size: 18px; font-weight: 600; margin: 0 0 10px;">Quick Facts:</h3>
-                  <ul style="color:#475569; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-                    <li>Public Mixed  Day and Boarding School in Matungulu, Machakos</li>
-                    <li>1200+ students community</li>
-                    <li>8-4-4 Curriculum System</li>
-                    <li>Quality education for all</li>
-                  </ul>
-                </div>
-                
-                ${data.deadline ? `<p style="color:#059669; font-size: 16px; font-weight: 600;">📅 Application Deadline: ${data.deadline}</p>` : ''}
-                
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="/pages/admissions" class="cta-button">Apply Now →</a>
-                </div>
-                
-                <p style="color:#64748b; font-size: 14px; line-height: 1.6; margin: 20px 0 0;">
-                  For more information, contact our admissions office at <strong>+254720123456</strong> or email <strong>admissions@katwanyaahighSchool.sc.ke</strong>
-                </p>
-              </div>
-
-              <div class="footer">
-                <p style="color:#1e293b; font-size: 18px; font-weight: 600; margin: 0 0 8px;">${SCHOOL_NAME}</p>
-                <p style="color:#64748b; font-size: 14px; margin: 0 0 8px;">${SCHOOL_MOTTO}</p>
-                <p style="color:#94a3b8; font-size: 12px; margin: 8px 0 0;">© 2024 ${SCHOOL_NAME}. All rights reserved.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `
-      }),
-
-      // Add your other templates here (newsletter, event, custom)
-      // ... (keep your existing template definitions)
-    };
-
-    const emailTemplate = emailTemplates[template] || emailTemplates.admission;
-    const emailContent = emailTemplate({
-      ...templateData,
-      subject: subject || `Important Update - ${SCHOOL_NAME}`,
-      customMessage: customMessage || ''
-    });
+    // Step 4: Get email template with dynamic data
+    const templateFunction = emailTemplates[template] || emailTemplates.admission;
+    const emailContent = templateFunction(
+      templateData || {}, 
+      customMessage || '', 
+      agendaData || {}
+    );
 
     // Step 5: Send emails with rate limiting
     const BATCH_SIZE = 50;
     const results = [];
     const sentBy = auth.user.name;
 
-    console.log(`📧 Sending campaign to ${validSubscribers.length} subscribers...`);
+    console.log(`📧 Sending ${template} campaign to ${validSubscribers.length} subscribers...`);
 
     for (let i = 0; i < validSubscribers.length; i += BATCH_SIZE) {
       const batch = validSubscribers.slice(i, i + BATCH_SIZE);
@@ -332,7 +734,8 @@ export async function POST(request) {
             headers: {
               'X-Campaign-Type': template,
               'X-Sent-By': sentBy,
-              'X-School-Name': SCHOOL_NAME
+              'X-School-Name': SCHOOL_NAME,
+              'X-Template-Data': JSON.stringify(templateData)
             }
           });
           return { email: subscriber.email, status: 'sent', sentAt: new Date().toISOString() };
@@ -355,7 +758,7 @@ export async function POST(request) {
       const failedCount = results.filter(r => r.status === 'failed').length;
       console.log(`📊 Progress: ${sentCount} sent, ${failedCount} failed`);
 
-      // Add delay between batches to prevent rate limiting
+      // Add delay between batches
       if (i + BATCH_SIZE < validSubscribers.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -377,7 +780,8 @@ export async function POST(request) {
         sentBy: auth.user.name,
         timestamp: new Date().toISOString(),
         template: template,
-        subject: emailContent.subject
+        subject: emailContent.subject,
+        templateData: templateData
       },
       results,
       authenticated: true
@@ -394,16 +798,13 @@ export async function POST(request) {
   }
 }
 
-// Optionally add GET method to get campaign statistics (also protected)
 export async function GET(request) {
   try {
-    // Authenticate the GET request as well
     const auth = authenticateCampaignRequest(request);
     if (!auth.authenticated) {
       return auth.response;
     }
 
-    // You could implement campaign statistics here
     return NextResponse.json({
       success: true,
       message: 'Campaign API is active',
@@ -412,6 +813,14 @@ export async function GET(request) {
         name: auth.user.name,
         role: auth.user.role,
         permissions: ['send_campaigns']
+      },
+      availableTemplates: Object.keys(emailTemplates),
+      schoolInfo: {
+        name: SCHOOL_NAME,
+        location: SCHOOL_LOCATION,
+        motto: SCHOOL_MOTTO,
+        email: SCHOOL_EMAIL,
+        phone: SCHOOL_PHONE
       }
     });
 
