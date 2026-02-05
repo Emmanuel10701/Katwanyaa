@@ -2246,6 +2246,20 @@ const getAuthHeaders = (isProtected = false) => {
       setLoading(false);
     }
   };
+const handleAuthError = (error) => {
+  console.error('Authentication error:', error);
+  sooner.error('Session expired. Please login again.');
+  
+  // Optional: Clear tokens and redirect to login
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('device_token');
+  
+  // Optional: Redirect to login page or show login modal
+  // window.location.href = '/login';
+  
+  // Optional: Show login modal instead of redirect
+  // setShowLoginModal(true);
+};
 
   const refreshStatistics = async () => {
     try {
@@ -2400,119 +2414,168 @@ const getAuthHeaders = (isProtected = false) => {
     setResult(null);
   };
 
-  // Check for duplicates before upload
-  const checkDuplicates = async () => {
-    if (!file || !uploadStrategy) {
-      sooner.error('Please select a file and upload strategy first');
+const checkDuplicates = async () => {
+  if (!file || !uploadStrategy) {
+    sooner.error('Please select a file and upload strategy first');
+    return;
+  }
+
+  setValidationLoading(true);
+  try {
+    // GET auth tokens for protected operation
+    let authHeaders = {};
+    try {
+      const tokens = getAuthTokensForProtectedOps();
+      authHeaders = {
+        'Authorization': `Bearer ${tokens.adminToken}`,
+        'x-device-token': tokens.deviceToken
+      };
+    } catch (authError) {
+      sooner.error(authError.message);
+      setValidationLoading(false);
       return;
     }
 
-    setValidationLoading(true);
-    try {
-      // Create FormData
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('checkDuplicates', 'true');
-      
-      if (uploadStrategy.uploadType === 'new') {
-        formData.append('uploadType', 'new');
-        formData.append('forms', JSON.stringify(uploadStrategy.selectedForms));
-      } else {
-        formData.append('uploadType', 'update');
-        formData.append('targetForm', uploadStrategy.targetForm);
-      }
-
-      const response = await fetch('/api/studentupload', {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        if (data.duplicates && data.duplicates.length > 0) {
-          setDuplicates(data.duplicates);
-          setShowValidationModal(true);
-        } else {
-          // No duplicates, proceed with upload
-          proceedWithUpload('skip');
-        }
-      } else {
-        sooner.error(data.error || 'Failed to check for duplicates');
-      }
-    } catch (error) {
-      console.error('Validation error:', error);
-      sooner.error('Failed to validate file');
-    } finally {
-      setValidationLoading(false);
-    }
-  };
-
-  // Proceed with upload after duplicate check
-  const proceedWithUpload = async (duplicateAction = 'skip') => {
-    setUploading(true);
-    setShowValidationModal(false);
-    
+    // Create FormData
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('uploadType', uploadStrategy.uploadType);
+    formData.append('checkDuplicates', 'true');
     
     if (uploadStrategy.uploadType === 'new') {
+      formData.append('uploadType', 'new');
       formData.append('forms', JSON.stringify(uploadStrategy.selectedForms));
-      formData.append('duplicateAction', duplicateAction);
     } else {
+      formData.append('uploadType', 'update');
       formData.append('targetForm', uploadStrategy.targetForm);
     }
 
-    try {
-      const response = await fetch('/api/studentupload', {
-        method: 'POST',
-        body: formData
-      });
+    const response = await fetch('/api/studentupload', {
+      method: 'POST',
+      headers: authHeaders,
+      body: formData
+    });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Upload failed');
-      }
-      
-      setResult(data);
-      
-      if (data.success) {
-        let successMessage = '';
-        if (uploadStrategy.uploadType === 'new') {
-          successMessage = `✅ New upload successful! ${data.processingStats?.validRows || 0} students processed.`;
-        } else {
-          successMessage = `✅ Update successful! Form ${uploadStrategy.targetForm} updated: ${data.processingStats?.updatedRows || 0} updated, ${data.processingStats?.createdRows || 0} created.`;
-        }
-        
-        sooner.success(successMessage);
-        
-        if (data.errors && data.errors.length > 0) {
-          data.errors.slice(0, 3).forEach(error => {
-            sooner.error(error, { duration: 5000 });
-          });
-          if (data.errors.length > 3) {
-            sooner.error(`... and ${data.errors.length - 3} more errors`, { duration: 5000 });
-          }
-        }
-        
-        await Promise.all([loadStudents(1), loadUploadHistory(1), loadStats()]);
-        setFile(null);
-        setUploadStrategy(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } else {
-        sooner.error(data.message || 'Upload failed');
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      sooner.error(error.message || 'Upload failed. Please try again.');
-    } finally {
-      setUploading(false);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Authentication failed. Please login again.');
     }
-  };
+
+    const data = await response.json();
+    
+    if (data.success) {
+      if (data.duplicates && data.duplicates.length > 0) {
+        setDuplicates(data.duplicates);
+        setShowValidationModal(true);
+      } else {
+        // No duplicates, proceed with upload
+        proceedWithUpload('skip');
+      }
+    } else {
+      sooner.error(data.error || 'Failed to check for duplicates');
+    }
+  } catch (error) {
+    console.error('Validation error:', error);
+    
+    if (error.message.includes('Authentication') || error.message.includes('login')) {
+      sooner.error('Authentication failed. Please login again to continue.');
+    } else {
+      sooner.error('Failed to validate file');
+    }
+  } finally {
+    setValidationLoading(false);
+  }
+};
+
+const proceedWithUpload = async (duplicateAction = 'skip') => {
+  setUploading(true);
+  setShowValidationModal(false);
+  
+  // GET auth tokens for protected upload operation
+  let authHeaders = {};
+  try {
+    const tokens = getAuthTokensForProtectedOps();
+    authHeaders = {
+      'Authorization': `Bearer ${tokens.adminToken}`,
+      'x-device-token': tokens.deviceToken
+    };
+  } catch (authError) {
+    sooner.error(authError.message);
+    setUploading(false);
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('uploadType', uploadStrategy.uploadType);
+  
+  if (uploadStrategy.uploadType === 'new') {
+    formData.append('forms', JSON.stringify(uploadStrategy.selectedForms));
+    formData.append('duplicateAction', duplicateAction);
+  } else {
+    formData.append('targetForm', uploadStrategy.targetForm);
+  }
+
+  try {
+    const response = await fetch('/api/studentupload', {
+      method: 'POST',
+      headers: authHeaders,
+      body: formData
+    });
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error('Authentication failed. Please login again.');
+    }
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Upload failed');
+    }
+    
+    setResult(data);
+    
+    if (data.success) {
+      let successMessage = '';
+      if (uploadStrategy.uploadType === 'new') {
+        successMessage = `✅ New upload successful! ${data.processingStats?.validRows || 0} students processed.`;
+      } else {
+        successMessage = `✅ Update successful! Form ${uploadStrategy.targetForm} updated: ${data.processingStats?.updatedRows || 0} updated, ${data.processingStats?.createdRows || 0} created.`;
+      }
+      
+      sooner.success(successMessage);
+      
+      if (data.errors && data.errors.length > 0) {
+        data.errors.slice(0, 3).forEach(error => {
+          sooner.error(error, { duration: 5000 });
+        });
+        if (data.errors.length > 3) {
+          sooner.error(`... and ${data.errors.length - 3} more errors`, { duration: 5000 });
+        }
+      }
+      
+      await Promise.all([loadStudents(1), loadUploadHistory(1), loadStats()]);
+      setFile(null);
+      setUploadStrategy(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } else {
+      sooner.error(data.message || 'Upload failed');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    
+    // Handle specific authentication errors
+    if (error.message.includes('Authentication') || error.message.includes('login')) {
+      sooner.error('Authentication failed. Please login again to continue.');
+      // Optionally redirect to login or show login modal
+    } else {
+      sooner.error(error.message || 'Upload failed. Please try again.');
+    }
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   const handleDeleteBatch = async (batchId, batchName) => {
     setDeleteTarget({ type: 'batch', id: batchId, name: batchName });
