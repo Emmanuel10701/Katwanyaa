@@ -2074,6 +2074,33 @@ export default function ModernStudentBulkUpload() {
     }
   };
 
+
+
+  // Helper function to get authentication tokens
+// Helper function for protected operations only
+const getAuthTokensForProtectedOps = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  
+  if (!adminToken || !deviceToken) {
+    throw new Error('Authentication required for this action. Please login.');
+  }
+  
+  return { adminToken, deviceToken };
+};
+
+// Helper function for GET requests (no auth required)
+const getAuthHeaders = (isProtected = false) => {
+  if (isProtected) {
+    const { adminToken, deviceToken } = getAuthTokensForProtectedOps();
+    return {
+      'Authorization': `Bearer ${adminToken}`,
+      'x-device-token': deviceToken
+    };
+  }
+  return {}; // No headers for GET requests
+};
+
   // Enhanced loadStats function
   const loadStats = async () => {
     setLoading(true);
@@ -2497,62 +2524,93 @@ export default function ModernStudentBulkUpload() {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    try {
-      let url;
-      
-      if (deleteTarget.type === 'batch') {
-        url = `/api/studentupload?batchId=${deleteTarget.id}`;
-      } else {
-        url = `/api/studentupload?studentId=${deleteTarget.id}`;
-      }
+const confirmDelete = async () => {
+  try {
+    // GET auth headers for protected operation
+    const authHeaders = getAuthHeaders(true);
+    
+    let url;
+    
+    if (deleteTarget.type === 'batch') {
+      url = `/api/studentupload?batchId=${deleteTarget.id}`;
+    } else {
+      url = `/api/studentupload?studentId=${deleteTarget.id}`;
+    }
 
-      const res = await fetch(url, { method: 'DELETE' });
-      const data = await res.json();
-      
-      if (data.success) {
-        sooner.success(data.message || 'Deleted successfully');
-        await Promise.all([loadStudents(pagination.page), loadUploadHistory(1), loadStats()]);
-        if (deleteTarget.type === 'student') {
-          setSelectedStudent(null);
-        }
-      } else {
-        sooner.error(data.message || 'Failed to delete');
+    const res = await fetch(url, { 
+      method: 'DELETE',
+      headers: {
+        ...authHeaders
       }
-    } catch (error) {
-      console.error('Delete failed:', error);
+    });
+    
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Authentication failed');
+    }
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      sooner.success(data.message || 'Deleted successfully');
+      await Promise.all([loadStudents(pagination.page), loadUploadHistory(1), loadStats()]);
+      if (deleteTarget.type === 'student') {
+        setSelectedStudent(null);
+      }
+    } else {
+      sooner.error(data.message || 'Failed to delete');
+    }
+  } catch (error) {
+    console.error('Delete failed:', error);
+    if (error.message.includes('Authentication')) {
+      handleAuthError(error);
+    } else {
       sooner.error('Failed to delete');
-    } finally {
-      setShowDeleteModal(false);
-      setDeleteTarget({ type: '', id: '', name: '' });
     }
-  };
+  } finally {
+    setShowDeleteModal(false);
+    setDeleteTarget({ type: '', id: '', name: '' });
+  }
+};
 
-  const updateStudent = async (studentId, studentData) => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/studentupload`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: studentId, ...studentData })
-      });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        sooner.success('Student updated successfully');
-        await loadStudents(pagination.page);
-        setEditingStudent(null);
-      } else {
-        sooner.error(data.message || 'Failed to update student');
-      }
-    } catch (error) {
-      console.error('Update failed:', error);
-      sooner.error('Failed to update student');
-    } finally {
-      setLoading(false);
+const updateStudent = async (studentId, studentData) => {
+  setLoading(true);
+  try {
+    // GET auth headers for protected operation
+    const authHeaders = getAuthHeaders(true);
+    
+    const res = await fetch(`/api/studentupload`, {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        ...authHeaders
+      },
+      body: JSON.stringify({ id: studentId, ...studentData })
+    });
+    
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Authentication failed');
     }
-  };
+    
+    const data = await res.json();
+    
+    if (data.success) {
+      sooner.success('Student updated successfully');
+      await loadStudents(pagination.page);
+      setEditingStudent(null);
+    } else {
+      sooner.error(data.message || 'Failed to update student');
+    }
+  } catch (error) {
+    console.error('Update failed:', error);
+    if (error.message.includes('Authentication')) {
+      handleAuthError(error);
+    } else {
+      sooner.error('Failed to update student');
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
  const downloadCSVTemplate = () => {
   window.location.href = "/csv/form_1_students.csv";
