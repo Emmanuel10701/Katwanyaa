@@ -1136,6 +1136,8 @@ export async function GET(request) {
         }
       });
 
+      
+
       const total = await prisma.studentBulkUpload.count();
       
       return NextResponse.json({
