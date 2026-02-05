@@ -3,7 +3,134 @@ import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
 import { randomUUID } from "crypto";
 
-// Helper: Upload file to Cloudinary
+// ==================== TOKEN VERIFICATION FOR POST ONLY ====================
+class DeviceTokenManager {
+  static validateTokensFromHeaders(headers, options = {}) {
+    try {
+      const adminToken = headers.get('x-admin-token') || headers.get('authorization')?.replace('Bearer ', '');
+      const deviceToken = headers.get('x-device-token');
+
+      if (!adminToken) {
+        return { valid: false, reason: 'no_admin_token', message: 'Admin token is required' };
+      }
+
+      if (!deviceToken) {
+        return { valid: false, reason: 'no_device_token', message: 'Device token is required' };
+      }
+
+      const adminParts = adminToken.split('.');
+      if (adminParts.length !== 3) {
+        return { valid: false, reason: 'invalid_admin_token_format', message: 'Invalid admin token format' };
+      }
+
+      const deviceValid = this.validateDeviceToken(deviceToken);
+      if (!deviceValid.valid) {
+        return { 
+          valid: false, 
+          reason: `device_${deviceValid.reason}`,
+          message: `Device token ${deviceValid.reason}: ${deviceValid.error || ''}`
+        };
+      }
+
+      let adminPayload;
+      try {
+        adminPayload = JSON.parse(atob(adminParts[1]));
+        
+        const currentTime = Date.now() / 1000;
+        if (adminPayload.exp < currentTime) {
+          return { valid: false, reason: 'admin_token_expired', message: 'Admin token has expired' };
+        }
+        
+        const userRole = adminPayload.role || adminPayload.userRole;
+        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL', 'TEACHER', 'teacher'];
+        
+        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+          return { 
+            valid: false, 
+            reason: 'invalid_role', 
+            message: 'User does not have permission to create assignments' 
+          };
+        }
+        
+      } catch (error) {
+        return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
+      }
+
+      console.log('✅ Assignment creation authentication successful for user:', adminPayload.name || 'Unknown');
+      
+      return { 
+        valid: true, 
+        user: {
+          id: adminPayload.userId || adminPayload.id,
+          name: adminPayload.name,
+          email: adminPayload.email,
+          role: adminPayload.role || adminPayload.userRole
+        },
+        deviceInfo: deviceValid.payload
+      };
+
+    } catch (error) {
+      console.error('❌ Token validation error:', error);
+      return { 
+        valid: false, 
+        reason: 'validation_error', 
+        message: 'Authentication validation failed',
+        error: error.message 
+      };
+    }
+  }
+
+  static validateDeviceToken(token) {
+    try {
+      const payloadStr = Buffer.from(token, 'base64').toString('utf-8');
+      const payload = JSON.parse(payloadStr);
+      
+      if (payload.exp && payload.exp * 1000 <= Date.now()) {
+        return { valid: false, reason: 'expired', payload, error: 'Device token has expired' };
+      }
+      
+      const createdAt = new Date(payload.createdAt || payload.iat * 1000);
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      
+      if (createdAt < thirtyDaysAgo) {
+        return { valid: false, reason: 'age_expired', payload, error: 'Device token is too old' };
+      }
+      
+      return { valid: true, payload };
+    } catch (error) {
+      return { valid: false, reason: 'invalid_format', error: error.message };
+    }
+  }
+}
+
+const authenticateRequest = (req) => {
+  const headers = req.headers;
+  
+  const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
+  
+  if (!validationResult.valid) {
+    return {
+      authenticated: false,
+      response: NextResponse.json(
+        { 
+          success: false, 
+          error: "Access Denied",
+          message: "Authentication required to create assignments.",
+          details: validationResult.message
+        },
+        { status: 401 }
+      )
+    };
+  }
+
+  return {
+    authenticated: true,
+    user: validationResult.user,
+    deviceInfo: validationResult.devInfo
+  };
+};
+// ==================== END TOKEN VERIFICATION ====================
+
 const uploadFileToCloudinary = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
@@ -15,7 +142,6 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
     const extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
 
-    // Determine file type for better organization
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     const isPDF = extension === '.pdf';
@@ -36,7 +162,6 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
         overwrite: false,
       };
 
-      // Add transformations for images only
       if (isImage) {
         uploadOptions.transformation = [
           { width: 1200, crop: "scale" },
@@ -54,7 +179,6 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
         (error, result) => {
           if (error) reject(error);
           else {
-            // Determine file type for display
             let fileType = 'File';
             if (isImage) fileType = 'Image';
             else if (isVideo) fileType = 'Video';
@@ -87,7 +211,6 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
   }
 };
 
-// Helper: Delete files from Cloudinary
 const deleteFilesFromCloudinary = async (fileUrls) => {
   if (!Array.isArray(fileUrls) && !fileUrls) return;
 
@@ -113,17 +236,14 @@ const deleteFilesFromCloudinary = async (fileUrls) => {
           resource_type: resourceType 
         });
       } catch {
-        // Silent fail on individual file delete
       }
     });
 
     await Promise.all(deletePromises);
   } catch {
-    // Silent fail
   }
 };
 
-// Helper: Get file info from URL (Cloudinary URLs)
 const getFileInfoFromUrl = (url) => {
   if (!url) return null;
   
@@ -131,20 +251,16 @@ const getFileInfoFromUrl = (url) => {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     
-    // Extract filename from URL
     const pathParts = pathname.split('/');
     const lastPart = pathParts[pathParts.length - 1];
     let fileName = lastPart.includes('.') ? lastPart : `${lastPart}.jpg`;
     
-    // Clean up Cloudinary timestamp prefix
     fileName = fileName.replace(/^\d+-/, '');
     
-    // Extract extension
     const extension = fileName.includes('.') 
       ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
       : '';
     
-    // Determine file type
     const getFileType = (ext, url) => {
       const typeMap = {
         '.pdf': 'PDF Document',
@@ -202,7 +318,6 @@ const getFileInfoFromUrl = (url) => {
   }
 };
 
-// Helper: Upload multiple files to Cloudinary
 const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   const uploadedFiles = [];
   
@@ -222,12 +337,20 @@ const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   return uploadedFiles;
 };
 
-// 🔹 POST — Create a new assignment
 export async function POST(request) {
   try {
+    // ==================== ADD AUTHENTICATION HERE ====================
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    console.log("📝 POST /api/assignments - Creating assignment");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
+    // ==================== END AUTHENTICATION ====================
+
     const formData = await request.formData();
 
-    // Extract fields
     const title = formData.get("title")?.toString().trim() || "";
     const subject = formData.get("subject")?.toString().trim() || "";
     const className = formData.get("className")?.toString().trim() || "";
@@ -243,7 +366,6 @@ export async function POST(request) {
     const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || "";
     const learningObjectives = formData.get("learningObjectives")?.toString() || "[]";
 
-    // Validate required fields
     if (!title || !subject || !className || !teacher || !dueDate) {
       return NextResponse.json(
         { success: false, error: "Title, subject, class, teacher, and due date are required" },
@@ -251,18 +373,15 @@ export async function POST(request) {
       );
     }
 
-    // Handle file uploads to Cloudinary
     let assignmentFiles = [];
     let attachments = [];
     
     try {
-      // Upload assignment files
       const assignmentFileInputs = formData.getAll("assignmentFiles");
       const uploadedAssignmentFiles = await uploadFilesToCloudinary(assignmentFileInputs, "assignment-files");
       assignmentFiles = uploadedAssignmentFiles.map(file => file.url);
       console.log(`✅ Uploaded assignment files:`, uploadedAssignmentFiles.map(f => f.name));
       
-      // Upload attachments
       const attachmentInputs = formData.getAll("attachments");
       const uploadedAttachments = await uploadFilesToCloudinary(attachmentInputs, "attachments");
       attachments = uploadedAttachments.map(file => file.url);
@@ -276,7 +395,6 @@ export async function POST(request) {
       );
     }
 
-    // Parse learning objectives
     let learningObjectivesArray = [];
     try {
       learningObjectivesArray = JSON.parse(learningObjectives);
@@ -285,7 +403,6 @@ export async function POST(request) {
       learningObjectivesArray = [];
     }
 
-    // Create assignment in database
     const assignment = await prisma.assignment.create({
       data: {
         title,
@@ -328,12 +445,10 @@ export async function POST(request) {
   }
 }
 
-// 🔹 GET — Fetch all assignments with filtering
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Get query parameters
     const className = searchParams.get("class");
     const subject = searchParams.get("subject");
     const status = searchParams.get("status");
@@ -344,7 +459,6 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    // Build where clause for filtering
     const where = {
       AND: [
         className && className !== "all" ? { className } : {},
@@ -363,7 +477,6 @@ export async function GET(request) {
       ].filter(condition => Object.keys(condition).length > 0),
     };
 
-    // Get assignments with pagination
     const [assignments, total] = await Promise.all([
       prisma.assignment.findMany({
         where,
@@ -374,7 +487,6 @@ export async function GET(request) {
       prisma.assignment.count({ where }),
     ]);
 
-    // Process assignments to add file information
     const processedAssignments = assignments.map(assignment => {
       const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url, index) => {
         const fileInfo = getFileInfoFromUrl(url);
