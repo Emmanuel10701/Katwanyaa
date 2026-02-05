@@ -1126,6 +1126,7 @@ export async function GET(request) {
           fileType: true,
           status: true,
           uploadDate: true,
+          uploadedBy: true,
           processedDate: true,
           totalRows: true,
           validRows: true,
@@ -1332,11 +1333,15 @@ export async function POST(request) {
     // Create batch record with uploader info
     const batchId = `BATCH_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
+
+
+
     const uploadBatch = await prisma.studentBulkUpload.create({
       data: {
         id: batchId,
         fileName: file.name,
         fileType: fileExtension,
+         uploadedBy: 'System Upload',
         status: 'processing',
         metadata: {
           uploadType,
