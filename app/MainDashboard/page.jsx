@@ -952,8 +952,8 @@ const handleLogout = () => {
   const CompactSchoolHeader = () => {
     return (
       <div className="group cursor-default py-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 transition-all duration-500 ease-out group-hover:scale-[1.02] active:scale-95">
-          <div className="h-10 w-1 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full shadow-sm group-hover:h-12 transition-all duration-500" />
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div className="h-10 w-1 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full shadow-sm " />
 
           <div className="flex flex-col">
             <h1 className="text-lg md:text-xl font-black text-gray-900 tracking-tight leading-none uppercase italic">
