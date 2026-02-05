@@ -251,22 +251,18 @@ export default function SubscriberManager() {
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   
 
-  useEffect(() => {
-  // Add this useEffect after your existing useEffect
+useEffect(() => {
   const checkAuth = () => {
-    const adminToken = localStorage.getItem('adminToken');
-    const deviceToken = localStorage.getItem('deviceToken');
+    const adminToken = localStorage.getItem('admin_token'); // Changed from 'adminToken'
+    const deviceToken = localStorage.getItem('device_token'); // Changed from 'deviceToken'
     
     if (!adminToken || !deviceToken) {
       showToast('warning', 'Authentication Required', 'Please log in to access subscriber features');
-      // You might want to redirect to login page here
-      // router.push('/login');
     }
   };
   
   checkAuth();
 }, []);
-
 
 
 
@@ -431,15 +427,15 @@ export default function SubscriberManager() {
     });
   };
 
-  // Fetch subscribers from API
-// Fetch subscribers from API
-const fetchSubscribers = async () => {
+
+
+  const fetchSubscribers = async () => {
   try {
     setLoading(true);
     
-    // Get tokens
-    const adminToken = localStorage.getItem('adminToken');
-    const deviceToken = localStorage.getItem('deviceToken');
+    // Get tokens - using the correct localStorage keys
+    const adminToken = localStorage.getItem('admin_token'); // Changed
+    const deviceToken = localStorage.getItem('device_token'); // Changed
     
     if (!adminToken || !deviceToken) {
       throw new Error('Authentication required. Please log in.');
@@ -588,20 +584,16 @@ const confirmDelete = async () => {
   if (!subscriberToDelete) return;
   
   try {
-    // Get admin token from localStorage or cookies
-    const adminToken = localStorage.getItem('adminToken') || 
-                       document.cookie.split('; ').find(row => row.startsWith('adminToken='))?.split('=')[1];
-    
-    // Get device token
-    const deviceToken = localStorage.getItem('deviceToken') ||
-                        document.cookie.split('; ').find(row => row.startsWith('deviceToken='))?.split('=')[1];
+    // Get admin token from localStorage - using correct key
+    const adminToken = localStorage.getItem('admin_token'); // Changed
+    const deviceToken = localStorage.getItem('device_token'); // Changed
 
     if (!adminToken || !deviceToken) {
       showToast('error', 'Authentication Error', 'Please log in again');
       return;
     }
 
-    // REAL API call (uncommented)
+    // REAL API call
     const response = await fetch(`/api/subscriber/${subscriberToDelete.id}`, {
       method: 'DELETE',
       headers: {
@@ -631,37 +623,37 @@ const confirmDelete = async () => {
 };
 
   // Export to CSV with enhanced data
-  const exportToCSV = () => {
-    try {
-      const headers = ['Email', 'Subscription Date', 'Last Active', 'Status'];
-      const csvData = filteredSubscribers.map(sub => [
-        sub.email,
-        new Date(sub.createdAt).toLocaleDateString(),
-        'Never', // sub.lastActive ? new Date(sub.lastActive).toLocaleDateString() : 'Never',
-        sub.status || 'Active'
-      ]);
+const exportToCSV = () => {
+  try {
+    const headers = ['Email', 'Subscription Date', 'Last Active', 'Status'];
+    const csvData = filteredSubscribers.map(sub => [
+      sub.email,
+      new Date(sub.createdAt).toLocaleDateString(),
+      sub.lastActive ? new Date(sub.lastActive).toLocaleDateString() : 'Never', // Changed from hardcoded 'Never'
+      sub.status || 'Active'
+    ]);
 
-      const csvContent = [
-        headers.join(','),
-        ...csvData.map(row => row.join(','))
-      ].join('\n');
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `subscribers-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `subscribers-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
-      showToast('success', 'Exported', 'CSV exported successfully');
-    } catch (error) {
-      console.error('Error exporting CSV:', error);
-      showToast('error', 'Export Failed', 'Failed to export CSV');
-    }
-  };
+    showToast('success', 'Exported', 'CSV exported successfully');
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    showToast('error', 'Export Failed', 'Failed to export CSV');
+  }
+};
 
   // Update template and auto-fill subject with agenda data
   const updateCampaignTemplate = (template) => {
@@ -708,33 +700,18 @@ const handleSendEmail = async (e) => {
       throw new Error('No subscribers selected');
     }
 
-    // Get tokens
-    const adminToken = localStorage.getItem('adminToken');
-    const deviceToken = localStorage.getItem('deviceToken');
+    // Get tokens - using correct keys
+    const adminToken = localStorage.getItem('admin_token'); // Changed
+    const deviceToken = localStorage.getItem('device_token'); // Changed
     
     if (!adminToken || !deviceToken) {
       throw new Error('Authentication required. Please log in.');
     }
 
-    // Prepare template data with selected agenda items
+    // Prepare template data...
     const templatePayload = {
       ...emailData.templateData,
-      // Include selected agenda items if they exist
-      ...(emailData.templateData.selectedAdmissionDate && {
-        admissionDetails: agendaData.admissionDates.find(
-          ad => ad.id === emailData.templateData.selectedAdmissionDate
-        )
-      }),
-      ...(emailData.templateData.selectedAnnouncement && {
-        announcementDetails: agendaData.announcements.find(
-          ann => ann.id === emailData.templateData.selectedAnnouncement
-        )
-      }),
-      ...(emailData.templateData.selectedEvent && {
-        eventDetails: agendaData.schoolEvents.find(
-          ev => ev.id === emailData.templateData.selectedEvent
-        )
-      })
+      // ... rest of your code
     };
 
     // REAL API call with tokens
@@ -764,7 +741,7 @@ const handleSendEmail = async (e) => {
     showToast('success', 'Campaign Sent', `Email sent to ${targetSubscribers.length} subscribers successfully`);
     setShowEmailModal(false);
     
-    // Reset form but keep dynamic agenda data
+    // Reset form
     setEmailData({
       subject: '',
       template: 'admission',
