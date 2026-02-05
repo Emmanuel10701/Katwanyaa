@@ -454,52 +454,106 @@ useEffect(() => {
   }
 }, [formData.files]);
 
+const handleCreate = async () => {
+  if (!formData.title.trim() || formData.files.length === 0) {
+    toast.warning('Please provide a title and select files');
+    return;
+  }
 
-  // CRUD Operations
-  const handleCreate = async () => {
-    if (!formData.title.trim() || formData.files.length === 0) {
-      toast.warning('Please provide a title and select files');
-      return;
+  if (fileSizeError) {
+    toast.error(fileSizeError);
+    return;
+  }
+
+  setIsUploading(true);
+  
+  toast.loading('Uploading gallery...');
+  
+  try {
+    // Get authentication tokens
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    // Check if tokens exist
+    if (!adminToken) {
+      throw new Error('Authentication required. Please login again.');
     }
-
-    setIsUploading(true);
     
-    toast.loading('Uploading gallery...');
+    if (!deviceToken) {
+      throw new Error('Device verification required. Please login with verification.');
+    }
     
-    try {
-      const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('description', formData.description);
-      submitData.append('category', formData.category);
-      
-      formData.files.forEach(fileObj => {
-        submitData.append('files', fileObj.file);
-      });
+    const submitData = new FormData();
+    submitData.append('title', formData.title);
+    submitData.append('description', formData.description);
+    submitData.append('category', formData.category);
+    
+    formData.files.forEach(fileObj => {
+      submitData.append('files', fileObj.file);
+    });
 
-      const response = await fetch('/api/gallery', {
-        method: 'POST',
-        body: submitData,
-      });
+    const response = await fetch('/api/gallery', {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${adminToken}`,
+        'x-device-token': deviceToken
+      },
+      body: submitData,
+    });
 
-      const result = await response.json();
+    if (!response.ok) {
+      const errorData = await response.json();
       
-      if (result.success) {
-        toast.dismiss();
-        toast.success('Gallery created successfully!');
-        setShowCreateModal(false);
-        resetForm();
-        fetchGalleryItems();
-      } else {
-        throw new Error(result.error || 'Failed to create gallery');
+      // Handle 401 Unauthorized (token expired)
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        throw new Error('Session expired. Please login again.');
       }
-    } catch (error) {
-      toast.dismiss();
-      toast.error(`Error: ${error.message}`);
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({});
+      
+      // Handle 403 Forbidden (no permission)
+      if (response.status === 403) {
+        throw new Error('You do not have permission to upload galleries.');
+      }
+      
+      throw new Error(errorData.error || errorData.message || 'Failed to create gallery');
     }
-  };
+
+    const result = await response.json();
+    
+    if (result.success) {
+      toast.dismiss();
+      toast.success('Gallery created successfully!');
+      setShowCreateModal(false);
+      resetForm();
+      fetchGalleryItems();
+    } else {
+      throw new Error(result.error || 'Failed to create gallery');
+    }
+  } catch (error) {
+    toast.dismiss();
+    
+    // Handle specific error cases
+    if (error.message.includes('Session expired') || 
+        error.message.includes('Authentication required') ||
+        error.message.includes('Device verification')) {
+      
+      toast.error('Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 1500);
+      
+    } else if (error.message.includes('permission')) {
+      toast.error('Access denied: ' + error.message);
+    } else {
+      toast.error(`Error: ${error.message}`);
+    }
+  } finally {
+    setIsUploading(false);
+    setUploadProgress({});
+  }
+};
+
 
   const handleEdit = (item) => {
     setEditingItem(item);
@@ -513,130 +567,270 @@ useEffect(() => {
     setShowEditModal(true);
   };
 
-  const handleUpdate = async () => {
-    if (!formData.title.trim()) {
-      toast.warning('Please provide a title');
-      return;
+const handleUpdate = async () => {
+  if (!formData.title.trim()) {
+    toast.warning('Please provide a title');
+    return;
+  }
+
+  if (fileSizeError) {
+    toast.error(fileSizeError);
+    return;
+  }
+
+  setIsUploading(true);
+  
+  toast.loading('Updating gallery...');
+  
+  try {
+    // Get authentication tokens
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    // Check if tokens exist
+    if (!adminToken) {
+      throw new Error('Authentication required. Please login again.');
+    }
+    
+    if (!deviceToken) {
+      throw new Error('Device verification required. Please login with verification.');
+    }
+    
+    const submitData = new FormData();
+    submitData.append('title', formData.title);
+    submitData.append('description', formData.description);
+    submitData.append('category', formData.category);
+    
+    // Append files to remove
+    filesToRemove.forEach(fileUrl => {
+      submitData.append('filesToRemove', fileUrl);
+    });
+    
+    // Append new files
+    if (formData.files.length > 0) {
+      formData.files.forEach(fileObj => {
+        submitData.append('files', fileObj.file);
+      });
     }
 
-    setIsUploading(true);
-    
-    toast.loading('Updating gallery...');
-    
-    try {
-      const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('description', formData.description);
-      submitData.append('category', formData.category);
-      
-      // Append files to remove
-      filesToRemove.forEach(fileUrl => {
-        submitData.append('filesToRemove', fileUrl);
-      });
-      
-      // Append new files
-      if (formData.files.length > 0) {
-        formData.files.forEach(fileObj => {
-          submitData.append('files', fileObj.file);
-        });
-      }
+    const response = await fetch(`/api/gallery/${editingItem.id}`, {
+      method: 'PUT',
+      headers: { 
+        'Authorization': `Bearer ${adminToken}`,
+        'x-device-token': deviceToken
+      },
+      body: submitData,
+    });
 
-      const response = await fetch(`/api/gallery/${editingItem.id}`, {
-        method: 'PUT',
-        body: submitData,
-      });
-
-      const result = await response.json();
+    if (!response.ok) {
+      const errorData = await response.json();
       
-      if (result.success) {
-        toast.dismiss();
-        toast.success('Gallery updated successfully!');
-        setShowEditModal(false);
-        setEditingItem(null);
-        setFilesToRemove([]);
-        resetForm();
-        fetchGalleryItems();
-      } else {
-        throw new Error(result.error || 'Failed to update gallery');
+      // Handle 401 Unauthorized (token expired)
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        throw new Error('Session expired. Please login again.');
       }
-    } catch (error) {
+      
+      // Handle 403 Forbidden (no permission)
+      if (response.status === 403) {
+        throw new Error('You do not have permission to update galleries.');
+      }
+      
+      throw new Error(errorData.error || errorData.message || 'Failed to update gallery');
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
       toast.dismiss();
-      toast.error(`Error: ${error.message}`);
-    } finally {
-      setIsUploading(false);
-      setUploadProgress({});
+      toast.success('Gallery updated successfully!');
+      setShowEditModal(false);
+      setEditingItem(null);
+      setFilesToRemove([]);
+      resetForm();
+      fetchGalleryItems();
+    } else {
+      throw new Error(result.error || 'Failed to update gallery');
     }
-  };
+  } catch (error) {
+    toast.dismiss();
+    
+    // Handle specific error cases
+    if (error.message.includes('Session expired') || 
+        error.message.includes('Authentication required') ||
+        error.message.includes('Device verification')) {
+      
+      toast.error('Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 1500);
+      
+    } else if (error.message.includes('permission')) {
+      toast.error('Access denied: ' + error.message);
+    } else {
+      toast.error(`Error: ${error.message}`);
+    }
+  } finally {
+    setIsUploading(false);
+    setUploadProgress({});
+  }
+};
 
   const handleDelete = (item) => {
     setItemToDelete(item);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
+const confirmDelete = async () => {
+  if (!itemToDelete) return;
 
-    toast.loading('Deleting gallery...');
+  toast.loading('Deleting gallery...');
+  
+  try {
+    // Get authentication tokens
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
     
-    try {
-      const response = await fetch(`/api/gallery/${itemToDelete.id}`, {
-        method: 'DELETE',
-      });
+    // Check if tokens exist
+    if (!adminToken) {
+      throw new Error('Authentication required. Please login again.');
+    }
+    
+    if (!deviceToken) {
+      throw new Error('Device verification required. Please login with verification.');
+    }
+    
+    const response = await fetch(`/api/gallery/${itemToDelete.id}`, {
+      method: 'DELETE',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminToken}`,
+        'x-device-token': deviceToken
+      },
+    });
 
-      const result = await response.json();
+    if (!response.ok) {
+      const errorData = await response.json();
       
-      if (result.success) {
-        setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
-        setSelectedItems(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(itemToDelete.id);
-          return newSet;
-        });
-        
-        toast.dismiss();
-        toast.success('Gallery deleted successfully!');
-      } else {
-        throw new Error(result.error || 'Failed to delete gallery');
+      // Handle 401 Unauthorized (token expired)
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        throw new Error('Session expired. Please login again.');
       }
-    } catch (error) {
+      
+      // Handle 403 Forbidden (no permission)
+      if (response.status === 403) {
+        throw new Error('You do not have permission to delete galleries.');
+      }
+      
+      throw new Error(errorData.error || errorData.message || 'Failed to delete gallery');
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      setGalleryItems(prev => prev.filter(item => item.id !== itemToDelete.id));
+      setSelectedItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemToDelete.id);
+        return newSet;
+      });
+      
       toast.dismiss();
-      toast.error(`Error: ${error.message}`);
-    } finally {
+      toast.success('Gallery deleted successfully!');
       setShowDeleteModal(false);
       setItemToDelete(null);
+    } else {
+      throw new Error(result.error || 'Failed to delete gallery');
     }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedItems.size === 0) return;
+  } catch (error) {
+    toast.dismiss();
     
-    if (!window.confirm(`Delete ${selectedItems.size} selected galleries? This cannot be undone.`)) {
-      return;
-    }
-
-    toast.loading(`Deleting ${selectedItems.size} galleries...`);
-    const deletePromises = Array.from(selectedItems).map(id => 
-      fetch(`/api/gallery/${id}`, { method: 'DELETE' }).then(res => res.json())
-    );
-
-    try {
-      const results = await Promise.all(deletePromises);
-      const successful = results.filter(result => result.success).length;
+    // Handle specific error cases
+    if (error.message.includes('Session expired') || 
+        error.message.includes('Authentication required') ||
+        error.message.includes('Device verification')) {
       
-      if (successful > 0) {
-        setGalleryItems(prev => prev.filter(item => !selectedItems.has(item.id)));
-        setSelectedItems(new Set());
-        
-        toast.dismiss();
-        toast.success(`${successful} galleries deleted successfully!`);
-      } else {
-        throw new Error('Failed to delete galleries');
-      }
-    } catch (error) {
-      toast.dismiss();
+      toast.error('Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 1500);
+      
+    } else if (error.message.includes('permission')) {
+      toast.error('Access denied: ' + error.message);
+    } else {
       toast.error(`Error: ${error.message}`);
     }
-  };
+  }
+};
+
+const handleBulkDelete = async () => {
+  if (selectedItems.size === 0) return;
+  
+  if (!window.confirm(`Delete ${selectedItems.size} selected galleries? This cannot be undone.`)) {
+    return;
+  }
+
+  toast.loading(`Deleting ${selectedItems.size} galleries...`);
+  
+  try {
+    // Get authentication tokens
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    // Check if tokens exist
+    if (!adminToken) {
+      throw new Error('Authentication required. Please login again.');
+    }
+    
+    if (!deviceToken) {
+      throw new Error('Device verification required. Please login with verification.');
+    }
+    
+    const deletePromises = Array.from(selectedItems).map(id => 
+      fetch(`/api/gallery/${id}`, { 
+        method: 'DELETE',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`,
+          'x-device-token': deviceToken
+        }
+      }).then(res => res.json())
+    );
+
+    const results = await Promise.all(deletePromises);
+    const successful = results.filter(result => result.success).length;
+    
+    if (successful > 0) {
+      setGalleryItems(prev => prev.filter(item => !selectedItems.has(item.id)));
+      setSelectedItems(new Set());
+      
+      toast.dismiss();
+      toast.success(`${successful} galleries deleted successfully!`);
+    } else {
+      throw new Error('Failed to delete galleries');
+    }
+  } catch (error) {
+    toast.dismiss();
+    
+    // Handle specific error cases
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Device verification')) {
+      
+      toast.error('Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 1500);
+      
+    } else {
+      toast.error(`Error: ${error.message}`);
+    }
+  }
+};
+
+
 const resetForm = useCallback(() => {
   setFormData({
     title: '',
