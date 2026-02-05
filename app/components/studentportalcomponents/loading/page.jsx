@@ -30,7 +30,7 @@ export default function LoadingScreen() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
-                src="/katz.png" 
+                src="/katz.jpeg" 
                 alt="School Logo" 
                 className="w-full h-full object-contain p-2"
               />

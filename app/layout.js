@@ -72,7 +72,7 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: "/katz.png", // 🔑 relative path + metadataBase = safest
+        url: "/katz.jpeg", // 🔑 relative path + metadataBase = safest
         width: 1200,
         height: 630,
         alt: "Katwanyaa High School",
@@ -85,7 +85,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Katwanyaa High School",
     description: "Premier public education in Matungulu, Machakos County.",
-    images: ["/katz.png"],
+    images: ["/katz.jpeg"],
   },
 
   /* ✅ Robots */
@@ -102,8 +102,8 @@ export const metadata = {
 
 
   icons: {
-    icon: "/katz.png",
-    apple: "/katz.png",
+    icon: "/katz.jpeg",
+    apple: "/katz.jpeg",
   },
 
   verification: {

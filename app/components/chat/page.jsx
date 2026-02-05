@@ -929,7 +929,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
     <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
       <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shadow-lg bg-white shrink-0 overflow-hidden border border-white/20">
         <img
-          src="/katz.png"
+          src="/katz.jpeg"
           alt="Logo"
           className="w-full h-full object-cover"
         />

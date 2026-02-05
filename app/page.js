@@ -116,7 +116,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'School',
   name: 'Katwanyaa High School',
-  image: 'https://katwanyaa.vercel.app/katz.png',
+  image: 'https://katwanyaa.vercel.app/katz.jpeg',
   description: 'A secondary school committed to academic excellence, integrity, and holistic student development.',
   address: {
     '@type': 'PostalAddress',
@@ -476,7 +476,7 @@ const LoadingScreen = () => (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden border border-white/20 shadow-2xl">
             <img 
-              src="/katz.png" 
+              src="/katz.jpeg" 
               alt="AIC Katwanyaa High School Logo" 
               className="w-full h-full object-contain p-1.5 md:p-2"
             />

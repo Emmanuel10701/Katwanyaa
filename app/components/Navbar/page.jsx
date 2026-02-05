@@ -216,7 +216,7 @@ export default function ModernNavbar() {
                 shadow-lg border border-white/30 overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                 <Image
-                  src="/katz.png"
+                  src="/katz.jpeg"
                   alt="Katwanyaa High School Logo"
                   width={48}
                   height={48}

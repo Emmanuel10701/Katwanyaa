@@ -5,7 +5,7 @@ export default function sitemap() {
   const currentDate = new Date();
   
   // Using the Katwanyaa logo image
-  const schoolLogo = `${baseUrl}/katz.png`;
+  const schoolLogo = `${baseUrl}/katz.jpeg`;
 
   // Define categories for better organization
   const pages = [

@@ -219,7 +219,7 @@ export default function ModernFooter() {
               <div className="flex flex-col xs:flex-row items-start gap-4">
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-white flex-shrink-0 shadow-sm">
                   <img 
-                    src="/katz.png" 
+                    src="/katz.jpeg" 
                     alt="School Logo" 
                     className="w-full h-full object-cover"
                   />

@@ -883,7 +883,7 @@ if (!student || !token) {
           <div className="max-w-7xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
               <Image
-                src="/katz.png"
+                src="/katz.jpeg"
                 alt="Katwanyaa High School Logo"
                 width={32}
                 height={32}
