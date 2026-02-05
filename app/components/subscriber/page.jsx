@@ -251,35 +251,23 @@ export default function SubscriberManager() {
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   
 
+  useEffect(() => {
+  // Add this useEffect after your existing useEffect
+  const checkAuth = () => {
+    const adminToken = localStorage.getItem('adminToken');
+    const deviceToken = localStorage.getItem('deviceToken');
+    
+    if (!adminToken || !deviceToken) {
+      showToast('warning', 'Authentication Required', 'Please log in to access subscriber features');
+      // You might want to redirect to login page here
+      // router.push('/login');
+    }
+  };
+  
+  checkAuth();
+}, []);
 
 
-
-
-
-
-
-
-
-
-
-
-
-  const response = await fetch('/api/campaign', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-admin-token': 'your-admin-token',
-    'x-device-token': 'your-device-token'
-  },
-  body: JSON.stringify({
-    subscribers: selectedSubscribers,
-    template: emailData.template, // 'admission', 'newsletter', 'event', 'custom'
-    subject: emailData.subject,
-    customMessage: emailData.customMessage,
-    templateData: emailData.templateData, // All dynamic fields
-    agendaData: agendaData // Admission dates, announcements, events
-  })
-});
 
 
   // New state for agenda data
@@ -444,45 +432,49 @@ export default function SubscriberManager() {
   };
 
   // Fetch subscribers from API
-  const fetchSubscribers = async () => {
-    try {
-      setLoading(true);
-      // Mock data for demonstration - replace with actual API call
-      const mockData = {
-        success: true,
-        subscribers: [
-          { id: '1', email: 'john.doe@example.com', createdAt: '2024-01-15T10:30:00Z', status: 'active' },
-          { id: '2', email: 'jane.smith@example.com', createdAt: '2024-01-20T14:45:00Z', status: 'active' },
-          { id: '3', email: 'bob.johnson@example.com', createdAt: '2024-02-01T09:15:00Z', status: 'active' },
-          { id: '4', email: 'alice.williams@example.com', createdAt: '2024-02-10T16:20:00Z', status: 'active' },
-          { id: '5', email: 'charlie.brown@example.com', createdAt: '2024-02-15T11:10:00Z', status: 'active' },
-          { id: '6', email: 'diana.prince@example.com', createdAt: '2024-03-01T13:25:00Z', status: 'active' },
-          { id: '7', email: 'edward.stark@example.com', createdAt: '2024-03-05T08:45:00Z', status: 'active' },
-          { id: '8', email: 'fiona.green@example.com', createdAt: '2024-03-10T15:30:00Z', status: 'active' },
-          { id: '9', email: 'george.white@example.com', createdAt: '2024-03-15T12:15:00Z', status: 'active' },
-          { id: '10', email: 'helen.black@example.com', createdAt: '2024-03-20T10:00:00Z', status: 'active' }
-        ]
-      };
-      
-      // Uncomment for actual API call:
-      // const response = await fetch('/api/subscriber');
-      // const data = await response.json();
-      
-      const data = mockData;
-      
-      if (data.success) {
-        setSubscribers(data.subscribers);
-        setFilteredSubscribers(data.subscribers);
-      } else {
-        throw new Error(data.error || 'Failed to fetch subscribers');
-      }
-    } catch (error) {
-      console.error('Error fetching subscribers:', error);
-      showToast('error', 'Fetch Error', 'Failed to fetch subscribers');
-    } finally {
-      setLoading(false);
+// Fetch subscribers from API
+const fetchSubscribers = async () => {
+  try {
+    setLoading(true);
+    
+    // Get tokens
+    const adminToken = localStorage.getItem('adminToken');
+    const deviceToken = localStorage.getItem('deviceToken');
+    
+    if (!adminToken || !deviceToken) {
+      throw new Error('Authentication required. Please log in.');
     }
-  };
+
+    // REAL API call
+    const response = await fetch('/api/subscriber', {
+      headers: {
+        'x-admin-token': adminToken,
+        'x-device-token': deviceToken
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Session expired. Please log in again.');
+      }
+      throw new Error('Failed to fetch subscribers');
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      setSubscribers(data.subscribers);
+      setFilteredSubscribers(data.subscribers);
+    } else {
+      throw new Error(data.error || 'Failed to fetch subscribers');
+    }
+  } catch (error) {
+    console.error('Error fetching subscribers:', error);
+    showToast('error', 'Fetch Error', error.message || 'Failed to fetch subscribers');
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchSubscribers();
@@ -592,30 +584,51 @@ export default function SubscriberManager() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = async () => {
-    if (!subscriberToDelete) return;
+const confirmDelete = async () => {
+  if (!subscriberToDelete) return;
+  
+  try {
+    // Get admin token from localStorage or cookies
+    const adminToken = localStorage.getItem('adminToken') || 
+                       document.cookie.split('; ').find(row => row.startsWith('adminToken='))?.split('=')[1];
     
-    try {
-      // Mock delete - replace with actual API call
-      showToast('success', 'Deleted', 'Subscriber deleted successfully');
-      
-      // In real implementation:
-      // const response = await fetch(`/api/subscriber/${subscriberToDelete.id}`, {
-      //   method: 'DELETE',
-      // });
-      // const data = await response.json();
-      
-      // Update local state
-      setSubscribers(prev => prev.filter(sub => sub.id !== subscriberToDelete.id));
-      
-    } catch (error) {
-      console.error('Error deleting subscriber:', error);
-      showToast('error', 'Delete Failed', 'Failed to delete subscriber');
-    } finally {
-      setShowDeleteConfirm(false);
-      setSubscriberToDelete(null);
+    // Get device token
+    const deviceToken = localStorage.getItem('deviceToken') ||
+                        document.cookie.split('; ').find(row => row.startsWith('deviceToken='))?.split('=')[1];
+
+    if (!adminToken || !deviceToken) {
+      showToast('error', 'Authentication Error', 'Please log in again');
+      return;
     }
-  };
+
+    // REAL API call (uncommented)
+    const response = await fetch(`/api/subscriber/${subscriberToDelete.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken,
+        'x-device-token': deviceToken,
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Failed to delete subscriber');
+    }
+
+    // Update local state
+    setSubscribers(prev => prev.filter(sub => sub.id !== subscriberToDelete.id));
+    showToast('success', 'Deleted', 'Subscriber deleted successfully');
+    
+  } catch (error) {
+    console.error('Error deleting subscriber:', error);
+    showToast('error', 'Delete Failed', error.message || 'Failed to delete subscriber');
+  } finally {
+    setShowDeleteConfirm(false);
+    setSubscriberToDelete(null);
+  }
+};
 
   // Export to CSV with enhanced data
   const exportToCSV = () => {
@@ -681,68 +694,98 @@ export default function SubscriberManager() {
   };
 
   // Handle email sending with agenda data
-  const handleSendEmail = async (e) => {
-    e.preventDefault();
-    setSendingEmail(true);
+// Handle email sending with agenda data
+const handleSendEmail = async (e) => {
+  e.preventDefault();
+  setSendingEmail(true);
 
-    try {
-      const targetSubscribers = selectedSubscribers.size > 0 
-        ? subscribers.filter(sub => selectedSubscribers.has(sub.id))
-        : subscribers;
+  try {
+    const targetSubscribers = selectedSubscribers.size > 0 
+      ? subscribers.filter(sub => selectedSubscribers.has(sub.id))
+      : subscribers;
 
-      if (targetSubscribers.length === 0) {
-        throw new Error('No subscribers selected');
-      }
-
-      // Prepare template data with selected agenda items
-      const templatePayload = {
-        ...emailData.templateData,
-        // Include selected agenda items if they exist
-        ...(emailData.templateData.selectedAdmissionDate && {
-          admissionDetails: agendaData.admissionDates.find(
-            ad => ad.id === emailData.templateData.selectedAdmissionDate
-          )
-        }),
-        ...(emailData.templateData.selectedAnnouncement && {
-          announcementDetails: agendaData.announcements.find(
-            ann => ann.id === emailData.templateData.selectedAnnouncement
-          )
-        }),
-        ...(emailData.templateData.selectedEvent && {
-          eventDetails: agendaData.schoolEvents.find(
-            ev => ev.id === emailData.templateData.selectedEvent
-          )
-        })
-      };
-
-      // Mock send - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      showToast('success', 'Campaign Sent', `Email sent to ${targetSubscribers.length} subscribers successfully`);
-      setShowEmailModal(false);
-      
-      // Reset form but keep dynamic agenda data
-      setEmailData({
-        subject: '',
-        template: 'admission',
-        audience: 'all',
-        customMessage: '',
-        templateData: {
-          ...emailData.templateData,
-          selectedAdmissionDate: '',
-          selectedAnnouncement: '',
-          selectedEvent: ''
-        }
-      });
-      setSelectedSubscribers(new Set());
-      
-    } catch (error) {
-      console.error('Error sending campaign:', error);
-      showToast('error', 'Send Failed', error.message);
-    } finally {
-      setSendingEmail(false);
+    if (targetSubscribers.length === 0) {
+      throw new Error('No subscribers selected');
     }
-  };
+
+    // Get tokens
+    const adminToken = localStorage.getItem('adminToken');
+    const deviceToken = localStorage.getItem('deviceToken');
+    
+    if (!adminToken || !deviceToken) {
+      throw new Error('Authentication required. Please log in.');
+    }
+
+    // Prepare template data with selected agenda items
+    const templatePayload = {
+      ...emailData.templateData,
+      // Include selected agenda items if they exist
+      ...(emailData.templateData.selectedAdmissionDate && {
+        admissionDetails: agendaData.admissionDates.find(
+          ad => ad.id === emailData.templateData.selectedAdmissionDate
+        )
+      }),
+      ...(emailData.templateData.selectedAnnouncement && {
+        announcementDetails: agendaData.announcements.find(
+          ann => ann.id === emailData.templateData.selectedAnnouncement
+        )
+      }),
+      ...(emailData.templateData.selectedEvent && {
+        eventDetails: agendaData.schoolEvents.find(
+          ev => ev.id === emailData.templateData.selectedEvent
+        )
+      })
+    };
+
+    // REAL API call with tokens
+    const response = await fetch('/api/campaign', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-token': adminToken,
+        'x-device-token': deviceToken
+      },
+      body: JSON.stringify({
+        subscribers: targetSubscribers,
+        template: emailData.template,
+        subject: emailData.subject,
+        customMessage: emailData.customMessage,
+        templateData: templatePayload,
+        agendaData: agendaData
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Failed to send campaign');
+    }
+
+    showToast('success', 'Campaign Sent', `Email sent to ${targetSubscribers.length} subscribers successfully`);
+    setShowEmailModal(false);
+    
+    // Reset form but keep dynamic agenda data
+    setEmailData({
+      subject: '',
+      template: 'admission',
+      audience: 'all',
+      customMessage: '',
+      templateData: {
+        ...emailData.templateData,
+        selectedAdmissionDate: '',
+        selectedAnnouncement: '',
+        selectedEvent: ''
+      }
+    });
+    setSelectedSubscribers(new Set());
+    
+  } catch (error) {
+    console.error('Error sending campaign:', error);
+    showToast('error', 'Send Failed', error.message);
+  } finally {
+    setSendingEmail(false);
+  }
+};
 
   const viewSubscriberDetails = (subscriber) => {
     setSelectedSubscriber(subscriber);
