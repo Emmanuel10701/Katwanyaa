@@ -415,10 +415,6 @@ export async function PUT(req, { params }) {
         description, 
         category,
         files: updatedFiles,
-        // Audit trail
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
         updatedAt: new Date(),
       },
     });
@@ -429,7 +425,6 @@ export async function PUT(req, { params }) {
       success: true, 
       gallery: updatedGallery,
       message: `Gallery updated successfully. ${filesToRemove.length} files removed, ${newFileEntries.length} files added.`,
-      updatedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -526,7 +521,6 @@ export async function DELETE(req, { params }) {
       message: "Gallery deleted successfully",
       deletedGallery: gallery.title,
       deletedFilesCount: Array.isArray(gallery.files) ? gallery.files.length : 0,
-      deletedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

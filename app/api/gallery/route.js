@@ -410,12 +410,7 @@ export async function POST(req) {
         category,
         files,
         // Audit trail
-        createdBy: auth.user.id,
-        createdByName: auth.user.name,
-        createdByRole: auth.user.role,
-        updatedBy: auth.user.id,
-        updatedByName: auth.user.name,
-        updatedByRole: auth.user.role,
+       
       },
     });
 
@@ -425,7 +420,6 @@ export async function POST(req) {
       success: true, 
       gallery: newGallery,
       message: "Gallery uploaded successfully",
-      uploadedBy: auth.user.name,
       filesCount: files.length,
       timestamp: new Date().toISOString()
     }, { status: 201 });
