@@ -523,19 +523,6 @@ export async function POST(req) {
       updatedAt: new Date()
     };
 
-    // Add audit trail
-    if (existingDocument) {
-      updateData.updatedBy = auth.user.id;
-      updateData.updatedByName = auth.user.name;
-      updateData.updatedByRole = auth.user.role;
-    } else {
-      updateData.createdBy = auth.user.id;
-      updateData.createdByName = auth.user.name;
-      updateData.createdByRole = auth.user.role;
-      updateData.updatedBy = auth.user.id;
-      updateData.updatedByName = auth.user.name;
-      updateData.updatedByRole = auth.user.role;
-    }
 
     // Parse JSON fields
     const feesDayDistributionJson = formData.get("feesDayDistributionJson");
@@ -702,7 +689,6 @@ export async function POST(req) {
         success: true,
         message: "School documents created successfully",
         document: cleanDocumentResponse(finalDocument),
-        createdBy: auth.user.name,
         timestamp: new Date().toISOString()
       }, { status: 201 });
     }
@@ -766,10 +752,7 @@ export async function PUT(req) {
     const updateData = {
       [field]: data,
       updatedAt: new Date(),
-      // Audit trail
-      updatedBy: auth.user.id,
-      updatedByName: auth.user.name,
-      updatedByRole: auth.user.role
+
     };
 
     const updatedDocument = await prisma.schoolDocument.update({
@@ -917,9 +900,7 @@ export async function PATCH(req) {
           [field]: null,
           updatedAt: new Date(),
           // Audit trail
-          updatedBy: auth.user.id,
-          updatedByName: auth.user.name,
-          updatedByRole: auth.user.role
+ 
         };
 
         const mapping = fieldMappings[field];
@@ -948,7 +929,6 @@ export async function PATCH(req) {
         success: true,
         message: "File deleted successfully",
         document: cleanDocumentResponse(updatedDocument),
-        deletedBy: auth.user.name,
         timestamp: new Date().toISOString()
       });
     }
@@ -1077,7 +1057,6 @@ async function deleteDocumentAndFiles(document, auth) {
   return NextResponse.json({
     success: true,
     message: "School documents deleted successfully",
-    deletedBy: auth.user.name,
     deletedDocumentId: document.id,
     timestamp: new Date().toISOString()
   });
