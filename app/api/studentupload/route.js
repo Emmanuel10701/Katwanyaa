@@ -1419,115 +1419,132 @@ export async function POST(request) {
       
       let processingStats;
       
-      // Use transaction for consistency
-      await prisma.$transaction(async (tx) => {
-        if (uploadType === 'new') {
-          // Process new upload
-          processingStats = await processNewUpload(rawData, batchId, selectedForms, duplicateAction);
-          
-          // Update batch with new upload stats
-          await tx.studentBulkUpload.update({
-            where: { id: batchId },
-            data: {
-              status: 'completed',
-              processedDate: new Date(),
-              totalRows: processingStats.totalRows,
-              validRows: processingStats.validRows,
-              skippedRows: processingStats.skippedRows,
-              errorRows: processingStats.errorRows,
-              errorLog: processingStats.errors.length > 0 ? processingStats.errors.slice(0, 50) : undefined
-            }
-          });
-          
-          // Update statistics
-          if (processingStats.createdStudents.length > 0) {
-            const formCounts = processingStats.createdStudents.reduce((acc, student) => {
-              acc[student.form] = (acc[student.form] || 0) + 1;
-              return acc;
-            }, {});
-            
-            await tx.studentStats.upsert({
-              where: { id: 'global_stats' },
-              update: {
-                totalStudents: { increment: processingStats.createdStudents.length },
-                form1: { increment: formCounts['Form 1'] || 0 },
-                form2: { increment: formCounts['Form 2'] || 0 },
-                form3: { increment: formCounts['Form 3'] || 0 },
-                form4: { increment: formCounts['Form 4'] || 0 },
-                updatedAt: new Date()
-              },
-              create: {
-                id: 'global_stats',
-                totalStudents: processingStats.createdStudents.length,
-                form1: formCounts['Form 1'] || 0,
-                form2: formCounts['Form 2'] || 0,
-                form3: formCounts['Form 3'] || 0,
-                form4: formCounts['Form 4'] || 0
-              }
-            });
-          }
-          
-        } else if (uploadType === 'update') {
-          // Process update upload
-          processingStats = await processUpdateUpload(rawData, batchId, targetForm);
-          
-          // Update batch with update stats
-          await tx.studentBulkUpload.update({
-            where: { id: batchId },
-            data: {
-              status: 'completed',
-              processedDate: new Date(),
-              totalRows: processingStats.totalRows,
-              validRows: processingStats.validRows,
-              skippedRows: processingStats.errorRows,
-              errorRows: processingStats.errorRows,
-              errorLog: processingStats.errors.length > 0 ? processingStats.errors.slice(0, 50) : undefined,
-              metadata: {
-                ...uploadBatch.metadata,
-                updatedRows: processingStats.updatedRows,
-                createdRows: processingStats.createdRows,
-                deactivatedRows: processingStats.deactivatedRows
-              }
-            }
-          });
-          
-          // Recalculate statistics after update
-          const formStats = await tx.databaseStudent.groupBy({
-            by: ['form'],
-            where: { status: 'active' },
-            _count: { id: true }
-          });
-          
-          const totalStudents = await tx.databaseStudent.count({
-            where: { status: 'active' }
-          });
-          
-          const formStatsObj = formStats.reduce((acc, stat) => ({
-            ...acc,
-            [stat.form]: stat._count.id
-          }), {});
-          
-          await tx.studentStats.upsert({
-            where: { id: 'global_stats' },
-            update: {
-              totalStudents,
-              form1: formStatsObj['Form 1'] || 0,
-              form2: formStatsObj['Form 2'] || 0,
-              form3: formStatsObj['Form 3'] || 0,
-              form4: formStatsObj['Form 4'] || 0,
-              updatedAt: new Date()
-            },
-            create: {
-              id: 'global_stats',
-              totalStudents,
-              form1: formStatsObj['Form 1'] || 0,
-              form2: formStatsObj['Form 2'] || 0,
-              form3: formStatsObj['Form 3'] || 0,
-              form4: formStatsObj['Form 4'] || 0
-            }
-          });
+// Use transaction for consistency with increased timeout
+await prisma.$transaction(async (tx) => {
+  if (uploadType === 'new') {
+    // Process new upload
+    processingStats = await processNewUpload(rawData, batchId, selectedForms, duplicateAction);
+    
+    // Update batch with new upload stats
+    await tx.studentBulkUpload.update({
+      where: { id: batchId },
+      data: {
+        status: 'completed',
+        processedDate: new Date(),
+        totalRows: processingStats.totalRows,
+        validRows: processingStats.validRows,
+        skippedRows: processingStats.skippedRows,
+        errorRows: processingStats.errorRows,
+        errorLog: processingStats.errors.length > 0 ? processingStats.errors.slice(0, 50) : undefined
+      }
+    });
+    
+    // Update statistics - OPTIMIZED VERSION
+    if (processingStats.createdStudents.length > 0) {
+      const formCounts = {};
+      processingStats.createdStudents.forEach(student => {
+        formCounts[student.form] = (formCounts[student.form] || 0) + 1;
+      });
+      
+      // Update stats in bulk without recalculating everything
+      await tx.studentStats.upsert({
+        where: { id: 'global_stats' },
+        update: {
+          totalStudents: { increment: processingStats.createdStudents.length },
+          ...(formCounts['Form 1'] && { form1: { increment: formCounts['Form 1'] } }),
+          ...(formCounts['Form 2'] && { form2: { increment: formCounts['Form 2'] } }),
+          ...(formCounts['Form 3'] && { form3: { increment: formCounts['Form 3'] } }),
+          ...(formCounts['Form 4'] && { form4: { increment: formCounts['Form 4'] } }),
+          updatedAt: new Date()
+        },
+        create: {
+          id: 'global_stats',
+          totalStudents: processingStats.createdStudents.length,
+          form1: formCounts['Form 1'] || 0,
+          form2: formCounts['Form 2'] || 0,
+          form3: formCounts['Form 3'] || 0,
+          form4: formCounts['Form 4'] || 0
         }
       });
+    }
+    
+  } else if (uploadType === 'update') {
+    // Process update upload
+    processingStats = await processUpdateUpload(rawData, batchId, targetForm);
+    
+    // Update batch with update stats
+    await tx.studentBulkUpload.update({
+      where: { id: batchId },
+      data: {
+        status: 'completed',
+        processedDate: new Date(),
+        totalRows: processingStats.totalRows,
+        validRows: processingStats.validRows,
+        skippedRows: processingStats.errorRows,
+        errorRows: processingStats.errorRows,
+        errorLog: processingStats.errors.length > 0 ? processingStats.errors.slice(0, 50) : undefined,
+        metadata: {
+          ...uploadBatch.metadata,
+          updatedRows: processingStats.updatedRows,
+          createdRows: processingStats.createdRows,
+          deactivatedRows: processingStats.deactivatedRows
+        }
+      }
+    });
+    
+    // OPTIMIZED: Only recalculate statistics if needed
+    // Skip full recalculation if no deactivations
+    if (processingStats.deactivatedRows > 0) {
+      const formStats = await tx.databaseStudent.groupBy({
+        by: ['form'],
+        where: { status: 'active' },
+        _count: { id: true }
+      });
+      
+      const formStatsObj = {};
+      formStats.forEach(stat => {
+        formStatsObj[stat.form] = stat._count.id;
+      });
+      
+      await tx.studentStats.upsert({
+        where: { id: 'global_stats' },
+        update: {
+          totalStudents: formStats.reduce((sum, stat) => sum + stat._count.id, 0),
+          form1: formStatsObj['Form 1'] || 0,
+          form2: formStatsObj['Form 2'] || 0,
+          form3: formStatsObj['Form 3'] || 0,
+          form4: formStatsObj['Form 4'] || 0,
+          updatedAt: new Date()
+        },
+        create: {
+          id: 'global_stats',
+          totalStudents: formStats.reduce((sum, stat) => sum + stat._count.id, 0),
+          form1: formStatsObj['Form 1'] || 0,
+          form2: formStatsObj['Form 2'] || 0,
+          form3: formStatsObj['Form 3'] || 0,
+          form4: formStatsObj['Form 4'] || 0
+        }
+      });
+    } else {
+      // Simple increment/decrement for update operations
+      const netChange = processingStats.createdRows - processingStats.updatedRows;
+      await tx.studentStats.update({
+        where: { id: 'global_stats' },
+        data: {
+          totalStudents: { increment: netChange },
+          ...(targetForm === 'Form 1' && { form1: { increment: netChange } }),
+          ...(targetForm === 'Form 2' && { form2: { increment: netChange } }),
+          ...(targetForm === 'Form 3' && { form3: { increment: netChange } }),
+          ...(targetForm === 'Form 4' && { form4: { increment: netChange } }),
+          updatedAt: new Date()
+        }
+      });
+    }
+  }
+}, {
+  maxWait: 15000,    // Increased from default
+  timeout: 30000     // 30 seconds timeout
+});
       
       // Recalculate to ensure consistency
       const finalStats = await calculateStatistics({});
