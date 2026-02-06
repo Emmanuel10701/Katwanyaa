@@ -115,6 +115,9 @@ class DeviceTokenManager {
   }
 }
 
+
+
+
 // Authentication middleware for protected requests
 const authenticateRequest = (req) => {
   const headers = req.headers;
@@ -2119,8 +2122,6 @@ export async function POST(request) {
         fileName: file.name,
         fileType: fileExtension,
         uploadedBy: auth.user.name,
-        uploadedById: auth.user.id,
-        uploadedByRole: auth.user.role,
         status: 'processing',
         term: term || null,
         academicYear: academicYear || null,
