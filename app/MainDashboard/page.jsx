@@ -988,7 +988,9 @@ const handleLogout = () => {
   }
 
   return (
-    <>
+    < >
+    <div className="zoom: 85%;">
+    
       {/* Add Sonner Toaster */}
       <Toaster 
         position="top-right"
@@ -1067,6 +1069,7 @@ const handleLogout = () => {
             </div>
           </main>
         </div>
+      </div>
       </div>
     </>
   );
