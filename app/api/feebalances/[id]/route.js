@@ -144,7 +144,7 @@ const authenticateRequest = (req) => {
 
 // Helper function to calculate balance and payment status
 const calculateFeeStats = (amount, amountPaid) => {
-  const balance = amount - (amountPaid || 0);
+  const balance = Math.max(0, amount - (amountPaid || 0));
   const paymentStatus = balance <= 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'pending';
   return { balance, paymentStatus };
 };
@@ -153,8 +153,10 @@ const calculateFeeStats = (amount, amountPaid) => {
 const sortFeeBalances = (feeBalances) => {
   return feeBalances.sort((a, b) => {
     // First sort by academic year
-    if (a.academicYear > b.academicYear) return -1;
-    if (a.academicYear < b.academicYear) return 1;
+    const yearA = a.academicYear || '';
+    const yearB = b.academicYear || '';
+    if (yearA > yearB) return -1;
+    if (yearA < yearB) return 1;
     
     // Then sort by term (Term 1, Term 2, Term 3)
     const termOrder = { 'Term 1': 1, 'Term 2': 2, 'Term 3': 3 };
@@ -165,13 +167,33 @@ const sortFeeBalances = (feeBalances) => {
   });
 };
 
+// Helper function to parse date safely
+const parseDateSafely = (dateString) => {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+};
+
+// ========== API ENDPOINTS ==========
+
 // GET fee balances by admission number (PUBLIC - no authentication required)
 export async function GET(request, { params }) {
   try {
     const { id } = params;
     
-    // Assuming 'id' in params is actually the admissionNumber
-    const admissionNumber = id;
+    // Validate admission number
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Admission number is required' },
+        { status: 400 }
+      );
+    }
+    
+    const admissionNumber = String(id).trim();
 
     // Get all fee balances for this admission number
     const feeBalances = await prisma.feeBalance.findMany({
@@ -200,7 +222,7 @@ export async function GET(request, { params }) {
       },
       orderBy: [
         { academicYear: 'desc' },
-        { term: 'asc' } // Simple string ordering - will sort alphabetically
+        { term: 'asc' }
       ]
     });
 
@@ -209,30 +231,60 @@ export async function GET(request, { params }) {
 
     if (!orderedFeeBalances || orderedFeeBalances.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'No fee balance records found for this admission number' },
-        { status: 404 }
+        { 
+          success: false, 
+          message: 'No fee balance records found for this admission number',
+          data: { feeBalances: [], summary: { totalAmount: 0, totalPaid: 0, totalBalance: 0 } }
+        },
+        { status: 200 }
       );
     }
 
     // Calculate summary
     const summary = orderedFeeBalances.reduce((acc, fee) => {
-      acc.totalAmount += fee.amount;
-      acc.totalPaid += fee.amountPaid;
-      acc.totalBalance += fee.balance;
+      acc.totalAmount += fee.amount || 0;
+      acc.totalPaid += fee.amountPaid || 0;
+      acc.totalBalance += fee.balance || 0;
       return acc;
     }, { totalAmount: 0, totalPaid: 0, totalBalance: 0 });
+
+    // Get student info
+    const studentInfo = orderedFeeBalances.length > 0 
+      ? orderedFeeBalances[0].student 
+      : await prisma.databaseStudent.findUnique({
+          where: { admissionNumber },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            admissionNumber: true,
+            form: true,
+            stream: true,
+            email: true
+          }
+        });
 
     return NextResponse.json({
       success: true,
       data: {
         feeBalances: orderedFeeBalances,
-        summary
+        summary,
+        student: studentInfo,
+        metadata: {
+          totalRecords: orderedFeeBalances.length,
+          fetchedAt: new Date().toISOString(),
+          admissionNumber
+        }
       }
     });
   } catch (error) {
     console.error('GET fee balances by admission number error:', error);
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch fee balance records' },
+      { 
+        success: false, 
+        message: 'Failed to fetch fee balance records',
+        error: error.message 
+      },
       { status: 500 }
     );
   }
@@ -251,11 +303,11 @@ export async function POST(request, { params }) {
     console.log(`📝 Create fee balance request from: ${auth.user.name} (${auth.user.role})`);
 
     const { id } = params;
-    const admissionNumber = id;
+    const admissionNumber = String(id).trim();
     const data = await request.json();
 
     // Validate required fields
-    if (!data.term || !data.academicYear || !data.amount) {
+    if (!data.term || !data.academicYear || data.amount === undefined) {
       return NextResponse.json(
         { 
           success: false, 
@@ -329,20 +381,28 @@ export async function POST(request, { params }) {
       );
     }
 
+    // Prepare data for creation
+    const feeData = {
+      admissionNumber,
+      term: data.term,
+      academicYear: data.academicYear,
+      amount: parseFloat(data.amount),
+      amountPaid: parseFloat(amountPaid),
+      balance,
+      paymentStatus,
+      dueDate: parseDateSafely(data.dueDate),
+      uploadBatchId: data.uploadBatchId || null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
     const newFeeBalance = await prisma.feeBalance.create({
       data: {
-        admissionNumber,
-        term: data.term,
-        academicYear: data.academicYear,
-        amount: data.amount,
-        amountPaid: amountPaid,
-        balance: balance,
-        paymentStatus: paymentStatus,
-        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        ...feeData,
         student: {
           connect: { admissionNumber }
-        },
-        uploadBatchId: data.uploadBatchId || null
+        }
       },
       include: {
         student: {
@@ -360,7 +420,9 @@ export async function POST(request, { params }) {
     return NextResponse.json({
       success: true,
       message: 'Fee balance created successfully',
-      feeBalance: newFeeBalance,
+      data: {
+        feeBalance: newFeeBalance
+      },
       authenticated: true,
     }, { status: 201 });
   } catch (error) {
@@ -389,32 +451,182 @@ export async function POST(request, { params }) {
   }
 }
 
-// In the POST endpoint, update this section:
-const newFeeBalance = await prisma.feeBalance.create({
-  data: {
-    admissionNumber,
-    term: data.term,
-    academicYear: data.academicYear,
-    amount: data.amount,
-    amountPaid: amountPaid,
-    balance: balance,
-    paymentStatus: paymentStatus,
-    dueDate: data.dueDate ? new Date(data.dueDate) : null, // Convert string to Date
-    student: {
-      connect: { admissionNumber }
-    },
-    uploadBatchId: data.uploadBatchId || null
-  },
-  include: {
-    student: {
-      select: {
-        firstName: true,
-        lastName: true,
-        form: true
+// PUT update fee balance (PROTECTED - authentication required)
+export async function PUT(request, { params }) {
+  try {
+    // Step 1: Authenticate the PUT request
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    // Log authentication info
+    console.log(`📝 Update fee balance request from: ${auth.user.name} (${auth.user.role})`);
+
+    const { id } = params;
+    const data = await request.json();
+    
+    // Get feeBalanceId from request body or query params
+    const feeBalanceId = data.feeBalanceId || data.id;
+    
+    if (!feeBalanceId) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee balance ID is required',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get current fee balance
+    const currentFee = await prisma.feeBalance.findUnique({
+      where: { id: feeBalanceId }
+    });
+
+    if (!currentFee) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee balance record not found',
+          authenticated: true 
+        },
+        { status: 404 }
+      );
+    }
+
+    // Calculate values for update
+    const amount = data.amount !== undefined ? parseFloat(data.amount) : currentFee.amount;
+    const amountPaid = data.amountPaid !== undefined ? parseFloat(data.amountPaid) : currentFee.amountPaid;
+
+    // Validate amount
+    if (amount <= 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Amount must be greater than 0',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate amountPaid doesn't exceed amount
+    if (amountPaid > amount) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Amount paid cannot exceed total amount',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate balance and payment status
+    const { balance, paymentStatus } = calculateFeeStats(amount, amountPaid);
+
+    // Check for duplicate if updating admissionNumber, term, or academicYear
+    if (data.admissionNumber || data.term || data.academicYear) {
+      const admissionNumber = data.admissionNumber || currentFee.admissionNumber;
+      const term = data.term || currentFee.term;
+      const academicYear = data.academicYear || currentFee.academicYear;
+
+      const existingFee = await prisma.feeBalance.findFirst({
+        where: {
+          admissionNumber,
+          term,
+          academicYear,
+          NOT: { id: feeBalanceId }
+        }
+      });
+
+      if (existingFee) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'Fee entry already exists for this student, term, and academic year',
+            authenticated: true 
+          },
+          { status: 400 }
+        );
       }
     }
+
+    // Prepare update data
+    const updateData = {
+      ...(data.admissionNumber && { admissionNumber: data.admissionNumber }),
+      ...(data.term && { term: data.term }),
+      ...(data.academicYear && { academicYear: data.academicYear }),
+      amount,
+      amountPaid,
+      balance,
+      paymentStatus,
+      ...(data.dueDate !== undefined && { dueDate: parseDateSafely(data.dueDate) }),
+      ...(data.isActive !== undefined && { isActive: data.isActive }),
+      updatedAt: new Date()
+    };
+
+    const updatedFeeBalance = await prisma.feeBalance.update({
+      where: { id: feeBalanceId },
+      data: updateData,
+      include: {
+        student: {
+          select: {
+            firstName: true,
+            lastName: true,
+            form: true
+          }
+        }
+      }
+    });
+
+    console.log(`✅ Fee balance updated by ${auth.user.name}: Student ${updatedFeeBalance.admissionNumber} - ${updatedFeeBalance.term} ${updatedFeeBalance.academicYear}`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Fee balance updated successfully',
+      data: {
+        feeBalance: updatedFeeBalance
+      },
+      authenticated: true,
+    });
+  } catch (error) {
+    console.error('Update fee balance error:', error);
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee balance record not found',
+          authenticated: true 
+        },
+        { status: 404 }
+      );
+    }
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee entry already exists for this student, term, and academic year',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: 'Failed to update fee balance',
+        authenticated: true 
+      },
+      { status: 500 }
+    );
   }
-});
+}
 
 // DELETE fee balance (PROTECTED - authentication required)
 export async function DELETE(request, { params }) {
@@ -429,6 +641,7 @@ export async function DELETE(request, { params }) {
     console.log(`🗑️ Delete fee balance request from: ${auth.user.name} (${auth.user.role})`);
 
     const { id } = params;
+    const admissionNumber = String(id).trim();
     
     const url = new URL(request.url);
     const feeBalanceId = url.searchParams.get('feeBalanceId');
@@ -459,13 +672,15 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({
         success: true,
         message: 'Fee balance deleted successfully',
-        feeBalance: deletedFeeBalance,
+        data: {
+          feeBalance: deletedFeeBalance
+        },
         authenticated: true,
       });
     } else {
       // Delete all fee balances for this admission number
       const feeBalances = await prisma.feeBalance.findMany({
-        where: { admissionNumber: id },
+        where: { admissionNumber },
         select: {
           id: true,
           admissionNumber: true,
@@ -474,16 +689,30 @@ export async function DELETE(request, { params }) {
         }
       });
 
+      if (feeBalances.length === 0) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'No fee balances found for this admission number',
+            authenticated: true 
+          },
+          { status: 404 }
+        );
+      }
+
       const deletedCount = await prisma.feeBalance.deleteMany({
-        where: { admissionNumber: id }
+        where: { admissionNumber }
       });
 
-      console.log(`✅ Mass fee deletion by ${auth.user.name}: ${deletedCount.count} fee balances for admission number ${id}`);
+      console.log(`✅ Mass fee deletion by ${auth.user.name}: ${deletedCount.count} fee balances for admission number ${admissionNumber}`);
 
       return NextResponse.json({
         success: true,
-        message: `Deleted ${deletedCount.count} fee balance records for admission number ${id}`,
-        count: deletedCount.count,
+        message: `Deleted ${deletedCount.count} fee balance records for admission number ${admissionNumber}`,
+        data: {
+          count: deletedCount.count,
+          admissionNumber
+        },
         authenticated: true,
       });
     }
