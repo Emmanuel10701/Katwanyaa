@@ -19,8 +19,7 @@ body {
   zoom: 83%;
   
   /* Use @apply so the browser understands the Tailwind class */
-  @apply min-h-screen;
-
+margin-bottom: 0 !important;
 }
 
 
