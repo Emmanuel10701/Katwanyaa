@@ -1426,9 +1426,9 @@ export async function POST(request) {
         validRows: processingStats.validRows,
         skippedRows: processingStats.skippedRows,
         errorRows: processingStats.errorRows,
-        errorLog: processingStats.errors.length > 0 
-          ? processingStats.errors.join('\n') 
-          : null,
+       errorLog: processingStats.errors.length > 0 
+            ? processingStats.errors.join('\n').substring(0, 4000)  // Truncate to 4000 chars
+            : null,
         metadata: {
           uploadedBy: auth.user.name,
           userRole: auth.user.role,
