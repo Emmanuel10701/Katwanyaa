@@ -2,13 +2,10 @@ import { NextResponse } from 'next/server';
 import { parse } from 'papaparse';
 import * as XLSX from 'xlsx';
 import { prisma } from '../../../libs/prisma';
-import { Buffer } from 'buffer'; // Add this import
-
-
 
 // ==================== AUTHENTICATION UTILITIES ====================
 
-// Device Token Manager
+// Device Token Manager (SAME AS STUDENT API)
 class DeviceTokenManager {
   static validateTokensFromHeaders(headers, options = {}) {
     try {
@@ -53,13 +50,13 @@ class DeviceTokenManager {
         
         // Check user role - only admins/staff can manage fees
         const userRole = adminPayload.role || adminPayload.userRole;
-        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL', 'STAFF', 'HR_MANAGER', 'TEACHER', 'ACCOUNTANT'];
+        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL', 'STAFF', 'HR_MANAGER', 'TEACHER', 'FINANCE'];
         
         if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
           return { 
             valid: false, 
             reason: 'invalid_role', 
-            message: 'User does not have permission to manage fee balances' 
+            message: 'User does not have permission to manage fees' 
           };
         }
         
@@ -67,7 +64,7 @@ class DeviceTokenManager {
         return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
       }
 
-      console.log('✅ Fee management authentication successful for user:', adminPayload.name || 'Unknown');
+      console.log('✅ Fees management authentication successful for user:', adminPayload.name || 'Unknown');
       
       return { 
         valid: true, 
@@ -120,35 +117,31 @@ class DeviceTokenManager {
 
 // Authentication middleware for protected requests
 const authenticateRequest = (req) => {
-  try {
-    const headers = req.headers;
-    
-    // DEBUG: Log what headers are being received
-    console.log('🔍 Authentication Headers Received:');
-    console.log('x-admin-token:', headers.get('x-admin-token'));
-    console.log('x-device-token:', headers.get('x-device-token'));
-    console.log('authorization:', headers.get('authorization'));
-    console.log('All headers:', Object.fromEntries(headers.entries()));
-    
-    // Validate tokens
-    const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
-    
-    // ... rest of your code
-  } catch (error) {
-    console.error('Authentication error:', error);
+  const headers = req.headers;
+  
+  // Validate tokens
+  const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
+  
+  if (!validationResult.valid) {
     return {
       authenticated: false,
       response: NextResponse.json(
         { 
           success: false, 
-          error: "Authentication Error",
-          message: "Failed to authenticate request",
-          details: error.message
+          error: "Access Denied",
+          message: "Authentication required to manage fee data.",
+          details: validationResult.message
         },
-        { status: 500 }
+        { status: 401 }
       )
     };
   }
+
+  return {
+    authenticated: true,
+    user: validationResult.user,
+    deviceInfo: validationResult.deviceInfo
+  };
 };
 
 // ========== HELPER FUNCTIONS ==========
@@ -662,19 +655,6 @@ const checkStudentsExist = async (admissionNumbers, targetForm = null, tx = pris
 
 // ========== FILE PARSING FUNCTIONS ==========
 
-// ========== UNIFIED PARSING STRATEGY ==========
-
-const parseFeeFile = async (file, uploadStrategy = null) => {
-  const fileName = file.name.toLowerCase();
-  const fileExtension = fileName.split('.').pop();
-  
-  if (fileExtension === 'csv') {
-    return await parseFeeCSV(file, uploadStrategy);
-  } else {
-    return await parseFeeExcel(file, uploadStrategy);
-  }
-};
-
 const parseFeeCSV = async (file, uploadStrategy) => {
   try {
     const text = await file.text();
@@ -895,13 +875,12 @@ const parseFeeExcel = async (file, uploadStrategy) => {
     throw new Error(`Excel parsing failed: ${error.message}`);
   }
 };
-// ========== TRUE OVERWRITE UPDATE STRATEGY ==========
-// ========== COMPLETE REPLACE STRATEGY ==========
 
-const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploaderInfo) => {
+// ========== PROCESSING FUNCTIONS ==========
+
+const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy) => {
   console.log(`\n🔄 PROCESSING UPDATE UPLOAD (Complete Replace):`);
   console.log('Strategy:', uploadStrategy);
-  console.log('Uploader:', uploaderInfo.name);
   
   const normalizedForm = normalizeForm(uploadStrategy.selectedForm);
   const normalizedTerm = normalizeTerm(uploadStrategy.term);
@@ -956,7 +935,6 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
             oldAmount: fee.amount,
             oldAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-
             timestamp: new Date()
           }))
         });
@@ -1066,7 +1044,6 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
             newAmount: fee.amount,
             newAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-             uploadedBy: 'System Upload',
             timestamp: new Date()
           }))
         });
@@ -1094,8 +1071,7 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
       fileDuplicates: stats.skippedRows,
       validationErrors: stats.errorRows,
       netChange: stats.created - stats.replaced,
-      timestamp: new Date().toISOString(),
-      uploadedBy: 'System Upload'
+      timestamp: new Date().toISOString()
     };
     
     console.log('\n📊 REPLACE OPERATION COMPLETE:', stats.metadata);
@@ -1122,12 +1098,9 @@ const processUpdateFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploa
   }
 };
 
-// ========== NEW UPLOAD STRATEGY ==========
-
-const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploaderInfo) => {
+const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy) => {
   console.log(`\n📤 PROCESSING NEW UPLOAD:`);
   console.log('Strategy:', uploadStrategy);
-  console.log('Uploader:', uploaderInfo.name);
   
   const normalizedForm = normalizeForm(uploadStrategy.selectedForm);
   const firstRow = fees[0];
@@ -1242,9 +1215,6 @@ const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploader
             newAmount: fee.amount,
             newAmountPaid: fee.amountPaid,
             uploadBatchId: uploadBatchId,
-            uploadedBy: 'System Upload',
-            uploadedByName: 'System',
-            uploadedByRole: 'SYSTEM',
             timestamp: new Date()
           }))
         });
@@ -1259,8 +1229,7 @@ const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploader
       newInserted: stats.created,
       duplicatesSkipped: stats.skippedDuplicates,
       totalProcessed: stats.validRows,
-      timestamp: new Date().toISOString(),
-        uploadedBy: 'System Upload',
+      timestamp: new Date().toISOString()
     };
     
     console.log('\n📊 NEW UPLOAD COMPLETE:', stats.metadata);
@@ -1274,6 +1243,252 @@ const processNewFeeUpload = async (fees, uploadBatchId, uploadStrategy, uploader
 };
 
 // ========== API ENDPOINTS ==========
+
+// POST - Bulk upload (PROTECTED - authentication required)
+export async function POST(request) {
+  try {
+    // Step 1: Authenticate the POST request
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    // Log authentication info
+    console.log(`📝 Fees bulk upload request from: ${auth.user.name} (${auth.user.role})`);
+
+    const formData = await request.formData();
+    const file = formData.get('file');
+    const uploadType = formData.get('uploadType'); // 'new' or 'update'
+    const selectedForm = formData.get('selectedForm');
+    const checkDuplicates = formData.get('checkDuplicates') === 'true';
+    const term = formData.get('term');
+    const academicYear = formData.get('academicYear');
+    
+    console.log('\n📤 FEE UPLOAD REQUEST:');
+    console.log('File:', file?.name);
+    console.log('Upload Type:', uploadType);
+    console.log('Selected Form:', selectedForm);
+    console.log('Term:', term);
+    console.log('Academic Year:', academicYear);
+    console.log('Check Duplicates:', checkDuplicates);
+    console.log('Uploaded By:', auth.user.name);
+    
+    // Validate required fields
+    if (!file) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No file provided',
+        authenticated: true 
+      }, { status: 400 });
+    }
+    
+    if (!uploadType || !selectedForm) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Upload type and form selection are required',
+        authenticated: true 
+      }, { status: 400 });
+    }
+    
+    // Validate form
+    const normalizedForm = normalizeForm(selectedForm);
+    if (!normalizedForm) {
+      return NextResponse.json({ 
+        success: false, 
+        error: `Invalid form: ${selectedForm}. Must be one of: Form 1, Form 2, Form 3, Form 4`,
+        authenticated: true 
+      }, { status: 400 });
+    }
+    
+    // For UPDATE uploads, term and academicYear are REQUIRED
+    if (uploadType === 'update' && (!term || !academicYear)) {
+      return NextResponse.json({
+        success: false, 
+        error: 'For update uploads, term and academic year are required',
+        authenticated: true 
+      }, { status: 400 });
+    }
+    
+    // Create upload strategy object
+    const uploadStrategy = {
+      uploadType,
+      selectedForm: normalizedForm,
+      term: uploadType === 'update' ? term : undefined,
+      academicYear: uploadType === 'update' ? academicYear : undefined
+    };
+    
+    console.log('📋 Upload Strategy:', uploadStrategy);
+    
+    // Parse file with strategy
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.split('.').pop();
+    
+    let parsedData;
+    if (fileExtension === 'csv') {
+      parsedData = await parseFeeCSV(file, uploadStrategy);
+    } else {
+      parsedData = await parseFeeExcel(file, uploadStrategy);
+    }
+    
+    if (!parsedData || parsedData.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No valid fee data found in file',
+        authenticated: true 
+      }, { status: 400 });
+    }
+    
+    console.log(`✅ Parsed ${parsedData.length} rows`);
+    
+    // For NEW uploads, ensure all rows have same term/year (from first row)
+    if (uploadType === 'new') {
+      const firstRow = parsedData[0];
+      const commonTerm = normalizeTerm(firstRow.term);
+      const commonYear = normalizeAcademicYear(firstRow.academicYear);
+      
+      parsedData = parsedData.map(row => ({
+        ...row,
+        term: commonTerm,
+        academicYear: commonYear,
+        form: normalizedForm // Ensure all rows have correct form
+      }));
+      
+      console.log(`📝 Normalized NEW upload: Term=${commonTerm}, Year=${commonYear}`);
+    }
+    
+    // If just checking duplicates
+    if (checkDuplicates) {
+      const duplicates = await checkDuplicateFeeBalances(
+        parsedData, 
+        normalizedForm,
+        uploadType === 'update' ? term : parsedData[0]?.term,
+        uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
+      );
+      
+      return NextResponse.json({
+        success: true,
+        hasDuplicates: duplicates.length > 0,
+        duplicates: duplicates,
+        totalRows: parsedData.length,
+        form: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+        uploadType: uploadType,
+        authenticated: true,
+        uploadedBy: auth.user.name,
+        message: duplicates.length > 0 
+          ? `Found ${duplicates.length} existing fees` 
+          : 'No duplicates found'
+      });
+    }
+    
+    // Create batch record with uploader info
+    const batchId = `FEE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await prisma.feeBalanceUpload.create({
+      data: {
+        id: batchId,
+        fileName: file.name,
+        fileType: fileExtension,
+        uploadedBy: auth.user.name, // Use authenticated user's name
+        status: 'processing',
+        targetForm: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+        totalRows: parsedData.length,
+        validRows: 0,
+        skippedRows: 0,
+        errorRows: 0,
+        uploadType: uploadType,
+        uploadDate: new Date(),
+        metadata: {
+          uploadedBy: auth.user.name,
+          userRole: auth.user.role,
+          uploadTimestamp: new Date().toISOString()
+        }
+      }
+    });
+    
+    // Process upload based on type
+    let processingStats;
+    if (uploadType === 'new') {
+      processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy);
+    } else {
+      processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy);
+    }
+    
+    // Update batch record
+    await prisma.feeBalanceUpload.update({
+      where: { id: batchId },
+      data: {
+        status: 'completed',
+        processedDate: new Date(),
+        validRows: processingStats.validRows,
+        skippedRows: processingStats.skippedRows,
+        errorRows: processingStats.errorRows,
+        errorLog: processingStats.errors.length > 0 
+          ? processingStats.errors.join('\n') 
+          : null,
+        metadata: {
+          uploadedBy: auth.user.name,
+          userRole: auth.user.role,
+          uploadTimestamp: new Date().toISOString(),
+          created: processingStats.created || 0,
+          updated: processingStats.updated || 0,
+          replaced: processingStats.replaced || 0,
+          errors: processingStats.errorRows || 0,
+          warnings: processingStats.errors.filter(e => 
+            e.includes('warning') || e.includes('Warning')).length
+        }
+      }
+    });
+    
+    console.log('\n✅ UPLOAD COMPLETE:', {
+      batchId,
+      valid: processingStats.validRows,
+      created: processingStats.created,
+      updated: processingStats.updated,
+      replaced: processingStats.replaced,
+      skipped: processingStats.skippedRows,
+      errors: processingStats.errorRows,
+      uploadedBy: auth.user.name
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: uploadType === 'new'
+        ? `Uploaded ${processingStats.created} new fees for ${normalizedForm}`
+        : `Updated ${processingStats.created} fees for ${normalizedForm} ${term} ${academicYear}`,
+      data: {
+        uploadId: batchId,
+        processed: processingStats.validRows,
+        created: processingStats.created,
+        updated: processingStats.updated,
+        replaced: processingStats.replaced,
+        skipped: processingStats.skippedRows,
+        errors: processingStats.errors,
+        form: normalizedForm,
+        term: uploadType === 'update' ? term : parsedData[0]?.term,
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
+      },
+      authenticated: true,
+      uploadedBy: auth.user.name,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Upload error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message || 'Upload failed',
+        authenticated: true,
+        suggestion: 'Check that your file has the required columns and data format matches the template.'
+      },
+      { status: 500 }
+    );
+  }
+}
 
 // GET - Fetch fee balances, uploads, or statistics (PUBLIC - no authentication required)
 export async function GET(request) {
@@ -1866,337 +2081,6 @@ export async function GET(request) {
   }
 }
 
-
-export async function POST(request) {
-  console.log('\n========== FEE UPLOAD API CALLED ==========');
-  console.log('Request method:', request.method);
-  console.log('Request URL:', request.url);
-  console.log('Request headers:', Object.fromEntries(request.headers.entries()));
-  
-  try {
-    // Step 1: Authenticate the POST request
-    console.log('🔐 Attempting authentication...');
-    const auth = authenticateRequest(request);
-    
-    if (!auth || !auth.authenticated) {
-      console.error('❌ Authentication failed');
-      return auth?.response || NextResponse.json(
-        { 
-          success: false, 
-          error: "Authentication Failed",
-          message: "Unable to authenticate request"
-        },
-        { status: 401 }
-      );
-    }
-    
-    console.log('✅ Authentication successful:', {
-      user: auth.user?.name,
-      role: auth.user?.role
-    });
-    
-    // Step 2: Get form data
-    const formData = await request.formData();
-    const file = formData.get('file');
-    const uploadType = formData.get('uploadType'); // 'new' or 'update'
-    const selectedForm = formData.get('selectedForm');
-    const checkDuplicates = formData.get('checkDuplicates') === 'true';
-    const term = formData.get('term');
-    const academicYear = formData.get('academicYear');
-    
-    console.log('📤 Upload parameters:', {
-      fileName: file?.name,
-      fileSize: file?.size,
-      uploadType,
-      selectedForm,
-      checkDuplicates,
-      term,
-      academicYear,
-      uploadedBy: auth.user?.name
-    });
-    
-    // Step 3: Validate required fields
-    if (!file) {
-      console.error('❌ No file provided');
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No file provided',
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    if (!uploadType || !selectedForm) {
-      console.error('❌ Upload type and form selection are required');
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Upload type and form selection are required',
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    // Step 4: Validate form
-    const normalizedForm = normalizeForm(selectedForm);
-    if (!normalizedForm) {
-      console.error('❌ Invalid form:', selectedForm);
-      return NextResponse.json({ 
-        success: false, 
-        error: `Invalid form: ${selectedForm}. Must be one of: Form 1, Form 2, Form 3, Form 4`,
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    // Step 5: For UPDATE uploads, term and academicYear are REQUIRED
-    if (uploadType === 'update' && (!term || !academicYear)) {
-      console.error('❌ Missing term or academic year for update upload');
-      return NextResponse.json({
-        success: false, 
-        error: 'For update uploads, term and academic year are required',
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    // Step 6: Create upload strategy object
-    const uploadStrategy = {
-      uploadType,
-      selectedForm: normalizedForm,
-      term: uploadType === 'update' ? term : undefined,
-      academicYear: uploadType === 'update' ? academicYear : undefined
-    };
-    
-    console.log('📋 Upload Strategy:', uploadStrategy);
-    
-    // Step 7: Parse file
-    const fileName = file.name.toLowerCase();
-    const fileExtension = fileName.split('.').pop();
-    
-    console.log(`📄 Parsing ${fileExtension.toUpperCase()} file...`);
-    let parsedData;
-    try {
-      if (fileExtension === 'csv') {
-        parsedData = await parseFeeCSV(file, uploadStrategy);
-      } else if (['xlsx', 'xls'].includes(fileExtension)) {
-        parsedData = await parseFeeExcel(file, uploadStrategy);
-      } else {
-        console.error('❌ Unsupported file type:', fileExtension);
-        return NextResponse.json({ 
-          success: false, 
-          error: 'Unsupported file type. Please upload CSV or Excel files.',
-          authenticated: true 
-        }, { status: 400 });
-      }
-    } catch (parseError) {
-      console.error('❌ File parsing failed:', parseError.message);
-      return NextResponse.json({ 
-        success: false, 
-        error: `File parsing failed: ${parseError.message}`,
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    if (!parsedData || parsedData.length === 0) {
-      console.error('❌ No valid data found in file');
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No valid fee data found in file',
-        authenticated: true 
-      }, { status: 400 });
-    }
-    
-    console.log(`✅ Parsed ${parsedData.length} rows`);
-    
-    // Step 8: For NEW uploads, ensure all rows have same term/year
-    if (uploadType === 'new') {
-      const firstRow = parsedData[0];
-      const commonTerm = normalizeTerm(firstRow?.term || 'Term 1');
-      const commonYear = normalizeAcademicYear(firstRow?.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`);
-      
-      parsedData = parsedData.map(row => ({
-        ...row,
-        term: commonTerm,
-        academicYear: commonYear,
-        form: normalizedForm
-      }));
-      
-      console.log(`📝 Normalized NEW upload: Term=${commonTerm}, Year=${commonYear}`);
-    }
-    
-    // Step 9: Check duplicates if requested
-    if (checkDuplicates) {
-      console.log('🔍 Checking for duplicates...');
-      const duplicates = await checkDuplicateFeeBalances(
-        parsedData, 
-        normalizedForm,
-        uploadType === 'update' ? term : parsedData[0]?.term,
-        uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
-      );
-      
-      console.log(`🔍 Found ${duplicates.length} duplicates`);
-      
-      return NextResponse.json({
-        success: true,
-        hasDuplicates: duplicates.length > 0,
-        duplicates: duplicates,
-        totalRows: parsedData.length,
-        form: normalizedForm,
-        term: uploadType === 'update' ? term : parsedData[0]?.term,
-        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
-        uploadType: uploadType,
-        authenticated: true,
-        message: duplicates.length > 0 
-          ? `Found ${duplicates.length} existing fees that would be replaced` 
-          : 'No duplicates found'
-      });
-    }
-    
-    // Step 10: Create batch record
-    const batchId = `FEE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    console.log(`📁 Creating batch record: ${batchId}`);
-    
-    try {
-      await prisma.feeBalanceUpload.create({
-        data: {
-          id: batchId,
-          fileName: file.name,
-          fileType: fileExtension,
-          uploadedBy: auth.user?.name || 'Unknown',
-          uploadedByRole: auth.user?.role || 'Unknown',
-          status: 'processing',
-          targetForm: normalizedForm,
-          term: uploadType === 'update' ? term : parsedData[0]?.term,
-          academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
-          totalRows: parsedData.length,
-          validRows: 0,
-          skippedRows: 0,
-          errorRows: 0,
-          uploadType: uploadType,
-          uploadDate: new Date()
-        }
-      });
-    } catch (dbError) {
-      console.error('❌ Failed to create batch record:', dbError);
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Database error while creating batch record',
-          authenticated: true
-        },
-        { status: 500 }
-      );
-    }
-    
-    // Step 11: Process upload based on type
-    let processingStats;
-    try {
-      if (uploadType === 'new') {
-        console.log('🆕 Processing as NEW upload...');
-        processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy, {
-          name: auth.user?.name || 'System',
-          role: auth.user?.role || 'SYSTEM'
-        });
-      } else {
-        console.log('🔄 Processing as UPDATE upload...');
-        processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy, {
-          name: auth.user?.name || 'System',
-          role: auth.user?.role || 'SYSTEM'
-        });
-      }
-    } catch (processError) {
-      console.error('❌ Processing failed:', processError);
-      
-      // Update batch as failed
-      await prisma.feeBalanceUpload.update({
-        where: { id: batchId },
-        data: {
-          status: 'failed',
-          processedDate: new Date(),
-          errorRows: parsedData.length,
-          errorLog: processError.message.substring(0, 500)
-        }
-      }).catch(e => console.error('Failed to update batch status:', e));
-      
-      throw processError;
-    }
-    
-    // Step 12: Update batch record with results
-    try {
-      await prisma.feeBalanceUpload.update({
-        where: { id: batchId },
-        data: {
-          status: 'completed',
-          processedDate: new Date(),
-          validRows: processingStats.validRows,
-          skippedRows: processingStats.skippedRows,
-          errorRows: processingStats.errorRows,
-          errorLog: processingStats.errors.length > 0 
-            ? processingStats.errors.slice(0, 10).join('\n') 
-            : null,
-          metadata: {
-            created: processingStats.created || 0,
-            replaced: processingStats.replaced || 0,
-            totalProcessed: processingStats.validRows || 0,
-            errors: processingStats.errorRows || 0,
-            timestamp: new Date().toISOString(),
-            uploadedBy: auth.user?.name,
-            uploadedByRole: auth.user?.role
-          }
-        }
-      });
-    } catch (updateError) {
-      console.error('❌ Failed to update batch record:', updateError);
-      // Don't fail the whole request if just updating stats fails
-    }
-    
-    console.log('\n✅ UPLOAD COMPLETE:', {
-      batchId,
-      valid: processingStats.validRows,
-      created: processingStats.created,
-      replaced: processingStats.replaced,
-      skipped: processingStats.skippedRows,
-      errors: processingStats.errorRows
-    });
-
-    console.log(`✅ Fee upload completed by ${auth.user?.name}: ${processingStats.validRows} fees processed`);
-    
-    // Step 13: Return success response
-    return NextResponse.json({
-      success: true,
-      message: uploadType === 'new'
-        ? `Successfully uploaded ${processingStats.created} new fees for ${normalizedForm}`
-        : `Successfully updated ${processingStats.created} fees for ${normalizedForm} ${term} ${academicYear}`,
-      data: {
-        uploadId: batchId,
-        processed: processingStats.validRows,
-        created: processingStats.created,
-        replaced: processingStats.replaced,
-        skipped: processingStats.skippedRows,
-        errors: processingStats.errors,
-        form: normalizedForm,
-        term: uploadType === 'update' ? term : parsedData[0]?.term,
-        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
-        uploadType: uploadType
-      },
-      authenticated: true,
-      uploadedBy: auth.user?.name,
-      timestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    console.error('❌ Fatal POST Error:', error);
-    console.error('Error stack:', error.stack);
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || 'Upload failed',
-        authenticated: false,
-        suggestion: 'Check server logs for details',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
-  }
-}
 // PUT - Update single fee balance (PROTECTED - authentication required)
 export async function PUT(request) {
   try {
@@ -2207,18 +2091,14 @@ export async function PUT(request) {
     }
 
     // Log authentication info
-    console.log(`📝 Individual fee update request from: ${auth.user.name} (${auth.user.role})`);
+    console.log(`📝 Fee balance update request from: ${auth.user.name} (${auth.user.role})`);
 
     const body = await request.json();
     const { id, ...updateData } = body;
     
     if (!id) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Fee ID is required',
-          authenticated: true 
-        },
+        { success: false, error: 'Fee ID is required', authenticated: true },
         { status: 400 }
       );
     }
@@ -2242,12 +2122,12 @@ export async function PUT(request) {
     if (updateData.term) updateData.term = normalizeTerm(updateData.term);
     if (updateData.academicYear) updateData.academicYear = normalizeAcademicYear(updateData.academicYear);
     
-    // Update fee balance with audit info
+    // Update fee balance
     const updatedFee = await prisma.feeBalance.update({
       where: { id },
       data: {
         ...updateData,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       },
       include: {
         student: {
@@ -2261,12 +2141,8 @@ export async function PUT(request) {
       }
     });
 
-    console.log(`✅ Individual fee updated by ${auth.user.name}: Student ${updatedFee.student?.firstName} ${updatedFee.student?.lastName} (${updatedFee.admissionNumber})`);
+    console.log(`✅ Fee balance updated by ${auth.user.name}: ${updatedFee.admissionNumber}`);
     
-
-
-
-
     return NextResponse.json({
       success: true,
       message: 'Fee balance updated successfully',
@@ -2274,17 +2150,14 @@ export async function PUT(request) {
         feeBalance: updatedFee
       },
       authenticated: true,
+      updatedBy: auth.user.name
     });
     
   } catch (error) {
     console.error('PUT error:', error);
     if (error.code === 'P2025') {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Fee balance not found',
-          authenticated: true 
-        },
+        { success: false, error: 'Fee balance not found', authenticated: true },
         { status: 404 }
       );
     }
@@ -2292,7 +2165,7 @@ export async function PUT(request) {
       { 
         success: false, 
         error: error.message || 'Update failed',
-        authenticated: true 
+        authenticated: true
       },
       { status: 500 }
     );
@@ -2351,6 +2224,7 @@ export async function DELETE(request) {
         success: true,
         message: `Deleted batch ${result.batch.fileName} and ${result.deletedCount} fee balances`,
         authenticated: true,
+        deletedBy: auth.user.name
       });
     }
     
@@ -2360,12 +2234,13 @@ export async function DELETE(request) {
         where: { id: feeId }
       });
 
-      console.log(`✅ Individual fee deleted by ${auth.user.name}: Student ${fee.admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`);
+      console.log(`✅ Fee deleted by ${auth.user.name}: ${fee.admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`);
       
       return NextResponse.json({
         success: true,
         message: `Deleted fee balance for ${fee.admissionNumber} - ${fee.form} ${fee.term} ${fee.academicYear}`,
         authenticated: true,
+        deletedBy: auth.user.name
       });
     }
     
@@ -2379,32 +2254,104 @@ export async function DELETE(request) {
         }
       });
 
-      console.log(`✅ Mass fee deletion by ${auth.user.name}: ${deleteResult.count} fee balances for ${form} - ${term} ${academicYear}`);
+      console.log(`✅ Fees deleted by ${auth.user.name}: ${deleteResult.count} fee balances for ${form} - ${term} ${academicYear}`);
       
       return NextResponse.json({
         success: true,
         message: `Deleted ${deleteResult.count} fee balances for ${form} - ${term} ${academicYear}`,
         authenticated: true,
+        deletedBy: auth.user.name
       });
     }
     
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Provide batchId, feeId, or form/term/year combination',
-        authenticated: true 
-      },
+      { success: false, error: 'Provide batchId, feeId, or form/term/year combination', authenticated: true },
       { status: 400 }
     );
     
   } catch (error) {
     console.error('Delete error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || 'Delete failed',
-        authenticated: true 
-      },
+      { success: false, error: error.message || 'Delete failed', authenticated: true },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH - Reactivate inactive fees (PROTECTED - authentication required)
+export async function PATCH(request) {
+  try {
+    // Step 1: Authenticate the PATCH request
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    // Log authentication info
+    console.log(`📝 Fee reactivate request from: ${auth.user.name} (${auth.user.role})`);
+
+    const url = new URL(request.url);
+    const feeId = url.searchParams.get('feeId');
+    const batchId = url.searchParams.get('batchId');
+    
+    if (feeId) {
+      // Reactivate single fee
+      const fee = await prisma.feeBalance.update({
+        where: { id: feeId },
+        data: {
+          isActive: true,
+          updatedAt: new Date()
+        }
+      });
+
+      console.log(`✅ Fee reactivated by ${auth.user.name}: ${fee.admissionNumber}`);
+      
+      return NextResponse.json({
+        success: true,
+        message: `Fee balance for ${fee.admissionNumber} reactivated`,
+        data: { fee },
+        authenticated: true,
+        reactivatedBy: auth.user.name
+      });
+    }
+    
+    if (batchId) {
+      // Reactivate all fees in a batch
+      const result = await prisma.$transaction(async (tx) => {
+        const updated = await tx.feeBalance.updateMany({
+          where: { 
+            uploadBatchId: batchId,
+            isActive: false
+          },
+          data: {
+            isActive: true,
+            updatedAt: new Date()
+          }
+        });
+
+        return { count: updated.count };
+      });
+
+      console.log(`✅ Batch reactivated by ${auth.user.name}: ${result.count} fee balances`);
+      
+      return NextResponse.json({
+        success: true,
+        message: `Reactivated ${result.count} fee balances from batch`,
+        data: result,
+        authenticated: true,
+        reactivatedBy: auth.user.name
+      });
+    }
+    
+    return NextResponse.json(
+      { success: false, error: 'Provide feeId or batchId', authenticated: true },
+      { status: 400 }
+    );
+    
+  } catch (error) {
+    console.error('PATCH error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Reactivate failed', authenticated: true },
       { status: 500 }
     );
   }
