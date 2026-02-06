@@ -1,5 +1,9 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { Modal, Box, CircularProgress } from '@mui/material';
+
+// Consolidated Feather Icons (Fi)
 import {
   FiPlus,
   FiSearch,
@@ -14,6 +18,7 @@ import {
   FiTrendingUp,
   FiAward,
   FiEdit,
+  FiEdit3, // Added from your second list
   FiTrash2,
   FiEye,
   FiCheck,
@@ -59,7 +64,6 @@ import {
   IoChevronForwardOutline,
   IoCheckmarkCircleOutline
 } from 'react-icons/io5';
-import { Modal, Box, CircularProgress } from '@mui/material';
 
 // Modern Loading Spinner Component
 const Spinner = ({ size = 40, color = 'inherit', thickness = 3.6, variant = 'indeterminate', value = 0 }) => {
@@ -614,198 +618,154 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
 }
 
 // Modern Resource Card Component - UPDATED WITH SELECTION CHECKBOX
+import React from 'react';
+import { 
+  FiFileText, FiVideo, FiImage, FiMusic, FiGrid, FiFile, 
+  FiShield, FiUsers, FiUserCheck, FiPaperclip, FiTrash2, FiEdit3, FiEye 
+} from 'react-icons/fi';
+import { IoBookOutline } from 'react-icons/io5';
+
 function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSelect, actionLoading }) {
-  // File type colors
-  const getFileTypeColor = (type) => {
+  // File type styles
+  const getFileTypeStyle = (type) => {
     switch (type?.toLowerCase()) {
-      case 'pdf': return { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' };
-      case 'document': return { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' };
-      case 'video': return { bg: 'bg-purple-100', text: 'text-purple-800', dot: 'bg-purple-500' };
-      case 'presentation': return { bg: 'bg-orange-100', text: 'text-orange-800', dot: 'bg-orange-500' };
-      case 'image': return { bg: 'bg-pink-100', text: 'text-pink-800', dot: 'bg-pink-500' };
-      case 'audio': return { bg: 'bg-indigo-100', text: 'text-indigo-800', dot: 'bg-indigo-500' };
-      case 'spreadsheet': return { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' };
+      case 'pdf': return { bg: 'bg-red-50', text: 'text-red-600', icon: <FiFileText /> };
+      case 'document': return { bg: 'bg-blue-50', text: 'text-blue-600', icon: <FiFileText /> };
+      case 'video': return { bg: 'bg-purple-50', text: 'text-purple-600', icon: <FiVideo /> };
+      case 'presentation': return { bg: 'bg-orange-50', text: 'text-orange-600', icon: <FiFileText /> };
+      case 'image': return { bg: 'bg-pink-50', text: 'text-pink-600', icon: <FiImage /> };
+      case 'spreadsheet': return { bg: 'bg-green-50', text: 'text-green-600', icon: <FiGrid /> };
+      default: return { bg: 'bg-gray-50', text: 'text-gray-600', icon: <FiFile /> };
     }
   };
 
-  // Access level colors
-  const getAccessColor = (access) => {
+  const getAccessBadge = (access) => {
     switch (access?.toLowerCase()) {
-      case 'student': return 'text-blue-500';
-      case 'teacher': return 'text-green-500';
-      case 'admin': return 'text-purple-500';
-      default: return 'text-gray-500';
+      case 'student': return 'bg-blue-100 text-blue-700';
+      case 'teacher': return 'bg-emerald-100 text-emerald-700';
+      case 'admin': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
-  const typeColor = getFileTypeColor(resource.type);
-  const accessColor = getAccessColor(resource.accessLevel);
-
-  // Get file icon based on type
-  const getFileIcon = () => {
-    switch (resource.type?.toLowerCase()) {
-      case 'pdf': return <FiFileText className="text-red-500" />;
-      case 'document': return <FiFileText className="text-blue-500" />;
-      case 'video': return <FiVideo className="text-purple-500" />;
-      case 'presentation': return <FiBarChart className="text-orange-500" />;
-      case 'image': return <FiImage className="text-pink-500" />;
-      case 'audio': return <FiMusic className="text-indigo-500" />;
-      case 'spreadsheet': return <FiGrid className="text-green-500" />;
-      default: return <FiFile className="text-gray-500" />;
-    }
-  };
-
+  const typeStyle = getFileTypeStyle(resource.type);
+  
   const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return '0 B';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Calculate total size
   const totalSize = Array.isArray(resource.files) 
     ? resource.files.reduce((acc, file) => acc + (file.size || 0), 0)
     : resource.size || 0;
 
   return (
-    <div className={`bg-white rounded-[2rem] shadow-xl border ${
-      selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-100'
-    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl  cursor-pointer`} onClick={() => onView(resource)}>
-      
-      {/* Header with Type and Selection Checkbox */}
-      <div className={`p-6 ${typeColor.bg} border-b ${typeColor.text} border-opacity-20 relative`}>
-        {/* Selection Checkbox */}
-        <div className="absolute top-4 left-4 z-10">
-          <input 
-            type="checkbox" 
-            checked={selected} 
-            onChange={(e) => {
-              e.stopPropagation();
-              onSelect(resource.id, e.target.checked);
-            }}
-            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-        
-        <div className="flex items-center justify-between mb-4 pl-6">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${typeColor.dot}`}></div>
-            <span className={`text-xs font-bold ${typeColor.text} uppercase tracking-wider`}>
-              {resource.type || 'Document'}
+    <tr 
+      onClick={() => onView(resource)}
+      className={`group transition-all duration-200 border-b border-slate-50 hover:bg-slate-50/80 cursor-pointer ${
+        selected ? 'bg-blue-50/50' : ''
+      }`}
+    >
+      {/* Selection Column */}
+      <td className="p-4 w-12" onClick={(e) => e.stopPropagation()}>
+        <input 
+          type="checkbox" 
+          checked={selected} 
+          onChange={(e) => onSelect(resource.id, e.target.checked)}
+          className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 transition-all cursor-pointer"
+        />
+      </td>
+
+      {/* Title & Description Column */}
+      <td className="p-4 min-w-[300px]">
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-2xl ${typeStyle.bg} ${typeStyle.text} flex items-center justify-center text-xl shrink-0 shadow-sm group-hover:scale-110 transition-transform`}>
+            {typeStyle.icon}
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="font-black text-slate-900 truncate tracking-tight uppercase text-sm">
+              {resource.title}
+            </span>
+            <span className="text-xs font-bold text-slate-400 truncate max-w-[250px]">
+              {resource.description || 'No description provided'}
             </span>
           </div>
-          {resource.accessLevel && (
-            <div className="flex items-center gap-1">
-              <FiShield className={`text-xs ${accessColor}`} />
-              <span className={`text-xs font-bold ${accessColor}`}>
-                {resource.accessLevel}
-              </span>
-            </div>
-          )}
         </div>
-        
-        <h3 className="text-2xl font-black text-slate-900 leading-tight line-clamp-2">
-          {resource.title}
-        </h3>
-        
-        <p className="text-sm font-medium text-slate-400 mt-2 line-clamp-2">
-          {resource.description || 'No description available.'}
-        </p>
-      </div>
+      </td>
 
-      {/* Information Section */}
-      <div className="p-6">
-        {/* Grid Info Mapping */}
-        <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
-          {/* Subject */}
-          <div className="space-y-1">
-            <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Subject</span>
-            <div className="flex items-center gap-2">
-              <IoBookOutline className="text-blue-400 text-sm" />
-              <span className="text-xs font-bold text-slate-700 truncate">
-                {resource.subject || 'No Subject'}
-              </span>
-            </div>
+      {/* Subject & Class Column */}
+      <td className="p-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-slate-700">
+            <IoBookOutline className="text-blue-500" />
+            <span className="text-xs font-black uppercase tracking-tight">{resource.subject || 'General'}</span>
           </div>
-          
-          {/* Class */}
-          <div className="space-y-1">
-            <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Class</span>
-            <div className="flex items-center gap-2">
-              <FiUsers className="text-purple-400 text-sm" />
-              <span className="text-xs font-bold text-slate-700">
-                {resource.className}
-              </span>
-            </div>
-          </div>
-
-          {/* Teacher */}
-          {resource.teacher && (
-            <div className="col-span-2 p-3 bg-blue-50 rounded-2xl flex items-center justify-between border border-blue-100/50">
-              <div className="flex flex-col min-w-0">
-                <span className="text-[9px] text-blue-400 font-black uppercase tracking-[0.1em]">Teacher</span>
-                <span className="text-xs font-bold text-blue-800 truncate">{resource.teacher}</span>
-              </div>
-              <FiUserCheck className="text-blue-300 text-lg shrink-0 ml-2" />
-            </div>
-          )}
-
-          {/* Files */}
-          <div className="col-span-2 p-3 bg-emerald-50 rounded-2xl flex items-center justify-between border border-emerald-100/50">
-            <div className="flex flex-col min-w-0">
-              <span className="text-[9px] text-emerald-400 font-black uppercase tracking-[0.1em]">Files</span>
-              <span className="text-xs font-bold text-emerald-800 truncate">
-                {Array.isArray(resource.files) ? `${resource.files.length} file(s)` : '1 file'} • {formatFileSize(totalSize)}
-              </span>
-            </div>
-            <FiPaperclip className="text-emerald-300 text-lg shrink-0 ml-2" />
+          <div className="flex items-center gap-1.5 text-slate-400">
+            <FiUsers className="text-[10px]" />
+            <span className="text-[10px] font-bold uppercase">{resource.className}</span>
           </div>
         </div>
+      </td>
 
+      {/* Meta Info (Size & Access) */}
+      <td className="p-4">
+        <div className="flex flex-col gap-2">
+            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest w-fit shadow-sm ${getAccessBadge(resource.accessLevel)}`}>
+              {resource.accessLevel || 'Public'}
+            </span>
+            <div className="flex items-center gap-1.5 text-slate-400 ml-1">
+                <FiPaperclip size={10} />
+                <span className="text-[10px] font-bold">{formatFileSize(totalSize)}</span>
+            </div>
+        </div>
+      </td>
 
+      {/* Teacher Column */}
+      <td className="p-4 hidden md:table-cell">
+        <div className="flex items-center gap-2 text-slate-600">
+          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+            <FiUserCheck size={14} className="text-slate-400" />
+          </div>
+          <span className="text-xs font-black tracking-tight">{resource.teacher || 'Admin'}</span>
+        </div>
+      </td>
 
-        {/* Modern Action Bar */}
-        <div className="flex items-center gap-3">
+      {/* Modern Actions Column */}
+      <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onView(resource);
-            }}
-            className="px-5 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-none active:bg-slate-200 cursor-pointer"
+            onClick={() => onView(resource)}
+            className="p-2.5 bg-white text-slate-600 hover:text-blue-600 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md active:scale-90"
+            title="View Details"
           >
-            View
+            <FiEye size={16} />
           </button>
           
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(resource);
-            }}
+            onClick={() => onEdit(resource)}
             disabled={actionLoading}
-            className="flex-1 bg-slate-900 text-white py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest disabled:opacity-50 transition-none active:scale-[0.98] cursor-pointer"
+            className="p-2.5 bg-white text-slate-600 hover:text-purple-600 rounded-xl border border-slate-100 shadow-sm transition-all hover:shadow-md active:scale-90 disabled:opacity-50"
+            title="Edit Resource"
           >
-            Edit
+            <FiEdit3 size={16} />
           </button>
           
           <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(resource);
-            }}
+            onClick={() => onDelete(resource)}
             disabled={actionLoading}
-            className="p-3 bg-red-50 text-red-500 rounded-2xl border border-red-100 disabled:opacity-50 transition-none active:bg-red-100 cursor-pointer"
+            className="p-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl border border-red-100 shadow-sm transition-all hover:shadow-md active:scale-90 disabled:opacity-50"
+            title="Delete Resource"
           >
-            <FiTrash2 size={18} />
+            <FiTrash2 size={16} />
           </button>
         </div>
-      </div>
-    </div>
-  )
+      </td>
+    </tr>
+  );
 }
-
 
 function ModernResourceModal({ onClose, onSave, resource, loading }) {
   const [formData, setFormData] = useState({
