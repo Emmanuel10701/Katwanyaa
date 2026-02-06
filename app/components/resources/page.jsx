@@ -18,7 +18,7 @@ import {
   FiTrendingUp,
   FiAward,
   FiEdit,
-  FiEdit3, // Added from your second list
+  FiEdit3,
   FiTrash2,
   FiEye,
   FiCheck,
@@ -54,6 +54,7 @@ import {
   FiSortAlphaUp
 } from 'react-icons/fi';
 
+// Consolidated Ionicons (Io5)
 import {
   IoDocumentTextOutline,
   IoCalendarOutline,
@@ -64,6 +65,8 @@ import {
   IoChevronForwardOutline,
   IoCheckmarkCircleOutline
 } from 'react-icons/io5';
+
+// Rest of your component logic goes here...
 
 // Modern Loading Spinner Component
 const Spinner = ({ size = 40, color = 'inherit', thickness = 3.6, variant = 'indeterminate', value = 0 }) => {
@@ -617,13 +620,6 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
   );
 }
 
-// Modern Resource Card Component - UPDATED WITH SELECTION CHECKBOX
-import React from 'react';
-import { 
-  FiFileText, FiVideo, FiImage, FiMusic, FiGrid, FiFile, 
-  FiShield, FiUsers, FiUserCheck, FiPaperclip, FiTrash2, FiEdit3, FiEye 
-} from 'react-icons/fi';
-import { IoBookOutline } from 'react-icons/io5';
 
 function ModernResourceCard({ resource, onEdit, onDelete, onView, selected, onSelect, actionLoading }) {
   // File type styles
