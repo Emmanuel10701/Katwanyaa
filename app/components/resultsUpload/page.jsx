@@ -3208,7 +3208,6 @@ const confirmDelete = async () => {
 const updateResult = async (resultId, resultData) => {
   setLoading(true);
   try {
-    // GET auth headers for protected operation
     const authHeaders = getAuthHeaders(true);
     
     const res = await fetch(`/api/results/${resultId}`, {
