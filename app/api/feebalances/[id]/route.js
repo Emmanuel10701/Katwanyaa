@@ -452,7 +452,8 @@ export async function POST(request, { params }) {
 }
 
 // PUT - Update single fee balance (PROTECTED - authentication required)
-export async function PUT(request) {
+// PUT update fee balance (PROTECTED - authentication required)
+export async function PUT(request, { params }) {
   try {
     // Step 1: Authenticate the PUT request
     const auth = authenticateRequest(request);
@@ -461,90 +462,203 @@ export async function PUT(request) {
     }
 
     // Log authentication info
-    console.log(`📝 Fee balance update request from: ${auth.user.name} (${auth.user.role})`);
+    console.log(`📝 Update fee balance request from: ${auth.user.name} (${auth.user.role})`);
 
-    const body = await request.json();
-    const { id, ...updateData } = body;
+    const { id } = params; // Get fee ID from URL params
+    const data = await request.json();
     
-    if (!id) {
+    // Get feeBalanceId from request body (for backward compatibility)
+    const feeBalanceId = data.feeBalanceId || id;
+    
+    if (!feeBalanceId) {
       return NextResponse.json(
-        { success: false, error: 'Fee ID is required', authenticated: true },
+        { 
+          success: false, 
+          message: 'Fee balance ID is required',
+          authenticated: true 
+        },
         { status: 400 }
       );
     }
-    
-    // Auto-calculate balance if amount or amountPaid is updated
-    if (updateData.amount !== undefined || updateData.amountPaid !== undefined) {
-      const currentFee = await prisma.feeBalance.findUnique({
-        where: { id },
-        select: { amount: true, amountPaid: true }
-      });
-      
-      const amount = updateData.amount !== undefined ? updateData.amount : currentFee.amount;
-      const amountPaid = updateData.amountPaid !== undefined ? updateData.amountPaid : currentFee.amountPaid;
-      
-      updateData.balance = calculateBalance(amount, amountPaid);
-      updateData.paymentStatus = determinePaymentStatus(amount, amountPaid);
-    }
-    
-    // Normalize data
-    if (updateData.form) updateData.form = normalizeForm(updateData.form);
-    if (updateData.term) updateData.term = normalizeTerm(updateData.term);
-    if (updateData.academicYear) updateData.academicYear = normalizeAcademicYear(updateData.academicYear);
-    
-    // CRITICAL FIX: Convert dueDate string to Date object
-    if (updateData.dueDate !== undefined) {
-      if (updateData.dueDate === null || updateData.dueDate === '') {
-        updateData.dueDate = null;
-      } else {
-        updateData.dueDate = new Date(updateData.dueDate);
-      }
-    }
-    
-    // Update fee balance
-    const updatedFee = await prisma.feeBalance.update({
-      where: { id },
-      data: {
-        ...updateData,
-        updatedAt: new Date()
-      },
+
+    // Get current fee balance
+    const currentFee = await prisma.feeBalance.findUnique({
+      where: { id: feeBalanceId },
       include: {
         student: {
           select: {
             firstName: true,
-            lastName: true,
-            form: true,
-            admissionNumber: true
+            lastName: true
           }
         }
       }
     });
 
-    console.log(`✅ Fee balance updated by ${auth.user.name}: ${updatedFee.admissionNumber}`);
+    if (!currentFee) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee balance record not found',
+          authenticated: true 
+        },
+        { status: 404 }
+      );
+    }
+
+    // Calculate values for update
+    const amount = data.amount !== undefined ? parseFloat(data.amount) : currentFee.amount;
+    const amountPaid = data.amountPaid !== undefined ? parseFloat(data.amountPaid) : currentFee.amountPaid;
+
+    // Validate amount
+    if (amount <= 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Amount must be greater than 0',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate amountPaid doesn't exceed amount
+    if (amountPaid > amount) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Amount paid cannot exceed total amount',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate balance and payment status
+    const balance = Math.max(0, amount - amountPaid);
+    const paymentStatus = balance <= 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'pending';
+
+    // Check for duplicate if updating admissionNumber, term, or academicYear
+    if (data.admissionNumber || data.term || data.academicYear) {
+      const admissionNumber = data.admissionNumber || currentFee.admissionNumber;
+      const term = data.term || currentFee.term;
+      const academicYear = data.academicYear || currentFee.academicYear;
+
+      const existingFee = await prisma.feeBalance.findFirst({
+        where: {
+          admissionNumber,
+          term,
+          academicYear,
+          NOT: { id: feeBalanceId }
+        }
+      });
+
+      if (existingFee) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'Fee entry already exists for this student, term, and academic year',
+            authenticated: true 
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Prepare update data - handle dueDate conversion
+    const updateData = {};
     
+    // Only include fields that are being updated
+    if (data.admissionNumber !== undefined) updateData.admissionNumber = data.admissionNumber;
+    if (data.term !== undefined) updateData.term = data.term;
+    if (data.academicYear !== undefined) updateData.academicYear = data.academicYear;
+    if (data.form !== undefined) updateData.form = data.form;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    
+    // Always update these calculated fields
+    updateData.amount = amount;
+    updateData.amountPaid = amountPaid;
+    updateData.balance = balance;
+    updateData.paymentStatus = paymentStatus;
+    updateData.updatedAt = new Date();
+
+    // Handle dueDate specially - convert string to Date object
+    if (data.dueDate !== undefined) {
+      if (data.dueDate === null || data.dueDate === '' || data.dueDate === 'null') {
+        updateData.dueDate = null;
+      } else {
+        // Ensure it's a Date object
+        const dateObj = new Date(data.dueDate);
+        updateData.dueDate = isNaN(dateObj.getTime()) ? null : dateObj;
+        console.log(`📅 Date conversion: ${data.dueDate} -> ${updateData.dueDate}`);
+      }
+    }
+
+    console.log('🔍 Update data prepared:', updateData);
+
+    const updatedFeeBalance = await prisma.feeBalance.update({
+      where: { id: feeBalanceId },
+      data: updateData,
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            form: true,
+            admissionNumber: true,
+            email: true,
+            parentPhone: true
+          }
+        }
+      }
+    });
+
+    console.log(`✅ Fee balance updated by ${auth.user.name}: Student ${updatedFeeBalance.admissionNumber} - ${updatedFeeBalance.term} ${updatedFeeBalance.academicYear}`);
+
     return NextResponse.json({
       success: true,
       message: 'Fee balance updated successfully',
       data: {
-        feeBalance: updatedFee
+        feeBalance: updatedFeeBalance
       },
       authenticated: true,
       updatedBy: auth.user.name
     });
-    
   } catch (error) {
-    console.error('PUT error:', error);
+    console.error('Update fee balance error:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      meta: error.meta
+    });
+    
     if (error.code === 'P2025') {
       return NextResponse.json(
-        { success: false, error: 'Fee balance not found', authenticated: true },
+        { 
+          success: false, 
+          message: 'Fee balance record not found',
+          authenticated: true 
+        },
         { status: 404 }
       );
     }
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Fee entry already exists for this student, term, and academic year',
+          authenticated: true 
+        },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
-        error: error.message || 'Update failed',
-        authenticated: true
+        message: 'Failed to update fee balance',
+        authenticated: true 
       },
       { status: 500 }
     );

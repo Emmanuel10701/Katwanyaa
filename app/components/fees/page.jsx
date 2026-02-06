@@ -2587,42 +2587,86 @@ const updateFee = async (feeId, feeData) => {
     // GET auth headers for protected operation
     const authHeaders = getAuthHeaders(true);
     
-    const res = await fetch(`/api/feebalances`, {
+    console.log('🔄 Updating fee:', feeId, feeData);
+    
+    // CRITICAL: Ensure dueDate is properly formatted
+    const dataToSend = {
+      ...feeData,
+      // Ensure dueDate is either a valid Date string or null
+      dueDate: feeData.dueDate ? new Date(feeData.dueDate).toISOString() : null
+    };
+    
+    console.log('📤 Sending data:', dataToSend);
+    
+    // Call the correct endpoint for individual fee updates
+    const res = await fetch(`/api/feebalances/${feeId}`, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
         ...authHeaders
       },
-      body: JSON.stringify({ id: feeId, ...feeData })
+      body: JSON.stringify({
+        feeBalanceId: feeId,  // Explicitly include the feeBalanceId
+        ...dataToSend
+      })
     });
     
     // Handle auth errors
     if (res.status === 401 || res.status === 403) {
-      throw new Error('Authentication failed');
+      throw new Error('Authentication failed. Please login again.');
+    }
+    
+    // Handle other HTTP errors
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || `HTTP ${res.status}: Update failed`);
     }
     
     const data = await res.json();
     
     if (data.success) {
-      showNotification('School fee updated successfully', 'success');
-      await loadSchoolFees(pagination.page);
+      console.log('✅ Fee updated successfully:', data.data);
+      showNotification(data.message || 'School fee updated successfully', 'success');
+      
+      // Refresh the data
+      await Promise.all([
+        loadSchoolFees(pagination.page),
+        loadStatistics()
+      ]);
+      
+      // Close edit modal and clear selection
       setEditingFee(null);
-      setSelectedFee(data.data);
+      setSelectedFee(null);
+      setSelectedStudent(null);
+      
+      return data.data; // Return updated fee data
     } else {
-      showNotification(data.error || 'Failed to update school fee', 'error');
+      throw new Error(data.message || data.error || 'Failed to update school fee');
     }
   } catch (error) {
-    console.error('Update failed:', error);
+    console.error('❌ Update fee error:', error);
+    
+    // Handle specific error types
     if (error.message.includes('Authentication')) {
       handleAuthError(error, showNotification);
-    } else {
-      showNotification('Failed to update school fee', 'error');
+      return null;
     }
+    
+    if (error.message.includes('duplicate') || error.message.includes('already exists')) {
+      showNotification('Fee entry already exists for this student, term, and academic year', 'error');
+    } else if (error.message.includes('not found')) {
+      showNotification('Fee balance record not found. It may have been deleted.', 'error');
+    } else if (error.message.includes('amount paid cannot exceed')) {
+      showNotification('Amount paid cannot exceed total amount', 'error');
+    } else {
+      showNotification(`Failed to update school fee: ${error.message}`, 'error');
+    }
+    
+    return null;
   } finally {
     setLoading(false);
   }
 };
-
   // View fee details
   const viewFeeDetails = async (fee) => {
     setSelectedFee(fee);
