@@ -15,25 +15,16 @@
 }
 
 body {
-  /* Expand the canvas so 0.75 scaling fits 100% of the screen */
-  width: 133.33% !important;
-  min-height: 133.33vh;
-  
+ 
   /* Apply the zoom effect */
   transform: scale(0.75);
   
   /* Lock the scale to the top-left corner */
-  transform-origin: 0 0;
   
-  /* Clean up defaults */
-  margin: 0;
-  padding: 0;
+
 }
 
-/* Optional: Hide horizontal scroll if your content fluctuates */
-html {
-  overflow-x: hidden;
-}
+
 
 
 body {
