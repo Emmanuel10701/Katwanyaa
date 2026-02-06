@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { parse } from 'papaparse';
 import * as XLSX from 'xlsx';
 import { prisma } from '../../../libs/prisma';
+import { Buffer } from 'buffer'; // Add this import
+
+
 
 // ==================== AUTHENTICATION UTILITIES ====================
 
@@ -117,31 +120,35 @@ class DeviceTokenManager {
 
 // Authentication middleware for protected requests
 const authenticateRequest = (req) => {
-  const headers = req.headers;
-  
-  // Validate tokens
-  const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
-  
-  if (!validationResult.valid) {
+  try {
+    const headers = req.headers;
+    
+    // DEBUG: Log what headers are being received
+    console.log('🔍 Authentication Headers Received:');
+    console.log('x-admin-token:', headers.get('x-admin-token'));
+    console.log('x-device-token:', headers.get('x-device-token'));
+    console.log('authorization:', headers.get('authorization'));
+    console.log('All headers:', Object.fromEntries(headers.entries()));
+    
+    // Validate tokens
+    const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
+    
+    // ... rest of your code
+  } catch (error) {
+    console.error('Authentication error:', error);
     return {
       authenticated: false,
       response: NextResponse.json(
         { 
           success: false, 
-          error: "Access Denied",
-          message: "Authentication required to manage fee balances.",
-          details: validationResult.message
+          error: "Authentication Error",
+          message: "Failed to authenticate request",
+          details: error.message
         },
-        { status: 401 }
+        { status: 500 }
       )
     };
   }
-
-  return {
-    authenticated: true,
-    user: validationResult.user,
-    deviceInfo: validationResult.deviceInfo
-  };
 };
 
 // ========== HELPER FUNCTIONS ==========
@@ -1859,17 +1866,36 @@ export async function GET(request) {
   }
 }
 
+
 export async function POST(request) {
+  console.log('\n========== FEE UPLOAD API CALLED ==========');
+  console.log('Request method:', request.method);
+  console.log('Request URL:', request.url);
+  console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+  
   try {
     // Step 1: Authenticate the POST request
+    console.log('🔐 Attempting authentication...');
     const auth = authenticateRequest(request);
-    if (!auth.authenticated) {
-      return auth.response;
+    
+    if (!auth || !auth.authenticated) {
+      console.error('❌ Authentication failed');
+      return auth?.response || NextResponse.json(
+        { 
+          success: false, 
+          error: "Authentication Failed",
+          message: "Unable to authenticate request"
+        },
+        { status: 401 }
+      );
     }
-
-    // Log authentication info
-    console.log(`📝 Fee bulk upload request from: ${auth.user.name} (${auth.user.role})`);
-
+    
+    console.log('✅ Authentication successful:', {
+      user: auth.user?.name,
+      role: auth.user?.role
+    });
+    
+    // Step 2: Get form data
     const formData = await request.formData();
     const file = formData.get('file');
     const uploadType = formData.get('uploadType'); // 'new' or 'update'
@@ -1878,17 +1904,20 @@ export async function POST(request) {
     const term = formData.get('term');
     const academicYear = formData.get('academicYear');
     
-    console.log('\n📤 FEE UPLOAD REQUEST:');
-    console.log('File:', file?.name);
-    console.log('Upload Type:', uploadType);
-    console.log('Selected Form:', selectedForm);
-    console.log('Term:', term);
-    console.log('Academic Year:', academicYear);
-    console.log('Check Duplicates:', checkDuplicates);
-    console.log('Uploaded by:', auth.user.name);
+    console.log('📤 Upload parameters:', {
+      fileName: file?.name,
+      fileSize: file?.size,
+      uploadType,
+      selectedForm,
+      checkDuplicates,
+      term,
+      academicYear,
+      uploadedBy: auth.user?.name
+    });
     
-    // Validate required fields
+    // Step 3: Validate required fields
     if (!file) {
+      console.error('❌ No file provided');
       return NextResponse.json({ 
         success: false, 
         error: 'No file provided',
@@ -1897,6 +1926,7 @@ export async function POST(request) {
     }
     
     if (!uploadType || !selectedForm) {
+      console.error('❌ Upload type and form selection are required');
       return NextResponse.json({ 
         success: false, 
         error: 'Upload type and form selection are required',
@@ -1904,9 +1934,10 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // Validate form
+    // Step 4: Validate form
     const normalizedForm = normalizeForm(selectedForm);
     if (!normalizedForm) {
+      console.error('❌ Invalid form:', selectedForm);
       return NextResponse.json({ 
         success: false, 
         error: `Invalid form: ${selectedForm}. Must be one of: Form 1, Form 2, Form 3, Form 4`,
@@ -1914,8 +1945,9 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // For UPDATE uploads, term and academicYear are REQUIRED
+    // Step 5: For UPDATE uploads, term and academicYear are REQUIRED
     if (uploadType === 'update' && (!term || !academicYear)) {
+      console.error('❌ Missing term or academic year for update upload');
       return NextResponse.json({
         success: false, 
         error: 'For update uploads, term and academic year are required',
@@ -1923,7 +1955,7 @@ export async function POST(request) {
       }, { status: 400 });
     }
     
-    // Create upload strategy object
+    // Step 6: Create upload strategy object
     const uploadStrategy = {
       uploadType,
       selectedForm: normalizedForm,
@@ -1933,18 +1965,36 @@ export async function POST(request) {
     
     console.log('📋 Upload Strategy:', uploadStrategy);
     
-    // Parse file with strategy
+    // Step 7: Parse file
     const fileName = file.name.toLowerCase();
     const fileExtension = fileName.split('.').pop();
     
+    console.log(`📄 Parsing ${fileExtension.toUpperCase()} file...`);
     let parsedData;
-    if (fileExtension === 'csv') {
-      parsedData = await parseFeeCSV(file, uploadStrategy);
-    } else {
-      parsedData = await parseFeeExcel(file, uploadStrategy);
+    try {
+      if (fileExtension === 'csv') {
+        parsedData = await parseFeeCSV(file, uploadStrategy);
+      } else if (['xlsx', 'xls'].includes(fileExtension)) {
+        parsedData = await parseFeeExcel(file, uploadStrategy);
+      } else {
+        console.error('❌ Unsupported file type:', fileExtension);
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Unsupported file type. Please upload CSV or Excel files.',
+          authenticated: true 
+        }, { status: 400 });
+      }
+    } catch (parseError) {
+      console.error('❌ File parsing failed:', parseError.message);
+      return NextResponse.json({ 
+        success: false, 
+        error: `File parsing failed: ${parseError.message}`,
+        authenticated: true 
+      }, { status: 400 });
     }
     
     if (!parsedData || parsedData.length === 0) {
+      console.error('❌ No valid data found in file');
       return NextResponse.json({ 
         success: false, 
         error: 'No valid fee data found in file',
@@ -1954,30 +2004,33 @@ export async function POST(request) {
     
     console.log(`✅ Parsed ${parsedData.length} rows`);
     
-    // For NEW uploads, ensure all rows have same term/year (from first row)
+    // Step 8: For NEW uploads, ensure all rows have same term/year
     if (uploadType === 'new') {
       const firstRow = parsedData[0];
-      const commonTerm = normalizeTerm(firstRow.term);
-      const commonYear = normalizeAcademicYear(firstRow.academicYear);
+      const commonTerm = normalizeTerm(firstRow?.term || 'Term 1');
+      const commonYear = normalizeAcademicYear(firstRow?.academicYear || `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`);
       
       parsedData = parsedData.map(row => ({
         ...row,
         term: commonTerm,
         academicYear: commonYear,
-        form: normalizedForm // Ensure all rows have correct form
+        form: normalizedForm
       }));
       
       console.log(`📝 Normalized NEW upload: Term=${commonTerm}, Year=${commonYear}`);
     }
     
-    // If just checking duplicates
+    // Step 9: Check duplicates if requested
     if (checkDuplicates) {
+      console.log('🔍 Checking for duplicates...');
       const duplicates = await checkDuplicateFeeBalances(
         parsedData, 
         normalizedForm,
         uploadType === 'update' ? term : parsedData[0]?.term,
         uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
       );
+      
+      console.log(`🔍 Found ${duplicates.length} duplicates`);
       
       return NextResponse.json({
         success: true,
@@ -1990,106 +2043,155 @@ export async function POST(request) {
         uploadType: uploadType,
         authenticated: true,
         message: duplicates.length > 0 
-          ? `Found ${duplicates.length} existing fees` 
+          ? `Found ${duplicates.length} existing fees that would be replaced` 
           : 'No duplicates found'
       });
     }
     
-    // Create batch record with uploader info from authentication
+    // Step 10: Create batch record
     const batchId = `FEE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    await prisma.feeBalanceUpload.create({
-      data: {
-        id: batchId,
-        fileName: file.name,
-        fileType: fileExtension,
-        uploadedBy: auth.user.name, // Use authenticated user's name
-        status: 'processing',
-        targetForm: normalizedForm,
-        term: uploadType === 'update' ? term : parsedData[0]?.term,
-        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
-        totalRows: parsedData.length,
-        validRows: 0,
-        skippedRows: 0,
-        errorRows: 0,
-        uploadType: uploadType,
-        uploadDate: new Date()
-      }
-    });
+    console.log(`📁 Creating batch record: ${batchId}`);
     
-    // Process upload based on type
-    let processingStats;
-    if (uploadType === 'new') {
-      processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy);
-    } else {
-      processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy);
+    try {
+      await prisma.feeBalanceUpload.create({
+        data: {
+          id: batchId,
+          fileName: file.name,
+          fileType: fileExtension,
+          uploadedBy: auth.user?.name || 'Unknown',
+          uploadedByRole: auth.user?.role || 'Unknown',
+          status: 'processing',
+          targetForm: normalizedForm,
+          term: uploadType === 'update' ? term : parsedData[0]?.term,
+          academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+          totalRows: parsedData.length,
+          validRows: 0,
+          skippedRows: 0,
+          errorRows: 0,
+          uploadType: uploadType,
+          uploadDate: new Date()
+        }
+      });
+    } catch (dbError) {
+      console.error('❌ Failed to create batch record:', dbError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Database error while creating batch record',
+          authenticated: true
+        },
+        { status: 500 }
+      );
     }
     
-    // Update batch record
-    await prisma.feeBalanceUpload.update({
-      where: { id: batchId },
-      data: {
-        status: 'completed',
-        processedDate: new Date(),
-        validRows: processingStats.validRows,
-        skippedRows: processingStats.skippedRows,
-        errorRows: processingStats.errorRows,
-        errorLog: processingStats.errors.length > 0 
-          ? processingStats.errors.join('\n') 
-          : null,
-        metadata: {
-          created: processingStats.created || 0,
-          updated: processingStats.updated || 0,
-          replaced: processingStats.replaced || 0,
-          errors: processingStats.errorRows || 0,
-          warnings: processingStats.errors.filter(e => 
-            e.includes('warning') || e.includes('Warning')).length
-        }
+    // Step 11: Process upload based on type
+    let processingStats;
+    try {
+      if (uploadType === 'new') {
+        console.log('🆕 Processing as NEW upload...');
+        processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy, {
+          name: auth.user?.name || 'System',
+          role: auth.user?.role || 'SYSTEM'
+        });
+      } else {
+        console.log('🔄 Processing as UPDATE upload...');
+        processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy, {
+          name: auth.user?.name || 'System',
+          role: auth.user?.role || 'SYSTEM'
+        });
       }
-    });
+    } catch (processError) {
+      console.error('❌ Processing failed:', processError);
+      
+      // Update batch as failed
+      await prisma.feeBalanceUpload.update({
+        where: { id: batchId },
+        data: {
+          status: 'failed',
+          processedDate: new Date(),
+          errorRows: parsedData.length,
+          errorLog: processError.message.substring(0, 500)
+        }
+      }).catch(e => console.error('Failed to update batch status:', e));
+      
+      throw processError;
+    }
+    
+    // Step 12: Update batch record with results
+    try {
+      await prisma.feeBalanceUpload.update({
+        where: { id: batchId },
+        data: {
+          status: 'completed',
+          processedDate: new Date(),
+          validRows: processingStats.validRows,
+          skippedRows: processingStats.skippedRows,
+          errorRows: processingStats.errorRows,
+          errorLog: processingStats.errors.length > 0 
+            ? processingStats.errors.slice(0, 10).join('\n') 
+            : null,
+          metadata: {
+            created: processingStats.created || 0,
+            replaced: processingStats.replaced || 0,
+            totalProcessed: processingStats.validRows || 0,
+            errors: processingStats.errorRows || 0,
+            timestamp: new Date().toISOString(),
+            uploadedBy: auth.user?.name,
+            uploadedByRole: auth.user?.role
+          }
+        }
+      });
+    } catch (updateError) {
+      console.error('❌ Failed to update batch record:', updateError);
+      // Don't fail the whole request if just updating stats fails
+    }
     
     console.log('\n✅ UPLOAD COMPLETE:', {
       batchId,
       valid: processingStats.validRows,
       created: processingStats.created,
-      updated: processingStats.updated,
       replaced: processingStats.replaced,
       skipped: processingStats.skippedRows,
       errors: processingStats.errorRows
     });
 
-    console.log(`✅ Fee upload completed by ${auth.user.name}: ${processingStats.validRows} fees processed`);
+    console.log(`✅ Fee upload completed by ${auth.user?.name}: ${processingStats.validRows} fees processed`);
     
+    // Step 13: Return success response
     return NextResponse.json({
       success: true,
       message: uploadType === 'new'
-        ? `Uploaded ${processingStats.created} new fees for ${normalizedForm}`
-        : `Updated ${processingStats.created} fees for ${normalizedForm} ${term} ${academicYear}`,
+        ? `Successfully uploaded ${processingStats.created} new fees for ${normalizedForm}`
+        : `Successfully updated ${processingStats.created} fees for ${normalizedForm} ${term} ${academicYear}`,
       data: {
         uploadId: batchId,
         processed: processingStats.validRows,
         created: processingStats.created,
-        updated: processingStats.updated,
         replaced: processingStats.replaced,
         skipped: processingStats.skippedRows,
         errors: processingStats.errors,
         form: normalizedForm,
         term: uploadType === 'update' ? term : parsedData[0]?.term,
-        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear
+        academicYear: uploadType === 'update' ? academicYear : parsedData[0]?.academicYear,
+        uploadType: uploadType
       },
       authenticated: true,
-      uploadedBy: auth.user.name,
+      uploadedBy: auth.user?.name,
       timestamp: new Date().toISOString()
     });
     
   } catch (error) {
-    console.error('❌ Upload error:', error);
+    console.error('❌ Fatal POST Error:', error);
+    console.error('Error stack:', error.stack);
+    
     return NextResponse.json(
       { 
         success: false, 
         error: error.message || 'Upload failed',
-        authenticated: true,
-        suggestion: 'Check that your file has the required columns and data format matches the template.'
+        authenticated: false,
+        suggestion: 'Check server logs for details',
+        timestamp: new Date().toISOString()
       },
       { status: 500 }
     );
