@@ -1982,6 +1982,23 @@ export default function AssignmentsManager() {
     setStats(stats);
   };
 
+
+// Helper function to get authentication headers for PROTECTED endpoints
+const getAuthHeaders = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  
+  if (!adminToken || !deviceToken) {
+    throw new Error('Authentication required. Please login to perform this action.');
+  }
+  
+  return {
+    'Authorization': `Bearer ${adminToken}`,
+    'x-device-token': deviceToken
+  };
+};
+
+
   // Fetch assignments with refresh support
   const fetchAssignments = async (isRefresh = false) => {
     if (isRefresh) {
@@ -2110,78 +2127,106 @@ export default function AssignmentsManager() {
     setShowDeleteModal(true);
   };
 
-  // Confirm delete - handles both single and bulk
-  const confirmDelete = async () => {
-    if (deleteType === 'single' && !assignmentToDelete) return;
+const confirmDelete = async () => {
+  if (deleteType === 'single' && !assignmentToDelete) return;
+  
+  setDeleting(true);
+  setBulkDeleting(true);
+  
+  try {
+    // ✅ PROTECTED ENDPOINT - Add authentication for DELETE
+    const headers = getAuthHeaders();
     
-    setDeleting(true);
-    setBulkDeleting(true);
-    
-    try {
-      if (deleteType === 'single' && assignmentToDelete) {
-        // Single delete
-        const response = await fetch(`/api/assignment/${assignmentToDelete.id}`, {
-          method: 'DELETE',
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          // Update local state without refetching
-          setAssignments(prev => prev.filter(a => a.id !== assignmentToDelete.id));
-          setFilteredAssignments(prev => prev.filter(a => a.id !== assignmentToDelete.id));
-          showNotification('success', 'Deleted', 'Assignment deleted successfully!');
-        } else {
-          throw new Error(result.error);
-        }
-      } else if (deleteType === 'bulk') {
-        // Bulk delete
-        const deletedIds = [];
-        const failedIds = [];
-        
-        // Delete each selected assignment
-        for (const assignmentId of selectedAssignments) {
-          try {
-            const response = await fetch(`/api/assignment/${assignmentId}`, {
-              method: 'DELETE',
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-              deletedIds.push(assignmentId);
-            } else {
-              console.error(`Failed to delete assignment ${assignmentId}:`, result.error);
-              failedIds.push(assignmentId);
-            }
-          } catch (error) {
-            console.error(`Error deleting assignment ${assignmentId}:`, error);
+    if (deleteType === 'single' && assignmentToDelete) {
+      // Single delete - PROTECTED
+      const response = await fetch(`/api/assignment/${assignmentToDelete.id}`, {
+        method: 'DELETE',
+        headers: headers, // ✅ AUTHENTICATION HEADERS ADDED
+      });
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        throw new Error('Session expired. Please login again.');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update local state without refetching
+        setAssignments(prev => prev.filter(a => a.id !== assignmentToDelete.id));
+        setFilteredAssignments(prev => prev.filter(a => a.id !== assignmentToDelete.id));
+        showNotification('success', 'Deleted', 'Assignment deleted successfully!');
+      } else {
+        throw new Error(result.error);
+      }
+    } else if (deleteType === 'bulk') {
+      // Bulk delete - PROTECTED
+      const deletedIds = [];
+      const failedIds = [];
+      
+      // Delete each selected assignment
+      for (const assignmentId of selectedAssignments) {
+        try {
+          const response = await fetch(`/api/assignment/${assignmentId}`, {
+            method: 'DELETE',
+            headers: headers, // ✅ AUTHENTICATION HEADERS ADDED
+          });
+          
+          // Handle authentication errors
+          if (response.status === 401) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            throw new Error('Session expired. Please login again.');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            deletedIds.push(assignmentId);
+          } else {
+            console.error(`Failed to delete assignment ${assignmentId}:`, result.error);
             failedIds.push(assignmentId);
           }
-        }
-        
-        // Refresh the list
-        await fetchAssignments();
-        setSelectedAssignments(new Set());
-        
-        if (deletedIds.length > 0 && failedIds.length === 0) {
-          showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} assignment(s)`);
-        } else if (deletedIds.length > 0 && failedIds.length > 0) {
-          showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} assignment(s), failed to delete ${failedIds.length}`);
-        } else {
-          showNotification('error', 'Delete Failed', 'Failed to delete selected assignments');
+        } catch (error) {
+          console.error(`Error deleting assignment ${assignmentId}:`, error);
+          failedIds.push(assignmentId);
         }
       }
-    } catch (error) {
-      console.error('Error deleting assignment:', error);
-      showNotification('error', 'Delete Failed', 'Failed to delete assignment');
-    } finally {
-      setDeleting(false);
-      setBulkDeleting(false);
-      setShowDeleteModal(false);
-      setAssignmentToDelete(null);
+      
+      // Refresh the list
+      await fetchAssignments();
+      setSelectedAssignments(new Set());
+      
+      if (deletedIds.length > 0 && failedIds.length === 0) {
+        showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} assignment(s)`);
+      } else if (deletedIds.length > 0 && failedIds.length > 0) {
+        showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} assignment(s), failed to delete ${failedIds.length}`);
+      } else {
+        showNotification('error', 'Delete Failed', 'Failed to delete selected assignments');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Error deleting assignment:', error);
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Delete Failed', 'Failed to delete assignment');
+    }
+  } finally {
+    setDeleting(false);
+    setBulkDeleting(false);
+    setShowDeleteModal(false);
+    setAssignmentToDelete(null);
+  }
+};
 
 
 // In your AssignmentsManager component, update the handleSubmit function:
@@ -2190,6 +2235,9 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
   setSaving(true);
   try {
     console.log('📤 Starting assignment submission...');
+    
+    // ✅ PROTECTED ENDPOINT - Add authentication for CREATE/UPDATE
+    const headers = getAuthHeaders();
     
     // IMPORTANT: Calculate total file size BEFORE sending to API
     let totalBytes = 0;
@@ -2323,6 +2371,7 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
       console.log(`PUT request to: ${url}`);
       response = await fetch(url, {
         method: 'PUT',
+        headers: headers, // ✅ AUTHENTICATION HEADERS ADDED
         body: formDataToSend,
       });
     } else {
@@ -2331,8 +2380,16 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
       console.log(`POST request to: ${url}`);
       response = await fetch(url, {
         method: 'POST',
+        headers: headers, // ✅ AUTHENTICATION HEADERS ADDED
         body: formDataToSend,
       });
+    }
+
+    // Handle authentication errors
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      throw new Error('Session expired. Please login again.');
     }
 
     const result = await response.json();
@@ -2351,7 +2408,17 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
     }
   } catch (error) {
     console.error('❌ Error saving assignment:', error);
-    showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} assignment`);
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} assignment`);
+    }
   } finally {
     setSaving(false);
   }
