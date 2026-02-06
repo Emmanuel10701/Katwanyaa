@@ -16,7 +16,7 @@
 
 /* Apply 78% zoom to everything EXCEPT pages with 'no-zoom' class */
 html:not(.no-zoom) {
-  zoom: 0.78;
+  zoom: 0.85;
 }
 
 
