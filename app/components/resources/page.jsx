@@ -827,6 +827,32 @@ function ModernResourceModal({ onClose, onSave, resource, loading }) {
   const [totalSizeMB, setTotalSizeMB] = useState(0); // Total file size in MB
   const [fileSizeError, setFileSizeError] = useState(''); // Size error message
 
+
+  // Add this function inside ResourcesManager component
+const getAuthHeaders = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  
+  console.log('🔐 Getting auth headers:', {
+    hasAdminToken: !!adminToken,
+    hasDeviceToken: !!deviceToken
+  });
+  
+  if (!adminToken || !deviceToken) {
+    throw new Error('Authentication required. Please login to perform this action.');
+  }
+  
+  return {
+    'x-admin-token': adminToken,
+    'x-device-token': deviceToken
+  };
+};
+
+
+
+
+
+
 // In ModernResourceModal component, replace the useEffect with:
 useEffect(() => {
   if (resource?.files) {
@@ -1941,104 +1967,158 @@ export default function ResourcesManager() {
   };
 
   // Confirm delete - handles both single and bulk
-  const confirmDelete = async () => {
-    if (deleteType === 'single' && !resourceToDelete) return;
+const confirmDelete = async () => {
+  if (deleteType === 'single' && !resourceToDelete) return;
+  
+  setDeleting(true);
+  setBulkDeleting(true);
+  
+  try {
+    // Get authentication headers
+    const headers = getAuthHeaders();
     
-    setDeleting(true);
-    setBulkDeleting(true);
-    
-    try {
-      if (deleteType === 'single' && resourceToDelete) {
-        // Single delete
-        const response = await fetch(`/api/resources/${resourceToDelete.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          setResources(prev => prev.filter(r => r.id !== resourceToDelete.id));
-          setFilteredResources(prev => prev.filter(r => r.id !== resourceToDelete.id));
-          showNotification('success', 'Deleted', 'Resource deleted successfully!');
-        } else {
-          throw new Error(result.error);
-        }
-      } else if (deleteType === 'bulk') {
-        // Bulk delete
-        const deletedIds = [];
-        const failedIds = [];
-        
-        // Delete each selected resource
-        for (const resourceId of selectedResources) {
-          try {
-            const response = await fetch(`/api/resources/${resourceId}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-              deletedIds.push(resourceId);
-            } else {
-              console.error(`Failed to delete resource ${resourceId}:`, result.error);
-              failedIds.push(resourceId);
-            }
-          } catch (error) {
-            console.error(`Error deleting resource ${resourceId}:`, error);
+    if (deleteType === 'single' && resourceToDelete) {
+      // Single delete
+      console.log(`🗑️ Deleting resource ${resourceToDelete.id} with headers:`, headers);
+      const response = await fetch(`/api/resources/${resourceToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('device_token');
+        localStorage.removeItem('device_fingerprint');
+        throw new Error('Session expired. Please login again.');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setResources(prev => prev.filter(r => r.id !== resourceToDelete.id));
+        setFilteredResources(prev => prev.filter(r => r.id !== resourceToDelete.id));
+        showNotification('success', 'Deleted', 'Resource deleted successfully!');
+      } else {
+        throw new Error(result.error);
+      }
+    } else if (deleteType === 'bulk') {
+      // Bulk delete
+      console.log(`🗑️ Bulk deleting ${selectedResources.size} resources with headers:`, headers);
+      const deletedIds = [];
+      const failedIds = [];
+      
+      // Delete each selected resource
+      for (const resourceId of selectedResources) {
+        try {
+          const response = await fetch(`/api/resources/${resourceId}`, {
+            method: 'DELETE',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          // Handle authentication errors
+          if (response.status === 401) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            localStorage.removeItem('device_token');
+            localStorage.removeItem('device_fingerprint');
+            throw new Error('Session expired. Please login again.');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            deletedIds.push(resourceId);
+          } else {
+            console.error(`Failed to delete resource ${resourceId}:`, result.error);
             failedIds.push(resourceId);
           }
-        }
-        
-        // Refresh the list
-        await fetchResources();
-        setSelectedResources(new Set());
-        
-        if (deletedIds.length > 0 && failedIds.length === 0) {
-          showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} resource(s)`);
-        } else if (deletedIds.length > 0 && failedIds.length > 0) {
-          showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} resource(s), failed to delete ${failedIds.length}`);
-        } else {
-          showNotification('error', 'Delete Failed', 'Failed to delete selected resources');
+        } catch (error) {
+          console.error(`Error deleting resource ${resourceId}:`, error);
+          failedIds.push(resourceId);
         }
       }
-    } catch (error) {
-      console.error('Error deleting resource:', error);
-      showNotification('error', 'Delete Failed', 'Failed to delete resource');
-    } finally {
-      setDeleting(false);
-      setBulkDeleting(false);
-      setShowDeleteModal(false);
-      setResourceToDelete(null);
+      
+      // Refresh the list
+      await fetchResources();
+      setSelectedResources(new Set());
+      
+      if (deletedIds.length > 0 && failedIds.length === 0) {
+        showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} resource(s)`);
+      } else if (deletedIds.length > 0 && failedIds.length > 0) {
+        showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} resource(s), failed to delete ${failedIds.length}`);
+      } else {
+        showNotification('error', 'Delete Failed', 'Failed to delete selected resources');
+      }
     }
-  };
+  } catch (error) {
+    console.error('❌ Error deleting resource:', error);
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Delete Failed', error.message || 'Failed to delete resource');
+    }
+  } finally {
+    setDeleting(false);
+    setBulkDeleting(false);
+    setShowDeleteModal(false);
+    setResourceToDelete(null);
+  }
+};
 
 const handleSubmit = async (formData, id) => {
   setSaving(true);
   try {
+    // Get authentication headers
+    const headers = getAuthHeaders();
+    
     let response;
     
     if (id) {
       // Update existing resource
+      console.log(`🔄 Updating resource ${id} with headers:`, headers);
       response = await fetch(`/api/resources/${id}`, {
         method: 'PUT',
+        headers: headers, // ✅ Add auth headers
         body: formData,
         // Don't set Content-Type for FormData
       });
     } else {
       // Create new resource
+      console.log(`🆕 Creating resource with headers:`, headers);
       response = await fetch('/api/resources', {
         method: 'POST',
+        headers: headers, // ✅ Add auth headers
         body: formData,
         // Don't set Content-Type for FormData
       });
     }
     
+    console.log('📥 Response status:', response.status);
+    
+    // Handle authentication errors
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('device_token');
+      localStorage.removeItem('device_fingerprint');
+      
+      throw new Error('Session expired. Please login again.');
+    }
+
     const result = await response.json();
 
     if (result.success) {
@@ -2054,8 +2134,18 @@ const handleSubmit = async (formData, id) => {
       throw new Error(result.error);
     }
   } catch (error) {
-    console.error('Error saving resource:', error);
-    showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} resource`);
+    console.error('❌ Error saving resource:', error);
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} resource`);
+    }
   } finally {
     setSaving(false);
   }
