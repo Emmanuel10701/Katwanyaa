@@ -1859,7 +1859,6 @@ export async function GET(request) {
   }
 }
 
-// POST - Bulk upload with new strategy (PROTECTED - authentication required)
 export async function POST(request) {
   try {
     // Step 1: Authenticate the POST request
@@ -1996,7 +1995,7 @@ export async function POST(request) {
       });
     }
     
-    // Create batch record with uploader info
+    // Create batch record with uploader info from authentication
     const batchId = `FEE_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     await prisma.feeBalanceUpload.create({
@@ -2004,6 +2003,7 @@ export async function POST(request) {
         id: batchId,
         fileName: file.name,
         fileType: fileExtension,
+        uploadedBy: auth.user.name, // Use authenticated user's name
         status: 'processing',
         targetForm: normalizedForm,
         term: uploadType === 'update' ? term : parsedData[0]?.term,
@@ -2020,17 +2020,9 @@ export async function POST(request) {
     // Process upload based on type
     let processingStats;
     if (uploadType === 'new') {
-      processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy, {
-        id: auth.user.id,
-        name: auth.user.name,
-        role: auth.user.role
-      });
+      processingStats = await processNewFeeUpload(parsedData, batchId, uploadStrategy);
     } else {
-      processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy, {
-        id: auth.user.id,
-        name: auth.user.name,
-        role: auth.user.role
-      });
+      processingStats = await processUpdateFeeUpload(parsedData, batchId, uploadStrategy);
     }
     
     // Update batch record
@@ -2103,7 +2095,6 @@ export async function POST(request) {
     );
   }
 }
-
 // PUT - Update single fee balance (PROTECTED - authentication required)
 export async function PUT(request) {
   try {
