@@ -655,193 +655,6 @@ function ModernAssignmentDetailModal({ assignment, onClose, onEdit }) {
   );
 }
 
-// Modern Assignment Card Component - UPDATED WITH SELECTION CHECKBOX
-function ModernAssignmentCard({ assignment, onEdit, onDelete, onView, selected, onSelect, actionLoading }) {
-  // Status colors
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return { bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' };
-      case 'in progress': return { bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' };
-      case 'pending': return { bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' };
-      case 'overdue': return { bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' };
-      case 'assigned': return { bg: 'bg-indigo-100', text: 'text-indigo-800', dot: 'bg-indigo-500' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500' };
-    }
-  };
-
-  // Priority colors
-  const getPriorityColor = (priority) => {
-    switch (priority?.toLowerCase()) {
-      case 'high': return 'text-red-500';
-      case 'medium': return 'text-orange-500 ';
-      case 'low': return 'text-blue-500';
-      default: return 'text-gray-500';
-    }
-  };
-
-  const statusColor = getStatusColor(assignment.status);
-  const priorityColor = getPriorityColor(assignment.priority);
-  
-  // Calculate days remaining
-  const daysRemaining = assignment.dueDate ? 
-    Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24)) : 
-    null;
-
-  return (
-    <div className={`bg-white rounded-[2rem] shadow-xl border ${
-      selected ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-gray-100'
-    } w-full max-w-md overflow-hidden transition-none hover:shadow-2xl  cursor-pointer`} onClick={() => onView(assignment)}>
-      
-      {/* Header with Status and Selection Checkbox */}
-      <div className={`p-6 ${statusColor.bg} border-b ${statusColor.text} border-opacity-20 relative`}>
-        {/* Selection Checkbox */}
-        <div className="absolute top-4 left-4 z-10">
-          <input 
-            type="checkbox" 
-            checked={selected} 
-            onChange={(e) => {
-              e.stopPropagation();
-              onSelect(assignment.id, e.target.checked);
-            }}
-            className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-        
-        <div className="flex items-center justify-between mb-4 pl-6">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${statusColor.dot}`}></div>
-            <span className={`text-xs font-bold ${statusColor.text} uppercase tracking-wider`}>
-              {assignment.status || 'Pending'}
-            </span>
-          </div>
-          {assignment.priority && (
-            <div className="flex items-center gap-1">
-              <FiTarget className={`text-xs ${priorityColor}`} />
-              <span className={`text-xs font-bold ${priorityColor}`}>
-                {assignment.priority}
-              </span>
-            </div>
-          )}
-        </div>
-        
-        <h3 className="text-2xl font-black text-slate-900 leading-tight line-clamp-2">
-          {assignment.title}
-        </h3>
-        
-        <p className="text-sm font-medium text-slate-400 mt-2 line-clamp-2">
-          {assignment.description || 'No description available.'}
-        </p>
-      </div>
-
-      {/* Information Section */}
-      <div className="p-6">
-        {/* Grid Info Mapping */}
-        <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
-          {/* Due Date */}
-          <div className="space-y-1">
-            <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Due Date</span>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></div>
-              <span className="text-xs font-bold text-slate-700">
-                {new Date(assignment.dueDate).toLocaleDateString()}
-              </span>
-            </div>
-            {daysRemaining !== null && (
-              <span className={`text-[10px] font-bold ${
-                daysRemaining <= 0 ? 'text-red-500' : 
-                daysRemaining <= 3 ? 'text-orange-500 ' : 'text-green-500'
-              }`}>
-                {daysRemaining <= 0 ? 'Overdue' : `${daysRemaining} days left`}
-              </span>
-            )}
-          </div>
-          
-          {/* Subject */}
-          <div className="space-y-1">
-            <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Subject</span>
-            <div className="flex items-center gap-2">
-              <IoBookOutline className="text-indigo-400 text-sm" />
-              <span className="text-xs font-bold text-slate-700 truncate">
-                {assignment.subject || 'No Subject'}
-              </span>
-            </div>
-          </div>
-
-          {/* Class */}
-          {assignment.className && (
-            <div className="col-span-2 p-3 bg-indigo-50 rounded-2xl flex items-center justify-between border border-indigo-100/50">
-              <div className="flex flex-col min-w-0">
-                <span className="text-[9px] text-indigo-400 font-black uppercase tracking-[0.1em]">Class</span>
-                <span className="text-xs font-bold text-indigo-800 truncate">{assignment.className}</span>
-              </div>
-              <FiUserCheck className="text-indigo-300 text-lg shrink-0 ml-2" />
-            </div>
-          )}
-
-          {/* Teacher */}
-          {assignment.teacher && (
-            <div className="col-span-2 p-3 bg-blue-50 rounded-2xl flex items-center justify-between border border-blue-100/50">
-              <div className="flex flex-col min-w-0">
-                <span className="text-[9px] text-blue-400 font-black uppercase tracking-[0.1em]">Teacher</span>
-                <span className="text-xs font-bold text-blue-800 truncate">{assignment.teacher}</span>
-              </div>
-              <FiUsers className="text-blue-300 text-lg shrink-0 ml-2" />
-            </div>
-          )}
-        </div>
-
-        {/* Progress Bar (if applicable) */}
-        {assignment.completionRate !== undefined && (
-          <div className="mb-6">
-    
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-300"
-                style={{ width: `${assignment.completionRate}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Modern Action Bar */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onView(assignment);
-            }}
-            className="px-5 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-none active:bg-slate-200 cursor-pointer"
-          >
-            View
-          </button>
-          
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(assignment);
-            }}
-            disabled={actionLoading}
-            className="flex-1 bg-slate-900 text-white py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest disabled:opacity-50 transition-none active:scale-[0.98] cursor-pointer"
-          >
-            Edit
-          </button>
-          
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(assignment);
-            }}
-            disabled={actionLoading}
-            className="p-3 bg-red-50 text-red-500 rounded-2xl border border-red-100 disabled:opacity-50 transition-none active:bg-red-100 cursor-pointer"
-          >
-            <FiTrash2 size={18} />
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 
 function ModernAssignmentModal({ onClose, onSave, assignment, loading }) {
@@ -2849,29 +2662,284 @@ const handleSubmit = async (formData, id, assignmentFiles = [], attachments = []
       </div>
 
       {/* Assignments Grid */}
+      {/* Assignments Table */}
       {filteredAssignments.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {currentItems.map((assignment) => (
-              <ModernAssignmentCard 
-                key={assignment.id} 
-                assignment={assignment}
-                onEdit={handleEdit} 
-                onDelete={handleDeleteClick} 
-                onView={handleView}
-                selected={selectedAssignments.has(assignment.id)} 
-                onSelect={handleAssignmentSelect} 
-                actionLoading={saving}
-              />
-            ))}
-          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px]">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                  <tr>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedAssignments.size === currentItems.length && currentItems.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const newSelection = new Set(selectedAssignments);
+                            currentItems.forEach(assignment => newSelection.add(assignment.id));
+                            setSelectedAssignments(newSelection);
+                          } else {
+                            const newSelection = new Set(selectedAssignments);
+                            currentItems.forEach(assignment => newSelection.delete(assignment.id));
+                            setSelectedAssignments(newSelection);
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Assignment
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Subject / Class
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Due Date / Status
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Teacher / Priority
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Files
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentItems.map((assignment) => {
+                    // Calculate days remaining
+                    const daysRemaining = assignment.dueDate ? 
+                      Math.ceil((new Date(assignment.dueDate) - new Date()) / (1000 * 60 * 60 * 24)) : 
+                      null;
+                    
+                    // Status colors
+                    const getStatusColor = (status) => {
+                      switch (status?.toLowerCase()) {
+                        case 'completed': return 'bg-green-100 text-green-800';
+                        case 'in progress': return 'bg-blue-100 text-blue-800';
+                        case 'pending': return 'bg-yellow-100 text-yellow-800';
+                        case 'overdue': return 'bg-red-100 text-red-800';
+                        case 'assigned': return 'bg-indigo-100 text-indigo-800';
+                        default: return 'bg-gray-100 text-gray-800';
+                      }
+                    };
+                    
+                    // Priority colors
+                    const getPriorityColor = (priority) => {
+                      switch (priority?.toLowerCase()) {
+                        case 'high': return 'text-red-500';
+                        case 'medium': return 'text-orange-500';
+                        case 'low': return 'text-blue-500';
+                        default: return 'text-gray-500';
+                      }
+                    };
 
-          {/* Pagination */}
-          {filteredAssignments.length > itemsPerPage && (
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200">
-              <Pagination />
+                    return (
+                      <tr 
+                        key={assignment.id} 
+                        className={`hover:bg-gray-50 transition-colors duration-150 ${
+                          selectedAssignments.has(assignment.id) ? 'bg-indigo-50/50' : ''
+                        }`}
+                      >
+                        {/* Checkbox Column */}
+                        <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedAssignments.has(assignment.id)}
+                            onChange={(e) => handleAssignmentSelect(assignment.id, e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
+                        </td>
+
+                        {/* Assignment Details Column */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-start gap-3">
+                            <div className={`p-3 rounded-xl ${
+                              assignment.priority === 'high' ? 'bg-red-50 border border-red-100' :
+                              assignment.priority === 'medium' ? 'bg-orange-50 border border-orange-100' :
+                              assignment.priority === 'low' ? 'bg-blue-50 border border-blue-100' :
+                              'bg-gray-50 border border-gray-100'
+                            }`}>
+                              <IoDocumentTextOutline className={`text-lg ${
+                                assignment.priority === 'high' ? 'text-red-600' :
+                                assignment.priority === 'medium' ? 'text-orange-600' :
+                                assignment.priority === 'low' ? 'text-blue-600' :
+                                'text-gray-600'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
+                                {assignment.title || 'Untitled Assignment'}
+                              </h4>
+                              <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                                {assignment.description || 'No description provided'}
+                              </p>
+                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <FiClock className="w-3 h-3" />
+                                  {assignment.estimatedTime || 'No time estimate'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Subject & Class Column */}
+                        <td className="py-4 px-6">
+                          <div className="space-y-2">
+                            <span className="inline-block px-3 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">
+                              {assignment.subject || 'General'}
+                            </span>
+                            {assignment.className && (
+                              <div className="flex items-center gap-2 text-xs text-gray-600">
+                                <FiUsers className="w-3 h-3" />
+                                <span className="font-medium">{assignment.className}</span>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Due Date & Status Column */}
+                        <td className="py-4 px-6">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <FiCalendar className="text-indigo-500" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {new Date(assignment.dueDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(assignment.status)}`}>
+                                {assignment.status?.charAt(0).toUpperCase() + assignment.status?.slice(1) || 'Pending'}
+                              </span>
+                              {daysRemaining !== null && (
+                                <span className={`text-xs font-medium ${
+                                  daysRemaining <= 0 ? 'text-red-500' : 
+                                  daysRemaining <= 3 ? 'text-orange-500' : 'text-green-500'
+                                }`}>
+                                  {daysRemaining <= 0 ? 'Overdue' : `${daysRemaining}d left`}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Teacher & Priority Column */}
+                        <td className="py-4 px-6">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                                <FiUserCheck className="w-4 h-4 text-gray-600" />
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">
+                                {assignment.teacher || 'Admin'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <FiTarget className={`text-sm ${getPriorityColor(assignment.priority)}`} />
+                              <span className={`text-xs font-medium ${getPriorityColor(assignment.priority)}`}>
+                                {assignment.priority || 'medium'} priority
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Files Column */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            <FiPaperclip className="text-gray-400" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {(assignment.assignmentFiles?.length || 0) + (assignment.attachments?.length || 0)}
+                            </span>
+                            <span className="text-xs text-gray-500">files</span>
+                          </div>
+                        </td>
+
+                        {/* Actions Column */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleView(assignment);
+                              }}
+                              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
+                              title="View Details"
+                            >
+                              <FiEye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(assignment);
+                              }}
+                              className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                              title="Edit Assignment"
+                            >
+                              <FiEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(assignment);
+                              }}
+                              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              title="Delete Assignment"
+                            >
+                              <FiTrash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
+
+            {/* Table Footer with Pagination */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-sm text-gray-600">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredAssignments.length)} of {filteredAssignments.length} assignments
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                  >
+                    <FiChevronLeft />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+                    .map((page, index, array) => (
+                      <div key={page} className="flex items-center">
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                        <button
+                          onClick={() => paginate(page)}
+                          className={`px-3 py-1 rounded-lg ${currentPage === page ? 'bg-indigo-600 text-white' : 'text-gray-700'}`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    ))}
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                  >
+                    <FiChevronRight />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : (
         /* Empty State */
