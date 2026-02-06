@@ -2560,30 +2560,246 @@ const handleSubmit = async (formData, id) => {
         </div>
       </div>
 
-      {/* Resources Grid */}
+      {/* Resources Table */}
       {filteredResources.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {currentItems.map((resource) => (
-              <ModernResourceCard 
-                key={resource.id} 
-                resource={resource}
-                onEdit={handleEdit} 
-                onDelete={handleDeleteClick} 
-                onView={handleView}
-                selected={selectedResources.has(resource.id)} 
-                onSelect={handleResourceSelect} 
-                actionLoading={saving}
-              />
-            ))}
-          </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[900px]">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                  <tr>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedResources.size === currentItems.length && currentItems.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const newSelection = new Set(selectedResources);
+                            currentItems.forEach(resource => newSelection.add(resource.id));
+                            setSelectedResources(newSelection);
+                          } else {
+                            const newSelection = new Set(selectedResources);
+                            currentItems.forEach(resource => newSelection.delete(resource.id));
+                            setSelectedResources(newSelection);
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Resource
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Subject / Class
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Type / Access
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Teacher
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentItems.map((resource) => (
+                    <tr 
+                      key={resource.id} 
+                      className={`hover:bg-gray-50 transition-colors duration-150 ${
+                        selectedResources.has(resource.id) ? 'bg-blue-50/50' : ''
+                      }`}
+                    >
+                      {/* Checkbox Column */}
+                      <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedResources.has(resource.id)}
+                          onChange={(e) => handleResourceSelect(resource.id, e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
 
-          {/* Pagination */}
-          {filteredResources.length > itemsPerPage && (
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-200">
-              <Pagination />
+                      {/* Resource Details Column */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-start gap-3">
+                          <div className={`p-3 rounded-xl ${
+                            resource.type?.toLowerCase() === 'pdf' ? 'bg-red-50 border border-red-100' :
+                            resource.type?.toLowerCase() === 'video' ? 'bg-blue-50 border border-blue-100' :
+                            resource.type?.toLowerCase() === 'document' ? 'bg-green-50 border border-green-100' :
+                            resource.type?.toLowerCase() === 'image' ? 'bg-purple-50 border border-purple-100' :
+                            'bg-gray-50 border border-gray-100'
+                          }`}>
+                            {resource.type?.toLowerCase() === 'pdf' ? (
+                              <FiFileText className="text-lg text-red-600" />
+                            ) : resource.type?.toLowerCase() === 'video' ? (
+                              <FiVideo className="text-lg text-blue-600" />
+                            ) : resource.type?.toLowerCase() === 'image' ? (
+                              <FiImage className="text-lg text-purple-600" />
+                            ) : (
+                              <FiFileText className="text-lg text-green-600" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
+                              {resource.title || 'Untitled Resource'}
+                            </h4>
+                            <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                              {resource.description || 'No description provided'}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <FiFile className="w-3 h-3" />
+                                {resource.files?.length || 0} files
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <FiDownload className="w-3 h-3" />
+                                {resource.downloads || 0}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Subject & Class Column */}
+                      <td className="py-4 px-6">
+                        <div className="space-y-2">
+                          <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
+                            {resource.subject || 'General'}
+                          </span>
+                          {resource.className && (
+                            <p className="text-xs text-gray-600">
+                              Class: <span className="font-medium">{resource.className}</span>
+                            </p>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Type & Access Column */}
+                      <td className="py-4 px-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                              resource.type?.toLowerCase() === 'pdf' ? 'bg-red-500' :
+                              resource.type?.toLowerCase() === 'video' ? 'bg-blue-500' :
+                              resource.type?.toLowerCase() === 'document' ? 'bg-green-500' :
+                              resource.type?.toLowerCase() === 'image' ? 'bg-purple-500' :
+                              'bg-gray-500'
+                            }`} />
+                            <span className="text-xs font-medium text-gray-900 capitalize">
+                              {resource.type || 'File'}
+                            </span>
+                          </div>
+                          <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium ${
+                            resource.accessLevel === 'student' ? 'bg-blue-100 text-blue-700' :
+                            resource.accessLevel === 'teacher' ? 'bg-green-100 text-green-700' :
+                            resource.accessLevel === 'admin' ? 'bg-purple-100 text-purple-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {resource.accessLevel || 'student'} access
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Teacher Column */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                            <FiUserCheck className="w-4 h-4 text-gray-600" />
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {resource.teacher || 'Admin'}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Status Column */}
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          resource.isActive === true
+                            ? 'bg-green-100 text-green-800 border border-green-200'
+                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        }`}>
+                          {resource.isActive === true ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleView(resource)}
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            title="View Details"
+                          >
+                            <FiEye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(resource)}
+                            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                            title="Edit Resource"
+                          >
+                            <FiEdit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(resource)}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="Delete Resource"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
+
+            {/* Table Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredResources.length)} of {filteredResources.length} resources
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                  >
+                    <FiChevronLeft />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
+                    .map((page, index, array) => (
+                      <div key={page} className="flex items-center">
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                        <button
+                          onClick={() => paginate(page)}
+                          className={`px-3 py-1 rounded-lg ${currentPage === page ? 'bg-blue-600 text-white' : 'text-gray-700'}`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    ))}
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                  >
+                    <FiChevronRight />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       ) : (
         /* Empty State */
