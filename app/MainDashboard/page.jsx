@@ -989,7 +989,7 @@ const handleLogout = () => {
 
   return (
     < >
-    <div className="zoom: 85%;">
+    <div className="zoom: 75%;">
     
       {/* Add Sonner Toaster */}
       <Toaster 
