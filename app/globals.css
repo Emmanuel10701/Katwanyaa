@@ -16,10 +16,7 @@
 
 body {
   /* Apply the zoom effect */
-  zoom: 85%;
-  
-  /* Use @apply so the browser understands the Tailwind class */
-  @apply min-h-screen;
+  zoom: 85%;  
 }
 
 
