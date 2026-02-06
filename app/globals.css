@@ -15,14 +15,12 @@
 }
 
 body {
- 
   /* Apply the zoom effect */
-  transform: scale(0.75);
+  zoom: 75%;
   
-  
-
+  /* Use @apply so the browser understands the Tailwind class */
+  @apply min-h-screen;
 }
-
 
 
 
