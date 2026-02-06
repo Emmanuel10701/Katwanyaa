@@ -2909,30 +2909,56 @@ const loadStatistics = async () => {
 
 
 
-
-  // Helper function for protected operations only
+// Helper function for protected operations only
 const getAuthTokensForProtectedOps = () => {
-  const adminToken = localStorage.getItem('admin_token');
-  const deviceToken = localStorage.getItem('device_token');
-  
-  if (!adminToken || !deviceToken) {
-    throw new Error('Authentication required for this action. Please login.');
+  try {
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    console.log('Tokens retrieved:', { 
+      adminToken: adminToken ? 'Present' : 'Missing',
+      deviceToken: deviceToken ? 'Present' : 'Missing'
+    });
+    
+    if (!adminToken || !deviceToken) {
+      throw new Error('Authentication required for this action. Please login.');
+    }
+    
+    return { adminToken, deviceToken };
+  } catch (error) {
+    console.error('Token retrieval error:', error);
+    throw new Error('Failed to retrieve authentication tokens. Please login again.');
   }
-  
-  return { adminToken, deviceToken };
 };
-
+// Helper function for GET requests (no auth required)
 // Helper function for GET requests (no auth required)
 const getAuthHeaders = (isProtected = false) => {
   if (isProtected) {
-    const { adminToken, deviceToken } = getAuthTokensForProtectedOps();
-    return {
-      'Authorization': `Bearer ${adminToken}`,
-      'x-device-token': deviceToken
-    };
+    try {
+      const { adminToken, deviceToken } = getAuthTokensForProtectedOps();
+      
+      console.log('Creating auth headers with:', {
+        hasAdminToken: !!adminToken,
+        hasDeviceToken: !!deviceToken
+      });
+      
+      return {
+        'Authorization': `Bearer ${adminToken}`,
+        'x-device-token': deviceToken,
+        'Content-Type': 'application/json'
+      };
+    } catch (error) {
+      console.error('Failed to create auth headers:', error);
+      throw error; // Re-throw to be caught by calling function
+    }
   }
-  return {}; // No headers for GET requests
+  
+  // For non-protected requests
+  return {
+    'Content-Type': 'application/json'
+  };
 };
+
 
 const handleAuthError = (error) => {
   console.error('Authentication error:', error);
@@ -2942,7 +2968,6 @@ const handleAuthError = (error) => {
   localStorage.removeItem('admin_token');
   localStorage.removeItem('device_token');
 };
-
 
 
 
@@ -2963,6 +2988,7 @@ const checkDuplicates = async () => {
         'x-device-token': tokens.deviceToken
       };
     } catch (authError) {
+      console.error('Authentication failed:', authError);
       showNotification(authError.message, 'error');
       setValidationLoading(false);
       return;
@@ -2973,34 +2999,51 @@ const checkDuplicates = async () => {
     formData.append('file', file);
     formData.append('checkDuplicates', 'true');
     
+    console.log('uploadStrategy:', uploadStrategy);
+    console.log('uploadMode value:', uploadStrategy.uploadMode);
+    
     formData.append('uploadType', uploadStrategy.uploadMode);
     formData.append('term', uploadStrategy.term);
     formData.append('academicYear', uploadStrategy.academicYear);
     
     if (uploadStrategy.uploadMode === 'new') {
+      console.log('Selected forms:', uploadStrategy.selectedForms);
       formData.append('forms', JSON.stringify(uploadStrategy.selectedForms));
     } else if (uploadStrategy.uploadMode === 'update') {
+      console.log('Target form:', uploadStrategy.targetForm);
       formData.append('targetForm', uploadStrategy.targetForm);
     }
 
+    // Debug: show all form data entries
+    console.log('FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
+
+    console.log('Sending request with headers:', authHeaders);
+
     const response = await fetch('/api/results', {
       method: 'POST',
-      headers: authHeaders,
+      headers: authHeaders,  // <-- IMPORTANT: Add headers here
       body: formData
     });
 
+    console.log('Response status:', response.status);
+    
     if (response.status === 401 || response.status === 403) {
+      const errorData = await response.json();
+      console.error('Authentication error from server:', errorData);
       throw new Error('Authentication failed. Please login again.');
     }
 
     const data = await response.json();
+    console.log('Response:', data);
     
     if (data.success) {
       if (data.duplicates && data.duplicates.length > 0) {
         setDuplicates(data.duplicates);
         setShowValidationModal(true);
       } else {
-        // No duplicates, proceed with upload
         proceedWithUpload('skip');
       }
     } else {
@@ -3012,7 +3055,7 @@ const checkDuplicates = async () => {
     if (error.message.includes('Authentication') || error.message.includes('login')) {
       handleAuthError(error);
     } else {
-      showNotification('Failed to validate file', 'error');
+      showNotification('Failed to validate file: ' + error.message, 'error');
     }
   } finally {
     setValidationLoading(false);
@@ -3032,6 +3075,7 @@ const proceedWithUpload = async (duplicateAction = 'skip') => {
       'x-device-token': tokens.deviceToken
     };
   } catch (authError) {
+    console.error('Authentication failed:', authError);
     showNotification(authError.message, 'error');
     setUploading(false);
     return;
@@ -3052,9 +3096,11 @@ const proceedWithUpload = async (duplicateAction = 'skip') => {
   }
 
   try {
+    console.log('Uploading with headers:', authHeaders);
+    
     const response = await fetch('/api/results', {
       method: 'POST',
-      headers: authHeaders,
+      headers: authHeaders,  // <-- IMPORTANT: Add headers here
       body: formData
     });
 
@@ -3107,7 +3153,6 @@ const proceedWithUpload = async (duplicateAction = 'skip') => {
     setUploading(false);
   }
 };
-
 
 
   const handleUploadWithStrategy = () => {
