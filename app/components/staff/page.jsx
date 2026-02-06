@@ -1756,15 +1756,58 @@ export default function StaffManager() {
 
   const roles = ['Principal', 'Deputy Principal', 'Teacher', 'BOM Member', 'Support Staff', 'Librarian', 'Counselor'];
   const departments = ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Administration', 'Sports', 'Guidance'];
+
+
+
+  useEffect(() => {
+  // Check authentication on component mount
+  const checkAuth = () => {
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    console.log('Staff Manager Auth check:', {
+      hasAdminToken: !!adminToken,
+      hasDeviceToken: !!deviceToken
+    });
+    
+    // You can optionally hide action buttons if not authenticated
+    // or show a login prompt
+  };
+  
+  checkAuth();
+  fetchStaff();
+}, []);
+
+
+
+
+
+// Helper function to get authentication headers
+const getAuthHeaders = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  
+  if (!adminToken || !deviceToken) {
+    throw new Error('Authentication required');
+  }
+  
+  return {
+    'Authorization': `Bearer ${adminToken}`,
+    'x-device-token': deviceToken
+  };
+};
+
 const fetchStaff = async (isRefresh = false) => {
   try {
     if (isRefresh) {
-      setRefreshing(true); // Set refreshing to true for button spinner
+      setRefreshing(true);
     } else {
-      setLoading(true); // Set loading to true for initial load
+      setLoading(true);
     }
     
+    // ✅ PUBLIC ENDPOINT - No authentication needed
     const response = await fetch('/api/staff');
+    
     const data = await response.json();
     
     if (data.success) {
@@ -1778,17 +1821,20 @@ const fetchStaff = async (isRefresh = false) => {
     }
   } catch (error) {
     console.error('Error fetching staff:', error);
+    showNotification('error', 'Error', 'Error fetching staff data');
     setStaff([]);
     setFilteredStaff([]);
-    showNotification('error', 'Error', 'Error fetching staff data');
   } finally {
     if (isRefresh) {
-      setRefreshing(false); // Turn off refreshing spinner
+      setRefreshing(false);
     } else {
-      setLoading(false); // Turn off loading spinner
+      setLoading(false);
     }
   }
 };
+
+
+
 
   useEffect(() => {
     fetchStaff();
@@ -1863,67 +1909,96 @@ const fetchStaff = async (isRefresh = false) => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    try {
-      if (deleteType === 'single' && staffToDelete) {
-        setBulkDeleting(true);
-        const response = await fetch(`/api/staff/${staffToDelete.id}`, {
-          method: 'DELETE',
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          await fetchStaff();
-          showNotification('success', 'Deleted', `Staff member "${staffToDelete.name}" deleted successfully!`);
-        } else {
-          showNotification('error', 'Delete Failed', result.error || 'Failed to delete staff member');
-        }
-      } else if (deleteType === 'bulk') {
-        setBulkDeleting(true);
-        const deletedIds = [];
-        const failedIds = [];
-        
-        for (const staffId of selectedPosts) {
-          try {
-            const response = await fetch(`/api/staff/${staffId}`, {
-              method: 'DELETE',
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-              deletedIds.push(staffId);
-            } else {
-              console.error(`Failed to delete staff member ${staffId}:`, result.error);
-              failedIds.push(staffId);
-            }
-          } catch (error) {
-            console.error(`Error deleting staff member ${staffId}:`, error);
+const confirmDelete = async () => {
+  try {
+    // Add authentication headers
+    const headers = getAuthHeaders();
+    
+    if (deleteType === 'single' && staffToDelete) {
+      setBulkDeleting(true);
+      const response = await fetch(`/api/staff/${staffToDelete.id}`, {
+        method: 'DELETE',
+        headers: headers, // Add authentication headers
+      });
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        throw new Error('Session expired. Please login again.');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        await fetchStaff();
+        showNotification('success', 'Deleted', `Staff member "${staffToDelete.name}" deleted successfully!`);
+      } else {
+        showNotification('error', 'Delete Failed', result.error || 'Failed to delete staff member');
+      }
+    } else if (deleteType === 'bulk') {
+      setBulkDeleting(true);
+      const deletedIds = [];
+      const failedIds = [];
+      
+      for (const staffId of selectedPosts) {
+        try {
+          const response = await fetch(`/api/staff/${staffId}`, {
+            method: 'DELETE',
+            headers: headers, // Add authentication headers
+          });
+          
+          // Handle authentication errors
+          if (response.status === 401) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            throw new Error('Session expired. Please login again.');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            deletedIds.push(staffId);
+          } else {
+            console.error(`Failed to delete staff member ${staffId}:`, result.error);
             failedIds.push(staffId);
           }
-        }
-        
-        await fetchStaff();
-        setSelectedPosts(new Set());
-        
-        if (deletedIds.length > 0 && failedIds.length === 0) {
-          showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} staff member(s)`);
-        } else if (deletedIds.length > 0 && failedIds.length > 0) {
-          showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} staff member(s), failed to delete ${failedIds.length}`);
-        } else {
-          showNotification('error', 'Delete Failed', 'Failed to delete selected staff members');
+        } catch (error) {
+          console.error(`Error deleting staff member ${staffId}:`, error);
+          failedIds.push(staffId);
         }
       }
-    } catch (error) {
-      console.error('Error during deletion:', error);
-      showNotification('error', 'Error', 'Error during deletion');
-    } finally {
-      setBulkDeleting(false);
-      setShowDeleteModal(false);
-      setStaffToDelete(null);
+      
+      await fetchStaff();
+      setSelectedPosts(new Set());
+      
+      if (deletedIds.length > 0 && failedIds.length === 0) {
+        showNotification('success', 'Bulk Delete Successful', `Successfully deleted ${deletedIds.length} staff member(s)`);
+      } else if (deletedIds.length > 0 && failedIds.length > 0) {
+        showNotification('warning', 'Partial Success', `Deleted ${deletedIds.length} staff member(s), failed to delete ${failedIds.length}`);
+      } else {
+        showNotification('error', 'Delete Failed', 'Failed to delete selected staff members');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Error during deletion:', error);
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Error', 'Error during deletion');
+    }
+  } finally {
+    setBulkDeleting(false);
+    setShowDeleteModal(false);
+    setStaffToDelete(null);
+  }
+};
 
   const handlePostSelect = (staffId, selected) => {
     setSelectedPosts(prev => { 
@@ -1935,17 +2010,29 @@ const fetchStaff = async (isRefresh = false) => {
 const handleSubmit = async (formData, id) => {
   setSaving(true);
   try {
+    // Add authentication headers
+    const headers = getAuthHeaders();
+    
     let response;
     if (id) {
       response = await fetch(`/api/staff/${id}`, {
         method: 'PUT',
+        headers: headers, // Add authentication headers
         body: formData,
       });
     } else {
       response = await fetch('/api/staff', {
         method: 'POST',
+        headers: headers, // Add authentication headers
         body: formData,
       });
+    }
+
+    // Handle authentication errors
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      throw new Error('Session expired. Please login again.');
     }
 
     const result = await response.json();
@@ -1967,11 +2054,24 @@ const handleSubmit = async (formData, id) => {
     }
   } catch (error) {
     console.error('Error saving staff member:', error);
-    showNotification('error', 'Error', 'Error saving staff member');
+    
+    // Handle authentication errors
+    if (error.message.includes('Authentication required') || 
+        error.message.includes('Session expired')) {
+      showNotification('error', 'Authentication Required', 'Please login to continue');
+      setTimeout(() => {
+        window.location.href = '/pages/adminLogin';
+      }, 2000);
+    } else {
+      showNotification('error', 'Error', 'Error saving staff member');
+    }
   } finally {
     setSaving(false);
   }
 };
+
+
+
 
   useEffect(() => {
     const calculatedStats = {

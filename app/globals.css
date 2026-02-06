@@ -15,6 +15,11 @@
 }
 
 body {
+  zoom: 0.6; /* Sets visual scaling to 60% */
+}
+
+
+body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
