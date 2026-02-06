@@ -14,8 +14,50 @@
   }
 }
 
+/* 1. Reset html to provide a solid base */
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc; /* Use your specific background color here */
+  overflow: hidden; /* Prevents double scrollbars on the window */
+}
+/* 1. Global Scale: This handles the 75% zoom effect for everything */
 body {
-  zoom: 0.75; /* Sets visual scaling to 60% */
+  margin: 0;
+  padding: 0;
+  
+  /* Scale the visual output */
+  transform: scale(0.75);
+  transform-origin: top left;
+
+  /* MATH FIX: 
+     Scale (0.75) * Dimension (133.333%) = 100% of the screen.
+     This removes the empty space at the bottom and sides.
+  */
+  width: 133.333vw !important;
+  height: 133.333vh !important;
+
+  /* Prevent double scrollbars and handle overflow */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 2. Dashboard Specific: Use this on your main container */
+.dashboard-viewport {
+  /* This ensures the container stretches to the bottom of the scaled body */
+  min-height: 100%;
+  width: 100%;
+  
+  /* Keeps layout logic intact */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3. Ensuring backgrounds stay consistent */
+html {
+  height: 100%;
+  background-color: #f8fafc; /* Adjust to match your gray-50 / blue-50 gradient base */
 }
 
 
