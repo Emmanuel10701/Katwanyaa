@@ -29,6 +29,7 @@ import {
   FiSend,
   FiTarget,
   FiBarChart,
+  FiEdit2,
   FiPercent,
   FiStar,
   FiBookOpen,

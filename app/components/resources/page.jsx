@@ -30,6 +30,7 @@ import {
   FiFileText,
   FiDownload,
   FiSend,
+  FiEdit2,
   FiTarget,
   FiBarChart,
   FiPercent,
