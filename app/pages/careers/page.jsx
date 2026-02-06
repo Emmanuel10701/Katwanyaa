@@ -654,7 +654,7 @@ const ModernEmptyState = ({ onClearFilters }) => {
       </h3>
       
       <p className="text-slate-500 text-[9px] md:text-lg mb-6 md:mb-8 max-w-[240px] md:max-w-md mx-auto leading-relaxed">
-        Currently no opportunities available at <span className="text-slate-900 font-bold">Mary Immaculate</span>.
+        Currently no opportunities available at <span className="text-slate-900 font-bold">Katwanyaa High School</span>.
       </p>
 
       <div className="flex justify-center mb-8">

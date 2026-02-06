@@ -173,7 +173,7 @@ const jsonLd = {
       title: "Academic Excellence",
       subtitle: "Redefined Through Innovation",
       gradient: "from-blue-500 via-cyan-400 to-purple-600",
-      description: "At Mary Immaculate Girls Secondary School, we're pioneering a new era of education. With a 94% KCSE success rate and state-of-the-art STEM facilities, we're not just teaching—we're inspiring the next generation of leaders and innovators.",
+      description: "At Katwanyaa High School, we're pioneering a new era of education. With a 94% KCSE success rate and state-of-the-art STEM facilities, we're not just teaching—we're inspiring the next generation of leaders and innovators.",
       background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
       image: "/student.jpg",
       stats: { 
