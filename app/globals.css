@@ -16,7 +16,7 @@
 
 body {
   /* Apply the zoom effect */
-  zoom: 83%;
+  zoom: 78%;
   
   /* Use @apply so the browser understands the Tailwind class */
 margin-bottom: 0 !important;
