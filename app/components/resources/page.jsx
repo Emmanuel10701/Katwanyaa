@@ -829,24 +829,7 @@ function ModernResourceModal({ onClose, onSave, resource, loading }) {
 
 
   // Add this function inside ResourcesManager component
-const getAuthHeaders = () => {
-  const adminToken = localStorage.getItem('admin_token');
-  const deviceToken = localStorage.getItem('device_token');
-  
-  console.log('🔐 Getting auth headers:', {
-    hasAdminToken: !!adminToken,
-    hasDeviceToken: !!deviceToken
-  });
-  
-  if (!adminToken || !deviceToken) {
-    throw new Error('Authentication required. Please login to perform this action.');
-  }
-  
-  return {
-    'x-admin-token': adminToken,
-    'x-device-token': deviceToken
-  };
-};
+
 
 
 
@@ -1785,6 +1768,27 @@ export default function ResourcesManager() {
       return newSet; 
     });
   };
+
+
+
+  const getAuthHeaders = () => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  
+  console.log('🔐 Getting auth headers:', {
+    hasAdminToken: !!adminToken,
+    hasDeviceToken: !!deviceToken
+  });
+  
+  if (!adminToken || !deviceToken) {
+    throw new Error('Authentication required. Please login to perform this action.');
+  }
+  
+  return {
+    'x-admin-token': adminToken,
+    'x-device-token': deviceToken
+  };
+};
 
   // NEW: Bulk delete function
   const handleBulkDelete = () => {
