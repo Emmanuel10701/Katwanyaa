@@ -554,19 +554,28 @@ export async function PUT(request, { params }) {
       }
     }
 
-    // Prepare update data
+    // CRITICAL FIX: Prepare update data WITHOUT spreading original data
+    // This prevents passing the string date directly to Prisma
     const updateData = {
-      ...(data.admissionNumber && { admissionNumber: data.admissionNumber }),
-      ...(data.term && { term: data.term }),
-      ...(data.academicYear && { academicYear: data.academicYear }),
+      // Only include fields that are actually being updated
+      ...(data.admissionNumber !== undefined && { admissionNumber: data.admissionNumber }),
+      ...(data.term !== undefined && { term: data.term }),
+      ...(data.academicYear !== undefined && { academicYear: data.academicYear }),
       amount,
       amountPaid,
       balance,
       paymentStatus,
-      ...(data.dueDate !== undefined && { dueDate: parseDateSafely(data.dueDate) }),
+      // Convert dueDate string to Date object if provided
+      ...(data.dueDate !== undefined && { 
+        dueDate: data.dueDate ? new Date(data.dueDate) : null 
+      }),
       ...(data.isActive !== undefined && { isActive: data.isActive }),
       updatedAt: new Date()
     };
+
+    console.log('📝 Update data:', updateData);
+    console.log('📝 dueDate value:', updateData.dueDate);
+    console.log('📝 dueDate type:', typeof updateData.dueDate);
 
     const updatedFeeBalance = await prisma.feeBalance.update({
       where: { id: feeBalanceId },
@@ -594,6 +603,11 @@ export async function PUT(request, { params }) {
     });
   } catch (error) {
     console.error('Update fee balance error:', error);
+    console.error('Error details:', {
+      code: error.code,
+      message: error.message,
+      meta: error.meta
+    });
     
     if (error.code === 'P2025') {
       return NextResponse.json(
