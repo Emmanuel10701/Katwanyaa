@@ -1075,10 +1075,20 @@ const handleSaveAdmin = async (e) => {
               <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
                 <Shield className="text-2xl" />
               </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold">Admin Management Dashboard</h1>
-                <p className="text-blue-100 opacity-90 mt-2 text-lg">Manage system administrators and permissions</p>
-              </div>
+           <div>
+  <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-900">
+    Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+      Management Dashboard
+    </span>
+  </h1>
+  
+  <p className="mt-4 text-slate-600 text-lg lg:text-xl font-medium max-w-3xl leading-relaxed">
+    Access the central authority hub to oversee system custodians. Regulate 
+    administrative privileges, monitor security protocols, and orchestrate 
+    high-level permissions to ensure total platform integrity and seamless 
+    governance.
+  </p>
+</div>
             </div>
           </div>
           
