@@ -958,7 +958,7 @@ if (!student || !token) {
       group
     "
   >
-    <span>Portal</span>
+    <span>Access Portal</span>
     <FaArrowRight className="w-3 h-3 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
   </button>
   
@@ -980,7 +980,7 @@ if (!student || !token) {
       transition-all active:scale-95
     "
   >
-    Help
+    Help Desk
   </button>
 </div>
             </div>
