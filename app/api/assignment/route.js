@@ -128,9 +128,8 @@ const authenticateRequest = (req) => {
   };
 };
 
-// ==================== CLOUDINARY HELPERS ====================
-// FIXED: Same upload logic as [id].js for file extensions
-const uploadFileToCloudinary = async (file, folder = "assignments") => {
+// ==================== CLOUDINARY HELPERS (FIXED FOR EXTENSIONS) ====================
+const uploadFileToCloudinary = async (file, folder = "files") => {
   if (!file?.name || file.size === 0) return null;
 
   try {
@@ -139,25 +138,24 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    // FIXED: Keep the extension in the filename (like school-documents API)
+    const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
+    // Determine resource type
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     const isPDF = fileExtension === '.pdf';
     const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
     
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
-    const format = fileExtension.substring(1);
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: `school_assignments/${folder}`,
-        public_id: `${timestamp}-${sanitizedFileName}`,
+        folder: `school/assignments/${folder}`, // FIXED: Changed to school/assignments/files like school-documents
+        public_id: `${timestamp}-${sanitizedFileName}`, // FIXED: Includes extension
         overwrite: false,
-        format: format,
-        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov']
+        // REMOVED: format parameter - let Cloudinary auto-detect from filename
       };
 
       if (isImage) {
@@ -175,18 +173,21 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
       const stream = cloudinary.uploader.upload_stream(
         uploadOptions,
         (error, result) => {
-          if (error) reject(error);
-          else {
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
             let fileType = 'document';
             if (isImage) fileType = 'image';
             else if (isVideo) fileType = 'video';
             else if (isPDF) fileType = 'pdf';
             else if (isDocument) fileType = 'document';
 
-            console.log('Assignment file uploaded:', {
+            console.log('✅ Assignment file uploaded (with extension):', {
               url: result.secure_url,
               extension: fileExtension,
-              format: result.format
+              hasExtension: result.secure_url.includes(fileExtension),
+              publicId: result.public_id
             });
 
             resolve({
@@ -210,7 +211,7 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files, folder = "assignments") => {
+const uploadMultipleFilesToCloudinary = async (files, folder = "files") => {
   if (!files || files.length === 0) return [];
   
   const uploadedFiles = [];
@@ -234,8 +235,12 @@ const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
-    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
-    if (!urlMatch) return;
+    // Extract full public ID including extension (FIXED for new folder structure)
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+)/);
+    if (!urlMatch) {
+      console.warn(`Could not extract public ID from URL: ${fileUrl}`);
+      return;
+    }
     
     const publicId = urlMatch[1];
     const isVideo = fileUrl.includes('/video/') || 
@@ -269,6 +274,7 @@ const deleteFilesFromCloudinary = async (fileUrls) => {
   }
 };
 
+// FIXED: Get file info from URL with proper extension extraction
 const getFileInfoFromUrl = (url) => {
   if (!url) return null;
   
@@ -276,23 +282,51 @@ const getFileInfoFromUrl = (url) => {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     
+    // Extract the public ID and reconstruct filename
     const pathParts = pathname.split('/');
     const lastPart = pathParts[pathParts.length - 1];
     
-    // Extract filename with extension
-    const filenameMatch = lastPart.match(/^\d+-(.+)$/);
+    // Get the public ID (timestamp-filename.extension)
+    const publicIdMatch = lastPart.match(/^(\d+)-(.*)$/);
     let fileName = lastPart;
+    let extension = '';
     
-    if (filenameMatch) {
-      fileName = filenameMatch[1];
+    if (publicIdMatch) {
+      const timestamp = publicIdMatch[1];
+      const nameWithExt = publicIdMatch[2];
+      
+      // Find the extension
+      const extensionMatch = nameWithExt.match(/\.([a-zA-Z0-9]+)$/);
+      if (extensionMatch) {
+        extension = '.' + extensionMatch[1].toLowerCase();
+        fileName = nameWithExt.replace(/^\d+-/, ''); // Remove timestamp prefix
+      } else {
+        // If no extension in URL, check format from Cloudinary response
+        if (url.includes('.pdf')) extension = '.pdf';
+        else if (url.includes('.docx')) extension = '.docx';
+        else if (url.includes('.doc')) extension = '.doc';
+        else if (url.includes('.jpg') || url.includes('.jpeg')) extension = '.jpg';
+        else if (url.includes('.png')) extension = '.png';
+        else if (url.includes('.mp4')) extension = '.mp4';
+        else if (url.includes('.mp3')) extension = '.mp3';
+        else if (url.includes('.txt')) extension = '.txt';
+        else if (url.includes('.xlsx')) extension = '.xlsx';
+        else if (url.includes('.csv')) extension = '.csv';
+      }
+    } else {
+      // Fallback: extract extension from URL
+      const extensionMatch = lastPart.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+      if (extensionMatch) {
+        extension = '.' + extensionMatch[1].toLowerCase();
+        fileName = lastPart;
+      }
     }
     
-    // Extract extension
-    const extensionMatch = fileName.match(/\.([a-zA-Z0-9]+)$/);
-    const extension = extensionMatch ? '.' + extensionMatch[1].toLowerCase() : '';
+    // Decode URI component to get original filename
+    fileName = decodeURIComponent(fileName);
     
-    // Determine file type
-    const getFileType = (ext) => {
+    // Determine file type from extension
+    const getFileTypeFromExtension = (ext) => {
       const typeMap = {
         '.pdf': 'PDF Document',
         '.doc': 'Word Document',
@@ -302,6 +336,7 @@ const getFileInfoFromUrl = (url) => {
         '.jpeg': 'Image',
         '.png': 'Image',
         '.gif': 'Image',
+        '.webp': 'Image',
         '.mp4': 'Video',
         '.mov': 'Video',
         '.avi': 'Video',
@@ -320,12 +355,14 @@ const getFileInfoFromUrl = (url) => {
       return typeMap[ext] || 'Document';
     };
 
+    const fileType = getFileTypeFromExtension(extension);
+    
     return {
       url,
-      name: decodeURIComponent(fileName),
-      fileName: decodeURIComponent(fileName),
-      extension,
-      fileType: getFileType(extension),
+      name: fileName,
+      fileName: fileName,
+      extension: extension,
+      fileType: fileType,
       storageType: 'cloudinary'
     };
   } catch (error) {
@@ -349,7 +386,7 @@ const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-// FIXED: Clean assignment response
+// FIXED: Clean assignment response with properly formatted files
 const cleanAssignmentResponse = (assignment) => {
   if (!assignment) return null;
   
@@ -358,7 +395,7 @@ const cleanAssignmentResponse = (assignment) => {
     if (fileInfo) {
       return {
         ...fileInfo,
-        formattedSize: formatFileSize(0)
+        formattedSize: formatFileSize(0) // Size not available from URL alone
       };
     }
     return null;
@@ -369,7 +406,7 @@ const cleanAssignmentResponse = (assignment) => {
     if (fileInfo) {
       return {
         ...fileInfo,
-        formattedSize: formatFileSize(0)
+        formattedSize: formatFileSize(0) // Size not available from URL alone
       };
     }
     return null;
@@ -475,7 +512,7 @@ export async function POST(request) {
       }
     }
 
-    // Upload files to Cloudinary
+    // Upload files to Cloudinary (NOW WITH EXTENSIONS)
     const newAssignmentFiles = formData.getAll("assignmentFiles");
     const newAttachments = formData.getAll("attachments");
     
@@ -486,7 +523,12 @@ export async function POST(request) {
       try {
         const uploadedFiles = await uploadMultipleFilesToCloudinary(newAssignmentFiles, "assignment-files");
         assignmentFiles = uploadedFiles.map(f => f.url).filter(url => url);
-        console.log('✅ Uploaded assignment files:', assignmentFiles.length);
+        console.log('✅ Uploaded assignment files (with extensions):', assignmentFiles.length);
+        
+        // Log file URLs to verify extensions
+        uploadedFiles.forEach((file, index) => {
+          console.log(`  File ${index + 1}: ${file.url} - Extension: ${file.extension}`);
+        });
       } catch (error) {
         console.error('❌ Error uploading assignment files:', error);
       }
@@ -496,7 +538,7 @@ export async function POST(request) {
       try {
         const uploadedFiles = await uploadMultipleFilesToCloudinary(newAttachments, "attachments");
         attachments = uploadedFiles.map(f => f.url).filter(url => url);
-        console.log('✅ Uploaded attachments:', attachments.length);
+        console.log('✅ Uploaded attachments (with extensions):', attachments.length);
       } catch (error) {
         console.error('❌ Error uploading attachments:', error);
       }

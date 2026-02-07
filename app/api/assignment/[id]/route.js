@@ -127,10 +127,9 @@ const authenticateRequest = (req) => {
     deviceInfo: validationResult.deviceInfo
   };
 };
-// ==================== END TOKEN VERIFICATION ====================
 
 // ==================== CLOUDINARY HELPERS (FIXED FOR EXTENSIONS) ====================
-const uploadFileToCloudinary = async (file, folder = "assignments") => {
+const uploadFileToCloudinary = async (file, folder = "files") => {
   if (!file?.name || file.size === 0) return null;
 
   try {
@@ -140,11 +139,10 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     
-    // Sanitize filename (preserve extension)
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    // FIXED: Keep the extension in the filename
+    const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
-    // Determine resource type and format
+    // Determine resource type
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     const isPDF = fileExtension === '.pdf';
@@ -152,16 +150,14 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
     const isAudio = file.type.startsWith('audio/');
     
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
-    const format = fileExtension.substring(1); // Remove the dot
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: `school_assignments/${folder}`,
-        public_id: `${timestamp}-${sanitizedFileName}`,
+        folder: `school/assignments/${folder}`, // FIXED: Changed to school/assignments/files
+        public_id: `${timestamp}-${sanitizedFileName}`, // FIXED: Includes extension
         overwrite: false,
-        format: format, // Explicitly set format
-        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav']
+        // REMOVED: format parameter - let Cloudinary auto-detect from filename
       };
 
       // Add transformations for images only
@@ -192,11 +188,12 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
             else if (isDocument) fileType = 'document';
             else if (isAudio) fileType = 'audio';
 
-            console.log('Assignment file uploaded:', {
+            console.log('✅ Assignment file uploaded (with extension):', {
               url: result.secure_url,
               format: result.format,
               publicId: result.public_id,
-              originalName
+              originalName,
+              hasExtension: result.secure_url.includes(fileExtension)
             });
 
             resolve({
@@ -222,7 +219,7 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files, folder = "assignments") => {
+const uploadMultipleFilesToCloudinary = async (files, folder = "files") => {
   if (!files || files.length === 0) return [];
   
   const uploadedFiles = [];
@@ -242,11 +239,13 @@ const uploadMultipleFilesToCloudinary = async (files, folder = "assignments") =>
   return uploadedFiles;
 };
 
+// FIXED: Delete function for new folder structure
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
-    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
+    // Extract full public ID including extension
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+)/);
     if (!urlMatch) {
       console.warn(`Could not extract public ID from URL: ${fileUrl}`);
       return;
@@ -291,7 +290,7 @@ const deleteFilesFromCloudinary = async (fileUrls) => {
   }
 };
 
-// FIXED: Get file info from URL with proper extension extraction
+// FIXED: Get file info from URL - updated regex to handle new folder structure
 const getFileInfoFromUrl = (url) => {
   if (!url) return null;
   
@@ -324,6 +323,12 @@ const getFileInfoFromUrl = (url) => {
         else if (url.includes('.doc')) extension = '.doc';
         else if (url.includes('.jpg') || url.includes('.jpeg')) extension = '.jpg';
         else if (url.includes('.png')) extension = '.png';
+        else if (url.includes('.gif')) extension = '.gif';
+        else if (url.includes('.mp4')) extension = '.mp4';
+        else if (url.includes('.mp3')) extension = '.mp3';
+        else if (url.includes('.txt')) extension = '.txt';
+        else if (url.includes('.xlsx')) extension = '.xlsx';
+        else if (url.includes('.csv')) extension = '.csv';
       }
     } else {
       // Fallback: extract extension from URL
@@ -566,6 +571,7 @@ export async function PUT(request, { params }) {
         const filesToRemove = JSON.parse(assignmentFilesToRemoveStr);
         if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
           await deleteFilesFromCloudinary(filesToRemove);
+          updatedAssignmentFiles = updatedAssignmentFiles.filter(file => !filesToRemove.includes(file));
           console.log('✅ Removed assignment files from Cloudinary:', filesToRemove.length);
         }
       } catch (error) {
@@ -578,6 +584,7 @@ export async function PUT(request, { params }) {
         const filesToRemove = JSON.parse(attachmentsToRemoveStr);
         if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
           await deleteFilesFromCloudinary(filesToRemove);
+          updatedAttachments = updatedAttachments.filter(file => !filesToRemove.includes(file));
           console.log('✅ Removed attachments from Cloudinary:', filesToRemove.length);
         }
       } catch (error) {
@@ -598,7 +605,12 @@ export async function PUT(request, { params }) {
         const uploadedFiles = await uploadMultipleFilesToCloudinary(newAssignmentFiles, "assignment-files");
         const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
         updatedAssignmentFiles = [...updatedAssignmentFiles, ...newUrls];
-        console.log('✅ Added new assignment files:', newUrls.length);
+        console.log('✅ Added new assignment files (with extensions):', newUrls.length);
+        
+        // Log new file URLs
+        uploadedFiles.forEach((file, index) => {
+          console.log(`  New file ${index + 1}: ${file.url} - Extension: ${file.extension}`);
+        });
       } catch (error) {
         console.error('❌ Error uploading new assignment files:', error);
       }
@@ -609,7 +621,7 @@ export async function PUT(request, { params }) {
         const uploadedFiles = await uploadMultipleFilesToCloudinary(newAttachments, "attachments");
         const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
         updatedAttachments = [...updatedAttachments, ...newUrls];
-        console.log('✅ Added new attachments:', newUrls.length);
+        console.log('✅ Added new attachments (with extensions):', newUrls.length);
       } catch (error) {
         console.error('❌ Error uploading new attachments:', error);
       }
@@ -626,6 +638,11 @@ export async function PUT(request, { params }) {
     }
     
     console.log('💾 Saving to database...');
+    console.log('📊 Final file counts:', {
+      assignmentFiles: updatedAssignmentFiles.length,
+      attachments: updatedAttachments.length
+    });
+    
     const updatedAssignment = await prisma.assignment.update({
       where: { id: assignmentId },
       data: { 
@@ -710,12 +727,16 @@ export async function DELETE(request, { params }) {
     ];
     
     if (allFiles.length > 0) {
+      console.log(`🗑️ Deleting ${allFiles.length} files from Cloudinary...`);
       await deleteFilesFromCloudinary(allFiles);
+      console.log(`✅ Deleted ${allFiles.length} files from Cloudinary`);
     }
 
     await prisma.assignment.delete({ 
       where: { id: assignmentId } 
     });
+
+    console.log(`✅ Assignment deleted: ${assignment.title} (ID: ${assignmentId})`);
 
     return NextResponse.json({ 
       success: true, 
