@@ -266,6 +266,61 @@ const determineMainTypeFromFiles = (files) => {
   return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
 };
 
+const cleanResourceResponse = (resource) => {
+  if (!resource) return null;
+  
+  return {
+    id: resource.id,
+    title: resource.title,
+    subject: resource.subject,
+    className: resource.className,
+    teacher: resource.teacher,
+    description: resource.description,
+    category: resource.category,
+    type: resource.type,
+    files: (resource.files || []).map(file => ({
+      ...file,
+      formattedSize: formatFileSize(file.size || 0)
+    })),
+    accessLevel: resource.accessLevel,
+    uploadedBy: resource.uploadedBy,
+    downloads: resource.downloads,
+    isActive: resource.isActive,
+    createdAt: resource.createdAt,
+    updatedAt: resource.updatedAt
+  };
+};
+
+// Helper: Parse form data
+const parseFormData = (formData, existingResource = null) => {
+  const updateData = {
+    updatedAt: new Date()
+  };
+
+  // Text fields
+  const title = formData.get("title")?.trim();
+  const subject = formData.get("subject")?.trim();
+  const className = formData.get("className")?.trim();
+  const teacher = formData.get("teacher")?.trim();
+  const description = formData.get("description")?.trim();
+  const category = formData.get("category")?.trim();
+  const accessLevel = formData.get("accessLevel")?.trim();
+  const uploadedBy = formData.get("uploadedBy")?.trim();
+  const isActive = formData.get("isActive");
+
+  if (title !== null && title !== undefined) updateData.title = title;
+  if (subject !== null && subject !== undefined) updateData.subject = subject;
+  if (className !== null && className !== undefined) updateData.className = className;
+  if (teacher !== null && teacher !== undefined) updateData.teacher = teacher;
+  if (description !== null && description !== undefined) updateData.description = description;
+  if (category !== null && category !== undefined) updateData.category = category;
+  if (accessLevel !== null && accessLevel !== undefined) updateData.accessLevel = accessLevel;
+  if (uploadedBy !== null && uploadedBy !== undefined) updateData.uploadedBy = uploadedBy;
+  if (isActive !== null && isActive !== undefined) updateData.isActive = isActive === "true";
+
+  return updateData;
+};
+
 // ==================== API ENDPOINTS ====================
 
 // GET - Get single resource by ID (PUBLIC)
@@ -292,14 +347,10 @@ export async function GET(request, { params }) {
       }, { status: 404 });
     }
 
-    if (resource.files && Array.isArray(resource.files)) {
-      resource.files = resource.files.map(file => ({
-        ...file,
-        formattedSize: formatFileSize(file.size || 0)
-      }));
-    }
-
-    return NextResponse.json({ success: true, resource }, { status: 200 });
+    return NextResponse.json({ 
+      success: true, 
+      resource: cleanResourceResponse(resource) 
+    }, { status: 200 });
   } catch (error) {
     console.error("❌ Error fetching resource:", error);
     return NextResponse.json({ 
@@ -309,7 +360,7 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT - Update a resource (PROTECTED)
+// PUT - Update a resource completely (PROTECTED) - Like school-documents
 export async function PUT(request, { params }) {
   try {
     const auth = authenticateRequest(request);
@@ -317,7 +368,7 @@ export async function PUT(request, { params }) {
       return auth.response;
     }
 
-    console.log("✏️ PUT /api/resources/[id]");
+    console.log("✏️ PUT /api/resources/[id] - Full update");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
 
     const { id } = params;
@@ -341,13 +392,57 @@ export async function PUT(request, { params }) {
       }, { status: 404 });
     }
 
-    const contentType = request.headers.get("content-type") || "";
+    const formData = await request.formData();
     
-    if (contentType.includes("multipart/form-data")) {
-      return await handleFormUpdate(request, resourceId, existingResource);
-    } else {
-      return await handleJsonUpdate(request, resourceId);
+    // Delete old files from Cloudinary
+    if (existingResource.files && Array.isArray(existingResource.files)) {
+      const deletePromises = existingResource.files
+        .filter(file => file.url)
+        .map(file => deleteFileFromCloudinary(file.url));
+      
+      await Promise.all(deletePromises);
+      console.log(`🗑️ Deleted ${deletePromises.length} old files from Cloudinary`);
     }
+
+    // Upload new files
+    const files = formData.getAll("files");
+    const validFiles = Array.from(files).filter(file => file?.name && file.size > 0);
+    
+    let uploadedFiles = [];
+    if (validFiles.length > 0) {
+      console.log(`📤 Uploading ${validFiles.length} new file(s)...`);
+      uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
+      console.log(`✅ Uploaded ${uploadedFiles.length} file(s)`);
+    } else {
+      // If no new files, keep empty array
+      uploadedFiles = [];
+    }
+
+    // Parse form data
+    const updateData = parseFormData(formData, existingResource);
+    
+    // Update files and type
+    updateData.files = uploadedFiles;
+    if (uploadedFiles.length > 0) {
+      updateData.type = determineMainTypeFromFiles(uploadedFiles);
+    } else {
+      updateData.type = "document"; // Default type if no files
+    }
+
+    // Update the resource
+    const updatedResource = await prisma.resource.update({
+      where: { id: resourceId },
+      data: updateData,
+    });
+
+    console.log(`✅ Resource updated: ${updatedResource.title} (ID: ${updatedResource.id})`);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Resource updated successfully",
+      resource: cleanResourceResponse(updatedResource)
+    }, { status: 200 });
+
   } catch (error) {
     console.error("❌ Error updating resource:", error);
     return NextResponse.json({ 
@@ -357,149 +452,69 @@ export async function PUT(request, { params }) {
   }
 }
 
-async function handleJsonUpdate(request, id) {
+// PATCH - Partial update (e.g., update downloads) (PROTECTED)
+export async function PATCH(request, { params }) {
   try {
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    console.log("📥 PATCH /api/resources/[id] - Partial update");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
+
+    const { id } = params;
+    const resourceId = parseInt(id);
+    
+    if (isNaN(resourceId)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Invalid resource ID" 
+      }, { status: 400 });
+    }
+
+    const existingResource = await prisma.resource.findUnique({ 
+      where: { id: resourceId } 
+    });
+    
+    if (!existingResource) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Resource not found" 
+      }, { status: 404 });
+    }
+
     const body = await request.json();
-    const { id: _, createdAt, downloads, files, ...updateData } = body;
+    const { downloads, isActive } = body;
+
+    const updateData = {
+      updatedAt: new Date()
+    };
+
+    if (downloads !== undefined) {
+      updateData.downloads = downloads;
+    }
+    
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
 
     const resource = await prisma.resource.update({
-      where: { id: id },
-      data: { 
-        ...updateData, 
-        updatedAt: new Date() 
-      },
+      where: { id: resourceId },
+      data: updateData,
     });
 
     return NextResponse.json({ 
       success: true, 
       message: "Resource updated successfully", 
-      resource 
+      resource: cleanResourceResponse(resource)
     }, { status: 200 });
+
   } catch (error) {
-    console.error("❌ Error in JSON update:", error);
+    console.error("❌ Error in PATCH:", error);
     return NextResponse.json({ 
       success: false, 
       error: error.message 
-    }, { status: 500 });
-  }
-}
-
-async function handleFormUpdate(request, id, existingResource) {
-  try {
-    const formData = await request.formData();
-    const action = formData.get("action") || "update";
-
-    let updateData = {};
-
-    console.log("🔄 Update Action:", action);
-    console.log("📄 Existing resource files:", existingResource.files?.length || 0);
-
-    const title = formData.get("title")?.trim();
-    const subject = formData.get("subject")?.trim();
-    const className = formData.get("className")?.trim();
-    const teacher = formData.get("teacher")?.trim();
-    const description = formData.get("description")?.trim();
-    const category = formData.get("category")?.trim();
-    const accessLevel = formData.get("accessLevel")?.trim();
-    const uploadedBy = formData.get("uploadedBy")?.trim();
-    const isActive = formData.get("isActive");
-
-    if (title !== null && title !== undefined) updateData.title = title;
-    if (subject !== null && subject !== undefined) updateData.subject = subject;
-    if (className !== null && className !== undefined) updateData.className = className;
-    if (teacher !== null && teacher !== undefined) updateData.teacher = teacher;
-    if (description !== null && description !== undefined) updateData.description = description;
-    if (category !== null && category !== undefined) updateData.category = category;
-    if (accessLevel !== null && accessLevel !== undefined) updateData.accessLevel = accessLevel;
-    if (uploadedBy !== null && uploadedBy !== undefined) updateData.uploadedBy = uploadedBy;
-    if (isActive !== null && isActive !== undefined) updateData.isActive = isActive === "true";
-
-    const existingFilesStr = formData.get("existingFiles");
-    const filesToRemoveStr = formData.get("filesToRemove");
-    const newFiles = formData.getAll("files");
-
-    console.log("📁 File Update Details:");
-    console.log("- New files:", newFiles.length);
-
-    let finalFiles = [];
-
-    if (existingFilesStr) {
-      try {
-        const parsedFiles = JSON.parse(existingFilesStr);
-        if (Array.isArray(parsedFiles)) {
-          finalFiles = parsedFiles;
-          console.log("- Existing files to keep:", parsedFiles.length);
-        }
-      } catch (error) {
-        console.error("❌ Error parsing existingFiles:", error);
-      }
-    }
-
-    if (filesToRemoveStr) {
-      try {
-        const filesToRemove = JSON.parse(filesToRemoveStr);
-        if (Array.isArray(filesToRemove)) {
-          console.log("- Files to remove:", filesToRemove.length);
-          
-          finalFiles = finalFiles.filter(file => {
-            const shouldRemove = filesToRemove.includes(file.url);
-            if (shouldRemove && file.url) {
-              deleteFileFromCloudinary(file.url).catch(err => 
-                console.warn("⚠️ Could not delete file:", file.url, err.message)
-              );
-            }
-            return !shouldRemove;
-          });
-        }
-      } catch (error) {
-        console.error("❌ Error parsing filesToRemove:", error);
-      }
-    }
-
-    if (newFiles.length > 0 && newFiles[0].name) {
-      console.log("- Uploading new files...");
-      const uploadedNewFiles = await uploadMultipleFilesToCloudinary(newFiles);
-      console.log("- Successfully uploaded:", uploadedNewFiles.length);
-      
-      finalFiles = [...finalFiles, ...uploadedNewFiles];
-    }
-
-    console.log("- Final file count:", finalFiles.length);
-    
-    updateData.files = finalFiles;
-    
-    if (finalFiles.length > 0) {
-      updateData.type = determineMainTypeFromFiles(finalFiles);
-      console.log("- Determined type:", updateData.type);
-    } else {
-      updateData.type = "document";
-    }
-
-    updateData.updatedAt = new Date();
-
-    console.log("💾 Saving to database...");
-
-    const resource = await prisma.resource.update({
-      where: { id: id },
-      data: updateData,
-    });
-
-    console.log("✅ Update successful");
-    console.log("- Updated resource ID:", resource.id);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: `Resource updated successfully with ${updateData.files?.length || 0} file(s)`, 
-      resource 
-    }, { status: 200 });
-  } catch (error) {
-    console.error("❌ Error in form update:", error);
-    console.error("- Error details:", error.message);
-    
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message,
-      details: "Check server logs for more information"
     }, { status: 500 });
   }
 }
@@ -536,6 +551,7 @@ export async function DELETE(request, { params }) {
       }, { status: 404 });
     }
 
+    // Delete files from Cloudinary
     if (resource.files && Array.isArray(resource.files)) {
       const fileUrls = resource.files.map(file => file.url).filter(url => url);
       if (fileUrls.length > 0) {
@@ -547,66 +563,15 @@ export async function DELETE(request, { params }) {
 
     await prisma.resource.delete({ where: { id: resourceId } });
 
+    console.log(`✅ Resource deleted: ${resource.title} (ID: ${resourceId})`);
+
     return NextResponse.json({ 
       success: true, 
       message: "Resource and all associated files deleted successfully" 
     }, { status: 200 });
+
   } catch (error) {
     console.error("❌ Error deleting resource:", error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message 
-    }, { status: 500 });
-  }
-}
-
-// PATCH - Increment download count (PROTECTED)
-export async function PATCH(request, { params }) {
-  try {
-    const auth = authenticateRequest(request);
-    if (!auth.authenticated) {
-      return auth.response;
-    }
-
-    console.log("📥 PATCH /api/resources/[id]");
-    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-
-    const { id } = params;
-    const resourceId = parseInt(id);
-    
-    if (isNaN(resourceId)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid resource ID" 
-      }, { status: 400 });
-    }
-
-    const existingResource = await prisma.resource.findUnique({ 
-      where: { id: resourceId } 
-    });
-    
-    if (!existingResource) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Resource not found" 
-      }, { status: 404 });
-    }
-
-    const resource = await prisma.resource.update({
-      where: { id: resourceId },
-      data: { 
-        downloads: { increment: 1 }, 
-        updatedAt: new Date() 
-      },
-    });
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Download count updated", 
-      downloads: resource.downloads 
-    }, { status: 200 });
-  } catch (error) {
-    console.error("❌ Error updating download count:", error);
     return NextResponse.json({ 
       success: false, 
       error: error.message 
