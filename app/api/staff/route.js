@@ -425,7 +425,6 @@ export async function POST(req) {
         responsibilities,
         expertise,
         achievements,
-        // Track who created this staff record
       },
     });
 

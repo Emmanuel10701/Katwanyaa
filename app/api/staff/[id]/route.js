@@ -341,10 +341,7 @@ export async function PUT(req, { params }) {
       }
     }
 
-    // Add audit trail fields
-    data.updatedBy = auth.user.id;
-    data.updatedByName = auth.user.name;
-    data.updatedByRole = auth.user.role;
+  
 
     // Optional image upload (replace old one)
     const file = formData.get("image");
@@ -411,7 +408,6 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ 
       success: true, 
       staff: updatedStaff,
-      updatedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -496,7 +492,6 @@ export async function DELETE(req, { params }) {
       success: true,
       message: "Staff deleted successfully",
       deletedStaff: staff.name,
-      deletedBy: auth.user.name,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
