@@ -14,13 +14,7 @@
   }
 }
 
-/* Apply 78% zoom to everything EXCEPT pages with 'no-zoom' class */
-html:not(.no-zoom) body {
-  transform: scaleX(0.83);
-  transform-origin: top left;
-  width: calc(100% / 0.83);
-}
-
+/* Apply 78% zoom to everything EXCEPT pages with 'no-zoom' class *
 
 
 
