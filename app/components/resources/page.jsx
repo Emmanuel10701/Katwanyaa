@@ -2400,22 +2400,11 @@ const handleSubmit = async (formData, id) => {
                     </h3>
                     <p className="text-md  text-slate-800  mt-1 flex items-center gap-2">
                       <FiClock className="w-3 h-3" />
-                      Updated just now
+                      Updated  
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  {selectedResources.size > 0 && (
-                    <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-md  font-semibold rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all duration-200 group">
-                      <FiTrash2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                      Delete ({selectedResources.size})
-                    </button>
-                  )}
-                  <button className="p-2.5 text-slate-800  hover:text-blue-600 hover:bg-white hover:shadow-md rounded-xl border border-slate-200 hover:border-blue-200 transition-all duration-200">
-                    <FiMoreVertical className="w-5 h-5" />
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -2468,15 +2457,14 @@ const handleSubmit = async (formData, id) => {
                     >
                       {/* Checkbox Column */}
                       <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={selectedResources.has(resource.id)}
-                            onChange={(e) => handleResourceSelect(resource.id, e.target.checked)}
-                            className="w-5 h-5 rounded-xl border-2 border-slate-300 bg-white checked:bg-gradient-to-r checked:from-blue-500 checked:to-purple-600 checked:border-0 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-200 peer"
-                          />
-                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-purple-600/0 peer-checked:from-blue-500/20 peer-checked:to-purple-600/20 pointer-events-none transition-all duration-300"></div>
-                        </div>
+<div className="flex items-center">
+  <input
+    type="checkbox"
+    checked={selectedResources.has(resource.id)}
+    onChange={(e) => handleResourceSelect(resource.id, e.target.checked)}
+    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer transition-colors"
+  />
+</div>
                       </td>
 
                       {/* Resource Details Column */}
