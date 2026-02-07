@@ -326,28 +326,36 @@ const PasswordStrengthIndicator = () => {
 };
 
 // ==================== AUTHENTICATION HELPERS ====================
-
 const getAuthHeaders = (contentType = 'application/json') => {
   const adminToken = localStorage.getItem('admin_token');
   const deviceToken = localStorage.getItem('device_token');
   const adminUser = localStorage.getItem('admin_user');
   
-  if (!adminToken || !deviceToken) {
-    // Clear any invalid tokens
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('device_token');
-    localStorage.removeItem('admin_user');
-    throw new Error('Authentication required. Please login again.');
+  console.log('🔑 Auth debug:', {
+    hasAdminToken: !!adminToken,
+    hasDeviceToken: !!deviceToken,
+    hasAdminUser: !!adminUser,
+    adminToken: adminToken ? adminToken.substring(0, 30) + '...' : 'none',
+    deviceToken: deviceToken ? deviceToken.substring(0, 30) + '...' : 'none'
+  });
+  
+  if (!adminToken) {
+    throw new Error('Admin authentication required. Please login again.');
   }
   
   const headers = {
     'Authorization': `Bearer ${adminToken}`,
-    'x-device-token': deviceToken,
-    'x-admin-user': adminUser || 'unknown'
+    'Content-Type': contentType
   };
   
-  if (contentType) {
-    headers['Content-Type'] = contentType;
+  // Only add device token if it exists
+  if (deviceToken) {
+    headers['x-device-token'] = deviceToken;
+  }
+  
+  // Only add admin user if it exists
+  if (adminUser) {
+    headers['x-admin-user'] = adminUser;
   }
   
   return headers;
@@ -363,26 +371,43 @@ const isAuthenticated = () => {
 };
 
 const handleAuthError = (error, showNotification) => {
-  console.error('Auth error:', error);
+  console.error('🔐 Auth error details:', {
+    message: error.message,
+    name: error.name,
+    type: error.constructor.name
+  });
   
   if (error.message.includes('Authentication required') || 
       error.message.includes('login') ||
-      error.message.includes('Session expired')) {
+      error.message.includes('Session expired') ||
+      error.message.includes('Unauthorized') ||
+      error.message === 'Access Denied') {
     
-    toast.error('Please login to continue');
+    toast.error('Your session has expired. Please login again.');
+    
+    // Clear all auth data
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('device_token');
+    localStorage.removeItem('admin_user');
+    localStorage.removeItem('last_login');
+    localStorage.removeItem('login_count');
+    
     setTimeout(() => {
-      // Clear tokens and redirect to login
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('device_token');
-      localStorage.removeItem('admin_user');
       window.location.href = '/pages/adminLogin';
-    }, 1000);
+    }, 1500);
+    
     return true;
   }
+  
+  // Handle 403 Forbidden errors specifically
+  if (error.message.includes('Permission Denied') || 
+      error.message.includes('do not have permission')) {
+    toast.error('You do not have permission to perform this action');
+    return true;
+  }
+  
   return false;
 };
-
-
 const fetchAdmins = async (showRefresh = false) => {
   if (status !== 'authenticated') {
     console.log('❌ Cannot fetch admins: Not authenticated');
@@ -397,16 +422,8 @@ const fetchAdmins = async (showRefresh = false) => {
       setLoading(true);
     }
 
-    // Get authentication headers (optional for GET)
-    const headers = {};
-    try {
-      const authHeaders = getAuthHeaders('application/json');
-      headers.Authorization = authHeaders.Authorization;
-      headers['x-device-token'] = authHeaders['x-device-token'];
-    } catch (authError) {
-      console.log('Unauthenticated GET request for admins');
-      // Allow GET requests without auth, but log it
-    }
+    // Get authentication headers
+    const headers = getAuthHeaders('application/json');
     
     // Fetch from your API endpoint
     const response = await fetch('/api/register', {
@@ -437,7 +454,7 @@ const fetchAdmins = async (showRefresh = false) => {
           manageSettings: user.role === 'SUPER_ADMIN',
           viewReports: true
         },
-        status: 'active' // You'll need to add status field to your User model
+        status: 'active'
       }));
       
       setAdmins(adminsData);
