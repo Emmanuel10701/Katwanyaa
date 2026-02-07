@@ -1655,64 +1655,36 @@ export async function GET(request) {
     const includeStats = url.searchParams.get('includeStats') !== 'false';
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
-if (action === 'uploads') {
-  // Fetch upload history with filtering
-  const uploadWhere = {};
-  
-  // Always filter for completed uploads by default
-  uploadWhere.status = 'completed';
-  
-  // Optional filters from query parameters
-  const term = url.searchParams.get('term');
-  const academicYear = url.searchParams.get('academicYear');
-  const uploadMode = url.searchParams.get('uploadMode');
-  const status = url.searchParams.get('status');
-  
-  if (term) uploadWhere.term = term;
-  if (academicYear) uploadWhere.academicYear = academicYear;
-  if (uploadMode) uploadWhere.uploadMode = uploadMode;
-  
-  // Allow overriding status filter if explicitly requested
-  if (status && status !== 'completed') {
-    uploadWhere.status = status;
-  }
-  
-  // Optional: Add a way to see all uploads (including non-completed)
-  const showAll = url.searchParams.get('showAll') === 'true';
-  if (showAll) {
-    delete uploadWhere.status; // Remove status filter to show all
-  }
 
-  const [uploads, total] = await Promise.all([
-    prisma.resultUpload.findMany({
-      where: uploadWhere,
-      orderBy: { uploadDate: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-      select: {
-        id: true,
-        fileName: true,
-        fileType: true,
-        status: true,
-        uploadedBy: true,
-        uploadDate: true,
-        processedDate: true,
-        term: true,
-        academicYear: true,
-        totalRows: true,
-        uploadMode: true,
-        validRows: true,
-        skippedRows: true,
-        errorRows: true,
-        newRecords: true,
-        updatedRecords: true,
-        duplicateRecords: true,
-        errorLog: true,
-        warningLog: true
-      }
-    }),
-    prisma.resultUpload.count({ where: uploadWhere })
-  ]);
+    if (action === 'uploads') {
+  const uploads = await prisma.resultUpload.findMany({
+    orderBy: { uploadDate: 'desc' },
+    skip: (page - 1) * limit,
+    take: limit,
+    select: {
+      id: true,
+      fileName: true,
+      fileType: true,
+      status: true,
+      uploadedBy: true,
+      uploadDate: true,
+      processedDate: true,
+      term: true,
+      academicYear: true,
+      totalRows: true,
+      uploadMode: true,
+      validRows: true,
+      skippedRows: true,
+      errorRows: true,
+      newRecords: true,
+      updatedRecords: true,
+      duplicateRecords: true,
+      errorLog: true,
+      warningLog: true
+    }
+  });
+
+  const total = await prisma.resultUpload.count();
 
   return NextResponse.json({
     success: true,
@@ -1722,12 +1694,6 @@ if (action === 'uploads') {
       limit, 
       total, 
       pages: Math.ceil(total / limit) 
-    },
-    filters: {
-      status: uploadWhere.status || 'all',
-      term,
-      academicYear,
-      uploadMode
     }
   });
 }

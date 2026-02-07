@@ -1115,17 +1115,8 @@ export async function GET(request) {
     const filters = { form, stream, gender, status, search };
     const where = buildWhereClause(filters);
 
-  // In your API route handler, modify the uploads section:
 if (action === 'uploads') {
-  const status = url.searchParams.get('status') || ''; // Get status parameter
-  
-  const whereClause = {};
-  if (status) {
-    whereClause.status = status; // Filter by status if provided
-  }
-  
   const uploads = await prisma.studentBulkUpload.findMany({
-    where: whereClause, // Add the where clause
     orderBy: { uploadDate: 'desc' },
     skip: (page - 1) * limit,
     take: limit,
@@ -1141,14 +1132,23 @@ if (action === 'uploads') {
       validRows: true,
       skippedRows: true,
       errorRows: true,
-      errorLog: true,
-      metadata: true
+      errorLog: true
     }
   });
-  
-  // ... rest of your code
-}
 
+  const total = await prisma.studentBulkUpload.count();
+  
+  return NextResponse.json({
+    success: true,
+    uploads,
+    pagination: { 
+      page, 
+      limit, 
+      total, 
+      pages: Math.ceil(total / limit) 
+    }
+  });
+}
     if (action === 'stats') {
       // Calculate fresh statistics with filters
       const statsResult = await calculateStatistics(where);
