@@ -1033,7 +1033,7 @@ const handleLogout = () => {
 
   return (
     < >
-  <div className="scale-95  w-full h-full">
+  <div className="w-full h-full">
     
       {/* Add Sonner Toaster */}
       <Toaster 

@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 // Enhanced Hero Slides with Modern Design - Updated with accurate Katwanyaa High School in Matungulu information
 const heroSlides = [
   {
-    title: "Katwanyaa High School",
+    title: "Katwanyaa senior School",
     subtitle: "Matungulu, Machakos County",
     gradient: "from-blue-500 via-cyan-400 to-purple-600",
     description: "Katwanyaa High School is a public secondary school located in Matungulu sub-county, Machakos County, Kenya. The school is committed to providing quality education and holistic development to students from the region.",
