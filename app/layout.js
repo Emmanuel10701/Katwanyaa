@@ -27,14 +27,14 @@ export const metadata = {
   metadataBase: new URL("https://katwanyaa.vercel.app"),
 
   title: {
-    default: "A.I.C Katwanyaa High School",
-    template: "%s | Katwanyaa High School",
+    default: "A.I.C Katwanyaa Senior High School",
+    template: "%s | Katwanyaa  Senior High School",
   },
 
   description:
-    "Official website for Katwanyaa High School in Matungulu, Machakos County. A public secondary school committed to academic excellence, discipline, and holistic student development in Kenya.",
+    "Official website for Katwanyaa Senior High School in Matungulu, Machakos County. A public secondary school committed to academic excellence, discipline, and holistic student development in Kenya.",
   keywords: [
-    "Katwanyaa High School",
+    "Katwanyaa Senior High School",
     "katwanyaa school",
     "katwanyaa",
     "katwanyaa high",
