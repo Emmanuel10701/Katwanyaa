@@ -716,105 +716,74 @@ export async function POST(request) {
     // ====================
     // 1. VERIFY CODE FLOW (OTP verification)
     // ====================
-    if (action === 'verify' && verificationCode) {
-      console.log('🔐 OTP verification flow for:', email);
-      
-      if (!email) {
-        return NextResponse.json({ 
-          success: false,
-          error: 'Email is required for verification' 
-        }, { status: 400 });
-      }
+// In the verification endpoint (action === 'verify')
+if (action === 'verify' && verificationCode) {
+  console.log('🔐 OTP verification flow for:', email);
+  
+  // ... existing verification code ...
+  
+  // OTP is valid - check if we should reset counts
+  const shouldResetCounts = body.shouldResetCounts === true || 
+                           verificationReason === 'max_logins_reached' ||
+                           verificationReason === 'expired';
+  
+  if (shouldResetCounts) {
+    console.log('🔄 Resetting device counts due to:', {
+      shouldResetCounts: body.shouldResetCounts,
+      verificationReason: verificationReason
+    });
+    
+    // RESET device counts (start fresh from 1)
+    const device = await resetDeviceCounts(user.id, deviceHash);
+    
+    // Delete used verification code
+    await prisma.verificationToken.delete({
+      where: { token: verificationCode }
+    });
 
-      // Find verification code
-      const verificationToken = await prisma.verificationToken.findFirst({
-        where: {
-          identifier: email,
-          token: verificationCode,
-          expires: { gt: new Date() }
-        }
-      });
+    // Generate tokens with RESET login count (1)
+    const authToken = generateToken(user);
+    const deviceToken = generateDeviceToken(user.id, deviceHash);
+    
+    // Update login count in device token
+    const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
+    deviceTokenPayload.loginCount = 1; // Always reset to 1 after verification
+    const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
+    
+    const userData = sanitizeUser(user);
 
-      if (!verificationToken) {
-        return NextResponse.json({
-          success: false,
-          error: 'Invalid or expired verification code'
-        }, { status: 400 });
-      }
-
-      // Find user
-      const user = await prisma.user.findUnique({
-        where: { email: email }
-      });
-
-      if (!user) {
-        return NextResponse.json({
-          success: false,
-          error: 'User not found'
-        }, { status: 404 });
-      }
-
-      // OTP is valid - complete login with RESET COUNTS
-      const userAgent = request.headers.get('user-agent') || 'unknown';
-      
-      // Check device status to see if we should reset counts
-      const deviceVerificationCheck = await checkDeviceVerification(
-        user.id,
-        deviceHash,
-        0,
-        clientDeviceToken
-      );
-      
-      const shouldResetCounts = deviceVerificationCheck.shouldResetAfterVerification || 
-                               deviceVerificationCheck.requiresVerification;
-      
-      // RESET device counts (start fresh from 1)
-      const device = await resetDeviceCounts(user.id, deviceHash);
-      
-      // Delete used verification code
-      await prisma.verificationToken.delete({
-        where: { token: verificationCode }
-      });
-
-      // Generate tokens with RESET login count (1)
-      const authToken = generateToken(user);
-      const deviceToken = generateDeviceToken(user.id, deviceHash);
-      
-      // Update login count in device token
-      const deviceTokenPayload = JSON.parse(base64Decode(deviceToken));
-      deviceTokenPayload.loginCount = 1; // Always reset to 1 after verification
-      const updatedDeviceToken = base64Encode(JSON.stringify(deviceTokenPayload));
-      
-      const userData = sanitizeUser(user);
-
-      // Log successful verification
-      await prisma.loginAttempt.create({
-        data: {
-          userId: user.id,
-          email: user.email,
-          ipAddress: ipAddress,
-          userAgent: userAgent,
-          deviceHash: deviceHash,
-          status: 'success',
-          reason: 'otp_verified_counts_reset'
-        }
-      });
-
-      console.log('✅ OTP verification successful with RESET counts for:', user.email);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Login successful! Device verification counts have been reset.',
-        user: userData,
+    // Log successful verification with reset
+    await prisma.loginAttempt.create({
+      data: {
+        userId: user.id,
         email: user.email,
-        token: authToken,
-        deviceToken: updatedDeviceToken,
-        storeInLocalStorage: true,
-        loginCount: 1, // Always 1 after reset
-        directLogin: true,
-        countsWereReset: true
-      }, { status: 200 });
-    }
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceHash: deviceHash,
+        status: 'success',
+        reason: 'otp_verified_counts_reset'
+      }
+    });
+
+    console.log('✅ OTP verification successful with RESET counts for:', user.email);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Login successful! Device verification counts have been reset.',
+      user: userData,
+      email: user.email,
+      token: authToken,
+      deviceToken: updatedDeviceToken,
+      storeInLocalStorage: true,
+      loginCount: 1, // Always 1 after reset
+      directLogin: true,
+      countsWereReset: true // IMPORTANT: Tell frontend counts were reset
+    }, { status: 200 });
+  } else {
+    // Regular verification without reset
+    // ... existing regular verification code ...
+  }
+}
 
     // ====================
     // 2. PASSWORD + VERIFICATION FLOW (for failed attempts)

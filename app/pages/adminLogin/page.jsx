@@ -669,10 +669,12 @@ const handleVerifyCode = async (e) => {
   setVerificationLoading(true);
 
   try {
-    const localStorageCheck = LocalStorageManager.checkVerificationRequirement();
     const deviceFingerprint = DeviceFingerprint.generate();
     
-    // Always use the stored verificationEmail (set when OTP was sent)
+    // Get pending verification info
+    const pendingVerification = JSON.parse(localStorage.getItem('pending_verification_device') || '{}');
+    
+    // Always use the stored verificationEmail
     const emailToUse = verificationEmail || formData.email;
     
     if (!emailToUse) {
@@ -681,11 +683,12 @@ const handleVerifyCode = async (e) => {
       return;
     }
     
-    console.log('🔐 Verifying OTP for:', emailToUse);
-    console.log('📱 Device state:', {
+    console.log('🔐 Verifying OTP with reset info:', {
+      email: emailToUse,
       deviceHash: deviceFingerprint.hash,
-      clientLoginCount: localStorageCheck.loginCount,
-      requiresVerification: localStorageCheck.requiresVerification
+      pendingReason: pendingVerification.reason,
+      shouldReset: pendingVerification.reason === 'max_logins_reached' || 
+                  pendingVerification.reason === 'expired'
     });
     
     const response = await fetch('/api/login', {
@@ -697,27 +700,29 @@ const handleVerifyCode = async (e) => {
         email: emailToUse,
         verificationCode: code,
         action: 'verify',
-        clientLoginCount: localStorageCheck.loginCount,
         clientDeviceHash: deviceFingerprint.hash,
-        clientDeviceToken: localStorageCheck.deviceToken
+        // Tell backend to reset counts if max was reached
+        shouldResetCounts: pendingVerification.reason === 'max_logins_reached' || 
+                         pendingVerification.reason === 'expired'
       }),
     });
 
     const data = await response.json();
     console.log('📩 OTP verification response:', {
       success: data.success,
-      hasDeviceToken: !!data.deviceToken,
-      loginCount: data.loginCount,
-      requiresPassword: data.requiresPassword,
-      countsWereReset: data.countsWereReset
+      countsWereReset: data.countsWereReset,
+      loginCount: data.loginCount
     });
 
     if (response.ok && data.success) {
-      // Check if counts were reset by backend
+      // Clear the pending verification flag
+      localStorage.removeItem('pending_verification_device');
+      
+      // Clear OLD device data if counts were reset
       if (data.countsWereReset) {
         console.log('🔄 Backend reset device counts. New count:', data.loginCount);
         
-        // Clear old device data to start fresh
+        // Clear ALL old device data
         LocalStorageManager.clearLoginData();
         
         // Store fresh device data with reset count (should be 1)
@@ -964,7 +969,8 @@ const handleSubmit = async (e) => {
 
     toast.dismiss(loadingToast);
 
-    // Handle verification required response
+
+
     if (response.ok && data.requiresVerification === true) {
       console.log('🔐 Verification required, reason:', data.reason);
       
@@ -972,7 +978,7 @@ const handleSubmit = async (e) => {
       setVerificationEmail(data.email || formData.email);
       setShowVerificationModal(true);
       setCountdown(60);
-      
+     
       // Check if verification will reset counts
       const resetHint = data.shouldResetAfterVerification 
         ? "After verification, your device login counts will be reset to give you 15 fresh logins."
