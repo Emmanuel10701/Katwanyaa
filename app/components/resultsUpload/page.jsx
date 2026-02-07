@@ -2831,23 +2831,24 @@ const loadStatistics = async () => {
   }
 };
 
-  const loadUploadHistory = async (page = 1) => {
-    setHistoryLoading(true);
-    try {
-      const res = await fetch(`/api/results?action=uploads&page=${page}&limit=5`);
-      const data = await res.json();
-      if (data.success) {
-        setUploadHistory(data.uploads || []);
-      } else {
-        showNotification('Failed to load upload history', 'error');
-      }
-    } catch (error) {
-      console.error('Failed to load history:', error);
+const loadUploadHistory = async (page = 1) => {
+  setHistoryLoading(true);
+  try {
+    // Add status=completed to explicitly filter for completed uploads
+    const res = await fetch(`/api/results?action=uploads&page=${page}&limit=5&status=completed`);
+    const data = await res.json();
+    if (data.success) {
+      setUploadHistory(data.uploads || []);
+    } else {
       showNotification('Failed to load upload history', 'error');
-    } finally {
-      setHistoryLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Failed to load history:', error);
+    showNotification('Failed to load upload history', 'error');
+  } finally {
+    setHistoryLoading(false);
+  }
+};
 
   const loadStudentInfo = async (admissionNumber) => {
     try {
