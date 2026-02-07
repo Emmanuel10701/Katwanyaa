@@ -1016,7 +1016,7 @@ const handleSaveAdmin = async (e) => {
     localStorage.removeItem('admin_user');
     console.log('👋 Logged out successfully');
     toast.info('Logged out successfully');
-    router.push('/adminLogin');
+    router.push('/pages/adminLogin');
   };
 
   // Show loading while checking authentication
