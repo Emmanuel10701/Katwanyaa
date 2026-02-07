@@ -2835,7 +2835,7 @@ const loadUploadHistory = async (page = 1) => {
   setHistoryLoading(true);
   try {
     // Add status=completed to explicitly filter for completed uploads
-    const res = await fetch(`/api/results?action=uploads&page=${page}&limit=5&status=completed`);
+    const res = await fetch(`/api/results?action=uploads&page=${page}&limit=30`);
     const data = await res.json();
     if (data.success) {
       setUploadHistory(data.uploads || []);

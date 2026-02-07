@@ -2329,7 +2329,7 @@ const loadUploadHistory = async (page = 1) => {
   setHistoryLoading(true);
   try {
     // Add status=completed to the API call
-    const res = await fetch(`/api/studentupload?action=uploads&page=${page}&limit=5&status=completed`);
+    const res = await fetch(`/api/studentupload?action=uploads&page=${page}&limit=30`);
     const data = await res.json();
     if (data.success) {
       setUploadHistory(data.uploads || []);
