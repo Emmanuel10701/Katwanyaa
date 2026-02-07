@@ -2430,7 +2430,7 @@ const handleSubmit = async (formData, id) => {
                     <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       <div className="flex items-center gap-2">
                         <FiLock className="w-4 h-4 text-amber-500" />
-                        Access & Type
+                        Access 
                       </div>
                     </th>
                     <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
@@ -2451,7 +2451,7 @@ const handleSubmit = async (formData, id) => {
                   {currentItems.map((resource) => (
                     <tr 
                       key={resource.id} 
-                      className={`group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/20 transition-all duration-300 ${
+                      className={`group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/20 transition-all duration-300 cursor-pointer ${
                         selectedResources.has(resource.id) ? 'bg-gradient-to-r from-blue-50/50 to-purple-50/30' : ''
                       }`}
                     >
@@ -2468,7 +2468,8 @@ const handleSubmit = async (formData, id) => {
                       </td>
 
                       {/* Resource Details Column */}
-                      <td className="py-5 px-8">
+                      <td className="py-5 px-8 cursor-pointer"  onClick={() => handleView(resource)}
+>
                         <div className="flex items-start gap-4">
                           <div className={`relative p-3.5 rounded-2xl transition-all duration-300 group-hover:scale-105 ${
                             resource.type?.toLowerCase() === 'pdf' 
@@ -2503,26 +2504,15 @@ const handleSubmit = async (formData, id) => {
                               <h4 className="font-bold text-slate-900 text-md  leading-tight group-hover:text-blue-600 transition-colors">
                                 {resource.title || 'Untitled Resource'}
                               </h4>
-                              <span className="flex items-center gap-1 text-xs text-slate-400">
-                                <FiHeart className="w-3 h-3" />
-                                {resource.likes || 0}
-                              </span>
+              
                             </div>
-                            <p className="text-slate-600 text-xs line-clamp-2 mb-3">
+                            <p className="text-slate-900 text-xs line-clamp-2 mb-3">
                               {resource.description || 'No description provided'}
                             </p>
                             <div className="flex items-center gap-4 text-xs text-slate-800 ">
                               <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
                                 <FiFile className="w-3 h-3" />
                                 {resource.files?.length || 0} files
-                              </span>
-                              <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
-                                <FiDownload className="w-3 h-3" />
-                                {resource.downloads || 0}
-                              </span>
-                              <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
-                                <FiClock className="w-3 h-3" />
-                                {resource.size || 'N/A'}
                               </span>
                             </div>
                           </div>
@@ -2642,13 +2632,6 @@ const handleSubmit = async (formData, id) => {
                             title="Duplicate"
                           >
                             <FiCopy className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleShare(resource)}
-                            className="p-2.5 text-slate-400 hover:text-amber-600 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 hover:border-amber-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
-                            title="Share"
-                          >
-                            <FiShare2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(resource)}
