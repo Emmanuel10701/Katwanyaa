@@ -329,8 +329,8 @@ const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid', onS
             </div>
 {/* 5. Final Action Button */}
 <button className="
-  w-fit sm:w-full 
-  py-2 sm:py-4 
+   sm:w-full 
+  py-2 sm:py-4 px-2 
   bg-slate-900 text-white 
   rounded-xl sm:rounded-2xl 
   font-normal sm:font-bold 
@@ -339,7 +339,6 @@ const ModernGalleryCard = ({ gallery, onView, onFavorite, viewMode = 'grid', onS
   active:scale-[0.98] transition-transform hover:shadow-lg
 ">
   View Gallery
-  <FiArrowRight size={14} className="sm:w-[18px] sm:h-[18px]" />
 </button>
           </div>
         </div>
