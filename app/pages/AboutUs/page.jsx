@@ -21,7 +21,7 @@ export default function AboutPage() {
   ];
 const date = new Date(); // Add this line!
   return (
-    <div className="bg-white text-slate-900 scale-[0.85]">
+    <div className="bg-white text-slate-900">
       {/* Hero Section */}
       {/* Modern Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-950 via-orange-950 to-red-950">
