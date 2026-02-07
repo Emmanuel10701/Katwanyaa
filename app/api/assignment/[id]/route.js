@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
 import cloudinary from "../../../../libs/cloudinary";
 
-// ==================== TOKEN VERIFICATION FOR DELETE/UPDATE ====================
+// ==================== TOKEN VERIFICATION ====================
 class DeviceTokenManager {
-  static validateTokensFromHeaders(headers, options = {}) {
+  static validateTokensFromHeaders(headers) {
     try {
       const adminToken = headers.get('x-admin-token') || headers.get('authorization')?.replace('Bearer ', '');
       const deviceToken = headers.get('x-device-token');
@@ -27,7 +27,7 @@ class DeviceTokenManager {
         return { 
           valid: false, 
           reason: `device_${deviceValid.reason}`,
-          message: `Device token ${deviceValid.reason}: ${deviceValid.error || ''}`
+          message: `Device token error: ${deviceValid.error || 'Invalid token'}`
         };
       }
 
@@ -36,14 +36,14 @@ class DeviceTokenManager {
         adminPayload = JSON.parse(atob(adminParts[1]));
         
         const currentTime = Date.now() / 1000;
-        if (adminPayload.exp < currentTime) {
+        if (adminPayload.exp && adminPayload.exp < currentTime) {
           return { valid: false, reason: 'admin_token_expired', message: 'Admin token has expired' };
         }
         
-        const userRole = adminPayload.role || adminPayload.userRole;
+        const userRole = adminPayload.role || adminPayload.userRole || '';
         const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL', 'TEACHER', 'teacher'];
         
-        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+        if (!validRoles.includes(userRole.toUpperCase())) {
           return { 
             valid: false, 
             reason: 'invalid_role', 
@@ -55,7 +55,7 @@ class DeviceTokenManager {
         return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
       }
 
-      console.log('✅ Assignment management authentication successful for user:', adminPayload.name || 'Unknown');
+      console.log('✅ Authentication successful for user:', adminPayload.name || 'Unknown');
       
       return { 
         valid: true, 
@@ -104,7 +104,6 @@ class DeviceTokenManager {
 
 const authenticateRequest = (req) => {
   const headers = req.headers;
-  
   const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
   
   if (!validationResult.valid) {
@@ -114,8 +113,8 @@ const authenticateRequest = (req) => {
         { 
           success: false, 
           error: "Access Denied",
-          message: "Authentication required to manage assignments.",
-          details: validationResult.message
+          message: validationResult.message,
+          details: validationResult.reason
         },
         { status: 401 }
       )
@@ -125,42 +124,47 @@ const authenticateRequest = (req) => {
   return {
     authenticated: true,
     user: validationResult.user,
-    deviceInfo: validationResult.devInfo
+    deviceInfo: validationResult.deviceInfo
   };
 };
 // ==================== END TOKEN VERIFICATION ====================
 
+// ==================== CLOUDINARY HELPERS (FIXED FOR EXTENSIONS) ====================
 const uploadFileToCloudinary = async (file, folder = "assignments") => {
   if (!file?.name || file.size === 0) return null;
 
   try {
+    // Get file extension properly
+    const originalName = file.name;
+    const fileExtension = '.' + originalName.split('.').pop().toLowerCase();
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
-    const originalName = file.name;
+    
+    // Sanitize filename (preserve extension)
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
-
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    // Determine resource type and format
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
-    const isPDF = extension === '.pdf';
-    const isDocument = ['.doc', '.docx', '.txt'].includes(extension);
-    const isSpreadsheet = ['.xls', '.xlsx'].includes(extension);
-    const isPresentation = ['.ppt', '.pptx'].includes(extension);
-    const isArchive = ['.zip', '.rar', '.7z'].includes(extension);
+    const isPDF = fileExtension === '.pdf';
+    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
+    const isAudio = file.type.startsWith('audio/');
     
-    const resourceType = isVideo ? "video" : "raw";
+    const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
+    const format = fileExtension.substring(1); // Remove the dot
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
         folder: `school_assignments/${folder}`,
         public_id: `${timestamp}-${sanitizedFileName}`,
-        use_filename: false,
-        unique_filename: true,
         overwrite: false,
+        format: format, // Explicitly set format
+        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav']
       };
 
+      // Add transformations for images only
       if (isImage) {
         uploadOptions.transformation = [
           { width: 1200, crop: "scale" },
@@ -176,24 +180,32 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
       const stream = cloudinary.uploader.upload_stream(
         uploadOptions,
         (error, result) => {
-          if (error) reject(error);
-          else {
-            let fileType = 'File';
-            if (isImage) fileType = 'Image';
-            else if (isVideo) fileType = 'Video';
-            else if (isPDF) fileType = 'PDF Document';
-            else if (isDocument) fileType = 'Word Document';
-            else if (isSpreadsheet) fileType = 'Excel Spreadsheet';
-            else if (isPresentation) fileType = 'Presentation';
-            else if (isArchive) fileType = 'Archive';
-            else if (file.type.startsWith('audio/')) fileType = 'Audio';
+          if (error) {
+            console.error("Cloudinary upload error details:", error);
+            reject(error);
+          } else {
+            // Determine file type for display
+            let fileType = 'document';
+            if (isImage) fileType = 'image';
+            else if (isVideo) fileType = 'video';
+            else if (isPDF) fileType = 'pdf';
+            else if (isDocument) fileType = 'document';
+            else if (isAudio) fileType = 'audio';
+
+            console.log('Assignment file uploaded:', {
+              url: result.secure_url,
+              format: result.format,
+              publicId: result.public_id,
+              originalName
+            });
 
             resolve({
               url: result.secure_url,
               name: originalName,
               size: file.size,
-              type: fileType,
-              extension: extension,
+              extension: fileExtension,
+              uploadedAt: new Date().toISOString(),
+              fileType: fileType,
               storageType: 'cloudinary',
               publicId: result.public_id,
               format: result.format,
@@ -210,116 +222,10 @@ const uploadFileToCloudinary = async (file, folder = "assignments") => {
   }
 };
 
-const deleteFilesFromCloudinary = async (fileUrls) => {
-  if (!Array.isArray(fileUrls) && !fileUrls) return;
-
-  try {
-    const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
-    
-    const deletePromises = urls.map(async (fileUrl) => {
-      if (!fileUrl?.includes('cloudinary.com')) return;
-
-      try {
-        const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+(?:$|\?)/);
-        if (!urlMatch) return;
-        
-        const publicId = urlMatch[1];
-        const isVideo = fileUrl.includes('/video/') || 
-                       fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
-        const isRaw = fileUrl.includes('/raw/') || 
-                     fileUrl.match(/\.(pdf|doc|docx|txt|xls|xlsx|ppt|pptx|zip|rar|7z)$/i);
-        
-        const resourceType = isVideo ? "video" : isRaw ? "raw" : "image";
-        
-        await cloudinary.uploader.destroy(publicId, { 
-          resource_type: resourceType 
-        });
-      } catch {
-      }
-    });
-
-    await Promise.all(deletePromises);
-  } catch {
-  }
-};
-
-const getFileInfoFromUrl = (url) => {
-  if (!url) return null;
+const uploadMultipleFilesToCloudinary = async (files, folder = "assignments") => {
+  if (!files || files.length === 0) return [];
   
-  try {
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
-    
-    const pathParts = pathname.split('/');
-    const lastPart = pathParts[pathParts.length - 1];
-    let fileName = lastPart.includes('.') ? lastPart : `${lastPart}.jpg`;
-    
-    fileName = fileName.replace(/^\d+-/, '');
-    
-    const extension = fileName.includes('.') 
-      ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-      : '';
-    
-    const getFileType = (ext, url) => {
-      const typeMap = {
-        '.pdf': 'PDF Document',
-        '.doc': 'Word Document',
-        '.docx': 'Word Document',
-        '.txt': 'Text File',
-        '.jpg': 'Image',
-        '.jpeg': 'Image',
-        '.png': 'Image',
-        '.gif': 'Image',
-        '.webp': 'Image',
-        '.bmp': 'Image',
-        '.svg': 'Image',
-        '.mp4': 'Video',
-        '.mov': 'Video',
-        '.avi': 'Video',
-        '.wmv': 'Video',
-        '.flv': 'Video',
-        '.webm': 'Video',
-        '.mkv': 'Video',
-        '.mp3': 'Audio',
-        '.wav': 'Audio',
-        '.m4a': 'Audio',
-        '.ogg': 'Audio',
-        '.xls': 'Excel Spreadsheet',
-        '.xlsx': 'Excel Spreadsheet',
-        '.ppt': 'Presentation',
-        '.pptx': 'Presentation',
-        '.zip': 'Archive',
-        '.rar': 'Archive',
-        '.7z': 'Archive'
-      };
-      
-      if (url.includes('/video/')) return 'Video';
-      if (url.includes('/raw/')) return typeMap[ext] || 'Document';
-      return typeMap[ext] || 'Image';
-    };
-
-    return {
-      url,
-      fileName: decodeURIComponent(fileName),
-      extension,
-      fileType: getFileType(extension, url),
-      storageType: 'cloudinary'
-    };
-  } catch (error) {
-    console.error("Error parsing URL:", url, error);
-    return {
-      url,
-      fileName: 'download',
-      extension: '',
-      fileType: 'File',
-      storageType: 'cloudinary'
-    };
-  }
-};
-
-const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   const uploadedFiles = [];
-  
   for (const file of files) {
     if (file && file.name && file.size > 0) {
       try {
@@ -336,11 +242,204 @@ const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   return uploadedFiles;
 };
 
+const deleteFileFromCloudinary = async (fileUrl) => {
+  if (!fileUrl) return;
+
+  try {
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
+    if (!urlMatch) {
+      console.warn(`Could not extract public ID from URL: ${fileUrl}`);
+      return;
+    }
+    
+    const publicId = urlMatch[1];
+    const isVideo = fileUrl.includes('/video/') || 
+                   fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
+    const isRaw = fileUrl.includes('/raw/') || 
+                 fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
+    const isImage = fileUrl.includes('/image/') || 
+                   fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i);
+    
+    const resourceType = isVideo ? "video" : isRaw ? "raw" : isImage ? "image" : "raw";
+    
+    console.log(`Deleting from Cloudinary: ${publicId} (${resourceType})`);
+    
+    await cloudinary.uploader.destroy(publicId, { 
+      resource_type: resourceType 
+    });
+    
+    console.log(`✅ Deleted from Cloudinary: ${fileUrl}`);
+  } catch (error) {
+    console.warn("⚠️ Could not delete Cloudinary file:", error.message);
+  }
+};
+
+const deleteFilesFromCloudinary = async (fileUrls) => {
+  if (!Array.isArray(fileUrls) && !fileUrls) return;
+
+  try {
+    const urls = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
+    
+    const deletePromises = urls.map(async (fileUrl) => {
+      if (!fileUrl?.includes('cloudinary.com')) return;
+      await deleteFileFromCloudinary(fileUrl);
+    });
+
+    await Promise.all(deletePromises);
+  } catch (error) {
+    console.warn("⚠️ Could not delete files from Cloudinary:", error.message);
+  }
+};
+
+// FIXED: Get file info from URL with proper extension extraction
+const getFileInfoFromUrl = (url) => {
+  if (!url) return null;
+  
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Extract the public ID and reconstruct filename
+    const pathParts = pathname.split('/');
+    const lastPart = pathParts[pathParts.length - 1];
+    
+    // Get the public ID (timestamp-filename.extension)
+    const publicIdMatch = lastPart.match(/^(\d+)-(.*)$/);
+    let fileName = lastPart;
+    let extension = '';
+    
+    if (publicIdMatch) {
+      const timestamp = publicIdMatch[1];
+      const nameWithExt = publicIdMatch[2];
+      
+      // Find the extension
+      const extensionMatch = nameWithExt.match(/\.([a-zA-Z0-9]+)$/);
+      if (extensionMatch) {
+        extension = '.' + extensionMatch[1].toLowerCase();
+        fileName = nameWithExt.replace(/^\d+-/, ''); // Remove timestamp prefix
+      } else {
+        // If no extension in URL, check format from Cloudinary response
+        if (url.includes('.pdf')) extension = '.pdf';
+        else if (url.includes('.docx')) extension = '.docx';
+        else if (url.includes('.doc')) extension = '.doc';
+        else if (url.includes('.jpg') || url.includes('.jpeg')) extension = '.jpg';
+        else if (url.includes('.png')) extension = '.png';
+      }
+    } else {
+      // Fallback: extract extension from URL
+      const extensionMatch = lastPart.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+      if (extensionMatch) {
+        extension = '.' + extensionMatch[1].toLowerCase();
+        fileName = lastPart;
+      }
+    }
+    
+    // Decode URI component to get original filename
+    fileName = decodeURIComponent(fileName);
+    
+    // Determine file type from extension
+    const getFileTypeFromExtension = (ext) => {
+      const typeMap = {
+        '.pdf': 'PDF Document',
+        '.doc': 'Word Document',
+        '.docx': 'Word Document',
+        '.txt': 'Text File',
+        '.jpg': 'Image',
+        '.jpeg': 'Image',
+        '.png': 'Image',
+        '.gif': 'Image',
+        '.webp': 'Image',
+        '.mp4': 'Video',
+        '.mov': 'Video',
+        '.avi': 'Video',
+        '.wmv': 'Video',
+        '.mp3': 'Audio',
+        '.wav': 'Audio',
+        '.xls': 'Excel Spreadsheet',
+        '.xlsx': 'Excel Spreadsheet',
+        '.ppt': 'Presentation',
+        '.pptx': 'Presentation',
+        '.zip': 'Archive',
+        '.rar': 'Archive',
+        '.csv': 'CSV File'
+      };
+      
+      return typeMap[ext] || 'Document';
+    };
+
+    const fileType = getFileTypeFromExtension(extension);
+    
+    return {
+      url,
+      name: fileName,
+      fileName: fileName,
+      extension: extension,
+      fileType: fileType,
+      storageType: 'cloudinary'
+    };
+  } catch (error) {
+    console.error("Error parsing URL:", url, error);
+    return {
+      url,
+      name: 'download',
+      fileName: 'download',
+      extension: '',
+      fileType: 'File',
+      storageType: 'cloudinary'
+    };
+  }
+};
+
+const formatFileSize = (bytes) => {
+  if (!bytes || bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+};
+
+// FIXED: Clean assignment response with formatted files
+const cleanAssignmentResponse = (assignment) => {
+  if (!assignment) return null;
+  
+  const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url) => {
+    const fileInfo = getFileInfoFromUrl(url);
+    if (fileInfo) {
+      return {
+        ...fileInfo,
+        formattedSize: formatFileSize(0) // Size not available from URL alone
+      };
+    }
+    return null;
+  }).filter(Boolean);
+  
+  const attachmentAttachments = (assignment.attachments || []).map((url) => {
+    const fileInfo = getFileInfoFromUrl(url);
+    if (fileInfo) {
+      return {
+        ...fileInfo,
+        formattedSize: formatFileSize(0) // Size not available from URL alone
+      };
+    }
+    return null;
+  }).filter(Boolean);
+  
+  return {
+    ...assignment,
+    assignmentFileAttachments,
+    attachmentAttachments
+  };
+};
+
+// ==================== API ENDPOINTS ====================
+
+// GET - Get single assignment by ID (PUBLIC)
 export async function GET(request, { params }) {
   try {
     const { id } = params;
+    const assignmentId = parseInt(id);
     
-    if (!id || isNaN(parseInt(id))) {
+    if (isNaN(assignmentId)) {
       return NextResponse.json(
         { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
@@ -348,7 +447,7 @@ export async function GET(request, { params }) {
     }
 
     const assignment = await prisma.assignment.findUnique({ 
-      where: { id: parseInt(id) } 
+      where: { id: assignmentId } 
     });
     
     if (!assignment) {
@@ -358,24 +457,10 @@ export async function GET(request, { params }) {
       );
     }
     
-    const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url) => {
-      return getFileInfoFromUrl(url);
-    }).filter(Boolean);
-    
-    const attachmentAttachments = (assignment.attachments || []).map((url) => {
-      return getFileInfoFromUrl(url);
-    }).filter(Boolean);
-    
-    const processedAssignment = {
-      ...assignment,
-      assignmentFileAttachments,
-      attachmentAttachments
-    };
-    
     return NextResponse.json({ 
       success: true, 
-      assignment: processedAssignment 
-    });
+      assignment: cleanAssignmentResponse(assignment) 
+    }, { status: 200 });
   } catch (error) {
     console.error("❌ GET Single Assignment Error:", error);
     return NextResponse.json(
@@ -385,21 +470,21 @@ export async function GET(request, { params }) {
   }
 }
 
+// PUT - Update an assignment (PROTECTED)
 export async function PUT(request, { params }) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(request);
     if (!auth.authenticated) {
       return auth.response;
     }
 
-    console.log("✏️ PUT /api/assignments - Updating assignment");
+    console.log("✏️ PUT /api/assignments/[id] - Updating assignment");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    // ==================== END AUTHENTICATION ====================
 
     const { id } = params;
+    const assignmentId = parseInt(id);
     
-    if (!id || isNaN(parseInt(id))) {
+    if (isNaN(assignmentId)) {
       return NextResponse.json(
         { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
@@ -410,7 +495,7 @@ export async function PUT(request, { params }) {
     console.log('📥 PUT Update - Received form fields:', Array.from(formData.keys()));
 
     const existingAssignment = await prisma.assignment.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: assignmentId }
     });
 
     if (!existingAssignment) {
@@ -420,6 +505,7 @@ export async function PUT(request, { params }) {
       );
     }
 
+    // Extract form fields
     const title = formData.get("title")?.toString().trim() || existingAssignment.title;
     const subject = formData.get("subject")?.toString().trim() || existingAssignment.subject;
     const className = formData.get("className")?.toString().trim() || existingAssignment.className;
@@ -509,7 +595,7 @@ export async function PUT(request, { params }) {
     
     if (newAssignmentFiles.length > 0 && newAssignmentFiles[0].name) {
       try {
-        const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
+        const uploadedFiles = await uploadMultipleFilesToCloudinary(newAssignmentFiles, "assignment-files");
         const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
         updatedAssignmentFiles = [...updatedAssignmentFiles, ...newUrls];
         console.log('✅ Added new assignment files:', newUrls.length);
@@ -520,7 +606,7 @@ export async function PUT(request, { params }) {
     
     if (newAttachments.length > 0 && newAttachments[0].name) {
       try {
-        const uploadedFiles = await uploadFilesToCloudinary(newAttachments, "attachments");
+        const uploadedFiles = await uploadMultipleFilesToCloudinary(newAttachments, "attachments");
         const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
         updatedAttachments = [...updatedAttachments, ...newUrls];
         console.log('✅ Added new attachments:', newUrls.length);
@@ -541,7 +627,7 @@ export async function PUT(request, { params }) {
     
     console.log('💾 Saving to database...');
     const updatedAssignment = await prisma.assignment.update({
-      where: { id: parseInt(id) },
+      where: { id: assignmentId },
       data: { 
         title,
         subject,
@@ -558,6 +644,7 @@ export async function PUT(request, { params }) {
         assignmentFiles: updatedAssignmentFiles,
         attachments: updatedAttachments,
         learningObjectives: learningObjectivesArray,
+        updatedAt: new Date()
       },
     });
 
@@ -565,9 +652,9 @@ export async function PUT(request, { params }) {
     
     return NextResponse.json({ 
       success: true, 
-      assignment: updatedAssignment,
+      assignment: cleanAssignmentResponse(updatedAssignment),
       message: "Assignment updated successfully" 
-    });
+    }, { status: 200 });
   } catch (error) {
     console.error("❌ PUT Assignment Error:", error);
     
@@ -585,21 +672,21 @@ export async function PUT(request, { params }) {
   }
 }
 
+// DELETE - Delete an assignment (PROTECTED)
 export async function DELETE(request, { params }) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(request);
     if (!auth.authenticated) {
       return auth.response;
     }
 
-    console.log("🗑️ DELETE /api/assignments - Deleting assignment");
+    console.log("🗑️ DELETE /api/assignments/[id] - Deleting assignment");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    // ==================== END AUTHENTICATION ====================
 
     const { id } = params;
+    const assignmentId = parseInt(id);
     
-    if (!id || isNaN(parseInt(id))) {
+    if (isNaN(assignmentId)) {
       return NextResponse.json(
         { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
@@ -607,7 +694,7 @@ export async function DELETE(request, { params }) {
     }
 
     const assignment = await prisma.assignment.findUnique({
-      where: { id: parseInt(id) }
+      where: { id: assignmentId }
     });
 
     if (!assignment) {
@@ -627,13 +714,13 @@ export async function DELETE(request, { params }) {
     }
 
     await prisma.assignment.delete({ 
-      where: { id: parseInt(id) } 
+      where: { id: assignmentId } 
     });
 
     return NextResponse.json({ 
       success: true, 
       message: "Assignment deleted successfully" 
-    });
+    }, { status: 200 });
   } catch (error) {
     console.error("❌ DELETE Assignment Error:", error);
     
