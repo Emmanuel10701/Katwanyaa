@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Box, CircularProgress } from '@mui/material';
 
-// Consolidated Feather Icons (Fi)
+// Consolidated Feather Icons (Fi) - All Duplicates Removed
 import {
   FiPlus,
   FiSearch,
@@ -18,6 +18,7 @@ import {
   FiTrendingUp,
   FiAward,
   FiEdit,
+  FiEdit2,
   FiEdit3,
   FiTrash2,
   FiEye,
@@ -30,7 +31,6 @@ import {
   FiFileText,
   FiDownload,
   FiSend,
-  FiEdit2,
   FiTarget,
   FiBarChart,
   FiPercent,
@@ -52,8 +52,23 @@ import {
   FiGrid,
   FiSliders,
   FiSortAlphaDown,
-  FiSortAlphaUp
+  FiSortAlphaUp,
+  FiLock,
+  FiUnlock,
+  FiExternalLink,
+  FiMoreVertical,
+  FiCopy,
+  FiShare2,
+  FiHeart
 } from 'react-icons/fi';
+
+// Consolidated Heroicons (Hi)
+import {
+  HiOutlineDocumentText,
+  HiOutlinePhotograph,
+  HiOutlinePresentationChartBar,
+  HiOutlineSparkles
+} from 'react-icons/hi';
 
 // Consolidated Ionicons (Io5)
 import {
@@ -66,7 +81,6 @@ import {
   IoChevronForwardOutline,
   IoCheckmarkCircleOutline
 } from 'react-icons/io5';
-
 // Rest of your component logic goes here...
 
 // Modern Loading Spinner Component
@@ -2421,105 +2435,179 @@ const handleSubmit = async (formData, id) => {
         </div>
       </div>
 
-      {/* Resources Table */}
+
       {filteredResources.length > 0 ? (
         <>
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/5 border border-slate-200/50 overflow-hidden relative">
+            {/* Glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none"></div>
+            
+            {/* Enhanced Table Header */}
+            <div className="border-b border-slate-200/50">
+              <div className="flex items-center justify-between px-8 py-5">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={selectedResources.size === currentItems.length && currentItems.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const newSelection = new Set(selectedResources);
+                          currentItems.forEach(resource => newSelection.add(resource.id));
+                          setSelectedResources(newSelection);
+                        } else {
+                          const newSelection = new Set(selectedResources);
+                          currentItems.forEach(resource => newSelection.delete(resource.id));
+                          setSelectedResources(newSelection);
+                        }
+                      }}
+                      className="w-5 h-5 rounded-xl border-2 border-slate-300 bg-white checked:bg-gradient-to-r checked:from-blue-500 checked:to-purple-600 checked:border-0 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-200"
+                    />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Digital Resources
+                      <span className="ml-2 px-2.5 py-0.5 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 text-xs font-semibold rounded-full">
+                        {filteredResources.length} items
+                      </span>
+                    </h3>
+                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+                      <FiClock className="w-3 h-3" />
+                      Updated just now
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  {selectedResources.size > 0 && (
+                    <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all duration-200 group">
+                      <FiTrash2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                      Delete ({selectedResources.size})
+                    </button>
+                  )}
+                  <button className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-md rounded-xl border border-slate-200 hover:border-blue-200 transition-all duration-200">
+                    <FiMoreVertical className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                  <tr>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider w-12">
-                      <input
-                        type="checkbox"
-                        checked={selectedResources.size === currentItems.length && currentItems.length > 0}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            const newSelection = new Set(selectedResources);
-                            currentItems.forEach(resource => newSelection.add(resource.id));
-                            setSelectedResources(newSelection);
-                          } else {
-                            const newSelection = new Set(selectedResources);
-                            currentItems.forEach(resource => newSelection.delete(resource.id));
-                            setSelectedResources(newSelection);
-                          }
-                        }}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
+              <table className="w-full min-w-[1000px]">
+                <thead>
+                  <tr className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em] w-16">
+                      Select
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Resource
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em] min-w-[300px]">
+                      <div className="flex items-center gap-2">
+                        <HiOutlineSparkles className="w-4 h-4 text-blue-500" />
+                        Resource
+                      </div>
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Subject / Class
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                      <div className="flex items-center gap-2">
+                        <FiUsers className="w-4 h-4 text-emerald-500" />
+                        Class & Subject
+                      </div>
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Type / Access
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                      <div className="flex items-center gap-2">
+                        <FiLock className="w-4 h-4 text-amber-500" />
+                        Access & Type
+                      </div>
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
-                      Teacher
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                      <div className="flex items-center gap-2">
+                        <FiUserCheck className="w-4 h-4 text-purple-500" />
+                        Author
+                      </div>
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
                       Status
                     </th>
-                    <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100/50">
                   {currentItems.map((resource) => (
                     <tr 
                       key={resource.id} 
-                      className={`hover:bg-gray-50 transition-colors duration-150 ${
-                        selectedResources.has(resource.id) ? 'bg-blue-50/50' : ''
+                      className={`group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/20 transition-all duration-300 ${
+                        selectedResources.has(resource.id) ? 'bg-gradient-to-r from-blue-50/50 to-purple-50/30' : ''
                       }`}
                     >
                       {/* Checkbox Column */}
-                      <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={selectedResources.has(resource.id)}
-                          onChange={(e) => handleResourceSelect(resource.id, e.target.checked)}
-                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
+                      <td className="py-5 px-8" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={selectedResources.has(resource.id)}
+                            onChange={(e) => handleResourceSelect(resource.id, e.target.checked)}
+                            className="w-5 h-5 rounded-xl border-2 border-slate-300 bg-white checked:bg-gradient-to-r checked:from-blue-500 checked:to-purple-600 checked:border-0 focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-200 peer"
+                          />
+                          <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/0 to-purple-600/0 peer-checked:from-blue-500/20 peer-checked:to-purple-600/20 pointer-events-none transition-all duration-300"></div>
+                        </div>
                       </td>
 
                       {/* Resource Details Column */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-start gap-3">
-                          <div className={`p-3 rounded-xl ${
-                            resource.type?.toLowerCase() === 'pdf' ? 'bg-red-50 border border-red-100' :
-                            resource.type?.toLowerCase() === 'video' ? 'bg-blue-50 border border-blue-100' :
-                            resource.type?.toLowerCase() === 'document' ? 'bg-green-50 border border-green-100' :
-                            resource.type?.toLowerCase() === 'image' ? 'bg-purple-50 border border-purple-100' :
-                            'bg-gray-50 border border-gray-100'
+                      <td className="py-5 px-8">
+                        <div className="flex items-start gap-4">
+                          <div className={`relative p-3.5 rounded-2xl transition-all duration-300 group-hover:scale-105 ${
+                            resource.type?.toLowerCase() === 'pdf' 
+                              ? 'bg-gradient-to-br from-red-50 to-pink-50 border border-red-100 shadow-sm shadow-red-500/10' 
+                              : resource.type?.toLowerCase() === 'video' 
+                              ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 shadow-sm shadow-blue-500/10'
+                              : resource.type?.toLowerCase() === 'image' 
+                              ? 'bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-100 shadow-sm shadow-purple-500/10'
+                              : resource.type?.toLowerCase() === 'document' 
+                              ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 shadow-sm shadow-emerald-500/10'
+                              : 'bg-gradient-to-br from-slate-50 to-gray-50 border border-slate-100 shadow-sm shadow-slate-500/10'
                           }`}>
                             {resource.type?.toLowerCase() === 'pdf' ? (
-                              <FiFileText className="text-lg text-red-600" />
+                              <HiOutlineDocumentText className="text-xl text-red-600" />
                             ) : resource.type?.toLowerCase() === 'video' ? (
-                              <FiVideo className="text-lg text-blue-600" />
+                              <FiVideo className="text-xl text-blue-600" />
                             ) : resource.type?.toLowerCase() === 'image' ? (
-                              <FiImage className="text-lg text-purple-600" />
+                              <HiOutlinePhotograph className="text-xl text-purple-600" />
+                            ) : resource.type?.toLowerCase() === 'presentation' ? (
+                              <HiOutlinePresentationChartBar className="text-xl text-amber-600" />
                             ) : (
-                              <FiFileText className="text-lg text-green-600" />
+                              <FiFileText className="text-xl text-emerald-600" />
+                            )}
+                            {resource.isFeatured && (
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+                                <FiStar className="w-2.5 h-2.5 text-white" />
+                              </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
-                              {resource.title || 'Untitled Resource'}
-                            </h4>
-                            <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h4 className="font-bold text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors">
+                                {resource.title || 'Untitled Resource'}
+                              </h4>
+                              <span className="flex items-center gap-1 text-xs text-slate-400">
+                                <FiHeart className="w-3 h-3" />
+                                {resource.likes || 0}
+                              </span>
+                            </div>
+                            <p className="text-slate-600 text-xs line-clamp-2 mb-3">
                               {resource.description || 'No description provided'}
                             </p>
-                            <div className="flex items-center gap-3 text-xs text-gray-500">
-                              <span className="flex items-center gap-1">
+                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                              <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
                                 <FiFile className="w-3 h-3" />
                                 {resource.files?.length || 0} files
                               </span>
-                              <span className="flex items-center gap-1">
+                              <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
                                 <FiDownload className="w-3 h-3" />
                                 {resource.downloads || 0}
+                              </span>
+                              <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
+                                <FiClock className="w-3 h-3" />
+                                {resource.size || 'N/A'}
                               </span>
                             </div>
                           </div>
@@ -2527,92 +2615,141 @@ const handleSubmit = async (formData, id) => {
                       </td>
 
                       {/* Subject & Class Column */}
-                      <td className="py-4 px-6">
-                        <div className="space-y-2">
-                          <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-                            {resource.subject || 'General'}
-                          </span>
-                          {resource.className && (
-                            <p className="text-xs text-gray-600">
-                              Class: <span className="font-medium">{resource.className}</span>
+                      <td className="py-5 px-8">
+                        <div className="space-y-3">
+                          <div className="inline-flex flex-col gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 text-xs font-bold rounded-xl border border-blue-100">
+                              <FiUsers className="w-3 h-3" />
+                              {resource.className || 'All Classes'}
+                            </span>
+                            <span className="inline-block px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-100">
+                              {resource.subject || 'General Studies'}
+                            </span>
+                          </div>
+                          {resource.students && (
+                            <p className="text-xs text-slate-500 font-medium">
+                              {resource.students} students enrolled
                             </p>
                           )}
                         </div>
                       </td>
 
                       {/* Type & Access Column */}
-                      <td className="py-4 px-6">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${
-                              resource.type?.toLowerCase() === 'pdf' ? 'bg-red-500' :
-                              resource.type?.toLowerCase() === 'video' ? 'bg-blue-500' :
-                              resource.type?.toLowerCase() === 'document' ? 'bg-green-500' :
-                              resource.type?.toLowerCase() === 'image' ? 'bg-purple-500' :
-                              'bg-gray-500'
-                            }`} />
-                            <span className="text-xs font-medium text-gray-900 capitalize">
-                              {resource.type || 'File'}
-                            </span>
+                      <td className="py-5 px-8">
+                        <div className="space-y-3">
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${
+                                resource.type?.toLowerCase() === 'pdf' ? 'bg-gradient-to-r from-red-500 to-pink-500' :
+                                resource.type?.toLowerCase() === 'video' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                resource.type?.toLowerCase() === 'image' ? 'bg-gradient-to-r from-purple-500 to-violet-500' :
+                                resource.type?.toLowerCase() === 'document' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                                'bg-gradient-to-r from-slate-500 to-gray-500'
+                              }`} />
+                              <span className="text-xs font-bold text-slate-900 capitalize">
+                                {resource.type || 'File'}
+                              </span>
+                            </div>
+                            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold ${
+                              resource.accessLevel === 'student' 
+                                ? 'bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 border-blue-100' 
+                                : resource.accessLevel === 'teacher' 
+                                ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-100'
+                                : resource.accessLevel === 'admin' 
+                                ? 'bg-gradient-to-r from-purple-50 to-violet-50 text-purple-700 border-purple-100'
+                                : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-700 border-slate-100'
+                            }`}>
+                              {resource.accessLevel === 'admin' ? <FiLock className="w-3 h-3" /> : <FiUnlock className="w-3 h-3" />}
+                              {resource.accessLevel || 'student'} access
+                            </div>
                           </div>
-                          <span className={`inline-block px-2 py-1 rounded text-[10px] font-medium ${
-                            resource.accessLevel === 'student' ? 'bg-blue-100 text-blue-700' :
-                            resource.accessLevel === 'teacher' ? 'bg-green-100 text-green-700' :
-                            resource.accessLevel === 'admin' ? 'bg-purple-100 text-purple-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
-                            {resource.accessLevel || 'student'} access
-                          </span>
                         </div>
                       </td>
 
                       {/* Teacher Column */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                            <FiUserCheck className="w-4 h-4 text-gray-600" />
+                      <td className="py-5 px-8">
+                        <div className="flex items-center gap-3 group/author">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/25">
+                              {resource.teacher?.split(' ').map(n => n[0]).join('') || 'A'}
+                            </div>
+                            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/0 to-purple-600/0 group-hover/author:from-blue-500/20 group-hover/author:to-purple-600/20 transition-all duration-300"></div>
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            {resource.teacher || 'Admin'}
-                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-slate-900 group-hover/author:text-blue-600 transition-colors">
+                              {resource.teacher || 'System Admin'}
+                            </span>
+                            <span className="text-xs text-slate-500 font-medium">
+                              {resource.role || 'Educator'}
+                            </span>
+                          </div>
                         </div>
                       </td>
 
                       {/* Status Column */}
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          resource.isActive === true
-                            ? 'bg-green-100 text-green-800 border border-green-200'
-                            : 'bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}>
-                          {resource.isActive === true ? 'Active' : 'Inactive'}
-                        </span>
+                      <td className="py-5 px-8">
+                        <div className="relative">
+                          <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300 ${
+                            resource.isActive === true
+                              ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border-emerald-200 group-hover:shadow-lg group-hover:shadow-emerald-500/20'
+                              : 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-600 border-slate-200'
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              resource.isActive === true 
+                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 animate-pulse' 
+                                : 'bg-slate-400'
+                            }`}></div>
+                            {resource.isActive === true ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Actions Column */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-1">
+                      <td className="py-5 px-8">
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-4">
                           <button
                             onClick={() => handleView(resource)}
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                            title="View Details"
+                            className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-blue-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
+                            title="Quick Preview"
                           >
                             <FiEye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEdit(resource)}
-                            className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 hover:border-emerald-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
                             title="Edit Resource"
                           >
                             <FiEdit2 className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleCopy(resource)}
+                            className="p-2.5 text-slate-400 hover:text-purple-600 hover:bg-gradient-to-r hover:from-purple-50 hover:to-violet-50 hover:border-purple-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
+                            title="Duplicate"
+                          >
+                            <FiCopy className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleShare(resource)}
+                            className="p-2.5 text-slate-400 hover:text-amber-600 hover:bg-gradient-to-r hover:from-amber-50 hover:to-orange-50 hover:border-amber-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
+                            title="Share"
+                          >
+                            <FiShare2 className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteClick(resource)}
-                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Delete Resource"
+                            className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:border-red-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
+                            title="Archive Resource"
                           >
                             <FiTrash2 className="w-4 h-4" />
                           </button>
+                        </div>
+                        {/* Dots for non-hover state */}
+                        <div className="group-hover:hidden flex justify-end">
+                          <div className="flex gap-0.5">
+                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -2621,41 +2758,48 @@ const handleSubmit = async (formData, id) => {
               </table>
             </div>
 
-            {/* Table Footer */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
+            {/* Modern Table Footer */}
+            <div className="px-8 py-6 border-t border-slate-200/50 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredResources.length)} of {filteredResources.length} resources
+                <div className="text-sm text-slate-600 font-medium">
+                  <span className="font-bold text-slate-900">{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredResources.length)}</span> 
+                  of <span className="font-bold text-slate-900">{filteredResources.length}</span> resources
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => paginate(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                    className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-200 group"
                   >
-                    <FiChevronLeft />
+                    <FiChevronLeft className="w-5 h-5 text-slate-500 group-hover:text-blue-600" />
                   </button>
+                  
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(page => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
                     .map((page, index, array) => (
                       <div key={page} className="flex items-center">
                         {index > 0 && array[index - 1] !== page - 1 && (
-                          <span className="px-2 text-gray-500">...</span>
+                          <span className="px-2 text-slate-400">...</span>
                         )}
                         <button
                           onClick={() => paginate(page)}
-                          className={`px-3 py-1 rounded-lg ${currentPage === page ? 'bg-blue-600 text-white' : 'text-gray-700'}`}
+                          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+                            currentPage === page 
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
+                              : 'text-slate-700 hover:bg-slate-100'
+                          }`}
                         >
                           {page}
                         </button>
                       </div>
                     ))}
+                  
                   <button
                     onClick={() => paginate(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-gray-300 hover:bg-white disabled:opacity-50"
+                    className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-200 group"
                   >
-                    <FiChevronRight />
+                    <FiChevronRight className="w-5 h-5 text-slate-500 group-hover:text-blue-600" />
                   </button>
                 </div>
               </div>
@@ -2663,25 +2807,54 @@ const handleSubmit = async (formData, id) => {
           </div>
         </>
       ) : (
-        /* Empty State */
-        <div className="text-center py-12 bg-white rounded-2xl shadow-lg border border-gray-200">
-          <FiFolder className="text-4xl lg:text-5xl text-gray-300 mx-auto mb-4" />
-          <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-3">
-            {searchTerm || selectedType !== 'all' || selectedSubject !== 'All Subjects' ? 'No resources found' : 'No resources available'}
-          </h3>
-          <p className="text-gray-600 text-sm lg:text-base mb-6 max-w-md mx-auto">
-            {searchTerm || selectedType !== 'all' || selectedSubject !== 'All Subjects' ? 
-              'Try adjusting your search criteria' : 
-              'Start by uploading your first resource'}
-          </p>
-          <button 
-            onClick={handleCreate} 
-            className="text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-bold shadow-lg flex items-center gap-2 mx-auto text-sm lg:text-base cursor-pointer bg-gradient-to-r from-blue-600 to-cyan-600"
-          >
-            <FiUpload /> Upload Resource
-          </button>
+        /* Modern Empty State */
+        <div className="relative bg-gradient-to-br from-white/90 to-blue-50/50 backdrop-blur-xl rounded-3xl shadow-2xl shadow-blue-500/5 border border-blue-100/50 text-center py-16 px-8 overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-400"></div>
+          </div>
+          
+          <div className="relative">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/10">
+              <FiFolder className="text-4xl text-gradient-to-r from-blue-500 to-purple-500" />
+            </div>
+            
+            <h3 className="text-2xl font-bold text-slate-900 mb-3">
+              {searchTerm || selectedType !== 'all' || selectedSubject !== 'All Subjects' 
+                ? 'No resources match your search' 
+                : 'Your resource library is empty'}
+            </h3>
+            
+            <p className="text-slate-600 text-base mb-8 max-w-md mx-auto">
+              {searchTerm || selectedType !== 'all' || selectedSubject !== 'All Subjects' 
+                ? 'Try adjusting your filters or search keywords to find what you need.' 
+                : 'Start building your digital classroom by uploading your first resource.'}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button 
+                onClick={handleCreate} 
+                className="group relative bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-3.5 rounded-2xl font-bold shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/30 flex items-center gap-2 mx-auto transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <FiUpload className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Upload Resource
+              </button>
+              
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedType('all');
+                  setSelectedSubject('All Subjects');
+                }}
+                className="px-6 py-3.5 rounded-2xl font-semibold border-2 border-slate-200 text-slate-700 hover:border-blue-300 hover:text-blue-600 hover:bg-white transition-all duration-300"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
         </div>
       )}
+   
 
       {/* Create/Edit Modal */}
       {showModal && (
