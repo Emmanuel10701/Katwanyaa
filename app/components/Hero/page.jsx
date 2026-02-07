@@ -333,23 +333,26 @@ const ModernHero = () => {
         <div className={`w-full max-w-4xl transition-all duration-500 transform ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} px-2`}>
           
           {/* Tagline - Reduced size */}
-          <div className="flex items-center justify-center space-x-2 sm:space-x-2 mb-4 sm:mb-4">
-            <div className="h-[1px] w-5 sm:w-6 md:w-8 bg-white/40" />
+<div className="flex items-center justify-center gap-2 mb-3 sm:mb-4 px-2">
+  <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/40" />
 
-            <span
-              className={`
-                uppercase
-                tracking-[0.10em] xs:tracking-[0.12em] sm:tracking-[0.15em]
-                text-xs xs:text-sm sm:text-sm
-                font-bold
-                ${getHighlightColorClass(slide.highlightColor)}
-              `}
-            >
-              {isMobile ? slide.subtitle.substring(0, 22) + '...' : slide.subtitle}
-            </span>
+  <span
+    className={`
+      uppercase
+      text-base xs:text-lg sm:text-base md:text-lg
+      tracking-[0.08em] xs:tracking-[0.1em] sm:tracking-[0.15em]
+      font-semibold sm:font-bold
+      text-center
+      leading-snug
+      ${getHighlightColorClass(slide.highlightColor)}
+    `}
+  >
+    {slide.subtitle}
+  </span>
 
-            <div className="h-[1px] w-5 sm:w-6 md:w-8 bg-white/40" />
-          </div>
+  <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/40" />
+</div>
+
 
           {/* Dynamic Heading - REDUCED SIZE from 7xl to 5xl */}
           <h1 className="
