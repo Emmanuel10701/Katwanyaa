@@ -202,7 +202,7 @@ function DeleteConfirmationModal({
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
             <div className="flex items-start gap-2">
               <FiAlertCircle className="text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-red-700 text-sm">
+              <p className="text-red-700 text-md ">
                 <span className="font-bold">Warning:</span> This action cannot be undone. All files will be permanently deleted.
               </p>
             </div>
@@ -346,7 +346,7 @@ function Notification({
             </div>
             <div className="flex-1">
               <h4 className={`font-bold ${styles.title} mb-1`}>{title}</h4>
-              <p className="text-gray-700 text-sm">{message}</p>
+              <p className="text-gray-700 text-md ">{message}</p>
             </div>
             <button 
               onClick={onClose}
@@ -434,7 +434,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl sm:text-3xl font-bold truncate">Resource Details</h2>
-                <p className="text-white/90 opacity-90 mt-1 text-sm sm:text-lg">
+                <p className="text-white/90 opacity-90 mt-1 text-md  sm:text-lg">
                   Complete educational resource information
                 </p>
               </div>
@@ -459,21 +459,21 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                 {resource.title}
               </h1>
               <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${typeColor.bg} ${typeColor.text} border ${typeColor.border}`}>
+                <span className={`px-3 py-1.5 rounded-full text-md  font-bold ${typeColor.bg} ${typeColor.text} border ${typeColor.border}`}>
                   {resource.type?.charAt(0).toUpperCase() + resource.type?.slice(1) || 'Document'}
                 </span>
                 {resource.accessLevel && (
-                  <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${accessColor.bg} ${accessColor.text}`}>
+                  <span className={`px-3 py-1.5 rounded-full text-md  font-bold ${accessColor.bg} ${accessColor.text}`}>
                     {resource.accessLevel} Access
                   </span>
                 )}
                 {resource.category && (
-                  <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                  <span className="px-3 py-1.5 rounded-full text-md  font-bold bg-purple-100 text-purple-800 border border-purple-200">
                     {resource.category}
                   </span>
                 )}
                 {resource.className && (
-                  <span className="px-3 py-1.5 rounded-full text-sm font-bold bg-gradient-to-r from-cyan-100 to-blue-100 text-blue-800 border border-blue-200">
+                  <span className="px-3 py-1.5 rounded-full text-md  font-bold bg-gradient-to-r from-cyan-100 to-blue-100 text-blue-800 border border-blue-200">
                     Class: {resource.className}
                   </span>
                 )}
@@ -491,7 +491,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                     Description
                   </h3>
                   <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-md  sm:text-base">
                       {resource.description || 'No description available.'}
                     </p>
                   </div>
@@ -513,7 +513,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
                                 {getFileIcon()}
                               </div>
                               <div className="min-w-0">
-                          <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
+                          <h4 className="text-md  sm:text-base font-bold text-gray-900 truncate">
   {file.name.replace(/^[\d-]+/, "")}
 </h4>
                             
@@ -548,7 +548,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
       <div className="p-2 bg-blue-50 rounded-lg">
         <FiBriefcase className="text-blue-600" size={18} />
       </div>
-      <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
+      <h3 className="text-md  font-black uppercase tracking-widest text-slate-800">
         Resource Metadata
       </h3>
     </div>
@@ -563,7 +563,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-100 shrink-0">
                <FiUserCheck className="text-white" size={16} />
             </div>
-            <span className="text-slate-700 font-bold text-sm sm:text-base truncate">
+            <span className="text-slate-700 font-bold text-md  sm:text-base truncate">
               {resource.teacher}
             </span>
           </div>
@@ -577,7 +577,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
           <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 shrink-0">
             <FiUsers className="text-emerald-500" size={14} />
           </div>
-          <span className="text-slate-700 font-bold text-xs sm:text-sm truncate">
+          <span className="text-slate-700 font-bold text-xs sm:text-md  truncate">
             {resource.uploadedBy || 'System'}
           </span>
         </div>
@@ -590,7 +590,7 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
           <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center border border-purple-100 shrink-0">
             <FiFile className="text-purple-500" size={14} />
           </div>
-          <span className="text-slate-700 font-bold text-xs sm:text-sm">
+          <span className="text-slate-700 font-bold text-xs sm:text-md ">
             {resource.files?.length || 0} items
           </span>
         </div>
@@ -617,13 +617,13 @@ function ModernResourceDetailModal({ resource, onClose, onEdit }) {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <button 
                 onClick={onClose} 
-                className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-sm sm:text-base"
+                className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-md  sm:text-base"
               >
                 Close
               </button>
               <button 
                 onClick={() => onEdit(resource)} 
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-sm sm:text-base"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-md  sm:text-base"
               >
                 <FiEdit size={16} /> Edit Resource
               </button>
@@ -985,7 +985,7 @@ useEffect(() => {
               </div>
               <div>
                 <h2 className="text-2xl font-bold">{resource ? 'Edit' : 'Create'} Resource</h2>
-                <p className="text-white/90 opacity-90 mt-1 text-sm">
+                <p className="text-white/90 opacity-90 mt-1 text-md ">
                   Upload educational materials and resources
                 </p>
               </div>
@@ -1006,7 +1006,7 @@ useEffect(() => {
                 <div className="flex items-start gap-3">
                   <FiAlertCircle className="text-red-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="text-red-700 text-sm font-bold">
+                    <p className="text-red-700 text-md  font-bold">
                       File Size Limit Exceeded!
                     </p>
                     <p className="text-red-600 text-xs mt-1">
@@ -1190,7 +1190,7 @@ useEffect(() => {
                     <div className="flex items-start gap-3">
                       <FiAlertCircle className="text-red-500 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-red-700 text-sm font-bold">
+                        <p className="text-red-700 text-md  font-bold">
                           Vercel Size Limit Exceeded!
                         </p>
                         <p className="text-red-600 text-xs mt-1">
@@ -1265,7 +1265,7 @@ useEffect(() => {
                       }`}>
                         {totalSizeMB > 4.5 ? 'Storage Full' : 'Drag & drop files or browse'}
                       </p>
-                      <p className="text-slate-500 text-sm max-w-xs mb-3">
+                      <p className="text-slate-800  text-md  max-w-xs mb-3">
                         {totalSizeMB > 4.5 
                           ? 'Remove files to free up space' 
                           : 'PDF, DOC, PPT, XLS, Images, Videos, or Audio'
@@ -1294,7 +1294,7 @@ useEffect(() => {
                   {(files.length > 0 || existingFiles.length > 0) && (
                     <div className="space-y-6">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">
+                        <h4 className="text-md  font-black uppercase tracking-widest text-slate-400">
                           Selected Assets ({files.length + existingFiles.length - filesToRemove.length})
                         </h4>
                         {totalSizeMB > 4.5 && (
@@ -1332,7 +1332,7 @@ useEffect(() => {
                                   <FiFileText className="text-lg" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm font-bold text-slate-700 truncate">
+                                  <p className="text-md  font-bold text-slate-800 truncate">
                                     {fileObj.name}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1">
@@ -1378,7 +1378,7 @@ useEffect(() => {
                                   <FiFileText className="text-lg" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="text-sm font-bold text-slate-700 truncate">
+                                  <p className="text-md  font-bold text-slate-700 truncate">
                                     {file.name || 'Cloud Resource'}
                                   </p>
                                   <div className="flex items-center gap-2 mt-1">
@@ -1413,7 +1413,7 @@ useEffect(() => {
                 type="button"
                 onClick={onClose}
                 disabled={loading}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 cursor-pointer text-sm"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg disabled:opacity-50 cursor-pointer text-md "
               >
                 Cancel
               </button>
@@ -1421,7 +1421,7 @@ useEffect(() => {
               <button 
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="px-6 py-3 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-sm hover:from-blue-700 hover:to-cyan-700 transition-all"
+                className="px-6 py-3 text-white rounded-xl font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-md  hover:from-blue-700 hover:to-cyan-700 transition-all"
               >
                 {loading ? (
                   <>
@@ -1994,7 +1994,7 @@ const handleSubmit = async (formData, id) => {
   // Pagination Component
   const Pagination = () => (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
-      <p className="text-sm text-gray-700 font-medium">
+      <p className="text-md  text-gray-700 font-medium">
         Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredResources.length)} of {filteredResources.length} resources
       </p>
       <div className="flex items-center gap-2">
@@ -2051,7 +2051,7 @@ const handleSubmit = async (formData, id) => {
           <p className="text-gray-700 text-lg mt-4 font-medium">
             Loading Resources
           </p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-400 text-md  mt-1">
             Please wait while we fetch educational resources.
           </p>
         </div>
@@ -2123,7 +2123,7 @@ const handleSubmit = async (formData, id) => {
             </h1>
             
             {/* Description - Responsive sizing and line clamping */}
-            <p className="text-amber-100/90 mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+            <p className="text-amber-100/90 mt-2 sm:mt-3 text-md  xs:text-base sm:text-lg font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
   Centralized hub for uploading, organizing, and securely managing learning resources and documents.
 </p>
 
@@ -2158,12 +2158,12 @@ const handleSubmit = async (formData, id) => {
           {refreshing ? (
             <>
               <CircularProgress size={16} color="inherit" />
-              <span className="text-xs sm:text-sm">Refreshing...</span>
+              <span className="text-xs sm:text-md ">Refreshing...</span>
             </>
           ) : (
             <>
               <FiRotateCw className="w-4 h-4" />
-              <span className="text-xs sm:text-sm">Refresh</span>
+              <span className="text-xs sm:text-md ">Refresh</span>
             </>
           )}
         </button>
@@ -2180,7 +2180,7 @@ const handleSubmit = async (formData, id) => {
           <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="relative flex items-center justify-center gap-2">
             <FiPlus className="w-4 h-4" />
-            <span className="text-xs sm:text-sm whitespace-nowrap">
+            <span className="text-xs sm:text-md  whitespace-nowrap">
               Upload Resource
             </span>
           </div>
@@ -2201,7 +2201,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Total</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Total</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.total}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-2xl">
@@ -2214,7 +2214,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Total Files</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Total Files</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.totalFiles}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 rounded-2xl">
@@ -2227,7 +2227,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Form 1</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Form 1</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.form1 || 0}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 rounded-2xl">
@@ -2240,7 +2240,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Form 2</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Form 2</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.form2 || 0}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-green-50 to-green-100 text-green-600 rounded-2xl">
@@ -2253,7 +2253,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Form 3</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Form 3</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.form3 || 0}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-purple-50 to-purple-100 text-purple-600 rounded-2xl">
@@ -2266,7 +2266,7 @@ const handleSubmit = async (formData, id) => {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-5 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 transform-gpu">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 truncate">Form 4</p>
+                <p className="text-xs sm:text-md  font-semibold text-gray-600 mb-1 truncate">Form 4</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stats.form4 || 0}</p>
               </div>
               <div className="flex-shrink-0 ml-3 p-2.5 sm:p-3 bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-600 rounded-2xl">
@@ -2289,7 +2289,7 @@ const handleSubmit = async (formData, id) => {
                 <h3 className="font-bold text-red-900 text-lg">
                   {selectedResources.size} resource{selectedResources.size === 1 ? '' : 's'} selected
                 </h3>
-                <p className="text-red-700 text-sm">
+                <p className="text-red-700 text-md ">
                   You can perform bulk actions on selected items
                 </p>
               </div>
@@ -2297,14 +2297,14 @@ const handleSubmit = async (formData, id) => {
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setSelectedResources(new Set())}
-                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm"
+                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-md "
               >
                 Clear Selection
               </button>
               <button 
                 onClick={handleBulkDelete}
                 disabled={bulkDeleting}
-                className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2 text-sm"
+                className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg disabled:opacity-50 cursor-pointer flex items-center gap-2 text-md "
               >
                 {bulkDeleting ? (
                   <>
@@ -2333,14 +2333,14 @@ const handleSubmit = async (formData, id) => {
               placeholder="Search resources by title, description, or subject..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10    font-bold pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-gray-50"
+              className="w-full pl-10    font-bold pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-md  bg-gray-50"
             />
           </div>
 
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 cursor-pointer text-md "
           >
             <option value="all">All Types</option>
             {typeOptions.filter(opt => opt.value !== 'all').map(option => (
@@ -2353,7 +2353,7 @@ const handleSubmit = async (formData, id) => {
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-gray-50 cursor-pointer text-md "
           >
             {subjectOptions.map(subject => (
               <option key={subject} value={subject}>
@@ -2365,7 +2365,7 @@ const handleSubmit = async (formData, id) => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50 cursor-pointer text-md "
           >
             {categoryOptions.map(category => (
               <option key={category} value={category}>
@@ -2377,7 +2377,7 @@ const handleSubmit = async (formData, id) => {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-gray-50 cursor-pointer text-md "
           >
             {classOptions.map(className => (
               <option key={className} value={className}>
@@ -2392,7 +2392,7 @@ const handleSubmit = async (formData, id) => {
           <select
             value={selectedAccessLevel}
             onChange={(e) => setSelectedAccessLevel(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 cursor-pointer text-md "
           >
             <option value="all">All Access Levels</option>
             {accessOptions.filter(opt => opt.value !== 'all').map(option => (
@@ -2405,7 +2405,7 @@ const handleSubmit = async (formData, id) => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-gray-50 cursor-pointer text-sm"
+            className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-gray-50 cursor-pointer text-md "
           >
             {statusOptions.map(option => (
               <option key={option.value} value={option.value}>
@@ -2427,7 +2427,7 @@ const handleSubmit = async (formData, id) => {
                 setSelectedStatus('all');
                 setSearchTerm('');
               }}
-              className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 cursor-pointer"
+              className="px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold text-md  hover:bg-gray-50 cursor-pointer"
             >
               Clear All Filters
             </button>
@@ -2471,7 +2471,7 @@ const handleSubmit = async (formData, id) => {
                         {filteredResources.length} items
                       </span>
                     </h3>
-                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+                    <p className="text-md  text-slate-800  mt-1 flex items-center gap-2">
                       <FiClock className="w-3 h-3" />
                       Updated just now
                     </p>
@@ -2480,12 +2480,12 @@ const handleSubmit = async (formData, id) => {
                 
                 <div className="flex items-center gap-3">
                   {selectedResources.size > 0 && (
-                    <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-semibold rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all duration-200 group">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-md  font-semibold rounded-xl hover:shadow-lg hover:shadow-red-500/25 transition-all duration-200 group">
                       <FiTrash2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                       Delete ({selectedResources.size})
                     </button>
                   )}
-                  <button className="p-2.5 text-slate-500 hover:text-blue-600 hover:bg-white hover:shadow-md rounded-xl border border-slate-200 hover:border-blue-200 transition-all duration-200">
+                  <button className="p-2.5 text-slate-800  hover:text-blue-600 hover:bg-white hover:shadow-md rounded-xl border border-slate-200 hover:border-blue-200 transition-all duration-200">
                     <FiMoreVertical className="w-5 h-5" />
                   </button>
                 </div>
@@ -2496,37 +2496,37 @@ const handleSubmit = async (formData, id) => {
               <table className="w-full min-w-[1000px]">
                 <thead>
                   <tr className="bg-gradient-to-r from-slate-50/80 to-white/80 backdrop-blur-sm">
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em] w-16">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em] w-16">
                       Select
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em] min-w-[300px]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em] min-w-[300px]">
                       <div className="flex items-center gap-2">
                         <HiOutlineSparkles className="w-4 h-4 text-blue-500" />
                         Resource
                       </div>
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       <div className="flex items-center gap-2">
                         <FiUsers className="w-4 h-4 text-emerald-500" />
                         Class & Subject
                       </div>
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       <div className="flex items-center gap-2">
                         <FiLock className="w-4 h-4 text-amber-500" />
                         Access & Type
                       </div>
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       <div className="flex items-center gap-2">
                         <FiUserCheck className="w-4 h-4 text-purple-500" />
-                        Author
+                        Teacher
                       </div>
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       Status
                     </th>
-                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">
+                    <th className="py-5 px-8 text-left text-xs font-bold text-slate-800  uppercase tracking-[0.2em]">
                       Actions
                     </th>
                   </tr>
@@ -2585,7 +2585,7 @@ const handleSubmit = async (formData, id) => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <h4 className="font-bold text-slate-900 text-sm leading-tight group-hover:text-blue-600 transition-colors">
+                              <h4 className="font-bold text-slate-900 text-md  leading-tight group-hover:text-blue-600 transition-colors">
                                 {resource.title || 'Untitled Resource'}
                               </h4>
                               <span className="flex items-center gap-1 text-xs text-slate-400">
@@ -2596,7 +2596,7 @@ const handleSubmit = async (formData, id) => {
                             <p className="text-slate-600 text-xs line-clamp-2 mb-3">
                               {resource.description || 'No description provided'}
                             </p>
-                            <div className="flex items-center gap-4 text-xs text-slate-500">
+                            <div className="flex items-center gap-4 text-xs text-slate-800 ">
                               <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-lg">
                                 <FiFile className="w-3 h-3" />
                                 {resource.files?.length || 0} files
@@ -2627,7 +2627,7 @@ const handleSubmit = async (formData, id) => {
                             </span>
                           </div>
                           {resource.students && (
-                            <p className="text-xs text-slate-500 font-medium">
+                            <p className="text-xs text-slate-800  font-medium">
                               {resource.students} students enrolled
                             </p>
                           )}
@@ -2670,16 +2670,16 @@ const handleSubmit = async (formData, id) => {
                       <td className="py-5 px-8">
                         <div className="flex items-center gap-3 group/author">
                           <div className="relative">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-500/25">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-md  shadow-md shadow-blue-500/25">
                               {resource.teacher?.split(' ').map(n => n[0]).join('') || 'A'}
                             </div>
                             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500/0 to-purple-600/0 group-hover/author:from-blue-500/20 group-hover/author:to-purple-600/20 transition-all duration-300"></div>
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-sm font-bold text-slate-900 group-hover/author:text-blue-600 transition-colors">
+                            <span className="text-md  font-bold text-slate-900 group-hover/author:text-blue-600 transition-colors">
                               {resource.teacher || 'System Admin'}
                             </span>
-                            <span className="text-xs text-slate-500 font-medium">
+                            <span className="text-xs text-slate-800  font-medium">
                               {resource.role || 'Educator'}
                             </span>
                           </div>
@@ -2761,7 +2761,7 @@ const handleSubmit = async (formData, id) => {
             {/* Modern Table Footer */}
             <div className="px-8 py-6 border-t border-slate-200/50 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-600 font-medium">
+                <div className="text-md  text-slate-600 font-medium">
                   <span className="font-bold text-slate-900">{indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredResources.length)}</span> 
                   of <span className="font-bold text-slate-900">{filteredResources.length}</span> resources
                 </div>
@@ -2771,7 +2771,7 @@ const handleSubmit = async (formData, id) => {
                     disabled={currentPage === 1}
                     className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-200 group"
                   >
-                    <FiChevronLeft className="w-5 h-5 text-slate-500 group-hover:text-blue-600" />
+                    <FiChevronLeft className="w-5 h-5 text-slate-800  group-hover:text-blue-600" />
                   </button>
                   
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -2783,7 +2783,7 @@ const handleSubmit = async (formData, id) => {
                         )}
                         <button
                           onClick={() => paginate(page)}
-                          className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 ${
+                          className={`px-4 py-2 rounded-xl font-medium text-md  transition-all duration-200 ${
                             currentPage === page 
                               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25' 
                               : 'text-slate-700 hover:bg-slate-100'
@@ -2799,7 +2799,7 @@ const handleSubmit = async (formData, id) => {
                     disabled={currentPage === totalPages}
                     className="p-2.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-200 group"
                   >
-                    <FiChevronRight className="w-5 h-5 text-slate-500 group-hover:text-blue-600" />
+                    <FiChevronRight className="w-5 h-5 text-slate-800  group-hover:text-blue-600" />
                   </button>
                 </div>
               </div>
