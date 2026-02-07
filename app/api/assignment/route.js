@@ -463,6 +463,7 @@ export async function GET(request) {
 }
 
 // POST - Create assignment (PROTECTED)
+// POST - Create assignment (PROTECTED)
 export async function POST(request) {
   try {
     // Authenticate
@@ -544,7 +545,7 @@ export async function POST(request) {
       }
     }
 
-    // Create assignment in database
+    // FIX: Create assignment with dateAssigned field
     const assignment = await prisma.assignment.create({
       data: {
         title,
@@ -552,6 +553,7 @@ export async function POST(request) {
         className,
         teacher,
         dueDate: dueDate ? new Date(dueDate) : null,
+        dateAssigned: new Date(), // FIX: Added required field
         status,
         description,
         instructions,

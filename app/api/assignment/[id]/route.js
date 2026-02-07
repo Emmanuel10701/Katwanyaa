@@ -524,6 +524,7 @@ export async function PUT(request, { params }) {
     const additionalWork = formData.get("additionalWork")?.toString().trim() || existingAssignment.additionalWork;
     const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || existingAssignment.teacherRemarks;
     const learningObjectives = formData.get("learningObjectives")?.toString();
+    const dateAssigned = formData.get("dateAssigned")?.toString() || existingAssignment.dateAssigned;
     
     console.log('📝 Fields extracted:', { title, subject, className, teacher, dueDate });
 
@@ -651,6 +652,7 @@ export async function PUT(request, { params }) {
         className,
         teacher,
         dueDate: dueDate ? new Date(dueDate) : existingAssignment.dueDate,
+        dateAssigned: dateAssigned ? new Date(dateAssigned) : existingAssignment.dateAssigned, // FIX: Added dateAssigned
         status,
         description,
         instructions,
