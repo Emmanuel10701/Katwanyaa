@@ -10,6 +10,7 @@ import {
   FiRefreshCw
 } from 'react-icons/fi';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function NavigationSidebar({ 
   student, 
@@ -29,6 +30,8 @@ export default function NavigationSidebar({
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'ST';
   };
+
+  const router = useRouter();
 
   return (
 <aside className="fixed lg:relative inset-y-0 left-0 z-50  h-full bg-white border-r border-gray-200 w-full max-w-[300px] lg:max-w-[280px] xl:max-w-[300px] flex flex-col">
@@ -131,7 +134,7 @@ export default function NavigationSidebar({
             
             {/* Refresh Button */}
             <button
-              onClick={onRefresh}
+              onClick={() => router.refresh()}
               className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
               bg-white border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl 
               text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
