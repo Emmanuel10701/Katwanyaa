@@ -129,34 +129,42 @@ const authenticateRequest = (req) => {
 };
 
 // ==================== CLOUDINARY HELPERS ====================
+// FIXED: Same upload logic as route.js
 const uploadFileToCloudinary = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
   try {
+    const originalName = file.name;
+    const fileExtension = '.' + originalName.split('.').pop().toLowerCase();
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
-    const originalName = file.name;
+    
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
-
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
-    const isPDF = extension === '.pdf';
-    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(extension);
+    const isPDF = fileExtension === '.pdf';
+    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
     
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
+    const format = fileExtension.substring(1);
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: "school_resources",
+        folder: "school_resources/files",
         public_id: `${timestamp}-${sanitizedFileName}`,
         overwrite: false,
+        format: format,
+        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif']
       };
 
       if (isImage) {
-        uploadOptions.transformation = [{ width: 1200, crop: "scale" }];
+        uploadOptions.transformation = [
+          { width: 1200, crop: "scale" },
+          { quality: "auto:good" }
+        ];
       }
 
       const stream = cloudinary.uploader.upload_stream(
@@ -170,14 +178,21 @@ const uploadFileToCloudinary = async (file) => {
             else if (isPDF) fileType = 'pdf';
             else if (isDocument) fileType = 'document';
 
+            console.log('Uploaded file:', {
+              url: result.secure_url,
+              extension: fileExtension,
+              format: result.format
+            });
+
             resolve({
               url: result.secure_url,
               name: originalName,
               size: file.size,
-              extension: extension,
+              extension: fileExtension,
               uploadedAt: new Date().toISOString(),
               fileType: fileType,
-              publicId: result.public_id
+              publicId: result.public_id,
+              format: result.format
             });
           }
         }
@@ -214,8 +229,10 @@ const deleteFileFromCloudinary = async (fileUrl) => {
     if (!urlMatch) return;
     
     const publicId = urlMatch[1];
-    const isVideo = fileUrl.includes('/video/');
-    const isRaw = fileUrl.includes('/raw/') || fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
+    const isVideo = fileUrl.includes('/video/') || 
+                   fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
+    const isRaw = fileUrl.includes('/raw/') || 
+                 fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
     
     const resourceType = isVideo ? "video" : isRaw ? "raw" : "image";
     
@@ -273,13 +290,18 @@ const cleanResourceResponse = (resource) => {
     id: resource.id,
     title: resource.title,
     subject: resource.subject,
-    className: resource.className,
     teacher: resource.teacher,
+    className: resource.className,
     description: resource.description,
     category: resource.category,
     type: resource.type,
     files: (resource.files || []).map(file => ({
-      ...file,
+      url: file.url,
+      name: file.name,
+      size: file.size,
+      extension: file.extension || '.' + file.name.split('.').pop().toLowerCase(),
+      fileType: file.fileType || getFileType(file.name),
+      uploadedAt: file.uploadedAt,
       formattedSize: formatFileSize(file.size || 0)
     })),
     accessLevel: resource.accessLevel,
@@ -289,36 +311,6 @@ const cleanResourceResponse = (resource) => {
     createdAt: resource.createdAt,
     updatedAt: resource.updatedAt
   };
-};
-
-// Helper: Parse form data
-const parseFormData = (formData, existingResource = null) => {
-  const updateData = {
-    updatedAt: new Date()
-  };
-
-  // Text fields
-  const title = formData.get("title")?.trim();
-  const subject = formData.get("subject")?.trim();
-  const className = formData.get("className")?.trim();
-  const teacher = formData.get("teacher")?.trim();
-  const description = formData.get("description")?.trim();
-  const category = formData.get("category")?.trim();
-  const accessLevel = formData.get("accessLevel")?.trim();
-  const uploadedBy = formData.get("uploadedBy")?.trim();
-  const isActive = formData.get("isActive");
-
-  if (title !== null && title !== undefined) updateData.title = title;
-  if (subject !== null && subject !== undefined) updateData.subject = subject;
-  if (className !== null && className !== undefined) updateData.className = className;
-  if (teacher !== null && teacher !== undefined) updateData.teacher = teacher;
-  if (description !== null && description !== undefined) updateData.description = description;
-  if (category !== null && category !== undefined) updateData.category = category;
-  if (accessLevel !== null && accessLevel !== undefined) updateData.accessLevel = accessLevel;
-  if (uploadedBy !== null && uploadedBy !== undefined) updateData.uploadedBy = uploadedBy;
-  if (isActive !== null && isActive !== undefined) updateData.isActive = isActive === "true";
-
-  return updateData;
 };
 
 // ==================== API ENDPOINTS ====================
@@ -360,7 +352,7 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT - Update a resource completely (PROTECTED) - Like school-documents
+// PUT - Update a resource (PROTECTED)
 export async function PUT(request, { params }) {
   try {
     const auth = authenticateRequest(request);
@@ -368,7 +360,7 @@ export async function PUT(request, { params }) {
       return auth.response;
     }
 
-    console.log("✏️ PUT /api/resources/[id] - Full update");
+    console.log("✏️ PUT /api/resources/[id] - Updating resource");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
 
     const { id } = params;
@@ -392,57 +384,13 @@ export async function PUT(request, { params }) {
       }, { status: 404 });
     }
 
-    const formData = await request.formData();
+    const contentType = request.headers.get("content-type") || "";
     
-    // Delete old files from Cloudinary
-    if (existingResource.files && Array.isArray(existingResource.files)) {
-      const deletePromises = existingResource.files
-        .filter(file => file.url)
-        .map(file => deleteFileFromCloudinary(file.url));
-      
-      await Promise.all(deletePromises);
-      console.log(`🗑️ Deleted ${deletePromises.length} old files from Cloudinary`);
-    }
-
-    // Upload new files
-    const files = formData.getAll("files");
-    const validFiles = Array.from(files).filter(file => file?.name && file.size > 0);
-    
-    let uploadedFiles = [];
-    if (validFiles.length > 0) {
-      console.log(`📤 Uploading ${validFiles.length} new file(s)...`);
-      uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
-      console.log(`✅ Uploaded ${uploadedFiles.length} file(s)`);
+    if (contentType.includes("multipart/form-data")) {
+      return await handleFormUpdate(request, resourceId, existingResource);
     } else {
-      // If no new files, keep empty array
-      uploadedFiles = [];
+      return await handleJsonUpdate(request, resourceId);
     }
-
-    // Parse form data
-    const updateData = parseFormData(formData, existingResource);
-    
-    // Update files and type
-    updateData.files = uploadedFiles;
-    if (uploadedFiles.length > 0) {
-      updateData.type = determineMainTypeFromFiles(uploadedFiles);
-    } else {
-      updateData.type = "document"; // Default type if no files
-    }
-
-    // Update the resource
-    const updatedResource = await prisma.resource.update({
-      where: { id: resourceId },
-      data: updateData,
-    });
-
-    console.log(`✅ Resource updated: ${updatedResource.title} (ID: ${updatedResource.id})`);
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Resource updated successfully",
-      resource: cleanResourceResponse(updatedResource)
-    }, { status: 200 });
-
   } catch (error) {
     console.error("❌ Error updating resource:", error);
     return NextResponse.json({ 
@@ -452,56 +400,17 @@ export async function PUT(request, { params }) {
   }
 }
 
-// PATCH - Partial update (e.g., update downloads) (PROTECTED)
-export async function PATCH(request, { params }) {
+async function handleJsonUpdate(request, id) {
   try {
-    const auth = authenticateRequest(request);
-    if (!auth.authenticated) {
-      return auth.response;
-    }
-
-    console.log("📥 PATCH /api/resources/[id] - Partial update");
-    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-
-    const { id } = params;
-    const resourceId = parseInt(id);
-    
-    if (isNaN(resourceId)) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Invalid resource ID" 
-      }, { status: 400 });
-    }
-
-    const existingResource = await prisma.resource.findUnique({ 
-      where: { id: resourceId } 
-    });
-    
-    if (!existingResource) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "Resource not found" 
-      }, { status: 404 });
-    }
-
     const body = await request.json();
-    const { downloads, isActive } = body;
-
-    const updateData = {
-      updatedAt: new Date()
-    };
-
-    if (downloads !== undefined) {
-      updateData.downloads = downloads;
-    }
-    
-    if (isActive !== undefined) {
-      updateData.isActive = isActive;
-    }
+    const { id: _, createdAt, downloads, files, ...updateData } = body;
 
     const resource = await prisma.resource.update({
-      where: { id: resourceId },
-      data: updateData,
+      where: { id: id },
+      data: { 
+        ...updateData, 
+        updatedAt: new Date() 
+      },
     });
 
     return NextResponse.json({ 
@@ -509,12 +418,135 @@ export async function PATCH(request, { params }) {
       message: "Resource updated successfully", 
       resource: cleanResourceResponse(resource)
     }, { status: 200 });
-
   } catch (error) {
-    console.error("❌ Error in PATCH:", error);
+    console.error("❌ Error in JSON update:", error);
     return NextResponse.json({ 
       success: false, 
       error: error.message 
+    }, { status: 500 });
+  }
+}
+
+async function handleFormUpdate(request, id, existingResource) {
+  try {
+    const formData = await request.formData();
+
+    const title = formData.get("title")?.trim();
+    const subject = formData.get("subject")?.trim();
+    const teacher = formData.get("teacher")?.trim();
+    const className = formData.get("className")?.trim();
+    const description = formData.get("description")?.trim();
+    const category = formData.get("category")?.trim();
+    const accessLevel = formData.get("accessLevel")?.trim();
+    const uploadedBy = formData.get("uploadedBy")?.trim();
+    const isActive = formData.get("isActive");
+
+    let updateData = {
+      updatedAt: new Date()
+    };
+
+    if (title !== null && title !== undefined) updateData.title = title;
+    if (subject !== null && subject !== undefined) updateData.subject = subject;
+    if (teacher !== null && teacher !== undefined) updateData.teacher = teacher;
+    if (className !== null && className !== undefined) updateData.className = className;
+    if (description !== null && description !== undefined) updateData.description = description;
+    if (category !== null && category !== undefined) updateData.category = category;
+    if (accessLevel !== null && accessLevel !== undefined) updateData.accessLevel = accessLevel;
+    if (uploadedBy !== null && uploadedBy !== undefined) updateData.uploadedBy = uploadedBy;
+    if (isActive !== null && isActive !== undefined) updateData.isActive = isActive === "true";
+
+    // Handle file updates
+    const existingFilesStr = formData.get("existingFiles");
+    const filesToRemoveStr = formData.get("filesToRemove");
+    const newFiles = formData.getAll("files");
+
+    console.log("📁 File Update Details:");
+    console.log("- New files:", newFiles.length);
+
+    let finalFiles = [];
+
+    // Parse existing files that should remain
+    if (existingFilesStr) {
+      try {
+        const parsedFiles = JSON.parse(existingFilesStr);
+        if (Array.isArray(parsedFiles)) {
+          finalFiles = parsedFiles;
+          console.log("- Existing files to keep:", parsedFiles.length);
+        }
+      } catch (error) {
+        console.error("❌ Error parsing existingFiles:", error);
+      }
+    }
+
+    // Parse and remove files marked for deletion
+    if (filesToRemoveStr) {
+      try {
+        const filesToRemove = JSON.parse(filesToRemoveStr);
+        if (Array.isArray(filesToRemove)) {
+          console.log("- Files to remove:", filesToRemove.length);
+          
+          // Remove from finalFiles and delete from storage
+          finalFiles = finalFiles.filter(file => {
+            const shouldRemove = filesToRemove.includes(file.url);
+            if (shouldRemove && file.url) {
+              deleteFileFromCloudinary(file.url).catch(err => 
+                console.warn("⚠️ Could not delete file:", file.url, err.message)
+              );
+            }
+            return !shouldRemove;
+          });
+        }
+      } catch (error) {
+        console.error("❌ Error parsing filesToRemove:", error);
+      }
+    }
+
+    // Upload new files
+    if (newFiles.length > 0 && newFiles[0].name) {
+      console.log("- Uploading new files...");
+      const uploadedNewFiles = await uploadMultipleFilesToCloudinary(newFiles);
+      console.log("- Successfully uploaded:", uploadedNewFiles.length);
+      
+      // Add new files to finalFiles
+      finalFiles = [...finalFiles, ...uploadedNewFiles];
+    }
+
+    console.log("- Final file count:", finalFiles.length);
+    
+    // Update files array in database
+    updateData.files = finalFiles;
+    
+    // Determine file type safely
+    if (finalFiles.length > 0) {
+      updateData.type = determineMainTypeFromFiles(finalFiles);
+      console.log("- Determined type:", updateData.type);
+    } else {
+      updateData.type = "document";
+    }
+
+    console.log("💾 Saving to database...");
+
+    const resource = await prisma.resource.update({
+      where: { id: id },
+      data: updateData,
+    });
+
+    console.log("✅ Update successful");
+    console.log("- Updated resource ID:", resource.id);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `Resource updated successfully with ${updateData.files?.length || 0} file(s)`, 
+      resource: cleanResourceResponse(resource)
+    }, { status: 200 });
+  } catch (error) {
+    console.error("❌ Error in form update:", error);
+    console.error("- Error details:", error.message);
+    
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message,
+      details: "Check server logs for more information"
     }, { status: 500 });
   }
 }
@@ -527,7 +559,7 @@ export async function DELETE(request, { params }) {
       return auth.response;
     }
 
-    console.log("🗑️ DELETE /api/resources/[id]");
+    console.log("🗑️ DELETE /api/resources/[id] - Deleting resource");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
 
     const { id } = params;
@@ -569,9 +601,62 @@ export async function DELETE(request, { params }) {
       success: true, 
       message: "Resource and all associated files deleted successfully" 
     }, { status: 200 });
-
   } catch (error) {
     console.error("❌ Error deleting resource:", error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 });
+  }
+}
+
+// PATCH - Increment download count (PROTECTED)
+export async function PATCH(request, { params }) {
+  try {
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    console.log("📥 PATCH /api/resources/[id] - Updating download count");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
+
+    const { id } = params;
+    const resourceId = parseInt(id);
+    
+    if (isNaN(resourceId)) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Invalid resource ID" 
+      }, { status: 400 });
+    }
+
+    const existingResource = await prisma.resource.findUnique({ 
+      where: { id: resourceId } 
+    });
+    
+    if (!existingResource) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "Resource not found" 
+      }, { status: 404 });
+    }
+
+    const resource = await prisma.resource.update({
+      where: { id: resourceId },
+      data: { 
+        downloads: { increment: 1 }, 
+        updatedAt: new Date() 
+      },
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Download count updated", 
+      downloads: resource.downloads 
+    }, { status: 200 });
+  } catch (error) {
+    console.error("❌ Error updating download count:", error);
     return NextResponse.json({ 
       success: false, 
       error: error.message 

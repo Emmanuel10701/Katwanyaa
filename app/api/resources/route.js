@@ -129,56 +129,82 @@ const authenticateRequest = (req) => {
 };
 
 // ==================== CLOUDINARY HELPERS ====================
-const uploadFileToCloudinary = async (file, folder = "school_resources") => {
+// FIXED: This now works EXACTLY like school-documents API
+const uploadFileToCloudinary = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
   try {
+    // Get file extension properly
+    const originalName = file.name;
+    const fileExtension = '.' + originalName.split('.').pop().toLowerCase();
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
-    const originalName = file.name;
+    
+    // Sanitize filename (preserve extension)
     const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
-
+    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    
+    // Determine resource type
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
-    const isPDF = extension === '.pdf';
-    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(extension);
+    const isPDF = fileExtension === '.pdf';
+    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
+    const isAudio = file.type.startsWith('audio/');
     
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
+    const format = fileExtension.substring(1); // Remove the dot
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: folder,
-        public_id: `${timestamp}-${sanitizedFileName}`,
+        folder: "school_resources/files", // Changed to match pattern
+        public_id: `${timestamp}-${sanitizedFileName}`, // This will keep extension automatically
         overwrite: false,
+        format: format, // Explicitly set format
+        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav']
       };
 
+      // Add transformations for images only
       if (isImage) {
-        uploadOptions.transformation = [{ width: 1200, crop: "scale" }];
+        uploadOptions.transformation = [
+          { width: 1200, crop: "scale" },
+          { quality: "auto:good" }
+        ];
       }
 
       const stream = cloudinary.uploader.upload_stream(
         uploadOptions,
         (error, result) => {
-          if (error) reject(error);
-          else {
+          if (error) {
+            console.error("Cloudinary upload error details:", error);
+            reject(error);
+          } else {
+            // Determine file type for display
             let fileType = 'document';
             if (isImage) fileType = 'image';
             else if (isVideo) fileType = 'video';
             else if (isPDF) fileType = 'pdf';
             else if (isDocument) fileType = 'document';
+            else if (isAudio) fileType = 'audio';
+
+            console.log('Upload successful:', {
+              url: result.secure_url,
+              format: result.format,
+              publicId: result.public_id,
+              originalName
+            });
 
             resolve({
               url: result.secure_url,
               name: originalName,
               size: file.size,
-              extension: extension,
+              extension: fileExtension,
               uploadedAt: new Date().toISOString(),
               fileType: fileType,
+              storageType: 'cloudinary',
               publicId: result.public_id,
-              format: result.format
+              format: result.format,
+              resourceType: result.resource_type
             });
           }
         }
@@ -187,14 +213,14 @@ const uploadFileToCloudinary = async (file, folder = "school_resources") => {
     });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    return null;
+    throw new Error(`File upload failed: ${error.message}`);
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files, folder = "school_resources") => {
+const uploadMultipleFilesToCloudinary = async (files) => {
   if (!files || files.length === 0) return [];
   
-  const uploadPromises = files.map(file => uploadFileToCloudinary(file, folder));
+  const uploadPromises = files.map(file => uploadFileToCloudinary(file));
   const results = await Promise.allSettled(uploadPromises);
   
   const uploadedFiles = [];
@@ -209,21 +235,35 @@ const uploadMultipleFilesToCloudinary = async (files, folder = "school_resources
   return uploadedFiles;
 };
 
+// FIXED: Delete function to handle different resource types
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
+    // Extract public ID from URL
     const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
-    if (!urlMatch) return;
+    if (!urlMatch) {
+      console.warn(`Could not extract public ID from URL: ${fileUrl}`);
+      return;
+    }
     
     const publicId = urlMatch[1];
-    const isVideo = fileUrl.includes('/video/');
-    const isRaw = fileUrl.includes('/raw/') || fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
+    const isVideo = fileUrl.includes('/video/') || 
+                   fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
+    const isRaw = fileUrl.includes('/raw/') || 
+                 fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
+    const isImage = fileUrl.includes('/image/') || 
+                   fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i);
     
-    const resourceType = isVideo ? "video" : isRaw ? "raw" : "image";
+    const resourceType = isVideo ? "video" : isRaw ? "raw" : isImage ? "image" : "raw";
     
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-    console.log(`✅ Deleted from Cloudinary: ${publicId}`);
+    console.log(`Deleting from Cloudinary: ${publicId} (${resourceType})`);
+    
+    await cloudinary.uploader.destroy(publicId, { 
+      resource_type: resourceType 
+    });
+    
+    console.log(`✅ Deleted from Cloudinary: ${fileUrl}`);
   } catch (error) {
     console.warn("⚠️ Could not delete Cloudinary file:", error.message);
   }
@@ -269,7 +309,7 @@ const determineMainTypeFromFiles = (files) => {
   return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
 };
 
-// Helper: Clean resource response
+// FIXED: Clean response to match school-documents structure
 const cleanResourceResponse = (resource) => {
   if (!resource) return null;
   
@@ -277,14 +317,21 @@ const cleanResourceResponse = (resource) => {
     id: resource.id,
     title: resource.title,
     subject: resource.subject,
-    className: resource.className,
     teacher: resource.teacher,
+    className: resource.className,
     description: resource.description,
     category: resource.category,
     type: resource.type,
     files: (resource.files || []).map(file => ({
-      ...file,
-      formattedSize: formatFileSize(file.size || 0)
+      url: file.url,
+      name: file.name,
+      size: file.size,
+      extension: file.extension || '.' + file.name.split('.').pop().toLowerCase(),
+      fileType: file.fileType || getFileType(file.name),
+      uploadedAt: file.uploadedAt,
+      formattedSize: formatFileSize(file.size || 0),
+      publicId: file.publicId,
+      format: file.format
     })),
     accessLevel: resource.accessLevel,
     uploadedBy: resource.uploadedBy,
@@ -297,7 +344,7 @@ const cleanResourceResponse = (resource) => {
 
 // ==================== API ENDPOINTS ====================
 
-// GET - Fetch all resources (PUBLIC)
+// GET - Fetch all resources (PUBLIC) - FIXED to work like school-documents
 export async function GET() {
   try {
     console.log("📥 GET /api/resources");
@@ -324,125 +371,103 @@ export async function GET() {
   }
 }
 
-// POST - Create or update ALL resources (PROTECTED) - Like school-documents
+// POST - Create resource (PROTECTED) - FIXED to work like school-documents
 export async function POST(request) {
   try {
+    // Authenticate
     const auth = authenticateRequest(request);
     if (!auth.authenticated) {
       return auth.response;
     }
 
-    console.log("📝 POST /api/resources - Processing bulk update");
+    console.log("📝 POST /api/resources - Creating resource");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
 
     const formData = await request.formData();
-    
-    // Get all files
+
+    // Get form fields
+    const title = formData.get("title")?.trim() || "";
+    const subject = formData.get("subject")?.trim() || "";
+    const teacher = formData.get("teacher")?.trim() || "";
+    const className = formData.get("className")?.trim() || "";
+    const description = formData.get("description")?.trim() || "";
+    const category = formData.get("category")?.trim() || "general";
+    const accessLevel = formData.get("accessLevel")?.trim() || "student";
+    const uploadedBy = formData.get("uploadedBy")?.trim() || auth.user.name;
+
+    // Validate required fields
+    if (!title || !subject || !teacher || !className) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Title, subject, teacher, and class name are required" 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get and validate files
     const files = formData.getAll("files");
     const validFiles = Array.from(files).filter(file => file?.name && file.size > 0);
     
     if (validFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: "No valid files provided" 
+        error: "At least one file is required" 
       }, { status: 400 });
     }
 
-    // Upload all files to Cloudinary
-    console.log(`📤 Uploading ${validFiles.length} file(s)...`);
+    // Upload files to Cloudinary
+    console.log(`📤 Uploading ${validFiles.length} file(s) to Cloudinary...`);
     const uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
     
     if (uploadedFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: "Failed to upload files" 
+        error: "Failed to upload files to Cloudinary" 
       }, { status: 500 });
     }
 
-    // Process each uploaded file as a separate resource
-    const resources = [];
-    const errors = [];
+    console.log(`✅ Successfully uploaded ${uploadedFiles.length} file(s)`);
+    
+    // Log uploaded file details
+    uploadedFiles.forEach((file, index) => {
+      console.log(`File ${index + 1}:`, {
+        name: file.name,
+        url: file.url,
+        extension: file.extension,
+        size: file.size
+      });
+    });
 
-    for (const uploadedFile of uploadedFiles) {
-      try {
-        // Extract metadata from filename or use defaults
-        const fileName = uploadedFile.name.toLowerCase();
-        
-        // Auto-detect subject from filename patterns
-        let detectedSubject = "General";
-        let detectedCategory = "document";
-        let detectedClassName = "All Classes";
-        
-        // Pattern matching for subject detection
-        if (fileName.includes('math') || fileName.includes('mathematics')) detectedSubject = "Mathematics";
-        else if (fileName.includes('eng') || fileName.includes('english')) detectedSubject = "English";
-        else if (fileName.includes('kisw') || fileName.includes('kiswahili')) detectedSubject = "Kiswahili";
-        else if (fileName.includes('bio') || fileName.includes('biology')) detectedSubject = "Biology";
-        else if (fileName.includes('phy') || fileName.includes('physics')) detectedSubject = "Physics";
-        else if (fileName.includes('chem') || fileName.includes('chemistry')) detectedSubject = "Chemistry";
-        else if (fileName.includes('hist') || fileName.includes('history')) detectedSubject = "History";
-        else if (fileName.includes('geo') || fileName.includes('geography')) detectedSubject = "Geography";
-        else if (fileName.includes('cre') || fileName.includes('religious')) detectedSubject = "CRE";
-        else if (fileName.includes('ire')) detectedSubject = "IRE";
-        else if (fileName.includes('hre')) detectedSubject = "HRE";
-        else if (fileName.includes('comp') || fileName.includes('computer')) detectedSubject = "Computer";
-        
-        // Pattern matching for class
-        if (fileName.includes('form1') || fileName.includes('f1')) detectedClassName = "Form 1";
-        else if (fileName.includes('form2') || fileName.includes('f2')) detectedClassName = "Form 2";
-        else if (fileName.includes('form3') || fileName.includes('f3')) detectedClassName = "Form 3";
-        else if (fileName.includes('form4') || fileName.includes('f4')) detectedClassName = "Form 4";
-        
-        // Get form data for this file (or use defaults)
-        const title = formData.get("title")?.trim() || 
-                     uploadedFile.name.split('.')[0] || 
-                     "Resource Document";
-        const subject = formData.get("subject")?.trim() || detectedSubject;
-        const className = formData.get("className")?.trim() || detectedClassName;
-        const teacher = formData.get("teacher")?.trim() || auth.user.name;
-        const description = formData.get("description")?.trim() || 
-                          `${uploadedFile.fileType.toUpperCase()} resource for ${className} - ${subject}`;
-        const category = formData.get("category")?.trim() || uploadedFile.fileType;
-        const accessLevel = formData.get("accessLevel")?.trim() || "student";
-        const uploadedBy = formData.get("uploadedBy")?.trim() || auth.user.name;
+    // Determine main type
+    const mainType = determineMainTypeFromFiles(uploadedFiles);
 
-        // Create resource for this file
-        const resource = await prisma.resource.create({
-          data: {
-            title,
-            subject,
-            className,
-            teacher,
-            description,
-            category,
-            type: uploadedFile.fileType,
-            files: [uploadedFile], // Single file per resource
-            accessLevel,
-            uploadedBy,
-            downloads: 0,
-            isActive: true,
-          },
-        });
+    // Create resource in database
+    const resource = await prisma.resource.create({
+      data: {
+        title,
+        subject,
+        teacher,
+        className,
+        description,
+        category,
+        type: mainType,
+        files: uploadedFiles,
+        accessLevel,
+        uploadedBy,
+        downloads: 0,
+        isActive: true,
+      },
+    });
 
-        resources.push(cleanResourceResponse(resource));
-        console.log(`✅ Created resource: ${resource.title} (ID: ${resource.id})`);
-        
-      } catch (fileError) {
-        errors.push({
-          file: uploadedFile.name,
-          error: fileError.message
-        });
-        console.error(`❌ Failed to create resource for ${uploadedFile.name}:`, fileError);
-      }
-    }
+    console.log(`✅ Resource created with ID: ${resource.id}`);
 
     return NextResponse.json(
       { 
         success: true, 
-        message: `Processed ${resources.length} resource(s) successfully`,
-        resources: resources,
-        errors: errors.length > 0 ? errors : undefined,
-        count: resources.length
+        message: `Resource created with ${uploadedFiles.length} file(s)`, 
+        resource: cleanResourceResponse(resource)
       },
       { status: 201 }
     );
@@ -451,8 +476,9 @@ export async function POST(request) {
     console.error("❌ POST Error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: "Failed to process resources",
-      message: error.message 
+      error: "Failed to create resource",
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
 }
