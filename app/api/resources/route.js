@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
 import cloudinary from "../../../libs/cloudinary";
 
-// ==================== TOKEN VERIFICATION FOR POST ONLY ====================
+// ==================== AUTHENTICATION ====================
 class DeviceTokenManager {
-  static validateTokensFromHeaders(headers, options = {}) {
+  static validateTokensFromHeaders(headers) {
     try {
       const adminToken = headers.get('x-admin-token') || headers.get('authorization')?.replace('Bearer ', '');
       const deviceToken = headers.get('x-device-token');
@@ -27,7 +27,7 @@ class DeviceTokenManager {
         return { 
           valid: false, 
           reason: `device_${deviceValid.reason}`,
-          message: `Device token ${deviceValid.reason}: ${deviceValid.error || ''}`
+          message: `Device token error: ${deviceValid.error || 'Invalid token'}`
         };
       }
 
@@ -36,14 +36,14 @@ class DeviceTokenManager {
         adminPayload = JSON.parse(atob(adminParts[1]));
         
         const currentTime = Date.now() / 1000;
-        if (adminPayload.exp < currentTime) {
+        if (adminPayload.exp && adminPayload.exp < currentTime) {
           return { valid: false, reason: 'admin_token_expired', message: 'Admin token has expired' };
         }
         
-        const userRole = adminPayload.role || adminPayload.userRole;
+        const userRole = adminPayload.role || adminPayload.userRole || '';
         const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL', 'TEACHER', 'teacher'];
         
-        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+        if (!validRoles.includes(userRole.toUpperCase())) {
           return { 
             valid: false, 
             reason: 'invalid_role', 
@@ -55,7 +55,7 @@ class DeviceTokenManager {
         return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
       }
 
-      console.log('✅ Resource management authentication successful for user:', adminPayload.name || 'Unknown');
+      console.log('✅ Authentication successful for user:', adminPayload.name || 'Unknown');
       
       return { 
         valid: true, 
@@ -104,7 +104,6 @@ class DeviceTokenManager {
 
 const authenticateRequest = (req) => {
   const headers = req.headers;
-  
   const validationResult = DeviceTokenManager.validateTokensFromHeaders(headers);
   
   if (!validationResult.valid) {
@@ -114,8 +113,8 @@ const authenticateRequest = (req) => {
         { 
           success: false, 
           error: "Access Denied",
-          message: "Authentication required to manage resources.",
-          details: validationResult.message
+          message: validationResult.message,
+          details: validationResult.reason
         },
         { status: 401 }
       )
@@ -125,12 +124,11 @@ const authenticateRequest = (req) => {
   return {
     authenticated: true,
     user: validationResult.user,
-    deviceInfo: validationResult.devInfo
+    deviceInfo: validationResult.deviceInfo
   };
 };
-// ==================== END TOKEN VERIFICATION ====================
 
-// Helper: Upload file to Cloudinary
+// ==================== CLOUDINARY HELPERS ====================
 const uploadFileToCloudinary = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
@@ -142,39 +140,23 @@ const uploadFileToCloudinary = async (file) => {
     const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, "_");
     const extension = originalName.substring(originalName.lastIndexOf('.')).toLowerCase();
 
-    // Determine file type and resource type
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     const isPDF = extension === '.pdf';
-    const isDocument = ['.doc', '.docx', '.txt'].includes(extension);
-    const isSpreadsheet = ['.xls', '.xlsx', '.csv'].includes(extension);
-    const isPresentation = ['.ppt', '.pptx'].includes(extension);
-    const isArchive = ['.zip', '.rar', '.7z'].includes(extension);
-    const isAudio = file.type.startsWith('audio/');
+    const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(extension);
     
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: "school_resources/files",
+        folder: "school_resources",
         public_id: `${timestamp}-${sanitizedFileName}`,
-        use_filename: false,
-        unique_filename: true,
         overwrite: false,
       };
 
-      // Add transformations for images only
       if (isImage) {
-        uploadOptions.transformation = [
-          { width: 1200, crop: "scale" },
-          { quality: "auto:good" }
-        ];
-      } else if (isVideo) {
-        uploadOptions.transformation = [
-          { width: 1280, crop: "scale" },
-          { quality: "auto" }
-        ];
+        uploadOptions.transformation = [{ width: 1200, crop: "scale" }];
       }
 
       const stream = cloudinary.uploader.upload_stream(
@@ -182,16 +164,11 @@ const uploadFileToCloudinary = async (file) => {
         (error, result) => {
           if (error) reject(error);
           else {
-            // Determine file type for display
             let fileType = 'document';
             if (isImage) fileType = 'image';
             else if (isVideo) fileType = 'video';
             else if (isPDF) fileType = 'pdf';
             else if (isDocument) fileType = 'document';
-            else if (isSpreadsheet) fileType = 'spreadsheet';
-            else if (isPresentation) fileType = 'presentation';
-            else if (isArchive) fileType = 'archive';
-            else if (isAudio) fileType = 'audio';
 
             resolve({
               url: result.secure_url,
@@ -200,10 +177,7 @@ const uploadFileToCloudinary = async (file) => {
               extension: extension,
               uploadedAt: new Date().toISOString(),
               fileType: fileType,
-              storageType: 'cloudinary',
-              publicId: result.public_id,
-              format: result.format,
-              resourceType: result.resource_type
+              publicId: result.public_id
             });
           }
         }
@@ -212,197 +186,136 @@ const uploadFileToCloudinary = async (file) => {
     });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    return null;
+    throw new Error(`File upload failed: ${error.message}`);
   }
 };
 
-// Helper: Upload multiple files to Cloudinary
 const uploadMultipleFilesToCloudinary = async (files) => {
   if (!files || files.length === 0) return [];
-
+  
+  const uploadPromises = files.map(file => uploadFileToCloudinary(file));
+  const results = await Promise.allSettled(uploadPromises);
+  
   const uploadedFiles = [];
-
-  for (const file of files) {
-    if (!file.name || file.size === 0) continue;
-    
-    const result = await uploadFileToCloudinary(file);
-    if (result) {
-      uploadedFiles.push({
-        url: result.url,
-        name: result.name,
-        size: result.size,
-        extension: result.extension,
-        uploadedAt: result.uploadedAt,
-        fileType: result.fileType
-      });
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && result.value) {
+      uploadedFiles.push(result.value);
+    } else {
+      console.error(`Failed to upload file ${files[index]?.name}:`, result.reason);
     }
-  }
-
+  });
+  
   return uploadedFiles;
 };
 
-// Helper: Delete files from Cloudinary
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
-    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+(?:$|\?)/);
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
     if (!urlMatch) return;
     
     const publicId = urlMatch[1];
-    const isVideo = fileUrl.includes('/video/') || 
-                   fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
-    const isRaw = fileUrl.includes('/raw/') || 
-                 fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv|zip|rar|7z|mp3|wav|m4a|ogg)$/i);
+    const isVideo = fileUrl.includes('/video/');
+    const isRaw = fileUrl.includes('/raw/') || fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
     
     const resourceType = isVideo ? "video" : isRaw ? "raw" : "image";
     
-    await cloudinary.uploader.destroy(publicId, { 
-      resource_type: resourceType 
-    });
-    console.log(`✅ Deleted from Cloudinary: ${fileUrl}`);
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    console.log(`✅ Deleted from Cloudinary: ${publicId}`);
   } catch (error) {
     console.warn("⚠️ Could not delete Cloudinary file:", error.message);
   }
 };
 
-// Helper: Format file size
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return "0 Bytes";
+  if (!bytes || bytes === 0) return "0 Bytes";
   const k = 1024;
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-// Helper: Get file type from name
 const getFileType = (fileName) => {
-  if (!fileName || typeof fileName !== 'string') {
-    return "document";
-  }
+  if (!fileName) return "document";
   
-  const parts = fileName.split(".");
-  if (parts.length < 2) {
-    return "document";
-  }
-  
-  const ext = parts.pop().toLowerCase();
-
+  const ext = fileName.split('.').pop().toLowerCase();
   const typeMap = {
     pdf: "pdf",
-    doc: "document",
-    docx: "document",
-    txt: "document",
-    ppt: "presentation",
-    pptx: "presentation",
-    xls: "spreadsheet",
-    xlsx: "spreadsheet",
-    csv: "spreadsheet",
-    jpg: "image",
-    jpeg: "image",
-    png: "image",
-    gif: "image",
-    webp: "image",
-    bmp: "image",
-    svg: "image",
-    mp4: "video",
-    mov: "video",
-    avi: "video",
-    wmv: "video",
-    flv: "video",
-    webm: "video",
-    mkv: "video",
-    mp3: "audio",
-    wav: "audio",
-    m4a: "audio",
-    ogg: "audio",
-    zip: "archive",
-    rar: "archive",
-    "7z": "archive",
+    doc: "document", docx: "document", txt: "document",
+    ppt: "presentation", pptx: "presentation",
+    xls: "spreadsheet", xlsx: "spreadsheet", csv: "spreadsheet",
+    jpg: "image", jpeg: "image", png: "image", gif: "image", webp: "image",
+    mp4: "video", mov: "video", avi: "video", mkv: "video",
+    mp3: "audio", wav: "audio", m4a: "audio",
+    zip: "archive", rar: "archive",
   };
 
   return typeMap[ext] || "document";
 };
 
-// Helper: Determine main type from files
 const determineMainTypeFromFiles = (files) => {
   if (!files || !Array.isArray(files) || files.length === 0) {
     return "document";
   }
 
-  const types = files
-    .map((file) => {
-      if (file && file.fileType) {
-        return file.fileType;
-      }
-      if (file && file.name) {
-        return getFileType(file.name);
-      }
-      return "document";
-    })
-    .filter(type => type);
-
-  if (types.length === 0) return "document";
-
   const typeCount = {};
-  types.forEach((type) => {
+  files.forEach(file => {
+    const type = file.fileType || getFileType(file.name);
     typeCount[type] = (typeCount[type] || 0) + 1;
   });
 
-  return Object.keys(typeCount).reduce((a, b) =>
-    typeCount[a] > typeCount[b] ? a : b
-  );
+  return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
 };
 
-// 🔹 GET — Fetch all resources (PUBLIC)
+// ==================== API ENDPOINTS ====================
+
+// GET - Fetch all resources (PUBLIC)
 export async function GET() {
   try {
+    console.log("📥 GET /api/resources");
+    
     const resources = await prisma.resource.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    // Format file sizes for display
-    const formattedResources = resources.map(resource => {
-      if (resource.files && Array.isArray(resource.files)) {
-        const formattedFiles = resource.files.map(file => ({
-          ...file,
-          formattedSize: formatFileSize(file.size || 0)
-        }));
-        return { ...resource, files: formattedFiles };
-      }
-      return resource;
-    });
+    const formattedResources = resources.map(resource => ({
+      ...resource,
+      files: (resource.files || []).map(file => ({
+        ...file,
+        formattedSize: formatFileSize(file.size || 0)
+      }))
+    }));
 
     return NextResponse.json({ 
       success: true, 
       resources: formattedResources, 
       count: formattedResources.length 
     }, { status: 200 });
+
   } catch (error) {
-    console.error("❌ Error fetching resources:", error);
+    console.error("❌ GET Error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: "Failed to fetch resources",
+      message: error.message 
     }, { status: 500 });
   }
 }
 
-// 🔹 POST — Create resource with multiple files (PROTECTED)
+// POST - Create resource (PROTECTED)
 export async function POST(request) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(request);
     if (!auth.authenticated) {
       return auth.response;
     }
 
-    console.log("📝 POST /api/resources - Creating resource");
+    console.log("📝 POST /api/resources");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    // ==================== END AUTHENTICATION ====================
 
     const formData = await request.formData();
 
-    // Extract fields
     const title = formData.get("title")?.trim() || "";
     const subject = formData.get("subject")?.trim() || "";
     const className = formData.get("className")?.trim() || "";
@@ -410,31 +323,32 @@ export async function POST(request) {
     const description = formData.get("description")?.trim() || "";
     const category = formData.get("category")?.trim() || "general";
     const accessLevel = formData.get("accessLevel")?.trim() || "student";
-    const uploadedBy = formData.get("uploadedBy")?.trim() || "System";
+    const uploadedBy = formData.get("uploadedBy")?.trim() || auth.user.name;
     const isActive = formData.get("isActive") !== "false";
 
     if (!title || !subject || !className || !teacher) {
       return NextResponse.json(
         { 
           success: false, 
-          error: "Title, subject, class, and teacher are required" 
+          error: "Title, subject, class name, and teacher are required" 
         },
         { status: 400 }
       );
     }
 
     const files = formData.getAll("files");
-    const validFiles = files.filter(file => file && file.name && file.size > 0);
+    const validFiles = Array.from(files).filter(file => file?.name && file.size > 0);
     
     if (validFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: "At least one valid file is required" 
+        error: "At least one file is required" 
       }, { status: 400 });
     }
 
-    // Upload files to Cloudinary
+    console.log(`📤 Uploading ${validFiles.length} file(s)...`);
     const uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
+    
     if (uploadedFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 
@@ -444,7 +358,6 @@ export async function POST(request) {
 
     const mainType = determineMainTypeFromFiles(uploadedFiles);
 
-    // Save resource to database
     const resource = await prisma.resource.create({
       data: {
         title,
@@ -458,9 +371,11 @@ export async function POST(request) {
         accessLevel,
         uploadedBy,
         downloads: 0,
-        isActive,
+        isActive: true,
       },
     });
+
+    console.log(`✅ Resource created with ID: ${resource.id}`);
 
     return NextResponse.json(
       { 
@@ -470,11 +385,13 @@ export async function POST(request) {
       },
       { status: 201 }
     );
+
   } catch (error) {
-    console.error("❌ Error creating resource:", error);
+    console.error("❌ POST Error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: "Failed to create resource",
+      message: error.message 
     }, { status: 500 });
   }
 }

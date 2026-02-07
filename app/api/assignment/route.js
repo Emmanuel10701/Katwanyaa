@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "../../../libs/prisma";
-import cloudinary from "../../../libs/cloudinary";
-import { randomUUID } from "crypto";
+import { prisma } from "../../../../libs/prisma";
+import cloudinary from "../../../../libs/cloudinary";
 
-// ==================== TOKEN VERIFICATION FOR POST ONLY ====================
+// ==================== TOKEN VERIFICATION FOR DELETE/UPDATE ====================
 class DeviceTokenManager {
   static validateTokensFromHeaders(headers, options = {}) {
     try {
@@ -48,7 +47,7 @@ class DeviceTokenManager {
           return { 
             valid: false, 
             reason: 'invalid_role', 
-            message: 'User does not have permission to create assignments' 
+            message: 'User does not have permission to manage assignments' 
           };
         }
         
@@ -56,7 +55,7 @@ class DeviceTokenManager {
         return { valid: false, reason: 'invalid_admin_token', message: 'Invalid admin token' };
       }
 
-      console.log('✅ Assignment creation authentication successful for user:', adminPayload.name || 'Unknown');
+      console.log('✅ Assignment management authentication successful for user:', adminPayload.name || 'Unknown');
       
       return { 
         valid: true, 
@@ -115,7 +114,7 @@ const authenticateRequest = (req) => {
         { 
           success: false, 
           error: "Access Denied",
-          message: "Authentication required to create assignments.",
+          message: "Authentication required to manage assignments.",
           details: validationResult.message
         },
         { status: 401 }
@@ -337,7 +336,56 @@ const uploadFilesToCloudinary = async (files, folder = "assignments") => {
   return uploadedFiles;
 };
 
-export async function POST(request) {
+export async function GET(request, { params }) {
+  try {
+    const { id } = params;
+    
+    if (!id || isNaN(parseInt(id))) {
+      return NextResponse.json(
+        { success: false, error: "Valid assignment ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const assignment = await prisma.assignment.findUnique({ 
+      where: { id: parseInt(id) } 
+    });
+    
+    if (!assignment) {
+      return NextResponse.json(
+        { success: false, error: "Assignment not found" }, 
+        { status: 404 }
+      );
+    }
+    
+    const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url) => {
+      return getFileInfoFromUrl(url);
+    }).filter(Boolean);
+    
+    const attachmentAttachments = (assignment.attachments || []).map((url) => {
+      return getFileInfoFromUrl(url);
+    }).filter(Boolean);
+    
+    const processedAssignment = {
+      ...assignment,
+      assignmentFileAttachments,
+      attachmentAttachments
+    };
+    
+    return NextResponse.json({ 
+      success: true, 
+      assignment: processedAssignment 
+    });
+  } catch (error) {
+    console.error("❌ GET Single Assignment Error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch assignment" }, 
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request, { params }) {
   try {
     // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(request);
@@ -345,72 +393,161 @@ export async function POST(request) {
       return auth.response;
     }
 
-    console.log("📝 POST /api/assignments - Creating assignment");
+    console.log("✏️ PUT /api/assignments - Updating assignment");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
     // ==================== END AUTHENTICATION ====================
 
-    const formData = await request.formData();
-
-    const title = formData.get("title")?.toString().trim() || "";
-    const subject = formData.get("subject")?.toString().trim() || "";
-    const className = formData.get("className")?.toString().trim() || "";
-    const teacher = formData.get("teacher")?.toString().trim() || "";
-    const dueDate = formData.get("dueDate")?.toString() || "";
-    const dateAssigned = formData.get("dateAssigned")?.toString() || new Date().toISOString();
-    const status = formData.get("status")?.toString() || "assigned";
-    const description = formData.get("description")?.toString().trim() || "";
-    const instructions = formData.get("instructions")?.toString().trim() || "";
-    const priority = formData.get("priority")?.toString() || "medium";
-    const estimatedTime = formData.get("estimatedTime")?.toString().trim() || "";
-    const additionalWork = formData.get("additionalWork")?.toString().trim() || "";
-    const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || "";
-    const learningObjectives = formData.get("learningObjectives")?.toString() || "[]";
-
-    if (!title || !subject || !className || !teacher || !dueDate) {
+    const { id } = params;
+    
+    if (!id || isNaN(parseInt(id))) {
       return NextResponse.json(
-        { success: false, error: "Title, subject, class, teacher, and due date are required" },
+        { success: false, error: "Valid assignment ID is required" },
         { status: 400 }
       );
     }
 
-    let assignmentFiles = [];
-    let attachments = [];
-    
-    try {
-      const assignmentFileInputs = formData.getAll("assignmentFiles");
-      const uploadedAssignmentFiles = await uploadFilesToCloudinary(assignmentFileInputs, "assignment-files");
-      assignmentFiles = uploadedAssignmentFiles.map(file => file.url);
-      console.log(`✅ Uploaded assignment files:`, uploadedAssignmentFiles.map(f => f.name));
-      
-      const attachmentInputs = formData.getAll("attachments");
-      const uploadedAttachments = await uploadFilesToCloudinary(attachmentInputs, "attachments");
-      attachments = uploadedAttachments.map(file => file.url);
-      console.log(`✅ Uploaded attachments:`, uploadedAttachments.map(f => f.name));
-      
-    } catch (fileError) {
-      console.error("File upload error:", fileError);
+    const formData = await request.formData();
+    console.log('📥 PUT Update - Received form fields:', Array.from(formData.keys()));
+
+    const existingAssignment = await prisma.assignment.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!existingAssignment) {
       return NextResponse.json(
-        { success: false, error: "Failed to upload files. Please try again." },
-        { status: 500 }
+        { success: false, error: "Assignment not found" },
+        { status: 404 }
       );
     }
 
-    let learningObjectivesArray = [];
-    try {
-      learningObjectivesArray = JSON.parse(learningObjectives);
-    } catch (error) {
-      console.error("Error parsing learning objectives:", error);
-      learningObjectivesArray = [];
-    }
+    const title = formData.get("title")?.toString().trim() || existingAssignment.title;
+    const subject = formData.get("subject")?.toString().trim() || existingAssignment.subject;
+    const className = formData.get("className")?.toString().trim() || existingAssignment.className;
+    const teacher = formData.get("teacher")?.toString().trim() || existingAssignment.teacher;
+    const dueDate = formData.get("dueDate")?.toString() || existingAssignment.dueDate;
+    const status = formData.get("status")?.toString() || existingAssignment.status;
+    const description = formData.get("description")?.toString().trim() || existingAssignment.description;
+    const instructions = formData.get("instructions")?.toString().trim() || existingAssignment.instructions;
+    const priority = formData.get("priority")?.toString() || existingAssignment.priority;
+    const estimatedTime = formData.get("estimatedTime")?.toString().trim() || existingAssignment.estimatedTime;
+    const additionalWork = formData.get("additionalWork")?.toString().trim() || existingAssignment.additionalWork;
+    const teacherRemarks = formData.get("teacherRemarks")?.toString().trim() || existingAssignment.teacherRemarks;
+    const learningObjectives = formData.get("learningObjectives")?.toString();
+    
+    console.log('📝 Fields extracted:', { title, subject, className, teacher, dueDate });
 
-    const assignment = await prisma.assignment.create({
-      data: {
+    let updatedAssignmentFiles = [...existingAssignment.assignmentFiles];
+    let updatedAttachments = [...existingAssignment.attachments];
+    
+    const existingAssignmentFilesStr = formData.get("existingAssignmentFiles");
+    const existingAttachmentsStr = formData.get("existingAttachments");
+    
+    console.log('📁 File data:', {
+      existingAssignmentFilesStr: existingAssignmentFilesStr?.substring(0, 100),
+      existingAttachmentsStr: existingAttachmentsStr?.substring(0, 100)
+    });
+    
+    if (existingAssignmentFilesStr) {
+      try {
+        const existingFiles = JSON.parse(existingAssignmentFilesStr);
+        updatedAssignmentFiles = existingFiles.filter(file => typeof file === 'string' && file.trim() !== '');
+        console.log('✅ Parsed existing assignment files:', updatedAssignmentFiles.length);
+      } catch (error) {
+        console.error('❌ Error parsing existingAssignmentFiles:', error);
+      }
+    }
+    
+    if (existingAttachmentsStr) {
+      try {
+        const existingFiles = JSON.parse(existingAttachmentsStr);
+        updatedAttachments = existingFiles.filter(file => typeof file === 'string' && file.trim() !== '');
+        console.log('✅ Parsed existing attachments:', updatedAttachments.length);
+      } catch (error) {
+        console.error('❌ Error parsing existingAttachments:', error);
+      }
+    }
+    
+    const assignmentFilesToRemoveStr = formData.get("assignmentFilesToRemove");
+    const attachmentsToRemoveStr = formData.get("attachmentsToRemove");
+    
+    console.log('🗑️ Files to remove:', {
+      assignmentFilesToRemoveStr: assignmentFilesToRemoveStr?.substring(0, 100),
+      attachmentsToRemoveStr: attachmentsToRemoveStr?.substring(0, 100)
+    });
+    
+    if (assignmentFilesToRemoveStr) {
+      try {
+        const filesToRemove = JSON.parse(assignmentFilesToRemoveStr);
+        if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+          await deleteFilesFromCloudinary(filesToRemove);
+          console.log('✅ Removed assignment files from Cloudinary:', filesToRemove.length);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing assignmentFilesToRemove:', error);
+      }
+    }
+    
+    if (attachmentsToRemoveStr) {
+      try {
+        const filesToRemove = JSON.parse(attachmentsToRemoveStr);
+        if (Array.isArray(filesToRemove) && filesToRemove.length > 0) {
+          await deleteFilesFromCloudinary(filesToRemove);
+          console.log('✅ Removed attachments from Cloudinary:', filesToRemove.length);
+        }
+      } catch (error) {
+        console.error('❌ Error parsing attachmentsToRemove:', error);
+      }
+    }
+    
+    const newAssignmentFiles = formData.getAll("assignmentFiles");
+    const newAttachments = formData.getAll("attachments");
+    
+    console.log('📤 New files to upload:', {
+      newAssignmentFiles: newAssignmentFiles.length,
+      newAttachments: newAttachments.length
+    });
+    
+    if (newAssignmentFiles.length > 0 && newAssignmentFiles[0].name) {
+      try {
+        const uploadedFiles = await uploadFilesToCloudinary(newAssignmentFiles, "assignment-files");
+        const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
+        updatedAssignmentFiles = [...updatedAssignmentFiles, ...newUrls];
+        console.log('✅ Added new assignment files:', newUrls.length);
+      } catch (error) {
+        console.error('❌ Error uploading new assignment files:', error);
+      }
+    }
+    
+    if (newAttachments.length > 0 && newAttachments[0].name) {
+      try {
+        const uploadedFiles = await uploadFilesToCloudinary(newAttachments, "attachments");
+        const newUrls = uploadedFiles.map(f => f.url).filter(url => url);
+        updatedAttachments = [...updatedAttachments, ...newUrls];
+        console.log('✅ Added new attachments:', newUrls.length);
+      } catch (error) {
+        console.error('❌ Error uploading new attachments:', error);
+      }
+    }
+    
+    let learningObjectivesArray = existingAssignment.learningObjectives;
+    if (learningObjectives) {
+      try {
+        learningObjectivesArray = JSON.parse(learningObjectives);
+        console.log('✅ Parsed learning objectives:', learningObjectivesArray?.length || 0);
+      } catch (error) {
+        console.error('❌ Error parsing learning objectives:', error);
+      }
+    }
+    
+    console.log('💾 Saving to database...');
+    const updatedAssignment = await prisma.assignment.update({
+      where: { id: parseInt(id) },
+      data: { 
         title,
         subject,
         className,
         teacher,
-        dueDate: new Date(dueDate),
-        dateAssigned: new Date(dateAssigned),
+        dueDate: dueDate ? new Date(dueDate) : existingAssignment.dueDate,
         status,
         description,
         instructions,
@@ -418,111 +555,97 @@ export async function POST(request) {
         estimatedTime,
         additionalWork,
         teacherRemarks,
-        assignmentFiles: assignmentFiles,
-        attachments: attachments,
+        assignmentFiles: updatedAssignmentFiles,
+        attachments: updatedAttachments,
         learningObjectives: learningObjectivesArray,
       },
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Assignment created successfully",
-        assignment,
-        fileCounts: {
-          assignmentFiles: assignmentFiles.length,
-          attachments: attachments.length
-        }
-      },
-      { status: 201 }
-    );
+    console.log('✅ Update successful:', updatedAssignment.id);
+    
+    return NextResponse.json({ 
+      success: true, 
+      assignment: updatedAssignment,
+      message: "Assignment updated successfully" 
+    });
   } catch (error) {
-    console.error("❌ Error creating assignment:", error);
+    console.error("❌ PUT Assignment Error:", error);
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, error: "Assignment not found" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { success: false, error: error.message || "Internal server error" },
+      { success: false, error: error.message || "Failed to update assignment" }, 
       { status: 500 }
     );
   }
 }
 
-export async function GET(request) {
+export async function DELETE(request, { params }) {
   try {
-    const { searchParams } = new URL(request.url);
+    // ==================== ADD AUTHENTICATION HERE ====================
+    const auth = authenticateRequest(request);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+
+    console.log("🗑️ DELETE /api/assignments - Deleting assignment");
+    console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
+    // ==================== END AUTHENTICATION ====================
+
+    const { id } = params;
     
-    const className = searchParams.get("class");
-    const subject = searchParams.get("subject");
-    const status = searchParams.get("status");
-    const teacher = searchParams.get("teacher");
-    const search = searchParams.get("search") || "";
-    const page = parseInt(searchParams.get("page")) || 1;
-    const limit = parseInt(searchParams.get("limit")) || 10;
+    if (!id || isNaN(parseInt(id))) {
+      return NextResponse.json(
+        { success: false, error: "Valid assignment ID is required" },
+        { status: 400 }
+      );
+    }
 
-    const skip = (page - 1) * limit;
-
-    const where = {
-      AND: [
-        className && className !== "all" ? { className } : {},
-        subject && subject !== "all" ? { subject } : {},
-        status && status !== "all" ? { status } : {},
-        teacher && teacher !== "all" ? { teacher } : {},
-        search ? {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } },
-            { teacher: { contains: search, mode: "insensitive" } },
-            { subject: { contains: search, mode: "insensitive" } },
-            { className: { contains: search, mode: "insensitive" } },
-          ],
-        } : {},
-      ].filter(condition => Object.keys(condition).length > 0),
-    };
-
-    const [assignments, total] = await Promise.all([
-      prisma.assignment.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip,
-        take: limit,
-      }),
-      prisma.assignment.count({ where }),
-    ]);
-
-    const processedAssignments = assignments.map(assignment => {
-      const assignmentFileAttachments = (assignment.assignmentFiles || []).map((url, index) => {
-        const fileInfo = getFileInfoFromUrl(url);
-        return fileInfo;
-      }).filter(Boolean);
-      
-      const attachmentAttachments = (assignment.attachments || []).map((url, index) => {
-        const fileInfo = getFileInfoFromUrl(url);
-        return fileInfo;
-      }).filter(Boolean);
-      
-      return {
-        ...assignment,
-        assignmentFileAttachments,
-        attachmentAttachments
-      };
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: parseInt(id) }
     });
 
-    return NextResponse.json(
-      {
-        success: true,
-        assignments: processedAssignments,
-        pagination: {
-          current: page,
-          totalPages: Math.ceil(total / limit),
-          totalAssignments: total,
-          hasNext: page < Math.ceil(total / limit),
-          hasPrev: page > 1,
-        },
-      },
-      { status: 200 }
-    );
+    if (!assignment) {
+      return NextResponse.json(
+        { success: false, error: "Assignment not found" },
+        { status: 404 }
+      );
+    }
+
+    const allFiles = [
+      ...(assignment.assignmentFiles || []),
+      ...(assignment.attachments || [])
+    ];
+    
+    if (allFiles.length > 0) {
+      await deleteFilesFromCloudinary(allFiles);
+    }
+
+    await prisma.assignment.delete({ 
+      where: { id: parseInt(id) } 
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Assignment deleted successfully" 
+    });
   } catch (error) {
-    console.error("❌ Error fetching assignments:", error);
+    console.error("❌ DELETE Assignment Error:", error);
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { success: false, error: "Assignment not found" },
+        { status: 404 }
+      );
+    }
+    
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || "Failed to delete assignment" }, 
       { status: 500 }
     );
   }
