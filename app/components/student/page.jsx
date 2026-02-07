@@ -3875,156 +3875,150 @@ const downloadExcelTemplate = () => {
           </div>
         )}
 
-{view === 'history' && (
-  <div className="space-y-8">
-    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-      <div>
-        <h3 className="text-2xl font-bold text-gray-900">Completed Upload History</h3>
-        <p className="text-gray-600 mt-2 text-base">Track all your successful bulk upload activities</p>
-      </div>
-      <button
-        onClick={() => loadUploadHistory(1)}
-        disabled={historyLoading}
-        className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
-      >
-        {historyLoading ? (
-          <>
-            <CircularProgress size={18} className="text-white" />
-            <span>Refreshing...</span>
-          </>
-        ) : (
-          <>
-            <FiRefreshCw />
-            <span>Refresh History</span>
-          </>
-        )}
-      </button>
-    </div>
+        {view === 'history' && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Upload History</h3>
+                <p className="text-gray-600 mt-2 text-base">Track all your bulk upload activities</p>
+              </div>
+              <button
+                onClick={() => loadUploadHistory(1)}
+                disabled={historyLoading}
+                className="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-2xl font-bold flex items-center justify-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
+              >
+                {historyLoading ? (
+                  <>
+                    <CircularProgress size={18} className="text-white" />
+                    <span>Refreshing...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiRefreshCw />
+                    <span>Refresh History</span>
+                  </>
+                )}
+              </button>
+            </div>
 
-    {uploadHistory.length === 0 ? (
-      <div className="text-center py-20 bg-white rounded-2xl border-2 border-gray-300 shadow-xl">
-        <FiClock className="text-6xl text-gray-300 mx-auto mb-6" />
-        <p className="text-gray-600 text-xl font-bold mb-4">No completed uploads found</p>
-        <p className="text-gray-500 text-base">Only successfully completed uploads are shown here</p>
-      </div>
-    ) : (
-      <div className="bg-white rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[768px]">
-            <thead className="bg-gradient-to-r from-gray-100 to-white">
-              <tr>
-                <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
-                  Upload Details
-                </th>
-                <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
-                  Statistics
-                </th>
-                <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-2 divide-gray-200">
-              {uploadHistory.map(upload => (
-                <tr key={upload.id} className="bg-white hover:bg-gray-50 transition-colors">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl">
-                        <FiFile className="text-blue-700 text-xl" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 text-base truncate max-w-[250px] lg:max-w-md">
-                          {upload.fileName}
-                        </div>
-                        <div className="text-gray-600 mt-2 font-semibold text-sm">
-                          {new Date(upload.uploadDate).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
-                        {upload.metadata && (
-                          <div className="mt-2">
-                            <span className={`px-2 py-1 rounded text-xs font-bold ${
-                              upload.metadata.uploadType === 'new' 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'bg-purple-100 text-purple-700'
+            {uploadHistory.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border-2 border-gray-300 shadow-xl">
+                <FiClock className="text-6xl text-gray-300 mx-auto mb-6" />
+                <p className="text-gray-600 text-xl font-bold mb-4">No upload history found</p>
+                <p className="text-gray-500 text-base">Upload your first file to see history here</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[768px]">
+                    <thead className="bg-gradient-to-r from-gray-100 to-white">
+                      <tr>
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
+                          Upload Details
+                        </th>
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
+                          Statistics
+                        </th>
+                        <th className="px-8 py-6 text-left text-base font-bold text-gray-700 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y-2 divide-gray-200">
+                      {uploadHistory.map(upload => (
+                        <tr key={upload.id} className="bg-white hover:bg-gray-50 transition-colors">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-4">
+                              <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl">
+                                <FiFile className="text-blue-700 text-xl" />
+                              </div>
+                              <div>
+                                <div className="font-bold text-gray-900 text-base truncate max-w-[250px] lg:max-w-md">
+                                  {upload.fileName}
+                                </div>
+                                <div className="text-gray-600 mt-2 font-semibold text-sm">
+                                  {new Date(upload.uploadDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                                {upload.metadata && (
+                                  <div className="mt-2">
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                      upload.metadata.uploadType === 'new' 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                      {upload.metadata.uploadType === 'new' ? 'New Upload' : 'Update Upload'}
+                                    </span>
+                                    {upload.metadata.selectedForms && (
+                                      <span className="ml-2 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700">
+                                        {upload.metadata.selectedForms.length} forms
+                                      </span>
+                                    )}
+                                    {upload.metadata.targetForm && (
+                                      <span className="ml-2 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700">
+                                        {upload.metadata.targetForm}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <span className={`px-5 py-2.5 rounded-xl text-sm font-bold ${
+                              upload.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : upload.status === 'processing'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
                             }`}>
-                              {upload.metadata.uploadType === 'new' ? 'New Upload' : 'Update Upload'}
+                              {upload.status.toUpperCase()}
                             </span>
-                            {upload.metadata.selectedForms && (
-                              <span className="ml-2 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700">
-                                {upload.metadata.selectedForms.length} forms
-                              </span>
-                            )}
-                            {upload.metadata.targetForm && (
-                              <span className="ml-2 px-2 py-1 rounded text-xs font-bold bg-gray-100 text-gray-700">
-                                {upload.metadata.targetForm}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className="px-5 py-2.5 rounded-xl text-sm font-bold bg-green-100 text-green-800">
-                      COMPLETED
-                    </span>
-                  </td>
-                  <td className="px-8 py-6">
-                    <div className="space-y-2">
-                      <div className="flex flex-col md:flex-row md:items-center gap-6">
-                        <span className="text-emerald-700 font-bold text-sm">{upload.validRows || 0} valid</span>
-                        <span className="text-amber-700 font-bold text-sm">{upload.skippedRows || 0} skipped</span>
-                        <span className="text-red-700 font-bold text-sm">{upload.errorRows || 0} errors</span>
-                      </div>
-                      <div className="text-gray-600 font-semibold text-sm">
-                        Total: {upload.totalRows || 0} rows processed
-                      </div>
-                      {upload.metadata && (upload.metadata.updatedRows || upload.metadata.createdRows || upload.metadata.deactivatedRows) && (
-                        <div className="text-gray-500 text-xs">
-                          {upload.metadata.updatedRows > 0 && `Updated: ${upload.metadata.updatedRows} `}
-                          {upload.metadata.createdRows > 0 && `Created: ${upload.metadata.createdRows} `}
-                          {upload.metadata.deactivatedRows > 0 && `Deactivated: ${upload.metadata.deactivatedRows}`}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <button
-                      onClick={() => handleDeleteBatch(upload.id, upload.fileName)}
-                      className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Add pagination if you want to show more than 5 */}
-        {uploadHistory.length >= 5 && (
-          <div className="flex justify-center py-4 border-t border-gray-200 bg-gray-50">
-            <button
-              onClick={() => loadUploadHistory(pagination.page + 1)}
-              className="px-4 py-2 text-blue-600 font-bold hover:underline"
-            >
-              Load More
-            </button>
+                          </td>
+                          <td className="px-8 py-6">
+                            <div className="space-y-2">
+                              <div className="flex flex-col md:flex-row md:items-center gap-6">
+                                <span className="text-emerald-700 font-bold text-sm">{upload.validRows || 0} valid</span>
+                                <span className="text-amber-700 font-bold text-sm">{upload.skippedRows || 0} skipped</span>
+                                <span className="text-red-700 font-bold text-sm">{upload.errorRows || 0} errors</span>
+                              </div>
+                              <div className="text-gray-600 font-semibold text-sm">
+                                Total: {upload.totalRows || 0} rows processed
+                              </div>
+                              {upload.metadata && (upload.metadata.updatedRows || upload.metadata.createdRows || upload.metadata.deactivatedRows) && (
+                                <div className="text-gray-500 text-xs">
+                                  {upload.metadata.updatedRows > 0 && `Updated: ${upload.metadata.updatedRows} `}
+                                  {upload.metadata.createdRows > 0 && `Created: ${upload.metadata.createdRows} `}
+                                  {upload.metadata.deactivatedRows > 0 && `Deactivated: ${upload.metadata.deactivatedRows}`}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <button
+                              onClick={() => handleDeleteBatch(upload.id, upload.fileName)}
+                              className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </div>
-    )}
-  </div>
-)}
       </div>
 
       {/* Modals */}
