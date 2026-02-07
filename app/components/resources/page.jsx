@@ -2585,7 +2585,7 @@ const handleSubmit = async (formData, id) => {
                               {resource.teacher || 'System Admin'}
                             </span>
                             <span className="text-xs text-slate-800  font-medium">
-                              {resource.role || 'Educator'}
+                              {resource.role || 'Teacher'}
                             </span>
                           </div>
                         </div>
@@ -2609,47 +2609,25 @@ const handleSubmit = async (formData, id) => {
                         </div>
                       </td>
 
-                      {/* Actions Column */}
-                      <td className="py-5 px-8">
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0 translate-x-4">
-                          <button
-                            onClick={() => handleView(resource)}
-                            className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-blue-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
-                            title="Quick Preview"
-                          >
-                            <FiEye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(resource)}
-                            className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-teal-50 hover:border-emerald-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
-                            title="Edit Resource"
-                          >
-                            <FiEdit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleCopy(resource)}
-                            className="p-2.5 text-slate-400 hover:text-purple-600 hover:bg-gradient-to-r hover:from-purple-50 hover:to-violet-50 hover:border-purple-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
-                            title="Duplicate"
-                          >
-                            <FiCopy className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(resource)}
-                            className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:border-red-200 rounded-xl border border-transparent transition-all duration-200 hover:scale-105"
-                            title="Archive Resource"
-                          >
-                            <FiTrash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {/* Dots for non-hover state */}
-                        <div className="group-hover:hidden flex justify-end">
-                          <div className="flex gap-0.5">
-                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-                            <div className="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
-                          </div>
-                        </div>
-                      </td>
+            <td className="py-5 px-8 text-right">
+  <div className="flex items-center justify-end gap-4">
+    <button
+      onClick={() => handleView(resource)}
+      className="flex items-center gap-1.5 text-blue-600 font-bold text-sm cursor-pointer"
+    >
+      <FiEye className="w-4 h-4" />
+      <span>View</span>
+    </button>
+    
+    <button
+      onClick={() => handleEdit(resource)}
+      className="flex items-center gap-1.5 text-slate-600 font-bold text-sm cursor-pointer"
+    >
+      <FiEdit2 className="w-4 h-4" />
+      <span>Edit</span>
+    </button>
+  </div>
+</td>
                     </tr>
                   ))}
                 </tbody>
