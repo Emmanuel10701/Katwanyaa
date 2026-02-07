@@ -362,280 +362,207 @@ function Notification({
   )
 }
 
-// Modern Resource Detail Modal
 function ModernResourceDetailModal({ resource, onClose, onEdit }) {
   if (!resource) return null;
 
-  // File type colors
+  // Modern Color Palette
   const getFileTypeColor = (type) => {
     switch (type?.toLowerCase()) {
-      case 'pdf': return { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200' };
-      case 'document': return { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200' };
-      case 'video': return { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' };
-      case 'presentation': return { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' };
-      case 'image': return { bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-200' };
-      case 'audio': return { bg: 'bg-indigo-100', text: 'text-indigo-800', border: 'border-indigo-200' };
-      case 'spreadsheet': return { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200' };
-    }
-  };
-
-  // Access level colors
-  const getAccessColor = (access) => {
-    switch (access?.toLowerCase()) {
-      case 'student': return { bg: 'bg-blue-100', text: 'text-blue-800' };
-      case 'teacher': return { bg: 'bg-green-100', text: 'text-green-800' };
-      case 'admin': return { bg: 'bg-purple-100', text: 'text-purple-800' };
-      default: return { bg: 'bg-gray-100', text: 'text-gray-800' };
+      case 'pdf': return { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100', icon: 'bg-rose-500' };
+      case 'video': return { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100', icon: 'bg-indigo-500' };
+      default: return { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-100', icon: 'bg-slate-500' };
     }
   };
 
   const typeColor = getFileTypeColor(resource.type);
-  const accessColor = getAccessColor(resource.accessLevel);
 
-  // Get file icon based on type
-  const getFileIcon = () => {
-    switch (resource.type?.toLowerCase()) {
-      case 'pdf': return <FiFileText className="text-red-600 text-2xl" />;
-      case 'document': return <FiFileText className="text-blue-600 text-2xl" />;
-      case 'video': return <FiVideo className="text-purple-600 text-2xl" />;
-      case 'presentation': return <FiBarChart className="text-orange-600 text-2xl" />;
-      case 'image': return <FiImage className="text-pink-600 text-2xl" />;
-      case 'audio': return <FiMusic className="text-indigo-600 text-2xl" />;
-      case 'spreadsheet': return <FiGrid className="text-green-600 text-2xl" />;
-      default: return <FiFile className="text-gray-600 text-2xl" />;
+  const getFileIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'pdf': return <FiFileText />;
+      case 'video': return <FiVideo />;
+      case 'image': return <FiImage />;
+      case 'presentation': return <FiBarChart />;
+      default: return <FiFile />;
     }
   };
 
-  const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   return (
-    <Modal open={true} onClose={onClose}>
+    <Modal open={true} onClose={onClose} className="flex items-center justify-center p-4 backdrop-blur-sm">
       <Box sx={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '95%',
-        maxWidth: '900px',
-        maxHeight: '95vh', bgcolor: 'background.paper',
-        borderRadius: 3, boxShadow: 24, overflow: 'hidden',
-        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f8ff 100%)'
+        width: '100%',
+        maxWidth: '1000px',
+        maxHeight: '90vh',
+        bgcolor: 'white',
+        borderRadius: '32px',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.1)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        outline: 'none'
       }}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 p-6 md:p-8 text-white">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-              <div className="p-3 bg-white bg-opacity-20 rounded-2xl">
-                <FiFolder className="text-xl sm:text-2xl" />
+        {/* Modern Header - Clean & Minimal */}
+        <div className="relative p-8 pb-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="bg-blue-600 text-white p-1.5 rounded-lg">
+                  <FiFolder size={16} />
+                </span>
+                <span className="text-xs font-black uppercase tracking-widest text-blue-600/70">Educational Resource</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-2xl sm:text-3xl font-bold truncate">Resource Details</h2>
-                <p className="text-white/90 opacity-90 mt-1 text-md  sm:text-lg">
-                  Complete educational resource information
-                </p>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                {resource.title}
+              </h1>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="group p-2 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-2xl transition-all duration-300"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
+
+          {/* Tags Bar */}
+          <div className="flex flex-wrap gap-2 mt-6">
+            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${typeColor.bg} ${typeColor.text} border ${typeColor.border}`}>
+              <span className={`w-2 h-2 rounded-full ${typeColor.icon}`}></span>
+              {resource.type || 'Resource'}
+            </div>
+            {resource.category && (
+              <div className="px-4 py-1.5 rounded-full text-xs font-bold bg-purple-50 text-purple-600 border border-purple-100">
+                #{resource.category}
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-             
-              <button 
-                onClick={onClose} 
-                className="p-2 sm:p-3 bg-white/10 text-white rounded-full cursor-pointer"
-              >
-                <FiX className="text-xl sm:text-2xl" />
-              </button>
-            </div>
+            )}
+            {resource.className && (
+              <div className="px-4 py-1.5 rounded-full text-xs font-bold bg-slate-900 text-white">
+                {resource.className}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="max-h-[calc(95vh-140px)] overflow-y-auto">
-          <div className="p-4 sm:p-6 md:p-8 space-y-8">
-            {/* Resource Title and Status */}
-            <div className="space-y-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words">
-                {resource.title}
-              </h1>
-              <div className="flex flex-wrap gap-2">
-                <span className={`px-3 py-1.5 rounded-full text-md  font-bold ${typeColor.bg} ${typeColor.text} border ${typeColor.border}`}>
-                  {resource.type?.charAt(0).toUpperCase() + resource.type?.slice(1) || 'Document'}
-                </span>
-                {resource.accessLevel && (
-                  <span className={`px-3 py-1.5 rounded-full text-md  font-bold ${accessColor.bg} ${accessColor.text}`}>
-                    {resource.accessLevel} Access
-                  </span>
-                )}
-                {resource.category && (
-                  <span className="px-3 py-1.5 rounded-full text-md  font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                    {resource.category}
-                  </span>
-                )}
-                {resource.className && (
-                  <span className="px-3 py-1.5 rounded-full text-md  font-bold bg-gradient-to-r from-cyan-100 to-blue-100 text-blue-800 border border-blue-200">
-                    Class: {resource.className}
-                  </span>
-                )}
-              </div>
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto p-8 pt-4 custom-scrollbar">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left Column: Description & Files */}
+            <div className="lg:col-span-8 space-y-10">
+              
+              {/* Description Section */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <IoDocumentTextOutline />
+                  </div>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Overview</h3>
+                </div>
+                <div className="bg-slate-50/50 p-6 rounded-[24px] border border-slate-100">
+                  <p className="text-slate-600 leading-relaxed text-base">
+                    {resource.description || "No detailed description provided."}
+                  </p>
+                </div>
+              </section>
+
+              {/* Files Grid - Modernized */}
+              {resource.files?.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                      <FiPaperclip />
+                    </div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Attachments ({resource.files.length})</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {resource.files.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-blue-500/30 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 group">
+                        <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-slate-50 text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                          {getFileIcon(file.extension)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">
+                            {file.name.replace(/^[\d-]+/, "")}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                            {file.extension} • {new Date(file.uploadedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
 
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - Description and Files */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Description - Full Width */}
-                <div className="w-full">
-                  <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <IoDocumentTextOutline className="text-blue-600" />
-                    Description
-                  </h3>
-                  <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-md  sm:text-base">
-                      {resource.description || 'No description available.'}
-                    </p>
+            {/* Right Column: Metadata Cards */}
+            <div className="lg:col-span-4">
+              <div className="sticky top-0 space-y-4">
+                <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-xl">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-6">Metadata</h3>
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                        <FiUserCheck className="text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-white/40 uppercase">Instructor</p>
+                        <p className="text-sm font-bold">{resource.teacher || 'Unassigned'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                        <FiUsers className="text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-white/40 uppercase">Publisher</p>
+                        <p className="text-sm font-bold">{resource.uploadedBy || 'System'}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                        <FiClock className="text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-white/40 uppercase">Last Updated</p>
+                        <p className="text-sm font-bold">Today</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Files Section - Full Width */}
-                {Array.isArray(resource.files) && resource.files.length > 0 && (
-                  <div className="w-full space-y-4">
-                    <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                      <FiPaperclip className="text-orange-600" />
-                      Files ({resource.files.length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      {resource.files.slice(0, 4).map((file, index) => (
-                        <div key={index} className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-orange-200">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
-                                {getFileIcon()}
-                              </div>
-                              <div className="min-w-0">
-                          <h4 className="text-md  sm:text-base font-bold text-gray-900 truncate">
-  {file.name.replace(/^[\d-]+/, "")}
-</h4>
-                            
-                              </div>
-                            </div>
-                          
-                          </div>
-                          <div className="flex items-center justify-between text-xs">
-                            {file.extension && (
-                              <span className="font-medium text-gray-700">
-                                {file.extension.toUpperCase()}
-                              </span>
-                            )}
-                            {file.uploadedAt && (
-                              <span className="text-gray-500">
-                                {new Date(file.uploadedAt).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div className="p-6 bg-blue-50 rounded-[32px] border border-blue-100">
+                   <p className="text-[10px] font-black text-blue-600 uppercase mb-2">Security</p>
+                   <p className="text-xs font-bold text-blue-900/70 leading-relaxed">
+                     This resource is restricted to <span className="text-blue-600 underline font-black">{resource.accessLevel}</span> roles only.
+                   </p>
+                </div>
               </div>
-
-              {/* Right Column - Information Panel */}
-<div className="space-y-6">
-  {/* Modernized Resource Information Card */}
-  <div className="bg-white rounded-[24px] p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md">
-    <div className="flex items-center gap-2 mb-6 px-1">
-      <div className="p-2 bg-blue-50 rounded-lg">
-        <FiBriefcase className="text-blue-600" size={18} />
-      </div>
-      <h3 className="text-md  font-black uppercase tracking-widest text-slate-800">
-        Resource Metadata
-      </h3>
-    </div>
-
-    {/* Information Grid */}
-    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-      {/* Teacher Row - Full width if needed or half */}
-      {resource.teacher && (
-        <div className="col-span-2 flex flex-col p-3 bg-slate-50/50 rounded-2xl border border-slate-50">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-1">Lead Teacher</span>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-100 shrink-0">
-               <FiUserCheck className="text-white" size={16} />
             </div>
-            <span className="text-slate-700 font-bold text-md  sm:text-base truncate">
-              {resource.teacher}
-            </span>
+
           </div>
         </div>
-      )}
 
-      {/* Uploaded By */}
-      <div className="flex flex-col px-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Publisher</span>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 shrink-0">
-            <FiUsers className="text-emerald-500" size={14} />
-          </div>
-          <span className="text-slate-700 font-bold text-xs sm:text-md  truncate">
-            {resource.uploadedBy || 'System'}
-          </span>
-        </div>
-      </div>
-
-      {/* Files Count */}
-      <div className="flex flex-col px-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Total Assets</span>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center border border-purple-100 shrink-0">
-            <FiFile className="text-purple-500" size={14} />
-          </div>
-          <span className="text-slate-700 font-bold text-xs sm:text-md ">
-            {resource.files?.length || 0} items
-          </span>
-        </div>
-      </div>
-
-      {/* Downloads Stats */}
-      <div className="flex flex-col px-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Popularity</span>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center border border-red-100 shrink-0">
-            <FiDownload className="text-red-500" size={14} />
-          </div>
-        
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="p-4 sm:p-6 border-t border-gray-200 bg-white">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <button 
-                onClick={onClose} 
-                className="w-full sm:w-auto bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-md  sm:text-base"
-              >
-                Close
-              </button>
-              <button 
-                onClick={() => onEdit(resource)} 
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg cursor-pointer text-md  sm:text-base"
-              >
-                <FiEdit size={16} /> Edit Resource
-              </button>
-            </div>
-          </div>
+        {/* Action Footer */}
+        <div className="p-6 bg-white border-t border-slate-50 flex flex-col sm:flex-row justify-end gap-4">
+          <button 
+            onClick={onClose}
+            className="px-8 py-3 rounded-2xl font-black text-slate-400 hover:text-slate-900 transition-colors"
+          >
+            Dismiss
+          </button>
+          <button 
+            onClick={() => onEdit(resource)}
+            className="flex items-center justify-center gap-3 bg-slate-900 hover:bg-blue-600 text-white px-10 py-4 rounded-2xl font-black transition-all duration-300 shadow-lg shadow-slate-200"
+          >
+            <FiEdit size={18} /> Edit Resource
+          </button>
         </div>
       </Box>
     </Modal>
   );
 }
-
-
 
 
 function ModernResourceModal({ onClose, onSave, resource, loading }) {
