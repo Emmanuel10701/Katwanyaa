@@ -1203,183 +1203,145 @@ const handlePasswordAfterVerification = async () => {
       )}
 
       {/* Verification Modal */}
-      {showVerificationModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-[9999] animate-fade-in">
-          <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-gradient-to-br from-white to-slate-50 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden mx-2 sm:mx-4">
-            
-            {/* Modal Header */}
-            <div className="relative p-4 sm:p-6 md:p-8 bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-              <button
-                onClick={closeVerificationModal}
-                className="absolute top-2 sm:top-3 md:top-4 right-2 sm:right-3 md:right-4 p-1.5 sm:p-2 hover:bg-white/10 rounded-lg sm:rounded-xl transition-colors"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-              
-              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl md:rounded-xl flex items-center justify-center">
-                  <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg md:text-xl font-black">
-                    {requiresPasswordAfterVerification ? 'Enter Password' : 'Security Verification'}
-                  </h3>
-                  <p className="text-blue-100 text-xs sm:text-sm md:text-sm mt-0.5 sm:mt-1">
-                    {requiresPasswordAfterVerification ? 'Complete your login' : 'Verify your identity to continue'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="mt-2 sm:mt-3 md:mt-4 inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full">
-                <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs sm:text-xs font-bold">
-                  {verificationReason === 'failed_attempts' 
-                    ? 'Password Required' 
-                    : verificationReason === 'new_device' 
-                    ? 'New Device Detected' 
-                    : verificationReason === 'max_logins_reached'
-                    ? 'Max Login Attempts Reached'
-                    : verificationReason === 'expired' || verificationReason === 'token_expired'
-                    ? 'Token Expired'
-                    : verificationReason === 'device_mismatch' || verificationReason === 'token_device_mismatch'
-                    ? 'Device Changed'
-                    : verificationReason === 'token_expiring_soon'
-                    ? 'Token Expiring Soon'
-                    : 'Verification Required'}
-                </span>
-              </div>
-            </div>
-            
-            {/* Modal Content */}
-            <div className="p-4 sm:p-6 md:p-8">
-              {!requiresPasswordAfterVerification ? (
-                <>
-                  <div className="mb-4 sm:mb-5 md:mb-6">
-                    <p className="text-slate-600 text-xs sm:text-sm mb-2 sm:mb-3 md:mb-4">
-                      A 6-digit verification code has been sent to:
-                    </p>
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4">
-                      <p className="text-blue-800 font-bold text-center text-sm sm:text-base">{verificationEmail}</p>
-                    </div>
-                    <p className="text-slate-500 text-xs mt-2 sm:mt-3 text-center">
-                      Enter the code below to verify your identity
-                    </p>
-                  </div>
-                  
-                  <div className="mb-4 sm:mb-6 md:mb-8">
-                    <div className="flex justify-center gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
-                      {verificationCode.map((digit, index) => (
-                        <input
-                          key={index}
-                          id={`verification-input-${index}`}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
-                          onKeyDown={(e) => handleVerificationKeyDown(index, e)}
-                          className="w-8 h-10 sm:w-10 sm:h-12 md:w-12 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-bold bg-white border-2 border-slate-300 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                          autoFocus={index === 0}
-                        />
-                      ))}
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-slate-500 mb-4 sm:mb-5 md:mb-6">
-                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>Code expires in: </span>
-                      <span className="font-bold text-blue-600">
-                        {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
-                      </span>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="mb-6">
-                    <p className="text-slate-600 text-sm mb-4">
-                      Code verified! Please enter your password to complete login.
-                    </p>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        value={passwordAfterVerification}
-                        onChange={(e) => setPasswordAfterVerification(e.target.value)}
-                        placeholder="Enter your password"
-                        className="w-full p-4 border-2 border-slate-300 rounded-xl focus:outline-none focus:border-blue-500"
-                        autoFocus
-                      />
-                      <Lock className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                {!requiresPasswordAfterVerification && (
-                  <button
-                    type="button"
-                    onClick={handleResendCode}
-                    disabled={resendLoading || countdown > 0}
-                    className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {resendLoading ? (
-                      <>
-                        <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-                        <span>Sending...</span>
-                      </>
-                    ) : countdown > 0 ? (
-                      <span>Resend in {countdown}s</span>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>Resend Code</span>
-                      </>
-                    )}
-                  </button>
-                )}
-                
-                <button
-                  type="button"
-                  onClick={requiresPasswordAfterVerification ? handlePasswordAfterVerification : handleVerifyCode}
-                  disabled={verificationLoading || 
-                    (!requiresPasswordAfterVerification && verificationCode.join('').length !== 6) ||
-                    (requiresPasswordAfterVerification && !passwordAfterVerification)}
-                  className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {verificationLoading ? (
-                    <>
-                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>{requiresPasswordAfterVerification ? 'Verifying...' : 'Checking...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>{requiresPasswordAfterVerification ? 'Continue' : 'Verify & Continue'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              
-              <div className="mt-4 sm:mt-6 md:mt-8 pt-3 sm:pt-4 md:pt-6 border-t border-slate-200">
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs sm:text-sm font-bold text-slate-800">Security Notice</p>
-                    <p className="text-xs text-slate-600 mt-0.5 sm:mt-1">
-                      {requiresPasswordAfterVerification 
-                        ? 'Enter your password to complete the secure login process.'
-                        : 'This extra step ensures your account stays secure. Never share verification codes with anyone.'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+{showVerificationModal && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 z-[9999] animate-fade-in overflow-y-auto">
+    {/* Main Modal Container - Added max-h-screen and flex-col to handle internal scrolling */}
+    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md my-auto bg-gradient-to-br from-white to-slate-50 rounded-2xl md:rounded-3xl shadow-2xl border border-white/30 overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+      
+      {/* Modal Header - Shrink-0 prevents header from disappearing when zoomed */}
+      <div className="relative p-4 sm:p-6 bg-gradient-to-r from-blue-600 to-cyan-500 text-white shrink-0">
+        <button
+          onClick={closeVerificationModal}
+          className="absolute top-2 right-2 p-2 hover:bg-white/10 rounded-xl transition-colors active:scale-90"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0">
+            <ShieldAlert className="w-5 h-5 md:w-6 md:h-6" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base sm:text-lg font-black truncate">
+              {requiresPasswordAfterVerification ? 'Enter Password' : 'Security Verification'}
+            </h3>
+            <p className="text-blue-100 text-xs mt-0.5 opacity-90 truncate">
+              {requiresPasswordAfterVerification ? 'Complete your login' : 'Verify identity'}
+            </p>
           </div>
         </div>
-      )}
+        
+        <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full">
+          <AlertCircle className="w-3 h-3" />
+          <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap uppercase tracking-wider">
+            {verificationReason?.replace(/_/g, ' ') || 'Action Required'}
+          </span>
+        </div>
+      </div>
+      
+      {/* Scrollable Modal Content */}
+      <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+        {!requiresPasswordAfterVerification ? (
+          <>
+            <div className="mb-4 text-center">
+              <p className="text-slate-600 text-xs sm:text-sm mb-3">
+                6-digit code sent to:
+              </p>
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
+                <p className="text-blue-800 font-black text-sm break-all">{verificationEmail}</p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              {/* Input Grid - Grid layout handles zoom better than flex-center with gaps */}
+              <div className="grid grid-cols-6 gap-1 sm:gap-2 mb-4">
+                {verificationCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`verification-input-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleVerificationCodeChange(index, e.target.value)}
+                    onKeyDown={(e) => handleVerificationKeyDown(index, e)}
+                    className="w-full aspect-square text-center text-lg sm:text-xl font-black bg-white border-2 border-slate-200 rounded-lg sm:rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400">
+                <Clock className="w-3 h-3" />
+                <span>Expires: <span className="text-blue-600 font-mono">{Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}</span></span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mb-6">
+            <p className="text-slate-600 text-sm mb-4 font-medium">
+              Code verified! Enter password to finish.
+            </p>
+            <div className="relative group">
+              <input
+                type="password"
+                value={passwordAfterVerification}
+                onChange={(e) => setPasswordAfterVerification(e.target.value)}
+                placeholder="••••••••"
+                className="w-full p-4 pl-4 pr-12 bg-slate-50 border-2 border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+                autoFocus
+              />
+              <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors w-5 h-5" />
+            </div>
+          </div>
+        )}
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={requiresPasswordAfterVerification ? handlePasswordAfterVerification : handleVerifyCode}
+            disabled={verificationLoading || (!requiresPasswordAfterVerification && verificationCode.join('').length !== 6)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all disabled:opacity-50"
+          >
+            {verificationLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" />
+                <span>{requiresPasswordAfterVerification ? 'COMPLETE LOGIN' : 'VERIFY CODE'}</span>
+              </>
+            )}
+          </button>
+
+          {!requiresPasswordAfterVerification && (
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={resendLoading || countdown > 0}
+              className="w-full py-3 text-slate-500 font-bold text-xs hover:text-blue-600 transition-colors disabled:opacity-50"
+            >
+              Didn't get a code? <span className="underline">Resend</span>
+            </button>
+          )}
+        </div>
+
+        {/* Security Footer */}
+        <div className="mt-6 pt-4 border-t border-slate-100">
+          <div className="flex gap-3">
+            <ShieldCheck className="w-5 h-5 text-blue-500 shrink-0" />
+            <p className="text-[10px] leading-relaxed text-slate-500 font-medium">
+              This is a secure, encrypted verification. Your session is protected by 256-bit encryption.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* MAIN LOGIN PAGE */}
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
+      <div className="min-h-screen scale-[0.83] origin-top-left bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
         <div className="max-w-6xl w-full bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] shadow-xl sm:shadow-2xl shadow-slate-900/10 border border-white/40 overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[600px] md:min-h-[720px]">
           
           {/* Left Panel */}
