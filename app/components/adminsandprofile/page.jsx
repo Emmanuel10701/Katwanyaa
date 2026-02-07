@@ -200,7 +200,7 @@ const handleViewAdmin = (admin) => {
               localStorage.removeItem('admin_user');
               setStatus('unauthenticated');
               toast.error('Session expired. Please login again.');
-              router.push('/adminLogin');
+              router.push('/pages/adminLogin');
               return;
             }
             
@@ -216,12 +216,12 @@ const handleViewAdmin = (admin) => {
           console.log('❌ No valid auth data found');
           setStatus('unauthenticated');
           toast.error('Please login to access this page');
-          router.push('/adminLogin');
+          router.push('/pages/adminLogin');
         }
       } catch (error) {
         console.error('❌ Auth check error:', error);
         setStatus('unauthenticated');
-        router.push('/adminLogin');
+        router.push('/pages/adminLogin');
       }
     };
 
@@ -855,7 +855,7 @@ const handleSaveAdmin = async (e) => {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
         localStorage.removeItem('device_token');
-        router.push('/adminLogin');
+        router.push('/pages/adminLogin');
         return;
       }
       
@@ -953,7 +953,7 @@ const handleSaveAdmin = async (e) => {
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
       localStorage.removeItem('device_token');
-      router.push('/adminLogin');
+      router.push('/pages/adminLogin');
     } else {
       toast.error(error.message || 'An unexpected error occurred');
     }
