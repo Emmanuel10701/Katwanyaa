@@ -91,6 +91,9 @@ export default function NavigationSidebar({
           </div>
         </div>
 
+
+        
+
         {/* Navigation */}
         <nav className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto">
           <div className="space-y-2 sm:space-y-4">
