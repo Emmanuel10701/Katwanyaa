@@ -2451,7 +2451,7 @@ const handleSubmit = async (formData, id) => {
                   {currentItems.map((resource) => (
                     <tr 
                       key={resource.id} 
-                      className={`group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/20 transition-all duration-300 cursor-pointer ${
+                      className={`group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/20 transition-all duration-300  ${
                         selectedResources.has(resource.id) ? 'bg-gradient-to-r from-blue-50/50 to-purple-50/30' : ''
                       }`}
                     >
