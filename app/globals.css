@@ -15,9 +15,12 @@
 }
 
 /* Apply 78% zoom to everything EXCEPT pages with 'no-zoom' class */
-html:not(.no-zoom) {
-  zoom: 0.79;
+html:not(.no-zoom) body {
+  transform: scaleX(0.79);
+  transform-origin: top left;
+  width: calc(100% / 0.79);
 }
+
 
 
 
