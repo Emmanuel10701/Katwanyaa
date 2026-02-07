@@ -1571,52 +1571,73 @@ export async function GET(request) {
 
     // ========== ACTION HANDLERS ==========
 
-    if (action === 'uploads') {
-      // Fetch upload history with optional filtering
-      const uploadWhere = {};
-      if (form) uploadWhere.targetForm = form;
-      if (uploadType) uploadWhere.uploadType = uploadType;
-      
-      const [uploads, total] = await Promise.all([
-        prisma.feeBalanceUpload.findMany({
-          where: uploadWhere,
-          orderBy: { uploadDate: 'desc' },
-          skip: (page - 1) * limit,
-          take: limit,
-          select: {
-            id: true,
-            fileName: true,
-            fileType: true,
-            status: true,
-            uploadedBy: true,
-            uploadDate: true,
-            processedDate: true,
-            term: true,
-            academicYear: true,
-            targetForm: true,
-            totalRows: true,
-            validRows: true,
-            skippedRows: true,
-            errorRows: true,
-            errorLog: true,
-            uploadType: true,
-            metadata: true
-          }
-        }),
-        prisma.feeBalanceUpload.count({ where: uploadWhere })
-      ]);
-      
-      return NextResponse.json({
-        success: true,
-        uploads,
-        pagination: { 
-          page, 
-          limit, 
-          total, 
-          pages: Math.ceil(total / limit) 
-        }
-      });
+if (action === 'uploads') {
+  // Fetch upload history with optional filtering
+  const uploadWhere = {};
+  
+  // Always filter for completed uploads
+  uploadWhere.status = 'completed';
+  
+  // Additional optional filters
+  if (form) uploadWhere.targetForm = form;
+  if (uploadType) uploadWhere.uploadType = uploadType;
+  if (status && status !== 'completed') {
+    // If a different status is explicitly requested, override the default
+    uploadWhere.status = status;
+  }
+  
+  // If you want to allow showing all uploads (including non-completed), 
+  // you could add a special parameter like `showAll=true`
+  const showAll = url.searchParams.get('showAll') === 'true';
+  if (showAll) {
+    delete uploadWhere.status; // Remove status filter to show all
+  }
+  
+  const [uploads, total] = await Promise.all([
+    prisma.feeBalanceUpload.findMany({
+      where: uploadWhere,
+      orderBy: { uploadDate: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      select: {
+        id: true,
+        fileName: true,
+        fileType: true,
+        status: true,
+        uploadedBy: true,
+        uploadDate: true,
+        processedDate: true,
+        term: true,
+        academicYear: true,
+        targetForm: true,
+        totalRows: true,
+        validRows: true,
+        skippedRows: true,
+        errorRows: true,
+        errorLog: true,
+        uploadType: true,
+        metadata: true
+      }
+    }),
+    prisma.feeBalanceUpload.count({ where: uploadWhere })
+  ]);
+  
+  return NextResponse.json({
+    success: true,
+    uploads,
+    pagination: { 
+      page, 
+      limit, 
+      total, 
+      pages: Math.ceil(total / limit) 
+    },
+    filters: {
+      status: uploadWhere.status || 'all',
+      form,
+      uploadType
     }
+  });
+}
 
     if (action === 'stats') {
       // Get current academic year

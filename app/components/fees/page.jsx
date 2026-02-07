@@ -2191,23 +2191,25 @@ const loadStatistics = async () => {
 };
 
   // Load upload history
-  const loadUploadHistory = async (page = 1) => {
-    setHistoryLoading(true);
-    try {
-      const res = await fetch(`/api/feebalances?action=uploads&page=${page}&limit=5`);
-      const data = await res.json();
-      if (data.success) {
-        setUploadHistory(data.uploads || data.data?.uploads || []);
-      } else {
-        showNotification('Failed to load upload history', 'error');
-      }
-    } catch (error) {
-      console.error('Failed to load history:', error);
+// Load upload history - MODIFIED to only get completed uploads
+const loadUploadHistory = async (page = 1) => {
+  setHistoryLoading(true);
+  try {
+    // Add status=completed to the API call
+    const res = await fetch(`/api/feebalances?action=uploads&page=${page}&limit=5&status=completed`);
+    const data = await res.json();
+    if (data.success) {
+      setUploadHistory(data.uploads || data.data?.uploads || []);
+    } else {
       showNotification('Failed to load upload history', 'error');
-    } finally {
-      setHistoryLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Failed to load history:', error);
+    showNotification('Failed to load upload history', 'error');
+  } finally {
+    setHistoryLoading(false);
+  }
+};
 
   // Load student info for a fee
   const loadStudentInfo = async (admissionNumber) => {
