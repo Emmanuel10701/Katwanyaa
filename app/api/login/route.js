@@ -607,46 +607,19 @@ async function handleVerification(email, code, deviceHash, req, clientLoginCount
       }
     });
 
-    // If verification was triggered by wrong password attempts, check password NOW
-    if (recentFailedPasswordAttempts > 0) {
-      if (!password) {
-        return {
-          success: true,
-          requiresPassword: true,
-          message: 'Please enter your password to complete login.',
-          email: email,
-          user: sanitizeUser(user),
-          verificationCodeValid: true
-        };
-      }
-      
-      // Verify the password
-      const isPasswordValid = await verifyPassword(password, user.password);
-      
-      if (!isPasswordValid) {
-        // Password is STILL wrong after OTP verification
-        return {
-          success: false,
-          passwordInvalid: true,
-          error: 'Incorrect password. Please try again.',
-          email: email,
-          requiresPassword: true
-        };
-      }
-    } else if (password) {
-      // Password was provided but not required - verify it anyway for security
-      const isPasswordValid = await verifyPassword(password, user.password);
-      
-      if (!isPasswordValid) {
-        return {
-          success: false,
-          passwordInvalid: true,
-          error: 'Incorrect password. Please try again.',
-          email: email,
-          requiresPassword: true
-        };
-      }
-    }
+// Always verify password if provided
+if (password) {
+  const isPasswordValid = await verifyPassword(password, user.password);
+  
+  if (!isPasswordValid) {
+    return {
+      success: false,
+      error: 'Incorrect password',
+      email: email
+    };
+  }
+}
+
 
     // Regular login flow (password was correct or no password needed)
     const userAgent = req.headers.get('user-agent') || 'unknown';

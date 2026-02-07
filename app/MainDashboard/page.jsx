@@ -525,230 +525,274 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    const initializeDashboard = async () => {
-      setLoading(true);
+useEffect(() => {
+  const initializeDashboard = async () => {
+    setLoading(true);
+    
+    try {
+      console.log('🔍 Starting dashboard initialization...');
       
+      const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
+      const possibleAdminTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
+      const deviceTokenKeys = ['device_token', 'deviceToken'];
+      const deviceFingerprintKeys = ['device_fingerprint', 'deviceFingerprint'];
+      
+      let userData = null;
+      let adminToken = null;
+      let deviceToken = null;
+      let deviceFingerprint = null;
+      
+      // Find user data
+      for (const key of possibleUserKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found user data in key: ${key}`);
+          userData = data;
+          break;
+        }
+      }
+      
+      // Find admin token
+      for (const key of possibleAdminTokenKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found admin token in key: ${key}`);
+          adminToken = data;
+          break;
+        }
+      }
+      
+      // Find device token (optional for dashboard)
+      for (const key of deviceTokenKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found device token in key: ${key}`);
+          deviceToken = data;
+          break;
+        }
+      }
+      
+      // Find device fingerprint (optional for dashboard)
+      for (const key of deviceFingerprintKeys) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          console.log(`✅ Found device fingerprint in key: ${key}`);
+          deviceFingerprint = data;
+          break;
+        }
+      }
+      
+      // ==============================================
+      // 1. CHECK ADMIN TOKEN (PRIMARY - REQUIRED)
+      // ==============================================
+      if (!adminToken) {
+        console.log('❌ No admin token found');
+        toast.error('Authentication required. Please login again.');
+        
+        // Clear only authentication data
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // Parse and validate admin token (12-hour expiry)
+      let adminTokenPayload = null;
       try {
-        console.log('🔍 Starting dashboard initialization...');
-        
-        const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
-        const possibleAdminTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
-        const deviceTokenKeys = ['device_token', 'deviceToken'];
-        const deviceFingerprintKeys = ['device_fingerprint', 'deviceFingerprint'];
-        
-        let userData = null;
-        let adminToken = null;
-        let deviceToken = null;
-        let deviceFingerprint = null;
-        
-        for (const key of possibleUserKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found user data in key: ${key}`);
-            userData = data;
-            break;
-          }
+        const tokenParts = adminToken.split('.');
+        if (tokenParts.length !== 3) {
+          throw new Error('Invalid JWT format');
         }
         
-        for (const key of possibleAdminTokenKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found admin token in key: ${key}`);
-            adminToken = data;
-            break;
-          }
-        }
+        // Decode the payload (middle part of JWT)
+        adminTokenPayload = JSON.parse(atob(tokenParts[1]));
+        const currentTime = Math.floor(Date.now() / 1000);
         
-        for (const key of deviceTokenKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found device token in key: ${key}`);
-            deviceToken = data;
-            break;
-          }
-        }
-        
-        for (const key of deviceFingerprintKeys) {
-          const data = localStorage.getItem(key);
-          if (data) {
-            console.log(`✅ Found device fingerprint in key: ${key}`);
-            deviceFingerprint = data;
-            break;
-          }
-        }
-        
-        // TOKEN VALIDATION
-        if (!userData) {
-          console.log('❌ No user data found in localStorage');
-          toast.error('Please login to access the dashboard'); // Using sonner toast
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        if (!adminToken) {
-          console.log('❌ No admin token found');
-          toast.error('Authentication required. Please login again.');
-          
-          possibleUserKeys.forEach(key => localStorage.removeItem(key));
-          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        if (!deviceToken) {
-          console.log('❌ No device token found');
-          toast.error('Device verification required. Please login with verification.');
-          
-          possibleUserKeys.forEach(key => localStorage.removeItem(key));
-          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
-          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        // Parse user data
-        const user = JSON.parse(userData);
-        console.log('📋 Parsed user data:', user);
-        
-        // Verify admin token
-        try {
-          const tokenPayload = JSON.parse(atob(adminToken.split('.')[1]));
-          const currentTime = Date.now() / 1000;
-          
-          if (tokenPayload.exp < currentTime) {
-            console.log('❌ Admin token expired');
-            toast.error('Session expired. Please login again.');
-            
-            possibleUserKeys.forEach(key => localStorage.removeItem(key));
-            possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
-            deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-            window.location.href = '/pages/adminLogin';
-            return;
-          }
-          console.log('✅ Admin token is valid');
-        } catch (tokenError) {
-          console.log('⚠️ Admin token validation error:', tokenError.message);
-          toast.error('Invalid authentication. Please login again.');
-          
-          possibleUserKeys.forEach(key => localStorage.removeItem(key));
-          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
-          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        // Verify device token
-        try {
-          const devicePayloadStr = decodeURIComponent(escape(atob(deviceToken)));
-          const devicePayload = JSON.parse(devicePayloadStr);
-          
-          if (devicePayload.exp * 1000 <= Date.now()) {
-            console.log('❌ Device token expired');
-            toast.error('Device verification expired. Please login with verification.');
-            
-            deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-            localStorage.setItem('requires_verification', 'true');
-            window.location.href = '/pages/adminLogin';
-            return;
-          }
-          
-          const createdAt = new Date(devicePayload.createdAt || devicePayload.iat * 1000);
-          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          
-          if (createdAt < thirtyDaysAgo) {
-            console.log('❌ Device token too old');
-            toast.error('Device verification expired. Please login again.');
-            
-            deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-            localStorage.setItem('requires_verification', 'true');
-            window.location.href = '/pages/adminLogin';
-            return;
-          }
-          
-          console.log('✅ Device token is valid');
-          
-          // Verify device fingerprint matches
-          if (deviceFingerprint) {
-            const currentFingerprint = generateDeviceFingerprint();
-            
-            if (deviceFingerprint !== currentFingerprint.hash) {
-              console.log('❌ Device fingerprint mismatch');
-              toast.error('Device changed. Verification required.');
-              
-              deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-              deviceFingerprintKeys.forEach(key => localStorage.removeItem(key));
-              localStorage.setItem('requires_verification', 'true');
-              window.location.href = '/pages/adminLogin';
-              return;
-            }
-            console.log('✅ Device fingerprint matches');
-          }
-          
-        } catch (deviceTokenError) {
-          console.log('⚠️ Device token validation error:', deviceTokenError.message);
-          toast.error('Invalid device token. Please login with verification.');
-          
-          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-          deviceFingerprintKeys.forEach(key => localStorage.removeItem(key));
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        // USER ROLE VALIDATION
-        const userRole = user.role;
-        const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL'];
-        
-        if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
-          console.log('❌ User does not have valid role:', userRole);
-          toast.error('Unauthorized access. Please login with admin credentials.');
-          
-          possibleUserKeys.forEach(key => localStorage.removeItem(key));
-          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
-          deviceTokenKeys.forEach(key => localStorage.removeItem(key));
-          window.location.href = '/pages/adminLogin';
-          return;
-        }
-        
-        console.log('✅ User role verified:', userRole);
-        
-        // SUCCESS - SET USER
-        console.log('✅ User authenticated successfully:', user.name);
-        console.log('✅ Both tokens validated successfully');
-        
-        localStorage.setItem('last_dashboard_access', new Date().toISOString());
-        
-        const loginCount = parseInt(localStorage.getItem('login_count') || '0');
-        console.log('📱 Security audit:', {
-          user: user.name,
-          role: user.role,
-          deviceLoginCount: loginCount,
-          lastLogin: localStorage.getItem('last_login'),
-          dashboardAccess: new Date().toISOString()
+        console.log('🔑 Admin token details:', {
+          expiresAt: new Date(adminTokenPayload.exp * 1000).toLocaleString(),
+          issuedAt: new Date(adminTokenPayload.iat * 1000).toLocaleString(),
+          expiresInHours: ((adminTokenPayload.exp - currentTime) / 3600).toFixed(2),
+          userRole: adminTokenPayload.role,
+          userId: adminTokenPayload.userId
         });
         
-        setUser(user);
+        if (adminTokenPayload.exp < currentTime) {
+          console.log('❌ Admin token expired');
+          toast.error('Session expired. Please login again.');
+          
+          // Clear only authentication data
+          possibleUserKeys.forEach(key => localStorage.removeItem(key));
+          possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+          window.location.href = '/pages/adminLogin';
+          return;
+        }
         
-        console.log('📊 Fetching dashboard statistics...');
-        await fetchRealCounts();
+        console.log('✅ Admin token is valid (12-hour expiry)');
+      } catch (tokenError) {
+        console.log('⚠️ Admin token validation error:', tokenError.message);
+        toast.error('Invalid authentication. Please login again.');
         
-        toast.success(`Welcome back, ${user.name}!`); // Using sonner toast
-        
-      } catch (error) {
-        console.error('❌ Error initializing dashboard:', error);
-        
-        toast.error('Failed to load dashboard. Please try again.');
-        
-        localStorage.clear();
+        // Clear only authentication data
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
         window.location.href = '/pages/adminLogin';
-        
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
+      
+      // ==============================================
+      // 2. CHECK USER DATA (REQUIRED)
+      // ==============================================
+      if (!userData) {
+        console.log('❌ No user data found in localStorage');
+        toast.error('Please login to access the dashboard');
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // Parse user data
+      let user;
+      try {
+        user = JSON.parse(userData);
+        console.log('📋 Parsed user data:', {
+          name: user.name,
+          email: user.email,
+          role: user.role
+        });
+      } catch (parseError) {
+        console.log('❌ Error parsing user data:', parseError);
+        toast.error('Invalid user data. Please login again.');
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      // ==============================================
+      // 3. VERIFY USER ROLE (REQUIRED)
+      // ==============================================
+      const userRole = user.role;
+      const validRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'TEACHER', 'PRINCIPAL'];
+      
+      if (!userRole || !validRoles.includes(userRole.toUpperCase())) {
+        console.log('❌ User does not have valid role:', userRole);
+        toast.error('Unauthorized access. Please login with admin credentials.');
+        
+        possibleUserKeys.forEach(key => localStorage.removeItem(key));
+        possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+        window.location.href = '/pages/adminLogin';
+        return;
+      }
+      
+      console.log('✅ User role verified:', userRole);
+      
+      // ==============================================
+      // 4. CHECK DEVICE TOKEN (OPTIONAL - FOR INFO ONLY)
+      // ==============================================
+      // Device token is only for login verification, not required for dashboard access
+      if (deviceToken) {
+        try {
+          // Decode device token (could be JWT or base64)
+          let devicePayload;
+          if (deviceToken.includes('.')) {
+            // JWT format
+            const deviceParts = deviceToken.split('.');
+            if (deviceParts.length === 3) {
+              devicePayload = JSON.parse(atob(deviceParts[1]));
+            }
+          } else {
+            // Base64 format
+            try {
+              const decodedStr = atob(deviceToken);
+              devicePayload = JSON.parse(decodedStr);
+            } catch (e) {
+              // Try URL-safe base64
+              try {
+                const urlSafeToken = deviceToken.replace(/-/g, '+').replace(/_/g, '/');
+                const decodedStr = atob(urlSafeToken);
+                devicePayload = JSON.parse(decodedStr);
+              } catch (e2) {
+                console.log('⚠️ Could not decode device token');
+                devicePayload = null;
+              }
+            }
+          }
+          
+          if (devicePayload) {
+            console.log('📱 Device token info (optional):', {
+              loginCount: devicePayload.loginCount,
+              expiresAt: devicePayload.exp ? new Date(devicePayload.exp * 1000).toLocaleString() : 'N/A',
+              valid: devicePayload.exp ? (devicePayload.exp * 1000 > Date.now()) : 'Unknown'
+            });
+          }
+          
+          // Check device fingerprint if available
+          if (deviceFingerprint) {
+            const currentFingerprint = generateDeviceFingerprint();
+            if (deviceFingerprint !== currentFingerprint.hash) {
+              console.log('⚠️ Device fingerprint changed - will be caught on next login');
+              // Don't redirect - admin token is still valid
+            } else {
+              console.log('✅ Device fingerprint matches');
+            }
+          }
+          
+        } catch (deviceError) {
+          console.log('⚠️ Device token check error (non-critical):', deviceError.message);
+          // Continue - device token is not required for dashboard access
+        }
+      } else {
+        console.log('ℹ️ No device token found - not required for dashboard access');
+      }
+      
+      // ==============================================
+      // 5. STORE DASHBOARD ACCESS TIMESTAMP
+      // ==============================================
+      localStorage.setItem('last_dashboard_access', new Date().toISOString());
+      
+      // ==============================================
+      // 6. SUCCESS - SET USER STATE
+      // ==============================================
+      console.log('✅ User authenticated successfully:', user.name);
+      console.log('✅ Admin token validated (12-hour expiry)');
+      
+      const loginCount = parseInt(localStorage.getItem('login_count') || '0');
+      console.log('📱 Security audit:', {
+        user: user.name,
+        role: user.role,
+        adminTokenExpiry: new Date(adminTokenPayload.exp * 1000).toLocaleString(),
+        deviceLoginCount: loginCount,
+        lastLogin: localStorage.getItem('last_login'),
+        dashboardAccess: new Date().toISOString()
+      });
+      
+      setUser(user);
+      
+      // ==============================================
+      // 7. FETCH DASHBOARD STATISTICS
+      // ==============================================
+      console.log('📊 Fetching dashboard statistics...');
+      await fetchRealCounts();
+      
+      toast.success(`Welcome back, ${user.name}!`);
+      
+    } catch (error) {
+      console.error('❌ Error initializing dashboard:', error);
+      toast.error('Failed to load dashboard. Please try again.');
+      
+      // Clear only authentication data on error
+      const possibleUserKeys = ['admin_user', 'user', 'currentUser', 'auth_user'];
+      const possibleAdminTokenKeys = ['admin_token', 'token', 'auth_token', 'jwt_token'];
+      
+      possibleUserKeys.forEach(key => localStorage.removeItem(key));
+      possibleAdminTokenKeys.forEach(key => localStorage.removeItem(key));
+      
+      window.location.href = '/pages/adminLogin';
+      
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    initializeDashboard();
-  }, []);
+  initializeDashboard();
+}, []);
 
   // Refresh counts when tab changes
   useEffect(() => {
