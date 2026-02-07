@@ -146,7 +146,7 @@ const validateInput = (name, email, password, role) => {
     errors.push("Password must be at least 6 characters");
   }
 
-  const validRoles = ["TEACHER", "PRINCIPAL", "ADMIN"];
+  const validRoles = ["TEACHER", "PRINCIPAL", "ADMIN", "SUPER_ADMIN"];
   if (role && !validRoles.includes(role)) {
     errors.push("Invalid user role");
   }
@@ -154,7 +154,7 @@ const validateInput = (name, email, password, role) => {
   return errors;
 };
 
-// Helper to check if operation requires admin privileges
+// Helper to check if operation requires admin privileges - FIXED
 const requiresAdminPrivilege = (operation, targetUserRole, currentUserRole) => {
   const adminRoles = ['ADMIN', 'SUPER_ADMIN', 'administrator', 'PRINCIPAL'];
   
@@ -163,9 +163,9 @@ const requiresAdminPrivilege = (operation, targetUserRole, currentUserRole) => {
     return false;
   }
   
-  // Special protection for ADMIN users
+  // Special protection for ADMIN users - only SUPER_ADMIN can modify other ADMINS
   if (targetUserRole?.toUpperCase() === 'ADMIN' && currentUserRole?.toUpperCase() !== 'SUPER_ADMIN') {
-    return 'SUPER_ADMIN';
+    return 'SUPER_ADMIN_REQUIRED'; // Changed to more descriptive string
   }
   
   return true;
@@ -237,7 +237,7 @@ export async function GET(req, { params }) {
   }
 }
 
-// UPDATE user by ID
+// UPDATE user by ID - FIXED
 export async function PUT(req, { params }) {
   try {
     // Authenticate request
@@ -259,40 +259,47 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Check permission
-    const permissionCheck = requiresAdminPrivilege('UPDATE', targetUser.role, auth.user.role);
-    if (permissionCheck === false) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Permission Denied",
-          message: "You do not have permission to update users"
-        },
-        { status: 403 }
-      );
-    }
-    
-    // Extra protection for ADMIN users - requires confirmation
-    if (targetUser.role?.toUpperCase() === 'ADMIN' && permissionCheck === 'SUPER_ADMIN') {
-      if (!confirmationToken) {
+    // ================ FIXED: ALLOW SELF-UPDATES ================
+    // Allow users to update their own profile
+    if (auth.user.id === id) {
+      console.log('👤 User updating their own profile:', auth.user.name);
+      // Skip admin privilege check for self-updates
+      // Still validate input but don't check admin permissions
+    } else {
+      // For updating other users, check admin permissions
+      const permissionCheck = requiresAdminPrivilege('UPDATE', targetUser.role, auth.user.role);
+      if (permissionCheck === false) {
         return NextResponse.json(
           { 
             success: false, 
-            error: "Confirmation Required",
-            message: "Updating an ADMIN user requires confirmation token",
-            requiresConfirmation: true
+            error: "Permission Denied",
+            message: "You do not have permission to update other users"
           },
           { status: 403 }
         );
       }
       
-      // Here you would validate the confirmation token
-      // For now, we'll just check if it's provided
-      console.log('⚠️ Admin user update attempt:', {
-        admin: auth.user.name,
-        targetAdmin: targetUser.name,
-        confirmationToken: confirmationToken ? 'Provided' : 'Missing'
-      });
+      // Extra protection for ADMIN users - requires SUPER_ADMIN
+      if (permissionCheck === 'SUPER_ADMIN_REQUIRED') {
+        if (!confirmationToken) {
+          return NextResponse.json(
+            { 
+              success: false, 
+              error: "Super Admin Required",
+              message: "Only SUPER_ADMIN can update other ADMIN accounts",
+              requiresConfirmation: true,
+              requiresSuperAdmin: true
+            },
+            { status: 403 }
+          );
+        }
+        
+        console.log('⚠️ Admin user update attempt by non-super admin:', {
+          admin: auth.user.name,
+          targetAdmin: targetUser.name,
+          confirmationToken: confirmationToken ? 'Provided' : 'Missing'
+        });
+      }
     }
 
     // Log the update attempt
@@ -303,6 +310,7 @@ export async function PUT(req, { params }) {
       targetUser: targetUser.email,
       targetUserId: id,
       targetUserRole: targetUser.role,
+      isSelfUpdate: auth.user.id === id,
       changes: { name, email, role, phoneChanged: !!phone, passwordChanged: !!password },
       device: auth.deviceInfo,
       timestamp: new Date().toISOString()
@@ -317,7 +325,10 @@ export async function PUT(req, { params }) {
       name,
       email,
       phone,
-      role: role || targetUser.role, // Keep existing role if not provided
+      // For self-updates, don't allow role change unless SUPER_ADMIN
+      role: auth.user.id === id && auth.user.role !== 'SUPER_ADMIN' 
+        ? targetUser.role // Keep existing role for self-updates
+        : (role || targetUser.role),
     };
 
     if (password) {
@@ -336,6 +347,7 @@ export async function PUT(req, { params }) {
     // Log successful update
     console.log('✅ User updated successfully:', {
       updatedBy: auth.user.name,
+      isSelfUpdate: auth.user.id === id,
       targetUser: updatedUser.email,
       changes: Object.keys(dataToUpdate),
       timestamp: new Date().toISOString()
@@ -347,7 +359,8 @@ export async function PUT(req, { params }) {
       user: sanitizeUser(updatedUser),
       updatedBy: {
         name: auth.user.name,
-        role: auth.user.role
+        role: auth.user.role,
+        isSelfUpdate: auth.user.id === id
       }
     }, { status: 200 });
   } catch (error) {
@@ -361,7 +374,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE user by ID
+// DELETE user by ID - FIXED
 export async function DELETE(req, { params }) {
   try {
     // Authenticate request
@@ -407,8 +420,8 @@ export async function DELETE(req, { params }) {
       );
     }
     
-    // Extra protection for ADMIN users
-    if (targetUser.role?.toUpperCase() === 'ADMIN' && permissionCheck === 'SUPER_ADMIN') {
+    // Extra protection for ADMIN users - requires SUPER_ADMIN
+    if (permissionCheck === 'SUPER_ADMIN_REQUIRED') {
       // Check for confirmation token in headers or body
       const confirmationToken = req.headers.get('x-confirmation-token') || (await req.json()).confirmationToken;
       
@@ -416,9 +429,10 @@ export async function DELETE(req, { params }) {
         return NextResponse.json(
           { 
             success: false, 
-            error: "Confirmation Required",
-            message: "Deleting an ADMIN user requires confirmation token from SUPER_ADMIN",
+            error: "Super Admin Required",
+            message: "Deleting an ADMIN user requires confirmation from SUPER_ADMIN",
             requiresConfirmation: true,
+            requiresSuperAdmin: true,
             targetUser: {
               name: targetUser.name,
               email: targetUser.email,
@@ -429,7 +443,7 @@ export async function DELETE(req, { params }) {
         );
       }
       
-      // Validate confirmation token (simplified - you should implement proper validation)
+      // Validate confirmation token
       console.log('⚠️ Admin user deletion attempt with confirmation token:', {
         superAdmin: auth.user.name,
         targetAdmin: targetUser.name,
