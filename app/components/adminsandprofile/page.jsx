@@ -1076,13 +1076,13 @@ const handleSaveAdmin = async (e) => {
                 <Shield className="text-2xl" />
               </div>
            <div>
-  <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-900">
-    Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+  <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-100">
+    Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-indigo-100">
       Management Dashboard
     </span>
   </h1>
   
-  <p className="mt-4 text-slate-600 text-lg lg:text-xl font-medium max-w-3xl leading-relaxed">
+  <p className="mt-4 text-slate-50 text-lg lg:text-xl font-medium max-w-3xl leading-relaxed">
     Access the central authority hub to oversee system custodians. Regulate 
     administrative privileges, monitor security protocols, and orchestrate 
     high-level permissions to ensure total platform integrity and seamless 
