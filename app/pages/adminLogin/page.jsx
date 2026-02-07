@@ -1341,7 +1341,7 @@ const handlePasswordAfterVerification = async () => {
 )}
 
       {/* MAIN LOGIN PAGE */}
-      <div className="min-h-screen scale-[0.83] origin-top-left bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
+      <div className="min-h-screen scale-[0.83]  bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-3 sm:p-4 md:p-6 font-sans">
         <div className="max-w-6xl w-full bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] shadow-xl sm:shadow-2xl shadow-slate-900/10 border border-white/40 overflow-hidden flex flex-col md:flex-row min-h-[500px] sm:min-h-[600px] md:min-h-[720px]">
           
           {/* Left Panel */}
