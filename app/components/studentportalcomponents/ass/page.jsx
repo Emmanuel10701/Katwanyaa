@@ -394,8 +394,6 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
             <div className="text-xs font-bold bg-white/20 px-1.5 py-0.5 sm:px-2 sm:yp-1 rounded-full">
               {totalFiles} {totalFiles === 1 ? 'file' : 'files'}
             </div>
-                    <h3 className="text-lg sm:text-lg font-bold line-clamp-2">{item.form}</h3>
-
           </div>
         </div>
         
@@ -472,6 +470,7 @@ function AssignmentResourceCard({ item, type, onView, onDownload, onBookmark, is
     </div>
   );
 }
+
 function DetailModal({ item, type, onClose, onDownload }) {
   if (!item) return null;
 
@@ -741,6 +740,17 @@ export default function ModernResourcesAssignmentsView({
     averageCompletion: 0
   });
 
+  // ==================== UPDATED HELPER FUNCTIONS ====================
+  
+  // Function to check if an item matches student's class
+  const matchesStudentClass = useCallback((itemClassName) => {
+    if (!student || !student.form) return true; // If no student, show all
+    
+    // Check if className matches student's form (e.g., "Form 2" matches "Form 2")
+    // Your data shows className is just "Form 2" without stream
+    return itemClassName === student.form;
+  }, [student]);
+
   // Fetch data
   const fetchAssignments = useCallback(async () => {
     setAssignmentsLoading(true);
@@ -748,7 +758,16 @@ export default function ModernResourcesAssignmentsView({
       const response = await fetch('/api/assignment');
       const data = await response.json();
       if (data.success) {
-        const processedAssignments = (data.assignments || []).map((assignment) => ({
+        // Filter assignments based on student's class FIRST
+        let filteredAssignments = data.assignments || [];
+        
+        if (student && student.form) {
+          filteredAssignments = filteredAssignments.filter(assignment => 
+            matchesStudentClass(assignment.className)
+          );
+        }
+        
+        const processedAssignments = filteredAssignments.map((assignment) => ({
           ...assignment,
           assignmentFileAttachments: (assignment.assignmentFiles || []).map((url) => ({
             ...extractFileInfoFromUrl(url),
@@ -769,7 +788,7 @@ export default function ModernResourcesAssignmentsView({
     } finally {
       setAssignmentsLoading(false);
     }
-  }, []);
+  }, [student, matchesStudentClass]);
 
   const fetchResources = useCallback(async () => {
     setResourcesLoading(true);
@@ -777,15 +796,25 @@ export default function ModernResourcesAssignmentsView({
       const response = await fetch('/api/resources');
       const data = await response.json();
       if (data.success) {
-        const processedResources = (data.resources || []).map((resource) => ({
+        // Filter resources based on student's class FIRST
+        let filteredResources = data.resources || [];
+        
+        if (student && student.form) {
+          filteredResources = filteredResources.filter(resource => 
+            matchesStudentClass(resource.className)
+          );
+        }
+        
+        const processedResources = filteredResources.map((resource) => ({
           ...resource,
-          mainAttachment: {
-            url: resource.fileUrl,
-            fileName: resource.fileName,
-            fileSize: resource.fileSize,
-            extension: resource.extension,
+          // Map files array to mainAttachment for single file display
+          mainAttachment: resource.files && resource.files.length > 0 ? {
+            url: resource.files[0].url,
+            fileName: resource.files[0].name,
+            fileSize: resource.files[0].size,
+            extension: resource.files[0].extension,
             fileType: resource.type
-          }
+          } : null
         }));
         setResources(processedResources);
       } else {
@@ -797,14 +826,14 @@ export default function ModernResourcesAssignmentsView({
     } finally {
       setResourcesLoading(false);
     }
-  }, []);
+  }, [student, matchesStudentClass]);
 
   useEffect(() => {
     fetchAssignments();
     fetchResources();
   }, [fetchAssignments, fetchResources]);
 
-  // Calculate statistics
+  // Calculate statistics - ONLY for student's classes
   useEffect(() => {
     const totalAssignments = assignments.length;
     const pendingAssignments = assignments.filter(a => 
@@ -827,13 +856,16 @@ export default function ModernResourcesAssignmentsView({
     });
   }, [assignments, resources]);
 
-  // Filter and sort logic
+  // ==================== UPDATED FILTER LOGIC ====================
+
+  // Get unique classes from filtered data (already filtered by student's form)
   const classes = useMemo(() => {
     const items = activeTab === 'assignments' ? assignments : resources;
     const uniqueClasses = ['all', ...new Set(items.map(item => item.className).filter(Boolean))];
     return uniqueClasses;
   }, [assignments, resources, activeTab]);
 
+  // Get unique subjects from filtered data
   const subjects = useMemo(() => {
     const items = activeTab === 'assignments' ? assignments : resources;
     return ['all', ...new Set(items.map(item => item.subject).filter(Boolean))];
@@ -858,7 +890,7 @@ export default function ModernResourcesAssignmentsView({
     }));
   }, [resources]);
 
-  // Filter items
+  // Filter assignments with student class pre-filtered
   const filteredAssignments = useMemo(() => {
     let filtered = assignments.filter(assignment => {
       const matchesClass = selectedClass === 'all' || assignment.className === selectedClass;
@@ -886,6 +918,7 @@ export default function ModernResourcesAssignmentsView({
     });
   }, [assignments, selectedClass, selectedSubject, selectedStatus, searchTerm, bookmarkedItems, showBookmarkedOnly]);
 
+  // Filter resources with student class pre-filtered
   const filteredResources = useMemo(() => {
     let filtered = resources.filter(resource => {
       const matchesType = selectedResourceType === 'all' || resource.type === selectedResourceType;
@@ -1085,7 +1118,6 @@ export default function ModernResourcesAssignmentsView({
                   : 'text-gray-600'
               }`}
             >
-       
               <div className="text-left">
                 <div className="text-sm font-bold">Assignments</div>
                 <div className={`text-xs ${activeTab === 'assignments' ? 'text-white/80' : 'text-gray-400'}`}>
@@ -1366,6 +1398,11 @@ export default function ModernResourcesAssignmentsView({
               Showing {filteredCount} of {totalItems} items
               {searchTerm && ` • Search: "${searchTerm}"`}
               {showBookmarkedOnly && ` • Bookmarked only`}
+              {student && (
+                <span className="text-blue-600 font-bold">
+                  • Filtered for {student.form} {student.stream}
+                </span>
+              )}
             </p>
           </div>
           
@@ -1393,6 +1430,8 @@ export default function ModernResourcesAssignmentsView({
               {searchTerm || selectedClass !== 'all' || selectedSubject !== 'all' || 
                selectedStatus !== 'all' || selectedResourceType !== 'all' || showBookmarkedOnly
                 ? 'Try adjusting your filters or search terms'
+                : student 
+                ? `No ${activeTab === 'assignments' ? 'assignments' : 'resources'} available for ${student.form} ${student.stream}`
                 : `No ${activeTab === 'assignments' ? 'assignments' : 'resources'} available yet`}
             </p>
             {(searchTerm || selectedClass !== 'all' || selectedSubject !== 'all' || 
@@ -1554,7 +1593,7 @@ export default function ModernResourcesAssignmentsView({
           Last updated {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
         <p className="mt-1 sm:mt-2 text-xs">
-          All files are securely stored and downloaded directly from Supabase storage
+          All files are securely stored and downloaded directly from Cloudinary storage
         </p>
       </div>
     </div>
