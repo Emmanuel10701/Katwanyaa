@@ -129,20 +129,18 @@ const authenticateRequest = (req) => {
 };
 
 // ==================== CLOUDINARY HELPERS ====================
-// FIXED: This now works EXACTLY like school-documents API
+// FIXED: UPDATED to work EXACTLY like school-documents API
 const uploadFileToCloudinary = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
   try {
-    // Get file extension properly
     const originalName = file.name;
     const fileExtension = '.' + originalName.split('.').pop().toLowerCase();
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     
-    // Sanitize filename (preserve extension)
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    // FIX: Keep the extension in the filename like school-documents API
+    const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
     // Determine resource type
     const isVideo = file.type.startsWith('video/');
@@ -151,17 +149,16 @@ const uploadFileToCloudinary = async (file) => {
     const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
     const isAudio = file.type.startsWith('audio/');
     
+    // Set resource type (raw for documents, pdf, etc.)
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
-    const format = fileExtension.substring(1); // Remove the dot
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: "school_resources/files", // Changed to match pattern
-        public_id: `${timestamp}-${sanitizedFileName}`, // This will keep extension automatically
+        folder: "school/resources/files", // FIXED: Match school-documents folder structure
+        public_id: `${timestamp}-${sanitizedFileName}`, // FIXED: This now includes extension
         overwrite: false,
-        format: format, // Explicitly set format
-        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'mp3', 'wav']
+        // REMOVED: format parameter - let Cloudinary auto-detect from filename
       };
 
       // Add transformations for images only
@@ -187,11 +184,12 @@ const uploadFileToCloudinary = async (file) => {
             else if (isDocument) fileType = 'document';
             else if (isAudio) fileType = 'audio';
 
-            console.log('Upload successful:', {
+            console.log('✅ Upload successful (like school-documents):', {
               url: result.secure_url,
               format: result.format,
               publicId: result.public_id,
-              originalName
+              originalName,
+              hasExtension: result.secure_url.includes(fileExtension)
             });
 
             resolve({
@@ -235,13 +233,13 @@ const uploadMultipleFilesToCloudinary = async (files) => {
   return uploadedFiles;
 };
 
-// FIXED: Delete function to handle different resource types
+// FIXED: Delete function updated for new folder structure
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
-    // Extract public ID from URL
-    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
+    // Extract public ID from URL - updated for new folder structure
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+)/);
     if (!urlMatch) {
       console.warn(`Could not extract public ID from URL: ${fileUrl}`);
       return;
@@ -344,7 +342,7 @@ const cleanResourceResponse = (resource) => {
 
 // ==================== API ENDPOINTS ====================
 
-// GET - Fetch all resources (PUBLIC) - FIXED to work like school-documents
+// GET - Fetch all resources (PUBLIC)
 export async function GET() {
   try {
     console.log("📥 GET /api/resources");
@@ -371,7 +369,7 @@ export async function GET() {
   }
 }
 
-// POST - Create resource (PROTECTED) - FIXED to work like school-documents
+// POST - Create resource (PROTECTED)
 export async function POST(request) {
   try {
     // Authenticate
@@ -436,7 +434,8 @@ export async function POST(request) {
         name: file.name,
         url: file.url,
         extension: file.extension,
-        size: file.size
+        size: file.size,
+        hasExtension: file.url.includes(file.extension)
       });
     });
 

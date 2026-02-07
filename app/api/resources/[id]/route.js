@@ -129,7 +129,7 @@ const authenticateRequest = (req) => {
 };
 
 // ==================== CLOUDINARY HELPERS ====================
-// FIXED: Same upload logic as route.js
+// FIXED: Works EXACTLY like school-documents API
 const uploadFileToCloudinary = async (file) => {
   if (!file?.name || file.size === 0) return null;
 
@@ -139,27 +139,28 @@ const uploadFileToCloudinary = async (file) => {
     const buffer = Buffer.from(await file.arrayBuffer());
     const timestamp = Date.now();
     
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const sanitizedFileName = nameWithoutExt.replace(/[^a-zA-Z0-9.-]/g, '_');
+    // FIXED: Keep extension in filename
+    const sanitizedFileName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
     
+    // Determine resource type
     const isVideo = file.type.startsWith('video/');
     const isImage = file.type.startsWith('image/');
     const isPDF = fileExtension === '.pdf';
     const isDocument = ['.doc', '.docx', '.txt', '.ppt', '.pptx', '.xls', '.xlsx', '.csv'].includes(fileExtension);
     
+    // Set resource type
     const resourceType = isVideo ? "video" : isImage ? "image" : "raw";
-    const format = fileExtension.substring(1);
     
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: "school_resources/files",
-        public_id: `${timestamp}-${sanitizedFileName}`,
+        folder: "school/resources/files", // FIXED: Match school-documents structure
+        public_id: `${timestamp}-${sanitizedFileName}`, // FIXED: Includes extension
         overwrite: false,
-        format: format,
-        allowed_formats: ['pdf', 'doc', 'docx', 'txt', 'ppt', 'pptx', 'xls', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'gif']
+        // REMOVED: format parameter - let Cloudinary auto-detect
       };
 
+      // Add transformations for images only
       if (isImage) {
         uploadOptions.transformation = [
           { width: 1200, crop: "scale" },
@@ -178,10 +179,11 @@ const uploadFileToCloudinary = async (file) => {
             else if (isPDF) fileType = 'pdf';
             else if (isDocument) fileType = 'document';
 
-            console.log('Uploaded file:', {
+            console.log('✅ Upload successful (like school-documents):', {
               url: result.secure_url,
               extension: fileExtension,
-              format: result.format
+              format: result.format,
+              hasExtension: result.secure_url.includes(fileExtension)
             });
 
             resolve({
@@ -221,11 +223,13 @@ const uploadMultipleFilesToCloudinary = async (files) => {
   return uploadedFiles;
 };
 
+// FIXED: Delete function for new folder structure
 const deleteFileFromCloudinary = async (fileUrl) => {
   if (!fileUrl) return;
 
   try {
-    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.\w+/);
+    // Extract full public ID including extension
+    const urlMatch = fileUrl.match(/\/upload\/(?:v\d+\/)?(.+)/);
     if (!urlMatch) return;
     
     const publicId = urlMatch[1];
@@ -233,10 +237,16 @@ const deleteFileFromCloudinary = async (fileUrl) => {
                    fileUrl.match(/\.(mp4|mpeg|avi|mov|wmv|flv|webm|mkv)$/i);
     const isRaw = fileUrl.includes('/raw/') || 
                  fileUrl.match(/\.(pdf|doc|docx|txt|ppt|pptx|xls|xlsx|csv)$/i);
+    const isImage = fileUrl.includes('/image/') || 
+                   fileUrl.match(/\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i);
     
-    const resourceType = isVideo ? "video" : isRaw ? "raw" : "image";
+    const resourceType = isVideo ? "video" : isRaw ? "raw" : isImage ? "image" : "raw";
     
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    await cloudinary.uploader.destroy(publicId, { 
+      resource_type: resourceType,
+      invalidate: true
+    });
+    
     console.log(`✅ Deleted from Cloudinary: ${publicId}`);
   } catch (error) {
     console.warn("⚠️ Could not delete Cloudinary file:", error.message);
@@ -501,9 +511,9 @@ async function handleFormUpdate(request, id, existingResource) {
       }
     }
 
-    // Upload new files
+    // Upload new files (now with extensions like school-documents)
     if (newFiles.length > 0 && newFiles[0].name) {
-      console.log("- Uploading new files...");
+      console.log("- Uploading new files with extensions...");
       const uploadedNewFiles = await uploadMultipleFilesToCloudinary(newFiles);
       console.log("- Successfully uploaded:", uploadedNewFiles.length);
       
@@ -583,7 +593,7 @@ export async function DELETE(request, { params }) {
       }, { status: 404 });
     }
 
-    // Delete files from Cloudinary
+    // Delete files from Cloudinary (now with proper extension handling)
     if (resource.files && Array.isArray(resource.files)) {
       const fileUrls = resource.files.map(file => file.url).filter(url => url);
       if (fileUrls.length > 0) {
