@@ -311,7 +311,6 @@ const ModernCounselingCard = ({ session, onView, onBookmark, viewMode = 'grid' }
   active:scale-[0.98] transition-transform
 ">
   View Details
-  <FiArrowRight size={16} className="sm:w-[18px] sm:h-[18px]" />
 </button>        </div>
       </div>
     );
