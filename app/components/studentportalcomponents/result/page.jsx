@@ -25,7 +25,6 @@ import {
   Modal,
   Box
 } from '@mui/material';
-import { result } from 'lodash';
 
 // Loading Spinner Component
 function ResultsLoadingSpinner({ message = "Loading academic results...", size = "medium" }) {
@@ -631,35 +630,52 @@ export default function ModernResultsView({
     }));
   }, [studentResults]);
 
-  // Fetch school document data
-// Fetch school document data
-useEffect(() => {
-  const fetchDocumentData = async () => {
-    try {
-      setDocumentLoading(true);
-      setDocumentError(null); // Reset error
-      
-      const response = await fetch('/api/schooldocuments');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success && data.document) {
-        setDocumentData(data.document);
-        console.log('✅ Document data fetched successfully:', {
-          hasForm1: !!data.document.form1ResultsPdf,
-          hasForm2: !!data.document.form2ResultsPdf,
-          hasForm3: !!data.document.form3ResultsPdf,
-          hasForm4: !!data.document.form4ResultsPdf,
-          hasKcse: !!data.document.kcseResultsPdf,
-          hasMock: !!data.document.mockExamsResultsPdf,
-          hasAdditional: data.document.additionalDocuments?.length || 0
-        });
-      } else {
-        // If no document exists, create an empty structure
+  // Fetch school document data - INDEPENDENTLY, ALWAYS FETCH
+  useEffect(() => {
+    const fetchDocumentData = async () => {
+      try {
+        setDocumentLoading(true);
+        setDocumentError(null);
+        
+        console.log('📥 Fetching school documents independently...');
+        const response = await fetch('/api/schooldocuments');
+        
+        if (!response.ok) {
+          // Don't throw error, just use empty structure
+          console.warn('⚠️ School documents API not available, using empty structure');
+          setDocumentData({
+            form1ResultsPdf: null,
+            form2ResultsPdf: null,
+            form3ResultsPdf: null,
+            form4ResultsPdf: null,
+            kcseResultsPdf: null,
+            mockExamsResultsPdf: null,
+            additionalDocuments: []
+          });
+          return;
+        }
+        
+        const data = await response.json();
+        
+        // Always set documentData regardless of response
+        if (data && data.document) {
+          setDocumentData(data.document);
+          console.log('✅ School documents loaded successfully');
+        } else {
+          // Empty but valid structure
+          setDocumentData({
+            form1ResultsPdf: null,
+            form2ResultsPdf: null,
+            form3ResultsPdf: null,
+            form4ResultsPdf: null,
+            kcseResultsPdf: null,
+            mockExamsResultsPdf: null,
+            additionalDocuments: []
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error in school documents fetch:', error);
+        // Still set empty data - never break the UI
         setDocumentData({
           form1ResultsPdf: null,
           form2ResultsPdf: null,
@@ -669,30 +685,16 @@ useEffect(() => {
           mockExamsResultsPdf: null,
           additionalDocuments: []
         });
-        console.log('📭 No document data found, using empty structure');
+      } finally {
+        setDocumentLoading(false);
       }
-    } catch (error) {
-      console.error('❌ Error fetching document data:', error);
-      // Create empty structure on error
-      setDocumentData({
-        form1ResultsPdf: null,
-        form2ResultsPdf: null,
-        form3ResultsPdf: null,
-        form4ResultsPdf: null,
-        kcseResultsPdf: null,
-        mockExamsResultsPdf: null,
-        additionalDocuments: []
-      });
-      setDocumentError(null); // Don't show error to user
-    } finally {
-      setDocumentLoading(false);
-    }
-  };
+    };
 
-  fetchDocumentData();
-}, []);
+    // ALWAYS FETCH - NO CONDITIONS
+    fetchDocumentData();
+  }, []); // Empty dependency array - fetch once on mount
 
-  // Calculate statistics
+  // Calculate statistics - STUDENT RESULTS ONLY
   useEffect(() => {
     if (transformedResults.length > 0 && student?.admissionNumber) {
       const studentResults = transformedResults.filter(result => 
@@ -775,93 +777,92 @@ useEffect(() => {
     return ['all', ...years];
   }, [transformedResults]);
 
-// Process exam results from documentData API - HANDLES NULL/UNDEFINED
-const prioritizedExamResults = useMemo(() => {
-  if (!documentData) return [];
-  
-  const results = [];
-  const studentForm = student?.form?.replace('Form ', '') || '4';
-  
-  // Define all possible exam result fields
-  const examFields = [
-    { key: 'form1ResultsPdf', form: '1', name: 'Form 1 Results' },
-    { key: 'form2ResultsPdf', form: '2', name: 'Form 2 Results' },
-    { key: 'form3ResultsPdf', form: '3', name: 'Form 3 Results' },
-    { key: 'form4ResultsPdf', form: '4', name: 'Form 4 Results' },
-    { key: 'mockExamsResultsPdf', form: '4', name: 'Mock Exams Results' },
-    { key: 'kcseResultsPdf', form: '4', name: 'KCSE Results' }
-  ];
-  
-  // Process each exam field
-  examFields.forEach(({ key, form, name }) => {
-    const pdfUrl = documentData[key];
-    if (pdfUrl && typeof pdfUrl === 'string' && pdfUrl.trim() !== '') {
-      const formKey = key.replace('Pdf', '');
-      results.push({
-        name: documentData[`${formKey}Name`] || name,
-        pdf: pdfUrl,
-        form: form,
-        type: 'exam',
-        priority: form === studentForm ? 0 : parseInt(form) || 99,
-        description: documentData[`${formKey}Description`] || '',
-        year: documentData[`${formKey}Year`] || '',
-        term: documentData[`${formKey}Term`] || '',
-        size: documentData[`${formKey}Size`] || documentData[`${formKey}PdfSize`] || 0,
-        uploadDate: documentData[`${formKey}UploadDate`] || ''
-      });
-    }
-  });
-  
-  // Sort by priority (student's own form first, then others)
-  return results.sort((a, b) => a.priority - b.priority);
-}, [documentData, student]);
-
-// Process additional documents - HANDLES NULL/UNDEFINED
-const additionalResultsFiles = useMemo(() => {
-  if (!documentData || !documentData.additionalDocuments || !Array.isArray(documentData.additionalDocuments)) {
-    return [];
-  }
-  
-  const resultsOnly = documentData.additionalDocuments.filter(doc => {
-    if (!doc) return false;
+  // Process exam results from documentData - ALWAYS PROCESS
+  const prioritizedExamResults = useMemo(() => {
+    if (!documentData) return [];
     
-    const filename = (doc.filename || '').toLowerCase();
-    const description = (doc.description || '').toLowerCase();
+    const results = [];
+    const studentForm = student?.form?.replace('Form ', '') || '4';
     
-    return (
-      filename.includes('result') ||
-      filename.includes('exam') ||
-      filename.includes('test') ||
-      filename.includes('mark') ||
-      description.includes('result') ||
-      description.includes('exam') ||
-      description.includes('test') ||
-      description.includes('mark') ||
-      description.includes('score') ||
-      description.includes('grade')
-    );
-  });
-  
-  return resultsOnly
-    .sort((a, b) => {
-      if (a.year && b.year && a.year !== b.year) {
-        return parseInt(b.year) - parseInt(a.year);
+    const examFields = [
+      { key: 'form1ResultsPdf', form: '1', name: 'Form 1 Results' },
+      { key: 'form2ResultsPdf', form: '2', name: 'Form 2 Results' },
+      { key: 'form3ResultsPdf', form: '3', name: 'Form 3 Results' },
+      { key: 'form4ResultsPdf', form: '4', name: 'Form 4 Results' },
+      { key: 'mockExamsResultsPdf', form: '4', name: 'Mock Exams Results' },
+      { key: 'kcseResultsPdf', form: '4', name: 'KCSE Results' }
+    ];
+    
+    examFields.forEach(({ key, form, name }) => {
+      const pdfUrl = documentData[key];
+      if (pdfUrl && typeof pdfUrl === 'string' && pdfUrl.trim() !== '') {
+        const formKey = key.replace('Pdf', '');
+        results.push({
+          name: documentData[`${formKey}Name`] || name,
+          pdf: pdfUrl,
+          form: form,
+          type: 'exam',
+          priority: form === studentForm ? 0 : parseInt(form) || 99,
+          description: documentData[`${formKey}Description`] || '',
+          year: documentData[`${formKey}Year`] || '',
+          term: documentData[`${formKey}Term`] || '',
+          size: documentData[`${formKey}Size`] || documentData[`${formKey}PdfSize`] || 0,
+          uploadDate: documentData[`${formKey}UploadDate`] || ''
+        });
       }
-      const dateA = a.uploadedAt ? new Date(a.uploadedAt) : 0;
-      const dateB = b.uploadedAt ? new Date(b.uploadedAt) : 0;
-      return dateB - dateA;
-    })
-    .map(doc => ({
-      filename: doc.filename || '',
-      filepath: doc.filepath || '',
-      filetype: doc.filetype || '',
-      description: doc.description || '',
-      year: doc.year || '',
-      term: doc.term || '',
-      filesize: doc.filesize || 0,
-      uploadedAt: doc.uploadedAt || ''
-    }));
-}, [documentData]);
+    });
+    
+    return results.sort((a, b) => a.priority - b.priority);
+  }, [documentData, student]);
+
+  // Process additional documents - ALWAYS PROCESS
+  const additionalResultsFiles = useMemo(() => {
+    if (!documentData || !documentData.additionalDocuments) return [];
+    
+    const additionalDocs = Array.isArray(documentData.additionalDocuments) 
+      ? documentData.additionalDocuments 
+      : [];
+    
+    const resultsOnly = additionalDocs.filter(doc => {
+      if (!doc) return false;
+      
+      const filename = (doc.filename || '').toLowerCase();
+      const description = (doc.description || '').toLowerCase();
+      
+      return (
+        filename.includes('result') ||
+        filename.includes('exam') ||
+        filename.includes('test') ||
+        filename.includes('mark') ||
+        description.includes('result') ||
+        description.includes('exam') ||
+        description.includes('test') ||
+        description.includes('mark') ||
+        description.includes('score') ||
+        description.includes('grade')
+      );
+    });
+    
+    return resultsOnly
+      .sort((a, b) => {
+        if (a.year && b.year && a.year !== b.year) {
+          return parseInt(b.year) - parseInt(a.year);
+        }
+        const dateA = a.uploadedAt ? new Date(a.uploadedAt) : 0;
+        const dateB = b.uploadedAt ? new Date(b.uploadedAt) : 0;
+        return dateB - dateA;
+      })
+      .map(doc => ({
+        filename: doc.filename || '',
+        filepath: doc.filepath || '',
+        filetype: doc.filetype || '',
+        description: doc.description || '',
+        year: doc.year || '',
+        term: doc.term || '',
+        filesize: doc.filesize || 0,
+        uploadedAt: doc.uploadedAt || ''
+      }));
+  }, [documentData]);
 
   const handleViewSubjects = (result) => {
     setSelectedResult(result);
@@ -1067,7 +1068,7 @@ const additionalResultsFiles = useMemo(() => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* STUDENT RESULTS SECTION */}
       {resultsError ? (
         <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl md:rounded-2xl border-2 border-red-300 p-3 sm:p-4 md:p-6 text-center">
           <FiAlertTriangle className="text-red-500 text-xl sm:text-2xl md:text-3xl mx-auto mb-2 sm:mb-3" />
@@ -1083,11 +1084,11 @@ const additionalResultsFiles = useMemo(() => {
       ) : filteredResults.length === 0 ? (
         <div className="bg-white rounded-xl md:rounded-2xl border-2 border-gray-300 p-4 sm:p-6 md:p-8 text-center">
           <FiAward className="text-gray-300 text-2xl sm:text-3xl md:text-4xl mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-sm sm:text-base md:text-xl font-bold text-gray-800 mb-1 sm:mb-2">No results found</h3>
+          <h3 className="text-sm sm:text-base md:text-xl font-bold text-gray-800 mb-1 sm:mb-2">No student results found</h3>
           <p className="text-gray-600 text-xs sm:text-sm">
             {selectedTerm !== 'all' || selectedYear !== 'all' 
               ? 'Try changing your filters' 
-              : 'No academic results available yet'
+              : 'Your academic results will appear here when available'
             }
           </p>
         </div>
@@ -1203,71 +1204,75 @@ const additionalResultsFiles = useMemo(() => {
               </div>
             )}
           </div>
-
-{/* School Documents Section - ONLY EXAM RESULTS */}
-<div>
-  <div className="mb-2 sm:mb-3 md:mb-4">
-    <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1">
-      Exam Results Documents
-    </h3>
-    <p className="text-gray-600 text-xs sm:text-sm">
-      Access class exam results, mock exams, and KCSE results.
-    </p>
-  </div>
-
-  {documentLoading ? (
-    <div className="text-center py-6 sm:py-8">
-      <CircularProgress size={20} className="text-purple-600" />
-      <p className="text-gray-600 text-xs sm:text-sm mt-2">Loading exam documents...</p>
-    </div>
-  ) : (
-    <div className="space-y-3 sm:space-y-4 md:space-y-6">
-      {/* Exam Results */}
-      {prioritizedExamResults.length > 0 && (
-        <div>
-          <h4 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-1.5 sm:mb-2 md:mb-3">
-            Class Exam Results
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
-            {prioritizedExamResults.map((result, index) => (
-              <DocumentCard key={index} document={result} type="exam" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Additional Results Files */}
-      {additionalResultsFiles.length > 0 && (
-        <div>
-          <h4 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-1.5 sm:mb-2 md:mb-3">
-            Additional Exam Reports
-          </h4>
-          <p className="text-gray-600 text-xs sm:text-sm md:text-base mb-2 sm:mb-3">
-            Supplementary results, test scores, and performance reports.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
-            {additionalResultsFiles.map((file, index) => (
-              <DocumentCard key={index} document={file} type="exam" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Empty State for Documents - Show only if BOTH are empty */}
-      {!documentLoading && prioritizedExamResults.length === 0 && additionalResultsFiles.length === 0 && (
-        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 p-4 sm:p-6 text-center">
-          <FiAward className="text-gray-300 text-2xl sm:text-3xl mx-auto mb-2 sm:mb-3" />
-          <h4 className="text-sm sm:text-base font-bold text-gray-800 mb-1 sm:mb-2">No exam results documents</h4>
-          <p className="text-gray-600 text-xs sm:text-sm">
-            Class exam results and reports will appear here when uploaded by school administration.
-          </p>
-        </div>
-      )}
-    </div>
-  )}
-</div>
         </>
       )}
+
+      {/* SCHOOL DOCUMENTS SECTION - ALWAYS SHOWS, INDEPENDENT OF STUDENT RESULTS */}
+      <div className="mt-6 pt-6 border-t-2 border-gray-300">
+        <div className="mb-2 sm:mb-3 md:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <IoDocumentText className="text-indigo-600 text-lg sm:text-xl" />
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">
+              School Exam Results Documents
+            </h3>
+          </div>
+          <p className="text-gray-600 text-xs sm:text-sm">
+            Access class exam results, mock exams, and KCSE results from school administration.
+            {documentLoading && ' (Loading documents...)'}
+          </p>
+        </div>
+
+        {documentLoading ? (
+          <div className="text-center py-6 sm:py-8">
+            <CircularProgress size={20} className="text-purple-600" />
+            <p className="text-gray-600 text-xs sm:text-sm mt-2">Loading exam documents...</p>
+          </div>
+        ) : (
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Exam Results */}
+            {prioritizedExamResults.length > 0 && (
+              <div>
+                <h4 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-1.5 sm:mb-2 md:mb-3">
+                  Class Exam Results
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
+                  {prioritizedExamResults.map((result, index) => (
+                    <DocumentCard key={index} document={result} type="exam" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Results Files */}
+            {additionalResultsFiles.length > 0 && (
+              <div>
+                <h4 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 mb-1.5 sm:mb-2 md:mb-3">
+                  Additional Exam Reports
+                </h4>
+                <p className="text-gray-600 text-xs sm:text-sm md:text-base mb-2 sm:mb-3">
+                  Supplementary results, test scores, and performance reports.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
+                  {additionalResultsFiles.map((file, index) => (
+                    <DocumentCard key={index} document={file} type="exam" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State for Documents - Show only if BOTH are empty */}
+            {!documentLoading && prioritizedExamResults.length === 0 && additionalResultsFiles.length === 0 && (
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-300 p-4 sm:p-6 text-center">
+                <FiAward className="text-gray-300 text-2xl sm:text-3xl mx-auto mb-2 sm:mb-3" />
+                <h4 className="text-sm sm:text-base font-bold text-gray-800 mb-1 sm:mb-2">No exam results documents</h4>
+                <p className="text-gray-600 text-xs sm:text-sm">
+                  Class exam results and reports will appear here when uploaded by school administration.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Subject Details Modal */}
       {selectedResult && (
