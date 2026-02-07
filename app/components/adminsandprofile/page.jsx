@@ -325,6 +325,63 @@ const PasswordStrengthIndicator = () => {
   );
 };
 
+// ==================== AUTHENTICATION HELPERS ====================
+
+const getAuthHeaders = (contentType = 'application/json') => {
+  const adminToken = localStorage.getItem('admin_token');
+  const deviceToken = localStorage.getItem('device_token');
+  const adminUser = localStorage.getItem('admin_user');
+  
+  if (!adminToken || !deviceToken) {
+    // Clear any invalid tokens
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('device_token');
+    localStorage.removeItem('admin_user');
+    throw new Error('Authentication required. Please login again.');
+  }
+  
+  const headers = {
+    'Authorization': `Bearer ${adminToken}`,
+    'x-device-token': deviceToken,
+    'x-admin-user': adminUser || 'unknown'
+  };
+  
+  if (contentType) {
+    headers['Content-Type'] = contentType;
+  }
+  
+  return headers;
+};
+
+const isAuthenticated = () => {
+  try {
+    getAuthHeaders();
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const handleAuthError = (error, showNotification) => {
+  console.error('Auth error:', error);
+  
+  if (error.message.includes('Authentication required') || 
+      error.message.includes('login') ||
+      error.message.includes('Session expired')) {
+    
+    toast.error('Please login to continue');
+    setTimeout(() => {
+      // Clear tokens and redirect to login
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('device_token');
+      localStorage.removeItem('admin_user');
+      window.location.href = '/pages/adminLogin';
+    }, 1000);
+    return true;
+  }
+  return false;
+};
+
 
 const fetchAdmins = async (showRefresh = false) => {
   if (status !== 'authenticated') {
@@ -340,18 +397,31 @@ const fetchAdmins = async (showRefresh = false) => {
       setLoading(true);
     }
 
-    const token = localStorage.getItem('admin_token');
+    // Get authentication headers (optional for GET)
+    const headers = {};
+    try {
+      const authHeaders = getAuthHeaders('application/json');
+      headers.Authorization = authHeaders.Authorization;
+      headers['x-device-token'] = authHeaders['x-device-token'];
+    } catch (authError) {
+      console.log('Unauthenticated GET request for admins');
+      // Allow GET requests without auth, but log it
+    }
     
     // Fetch from your API endpoint
     const response = await fetch('/api/register', {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+      headers: headers
     });
 
     if (!response.ok) {
+      // Handle authentication errors
+      if (response.status === 401) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('device_token');
+        throw new Error('Session expired. Please login again.');
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -382,13 +452,18 @@ const fetchAdmins = async (showRefresh = false) => {
     }
   } catch (error) {
     console.error('❌ Error fetching admins:', error);
+    
+    // Handle authentication errors
+    if (handleAuthError(error, toast.error)) {
+      return;
+    }
+    
     toast.error('Failed to load admins');
   } finally {
     setLoading(false);
     setRefreshing(false);
   }
 };
-
   useEffect(() => {
     if (status === 'authenticated') {
       fetchAdmins();
@@ -483,19 +558,26 @@ const fetchAdmins = async (showRefresh = false) => {
     setAdminToDelete(admin);
     setShowDeleteConfirm(true);
   };
+
 const confirmDelete = async () => {
   if (!adminToDelete) return;
   
   try {
-    const token = localStorage.getItem('admin_token');
+    // Check authentication first
+    const headers = getAuthHeaders('application/json');
     
     const response = await fetch(`/api/register/${adminToDelete.id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+      headers: headers
     });
+
+    // Handle authentication errors
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('device_token');
+      throw new Error('Session expired. Please login again.');
+    }
 
     const data = await response.json();
 
@@ -514,6 +596,12 @@ const confirmDelete = async () => {
     }
   } catch (error) {
     console.error('Error deleting admin:', error);
+    
+    // Handle authentication errors
+    if (handleAuthError(error, toast.error)) {
+      return;
+    }
+    
     toast.error('Failed to delete admin');
   } finally {
     setShowDeleteConfirm(false);
@@ -700,14 +788,6 @@ const handleSaveAdmin = async (e) => {
     // 3. PREPARE API PAYLOAD
     // ====================
     
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
-      toast.error('Authentication token missing. Please login again.');
-      router.push('/adminLogin');
-      setSavingAdmin(false);
-      return;
-    }
-    
     const adminPayload = {
       name: adminData.name.trim(),
       email: adminData.email.trim().toLowerCase(),
@@ -721,7 +801,13 @@ const handleSaveAdmin = async (e) => {
     };
     
     // ====================
-    // 4. MAKE API REQUEST
+    // 4. GET AUTHENTICATION HEADERS
+    // ====================
+    
+    const headers = getAuthHeaders('application/json');
+    
+    // ====================
+    // 5. MAKE API REQUEST
     // ====================
     
     let url = '/api/register';
@@ -744,17 +830,22 @@ const handleSaveAdmin = async (e) => {
     
     const response = await fetch(url, {
       method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: headers,
       body: JSON.stringify(adminPayload),
     });
+    
+    // Handle authentication errors
+    if (response.status === 401) {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('device_token');
+      throw new Error('Session expired. Please login again.');
+    }
     
     const data = await response.json();
     
     // ====================
-    // 5. HANDLE RESPONSE
+    // 6. HANDLE RESPONSE
     // ====================
     
     if (!response.ok) {
@@ -763,6 +854,7 @@ const handleSaveAdmin = async (e) => {
         toast.error('Session expired. Please login again.');
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
+        localStorage.removeItem('device_token');
         router.push('/adminLogin');
         return;
       }
@@ -784,7 +876,7 @@ const handleSaveAdmin = async (e) => {
       toast.success(successMessage);
       
       // ====================
-      // 6. UPDATE LOCAL STATE
+      // 7. UPDATE LOCAL STATE
       // ====================
       
       if (editingAdmin) {
@@ -807,7 +899,7 @@ const handleSaveAdmin = async (e) => {
       }
       
       // ====================
-      // 7. RESET FORM & CLOSE MODAL
+      // 8. RESET FORM & CLOSE MODAL
       // ====================
       
       setAdminData({
@@ -846,6 +938,11 @@ const handleSaveAdmin = async (e) => {
   } catch (error) {
     console.error('Error saving admin:', error);
     
+    // Handle authentication errors
+    if (handleAuthError(error, toast.error)) {
+      return;
+    }
+    
     // Handle specific error types
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       toast.error('Network error. Please check your connection.');
@@ -855,6 +952,7 @@ const handleSaveAdmin = async (e) => {
       toast.error('Session expired. Please login again.');
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_user');
+      localStorage.removeItem('device_token');
       router.push('/adminLogin');
     } else {
       toast.error(error.message || 'An unexpected error occurred');
