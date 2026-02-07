@@ -162,15 +162,6 @@ function ResultsStatisticsCard({ title, value, icon: Icon, color, trend = 0, pre
         <div className={`p-2 md:p-3 rounded-xl bg-gradient-to-r ${color}`}>
           <Icon className="text-white text-xl md:text-2xl" />
         </div>
-        <div className={`text-xs md:text-sm font-bold px-2 py-1 md:px-3 md:py-1 rounded-lg ${
-          trend > 0 
-            ? 'bg-green-100 text-green-800' 
-            : trend < 0 
-            ? 'bg-red-100 text-red-800' 
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {trend > 0 ? `+${trend}%` : trend < 0 ? `${trend}%` : '0%'}
-        </div>
       </div>
       <h4 className="text-xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">{formatValue(value)}</h4>
       <p className="text-gray-600 text-xs md:text-sm font-semibold">{title}</p>

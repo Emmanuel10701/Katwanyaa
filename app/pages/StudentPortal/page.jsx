@@ -397,9 +397,9 @@ function ModernHomeView({ student, feeBalance, feeLoading, token }) {
               <span className="text-[7px] xs:text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-tight sm:tracking-wider text-gray-500 md:text-gray-400 text-center sm:text-right">
                 {stat.category || 'Update'}
               </span>
-              <div className="flex items-center text-emerald-500 font-bold text-[9px] sm:text-[10px] md:text-xs mt-0.5">
+              <div className="flex items-center text-emerald-500  font-italic font-bold text-[9px] sm:text-[10px] md:text-xs mt-0.5">
                 <span className="text-[8px] sm:text-[10px]">↑</span>
-                <span className="ml-0.5">{stat.trend || 'Good'}</span>
+                <span className="ml-0.5">{stat.trend || 'progress'}</span>
               </div>
             </div>
           </div>
