@@ -206,7 +206,7 @@ export default function ModernFooter() {
   ];
 
   return (
-    <footer className="w-full scale-[0.86]  bg-slate-900 text-white">
+    <footer className="w-full  bg-slate-900 text-white">
       {/* Main Footer Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
         <div className="max-w-7xl mx-auto">
