@@ -130,33 +130,35 @@ export default function NavigationSidebar({
 
         </nav>
                <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
-          <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
-            
-            {/* Refresh Button */}
-            <button
-              onClick={() => router.refresh()}
-              className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
-              bg-white border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl 
-              text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
-              active:bg-blue-50 active:shadow-none transition-all duration-200 min-w-0"
-            >
-              <FiRefreshCw className="text-sm sm:text-lg" />
-              <span className="truncate">Refresh</span>
-            </button>
+      <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
+  {/* Refresh Button */}
+  <button
+    onClick={() => {
+      // 1. Next.js soft refresh
+      router.refresh(); 
+      // 2. Optional: If you want a full browser reload, use window.location.reload();
+    }}
+    className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
+    bg-white border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl 
+    text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
+    active:bg-blue-50 active:scale-95 transition-all duration-200 min-w-0"
+  >
+    <FiRefreshCw className="text-sm sm:text-lg group-active:animate-spin" />
+    <span className="truncate">Refresh</span>
+  </button>
 
-            {/* Logout Button */}
-            <button
-              onClick={onLogout}
-              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
-              bg-rose-50/50 border border-rose-100 text-rose-600 rounded-xl sm:rounded-2xl 
-              text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
-              active:bg-rose-100 active:shadow-none transition-all duration-200 min-w-0"
-            >
-              <FiLogOut className="text-sm sm:text-lg" />
-              <span className="truncate">Logout</span>
-            </button>
-            
-          </div>
+  {/* Logout Button */}
+  <button
+    onClick={onLogout}
+    className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
+    bg-rose-50/50 border border-rose-100 text-rose-600 rounded-xl sm:rounded-2xl 
+    text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
+    active:bg-rose-100 active:scale-95 transition-all duration-200 min-w-0"
+  >
+    <FiLogOut className="text-sm sm:text-lg" />
+    <span className="truncate">Logout</span>
+  </button>
+</div>
         </div>
    
       </div>
