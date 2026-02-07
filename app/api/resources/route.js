@@ -129,7 +129,7 @@ const authenticateRequest = (req) => {
 };
 
 // ==================== CLOUDINARY HELPERS ====================
-const uploadFileToCloudinary = async (file) => {
+const uploadFileToCloudinary = async (file, folder = "school_resources") => {
   if (!file?.name || file.size === 0) return null;
 
   try {
@@ -150,7 +150,7 @@ const uploadFileToCloudinary = async (file) => {
     return await new Promise((resolve, reject) => {
       const uploadOptions = {
         resource_type: resourceType,
-        folder: "school_resources",
+        folder: folder,
         public_id: `${timestamp}-${sanitizedFileName}`,
         overwrite: false,
       };
@@ -177,7 +177,8 @@ const uploadFileToCloudinary = async (file) => {
               extension: extension,
               uploadedAt: new Date().toISOString(),
               fileType: fileType,
-              publicId: result.public_id
+              publicId: result.public_id,
+              format: result.format
             });
           }
         }
@@ -186,14 +187,14 @@ const uploadFileToCloudinary = async (file) => {
     });
   } catch (error) {
     console.error("Cloudinary upload error:", error);
-    throw new Error(`File upload failed: ${error.message}`);
+    return null;
   }
 };
 
-const uploadMultipleFilesToCloudinary = async (files) => {
+const uploadMultipleFilesToCloudinary = async (files, folder = "school_resources") => {
   if (!files || files.length === 0) return [];
   
-  const uploadPromises = files.map(file => uploadFileToCloudinary(file));
+  const uploadPromises = files.map(file => uploadFileToCloudinary(file, folder));
   const results = await Promise.allSettled(uploadPromises);
   
   const uploadedFiles = [];
@@ -268,6 +269,32 @@ const determineMainTypeFromFiles = (files) => {
   return Object.keys(typeCount).reduce((a, b) => typeCount[a] > typeCount[b] ? a : b);
 };
 
+// Helper: Clean resource response
+const cleanResourceResponse = (resource) => {
+  if (!resource) return null;
+  
+  return {
+    id: resource.id,
+    title: resource.title,
+    subject: resource.subject,
+    className: resource.className,
+    teacher: resource.teacher,
+    description: resource.description,
+    category: resource.category,
+    type: resource.type,
+    files: (resource.files || []).map(file => ({
+      ...file,
+      formattedSize: formatFileSize(file.size || 0)
+    })),
+    accessLevel: resource.accessLevel,
+    uploadedBy: resource.uploadedBy,
+    downloads: resource.downloads,
+    isActive: resource.isActive,
+    createdAt: resource.createdAt,
+    updatedAt: resource.updatedAt
+  };
+};
+
 // ==================== API ENDPOINTS ====================
 
 // GET - Fetch all resources (PUBLIC)
@@ -279,13 +306,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    const formattedResources = resources.map(resource => ({
-      ...resource,
-      files: (resource.files || []).map(file => ({
-        ...file,
-        formattedSize: formatFileSize(file.size || 0)
-      }))
-    }));
+    const formattedResources = resources.map(cleanResourceResponse);
 
     return NextResponse.json({ 
       success: true, 
@@ -303,7 +324,7 @@ export async function GET() {
   }
 }
 
-// POST - Create resource (PROTECTED)
+// POST - Create or update ALL resources (PROTECTED) - Like school-documents
 export async function POST(request) {
   try {
     const auth = authenticateRequest(request);
@@ -311,41 +332,23 @@ export async function POST(request) {
       return auth.response;
     }
 
-    console.log("📝 POST /api/resources");
+    console.log("📝 POST /api/resources - Processing bulk update");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
 
     const formData = await request.formData();
-
-    const title = formData.get("title")?.trim() || "";
-    const subject = formData.get("subject")?.trim() || "";
-    const className = formData.get("className")?.trim() || "";
-    const teacher = formData.get("teacher")?.trim() || "";
-    const description = formData.get("description")?.trim() || "";
-    const category = formData.get("category")?.trim() || "general";
-    const accessLevel = formData.get("accessLevel")?.trim() || "student";
-    const uploadedBy = formData.get("uploadedBy")?.trim() || auth.user.name;
-    const isActive = formData.get("isActive") !== "false";
-
-    if (!title || !subject || !className || !teacher) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Title, subject, class name, and teacher are required" 
-        },
-        { status: 400 }
-      );
-    }
-
+    
+    // Get all files
     const files = formData.getAll("files");
     const validFiles = Array.from(files).filter(file => file?.name && file.size > 0);
     
     if (validFiles.length === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: "At least one file is required" 
+        error: "No valid files provided" 
       }, { status: 400 });
     }
 
+    // Upload all files to Cloudinary
     console.log(`📤 Uploading ${validFiles.length} file(s)...`);
     const uploadedFiles = await uploadMultipleFilesToCloudinary(validFiles);
     
@@ -356,32 +359,90 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    const mainType = determineMainTypeFromFiles(uploadedFiles);
+    // Process each uploaded file as a separate resource
+    const resources = [];
+    const errors = [];
 
-    const resource = await prisma.resource.create({
-      data: {
-        title,
-        subject,
-        className,
-        teacher,
-        description,
-        category,
-        type: mainType,
-        files: uploadedFiles,
-        accessLevel,
-        uploadedBy,
-        downloads: 0,
-        isActive: true,
-      },
-    });
+    for (const uploadedFile of uploadedFiles) {
+      try {
+        // Extract metadata from filename or use defaults
+        const fileName = uploadedFile.name.toLowerCase();
+        
+        // Auto-detect subject from filename patterns
+        let detectedSubject = "General";
+        let detectedCategory = "document";
+        let detectedClassName = "All Classes";
+        
+        // Pattern matching for subject detection
+        if (fileName.includes('math') || fileName.includes('mathematics')) detectedSubject = "Mathematics";
+        else if (fileName.includes('eng') || fileName.includes('english')) detectedSubject = "English";
+        else if (fileName.includes('kisw') || fileName.includes('kiswahili')) detectedSubject = "Kiswahili";
+        else if (fileName.includes('bio') || fileName.includes('biology')) detectedSubject = "Biology";
+        else if (fileName.includes('phy') || fileName.includes('physics')) detectedSubject = "Physics";
+        else if (fileName.includes('chem') || fileName.includes('chemistry')) detectedSubject = "Chemistry";
+        else if (fileName.includes('hist') || fileName.includes('history')) detectedSubject = "History";
+        else if (fileName.includes('geo') || fileName.includes('geography')) detectedSubject = "Geography";
+        else if (fileName.includes('cre') || fileName.includes('religious')) detectedSubject = "CRE";
+        else if (fileName.includes('ire')) detectedSubject = "IRE";
+        else if (fileName.includes('hre')) detectedSubject = "HRE";
+        else if (fileName.includes('comp') || fileName.includes('computer')) detectedSubject = "Computer";
+        
+        // Pattern matching for class
+        if (fileName.includes('form1') || fileName.includes('f1')) detectedClassName = "Form 1";
+        else if (fileName.includes('form2') || fileName.includes('f2')) detectedClassName = "Form 2";
+        else if (fileName.includes('form3') || fileName.includes('f3')) detectedClassName = "Form 3";
+        else if (fileName.includes('form4') || fileName.includes('f4')) detectedClassName = "Form 4";
+        
+        // Get form data for this file (or use defaults)
+        const title = formData.get("title")?.trim() || 
+                     uploadedFile.name.split('.')[0] || 
+                     "Resource Document";
+        const subject = formData.get("subject")?.trim() || detectedSubject;
+        const className = formData.get("className")?.trim() || detectedClassName;
+        const teacher = formData.get("teacher")?.trim() || auth.user.name;
+        const description = formData.get("description")?.trim() || 
+                          `${uploadedFile.fileType.toUpperCase()} resource for ${className} - ${subject}`;
+        const category = formData.get("category")?.trim() || uploadedFile.fileType;
+        const accessLevel = formData.get("accessLevel")?.trim() || "student";
+        const uploadedBy = formData.get("uploadedBy")?.trim() || auth.user.name;
 
-    console.log(`✅ Resource created with ID: ${resource.id}`);
+        // Create resource for this file
+        const resource = await prisma.resource.create({
+          data: {
+            title,
+            subject,
+            className,
+            teacher,
+            description,
+            category,
+            type: uploadedFile.fileType,
+            files: [uploadedFile], // Single file per resource
+            accessLevel,
+            uploadedBy,
+            downloads: 0,
+            isActive: true,
+          },
+        });
+
+        resources.push(cleanResourceResponse(resource));
+        console.log(`✅ Created resource: ${resource.title} (ID: ${resource.id})`);
+        
+      } catch (fileError) {
+        errors.push({
+          file: uploadedFile.name,
+          error: fileError.message
+        });
+        console.error(`❌ Failed to create resource for ${uploadedFile.name}:`, fileError);
+      }
+    }
 
     return NextResponse.json(
       { 
         success: true, 
-        message: `Resource created with ${uploadedFiles.length} file(s)`, 
-        resource 
+        message: `Processed ${resources.length} resource(s) successfully`,
+        resources: resources,
+        errors: errors.length > 0 ? errors : undefined,
+        count: resources.length
       },
       { status: 201 }
     );
@@ -390,7 +451,7 @@ export async function POST(request) {
     console.error("❌ POST Error:", error);
     return NextResponse.json({ 
       success: false, 
-      error: "Failed to create resource",
+      error: "Failed to process resources",
       message: error.message 
     }, { status: 500 });
   }
