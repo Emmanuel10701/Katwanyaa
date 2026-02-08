@@ -34,7 +34,7 @@ const date = new Date(); // Add this line!
     src="/hero/katz8.jpeg"
     alt="School"
     fill
-    className="object-cover opacity-50 transition-transform duration-[10s] ease-out group-hover:scale-105"
+    className="object-cover opacity-50 transition-transform duration-[10s] ease-out "
     priority
   />
 
@@ -180,7 +180,7 @@ const date = new Date(); // Add this line!
           { title: "Infrastructure", icon: <Globe size={18} />, desc: "Smart classrooms and collaborative labs.", color: "orange" }
         ].map((item, i) => (
           <div key={i} className="group flex gap-4 p-4 sm:p-6 rounded-2xl bg-slate-50 border border-transparent transition-all hover:bg-white hover:shadow-xl hover:shadow-orange-900/5 hover:border-slate-100">
-            <div className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${i % 2 === 0 ? 'bg-orange-600' : 'bg-amber-600'} text-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-100`}>
+            <div className={`shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${i % 2 === 0 ? 'bg-orange-600' : 'bg-amber-600'} text-white flex items-center justify-center shadow-lg transition-transform `}>
               {item.icon}
             </div>
             <div>
@@ -199,14 +199,14 @@ const date = new Date(); // Add this line!
 <div className="relative group px-2">
  <div className="relative group px-2">
   {/* The "Off-kilter" Background Glow */}
-  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1  duration-500"></div>
   
   <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
       src="/hero/katz8.jpeg"
       alt="School"
       fill
-      className="object-cover transition-transform duration-700 group-hover:scale-100"
+      className="object-cover transition-transform duration-700 "
       priority
     />
     
@@ -255,14 +255,14 @@ Katz        </div>
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
       
     <div className="relative group px-2">
-  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1  duration-500"></div>
   
   <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
       src="/bg/1.jpeg"
       alt="School"
       fill
-      className="object-cover transition-transform duration-700 group-hover:scale-110"
+      className="object-cover transition-transform duration-700 "
       priority
     />
     
@@ -390,18 +390,18 @@ Katz        </div>
         <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
 <div className="relative group px-2">
   {/* The "Off-kilter" Background Glow */}
-  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1  duration-500"></div>
   
 <div className="relative group px-2">
   {/* The "Off-kilter" Background Glow */}
-  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1  duration-500"></div>
   
   <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
       src="/hero/katz8.jpeg"
       alt="School"
       fill
-      className="object-cover transition-transform duration-700 group-hover:scale-100"
+      className="object-cover transition-transform duration-700 "
       priority
     />
     
@@ -456,7 +456,7 @@ Katz        </div>
       <div className="lg:col-span-4 group relative overflow-hidden bg-gradient-to-br from-orange-600 to-amber-600 p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shadow-orange-200/50 flex flex-col justify-between transition-all duration-500 hover:-translate-y-2">
         
         {/* Decorative background circle - scaled for mobile */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 sm:w-64 sm:h-64 bg-orange-500 rounded-full opacity-40 transition-transform duration-700 group-hover:scale-100"></div>
+        <div className="absolute -top-10 -right-10 w-40 h-40 sm:w-64 sm:h-64 bg-orange-500 rounded-full opacity-40 transition-transform duration-700 "></div>
         
         <div className="relative z-10">
           <span className="inline-block px-3 py-1 mb-4 sm:mb-6 text-[9px] sm:text-[10px] font-black tracking-widest text-orange-100 uppercase bg-orange-700/50 rounded-full border border-orange-400/30">
@@ -519,7 +519,7 @@ Katz        </div>
         </div>
         
         <div className="relative h-[280px] sm:h-[400px] lg:h-full min-h-[280px] sm:min-h-[400px] rounded-[1.5rem] sm:rounded-[1.8rem] overflow-hidden border border-slate-100 shadow-inner">
-          <div className="absolute inset-0 transition-transform duration-[2000ms] group-hover:scale-100">
+          <div className="absolute inset-0 transition-transform duration-[2000ms] ">
             <MapComponent />
           </div>
           
