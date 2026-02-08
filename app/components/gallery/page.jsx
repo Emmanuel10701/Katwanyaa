@@ -1417,128 +1417,95 @@ const ModernGalleryItem = ({
   };
 
   // Grid View
- return (
+return (
   <div
-    className={`bg-white rounded-2xl overflow-hidden border border-slate-100/50 group transition-all duration-300 hover:shadow-xl hover:border-slate-200 w-full ${
-      isSelected ? 'border-blue-500 ring-4 ring-blue-100/50' : ''
+    className={`group relative bg-white rounded-3xl transition-all duration-500 hover:-translate-y-2 ${
+      isSelected 
+        ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-100' 
+        : 'hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100'
     }`}
   >
-    <div className="relative">
-      {/* Selection Checkbox */}
-      <button
-        onClick={onSelect}
-        className={`absolute top-3 left-3 w-7 h-7 rounded-full border-2 flex items-center justify-center z-30 transition-all duration-200  ${
-          isSelected 
-            ? 'bg-gradient-to-br from-blue-500 to-cyan-500 border-blue-500 text-white shadow-lg' 
-            : 'bg-white/90 backdrop-blur-sm border-slate-300 hover:border-blue-400 hover:bg-blue-50'
-        }`}
-      >
-        <FiCheck className={`text-sm transition-all ${isSelected ? 'scale-100' : 'scale-90 opacity-0'}`} />
-      </button>
+    <div className="relative p-2"> {/* Internal padding gives a 'frame' look */}
+      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-100">
+        {/* Selection Checkbox - Minimalist */}
+        <button
+          onClick={onSelect}
+          className={`absolute top-3 left-3 w-6 h-6 rounded-full z-30 transition-all duration-300 flex items-center justify-center ${
+            isSelected 
+              ? 'bg-blue-500 text-white scale-110' 
+              : 'bg-white/40 backdrop-blur-md border border-white/50 text-transparent hover:bg-white/60'
+          }`}
+        >
+          <FiCheck className={`text-xs ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
+        </button>
 
-      {/* Category Badge */}
-      <div className="absolute top-3 right-3 z-20">
-        <span className="px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wide shadow-md bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
-          {formatCategory(item.category)}
-        </span>
-      </div>
+        {/* Category Badge - Glassmorphism */}
+        <div className="absolute top-3 right-3 z-20">
+          <span className="px-3 py-1 bg-black/20 backdrop-blur-xl border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest text-white">
+            {formatCategory(item.category)}
+          </span>
+        </div>
 
-      {/* Media Preview - Changed aspect-square to aspect-[4/3] (increases width by 25%) */}
-      <div className="aspect-[4/3] w-full bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden cursor-pointer" onClick={onPreview}>
+        {/* Media Preview */}
         {hasError ? (
-          <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center p-6">
-            <FiImage className="text-slate-400 text-3xl mb-3" />
-            <p className="text-slate-500 text-sm font-medium">Failed to load image</p>
-            <p className="text-slate-400 text-xs mt-1">Tap to refresh</p>
+          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50">
+            <FiImage className="text-slate-300 text-2xl mb-2" />
+            <span className="text-[10px] text-slate-400 font-bold uppercase">Error Loading</span>
           </div>
         ) : (
-          <>
-            {item.files && item.files[0] ? (
-              <>
-                <img
-                  src={item.files[0]}
-                  alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  onError={onImageError}
-                />
-                {item.files.length > 1 && (
-                  <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full shadow-xl font-bold z-10">
-                    +{item.files.length - 1} more
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 flex flex-col items-center justify-center p-6">
-                <FiImage className="text-slate-400 text-3xl mb-3" />
-                <p className="text-slate-500 text-sm font-medium">No image available</p>
+          <div className="w-full h-full cursor-pointer" onClick={onPreview}>
+            <img
+              src={item.files?.[0]}
+              alt={item.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              onError={onImageError}
+            />
+            {/* Minimalist Multi-image Indicator */}
+            {item.files?.length > 1 && (
+              <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
+                <p className="text-[10px] font-black text-slate-900">+{item.files.length - 1} PHOTOS</p>
               </div>
             )}
-            
-            {/* View Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-              <div className="flex items-center gap-2 text-white">
-                <FiEye className="text-lg" />
-                <span className="text-sm font-medium">View Gallery</span>
+            {/* Clean Overlay */}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div className="bg-white text-slate-900 p-3 rounded-full scale-90 group-hover:scale-100 transition-transform duration-300 shadow-xl">
+                <FiEye size={20} />
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
 
-    {/* Content */}
-    <div className="p-5">
-      <div className="mb-4">
+    {/* Content Area */}
+    <div className="px-5 pb-6 pt-2">
+      <div className="flex justify-between items-start mb-3">
         <h3 
-          className="font-bold text-slate-900 text-base mb-2 truncate cursor-pointer hover:text-blue-600 transition-colors" 
-          onClick={onPreview} 
-          title={item.title}
+          className="font-black text-slate-800 text-lg leading-tight hover:text-blue-600 transition-colors cursor-pointer"
+          onClick={onPreview}
         >
           {item.title}
         </h3>
-        
-        <p className="text-sm text-slate-600 mb-4 line-clamp-2 leading-relaxed" title={item.description}>
-          {item.description || 'No description provided for this gallery'}
-        </p>
       </div>
       
-      {/* View Button */}
-      <button
-        onClick={onPreview}
-        className="w-full py-3.5 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 text-white rounded-xl font-bold text-sm hover:from-amber-700 hover:via-orange-700 hover:to-red-700 transition-all duration-300 hover:shadow-lg flex items-center justify-center gap-2"
-      >
-        <FiEye className="text-base" />
-        <span>VIEW GALLERY</span>
-      </button>
+      <p className="text-sm text-slate-500 line-clamp-2 font-medium leading-relaxed mb-6">
+        {item.description || 'Exploring the visual journey of our latest collection.'}
+      </p>
 
-      {/* Stats & Info */}
-      <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
-            <FiCalendar className="text-blue-500 text-sm" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Uploaded</p>
-            <p className="text-xs sm:text-sm font-bold text-slate-800">
-              {item.uploadDate ? new Date(item.uploadDate).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric',
-                year: 'numeric'
-              }) : 'Unknown'}
-            </p>
-          </div>
+      {/* Stats - Modern Inline Style */}
+      <div className="flex items-center gap-4 text-slate-400 border-t border-slate-50 pt-5">
+        <div className="flex items-center gap-1.5">
+          <FiCalendar className="text-xs" />
+          <span className="text-[11px] font-bold uppercase tracking-tighter">
+             {item.uploadDate ? new Date(item.uploadDate).getFullYear() : '2024'}
+          </span>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
-            <FiImage className="text-purple-500 text-sm" />
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Files</p>
-            <p className="text-xs sm:text-sm font-bold text-slate-800">
-              {item.files ? item.files.length : 0} {item.files?.length === 1 ? 'file' : 'files'}
-            </p>
-          </div>
+        <div className="h-1 w-1 rounded-full bg-slate-200" />
+        <div className="flex items-center gap-1.5">
+          <FiImage className="text-xs" />
+          <span className="text-[11px] font-bold uppercase tracking-tighter">
+            {item.files?.length || 0} Assets
+          </span>
         </div>
       </div>
     </div>
