@@ -249,17 +249,53 @@ const date = new Date(); // Add this line!
   <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-16 overflow-hidden">
     <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
       
-      <div className="relative group px-2">
-        <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
-        <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square">
-               <Image
-            src="/hero/katz4.jpeg"
-            alt="School "
-            fill
-            priority
-          />
+    <div className="relative group px-2">
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  
+  <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
+    <Image
+      src="/hero/katz4.jpeg"
+      alt="School"
+      fill
+      className="object-cover transition-transform duration-700 group-hover:scale-110"
+      priority
+    />
+    
+    {/* Small floating section at bottom */}
+    <div className="absolute bottom-3 left-3 right-3 z-20">
+      <div className="bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-lg border border-white/50 flex items-center justify-between">
+        {/* Left side - Icon with label */}
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-slate-600">Library</p>
+            <p className="text-xs font-bold text-slate-800">Open Now</p>
+          </div>
+        </div>
+        
+        {/* Right side - Status indicator */}
+        <div className="flex items-center gap-1">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-[10px] font-medium text-green-600">Live</span>
         </div>
       </div>
+    </div>
+    
+    {/* Optional: Top right small badge */}
+    <div className="absolute top-3 right-3 z-20">
+      <div className="bg-orange-500 text-white px-2 py-1 rounded-full text-[10px] font-bold shadow-md">
+        New
+      </div>
+    </div>
+  </div>
+</div>
 
       <div className="flex flex-col text-center lg:text-left items-center lg:items-start">
         <h2 className="text-orange-600 font-black uppercase text-[9px] sm:text-xs tracking-[0.2em] mb-4 bg-white/80 border border-orange-100 w-fit px-3 py-1 rounded-full shadow-sm">
