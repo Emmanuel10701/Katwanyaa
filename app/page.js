@@ -539,29 +539,22 @@ const LoadingScreen = () => (
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="py-12 md:py-16 bg-white">
 
       <Hero />
-       </section>
       {/* Modern Achievements & Stats Section */}
-      <section className="py-12 scale-[0.85] md:py-16 bg-white">
+      <section className="py-12  md:py-16 bg-white">
         <Why/>
       </section>
 
-      <section className="py-12 scale-[0.85] md:py-16 bg-white">
 
       <ModernLeadershipSection />
-</section>
-      {/* External Components */}
 
-            <section className="py-12 scale-[0.85] md:py-16 bg-white">
 
       <EnhancedEventsSection 
         events={apiData.events}
         onViewAll={handleEventClick}
         schoolInfo={apiData.schoolInfo}
       />
-</section>
       {showVideoModal && (
         <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
           <div className="relative w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl">
