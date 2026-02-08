@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 
 // Data for all terms and conditions with detailed descriptions for Katwanyaa High School
+
+
 const allTerms = [
   { 
     id: 1,
