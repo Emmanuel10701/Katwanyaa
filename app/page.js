@@ -448,7 +448,7 @@ const jsonLd = {
 
   
 const LoadingScreen = () => (
-  <div className="fixed scale-[0.75] inset-0 bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
+  <div className="fixed inset-0 bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
     {/* Animated Background Particles */}
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(15)].map((_, i) => (
@@ -532,7 +532,7 @@ const LoadingScreen = () => (
   }
 
   return (
-    <div className="min-h-screen scale-[0.75] bg-white overflow-hidden">
+    <div className="min-h-screen bg-white overflow-hidden">
       {/* Inject JSON-LD structured data for SEO */}
       <script
         type="application/ld+json"
