@@ -542,7 +542,7 @@ const LoadingScreen = () => (
       <Hero />
 
       {/* Modern Achievements & Stats Section */}
-      <section className="py-12 md:py-16 bg-white">
+      <section className="py-12 scale-[0.83] md:py-16 bg-white">
         <Why/>
       </section>
 
