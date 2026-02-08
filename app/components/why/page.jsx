@@ -155,7 +155,7 @@ const ModernSchoolLayout = () => {
                </div>
              <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square">
                        <Image
-                    src="/bg/3.jpeg"
+                    src="/bg/14.jpeg"
                     alt="School "
                     fill
                     priority

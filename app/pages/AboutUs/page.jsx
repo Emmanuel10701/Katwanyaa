@@ -398,7 +398,7 @@ Katz        </div>
   
   <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
-      src="/hero/katz4.jpeg"
+      src="/bg/14.jpeg"
       alt="School"
       fill
       className="object-cover transition-transform duration-700 "
