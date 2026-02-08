@@ -54,6 +54,16 @@ export default function ContactPage() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [isMapZoomed, setIsMapZoomed] = useState(false);
 
+  const [rows, setRows] = useState(10);
+
+useEffect(() => {
+  if (window.innerWidth < 640) {
+    setRows(5);
+  }
+}, []);
+
+
+
   const departments = [
     {
       id: 'admissions',
