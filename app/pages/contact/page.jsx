@@ -56,11 +56,14 @@ export default function ContactPage() {
 
   const [rows, setRows] = useState(10);
 
-useEffect(() => {
-  if (window.innerWidth < 640) {
-    setRows(5);
-  }
-}, []);
+  useEffect(() => {
+    // Safely check for window object
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 640) {
+        setRows(5);
+      }
+    }
+  }, []);
 
 
 
@@ -496,7 +499,7 @@ useEffect(() => {
     <textarea
       name="message"
       required
-      rows={window.innerWidth < 640 ? 5 : 10}
+      rows={rows} 
       value={formData.message}
       onChange={handleInputChange}
       className="w-full px-4 sm:px-5 py-3 sm:py-4 font-semibold bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none resize-none"
@@ -668,7 +671,6 @@ useEffect(() => {
                 </div>
 
                 {/* Action Buttons */}
-{/* Action Buttons */}
 <div className="flex flex-row gap-3 sm:gap-4 pt-2">
   <a
     href={`mailto:${selectedDepartment.email}`}
