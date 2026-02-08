@@ -972,10 +972,7 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
     font-black text-[10px] md:text-[11px] 
     uppercase tracking-[0.2em]
     
-    /* Interaction:
-       - Transition-transform handles the smooth scale
-       - md:active:scale-95 ensures it only shrinks on Desktop
-    */
+  
     transition-transform duration-300
     md:active:scale-95
     md:hover:brightness-110
@@ -3010,10 +3007,7 @@ return (
     tracking-[0.15em] md:tracking-widest 
     text-[10px] md:text-[11px] 
     
-    /* SCALING & HOVER ADJUSTMENTS:
-       - md:active:scale-95 -> Only shrinks on desktop
-       - md:hover:bg-blue-50 -> Only changes color on desktop
-    */
+  
     transition-all 
     md:hover:bg-blue-50
     md:active:scale-95 
