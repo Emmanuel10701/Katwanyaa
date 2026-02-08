@@ -10,7 +10,7 @@ export default function AboutPage() {
     { icon: <Users className="w-5 h-5" />, label: "Students", value: "1200+" },
     { icon: <BookOpen className="w-5 h-5" />, label: "Curriculums", value: "12" },
     { icon: <Trophy className="w-5 h-5" />, label: "Awards", value: "45" },
-    { icon: <ShieldCheck className="w-5 h-5" />, label: "Success", value: "98%" },
+{ icon: <ShieldCheck className="w-5 h-5" />, label: "Completion Rate", value: "88%" },
   ];
 
   const values = [
