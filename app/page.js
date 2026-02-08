@@ -448,7 +448,7 @@ const jsonLd = {
 
   
 const LoadingScreen = () => (
-  <div className="fixed inset-0 bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
+  <div className="fixed inset-0 scale-[0.83] bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
     {/* Animated Background Particles */}
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(15)].map((_, i) => (
@@ -539,22 +539,29 @@ const LoadingScreen = () => (
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Hero />
+      <section className="py-12 scale-[0.85] md:py-16 bg-white">
 
+      <Hero />
+       </section>
       {/* Modern Achievements & Stats Section */}
-      <section className="py-12 scale-[0.83] md:py-16 bg-white">
+      <section className="py-12 scale-[0.85] md:py-16 bg-white">
         <Why/>
       </section>
 
-      <ModernLeadershipSection />
+      <section className="py-12 scale-[0.85] md:py-16 bg-white">
 
+      <ModernLeadershipSection />
+</section>
       {/* External Components */}
+
+            <section className="py-12 scale-[0.85] md:py-16 bg-white">
+
       <EnhancedEventsSection 
         events={apiData.events}
         onViewAll={handleEventClick}
         schoolInfo={apiData.schoolInfo}
       />
-
+</section>
       {showVideoModal && (
         <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
           <div className="relative w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl">
