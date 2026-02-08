@@ -59,7 +59,7 @@ const ResetPasswordContent = () => {
   useEffect(() => {
     if (resetSuccess) {
       const timer = setTimeout(() => {
-        router.push("/pages/login");
+        router.push("/pages/adminLogin");
       }, 3000);
       
       return () => clearTimeout(timer);
