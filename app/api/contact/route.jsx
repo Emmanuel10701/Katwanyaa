@@ -289,12 +289,13 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
             margin: 0 0 16px 0;
           }
           
-          .contact-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin: 20px 0;
-          }
+      .contact-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;   /* increase this for more space */
+  margin: 20px 10px;
+}
+
           
           @media (min-width: 480px) {
             .contact-buttons {
@@ -735,7 +736,6 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
                   <span class="step-text"><strong>Assistance:</strong> Our team will provide the information you need</span>
                 </li>
                 <li>
-                  <span class="step-icon">✔️</span>
                   <span class="step-text"><strong>Follow-up:</strong> We will ensure your inquiry is fully resolved</span>
                 </li>
               </ul>
