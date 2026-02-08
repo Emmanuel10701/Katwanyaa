@@ -491,13 +491,17 @@ const date = new Date(); // Add this line!
             </div>
           </div>
         </div>
-
-        <div className="relative z-10 mt-8 sm:mt-12">
-          <button className="w-full py-3 sm:py-4 bg-white text-orange-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl hover:bg-orange-50 active:scale-95 transition-all flex items-center justify-center gap-2 group uppercase tracking-wider">
-            Google Maps
-            <ExternalLink size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
-          </button>
-        </div>
+<div className="relative z-10 mt-8 sm:mt-12">
+  <a 
+    href="https://www.google.com/maps/search/?api=1&query=Katwanyaa+High+School" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className=" w-full py-3 sm:py-4 bg-white text-orange-600 font-black text-xs sm:text-sm rounded-xl sm:rounded-2xl shadow-xl transition-transform flex items-center justify-center gap-2 uppercase tracking-wider"
+  >
+    Google Maps
+    <ExternalLink size={16} />
+  </a>
+</div>
       </div>
 
       {/* 2. Map Container - Fully Optimized */}
