@@ -224,12 +224,11 @@ const date = new Date(); // Add this line!
           </div>
           <div>
             <p className="text-[10px] font-medium text-slate-600">Event Status</p>
-            <p className="text-xs font-bold text-slate-800">Registration Open</p>
+            <p className="text-xs font-bold text-slate-800">Education Is Light</p>
           </div>
         </div>
         <div className="text-[10px] font-bold bg-green-100 text-green-800 px-2 py-1 rounded-full">
-          Join Now
-        </div>
+Katz        </div>
       </div>
     </div>
 
@@ -260,7 +259,7 @@ const date = new Date(); // Add this line!
   
   <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
-      src="/hero/katz4.jpeg"
+      src="/bg/1.jpeg"
       alt="School"
       fill
       className="object-cover transition-transform duration-700 group-hover:scale-110"
@@ -278,8 +277,8 @@ const date = new Date(); // Add this line!
             </svg>
           </div>
           <div>
-            <p className="text-[10px] font-medium text-slate-600">Library</p>
-            <p className="text-xs font-bold text-slate-800">Open Now</p>
+            <p className="text-[10px] font-medium text-slate-600">Katz</p>
+            <p className="text-xs font-bold text-slate-800">Education</p>
           </div>
         </div>
         
