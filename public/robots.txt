@@ -1,45 +1,57 @@
-# AGGRESSIVE ROBOTS.TXT - TELL EVERY SEARCH ENGINE TO INDEX US
+# ============================================
+# Katwanyaa School - Search Engine Directives
+# ============================================
+
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /adminLogin
+Disallow: /pages/forgotpassword
+Disallow: /MainDashboard*
 Disallow: /admin/
 Disallow: /private/
-Disallow: /dashboard/
-Crawl-delay: 1
+Disallow: /secure/
+Disallow: /*.php$
+Disallow: /*?*
+Disallow: /search/
 
-# Sitemaps
+# ========== CRAWL DELAY ==========
+# For respectful crawling
+Crawl-delay: 2
+
+# ========== SITEMAP LOCATIONS ==========
+# Primary sitemap
 Sitemap: https://katwanyaa.vercel.app/sitemap.xml
-Sitemap: https://katwanyaa.vercel.app/sitemap-news.xml
 
-# Specific Bots
+# Optional: Image sitemap (if available)
+Sitemap: https://katwanyaa.vercel.app/sitemap-images.xml
+
+# Optional: Video sitemap (if available)
+Sitemap: https://katwanyaa.vercel.app/sitemap-video.xml
+
+# ========== SPECIFIC BOTS ==========
+# GoogleBot Specific
 User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
+Allow: /pages/
+Allow: /images/
+Disallow: /api/*
+Disallow: /MainDashboard/*
+Disallow: /user/*/private
 
-User-agent: Googlebot-News
-Allow: /
-Crawl-delay: 1
-
-User-agent: Googlebot-Image
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-User-agent: Slurp
-Allow: /
-Crawl-delay: 2
-
-User-agent: DuckDuckBot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Baiduspider
-Allow: /
+# BingBot Specific
+User-agent: bingbot
 Crawl-delay: 3
+Disallow: /api/
 
-User-agent: YandexBot
-Allow: /
-Crawl-delay: 3
+# ========== BAD BOTS ==========
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
