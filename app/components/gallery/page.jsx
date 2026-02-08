@@ -1419,7 +1419,7 @@ const ModernGalleryItem = ({
   // Grid View
 return (
   <div
-    className={`group relative bg-white rounded-3xl transition-all duration-500 hover:-translate-y-2 ${
+    className={`group relative bg-white rounded-3xl  ${
       isSelected 
         ? 'ring-2 ring-blue-500 shadow-2xl shadow-blue-100' 
         : 'hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100'
