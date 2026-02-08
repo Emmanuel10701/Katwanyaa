@@ -156,7 +156,7 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
           }
           
           .success-icon {
-            font-size: 48px;
+            font-size: 28px;
             display: block;
             margin-bottom: 12px;
           }
