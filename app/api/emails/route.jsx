@@ -333,15 +333,15 @@ function getModernEmailTemplate({
     <div>
         <!-- Header -->
         <div>
-            <h1>${SCHOOL_NAME}</h1>
+            <h1 style="font-size: 24px; margin-bottom: 10px;">${SCHOOL_NAME}</h1>
             <div>${recipientTypeLabel}</div>
         </div>
         
         <!-- Subject -->
-        <h2>${subject}</h2>
+        <h2 style="font-size: 18px; margin-bottom: 10px;">${subject}</h2>
         
         <!-- Date -->
-        <div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 20px;">
             Date: ${new Date().toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'short', 
@@ -358,7 +358,7 @@ function getModernEmailTemplate({
         ${attachmentsHTML}
         
         <!-- Notice -->
-        <div>
+        <div style="margin-top: 30px; color: #666;">
             Official communication from ${SCHOOL_NAME}. Do not reply to this email.
         </div>
     </div>
