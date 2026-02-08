@@ -401,7 +401,7 @@ const KatwanyaaAdmission = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
           style={{
-            backgroundImage: `url('/student.jpg')`,
+            backgroundImage: `url('/hero/katz8.jpeg')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
