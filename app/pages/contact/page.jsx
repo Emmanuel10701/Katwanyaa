@@ -553,7 +553,7 @@ export default function ContactPage() {
           </h4>
         </div>
         
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col  items-center">
           <button className="px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-amber-50 bg-white/5 border border-white/10 hover:bg-white/20 hover:border-white/20 rounded-full flex items-center gap-2 transition-all duration-300 active:scale-95">
             View details
             <ChevronRight size={14} className="text-amber-400 group-hover:translate-x-1 transition-transform" />
