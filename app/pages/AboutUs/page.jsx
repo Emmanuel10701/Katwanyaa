@@ -28,10 +28,10 @@ const date = new Date(); // Add this line!
         {/* Background with Zoom Effect */}
     <div className="absolute inset-0 group overflow-hidden rounded-t-md">
   {/* Modern Gradient Overlay */}
-  <div className="absolute inset-0 bg-gradient-to-b from-orange-950/40 via-orange-950/80 to-orange-950 z-20"></div>
+  <div className="absolute inset-0 bg-gradient-to-b from-orange-950/30 via-orange-950/80 to-orange-950 z-20"></div>
   
   <Image
-    src="/bg/14.jpeg"
+    src="/hero/katz8.jpeg"
     alt="School"
     fill
     className="object-cover opacity-50 transition-transform duration-[10s] ease-out group-hover:scale-105"
@@ -219,8 +219,7 @@ const date = new Date(); // Add this line!
     <div className="relative order-1 lg:order-2 group px-2 sm:px-0">
       <div className="absolute -inset-6 bg-gradient-to-tr from-orange-100 to-amber-100 rounded-full opacity-40 blur-3xl -z-10"></div>
       
-    
-    <div className="relative group px-2">
+<div className="relative group px-2">
   {/* The "Off-kilter" Background Glow */}
   <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
   
@@ -235,31 +234,31 @@ const date = new Date(); // Add this line!
     
     {/* Dark Gradient Overlay for readability of floating items */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-  </div>
 
-  {/* Floating Modern Item: Exam/Event Notification */}
-  <div className="absolute -bottom-4 -right-4 z-20 animate-float">
-    <div className="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex items-center gap-4">
-      <div className="flex -space-x-2">
-         {/* Representing the "Staff" or "Student" API integration */}
-        <div className="w-8 h-8 rounded-full border-2 border-white bg-orange-500 flex items-center justify-center text-[10px] text-white font-bold">JD</div>
-        <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">AS</div>
-      </div>
-      <div>
-        <p className="text-[10px] uppercase tracking-wider font-bold text-orange-600">Upcoming Exam</p>
-        <p className="text-sm font-semibold text-slate-800">Final Semester Finals</p>
+    {/* Floating Modern Item: Exam/Event Notification - MOVED INSIDE IMAGE CONTAINER */}
+    <div className="absolute bottom-4 right-4 z-20 animate-float">
+      <div className="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex items-center gap-4">
+        <div className="flex -space-x-2">
+          {/* Representing the "Staff" or "Student" API integration */}
+          <div className="w-8 h-8 rounded-full border-2 border-white bg-orange-500 flex items-center justify-center text-[10px] text-white font-bold">JD</div>
+          <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">AS</div>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-orange-600">Upcoming Exam</p>
+          <p className="text-sm font-semibold text-slate-800">Final Semester Finals</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  {/* Floating Modern Item: Resources Badge */}
-  <div className="absolute -top-6 -left-2 z-20 hidden sm:block animate-bounce [animation-duration:6s]">
-    <div className="bg-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-100 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-      </span>
-      New Resources Available
+    {/* Floating Modern Item: Resources Badge - MOVED INSIDE IMAGE CONTAINER */}
+    <div className="absolute top-4 left-4 z-20 hidden sm:block animate-bounce [animation-duration:6s]">
+      <div className="bg-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-100 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        New Resources Available
+      </div>
     </div>
   </div>
 </div>
@@ -370,14 +369,49 @@ const date = new Date(); // Add this line!
       
       <div className="relative group px-2">
         <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10"></div>
-        <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square">
-               <Image
-            src="/hero/katz4.jpeg"
-            alt="School "
-            fill
-            priority
-          />
+<div className="relative group px-2">
+  {/* The "Off-kilter" Background Glow */}
+  <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
+  
+  <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
+    <Image
+      src="/bg/1.jpeg"
+      alt="School"
+      fill
+      className="object-cover transition-transform duration-700 group-hover:scale-110"
+      priority
+    />
+    
+    {/* Dark Gradient Overlay for readability of floating items */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+    {/* Floating Modern Item: Exam/Event Notification */}
+    <div className="absolute bottom-4 right-4 z-20 animate-float">
+      <div className="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white flex items-center gap-4">
+        <div className="flex -space-x-2">
+          {/* Representing the "Staff" or "Student" API integration */}
+          <div className="w-8 h-8 rounded-full border-2 border-white bg-orange-500 flex items-center justify-center text-[10px] text-white font-bold">JD</div>
+          <div className="w-8 h-8 rounded-full border-2 border-white bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">AS</div>
         </div>
+        <div>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-orange-600">Upcoming Exam</p>
+          <p className="text-sm font-semibold text-slate-800">Final Semester Finals</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Floating Modern Item: Resources Badge */}
+    <div className="absolute top-4 left-4 z-20 hidden sm:block animate-bounce [animation-duration:6s]">
+      <div className="bg-orange-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg flex items-center gap-2">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-100 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        New Resources Available
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   </div>
