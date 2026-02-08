@@ -448,7 +448,7 @@ const jsonLd = {
 
   
 const LoadingScreen = () => (
-  <div className="fixed inset-0 scale-[0.83] bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
+  <div className="fixed inset-0  bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
     {/* Animated Background Particles */}
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {[...Array(15)].map((_, i) => (
@@ -539,7 +539,7 @@ const LoadingScreen = () => (
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <section className="py-12 scale-[0.85] md:py-16 bg-white">
+      <section className="py-12 md:py-16 bg-white">
 
       <Hero />
        </section>
