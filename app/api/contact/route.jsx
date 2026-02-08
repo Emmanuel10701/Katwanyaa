@@ -759,14 +759,14 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
               <p style="margin: 0 0 16px 0; font-size: 14px;">
                 Contact our team directly:
               </p>
-              <div class="contact-buttons">
-                <a href="tel:${CONTACT_PHONE}" class="contact-btn">
+
+               <a href="tel:${CONTACT_PHONE}" class="contact-btn">
                   <span>call us</span>
                 </a>
                 <a href="mailto:${CONTACT_EMAIL}" class="contact-btn">
                   <span>Email</span>
                 </a>
-              </div>
+               
               <p style="margin-top: 12px; font-size: 12px; opacity: 0.95;">
                 Office Hours: Monday - Friday, 8:00 AM - 5:00 PM
               </p>
