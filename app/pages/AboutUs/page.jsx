@@ -252,7 +252,7 @@ const date = new Date(); // Add this line!
     <div className="relative group px-2">
   <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
   
-  <div className="relative overflow-hidden aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
+  <div className="relative overflow-hidden rounded-md aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
       src="/hero/katz4.jpeg"
       alt="School"
