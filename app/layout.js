@@ -3,6 +3,9 @@ import "./globals.css";
 import ClientLayoutWrapper from "./-app";
 import { SessionProvider } from "./session/sessiowrapper";
 
+/* -------------------------------------------------------------------------- */
+/* FONTS                                    */
+/* -------------------------------------------------------------------------- */
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -15,80 +18,81 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-/* ✅ Viewport */
+/* -------------------------------------------------------------------------- */
+/* VIEWPORT                                  */
+/* -------------------------------------------------------------------------- */
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ea580c",
+  themeColor: "#ea580c", // Matches your orange-600 brand color
 };
 
-/* ✅ Metadata */
+/* -------------------------------------------------------------------------- */
+/* METADATA                                  */
+/* -------------------------------------------------------------------------- */
 export const metadata = {
   metadataBase: new URL("https://katwanyaa.vercel.app"),
 
   title: {
     default: "A.I.C Katwanyaa Senior High School",
-    template: "%s | Katwanyaa  Senior High School",
+    template: "%s | Katwanyaa Senior High School",
   },
 
   description:
-    "Official website for Katwanyaa Senior High School in Matungulu, Machakos County. A public secondary school committed to academic excellence, discipline, and holistic student development in Kenya.",
+    "The official website of A.I.C Katwanyaa Senior High School in Matungulu, Machakos County. Dedicated to academic excellence, Christian values, and holistic student development in Kenya.",
+  
   keywords: [
     "Katwanyaa Senior High School",
-    "katwanyaa school",
-    "katwanyaa",
-    "katwanyaa high",
-"katz",
-"katz high school",
-"Katwanyaa Secondary",
-"katwanyaa Matungulu",
-"katwanyaa sec",
     "Katwanyaa Secondary School",
+    "AIC Katwanyaa",
+    "katwanyaa school",
+    "Katwanyaa High School",
+    "katz school",
+    "katz",
+    "A.I.C Katwanyaa",
+    "AIC Katwanyaa Senior High",
+    
     "Katwanyaa High School Matungulu",
-    "Matungulu secondary school",
-    "Machakos County secondary schools",
-    "Public high school in Machakos",
-    "Public secondary school Kenya",
-    "Best high school in Matungulu",
-    "Secondary schools in Eastern Kenya",
-    "Mixed secondary school Machakos",
+    "Machakos County Schools",
+    "Best secondary schools in Machakos",
+    "Public schools in Kenya",
+    "Katwanyaa school results",
     "Katwanyaa school admissions",
-    "Education in Matungulu Sub County",
   ],
 
-  authors: [{ name: "Katwanyaa High School" }],
-
+  authors: [{ name: "A.I.C Katwanyaa Senior High School" }],
+  
   alternates: {
     canonical: "/",
   },
 
-  /* ✅ Open Graph (WhatsApp / Facebook) */
+  /* Open Graph (Social Media Sharing) */
   openGraph: {
-    title: "A.I.C Katwanyaa High School",
-    description: "Building future leaders through excellence and faith.",
+    title: "A.I.C Katwanyaa Senior High School",
+    description: "Official school portal for academic excellence and discipline in Matungulu, Machakos.",
     url: "https://katwanyaa.vercel.app",
     siteName: "Katwanyaa High School",
     locale: "en_KE",
     type: "website",
     images: [
       {
-        url: "/katz.jpeg", // 🔑 relative path + metadataBase = safest
+        url: "/katz.jpeg",
         width: 1200,
         height: 630,
-        alt: "Katwanyaa High School",
+        alt: "A.I.C Katwanyaa Senior High School Campus",
       },
     ],
   },
 
-  /* ✅ Twitter */
+  /* Twitter Card */
   twitter: {
     card: "summary_large_image",
-    title: "Katwanyaa High School",
-    description: "Premier public education in Matungulu, Machakos County.",
+    title: "A.I.C Katwanyaa Senior High School",
+    description: "Empowering students through education and faith in Machakos County.",
     images: ["/katz.jpeg"],
   },
 
-  /* ✅ Robots */
+  /* Search Engine Bot Instructions */
   robots: {
     index: true,
     follow: true,
@@ -100,7 +104,6 @@ export const metadata = {
     },
   },
 
-
   icons: {
     icon: "/katz.jpeg",
     apple: "/katz.jpeg",
@@ -111,16 +114,53 @@ export const metadata = {
   },
 };
 
-
-
+/* -------------------------------------------------------------------------- */
+/* ROOT LAYOUT                                 */
+/* -------------------------------------------------------------------------- */
 export default function RootLayout({ children }) {
+  // Structured Data (JSON-LD) for Local Business/School SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "School",
+    "name": "A.I.C Katwanyaa Senior High School",
+    "alternateName": "Katwanyaa High School",
+    "url": "https://katwanyaa.vercel.app",
+    "logo": "https://katwanyaa.vercel.app/katz.jpeg",
+    "image": "https://katwanyaa.vercel.app/katz.jpeg",
+    "description": "A premier public secondary school in Matungulu, Machakos County, Kenya.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Matungulu",
+      "addressRegion": "Machakos County",
+      "addressCountry": "KE"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "-1.2825", // Optional: replace with your actual GPS coordinates
+      "longitude": "37.2618"
+    },
+    "hasMap": "https://www.google.com/maps?q=Katwanyaa+Secondary+School", 
+    "telephone": "+254-000-000000", // Update with official school phone
+    "priceRange": "N/A"
+  };
+
   return (
     <html lang="en">
+      <head>
+        {/* Injecting Structured Data into the Head */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-orange-50 via-white to-amber-50 text-gray-900`}
       >
         <SessionProvider>
-          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+          <ClientLayoutWrapper>
+            {/* Semantic <main> tag should wrap content in page.jsx files for SEO */}
+            {children}
+          </ClientLayoutWrapper>
         </SessionProvider>
       </body>
     </html>
