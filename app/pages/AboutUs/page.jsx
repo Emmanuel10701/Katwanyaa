@@ -26,18 +26,46 @@ const date = new Date(); // Add this line!
       {/* Modern Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-amber-950 via-orange-950 to-red-950">
         {/* Background with Zoom Effect */}
-        <div className="absolute inset-0 group">
-          <div className="absolute inset-0 bg-gradient-to-b from-orange-950/40 via-orange-950/80 to-orange-950 z-10"></div>
-          <Image
-            src="/hero/katz8.jpeg"
-            alt="School "
-            fill
-            className="object-cover opacity-50 transition-transform duration-[10s] ease-out group-hover:scale-101"
-            priority
-          />
-          {/* Animated Radial Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/20 rounded-full blur-[120px] z-0"></div>
+    <div className="absolute inset-0 group overflow-hidden rounded-t-md">
+  {/* Modern Gradient Overlay */}
+  <div className="absolute inset-0 bg-gradient-to-b from-orange-950/40 via-orange-950/80 to-orange-950 z-20"></div>
+  
+  <Image
+    src="/bg/14.jpeg"
+    alt="School"
+    fill
+    className="object-cover opacity-50 transition-transform duration-[10s] ease-out group-hover:scale-105"
+    priority
+  />
+
+  {/* Animated Floating Items (Modern UI Badges) */}
+  <div className="absolute inset-0 z-30 pointer-events-none">
+    {/* Floating Assignment Card */}
+    <div className="absolute top-[20%] left-[10%] animate-bounce [animation-duration:5s] bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">📚</div>
+        <div className="text-xs text-white">
+          <p className="font-bold">New Assignment</p>
+          <p className="opacity-70">Mathematics 101</p>
         </div>
+      </div>
+    </div>
+
+    {/* Floating Staff/Resource Badge */}
+    <div className="absolute bottom-[30%] right-[12%] animate-bounce [animation-duration:7s] bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">👩‍🏫</div>
+        <div className="text-xs text-white">
+          <p className="font-bold">Staff Directory</p>
+          <p className="opacity-70">24 Online Now</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Animated Radial Glow */}
+  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/20 rounded-full blur-[120px] z-10"></div>
+</div>
 
         <div className="relative z-20 max-w-5xl mx-auto px-6 text-center">
           {/* Modern Static Badge */}

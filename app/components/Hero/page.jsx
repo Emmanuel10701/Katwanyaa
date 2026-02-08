@@ -58,7 +58,7 @@ const heroSlides = [
     gradient: "from-cyan-500 via-blue-400 to-indigo-600",
     description: "As a community-based institution in Matungulu, Katwanyaa High School works closely with parents and local stakeholders to provide relevant education that addresses community needs.",
     background: "bg-gradient-to-br from-cyan-900/90 via-blue-900/80 to-indigo-900/70",
-    image: "/hero/katz3.jpeg",
+    image: "/bg/14.jpeg",
     stats: { 
       labs: "Practical Learning", 
       tech: "Skill Development", 
