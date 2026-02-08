@@ -220,6 +220,7 @@ const date = new Date(); // Add this line!
       <div className="absolute -inset-6 bg-gradient-to-tr from-orange-100 to-amber-100 rounded-full opacity-40 blur-3xl -z-10"></div>
       
 <div className="relative group px-2">
+ <div className="relative group px-2">
   {/* The "Off-kilter" Background Glow */}
   <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
   
@@ -235,10 +236,38 @@ const date = new Date(); // Add this line!
     {/* Dark Gradient Overlay for readability of floating items */}
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
- 
+    {/* Floating Item 1: Small Bottom Info Bar */}
+    <div className="absolute bottom-3 left-3 right-3 z-20">
+      <div className="bg-white/90 backdrop-blur-md px-3 py-2 rounded-xl shadow-lg border border-white/50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium text-slate-600">Event Status</p>
+            <p className="text-xs font-bold text-slate-800">Registration Open</p>
+          </div>
+        </div>
+        <div className="text-[10px] font-bold bg-green-100 text-green-800 px-2 py-1 rounded-full">
+          Join Now
+        </div>
+      </div>
+    </div>
 
-    
+    {/* Floating Item 2: Top Right Badge */}
+    <div className="absolute top-3 right-3 z-20">
+      <div className="bg-orange-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1.5">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-200 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        Featured
+      </div>
+    </div>
   </div>
+</div>
 </div>
     </div>
   </div>
@@ -252,7 +281,7 @@ const date = new Date(); // Add this line!
     <div className="relative group px-2">
   <div className="absolute -inset-2 bg-orange-100/50 rounded-[2.5rem] -rotate-1 -z-10 transition-transform group-hover:rotate-1 group-hover:scale-105 duration-500"></div>
   
-  <div className="relative overflow-hidden rounded-md aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
+  <div className="relative overflow-hidden  aspect-square sm:aspect-video lg:aspect-square rounded-md shadow-2xl border border-orange-100/20">
     <Image
       src="/hero/katz4.jpeg"
       alt="School"
