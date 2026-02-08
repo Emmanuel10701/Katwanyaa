@@ -720,25 +720,18 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
                 <div class="info-label">📝 Inquiry Subject</div>
                 <div class="info-value">${subject}</div>
               </div>
-              <div class="info-card">
-                <div class="info-label">🔐 Reference Number</div>
-                <div class="info-value">${referenceNumber}</div>
-              </div>
             </div>
             
-            <div class="section-title">⏱️ What Happens Next?</div>
+            <div class="section-title"> What Happens Next?</div>
             <div class="process-box">
               <ul class="process-list">
                 <li>
-                  <span class="step-icon">🔍</span>
                   <span class="step-text"><strong>Review:</strong> Our team will carefully review your inquiry</span>
                 </li>
                 <li>
-                  <span class="step-icon">📧</span>
                   <span class="step-text"><strong>Contact:</strong> We will reach out to you via your preferred method</span>
                 </li>
                 <li>
-                  <span class="step-icon">💬</span>
                   <span class="step-text"><strong>Assistance:</strong> Our team will provide the information you need</span>
                 </li>
                 <li>
@@ -768,12 +761,10 @@ async function sendContactConfirmation(toEmail, name, subject, referenceNumber) 
               </p>
               <div class="contact-buttons">
                 <a href="tel:${CONTACT_PHONE}" class="contact-btn">
-                  <div class="contact-icon phone">☎</div>
-                  <span>${CONTACT_PHONE}</span>
+                  <span>call us</span>
                 </a>
                 <a href="mailto:${CONTACT_EMAIL}" class="contact-btn">
-                  <div class="contact-icon email">✉</div>
-                  <span>Email Us</span>
+                  <span>Email</span>
                 </a>
               </div>
               <p style="margin-top: 12px; font-size: 12px; opacity: 0.95;">
@@ -974,13 +965,13 @@ async function sendAdminNotification(contactData, referenceNumber) {
             font-weight: 700;
             color: #1e3c72;
             width: 35%;
-            font-size: 13px;
+            font-size: 9px;
           }
           
           .info-value {
             color: #4b5563;
             width: 65%;
-            font-size: 13px;
+            font-size: 8px;
             word-break: break-word;
           }
           
