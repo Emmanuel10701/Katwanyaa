@@ -38,30 +38,7 @@ const date = new Date(); // Add this line!
     priority
   />
 
-  {/* Animated Floating Items (Modern UI Badges) */}
-  <div className="absolute inset-0 z-30 pointer-events-none">
-    {/* Floating Assignment Card */}
-    <div className="absolute top-[20%] left-[10%] animate-bounce [animation-duration:5s] bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">📚</div>
-        <div className="text-xs text-white">
-          <p className="font-bold">New Assignment</p>
-          <p className="opacity-70">Mathematics 101</p>
-        </div>
-      </div>
-    </div>
 
-    {/* Floating Staff/Resource Badge */}
-    <div className="absolute bottom-[30%] right-[12%] animate-bounce [animation-duration:7s] bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">👩‍🏫</div>
-        <div className="text-xs text-white">
-          <p className="font-bold">Staff Directory</p>
-          <p className="opacity-70">24 Online Now</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   {/* Animated Radial Glow */}
   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-600/20 rounded-full blur-[120px] z-10"></div>
@@ -87,7 +64,7 @@ const date = new Date(); // Add this line!
           <div className="max-w-3xl mx-auto space-y-6 mb-12">
             <p className="text-sm md:text-base text-slate-200 font-medium leading-relaxed mb-8">
               Since 1998, a cornerstone of <span className="text-amber-400">academic distinction</span>, 
-              crafting a holistic pathway for future women leaders.
+              crafting a holistic pathway for future  leaders.
             </p>
 
             <div className="grid md:grid-cols-2 gap-6 text-left border-y border-white/10 py-8">
