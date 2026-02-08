@@ -1167,12 +1167,6 @@ const resetForm = useCallback(() => {
                 >
                   <FiGrid className="text-lg" />
                 </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-xl ${viewMode === 'list' ? 'bg-white text-blue-600 shadow-lg' : 'text-slate-600'}`}
-                >
-                  <FiList className="text-lg" />
-                </button>
               </div>
               <button 
                 onClick={selectAll}
