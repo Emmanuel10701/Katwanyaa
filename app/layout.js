@@ -68,7 +68,7 @@ export const metadata = {
 
   /* Open Graph (Social Media Sharing) */
   openGraph: {
-    title: "A.I.C Katwanyaa Senior High School",
+    title: "A.I.C Katwanyaa High School",
     description: "Official school portal for academic excellence and discipline in Matungulu, Machakos.",
     url: "https://katwanyaa.vercel.app",
     siteName: "Katwanyaa High School",
