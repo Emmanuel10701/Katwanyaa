@@ -296,7 +296,6 @@ function sanitizeContent(content) {
   return safeContent;
 }
 
-// COMPLETE EMAIL TEMPLATE FUNCTION WITH INLINE STYLING
 function getModernEmailTemplate({ 
   subject = '', 
   content = '',
@@ -309,16 +308,13 @@ function getModernEmailTemplate({
   
   // Generate attachments HTML if there are attachments
   const attachmentsHTML = attachments && attachments.length > 0 ? `
-    <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0;">
-      <div style="font-size: 15px; font-weight: 600; color: #1e3c72; margin-bottom: 14px;">📎 Attachments</div>
-      <ul style="list-style: none;">
+    <div>
+      <div>📎 Attachments:</div>
+      <ul>
         ${attachments.map(attachment => `
-          <li style="display: flex; align-items: center; gap: 10px; padding: 10px; background: white; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-            <span style="font-size: 18px;">📄</span>
-            <div style="flex: 1; min-width: 0;">
-              <a href="${attachment.url}" target="_blank" style="color: #1e3c72; text-decoration: none; font-weight: 500; font-size: 13px; word-break: break-word;">${attachment.originalName || attachment.filename}</a>
-              <small style="color: #64748b; font-size: 12px; display: block; margin-top: 2px;">${attachment.fileType ? attachment.fileType.toUpperCase() : 'File'} • ${formatFileSize(attachment.fileSize)}</small>
-            </div>
+          <li>
+            <a href="${attachment.url}" target="_blank">${attachment.originalName || attachment.filename}</a>
+            (${formatFileSize(attachment.fileSize)})
           </li>
         `).join('')}
       </ul>
@@ -331,103 +327,69 @@ function getModernEmailTemplate({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${subject} • ${SCHOOL_NAME}</title>
+    <title>${subject}</title>
 </head>
-<body style="margin: 0; padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc;">
-    <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0;">
+<body>
+    <div>
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 32px 20px; text-align: center; position: relative; overflow: hidden;">
-            <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; position: relative; z-index: 1;">${SCHOOL_NAME}</h1>
-            <p style="font-size: 14px; opacity: 0.95; margin-bottom: 16px; font-weight: 500; position: relative; z-index: 1;">${SCHOOL_MOTTO}</p>
-            <div style="display: inline-block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 6px 16px; border-radius: 24px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); position: relative; z-index: 1;">${recipientTypeLabel}</div>
+        <div>
+            <h1>${SCHOOL_NAME}</h1>
+            <div>${recipientTypeLabel}</div>
         </div>
         
-        <!-- Content -->
-        <div style="padding: 28px 20px;">
-            <h2 style="font-size: 22px; font-weight: 700; color: #1e3c72; margin-bottom: 20px; line-height: 1.4; border-left: 4px solid #4c7cf3; padding-left: 16px;">${subject}</h2>
-            
-            <!-- Recipient Information -->
-            <div style="background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%); border-radius: 12px; padding: 16px; margin: 20px 0; border: 1px solid #dbeafe;">
-                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px;">
-                    <span style="width: 18px; height: 18px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;">👤</span>
-                    <span style="font-size: 13px; color: #475569;">For: <strong>${recipientTypeLabel}</strong></span>
-                </div>
-                <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 13px;">
-                    <span style="width: 18px; height: 18px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;">📅</span>
-                    <span style="font-size: 13px; color: #475569;">Date: <strong>${new Date().toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                    })}</strong></span>
-                </div>
-            </div>
-            
-            <!-- Message Content -->
-            <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0; line-height: 1.7; font-size: 14px;">
-                ${sanitizedContent}
-            </div>
-            
-            <!-- Attachments Section -->
-            ${attachmentsHTML}
-            
-            <!-- Important Notice -->
-            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 14px; margin: 20px 0; text-align: center;">
-                <p style="font-size: 12px; color: #92400e; margin: 0; word-break: break-word;">📧 Official communication from ${SCHOOL_NAME}. Do not reply to this email.</p>
+        <!-- Subject -->
+        <h2>${subject}</h2>
+        
+        <!-- Date -->
+        <div>
+            Date: ${new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            })}
+        </div>
+        
+        <!-- Message Content -->
+        <div>
+            ${sanitizedContent}
+        </div>
+        
+        <!-- Attachments -->
+        ${attachmentsHTML}
+        
+        <!-- Notice -->
+        <div>
+            Official communication from ${SCHOOL_NAME}. Do not reply to this email.
+        </div>
+    </div>
+    
+    <!-- Footer with Social Media -->
+    <div style="background: #f8f9fa; padding: 20px; border-top: 1px solid #dee2e6; text-align: center;">
+        <div style="margin-bottom: 15px;">
+            <strong>${SCHOOL_NAME}</strong><br>
+            ${SCHOOL_LOCATION}
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            Email: <a href="mailto:${CONTACT_EMAIL}" style="color: #0066cc;">${CONTACT_EMAIL}</a><br>
+            Phone: <a href="tel:${CONTACT_PHONE}" style="color: #0066cc;">${CONTACT_PHONE}</a><br>
+            Website: <a href="${SCHOOL_WEBSITE}" target="_blank" style="color: #0066cc;">${SCHOOL_WEBSITE}</a>
+        </div>
+        
+        <!-- Social Media Section -->
+        <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; margin-bottom: 10px;">Follow Us</div>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="color: #1877F2; text-decoration: none;">Facebook</a> |
+                <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="color: #FF0000; text-decoration: none;">YouTube</a> |
+                <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="color: #0A66C2; text-decoration: none;">LinkedIn</a> |
+                <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="color: #000000; text-decoration: none;">Twitter</a>
             </div>
         </div>
         
-        <!-- Footer -->
-        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #cbd5e1; padding: 28px 20px; text-align: center;">
-            <!-- School Information -->
-            <div style="margin-bottom: 20px;">
-                <h3 style="font-size: 20px; font-weight: 900; color: white; margin-bottom: 6px; letter-spacing: -0.025em;">${SCHOOL_NAME}</h3>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 6px; color: #94a3b8; font-size: 13px; font-weight: 500;">📍 ${SCHOOL_LOCATION}</div>
-            </div>
-            
-            <!-- Contact Details -->
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <a href="mailto:${CONTACT_EMAIL}" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
-                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #e0f2fe; color: #0ea5e9;">✉</div>
-                    <div style="min-width: 0; flex: 1;">
-                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #0ea5e9; letter-spacing: 0.05em; margin-bottom: 2px;">Email</div>
-                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">${CONTACT_EMAIL}</div>
-                    </div>
-                </a>
-                
-                <a href="tel:${CONTACT_PHONE}" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
-                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #f0fdf4; color: #22c55e;">☎</div>
-                    <div style="min-width: 0; flex: 1;">
-                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #22c55e; letter-spacing: 0.05em; margin-bottom: 2px;">Call Us</div>
-                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">${CONTACT_PHONE}</div>
-                    </div>
-                </a>
-                
-                <a href="${SCHOOL_WEBSITE}" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; transition: all 0.2s ease;">
-                    <div style="width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce7f3; color: #db2777;">🌐</div>
-                    <div style="min-width: 0; flex: 1;">
-                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #db2777; letter-spacing: 0.05em; margin-bottom: 2px;">Visit</div>
-                        <div style="font-size: 14px; font-weight: 600; color: #1e293b; word-break: break-word;">Our Website</div>
-                    </div>
-                </a>
-            </div>
-            
-            <!-- Social Media Buttons -->
-            <div style="margin-bottom: 20px; padding: 16px 0; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; font-weight: 700; color: #94a3b8;">Follow Us</div>
-                <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #1877F2; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #1877F2;" title="Facebook">f</a>
-                    <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #FF0000; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #FF0000;" title="YouTube">▶</a>
-                    <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #0A66C2; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #0A66C2;" title="LinkedIn">in</a>
-                    <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="width: 44px; height: 44px; border-radius: 12px; border: 2px solid #000000; display: flex; align-items: center; justify-content: center; text-decoration: none; font-weight: 700; font-size: 12px; text-transform: uppercase; transition: all 0.3s ease; color: white; background: #000000;" title="Twitter">𝕏</a>
-                </div>
-            </div>
-            
-            <!-- Sender Information -->
-            <div style="padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 12px; color: #94a3b8;">
-                <p style="margin-bottom: 3px;">Sent by: <strong>${senderName}</strong></p>
-                <p style="margin-bottom: 3px;">${SCHOOL_NAME}</p>
-                <p style="margin-top: 8px; color: #64748b;"><em>Confidential communication for authorized recipients only.</em></p>
-            </div>
+        <div style="font-size: 12px; color: #666;">
+            Sent by: ${senderName}<br>
+            Confidential communication for authorized recipients only.
         </div>
     </div>
 </body>

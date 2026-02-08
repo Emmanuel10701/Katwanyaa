@@ -285,30 +285,15 @@ function getModernEmailTemplate({
   let attachmentsHTML = '';
   if (attachments && attachments.length > 0) {
     attachmentsHTML = `
-      <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #e2e8f0;">
-        <div style="font-size: 16px; font-weight: 600; color: #1e3c72; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          Attachments (${attachments.length})
-        </div>
-        <div style="list-style: none;">
+      <div>
+        <div>📎 Attachments (${attachments.length}):</div>
+        <div>
           ${attachments.map(attachment => {
             const fileSize = formatFileSize(attachment.fileSize);
             return `
-            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0;">
-              <div style="font-size: 20px; color: #4c7cf3;">
-                ${getFileIcon(attachment.fileType)}
-              </div>
-              <div style="flex: 1; min-width: 0;">
-                <a href="${attachment.url}" target="_blank" style="color: #1e3c72; text-decoration: none; font-weight: 500; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  ${attachment.originalName || attachment.filename}
-                </a>
-                <small style="color: #64748b; font-size: 12px; display: block; margin-top: 4px;">
-                  ${fileSize} • ${attachment.fileType ? attachment.fileType.toUpperCase() : 'File'}
-                </small>
-              </div>
+            <div>
+              <a href="${attachment.url}" target="_blank">${attachment.originalName || attachment.filename}</a>
+              <span> (${fileSize})</span>
             </div>
             `;
           }).join('')}
@@ -323,156 +308,73 @@ function getModernEmailTemplate({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="x-apple-disable-message-reformatting">
-    <title>${subject} • ${SCHOOL_NAME}</title>
+    <title>${subject}</title>
 </head>
-<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; -webkit-font-smoothing: antialiased;">
-    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0;">
-        <!-- HEADER -->
-        <div style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 40px 20px; text-align: center; position: relative; overflow: hidden;">
-            <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.025em; position: relative; z-index: 1;">${SCHOOL_NAME}</h1>
-            <p style="font-size: 15px; opacity: 0.95; margin-bottom: 20px; font-weight: 500; position: relative; z-index: 1;">${SCHOOL_MOTTO}</p>
-            <div style="display: inline-block; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); padding: 8px 20px; border-radius: 24px; font-size: 12px; font-weight: 600; text-transform: uppercase; border: 1px solid rgba(255, 255, 255, 0.2); position: relative; z-index: 1; letter-spacing: 0.5px;">${recipientTypeLabel}</div>
+<body>
+    <div>
+        <!-- Header -->
+        <div>
+            <h1>${SCHOOL_NAME}</h1>
+            <p>${SCHOOL_MOTTO}</p>
+            <div>${recipientTypeLabel}</div>
         </div>
         
-        <!-- CONTENT -->
-        <div style="padding: 40px 32px;">
-            <h2 style="font-size: 24px; font-weight: 700; color: #1e3c72; margin-bottom: 24px; line-height: 1.4; border-left: 4px solid #4c7cf3; padding-left: 16px;">${subject}</h2>
-            
-            <!-- Recipient Information -->
-            <div style="background: linear-gradient(135deg, #f0f7ff 0%, #f8fafc 100%); border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #dbeafe;">
-                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
-                    <svg style="width: 20px; height: 20px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                    </svg>
-                    <span style="font-size: 14px; color: #475569; line-height: 1.5;">This message is intended for: <strong>${recipientTypeLabel}</strong></span>
-                </div>
-                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
-                    <svg style="width: 20px; height: 20px; color: #4c7cf3; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
-                    </svg>
-                    <span style="font-size: 14px; color: #475569; line-height: 1.5;">Sent: <strong>${new Date().toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                    })}</strong></span>
-                </div>
-            </div>
-            
-            <!-- Message Content -->
-            <div style="background: #f8fafc; border-radius: 12px; padding: 28px; margin: 24px 0; border: 1px solid #e2e8f0; line-height: 1.7; font-size: 15px; word-break: break-word;">
-                ${sanitizedContent}
-            </div>
-            
-            <!-- Attachments Section -->
-            ${attachmentsHTML}
-            
-            <!-- Important Notice -->
-            <div style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 16px; margin: 24px 0; text-align: center;">
-                <p style="font-size: 13px; color: #92400e; margin: 0;">📧 This is an official communication from ${SCHOOL_NAME}. Please do not reply directly to this email.</p>
+        <!-- Subject -->
+        <h2>${subject}</h2>
+        
+        <!-- Recipient Info -->
+        <div>
+            <div>For: ${recipientTypeLabel}</div>
+            <div>Date: ${new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}</div>
+        </div>
+        
+        <!-- Message Content -->
+        <div>
+            ${sanitizedContent}
+        </div>
+        
+        <!-- Attachments -->
+        ${attachmentsHTML}
+        
+        <!-- Notice -->
+        <div>
+            Official communication from ${SCHOOL_NAME}. Do not reply to this email.
+        </div>
+    </div>
+    
+    <!-- Footer with Social Media -->
+    <div style="background: #f8f9fa; padding: 20px; border-top: 1px solid #dee2e6; text-align: center;">
+        <div style="margin-bottom: 15px;">
+            <strong>${SCHOOL_NAME}</strong><br>
+            ${SCHOOL_LOCATION}
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            Email: <a href="mailto:${CONTACT_EMAIL}" style="color: #0066cc;">${CONTACT_EMAIL}</a><br>
+            Phone: <a href="tel:${CONTACT_PHONE}" style="color: #0066cc;">${CONTACT_PHONE}</a><br>
+            Website: <a href="${SCHOOL_WEBSITE}" target="_blank" style="color: #0066cc;">${SCHOOL_WEBSITE}</a>
+        </div>
+        
+        <!-- Social Media Section -->
+        <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; margin-bottom: 10px;">Follow Us</div>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="color: #1877F2; text-decoration: none;">Facebook</a> |
+                <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="color: #FF0000; text-decoration: none;">YouTube</a> |
+                <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="color: #0A66C2; text-decoration: none;">LinkedIn</a> |
+                <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="color: #000000; text-decoration: none;">Twitter</a>
             </div>
         </div>
         
-        <!-- FOOTER -->
-        <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #cbd5e1; padding: 40px 32px; text-align: center;">
-            <!-- School Header -->
-            <div style="margin-bottom: 32px;">
-                <h3 style="font-size: 28px; font-weight: 900; color: white; margin-bottom: 8px; letter-spacing: -0.025em;">${SCHOOL_NAME}</h3>
-                <div style="display: inline-flex; align-items: center; gap: 6px; color: #94a3b8; font-size: 14px; font-weight: 500;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                        <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                    <span>${SCHOOL_LOCATION}</span>
-                </div>
-            </div>
-            
-            <!-- Contact Cards -->
-            <div style="display: flex; flex-direction: column; gap: 14px; margin: 32px 0;">
-                <a href="mailto:${CONTACT_EMAIL}" style="text-decoration: none; display: flex; align-items: center; gap: 16px; padding: 18px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; transition: all 0.3s ease;">
-                    <div style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fef3c7; color: #d97706;">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                    </div>
-                    <div style="min-width: 0; flex: 1;">
-                        <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 4px;">Email Us</p>
-                        <p style="font-size: 15px; font-weight: 700; color: #1e293b; word-break: break-word;">${CONTACT_EMAIL}</p>
-                    </div>
-                </a>
-
-                <a href="tel:${CONTACT_PHONE}" style="text-decoration: none; display: flex; align-items: center; gap: 16px; padding: 18px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; transition: all 0.3s ease;">
-                    <div style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #dcfce7; color: #16a34a;">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                        </svg>
-                    </div>
-                    <div style="min-width: 0; flex: 1;">
-                        <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 4px;">Call Support</p>
-                        <p style="font-size: 15px; font-weight: 700; color: #1e293b; word-break: break-word;">${CONTACT_PHONE}</p>
-                    </div>
-                </a>
-
-                <a href="${SCHOOL_WEBSITE}" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 16px; padding: 18px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 14px; transition: all 0.3s ease;">
-                    <div style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #fce7f3; color: #be185d;">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="2" y1="12" x2="22" y2="12"/>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
-                    </div>
-                    <div style="min-width: 0; flex: 1;">
-                        <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 4px;">Visit Portal</p>
-                        <p style="font-size: 15px; font-weight: 700; color: #1e293b; word-break: break-word;">Our Website</p>
-                    </div>
-                </a>
-            </div>
-            
-            <!-- Social Media Buttons -->
-            <div style="padding: 24px 0; margin: 24px 0; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px; font-weight: 700; color: #94a3b8;">Follow Us</h4>
-                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                    <a href="${SOCIAL_MEDIA.facebook.url}" target="_blank" style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s ease; background: #1877F2;" title="Facebook">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                    </a>
-
-                    <a href="${SOCIAL_MEDIA.youtube.url}" target="_blank" style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s ease; background: #FF0000;" title="YouTube">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                        </svg>
-                    </a>
-
-                    <a href="${SOCIAL_MEDIA.linkedin.url}" target="_blank" style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s ease; background: #0A66C2;" title="LinkedIn">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                    </a>
-
-                    <a href="${SOCIAL_MEDIA.twitter.url}" target="_blank" style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: all 0.3s ease; background: #000000;" title="Twitter">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.045 4.126H5.078z"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Sender Information -->
-            <div style="padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 13px; color: #94a3b8;">
-                <p style="margin-bottom: 4px;">Sent by: <strong>${senderName}</strong></p>
-                <p style="margin-bottom: 4px;">${SCHOOL_NAME} Administration</p>
-                <p style="margin-bottom: 4px;">This email was sent to ${recipientTypeLabel.toLowerCase()} of ${SCHOOL_NAME}</p>
-            </div>
-            
-            <!-- Privacy Notice -->
-            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <p style="font-size: 12px; color: #94a3b8; margin: 0; font-style: italic; line-height: 1.5;">
-                    Please note: This email and any attachments are confidential and intended solely for the use of the individual or entity to whom they are addressed. If you have received this email in error, please notify the sender immediately and delete it from your system.
-                </p>
-            </div>
+        <div style="font-size: 12px; color: #666;">
+            Sent by: ${senderName}<br>
+            ${SCHOOL_NAME} Administration<br>
+            Confidential communication for authorized recipients only.
         </div>
     </div>
 </body>
