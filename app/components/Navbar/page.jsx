@@ -282,6 +282,7 @@ export default function ModernNavbar() {
     </div>
     
 
+{/* Mobile Academic Dropdown Items */}
 {isMobileDropdownOpen && (
   <div className="ml-6 xs:ml-8 space-y-1.5 xs:space-y-2 pl-3 xs:pl-4 border-l-2 border-white/20">
     {academicDropdownItems.map((dropdownItem) => (
@@ -303,7 +304,6 @@ export default function ModernNavbar() {
       </a>
     ))}
     
-    {/* ADD ZERAKI LINK TO MOBILE MENU */}
     <a
       href="https://learning.zeraki.app/"
       className="flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg text-white/80 hover:bg-white/10"
@@ -321,7 +321,7 @@ export default function ModernNavbar() {
           className="w-full h-full object-cover rounded-md border border-white/30"
         />
       </div>
-      <span className="font-medium text-sm xs:text-base">Zeraki Account</span>
+      <span className="font-medium text-sm xs:text-base">Zeraki Analytics</span>
     </a>
   </div>
 )}
