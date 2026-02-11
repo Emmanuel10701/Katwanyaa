@@ -305,7 +305,7 @@ export default function ModernNavbar() {
     
     {/* ADD ZERAKI LINK TO MOBILE MENU */}
     <a
-      href="https://analytics.zeraki.app/#/auth/desktop"
+      href="https://learning.zeraki.app/"
       className="flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg text-white/80 hover:bg-white/10"
       onClick={() => {
         setIsOpen(false);
