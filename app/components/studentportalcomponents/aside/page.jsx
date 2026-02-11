@@ -7,7 +7,8 @@ import {
   FiMessageSquare, 
   FiLogOut,
   FiX,
-  FiRefreshCw
+  FiRefreshCw,
+  FiExternalLink
 } from 'react-icons/fi';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -34,8 +35,8 @@ export default function NavigationSidebar({
   const router = useRouter();
 
   return (
-<aside className="fixed lg:relative inset-y-0 left-0 z-50  h-full bg-white border-r border-gray-200 w-full max-w-[300px] lg:max-w-[280px] xl:max-w-[300px] flex flex-col">
-      <div className=" flex flex-col">
+    <aside className="fixed lg:relative inset-y-0 left-0 z-50 h-full bg-white border-r border-gray-200 w-full max-w-[300px] lg:max-w-[280px] xl:max-w-[300px] flex flex-col">
+      <div className="flex flex-col">
         {/* Header */}
         <div className="p-4 sm:p-5 lg:p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -94,9 +95,6 @@ export default function NavigationSidebar({
           </div>
         </div>
 
-
-        
-
         {/* Navigation */}
         <nav className="flex-1 p-4 sm:p-5 lg:p-6 overflow-y-auto">
           <div className="space-y-2 sm:space-y-4">
@@ -126,41 +124,58 @@ export default function NavigationSidebar({
                 </span>
               </button>
             ))}
+
+            {/* Zeraki Analytics Link - Added below navigation items */}
+            <a
+              href="https://analytics.zeraki.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl transition-all duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 group"
+            >
+              <div className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center">
+                <img 
+                  src="/zeraki.jpg" 
+                  alt="Zeraki Analytics" 
+                  className="w-full h-full object-cover rounded-md border border-gray-300 group-hover:border-blue-400 transition-colors"
+                />
+              </div>
+              <span className="font-semibold text-left text-sm sm:text-base flex-1">
+                Zeraki Analytics
+              </span>
+              <FiExternalLink className="text-gray-400 text-sm sm:text-base group-hover:text-blue-600 transition-colors" />
+            </a>
           </div>
-
         </nav>
-               <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
-      <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
-  {/* Refresh Button */}
-  <button
-    onClick={() => {
-      // 1. Next.js soft refresh
-      router.refresh(); 
-      // 2. Optional: If you want a full browser reload, use window.location.reload();
-    }}
-    className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
-    bg-white border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl 
-    text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
-    active:bg-blue-50 active:scale-95 transition-all duration-200 min-w-0"
-  >
-    <FiRefreshCw className="text-sm sm:text-lg group-active:animate-spin" />
-    <span className="truncate">Refresh</span>
-  </button>
 
-  {/* Logout Button */}
-  <button
-    onClick={onLogout}
-    className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
-    bg-rose-50/50 border border-rose-100 text-rose-600 rounded-xl sm:rounded-2xl 
-    text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
-    active:bg-rose-100 active:scale-95 transition-all duration-200 min-w-0"
-  >
-    <FiLogOut className="text-sm sm:text-lg" />
-    <span className="truncate">Logout</span>
-  </button>
-</div>
+        <div className="p-3 sm:p-4 lg:p-6 mb-[12%] bg-white/50 backdrop-blur-sm border-t border-gray-100">
+          <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
+            {/* Refresh Button */}
+            <button
+              onClick={() => {
+                router.refresh();
+              }}
+              className="group flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
+              bg-white border border-blue-100 text-blue-600 rounded-xl sm:rounded-2xl 
+              text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(59,130,246,0.08)] 
+              active:bg-blue-50 active:scale-95 transition-all duration-200 min-w-0"
+            >
+              <FiRefreshCw className="text-sm sm:text-lg group-active:animate-spin" />
+              <span className="truncate">Refresh</span>
+            </button>
+
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 
+              bg-rose-50/50 border border-rose-100 text-rose-600 rounded-xl sm:rounded-2xl 
+              text-xs sm:text-sm font-bold tracking-tight shadow-[0_4px_12px_rgba(225,29,72,0.08)] 
+              active:bg-rose-100 active:scale-95 transition-all duration-200 min-w-0"
+            >
+              <FiLogOut className="text-sm sm:text-lg" />
+              <span className="truncate">Logout</span>
+            </button>
+          </div>
         </div>
-   
       </div>
     </aside>
   );
