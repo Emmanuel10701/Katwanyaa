@@ -316,7 +316,7 @@ export default function ModernNavbar() {
   </div>
 )}
   </div>
-)}
+
                     );
                   }
 
