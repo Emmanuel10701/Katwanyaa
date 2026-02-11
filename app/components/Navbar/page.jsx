@@ -10,7 +10,6 @@ import {
   FiCalendar,
   FiImage,
   FiMail,
-  FiLogIn,
   FiUsers,
   FiFileText,
   FiChevronDown,
@@ -271,65 +270,53 @@ export default function ModernNavbar() {
                           )}
                         </button>
 
-{/* Academic Dropdown Menu */}
-{isAcademicDropdownOpen && (
-  <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
-    <div className="px-3 py-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
-      <h3 className="font-bold text-gray-800 text-[0.7rem] uppercase tracking-wider flex items-center gap-1.5">
-        <FiBook className="text-blue-600 text-xs" />
-        Academic Resources
-      </h3>
-    </div>
-    
-
-{/* Mobile Academic Dropdown Items */}
-{isMobileDropdownOpen && (
-  <div className="ml-6 xs:ml-8 space-y-1.5 xs:space-y-2 pl-3 xs:pl-4 border-l-2 border-white/20">
-    {academicDropdownItems.map((dropdownItem) => (
-      <a
-        key={dropdownItem.name}
-        href={dropdownItem.href}
-        className={`flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg ${
-          isActiveLink(dropdownItem.href)
-            ? 'bg-white/20 text-white'
-            : 'text-white/80 hover:bg-white/10'
-        }`}
-        onClick={() => {
-          setIsOpen(false);
-          setIsMobileDropdownOpen(false);
-        }}
-      >
-        <dropdownItem.icon className="text-base xs:text-lg" />
-        <span className="font-medium text-sm xs:text-base">{dropdownItem.name}</span>
-      </a>
-    ))}
-    
-    <a
-      href="https://learning.zeraki.app/"
-      className="flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg text-white/80 hover:bg-white/10"
-      onClick={() => {
-        setIsOpen(false);
-        setIsMobileDropdownOpen(false);
-      }}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <div className="w-5 h-5 xs:w-6 xs:h-6 flex-shrink-0">
-        <img 
-          src="/zeraki.jpg" 
-          alt="zeraki account" 
-          className="w-full h-full object-cover rounded-md border border-white/30"
-        />
-      </div>
-      <span className="font-medium text-sm xs:text-base">Zeraki Analytics</span>
-    </a>
-  </div>
-)}
-
-  </div>
-)}
-  </div>
-
+                        {/* Academic Dropdown Menu */}
+                        {isAcademicDropdownOpen && (
+                          <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
+                            <div className="px-3 py-2 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-xl">
+                              <h3 className="font-bold text-gray-800 text-[0.7rem] uppercase tracking-wider flex items-center gap-1.5">
+                                <FiBook className="text-blue-600 text-xs" />
+                                Academic Resources
+                              </h3>
+                            </div>
+                            
+                            {academicDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                href={dropdownItem.href}
+                                className={`group flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-all hover:pl-3.5 ${
+                                  isActiveLink(dropdownItem.href)
+                                    ? 'text-blue-700 bg-blue-50 border-l-3 border-blue-600'
+                                    : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50/50'
+                                }`}
+                                onClick={() => setIsAcademicDropdownOpen(false)}
+                              >
+                                <dropdownItem.icon className="text-xs flex-shrink-0" />
+                                <span className="flex-1 truncate">{dropdownItem.name}</span>
+                                <FiChevronRight className="text-gray-400 text-xs group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all" />
+                              </a>
+                            ))}
+                            
+                            <a 
+                              href="https://analytics.zeraki.app/" 
+                              className="group flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/50 transition-all hover:pl-3.5"
+                              onClick={() => setIsAcademicDropdownOpen(false)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <div className="w-4 h-4 flex-shrink-0">
+                                <img 
+                                  src="/zeraki.jpg" 
+                                  alt="Zeraki Analytics" 
+                                  className="w-full h-full object-cover rounded-md border border-gray-200 group-hover:border-blue-300 transition-colors"
+                                />
+                              </div>
+                              <span className="flex-1 truncate">Zeraki Analytics</span>
+                              <FiChevronRight className="text-gray-400 text-xs group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     );
                   }
 
@@ -501,6 +488,27 @@ export default function ModernNavbar() {
                                 <span className="font-medium text-sm xs:text-base">{dropdownItem.name}</span>
                               </a>
                             ))}
+                            
+                            {/* Zeraki Link for Mobile */}
+                            <a
+                              href="https://analytics.zeraki.app/"
+                              className="flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg text-white/80 hover:bg-white/10"
+                              onClick={() => {
+                                setIsOpen(false);
+                                setIsMobileDropdownOpen(false);
+                              }}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <div className="w-5 h-5 xs:w-6 xs:h-6 flex-shrink-0">
+                                <img 
+                                  src="/zeraki.jpg" 
+                                  alt="Zeraki Analytics" 
+                                  className="w-full h-full object-cover rounded-md border border-white/30"
+                                />
+                              </div>
+                              <span className="font-medium text-sm xs:text-base">Zeraki Analytics</span>
+                            </a>
                           </div>
                         )}
                       </div>
