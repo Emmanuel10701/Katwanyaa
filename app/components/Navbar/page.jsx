@@ -296,7 +296,15 @@ export default function ModernNavbar() {
                                 <span className="flex-1 truncate">{dropdownItem.name}</span>
                                 <FiChevronRight className="text-gray-400 text-xs group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all" />
                               </a>
+                          
                             ))}
+                                <a href="https://analytics.zeraki.app/#/auth/desktop" className="block px-3 py-2.5 text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/50">
+                                  <div className="flex items-center gap-2">
+
+                                  <img src="/zeraki.jpg" alt="zeraki account" />                                    
+                                  <span>Zeraki Account</span>
+                                  </div>
+                                </a>
                           </div>
                         )}
                       </div>
