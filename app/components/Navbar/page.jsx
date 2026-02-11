@@ -281,38 +281,51 @@ export default function ModernNavbar() {
       </h3>
     </div>
     
+
+{isMobileDropdownOpen && (
+  <div className="ml-6 xs:ml-8 space-y-1.5 xs:space-y-2 pl-3 xs:pl-4 border-l-2 border-white/20">
     {academicDropdownItems.map((dropdownItem) => (
       <a
         key={dropdownItem.name}
         href={dropdownItem.href}
-        className={`group flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-all hover:pl-3.5 ${
+        className={`flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg ${
           isActiveLink(dropdownItem.href)
-            ? 'text-blue-700 bg-blue-50 border-l-3 border-blue-600'
-            : 'text-gray-700 hover:text-blue-700 hover:bg-blue-50/50'
+            ? 'bg-white/20 text-white'
+            : 'text-white/80 hover:bg-white/10'
         }`}
-        onClick={() => setIsAcademicDropdownOpen(false)}
+        onClick={() => {
+          setIsOpen(false);
+          setIsMobileDropdownOpen(false);
+        }}
       >
-        <dropdownItem.icon className="text-xs flex-shrink-0" />
-        <span className="flex-1 truncate">{dropdownItem.name}</span>
-        <FiChevronRight className="text-gray-400 text-xs group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all" />
+        <dropdownItem.icon className="text-base xs:text-lg" />
+        <span className="font-medium text-sm xs:text-base">{dropdownItem.name}</span>
       </a>
     ))}
     
-    <a 
-      href="https://analytics.zeraki.app/#/auth/desktop" 
-      className="group flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-gray-700 hover:text-blue-700 hover:bg-blue-50/50 transition-all hover:pl-3.5"
-      onClick={() => setIsAcademicDropdownOpen(false)}
+    {/* ADD ZERAKI LINK TO MOBILE MENU */}
+    <a
+      href="https://analytics.zeraki.app/#/auth/desktop"
+      className="flex items-center gap-2 xs:gap-3 p-2.5 xs:p-3 rounded-lg text-white/80 hover:bg-white/10"
+      onClick={() => {
+        setIsOpen(false);
+        setIsMobileDropdownOpen(false);
+      }}
+      target="_blank"
+      rel="noopener noreferrer"
     >
-      <div className="w-4 h-4 flex-shrink-0">
+      <div className="w-5 h-5 xs:w-6 xs:h-6 flex-shrink-0">
         <img 
           src="/zeraki.jpg" 
           alt="zeraki account" 
-          className="w-full h-full object-cover rounded-md border border-gray-200 group-hover:border-blue-300 transition-colors"
+          className="w-full h-full object-cover rounded-md border border-white/30"
         />
       </div>
-      <span className="flex-1 truncate">Zeraki Account</span>
-      <FiChevronRight className="text-gray-400 text-xs group-hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-all" />
+      <span className="font-medium text-sm xs:text-base">Zeraki Account</span>
     </a>
+  </div>
+)}
+
   </div>
 )}
   </div>
