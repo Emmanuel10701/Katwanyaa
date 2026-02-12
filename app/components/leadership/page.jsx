@@ -472,7 +472,7 @@ const ModernStaffLeadership = () => {
             </div>
           </div>
 
-          {/* ========== SUB-CARD SIDEBAR - 4 CARDS: Principal + 2 Deputies + Denis Kanzi ========== */}
+          {/* ========== SUB-CARD SIDEBAR - 4 CARDS: Principal + 2 Deputies + Denis Kanzi (ALWAYS SHOW) ========== */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
             
             {/* 1. PRINCIPAL CARD - Mr. David Muange */}
@@ -631,7 +631,7 @@ const ModernStaffLeadership = () => {
               </button>
             )}
 
-            {/* 4. TEACHER CARD - Mr. Denis Kanzi (ALWAYS SHOW) */}
+            {/* 4. TEACHER CARD - Mr. Denis Kanzi - ALWAYS SHOW ON ALL SCREEN SIZES */}
             {teacher && (
               <button
                 onClick={() => handleStaffClick(teacher)}
