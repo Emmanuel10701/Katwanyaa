@@ -15,7 +15,7 @@ import {
   FaImage, FaList, FaFileMedical,
   FaCertificate, FaUserGraduate, FaUserTie,
   FaFlask, FaLaptopCode, FaSeedling, FaMusic,
-  FaPalette, FaFutbol, FaLanguage, FaHistory,
+  FaPalette, FaFutbol, FaLanguage, FaHistory,FaSync,
   FaBusinessTime, FaHome, FaChurch, FaMosque,
   FaHandsHelping, FaCalculator, FaChartLine,
   FaUniversity, FaDoorOpen, FaDoorClosed,
@@ -27,7 +27,7 @@ import {
   FiUsers, FiBook, FiCalendar, FiFileText, FiTrendingDown, FiTrendingUp,
   FiEye, FiDownload, FiMail, FiUserPlus, FiArrowUpRight, FiStar,
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
-  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity, FiRefreshCw 
+  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity 
 } from 'react-icons/fi';
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
 
@@ -1782,7 +1782,7 @@ const handleDeleteSchool = async () => {
   {loading ? (
     <CircularProgress size={14} color="inherit" /> 
   ) : (
-    <FiRefreshCw className="text-xs" />
+    <FaSync className="text-xs" />
   )}
   <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
 </button>
