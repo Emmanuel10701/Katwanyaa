@@ -53,7 +53,7 @@ const ModernStaffLeadership = () => {
   const [staff, setStaff] = useState([]);
   const [principal, setPrincipal] = useState(null);
   const [featuredStaff, setFeaturedStaff] = useState(null);
-  const [deputyPrincipal, setDeputyPrincipal] = useState(null);
+  const [deputies, setDeputies] = useState([]);
   const [randomStaff, setRandomStaff] = useState(null);
   const [randomBOM, setRandomBOM] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -93,19 +93,18 @@ useEffect(() => {
         setPrincipal(foundPrincipal);
         setFeaturedStaff(foundPrincipal);
 
-        // 2. Identify Deputy Principal (Mr. Paul Mwanzia & Madam Beatrice Olum)
-        const deputies = allStaff.filter(s => 
+        // 2. Identify ALL Deputy Principals (Mr. Paul Mwanzia & Madam Beatrice Olum)
+        const allDeputies = allStaff.filter(s => 
           s.id !== foundPrincipal?.id && 
           (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
         );
         
-        // Set the first deputy as the main deputy principal for display
-        setDeputyPrincipal(deputies[0]);
+        setDeputies(allDeputies);
 
         // 3. Create a set of IDs to exclude (Principal + ALL Deputies)
         const excludeIds = new Set([
           foundPrincipal?.id,
-          ...deputies.map(d => d.id)
+          ...allDeputies.map(d => d.id)
         ].filter(Boolean));
 
         // 4. Filter out ALL excluded staff (Principal + ALL Deputies)
@@ -138,7 +137,7 @@ useEffect(() => {
           // Fallback if no specific BOM found
           const remaining = nonExcludedStaff.filter(s => 
             s.id !== randomStaff?.id && 
-            !teachingStaff.includes(s) // Ensure not already in teaching
+            !teachingStaff.includes(s)
           );
           if (remaining.length > 0) setRandomBOM(remaining[0]);
         }
@@ -156,6 +155,7 @@ useEffect(() => {
 
   fetchStaff();
 }, []);
+
   // Handle subcard click
   const handleStaffClick = (staffMember) => {
     if (principal?.id === staffMember.id) {
@@ -282,7 +282,7 @@ useEffect(() => {
             )}
 
             {/* Image Section - 80% height */}
-      <div className="relative h-[60vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
+            <div className="relative h-[60vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-transparent z-10"></div>
               
               {getImageUrl(featuredStaff?.image) ? (
@@ -466,9 +466,10 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* Sub-Card Sidebar */}
+          {/* ========== SUB-CARD SIDEBAR - FIXED TO SHOW BOTH DEPUTIES ========== */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
-            {/* Principal Card */}
+            
+            {/* 1. PRINCIPAL CARD - ALWAYS FIRST */}
             {principal && (
               <button
                 onClick={() => {
@@ -522,160 +523,220 @@ useEffect(() => {
               </button>
             )}
 
-            {/* Deputy Principal Card */}
-            {deputyPrincipal && (
-              <button
-                onClick={() => handleStaffClick(deputyPrincipal)}
-                className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                  featuredStaff?.id === deputyPrincipal.id ? 'border-purple-500' : 'border-slate-100'
-                } hover:border-purple-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
-              >
-                <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                    {deputyPrincipal.image ? (
-                      <img
-                        src={getImageUrl(deputyPrincipal.image)}
-                        alt={deputyPrincipal.name}
-                        className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(deputyPrincipal.name)}&background=8b5cf6&color=fff&bold=true&size=128`;
-                        }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <FiUser className="text-white text-sm sm:text-lg md:text-2xl" />
+            {/* 2. DEPUTY PRINCIPAL CARDS - SHOW ALL DEPUTIES */}
+            {deputies.length > 0 && (
+              <>
+                {/* First Deputy - Mr. Paul Mwanzia */}
+                {deputies[0] && (
+                  <button
+                    onClick={() => handleStaffClick(deputies[0])}
+                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
+                      featuredStaff?.id === deputies[0].id ? 'border-purple-500' : 'border-slate-100'
+                    } hover:border-purple-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  >
+                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
+                        {deputies[0].image ? (
+                          <img
+                            src={getImageUrl(deputies[0].image)}
+                            alt={deputies[0].name}
+                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(deputies[0].name)}&background=8b5cf6&color=fff&bold=true&size=128`;
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <FiUser className="text-white text-sm sm:text-lg md:text-2xl" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                        Deputy Principal
-                      </span>
-                      {featuredStaff?.id === deputyPrincipal.id && (
-                        <span className="flex items-center gap-1 text-purple-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
-                          <FiCheck className="text-xs" /> Viewing
-                        </span>
-                      )}
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                            Deputy Principal
+                          </span>
+                          {featuredStaff?.id === deputies[0].id && (
+                            <span className="flex items-center gap-1 text-purple-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                              <FiCheck className="text-xs" /> Viewing
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                          {deputies[0].name}
+                        </h3>
+                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
+                          {deputies[0].department || 'Administration'}
+                        </p>
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-purple-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                          View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                      {deputyPrincipal.name}
-                    </h3>
-                    <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                      {deputyPrincipal.department || 'Administration'}
-                    </p>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-purple-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
-                      View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                )}
+
+                {/* Second Deputy - Madam Beatrice Olum (if exists) */}
+                {deputies[1] && (
+                  <button
+                    onClick={() => handleStaffClick(deputies[1])}
+                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
+                      featuredStaff?.id === deputies[1].id ? 'border-purple-500' : 'border-slate-100'
+                    } hover:border-purple-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  >
+                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
+                        {deputies[1].image ? (
+                          <img
+                            src={getImageUrl(deputies[1].image)}
+                            alt={deputies[1].name}
+                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(deputies[1].name)}&background=8b5cf6&color=fff&bold=true&size=128`;
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                            <FiUser className="text-white text-sm sm:text-lg md:text-2xl" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                            Deputy Principal
+                          </span>
+                          {featuredStaff?.id === deputies[1].id && (
+                            <span className="flex items-center gap-1 text-purple-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                              <FiCheck className="text-xs" /> Viewing
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                          {deputies[1].name}
+                        </h3>
+                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
+                          {deputies[1].department || 'Administration'}
+                        </p>
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-purple-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                          View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </button>
+                  </button>
+                )}
+              </>
             )}
 
-            {/* Random Teaching Staff Card */}
-            {randomStaff && (
-              <button
-                onClick={() => handleStaffClick(randomStaff)}
-                className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                  featuredStaff?.id === randomStaff.id ? 'border-green-500' : 'border-slate-100'
-                } hover:border-green-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
-              >
-                <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                    {randomStaff.image ? (
-                      <img
-                        src={getImageUrl(randomStaff.image)}
-                        alt={randomStaff.name}
-                        className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomStaff.name)}&background=10b981&color=fff&bold=true&size=128`;
-                        }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                        <FiBookOpen className="text-white text-sm sm:text-lg md:text-2xl" />
+            {/* 3. RANDOM TEACHING OR BOM STAFF CARD - SHOW ONE ONLY */}
+            {randomStaff && randomBOM && (
+              <>
+                {/* Randomly choose between Teacher and BOM - 50/50 chance */}
+                {Math.random() < 0.5 ? (
+                  /* Teacher Card */
+                  <button
+                    onClick={() => handleStaffClick(randomStaff)}
+                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
+                      featuredStaff?.id === randomStaff.id ? 'border-green-500' : 'border-slate-100'
+                    } hover:border-green-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  >
+                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
+                        {randomStaff.image ? (
+                          <img
+                            src={getImageUrl(randomStaff.image)}
+                            alt={randomStaff.name}
+                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomStaff.name)}&background=10b981&color=fff&bold=true&size=128`;
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                            <FiBookOpen className="text-white text-sm sm:text-lg md:text-2xl" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                        {randomStaff.role || 'Teaching Staff'}
-                      </span>
-                      {featuredStaff?.id === randomStaff.id && (
-                        <span className="flex items-center gap-1 text-green-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
-                          <FiCheck className="text-xs" /> Viewing
-                        </span>
-                      )}
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                            {randomStaff.role || 'Teaching Staff'}
+                          </span>
+                          {featuredStaff?.id === randomStaff.id && (
+                            <span className="flex items-center gap-1 text-green-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                              <FiCheck className="text-xs" /> Viewing
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-green-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                          {randomStaff.name}
+                        </h3>
+                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
+                          {randomStaff.position || randomStaff.department}
+                        </p>
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-green-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                          View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-bold text-slate-900 group-hover:text-green-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                      {randomStaff.name}
-                    </h3>
-                    <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                      {randomStaff.position || randomStaff.department}
-                    </p>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-green-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
-                      View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                ) : (
+                  /* BOM/Support Staff Card */
+                  <button
+                    onClick={() => handleStaffClick(randomBOM)}
+                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
+                      featuredStaff?.id === randomBOM.id ? 'border-amber-500' : 'border-slate-100'
+                    } hover:border-amber-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  >
+                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
+                        {randomBOM.image ? (
+                          <img
+                            src={getImageUrl(randomBOM.image)}
+                            alt={randomBOM.name}
+                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomBOM.name)}&background=f59e0b&color=fff&bold=true&size=128`;
+                            }}
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                            <FiShield className="text-white text-sm sm:text-lg md:text-2xl" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="flex items-center justify-between mb-1 sm:mb-2">
+                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                            {randomBOM.role?.toLowerCase().includes('support') ? 'Support Staff' : 'Staff Member'}
+                          </span>
+                          {featuredStaff?.id === randomBOM.id && (
+                            <span className="flex items-center gap-1 text-amber-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                              <FiCheck className="text-xs" /> Viewing
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                          {randomBOM.name}
+                        </h3>
+                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
+                          {randomBOM.position || randomBOM.department}
+                        </p>
+                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-amber-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                          View Details <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </button>
+                  </button>
+                )}
+              </>
             )}
 
-            {/* Random BOM/Support Staff Card */}
-            {randomBOM && (
-              <button
-                onClick={() => handleStaffClick(randomBOM)}
-                className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                  featuredStaff?.id === randomBOM.id ? 'border-amber-500' : 'border-slate-100'
-                } hover:border-amber-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
-              >
-                <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                    {randomBOM.image ? (
-                      <img
-                        src={getImageUrl(randomBOM.image)}
-                        alt={randomBOM.name}
-                        className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomBOM.name)}&background=f59e0b&color=fff&bold=true&size=128`;
-                        }}
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                        <FiShield className="text-white text-sm sm:text-lg md:text-2xl" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                        {randomBOM.role?.toLowerCase().includes('support') ? 'Support Staff' : 'Staff Member'}
-                      </span>
-                      {featuredStaff?.id === randomBOM.id && (
-                        <span className="flex items-center gap-1 text-amber-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
-                          <FiCheck className="text-xs" /> Viewing
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                      {randomBOM.name}
-                    </h3>
-                    <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                      {randomBOM.position || randomBOM.department}
-                    </p>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-amber-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
-                      View Details <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )}
-
-            {/* Stats Card */}
+            {/* Stats Card - Always Last */}
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 text-white">
               <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
                 <div className="p-1.5 sm:p-2 md:p-3 bg-white/20 rounded-lg sm:rounded-xl md:rounded-2xl">
