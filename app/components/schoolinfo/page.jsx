@@ -1774,20 +1774,18 @@ const handleDeleteSchool = async () => {
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-4 sm:p-0 rounded-[2rem] sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none">
             
-            <button 
-              onClick={loadSchoolInfo} 
-              disabled={refreshing}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98] disabled:opacity-60"
-            >
-              {refreshing ? (
-                <CircularProgress size={16} color="inherit" thickness={6} />
-              ) : (
-                <FaChartBar className="text-sm" /> 
-              )}
-              <span className="whitespace-nowrap font-bold">
-                {refreshing ? 'Syncing...' : 'Refresh'}
-              </span>
-            </button>
+        <button 
+  onClick={loadData} 
+  disabled={loading}
+  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
+>
+  {loading ? (
+    <CircularProgress size={14} color="inherit" /> 
+  ) : (
+    <FiRefreshCw className="text-xs" />
+  )}
+  <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+</button>
             
             {hasSchoolInfo && (
               <button 

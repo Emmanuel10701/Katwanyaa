@@ -779,11 +779,6 @@ function StatisticsCard({ title, value, icon: Icon, color, trend = 0, prefix = '
               <Icon className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
           </div>
-
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r ${trendColor} text-white font-bold text-[10px] md:text-xs shadow-sm whitespace-nowrap`}>
-            {trendIcon}
-            <span>{trend > 0 ? `+${trend}%` : trend < 0 ? `${trend}%` : '0%'}</span>
-          </div>
         </div>
 
         <div className="flex-grow space-y-1">
