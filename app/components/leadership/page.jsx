@@ -53,8 +53,7 @@ const ModernStaffLeadership = () => {
   const [principal, setPrincipal] = useState(null);
   const [featuredStaff, setFeaturedStaff] = useState(null);
   const [deputies, setDeputies] = useState([]);
-  const [randomStaff, setRandomStaff] = useState(null);
-  const [randomBOM, setRandomBOM] = useState(null);
+  const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -71,7 +70,7 @@ const ModernStaffLeadership = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch staff data from API
+  // Fetch staff data from API - FIXED to show Denis Kanzi
   useEffect(() => {
     const fetchStaff = async () => {
       try {
@@ -83,8 +82,9 @@ const ModernStaffLeadership = () => {
           const allStaff = data.staff;
           setStaff(allStaff);
 
-          // 1. Identify Principal (Mr. Muange)
+          // 1. Identify Principal (Mr. Muange - id: 1)
           const foundPrincipal = allStaff.find(s => 
+            s.id === 1 || 
             s.position?.toLowerCase() === 'chief principal' || 
             s.role?.toLowerCase() === 'principal'
           ) || allStaff[0];
@@ -92,52 +92,27 @@ const ModernStaffLeadership = () => {
           setPrincipal(foundPrincipal);
           setFeaturedStaff(foundPrincipal);
 
-          // 2. Identify ALL Deputy Principals (Mr. Paul Mwanzia & Madam Beatrice Olum)
+          // 2. Identify ALL Deputy Principals (Mr. Paul Mwanzia - id: 2, Madam Beatrice Olum - id: 3)
           const allDeputies = allStaff.filter(s => 
-            s.id !== foundPrincipal?.id && 
-            (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
+            (s.id === 2 || s.id === 3) ||
+            (s.id !== foundPrincipal?.id && 
+            (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy')))
           );
           
           setDeputies(allDeputies);
 
-          // 3. Create a set of IDs to exclude (Principal + ALL Deputies)
-          const excludeIds = new Set([
-            foundPrincipal?.id,
-            ...allDeputies.map(d => d.id)
-          ].filter(Boolean));
-
-          // 4. Filter out ALL excluded staff (Principal + ALL Deputies)
-          const nonExcludedStaff = allStaff.filter(s => !excludeIds.has(s.id));
-
-          // 5. Categorize Teaching Staff - EXCLUDING ALL DEPUTIES
-          const teachingStaff = nonExcludedStaff.filter(s => 
-            s.role?.toLowerCase().includes('teacher') || 
-            s.position?.toLowerCase().includes('teacher') ||
-            s.department?.toLowerCase().includes('science') ||
-            s.department?.toLowerCase().includes('mathematics') ||
-            s.department?.toLowerCase().includes('languages') ||
-            s.expertise?.some(exp => exp.toLowerCase().includes('teacher'))
-          );
-
-          // 6. Categorize BOM/Support Staff - EXCLUDING ALL DEPUTIES
-          const bomStaff = nonExcludedStaff.filter(s => 
-            s.role?.toLowerCase().includes('bom') || 
-            s.department?.toLowerCase().includes('administration')
-          );
-
-          // 7. Set Random Featured Staff
-          if (teachingStaff.length > 0) {
-            setRandomStaff(teachingStaff[Math.floor(Math.random() * teachingStaff.length)]);
-          }
-
-          if (bomStaff.length > 0) {
-            setRandomBOM(bomStaff[Math.floor(Math.random() * bomStaff.length)]);
+          // 3. Find Mr. Denis Kanzi (Teacher - id: 4)
+          const denisKanzi = allStaff.find(s => s.id === 4);
+          
+          if (denisKanzi) {
+            setTeacher(denisKanzi);
           } else {
-            const remaining = nonExcludedStaff.filter(s => 
-              s.id !== randomStaff?.id && 
-              !teachingStaff.includes(s)
+            // Fallback: find any teacher
+            const anyTeacher = allStaff.find(s => 
+              s.role?.toLowerCase().includes('teacher') || 
+              s.position?.toLowerCase().includes('teacher')
             );
-            if (remaining.length > 0) setRandomBOM(remaining[0]);
+            setTeacher(anyTeacher || null);
           }
 
         } else {
@@ -154,20 +129,54 @@ const ModernStaffLeadership = () => {
     fetchStaff();
   }, []);
 
-  // Handle subcard click
+  // Handle subcard click - Scroll main card into view on mobile
   const handleStaffClick = (staffMember) => {
     if (principal?.id === staffMember.id) {
-      return;
+      return; // Don't change if clicking on principal
     }
     
     setFeaturedStaff(staffMember);
     setViewMode('other');
+    
+    // Scroll the main featured card into view on mobile screens
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        const mainCard = document.querySelector('.lg\\:col-span-8');
+        if (mainCard) {
+          const rect = mainCard.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetY = rect.top + scrollTop - 80; // 80px offset from top
+          
+          window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    }
   };
 
-  // Function to return to principal view
+  // Function to return to principal view - Scroll main card into view on mobile
   const returnToPrincipal = () => {
     setFeaturedStaff(principal);
     setViewMode('principal');
+    
+    // Scroll the main featured card into view on mobile screens
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        const mainCard = document.querySelector('.lg\\:col-span-8');
+        if (mainCard) {
+          const rect = mainCard.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetY = rect.top + scrollTop - 80; // 80px offset from top
+          
+          window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    }
   };
 
   // Format phone number
@@ -463,10 +472,10 @@ const ModernStaffLeadership = () => {
             </div>
           </div>
 
-          {/* ========== SUB-CARD SIDEBAR - FIXED: 4 CARDS (Principal + 2 Deputies + 1 Random) ========== */}
+          {/* ========== SUB-CARD SIDEBAR - 4 CARDS: Principal + 2 Deputies + Denis Kanzi ========== */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
             
-            {/* 1. PRINCIPAL CARD */}
+            {/* 1. PRINCIPAL CARD - Mr. David Muange */}
             {principal && (
               <button
                 onClick={() => {
@@ -622,109 +631,55 @@ const ModernStaffLeadership = () => {
               </button>
             )}
 
-            {/* 4. RANDOM STAFF CARD - EITHER TEACHER OR BOM */}
-            {randomStaff && randomBOM && (
-              <>
-                {Math.random() < 0.5 ? (
-                  /* TEACHER CARD */
-                  <button
-                    onClick={() => handleStaffClick(randomStaff)}
-                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                      featuredStaff?.id === randomStaff.id ? 'border-green-500' : 'border-slate-100'
-                    } hover:border-green-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
-                  >
-                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
-                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                        {randomStaff.image ? (
-                          <img
-                            src={getImageUrl(randomStaff.image)}
-                            alt={randomStaff.name}
-                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomStaff.name)}&background=10b981&color=fff&bold=true&size=128`;
-                            }}
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                            <FiBookOpen className="text-white text-sm sm:text-lg md:text-2xl" />
-                          </div>
-                        )}
+            {/* 4. TEACHER CARD - Mr. Denis Kanzi (ALWAYS SHOW) */}
+            {teacher && (
+              <button
+                onClick={() => handleStaffClick(teacher)}
+                className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
+                  featuredStaff?.id === teacher.id ? 'border-green-500' : 'border-slate-100'
+                } hover:border-green-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+              >
+                <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
+                    {teacher.image ? (
+                      <img
+                        src={getImageUrl(teacher.image)}
+                        alt={teacher.name}
+                        className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(teacher.name)}&background=10b981&color=fff&bold=true&size=128`;
+                        }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                        <FiBookOpen className="text-white text-sm sm:text-lg md:text-2xl" />
                       </div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex items-center justify-between mb-1 sm:mb-2">
-                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                            {randomStaff.role || 'Teaching Staff'}
-                          </span>
-                          {featuredStaff?.id === randomStaff.id && (
-                            <span className="flex items-center gap-1 text-green-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
-                              <FiCheck className="text-xs" /> Viewing
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-green-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                          {randomStaff.name}
-                        </h3>
-                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                          {randomStaff.position || randomStaff.department}
-                        </p>
-                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-green-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
-                          View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                      </div>
+                    )}
+                  </div>
+                  <div className="flex-grow min-w-0">
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                        {teacher.role || 'Teaching Staff'}
+                      </span>
+                      {featuredStaff?.id === teacher.id && (
+                        <span className="flex items-center gap-1 text-green-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                          <FiCheck className="text-xs" /> Viewing
+                        </span>
+                      )}
                     </div>
-                  </button>
-                ) : (
-                  /* BOM/SUPPORT STAFF CARD */
-                  <button
-                    onClick={() => handleStaffClick(randomBOM)}
-                    className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                      featuredStaff?.id === randomBOM.id ? 'border-amber-500' : 'border-slate-100'
-                    } hover:border-amber-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
-                  >
-                    <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
-                      <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                        {randomBOM.image ? (
-                          <img
-                            src={getImageUrl(randomBOM.image)}
-                            alt={randomBOM.name}
-                            className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(randomBOM.name)}&background=f59e0b&color=fff&bold=true&size=128`;
-                            }}
-                          />
-                        ) : (
-                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                            <FiShield className="text-white text-sm sm:text-lg md:text-2xl" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex items-center justify-between mb-1 sm:mb-2">
-                          <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                            {randomBOM.role?.toLowerCase().includes('support') ? 'Support Staff' : 'Staff Member'}
-                          </span>
-                          {featuredStaff?.id === randomBOM.id && (
-                            <span className="flex items-center gap-1 text-amber-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
-                              <FiCheck className="text-xs" /> Viewing
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                          {randomBOM.name}
-                        </h3>
-                        <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                          {randomBOM.position || randomBOM.department}
-                        </p>
-                        <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-amber-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
-                          View Details <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                        </div>
-                      </div>
+                    <h3 className="font-bold text-slate-900 group-hover:text-green-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                      {teacher.name}
+                    </h3>
+                    <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
+                      {teacher.position || teacher.department}
+                    </p>
+                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-green-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                      View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
-                  </button>
-                )}
-              </>
+                  </div>
+                </div>
+              </button>
             )}
 
             {/* Stats Card - Always Last */}
