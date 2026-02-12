@@ -555,12 +555,6 @@ ${documentData?.kcseResultsPdf ? `**KCSE Examination Results:**
           url: documentData.kcseResultsPdf,
           icon: 'download' 
         }] : []),
-        ...(documentData?.form1ResultsPdf ? [{ 
-          label: 'Form 1 Results', 
-          action: 'download', 
-          url: documentData.form1ResultsPdf,
-          icon: 'download' 
-        }] : []),
        
       ]
     },
