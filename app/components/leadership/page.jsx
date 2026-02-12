@@ -84,7 +84,7 @@ useEffect(() => {
         const allStaff = data.staff;
         setStaff(allStaff);
 
-        // 1. Identify Principal (Mr. Muange) - Strict check to avoid Deputy overlap
+        // 1. Identify Principal (Mr. Muange)
         const foundPrincipal = allStaff.find(s => 
           s.position?.toLowerCase() === 'chief principal' || 
           s.role?.toLowerCase() === 'principal'
@@ -93,30 +93,41 @@ useEffect(() => {
         setPrincipal(foundPrincipal);
         setFeaturedStaff(foundPrincipal);
 
-        // 2. Identify Deputy Principal (Mr. Paul Mwanzia)
-        const deputy = allStaff.find(s => 
+        // 2. Identify Deputy Principal (Mr. Paul Mwanzia & Madam Beatrice Olum)
+        const deputies = allStaff.filter(s => 
           s.id !== foundPrincipal?.id && 
           (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
         );
-        setDeputyPrincipal(deputy);
+        
+        // Set the first deputy as the main deputy principal for display
+        setDeputyPrincipal(deputies[0]);
 
-        // 3. Filter out Admins to find Teaching and BOM staff
-        const nonAdminStaff = allStaff.filter(s => s.id !== foundPrincipal?.id && s.id !== deputy?.id);
+        // 3. Create a set of IDs to exclude (Principal + ALL Deputies)
+        const excludeIds = new Set([
+          foundPrincipal?.id,
+          ...deputies.map(d => d.id)
+        ].filter(Boolean));
 
-        // 4. Categorize Teaching Staff
-        const teachingStaff = nonAdminStaff.filter(s => 
+        // 4. Filter out ALL excluded staff (Principal + ALL Deputies)
+        const nonExcludedStaff = allStaff.filter(s => !excludeIds.has(s.id));
+
+        // 5. Categorize Teaching Staff - EXCLUDING ALL DEPUTIES
+        const teachingStaff = nonExcludedStaff.filter(s => 
           s.role?.toLowerCase().includes('teacher') || 
-          s.department?.toLowerCase().includes('science') || // Catching HODs
+          s.position?.toLowerCase().includes('teacher') ||
+          s.department?.toLowerCase().includes('science') ||
+          s.department?.toLowerCase().includes('mathematics') ||
+          s.department?.toLowerCase().includes('languages') ||
           s.expertise?.some(exp => exp.toLowerCase().includes('teacher'))
         );
 
-        // 5. Categorize BOM/Support Staff
-        const bomStaff = allStaff.filter(s => 
+        // 6. Categorize BOM/Support Staff - EXCLUDING ALL DEPUTIES
+        const bomStaff = nonExcludedStaff.filter(s => 
           s.role?.toLowerCase().includes('bom') || 
-          s.department?.toLowerCase().includes('administration') && s.id !== foundPrincipal?.id && s.id !== deputy?.id
+          s.department?.toLowerCase().includes('administration')
         );
 
-        // 6. Set Random Featured Staff (Randomization Logic)
+        // 7. Set Random Featured Staff
         if (teachingStaff.length > 0) {
           setRandomStaff(teachingStaff[Math.floor(Math.random() * teachingStaff.length)]);
         }
@@ -125,7 +136,10 @@ useEffect(() => {
           setRandomBOM(bomStaff[Math.floor(Math.random() * bomStaff.length)]);
         } else {
           // Fallback if no specific BOM found
-          const remaining = nonAdminStaff.filter(s => s.id !== randomStaff?.id);
+          const remaining = nonExcludedStaff.filter(s => 
+            s.id !== randomStaff?.id && 
+            !teachingStaff.includes(s) // Ensure not already in teaching
+          );
           if (remaining.length > 0) setRandomBOM(remaining[0]);
         }
 

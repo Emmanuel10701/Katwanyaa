@@ -1556,12 +1556,6 @@ export default function SchoolInfoPage() {
   }, []);
 
 
-
-
-
-
-
-
   const loadSchoolInfo = async () => {
     try {
       setLoading(true);
