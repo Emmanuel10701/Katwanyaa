@@ -863,27 +863,6 @@ const handleRefresh = async () => {
 };
 
 
-const loadSchoolInfo = async () => {
-  try {
-    setLoading(true);
-    const response = await fetch('/api/school');
-    if (!response.ok) throw new Error('Failed to fetch school information');
-    const data = await response.json();
-    setSchoolInfo(data.school || null);
-    console.log('School data loaded:', data.school ? 'Exists' : 'No school data');
-  } catch (error) {
-    console.error('Error loading school info:', error);
-    setSchoolInfo(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-// Or if you want it as a function:
-const loadData = async () => {
-  await loadSchoolInfo();
-};
 
 
 
@@ -1576,6 +1555,13 @@ export default function SchoolInfoPage() {
     loadSchoolInfo();
   }, []);
 
+
+
+
+
+
+
+
   const loadSchoolInfo = async () => {
     try {
       setLoading(true);
@@ -1594,6 +1580,13 @@ export default function SchoolInfoPage() {
       setLoading(false);
     }
   };
+
+
+  // Or if you want it as a function:
+const loadData = async () => {
+  await loadSchoolInfo();
+};
+
 
   // Function to check if school info exists - check for ID and required fields
   const hasSchoolInfo = schoolInfo && (
