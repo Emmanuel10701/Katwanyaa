@@ -242,6 +242,46 @@ model EmailCampaign {
   @@map("email_campaigns")
 }
 
+
+
+
+model SmsCampaign {
+  id            String    @id @default(cuid())
+  title         String
+  message       String    @db.Text
+  recipients    String    @db.Text   // comma-separated phone numbers
+  recipientType String    @default("all")
+  status        String    @default("draft") // draft, sent, failed
+  sentAt        DateTime?
+  sentCount     Int?
+  failedCount   Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  logs          SmsLog[]
+
+  @@map("sms_campaigns")
+}
+
+model SmsLog {
+  id              String   @id @default(cuid())
+  campaignId      String
+  userId          String?  // optional, if you track users
+  phoneNumber     String
+  message         String   @db.Text
+  providerMessageId String? // Africa's Talking messageId
+  status          String   // success, failed
+  errorMessage    String?
+  timestamp       DateTime @default(now())
+
+  campaign        SmsCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("sms_logs")
+}
+
+
+
+
 model GalleryImage {
   id          Int      @id @default(autoincrement())
   title       String

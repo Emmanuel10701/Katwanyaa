@@ -22,7 +22,8 @@ import {
   FiMonitor,
   FiSmartphone,
   FiArrowLeft,
-  FiArchive
+  FiArchive,
+  FiMessageSquare,
 } from 'react-icons/fi';
 import { 
   IoStatsChart,
@@ -53,6 +54,7 @@ import Student from "../components/student/page";
 import Fees from "../components/fees/page";
 import Results from "../components/resultsUpload/page";
 import SchoolDocs from "../components/schooldocuments/page";
+import sms from "../components/sms/page";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -74,6 +76,7 @@ export default function AdminDashboard() {
     Resources: 0,
     Careers: 0,
     totalStudent: 0,
+
     totalFees: 0,
     totalResults: 0
   });
@@ -464,7 +467,8 @@ export default function AdminDashboard() {
         studentRes,
         feesRes,
         schooldocumentsRes,
-        resultsRes
+        resultsRes,
+        smsRes
       ] = await Promise.allSettled([
         fetch('/api/staff'),
         fetch('/api/subscriber'),
@@ -473,6 +477,7 @@ export default function AdminDashboard() {
         fetch('/api/assignment'),
         fetch('/api/gallery'),
         fetch('/api/guidance'),
+        fetch('/api/sms'),
         fetch('/api/applyadmission'),
         fetch('/api/resources'),
         fetch('/api/career'),
@@ -496,7 +501,9 @@ export default function AdminDashboard() {
       const fees = feesRes.status === 'fulfilled' ? await feesRes.value.json() : { feebalances: [] };
       const results = resultsRes.status === 'fulfilled' ? await resultsRes.value.json() : { results: [] };
       const schoolDocs = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
+      const sms = smsRes.status === 'fulfilled' ? await smsRes.value.json() : { sms: [] };
 
+      
       const upcomingEvents = events.events?.filter(e => new Date(e.eventDate) >= new Date()).length || 0;
       const activeAssignments = assignments.assignments?.filter(a => a.status === 'assigned').length || 0;
       const admissionsData = admissions.applications || [];
@@ -513,6 +520,7 @@ export default function AdminDashboard() {
         totalApplications: admissionsData.length || 0,
         pendingApplications: pendingApps,
         Resources: resources.resources?.length || 0,
+        sms: sms.sms?.length || 0,
         Careers: careers.careers?.length || 0,
         totalStudent: student.students?.length || 0,
         totalFees: fees.feebalances?.length || 0,
@@ -872,6 +880,9 @@ const handleLogout = () => {
         return <GalleryManager />;
       case 'careers':
         return <Careers />; 
+        case 'sms':      
+          return <SMSManager />;
+
       case 'subscribers':
         return <SubscriberManager />;
       case 'email':
@@ -960,6 +971,12 @@ const handleLogout = () => {
       label: 'Careers',
       icon: FiCalendar,
       badge: 'lime'
+    },
+    { 
+      id: 'sms',
+      label: 'SMS Management',
+      icon: FiMessageSquare,
+      badge: 'orange'
     },
     { 
       id: 'newsevents', 
