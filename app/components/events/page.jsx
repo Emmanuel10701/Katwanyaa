@@ -841,10 +841,10 @@ const ModernEventsNewsSection = () => {
                   <button 
                     key={item.platform}
                     onClick={() => {
-                      const currentItem = selectedTab === 'events' ? currentEvent : currentNews;
+                      const currentItem = selectedTab === 'eventsandnews' ? currentEvent : currentNews;
                       if (!currentItem) return;
                       
-                      const url = `${window.location.origin}/${selectedTab}/${currentItem.id}`;
+                      const url = `${window.location.origin}/${selectedTab}`;
                       const text = `Check out "${currentItem.title}"`;
                       
                       const shareUrls = {
