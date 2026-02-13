@@ -266,7 +266,7 @@ const HierarchySection = ({ title, icon, staff, viewMode, isFirst = false }) => 
       <div className="flex items-center gap-4 mb-8 px-2">
         <div className="relative shrink-0 w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-900/10 overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <span className="relative z-10 text-2xl">{icon}</span>
+          <span className="relative  text-2xl">{icon}</span>
         </div>
         
         <div className="min-w-0">
@@ -787,7 +787,7 @@ export default function StaffDirectory() {
               </div>
 
               {/* HIERARCHY FILTER - Principal First in List */}
-              <div className="bg-white rounded-[1rem] border border-gray-100 shadow-xl overflow-hidden">
+              <div className="bg-white -z-10 rounded-[1rem] border border-gray-100 shadow-xl overflow-hidden">
                 <div className="p-5 bg-slate-900 border-b border-slate-800">
                   <h3 className="font-black text-white flex items-center gap-3 text-sm uppercase tracking-widest">
                     <FiUsers className="text-blue-400" /> 
