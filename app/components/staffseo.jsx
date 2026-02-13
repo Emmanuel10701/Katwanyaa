@@ -246,7 +246,7 @@ const ShareModal = () => {
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setShowShareModal(false)} />
       
       {/* Modal Card */}
-      <div className="relative bg-white w-full max-w-sm rounded-[2.5rem] shadow-3xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative bg-white w-full max-w-sm rounded-lg shadow-3xl overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -265,9 +265,9 @@ const ShareModal = () => {
                 href={ch.link || '#'}
                 target={ch.link ? "_blank" : "_self"}
                 onClick={ch.action}
-                className="group flex items-center gap-4 p-2 pr-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
+                className="group flex items-center gap-4 p-2 pr-6 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all"
               >
-                <div className={`w-12 h-12 ${ch.color} rounded-xl flex items-center justify-center text-white text-xl shadow-lg group-hover:scale-110 transition-transform`}>
+                <div className={`w-12 h-12 ${ch.color} rounded-md flex items-center justify-center text-white text-xl shadow-lg group-hover:scale-110 transition-transform`}>
                   {ch.icon}
                 </div>
                 <div className="flex-1">
@@ -286,11 +286,11 @@ const ShareModal = () => {
             <input 
               readOnly 
               value={profileUrl} 
-              className="w-full bg-slate-100 border-none rounded-2xl py-4 pl-5 pr-16 text-xs font-bold text-slate-500 focus:ring-2 ring-blue-500"
+              className="w-full bg-slate-100 border-none rounded-xl py-4 pl-5 pr-16 text-xs font-bold text-slate-500 focus:ring-2 ring-blue-500"
             />
             <button 
               onClick={handleCopy}
-              className={`absolute right-2 top-2 bottom-2 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              className={`absolute right-2 top-2 bottom-2 px-4 rounded-md font-black text-[10px] uppercase tracking-widest transition-all ${
                 copied ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-blue-600'
               }`}
             >
@@ -313,11 +313,11 @@ if (loading) {
       {/* Dynamic Brand Logo Loader */}
       <div className="relative mb-12">
         {/* Animated Rings */}
-        <div className="absolute inset-0 rounded-[2rem] border-2 border-blue-600/20 animate-ping" />
-        <div className="absolute inset-0 rounded-[2rem] border-4 border-slate-900/5 animate-pulse" />
+        <div className="absolute inset-0 rounded-[1rem] border-2 border-blue-600/20 animate-ping" />
+        <div className="absolute inset-0 rounded-[1rem] border-4 border-slate-900/5 animate-pulse" />
         
         {/* Central Icon */}
-        <div className="relative w-24 h-24 bg-slate-900 rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-3">
+        <div className="relative w-24 h-24 bg-slate-900 rounded-[1rem] flex items-center justify-center shadow-2xl rotate-3">
           <FaGraduationCap className="text-white text-4xl animate-bounce" />
         </div>
       </div>
@@ -359,8 +359,8 @@ if (loading) {
   if (error || !staff) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex items-center justify-center p-4">
-        <div className="text-center max-w-md w-full p-8 bg-white rounded-2xl shadow-lg">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+        <div className="text-center max-w-md w-full p-8 bg-white rounded-xl shadow-lg">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center mx-auto mb-6">
             <FaUserTie className="text-2xl text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Profile Unavailable</h2>
@@ -369,7 +369,7 @@ if (loading) {
           </p>
           <button 
             onClick={() => router.push('/pages/staff')}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-shadow w-full"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-shadow w-full"
           >
             Return to Staff Directory
           </button>
@@ -429,75 +429,75 @@ if (loading) {
 
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-8">
           {/* MOBILE Profile Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 sm:from-blue-600 sm:via-blue-700 sm:to-indigo-800 rounded-xl sm:rounded-3xl overflow-hidden shadow-lg sm:shadow-2xl mb-4 sm:mb-8">
-            <div className="relative p-4 sm:p-6 lg:p-8 xl:p-12 text-white">
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8">
-                {/* Mobile Profile Image */}
-                <div className="relative">
-<div className="relative w-20 h-20 sm:w-28 sm:h-28 lg:w-40 lg:h-40 xl:w-56 xl:h-56 rounded-lg sm:rounded-xl lg:rounded-2xl overflow-hidden border-3 sm:border-4 border-white/30 sm:border-white/40 shadow-md sm:shadow-2xl">
-  {staff.image && staff.image.startsWith('http') ? (
-    <img
-      src={staff.image}
-      alt={`Professional portrait of ${staff.name} - ${staff.position} at Katwanyaa High School`}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        e.target.onerror = null;
-        e.target.src = '/male.png';
-      }}
-    />
-  ) : (
-    // For local images, use Next.js Image component
-    <Image
-      src={staff.image || '/male.png'}
-      alt={`Professional portrait of ${staff.name} - ${staff.position} at Katwanyaa High School`}
-      fill
-      className="object-cover"
-      priority
-      sizes="(max-width: 640px) 80px, (max-width: 1024px) 112px, 160px, 224px"
-    />
-  )}
+{/* MOBILE Profile Header - ONLY CHANGES FOR SMALL SCREENS */}
+<div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-8">
+  <div className="relative p-6 text-white">
+    
+    {/* Large Image - Centered and Prominent - Mobile Only */}
+    <div className="flex flex-col items-center sm:items-start">
+      
+      {/* Image - Larger on mobile, normal on desktop */}
+      <div className="relative w-36 h-36 sm:w-28 sm:h-28 lg:w-40 lg:h-40 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl mb-4 sm:mb-0 sm:mr-6">
+        {staff.image && staff.image.startsWith('http') ? (
+          <img
+            src={staff.image}
+            alt={staff.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/male.png';
+            }}
+          />
+        ) : (
+          <Image
+            src={staff.image || '/male.png'}
+            alt={staff.name}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 640px) 144px, (max-width: 1024px) 112px, 160px"
+          />
+        )}
+        
+        {/* Status Badge */}
+        <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white shadow" />
+      </div>
+
+      {/* Mobile Centered Text - Only on small screens */}
+      <div className="text-center sm:text-left sm:flex-1">
+        <h1 className="text-2xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-1">
+          {staff.name}
+        </h1>
+        
+        <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full mb-2 mx-auto sm:mx-0">
+          <FaChalkboardTeacher className="text-blue-200 text-sm" />
+          <span className="font-semibold text-sm">{staff.department}</span>
+        </div>
+        
+        <p className="text-blue-100 text-base font-semibold mb-3">
+          {staff.position}
+        </p>
+      </div>
+    </div>
+
+    {/* Bio - Full width on mobile */}
+    <p className="text-blue-100/90 text-sm leading-relaxed text-center sm:text-left mt-4 sm:mt-0">
+      {staff.bio}
+    </p>
+
+    {/* Quick Info Row - Mobile optimized */}
+    <div className="flex flex-wrap gap-2 justify-center sm:justify-start border-t border-white/20 mt-4 pt-4">
+      <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-lg">
+        <FiCalendar className="text-blue-200 text-xs" />
+        <span className="font-medium text-xs">Since {staff.joinDate}</span>
+      </div>
+      <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-lg">
+        <FiMapPin className="text-blue-200 text-xs" />
+        <span className="font-medium text-xs truncate max-w-[140px]">{staff.location}</span>
+      </div>
+    </div>
+  </div>
 </div>
-                  {/* Status Badge - Smaller on mobile */}
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-emerald-400 sm:bg-gradient-to-br sm:from-emerald-500 sm:to-emerald-600 rounded-full border-2 sm:border-3 border-white shadow">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full m-auto mt-1 sm:mt-1.5"></div>
-                  </div>
-                </div>
-
-                {/* Mobile Profile Information */}
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight truncate">
-                      {staff.name}
-                    </h1>
-                    <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-white/20 backdrop-blur-sm px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full mx-auto sm:mx-0 w-fit">
-                      <FaChalkboardTeacher className="text-blue-200 text-sm sm:text-base" />
-                      <span className="font-semibold text-xs sm:text-sm lg:text-base">{staff.department}</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-blue-100 text-sm sm:text-base lg:text-lg xl:text-xl font-semibold mb-3 sm:mb-4 lg:mb-6">
-                    {staff.position}
-                  </p>
-                  
-                  <p className="text-blue-100/90 leading-relaxed text-xs sm:text-sm lg:text-base mb-4 sm:mb-6 lg:mb-8 max-w-3xl line-clamp-3 sm:line-clamp-none">
-                    {staff.bio}
-                  </p>
-
-                  {/* Mobile Quick Info */}
-                  <div className="flex flex-wrap gap-2 sm:gap-3 justify-center sm:justify-start">
-                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1.5 rounded-lg sm:rounded-xl">
-                      <FiCalendar className="text-blue-200 text-xs sm:text-sm" />
-                      <span className="font-medium text-xs sm:text-sm">Since {staff.joinDate}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1.5 rounded-lg sm:rounded-xl">
-                      <FiMapPin className="text-blue-200 text-xs sm:text-sm" />
-                      <span className="font-medium text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none">{staff.location}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
 {/* MODERN BENTO GRID - Zoom & Mobile Optimized */}
 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 auto-rows-min">
@@ -507,7 +507,7 @@ if (loading) {
     
     {/* School Trust Banner - Compact & Modern */}
     <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden group shadow-2xl">
-      <div className="absolute -right-4 -bottom-4 text-white/5 text-8xl rotate-12 group-hover:scale-110 transition-transform duration-500">
+      <div className="absolute -right-4 -bottom-4 text-white/5 text-8xl rotate-12 group-hover:scale-101 transition-transform duration-500">
         <FiHome />
       </div>
       <div className="relative z-10 flex items-center gap-4 mb-4">
@@ -541,7 +541,7 @@ if (loading) {
         ].map((item, i) => (
           item.val && (
             <a key={i} href={item.href} className={`flex items-center gap-4 p-3 rounded-2xl bg-${item.color}-50/50 border border-${item.color}-100 hover:bg-${item.color}-100 transition-all group`}>
-              <div className={`w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-${item.color}-600 group-hover:scale-110 transition-transform`}>
+              <div className={`w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-${item.color}-600 group-hover:scale-102 transition-transform`}>
                 {item.icon}
               </div>
               <div className="min-w-0">
@@ -576,7 +576,7 @@ if (loading) {
               {skill.name}
             </span>
           </div>
-          <div className="bg-slate-900 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg group-hover/item:scale-110 transition-transform">
+          <div className="bg-slate-900 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg group-hover/item:scale-102 transition-transform">
             {skill.level}%
           </div>
         </div>
@@ -621,7 +621,7 @@ if (loading) {
   
   {/* Specialized Expertise - Bento Tag Cloud */}
   <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-2xl shadow-slate-200/40 group relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[5rem] transition-transform group-hover:scale-110" />
+    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[5rem] transition-transform group-hover:scale-102" />
     
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 relative z-10">
       <div className="flex items-center gap-5">
@@ -642,7 +642,7 @@ if (loading) {
       {staff.expertise?.map((item, i) => (
         <span 
           key={i} 
-          className="px-5 py-3 bg-white hover:bg-slate-900 hover:text-white text-slate-700 text-xs font-black rounded-2xl border border-slate-200 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg cursor-default active:scale-95"
+          className="px-5 py-3 bg-white hover:bg-slate-900 hover:text-white text-slate-700 text-xs font-black rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-default active:scale-97"
         >
           {item}
         </span>
@@ -682,7 +682,7 @@ if (loading) {
       <ul className="space-y-6 relative z-10">
         {staff.achievements?.map((item, i) => (
           <li key={i} className="flex gap-4 items-start group/item">
-            <div className="w-2 h-2 rounded-full bg-amber-400 mt-2 shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.6)] group-hover/item:scale-150 transition-transform" />
+            <div className="w-2 h-2 rounded-full bg-amber-400 mt-2 shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.6)] group-hover/item:scale-130 transition-transform" />
             <span className="text-sm font-bold text-slate-600 group-hover/item:text-slate-900 leading-relaxed transition-colors">
               {item}
             </span>
