@@ -34,7 +34,7 @@ const ModernSchoolLayout = () => {
     {
       title: "Academic Excellence",
       gradient: "from-blue-500 to-cyan-500",
-      description: "Consistently ranked among top-performing schools in Nyeri County with impressive KCSE results year after year.",
+      description: "Consistently ranked among top-performing schools in Machakos County, Matungulu subcounty with impressive KCSE results year after year.",
       metrics: "Top Machakos Extra County School "
     },
     {
@@ -46,7 +46,7 @@ const ModernSchoolLayout = () => {
     {
       title: "Christian  Values",
       gradient: "from-purple-500 to-pink-500",
-      description: "Founded on strong Christian principles, nurturing girls with moral integrity, discipline, and service to community.",
+      description: "Founded on strong Christian principles, nurturing students with moral integrity, discipline, and service to community.",
       metrics: "Values-Based Education"
     },
     {
