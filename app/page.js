@@ -446,32 +446,29 @@ const jsonLd = {
     }, 100);
   }, [router, closeVideoModal, navigationBlocked]);
 
-  
-const LoadingScreen = () => (
-  <div className="fixed inset-0  bg-gradient-to-br from-indigo-950 via-blue-900 to-slate-950 z-[100] flex flex-col items-center justify-center p-4">
-    {/* Animated Background Particles */}
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1.5 h-1.5 bg-blue-400/20 rounded-full animate-pulse"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${i * 0.3}s`,
-            animationDuration: `${3 + Math.random() * 4}s`
-          }}
-        />
-      ))}
-    </div>
+  const LoadingScreen = () => (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 z-50 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-white/10 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 0.3}s`,
+              animationDuration: `${4 + Math.random() * 3}s`
+            }}
+          />
+        ))}
+      </div>
 
-    <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
-      {/* Animated Rings - Indigo & Cyan Theme */}
-      <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 md:mb-8">
-        <div className="absolute inset-0 border-4 border-blue-500/10 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]"></div>
-        <div className="absolute inset-2 md:inset-3 border-t-4 border-cyan-400/40 rounded-full animate-spin"></div>
-        <div className="absolute inset-5 md:inset-6 border-b-4 border-indigo-400/30 rounded-full animate-reverse-spin" style={{ animationDuration: '3s' }}></div>
-        
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md">
+        <div className="relative w-24 h-24 md:w-32 md:h-32 mb-6 md:mb-8">
+          <div className="absolute inset-0 border-4 border-orange-500/20 rounded-full"></div>
+          <div className="absolute inset-3 md:inset-4 border-4 border-amber-500/30 rounded-full animate-ping"></div>
+          <div className="absolute inset-6 md:inset-8 border-4 border-white/40 rounded-full animate-spin"></div>
+          
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
@@ -481,50 +478,39 @@ const LoadingScreen = () => (
               />
             </div>
           </div>
-      </div>
-      
-      {/* Loading Content */}
-      <div className="text-center space-y-4 md:space-y-6 px-2">
-        {/* School Name */}
-        <div>
-          <h2 className="text-xl md:text-2xl font-black text-white mb-2 leading-tight tracking-tight">
-            AIC Katwanyaa High School
-          </h2>
-          <p className="text-cyan-400/80 text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold">
-            Education is Light
-          </p>
-          <div className="mt-4 h-[1px] w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
         </div>
         
-        {/* Loading Text */}
-        <div className="space-y-4">
-          <p className="text-white/70 text-sm md:text-base font-medium"> Loading School Website...</p>
-          
-          {/* Animated Dots - Blue Theme */}
-          <div className="flex items-center justify-center gap-2">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-2 md:w-2.5 md:h-2.5 bg-cyan-400 rounded-full animate-bounce"
-                style={{ 
-                  animationDelay: `${i * 0.15}s`,
-                  boxShadow: '0 0 10px rgba(34, 211, 238, 0.5)'
-                }}
-              />
-            ))}
+        <div className="text-center space-y-4 md:space-y-6 px-2">
+          <div>
+            <h2 className="text-xl md:text-3xl font-bold text-white mb-2 leading-tight">
+              Katwanyaa High School
+            </h2>
+            <div className="h-1 w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>
           
-          {/* Progress Bar */}
-          <div className="w-40 md:w-56 h-1.5 bg-white/5 rounded-full overflow-hidden mx-auto border border-white/5">
-            <div className="h-full bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600 animate-infinite-scroll"></div>
+          <div className="space-y-4">
+            <p className="text-white/80 text-base md:text-lg">Preparing an exceptional learning experience</p>
+            
+            <div className="flex items-center justify-center gap-2">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
+            
+            <div className="w-48 md:w-64 h-2 bg-white/10 rounded-full overflow-hidden mx-auto">
+              <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 animate-gradient-loading"></div>
+            </div>
+            
+            <p className="text-white/60 text-xs md:text-sm">Loading For school Website...</p>
           </div>
-          
-          <p className="text-white/40 text-[10px] md:text-xs italic">A Better Way of Learning</p>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 
   if (isLoading) {
     return <LoadingScreen />;
