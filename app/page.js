@@ -472,16 +472,15 @@ const LoadingScreen = () => (
         <div className="absolute inset-2 md:inset-3 border-t-4 border-cyan-400/40 rounded-full animate-spin"></div>
         <div className="absolute inset-5 md:inset-6 border-b-4 border-indigo-400/30 rounded-full animate-reverse-spin" style={{ animationDuration: '3s' }}></div>
         
-        {/* Center Logo - Updated for Katz */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl flex items-center justify-center overflow-hidden border border-white/20 shadow-2xl">
-            <img 
-              src="/katz.jpeg" 
-              alt="AIC Katwanyaa High School Logo" 
-              className="w-full h-full object-contain p-1.5 md:p-2"
-            />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
+              <img 
+                src="/katz.jpeg" 
+                alt="Katwanyaa High School Logo" 
+                className="w-full h-full object-contain p-2"
+              />
+            </div>
           </div>
-        </div>
       </div>
       
       {/* Loading Content */}

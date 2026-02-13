@@ -254,6 +254,8 @@ export default function AdminDashboard() {
         <div className="p-6 sm:p-8 border-b border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
+
+
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <FiSmartphone className="text-xl text-white" />
               </div>
@@ -329,7 +331,7 @@ export default function AdminDashboard() {
           <div className="flex justify-center">
             <button
               onClick={() => router.back()}
-              className="group flex items-center gap-2 px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-full border border-gray-700 transition-all active:scale-95 shadow-lg"
+              className="group flex items-center gap-2 px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-full border border-gray-700 transition-all  shadow-lg"
             >
               <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-bold">Go Back</span>
