@@ -596,16 +596,44 @@ const confirmDelete = async () => {
       throw new Error('Session expired. Please login again.');
     }
 
-    const data = await response.json();
-
+    // Check if response is OK before trying to parse JSON
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to delete admin');
+      // Try to get error message from response if possible
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to delete admin (${response.status})`);
+      } catch (jsonError) {
+        // If can't parse JSON, just use status text
+        throw new Error(`Failed to delete admin: ${response.statusText || response.status}`);
+      }
     }
 
-    if (data.success) {
+    // Check if response has content before parsing
+    const contentType = response.headers.get('content-type');
+    let data = { success: true }; // Default success response
+    
+    if (contentType && contentType.includes('application/json')) {
+      const text = await response.text(); // Get as text first
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.log('Response text that failed to parse:', text);
+          // If parsing fails but response was OK, assume success
+          data = { success: true };
+        }
+      }
+    }
+
+    if (data.success !== false) {
       // Remove from local state
       const updatedAdmins = admins.filter(admin => admin.id !== adminToDelete.id);
       setAdmins(updatedAdmins);
+      setSelectedAdmins(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(adminToDelete.id);
+        return newSet;
+      });
       
       toast.success('Admin deleted successfully!');
     } else {
@@ -619,7 +647,7 @@ const confirmDelete = async () => {
       return;
     }
     
-    toast.error('Failed to delete admin');
+    toast.error(error.message || 'Failed to delete admin');
   } finally {
     setShowDeleteConfirm(false);
     setAdminToDelete(null);

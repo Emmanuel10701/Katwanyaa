@@ -374,7 +374,6 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE user by ID - FIXED
 export async function DELETE(req, { params }) {
   try {
     // Authenticate request
@@ -384,6 +383,15 @@ export async function DELETE(req, { params }) {
     }
     
     const { id } = params;
+    
+    // Read body once at the beginning if it might be needed
+    let body = null;
+    try {
+      body = await req.json();
+    } catch (e) {
+      // No body or invalid JSON - that's fine
+      body = {};
+    }
     
     // Get target user to check role
     const targetUser = await prisma.user.findUnique({
@@ -422,8 +430,8 @@ export async function DELETE(req, { params }) {
     
     // Extra protection for ADMIN users - requires SUPER_ADMIN
     if (permissionCheck === 'SUPER_ADMIN_REQUIRED') {
-      // Check for confirmation token in headers or body
-      const confirmationToken = req.headers.get('x-confirmation-token') || (await req.json()).confirmationToken;
+      // Check headers OR the body we already parsed
+      const confirmationToken = req.headers.get('x-confirmation-token') || body?.confirmationToken;
       
       if (!confirmationToken) {
         return NextResponse.json(
@@ -443,7 +451,6 @@ export async function DELETE(req, { params }) {
         );
       }
       
-      // Validate confirmation token
       console.log('⚠️ Admin user deletion attempt with confirmation token:', {
         superAdmin: auth.user.name,
         targetAdmin: targetUser.name,
