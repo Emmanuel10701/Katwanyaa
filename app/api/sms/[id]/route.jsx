@@ -149,18 +149,28 @@ function getRecipientTypeLabel(type) {
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
-  const regex = /^(\+?254|0)[7][0-9]{8}$/;
+  
+  // Kenyan phone numbers: 07XX XXX XXX, 2547XX XXX XXX, +2547XX XXX XXX
+  const regex = /^(?:(?:\+?254)|0)?(7[0-9]{8})$/;
   
   phoneNumbers.forEach(num => {
-    const cleaned = num.trim().replace(/\s+/g, '');
-    if (regex.test(cleaned)) {
-      let formatted = cleaned;
-      if (formatted.startsWith('0')) {
-        formatted = '254' + formatted.substring(1);
-      } else if (formatted.startsWith('+')) {
-        formatted = formatted.substring(1);
+    const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
+    
+    const match = cleaned.match(regex);
+    
+    if (match) {
+      // Extract the subscriber number (7XXXXXXXX)
+      const subscriberNumber = match[1];
+      
+      // Format to international format: 254 + subscriber number
+      const formatted = '254' + subscriberNumber;
+      
+      // Verify final length (should be 12 digits: 254 + 9 digits)
+      if (formatted.length === 12) {
+        valid.push(formatted);
+      } else {
+        invalid.push(num);
       }
-      valid.push(formatted);
     } else {
       invalid.push(num);
     }
@@ -434,6 +444,7 @@ export async function DELETE(req, { params }) {
   }
 }
 
+
 // 🔹 PATCH - Partial update (e.g., send campaign) (PROTECTED)
 export async function PATCH(req, { params }) {
   try {
@@ -473,29 +484,70 @@ export async function PATCH(req, { params }) {
     
     // If just updating status to sent
     if (status === 'sent' && existingCampaign.status !== 'sent') {
-      // Initialize Africa's Talking
+      // ==================== ADD MISSING IMPORTS HERE ====================
+      const africastalking = require('africastalking');
+      
+      // Initialize Africa's Talking with proper credentials
       const at = africastalking({
         apiKey: process.env.AT_API_KEY,
         username: process.env.AT_USERNAME,
       });
+      
       const sms = at.SMS;
       
       const recipients = existingCampaign.recipients.split(",").map(r => r.trim());
       const message = existingCampaign.message;
+      
+      // Validate and format phone numbers
+      const { valid: validPhones, invalid } = validatePhoneNumbers(recipients);
+      
+      if (invalid.length > 0) {
+        console.warn(`⚠️ Found ${invalid.length} invalid phone numbers:`, invalid);
+      }
+      
+      if (validPhones.length === 0) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: "No valid phone numbers found for this campaign",
+            invalidNumbers: invalid 
+          },
+          { status: 400 }
+        );
+      }
+      
+      console.log(`📱 Sending SMS to ${validPhones.length} valid recipients (${invalid.length} invalid skipped)`);
+      
+      // Prepare sender ID
+      const senderId = process.env.AT_SENDER_ID || "AIC KATWANA";
+      const senderType = process.env.AT_SENDER_TYPE || "alphanumeric";
+      
+      // For alphanumeric sender IDs, ensure it's not too long (max 11 characters)
+      const finalSender = senderType === "alphanumeric" 
+        ? senderId.substring(0, 11).trim() 
+        : senderId;
       
       const sent = [];
       const failed = [];
       
       // Send in batches
       const BATCH_SIZE = 100;
-      for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-        const batch = recipients.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < validPhones.length; i += BATCH_SIZE) {
+        const batch = validPhones.slice(i, i + BATCH_SIZE);
         try {
-          const result = await sms.send({
+          const smsOptions = {
             to: batch,
             message,
-            from: process.env.AT_SHORT_CODE || undefined,
-          });
+          };
+          
+          // Only add 'from' if we have a sender ID configured
+          if (finalSender && finalSender.trim() !== "") {
+            smsOptions.from = finalSender;
+          }
+          
+          console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${batch.length} numbers`);
+          
+          const result = await sms.send(smsOptions);
           
           if (result?.data?.SMSMessageData?.Recipients) {
             const recipientStatuses = result.data.SMSMessageData.Recipients;
@@ -515,6 +567,7 @@ export async function PATCH(req, { params }) {
               }
             });
           } else {
+            // fallback: treat entire batch as success
             batch.forEach(phone => {
               sent.push({
                 campaignId: existingCampaign.id,
@@ -525,7 +578,11 @@ export async function PATCH(req, { params }) {
               });
             });
           }
+          
+          console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
+          
         } catch (error) {
+          console.error(`❌ Batch failed:`, error.message);
           batch.forEach(phone => {
             failed.push({
               campaignId: existingCampaign.id,
@@ -537,7 +594,24 @@ export async function PATCH(req, { params }) {
             });
           });
         }
+        
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < validPhones.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
+      
+      // Also add invalid numbers to failed list (optional)
+      invalid.forEach(phone => {
+        failed.push({
+          campaignId: existingCampaign.id,
+          phoneNumber: phone,
+          message,
+          providerMessageId: null,
+          status: "failed",
+          errorMessage: "Invalid phone number format",
+        });
+      });
       
       // Save logs
       if (sent.length > 0) {
@@ -559,17 +633,25 @@ export async function PATCH(req, { params }) {
       });
       
       const summary = {
-        total: recipients.length,
+        total: validPhones.length,
         successful: sent.length,
         failed: failed.length,
-        successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
+        invalidSkipped: invalid.length,
+        successRate: validPhones.length > 0 ? Math.round((sent.length / validPhones.length) * 100) : 0,
       };
+      
+      console.log(`📊 SMS Campaign Summary:`, summary);
       
       return NextResponse.json({
         success: true,
         campaign: updatedCampaign,
-        smsResults: { sent, failed, summary },
-        message: `Campaign sent to ${sent.length} recipients successfully`
+        smsResults: { 
+          sent: sent.slice(0, 10), // Return only first 10 logs to avoid huge response
+          failed: failed.slice(0, 10),
+          summary,
+          invalidNumbers: invalid.length > 0 ? invalid : undefined
+        },
+        message: `Campaign sent to ${sent.length} recipients successfully${invalid.length > 0 ? ` (${invalid.length} invalid numbers skipped)` : ''}`
       });
     } else {
       // Other partial updates
