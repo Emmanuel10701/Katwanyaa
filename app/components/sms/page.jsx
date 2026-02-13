@@ -333,8 +333,8 @@ const SmsCampaignCard = ({
 };
 
 // Main Component
-export default function SmsCampaignManager() {
-  const [campaigns, setCampaigns] = useState([]);
+export default function SMSManager() {
+ const [campaigns, setCampaigns] = useState([]);
   const [students, setStudents] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
