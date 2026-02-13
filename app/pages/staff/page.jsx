@@ -243,7 +243,7 @@ const StatsPill = ({ icon, value, label, color = 'blue' }) => {
 
   return (
     <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] group hover:border-slate-300 transition-all cursor-default">
-      <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base ring-1 transition-transform group-hover:scale-110 ${activeColor}`}>
+      <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base ring-1 transition-transform group-hover:scale-101 ${activeColor}`}>
         {icon}
       </div>
       <div className="flex flex-col leading-tight">
@@ -286,7 +286,7 @@ const HierarchySection = ({ title, icon, staff, viewMode, isFirst = false }) => 
           : "flex flex-col gap-4"
       }>
         {staff.map((member) => (
-          <div key={member.id} className="transition-all duration-300 hover:translate-y-[-4px]">
+          <div key={member.id} className="transition-all duration-300 ">
             {viewMode === 'grid' 
               ? <StaffCard staff={member} /> 
               : <StaffListCard staff={member} />
@@ -303,7 +303,7 @@ const StaffCard = ({ staff }) => {
   const hierarchy = getStaffHierarchy(staff.position);
   
   return (
-    <div className="group bg-white rounded-[2rem] border border-gray-100 overflow-hidden flex flex-col h-full relative z-10 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10">
+    <div className="group bg-white rounded-[1rem] border border-gray-100 overflow-hidden flex flex-col h-full relative transition-all duration-300 hover:shadow-md hover:shadow-blue-500/10">
       
       <div className="relative h-56 sm:h-64 overflow-hidden">
         <Image
