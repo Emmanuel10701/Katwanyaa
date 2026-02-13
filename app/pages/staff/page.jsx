@@ -687,7 +687,7 @@ export default function StaffDirectory() {
                 </div>
               <div className="hidden sm:block">
                 <span className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                  Katwanyaa High School Staff
+              Katz Staff Faculty
                 </span>
                 <p className="text-xs text-gray-500 mt-0.5">Prayer, Discipline and Hardwork</p>
               </div>
