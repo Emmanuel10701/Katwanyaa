@@ -204,6 +204,10 @@ function validatePhoneNumbers(phoneNumbers) {
 
 /**
  * Send SMS with custom sender ID
+ * The sender can be:
+ * - Alphanumeric: "AIC KATWANA" (needs registration)
+ * - Short code: "12345" (dedicated short code)
+ * - Phone number: "+254700123456" (virtual number)
  */
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
@@ -238,123 +242,8 @@ async function sendSmsCampaign(campaign) {
         smsOptions.from = finalSender;
       }
 
-      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${batch.length} numbers:`, batch);
+      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${batch.length} numbers`);
       
-      const result = await sms.send(smsOptions);
-
-      // AT returns per-recipient statuses in result.data.SMSMessageData.Recipients
-      if (result?.data?.SMSMessageData?.Recipients) {
-        const recipientStatuses = result.data.SMSMessageData.Recipients;
-        recipientStatuses.forEach(rs => {
-          const logEntry = {
-            campaignId: campaign.id,
-            phoneNumber: rs.number,
-            message,
-            providerMessageId: rs.messageId || null,
-            status: rs.status === "Success" ? "success" : "failed",
-            errorMessage: rs.status !== "Success" ? rs.status : null,
-          };
-          if (rs.status === "Success") {
-            sent.push(logEntry);
-          } else {
-            failed.push(logEntry);
-          }
-        });
-      } else {
-        // fallback: treat entire batch as success
-        batch.forEach(phone => {
-          sent.push({
-            campaignId: campaign.id,
-            phoneNumber: phone,
-            message,
-            providerMessageId: null,
-            status: "success",
-          });
-        });
-      }
-      
-      // Log success for debugging
-      console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
-      
-    } catch (error) {
-      // whole batch failed
-      console.error(`❌ Batch failed:`, error.message);
-      batch.forEach(phone => {
-        failed.push({
-          campaignId: campaign.id,
-          phoneNumber: phone,
-          message,
-          providerMessageId: null,
-          status: "failed",
-          errorMessage: error.message,
-        });
-      });
-    }
-    
-    // Small delay between batches to avoid rate limiting
-    if (i + BATCH_SIZE < recipients.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
-
-  // Save logs to database
-  if (sent.length > 0) {
-    await prisma.smsLog.createMany({ data: sent });
-  }
-  if (failed.length > 0) {
-    await prisma.smsLog.createMany({ data: failed });
-  }
-
-  const summary = {
-    total: recipients.length,
-    successful: sent.length,
-    failed: failed.length,
-    successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
-  };
-
-  return { sent, failed, summary };
-}
-
-/**
- * Send SMS with custom sender ID
- * The sender can be:
- * - Alphanumeric: "AIC KATWANA" (needs registration)
- * - Short code: "12345" (dedicated short code)
- * - Phone number: "+254700123456" (virtual number)
- */
-async function sendSmsCampaign(campaign) {
-  const recipients = campaign.recipients.split(",").map(r => r.trim());
-  const message = campaign.message;
-
-  const sent = [];
-  const failed = [];
-
-  // Prepare sender ID
-  const senderId = AT_SENDER_ID;
-  
-  // For alphanumeric sender IDs, ensure it's not too long (max 11 characters)
-  const finalSender = AT_SENDER_TYPE === "alphanumeric" 
-    ? senderId.substring(0, 11) 
-    : senderId;
-
-  console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
-
-  // Africa's Talking supports up to 100 numbers per request
-  const BATCH_SIZE = 100;
-  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-    const batch = recipients.slice(i, i + BATCH_SIZE);
-    try {
-      // Prepare the SMS options
-      const smsOptions = {
-        to: batch,
-        message: message,
-      };
-      
-      // Only add 'from' if we have a sender ID configured
-      if (finalSender && finalSender.trim() !== "") {
-        smsOptions.from = finalSender;
-      }
-
       const result = await sms.send(smsOptions);
 
       // AT returns per-recipient statuses in result.data.SMSMessageData.Recipients
