@@ -762,7 +762,7 @@ export default function StaffDirectory() {
           <aside className={`
             fixed lg:static inset-y-0 left-0 w-80 bg-white transform transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none overflow-y-auto lg:overflow-visible border-r lg:border-r-0 border-gray-200/50
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            z-50
+            
           `}>
             <div className="p-4 sm:p-6 lg:p-0 lg:sticky lg:top-24 space-y-6">
               
