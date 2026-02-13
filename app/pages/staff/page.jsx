@@ -203,7 +203,7 @@ const StaffSkeleton = ({ viewMode }) => {
 };
 
 const Checkbox = ({ label, count, checked, onChange, color, icon }) => (
-  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-xl">
+  <label className="flex items-center gap-4 cursor-pointer p-3 rounded-lg">
     <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${
       checked 
         ? 'bg-blue-600 border-blue-600' 
@@ -242,7 +242,7 @@ const StatsPill = ({ icon, value, label, color = 'blue' }) => {
   const activeColor = colorMap[color] || colorMap.blue;
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] group hover:border-slate-300 transition-all cursor-default">
+    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-lg border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] group hover:border-slate-300 transition-all cursor-default">
       <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-base ring-1 transition-transform group-hover:scale-110 ${activeColor}`}>
         {icon}
       </div>
@@ -405,9 +405,9 @@ const StaffListCard = ({ staff }) => {
   const hierarchy = getStaffHierarchy(staff.position);
   
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-200/50 p-4 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6 items-center relative z-10">
+    <div className="bg-white rounded-lg sm:rounded-2xl border border-gray-200/50 p-4 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6 items-center relative z-10">
       <div className="relative">
-        <div className="relative w-20 h-20 sm:w-28 sm:h-28 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg">
+        <div className="relative w-20 h-20 sm:w-28 sm:h-28 rounded-lg sm:rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg">
           <Image
             src={getImageSrc(staff)}
             alt={staff.name}
@@ -460,14 +460,14 @@ const StaffListCard = ({ staff }) => {
         {staff.email && (
           <a 
             href={`mailto:${staff.email}`}
-            className="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs sm:text-sm font-semibold"
+            className="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 text-xs sm:text-sm font-semibold"
           >
             <FiMail /> <span className="hidden sm:inline">Email</span>
           </a>
         )}
         <Link
           href={`/pages/staff/${staff.id}/${generateSlug(staff.name, staff.id)}`}
-          className="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl border border-gray-300 text-gray-700 text-xs sm:text-sm font-semibold"
+          className="flex-1 lg:flex-none flex items-center justify-center lg:justify-start gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-lg border border-gray-300 text-gray-700 text-xs sm:text-sm font-semibold"
         >
           <FiUser /> <span className="hidden sm:inline">Profile</span>
         </Link>
@@ -645,7 +645,7 @@ export default function StaffDirectory() {
           <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold shadow-lg w-full sm:w-auto"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold shadow-lg w-full sm:w-auto"
           >
             Try Again
           </button>
@@ -678,7 +678,7 @@ export default function StaffDirectory() {
             </button>
             
             <Link href="/" className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
                 MI
               </div>
               <div className="hidden sm:block">
@@ -700,7 +700,7 @@ export default function StaffDirectory() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, role, expertise..."
-                className="block w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 border border-gray-200 rounded-xl sm:rounded-2xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base transition-all"
+                className="block w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-2xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm sm:text-base transition-all"
               />
               {searchQuery && (
                 <button 
@@ -726,7 +726,7 @@ export default function StaffDirectory() {
             <div className="hidden sm:flex bg-white p-1 rounded-2xl border border-gray-200/50 shadow-sm">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 sm:p-3 rounded-xl ${
+                className={`p-2 sm:p-3 rounded-lg ${
                   viewMode === 'grid' 
                     ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
                     : 'text-gray-500'
@@ -737,7 +737,7 @@ export default function StaffDirectory() {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 sm:p-3 rounded-xl ${
+                className={`p-2 sm:p-3 rounded-lg ${
                   viewMode === 'list' 
                     ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
                     : 'text-gray-500'
@@ -781,13 +781,13 @@ export default function StaffDirectory() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search staff members..."
-                    className="w-full px-4 py-4 border-2 border-gray-100 rounded-2xl bg-gray-50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all text-base font-medium"
+                    className="w-full px-4 py-4 border-2 border-gray-100 rounded-lg bg-gray-50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all text-base font-medium"
                   />
                 </div>
               </div>
 
               {/* HIERARCHY FILTER - Principal First in List */}
-              <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden">
+              <div className="bg-white rounded-[1rem] border border-gray-100 shadow-xl overflow-hidden">
                 <div className="p-5 bg-slate-900 border-b border-slate-800">
                   <h3 className="font-black text-white flex items-center gap-3 text-sm uppercase tracking-widest">
                     <FiUsers className="text-blue-400" /> 
@@ -798,7 +798,7 @@ export default function StaffDirectory() {
                   {/* All Staff Option */}
                   <button
                     onClick={() => setSelectedHierarchy('all')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                       selectedHierarchy === 'all' 
                       ? 'bg-blue-600 text-white shadow-lg' 
                       : 'hover:bg-gray-50 text-gray-700'
@@ -813,7 +813,7 @@ export default function StaffDirectory() {
                   {/* Leadership (Principal + Deputies) */}
                   <button
                     onClick={() => setSelectedHierarchy('leadership')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                       selectedHierarchy === 'leadership' 
                       ? 'bg-blue-600 text-white shadow-lg' 
                       : 'hover:bg-gray-50 text-gray-700'
@@ -831,7 +831,7 @@ export default function StaffDirectory() {
                   {/* Teaching Staff */}
                   <button
                     onClick={() => setSelectedHierarchy('teaching')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                       selectedHierarchy === 'teaching' 
                       ? 'bg-blue-600 text-white shadow-lg' 
                       : 'hover:bg-gray-50 text-gray-700'
@@ -849,7 +849,7 @@ export default function StaffDirectory() {
                   {/* Support Staff */}
                   <button
                     onClick={() => setSelectedHierarchy('support')}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                       selectedHierarchy === 'support' 
                       ? 'bg-blue-600 text-white shadow-lg' 
                       : 'hover:bg-gray-50 text-gray-700'
@@ -888,7 +888,7 @@ export default function StaffDirectory() {
                     <div 
                       key={dept.id}
                       onClick={() => toggleDept(dept.id)}
-                      className={`cursor-pointer flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      className={`cursor-pointer flex items-center justify-between p-3 rounded-lg border transition-all ${
                         selectedDepts.includes(dept.id)
                         ? 'border-blue-500 bg-blue-50/50'
                         : 'border-transparent hover:bg-gray-50'
@@ -1041,7 +1041,7 @@ export default function StaffDirectory() {
                       <button
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
-                        className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-base font-semibold text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-lg text-xs sm:text-base font-semibold text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         <FiArrowLeft /> <span className="hidden sm:inline">Previous</span>
                       </button>
@@ -1055,7 +1055,7 @@ export default function StaffDirectory() {
                             <button
                               key={pageNum}
                               onClick={() => setCurrentPage(pageNum)}
-                              className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl text-xs sm:text-base font-semibold ${
+                              className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-lg text-xs sm:text-base font-semibold ${
                                 currentPage === pageNum 
                                   ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
                                   : 'text-gray-600'
@@ -1069,7 +1069,7 @@ export default function StaffDirectory() {
                       <button
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
-                        className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl text-xs sm:text-base font-semibold text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg sm:rounded-lg text-xs sm:text-base font-semibold text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         <span className="hidden sm:inline">Next</span> <FiArrowRight />
                       </button>
@@ -1089,7 +1089,7 @@ export default function StaffDirectory() {
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl sm:rounded-2xl font-bold shadow-lg w-full sm:w-auto"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg sm:rounded-2xl font-bold shadow-lg w-full sm:w-auto"
                 >
                   Clear All Filters & Search
                 </button>
