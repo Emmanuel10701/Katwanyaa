@@ -202,7 +202,8 @@ const deleteImageFromCloudinary = async (imageUrl) => {
 };
 
 // 🔹 Check principal/deputy principal limits
-async function checkRoleLimits(role, staffId = null) {
+// 🔹 Enhanced role limits with position-based validation for Deputy Principals
+async function checkRoleLimits(role, staffId = null, position = null) {
   if (role === "Principal") {
     const existingPrincipal = await prisma.staff.findFirst({
       where: { 
@@ -214,7 +215,9 @@ async function checkRoleLimits(role, staffId = null) {
     if (existingPrincipal) {
       throw new Error("A principal already exists. There can only be one principal.");
     }
-  } else if (role === "Deputy Principal") {
+  } 
+  
+  else if (role === "Deputy Principal") {
     const existingDeputies = await prisma.staff.findMany({
       where: { 
         role: "Deputy Principal",
@@ -222,8 +225,42 @@ async function checkRoleLimits(role, staffId = null) {
       }
     });
     
-    if (existingDeputies.length >= 3) {
-      throw new Error("Maximum of three deputy principals allowed. Current count: " + existingDeputies.length);
+    // Hard limit: Exactly 2 Deputy Principals maximum
+    if (existingDeputies.length >= 2) {
+      throw new Error(
+        "Maximum of two deputy principals allowed.\n" +
+        "✓ One Deputy Principal (Academics)\n" +
+        "✓ One Deputy Principal (Administration)"
+      );
+    }
+    
+    // If position is provided, check for duplicates based on position type
+    if (position && existingDeputies.length > 0) {
+      const positionLower = position.toLowerCase();
+      
+      // Check if trying to add a second Academic Deputy
+      if (positionLower.includes('academics') || positionLower.includes('academic')) {
+        const academicExists = existingDeputies.some(deputy => 
+          deputy.position?.toLowerCase().includes('academics') || 
+          deputy.position?.toLowerCase().includes('academic')
+        );
+        
+        if (academicExists) {
+          throw new Error("Deputy Principal (Academics) already exists.");
+        }
+      }
+      
+      // Check if trying to add a second Administration Deputy
+      if (positionLower.includes('admin')) {
+        const adminExists = existingDeputies.some(deputy => 
+          deputy.position?.toLowerCase().includes('admin') ||
+          deputy.position?.toLowerCase().includes('administration')
+        );
+        
+        if (adminExists) {
+          throw new Error("Deputy Principal (Administration) already exists.");
+        }
+      }
     }
   }
 }
@@ -244,7 +281,6 @@ export async function GET() {
     );
   }
 }
-
 // 🔹 POST new staff (PROTECTED - authentication required)
 export async function POST(req) {
   try {
@@ -254,7 +290,6 @@ export async function POST(req) {
       return auth.response;
     }
 
-    // Log authentication info
     console.log(`📝 Staff creation request from: ${auth.user.name} (${auth.user.role})`);
 
     const formData = await req.formData();
@@ -286,9 +321,21 @@ export async function POST(req) {
       );
     }
 
-    // 🔹 Validate role limits BEFORE processing image
+    // 🔹 Validate Deputy Principal has position specified
+    if (role === "Deputy Principal" && !position) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Deputy Principal must have a position: 'Deputy Principal (Academics)' or 'Deputy Principal (Administration)'",
+          authenticated: true
+        },
+        { status: 400 }
+      );
+    }
+
+    // 🔹 Validate Principal/Deputy Principal limits
     try {
-      await checkRoleLimits(role);
+      await checkRoleLimits(role, null, position);
     } catch (error) {
       return NextResponse.json(
         { 
@@ -428,7 +475,7 @@ export async function POST(req) {
       },
     });
 
-    console.log(`✅ Staff member created by ${auth.user.name}: ${newStaff.name}`);
+    console.log(`✅ Staff member created by ${auth.user.name}: ${newStaff.name} (${newStaff.role}${newStaff.position ? ' - ' + newStaff.position : ''})`);
 
     return NextResponse.json(
       { 

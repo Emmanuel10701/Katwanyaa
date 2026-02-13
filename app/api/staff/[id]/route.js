@@ -267,7 +267,7 @@ export async function PUT(req, { params }) {
     const formData = await req.formData();
     const data = {};
 
-    // Fetch existing staff (for image cleanup)
+    // Fetch existing staff (for image cleanup and role checks)
     const existingStaff = await prisma.staff.findUnique({
       where: { id },
     });
@@ -283,12 +283,26 @@ export async function PUT(req, { params }) {
       );
     }
 
-    // Check if role is being changed
+    // Check if role or position is being changed
     const newRole = formData.get("role");
+    const newPosition = formData.get("position");
+    
+    // Validate Deputy Principal has position when role is Deputy Principal
+    if (newRole === "Deputy Principal" && !newPosition) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Deputy Principal must have a position: 'Deputy Principal (Academics)' or 'Deputy Principal (Administration)'",
+          authenticated: true
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check role limits if role is being changed OR if position is being updated for Deputy Principal
     if (newRole && newRole !== existingStaff.role) {
       try {
-        // Validate role limits BEFORE processing other data
-        await checkRoleLimits(newRole, id);
+        await checkRoleLimits(newRole, id, newPosition);
       } catch (error) {
         return NextResponse.json(
           { 
@@ -298,6 +312,43 @@ export async function PUT(req, { params }) {
           },
           { status: 400 }
         );
+      }
+    } 
+    // Special case: Updating Deputy Principal position (e.g., from Academics to Administration)
+    else if (existingStaff.role === "Deputy Principal" && 
+             newPosition && 
+             newPosition !== existingStaff.position) {
+      
+      // Check if the target position is already taken
+      const existingDeputies = await prisma.staff.findMany({
+        where: { 
+          role: "Deputy Principal",
+          id: { not: id } // Exclude current staff
+        }
+      });
+      
+      const positionLower = newPosition.toLowerCase();
+      
+      if (positionLower.includes('academics') || positionLower.includes('academic')) {
+        const academicExists = existingDeputies.some(deputy => 
+          deputy.position?.toLowerCase().includes('academics') || 
+          deputy.position?.toLowerCase().includes('academic')
+        );
+        
+        if (academicExists) {
+          throw new Error("Deputy Principal (Academics) already exists. Cannot change to this position.");
+        }
+      }
+      
+      if (positionLower.includes('admin')) {
+        const adminExists = existingDeputies.some(deputy => 
+          deputy.position?.toLowerCase().includes('admin') ||
+          deputy.position?.toLowerCase().includes('administration')
+        );
+        
+        if (adminExists) {
+          throw new Error("Deputy Principal (Administration) already exists. Cannot change to this position.");
+        }
       }
     }
 
@@ -340,8 +391,6 @@ export async function PUT(req, { params }) {
         console.error("Error parsing achievements:", e);
       }
     }
-
-  
 
     // Optional image upload (replace old one)
     const file = formData.get("image");
@@ -403,7 +452,7 @@ export async function PUT(req, { params }) {
       data,
     });
 
-    console.log(`✅ Staff member updated by ${auth.user.name}: ${updatedStaff.name}`);
+    console.log(`✅ Staff member updated by ${auth.user.name}: ${updatedStaff.name} (${updatedStaff.role}${updatedStaff.position ? ' - ' + updatedStaff.position : ''})`);
 
     return NextResponse.json({ 
       success: true, 
@@ -414,7 +463,9 @@ export async function PUT(req, { params }) {
     console.error("❌ PUT Staff Error:", error);
     
     // Handle role limit errors
-    if (error.message.includes("principal") || error.message.includes("deputy")) {
+    if (error.message.includes("principal") || 
+        error.message.includes("deputy") || 
+        error.message.includes("Deputy")) {
       return NextResponse.json(
         {
           success: false,

@@ -499,16 +499,23 @@ function ModernStaffDetailModal({ staff, onClose, onEdit }) {
             </div>
 
             <div className="flex-1 space-y-2">
-              <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-2">
-                <span className="bg-orange-600 text-[10px] font-black uppercase tracking-widest text-white px-3 py-1 rounded-full">
-                  {staff.role}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                  staff.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400'
-                }`}>
-                  {staff.status || 'active'}
-                </span>
-              </div>
+<div className="flex flex-wrap justify-center md:justify-start gap-2 mb-2">
+  <span className="bg-orange-600 text-[10px] font-black uppercase tracking-widest text-white px-3 py-1 rounded-full">
+    {staff.role}
+  </span>
+  {staff.role === 'Deputy Principal' && staff.position && (
+    <span className={`text-[10px] font-black uppercase tracking-widest text-white px-3 py-1 rounded-full ${
+      staff.position.includes('Academics') ? 'bg-emerald-600' : 'bg-amber-600'
+    }`}>
+      {staff.position.replace('Deputy Principal ', '')}
+    </span>
+  )}
+  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+    staff.status === 'active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400'
+  }`}>
+    {staff.status || 'active'}
+  </span>
+</div>
               <h1 className="text-2xl md:text-4xl font-black text-white tracking-tighter uppercase leading-none italic">
                 {staff.name}
               </h1>
@@ -748,11 +755,23 @@ const getImageUrl = (imagePath) => {
             </div>
           </div>
           
-          {/* Role Mapping */}
-          <div className="space-y-1">
-            <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Role</span>
-            <span className="text-xs font-bold text-slate-700 truncate block">{staff.role}</span>
-          </div>
+<div className="space-y-1">
+  <span className="block text-[9px] text-slate-400 font-black uppercase tracking-[0.1em]">Role</span>
+  {staff.role === 'Deputy Principal' && staff.position ? (
+    <div className="flex flex-col">
+      <span className="text-xs font-bold text-slate-800 truncate block">
+        Deputy Principal
+      </span>
+      <span className={`text-[10px] font-black ${
+        staff.position.includes('Academics') ? 'text-emerald-600' : 'text-amber-600'
+      } truncate`}>
+        {staff.position.replace('Deputy Principal ', '')}
+      </span>
+    </div>
+  ) : (
+    <span className="text-xs font-bold text-slate-700 truncate block">{staff.role}</span>
+  )}
+</div>
 
           {/* Phone Mapping */}
           <div className="col-span-2 p-3 bg-slate-50 rounded-2xl flex items-center justify-between border border-slate-100/50">
@@ -850,15 +869,39 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
     { id: 'details', label: 'Details', icon: FaInfoCircle, description: 'Additional information' }
   ];
 
-  const ROLES = [
-    { value: 'Teacher', label: 'Teacher', icon: FaChalkboardTeacher, color: 'text-blue-500' },
-    { value: 'Principal', label: 'Principal', icon: FaCrown, color: 'text-purple-500' },
-    { value: 'Deputy Principal', label: 'Deputy Principal', icon: FaUserTie, color: 'text-green-500' },
-    { value: 'BOM Member', label: 'BOM Member', icon: FaShieldAlt, color: 'text-red-500' },
-    { value: 'Support Staff', label: 'Support Staff', icon: FaUsers, color: 'text-yellow-500' },
-    { value: 'Librarian', label: 'Librarian', icon: FaBook, color: 'text-indigo-500' },
-    { value: 'Counselor', label: 'Counselor', icon: FaHandsHelping, color: 'text-pink-500' }
-  ];
+
+
+
+const ROLES = [
+  { value: 'Teacher', label: 'Teacher', icon: FaChalkboardTeacher, color: 'text-blue-500' },
+  { value: 'Principal', label: 'Principal', icon: FaCrown, color: 'text-purple-500' },
+  { value: 'BOM Member', label: 'BOM Member', icon: FaShieldAlt, color: 'text-red-500' },
+  { value: 'Support Staff', label: 'Support Staff', icon: FaUsers, color: 'text-yellow-500' },
+  { value: 'Librarian', label: 'Librarian', icon: FaBook, color: 'text-indigo-500' },
+  { value: 'Counselor', label: 'Counselor', icon: FaHandsHelping, color: 'text-pink-500' }
+];
+
+
+
+
+// Add this after the ROLES array
+const DEPUTY_PRINCIPAL_TYPES = [
+  { 
+    value: 'Deputy Principal (Academics)', 
+    label: 'Deputy Principal (Academics)', 
+    icon: FaGraduationCap, 
+    color: 'text-emerald-600',
+    description: 'Oversees curriculum, academics, and examinations'
+  },
+  { 
+    value: 'Deputy Principal (Administration)', 
+    label: 'Deputy Principal (Administration)', 
+    icon: FaBuilding, 
+    color: 'text-amber-600',
+    description: 'Oversees discipline, facilities, and student affairs'
+  }
+];
+
 
   const DEPARTMENTS = [
     'Sciences', 'Mathematics', 'Languages', 'Humanities', 
@@ -878,44 +921,46 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
     }
   }, [staff]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (currentStep < steps.length - 1) {
-      return;
-    }
 
+const validateDeputyPrincipal = () => {
+  if (formData.role === 'Deputy Principal') {
+    if (!formData.position) {
+      setCurrentStep(0); // Go back to basic info step
+      throw new Error('Please select Deputy Principal type (Academics or Administration)');
+    }
+    
+    // Optional: Check if position clearly indicates which type
+    if (!formData.position.includes('Academics') && !formData.position.includes('Administration')) {
+      throw new Error('Deputy Principal must be either Academics or Administration');
+    }
+  }
+  return true;
+};
+
+// Modify your handleSubmit function to include validation
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (currentStep < steps.length - 1) {
+    return;
+  }
+
+  try {
+    // Add deputy principal validation
+    validateDeputyPrincipal();
+    
     if (!imageFile && !staff?.image && !imagePreview) {
       setImageError('Staff image is required. Please upload an image.');
       setCurrentStep(2);
       return;
     }
 
-    try {
-      const formDataToSend = new FormData();
-      
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== undefined) {
-          if (Array.isArray(formData[key])) {
-            formDataToSend.append(key, JSON.stringify(formData[key]));
-          } else if (key !== 'image') {
-            formDataToSend.append(key, formData[key].toString());
-          }
-        }
-      });
-      
-      if (imageFile) {
-        formDataToSend.append('image', imageFile);
-      } else if (staff?.image && typeof staff.image === 'string' && staff.image.trim() !== '') {
-        formDataToSend.append('image', staff.image);
-      } else {
-        formDataToSend.append('image', '');
-      }
-      
-      await onSave(formDataToSend, staff?.id);
-    } catch (error) {
-      throw error;
-    }
-  };
+    // Rest of your submit code...
+  } catch (error) {
+    // Show validation error to user
+    alert(error.message); // Or use your notification system
+    return;
+  }
+};
 
   const handleNextStep = (e) => {
     e.preventDefault();
@@ -1103,71 +1148,227 @@ function ModernStaffModal({ onClose, onSave, staff, loading }) {
                         className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
                       />
                     </div>
+{/* ENHANCED ROLE SELECTION - WITH SEPARATE DEPUTY PRINCIPAL OPTIONS */}
+<div>
+  <label className="flex text-md font-black text-gray-900 mb-4 items-center gap-3">
+    <FaUserTie className="text-purple-600 text-lg" /> 
+    <span>Role <span className="text-red-900">*</span></span>
+  </label>
+  
+  {/* Regular Roles Grid (excluding Deputy Principal) */}
+  <div className="grid grid-cols-2 gap-4 mb-6">
+    {ROLES.map((role) => (
+      <div 
+        key={role.value} 
+        onClick={() => handleChange('role', role.value)}
+        className={`p-5 rounded-xl border-3 cursor-pointer transition-all duration-300 ${
+          formData.role === role.value 
+            ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg shadow-blue-100' 
+            : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md'
+        }`}
+      >
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-xl ${formData.role === role.value ? 'bg-blue-100' : 'bg-gray-100'}`}>
+            <role.icon className={`text-2xl ${role.color}`} />
+          </div>
+          <div>
+            <span className="font-black text-gray-900 text-base block">{role.label}</span>
+            {role.description && (
+              <span className="text-[9px] text-gray-500 font-bold uppercase tracking-tight">{role.description}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+  
+  {/* Deputy Principal Section - Separate with Header */}
+  <div className="mt-2 mb-4">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-1.5 h-6 bg-gradient-to-b from-emerald-500 to-amber-500 rounded-full"></div>
+      <span className="text-xs font-black text-gray-700 uppercase tracking-wider">Deputy Principal Positions (Maximum 2 Total)</span>
+    </div>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {DEPUTY_PRINCIPAL_TYPES.map((deputyType) => {
+        const isSelected = formData.role === 'Deputy Principal' && formData.position === deputyType.value;
+        
+        return (
+          <div 
+            key={deputyType.value} 
+            onClick={() => {
+              handleChange('role', 'Deputy Principal');
+              handleChange('position', deputyType.value);
+              // Auto-set department to Administration for Admin Deputy, Sciences for Academics
+              if (deputyType.value.includes('Administration')) {
+                handleChange('department', 'Administration');
+              } else {
+                handleChange('department', 'Sciences'); // or keep existing
+              }
+            }}
+            className={`p-6 rounded-2xl border-3 cursor-pointer transition-all duration-300 ${
+              isSelected 
+                ? 'border-emerald-600 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-xl shadow-emerald-100/50' 
+                : 'border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/30'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-2xl ${
+                isSelected 
+                  ? 'bg-emerald-600 text-white' 
+                  : deputyType.value.includes('Academics') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+              }`}>
+                <deputyType.icon className="text-2xl" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-black text-gray-900 text-base">{deputyType.label}</span>
+                  {isSelected && (
+                    <span className="bg-emerald-600 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-wider">
+                      Selected
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600 font-medium mb-2">{deputyType.description}</p>
+                
+                {/* Status badges */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-[9px] bg-white px-2 py-1 rounded-lg border border-gray-200 font-bold uppercase tracking-tight">
+                    {deputyType.value.includes('Academics') ? '📚 Curriculum' : '🏛️ Administration'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    
+    {/* Info Alert for Deputy Principal Limits */}
+    <div className="mt-4 p-4 bg-blue-50/80 border border-blue-200 rounded-2xl flex items-start gap-3">
+      <FaInfoCircle className="text-blue-600 text-lg flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="text-sm font-bold text-blue-900 mb-1">Deputy Principal Allocation Policy</p>
+        <p className="text-xs text-blue-800 leading-relaxed">
+          Only <span className="font-black">one (1) Deputy Principal (Academics)</span> and{' '}
+          <span className="font-black">one (1) Deputy Principal (Administration)</span> are allowed.<br />
+          Total Deputy Principals cannot exceed <span className="font-black bg-blue-200 px-2 py-0.5 rounded-lg">2</span>.
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Show current Deputy Principal count if any exist - This would need to be passed as prop from parent */}
+  {props.existingDeputyCounts && (
+    <div className="mt-4 flex flex-wrap gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold text-gray-700">Current Deputy Principals:</span>
+        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-[10px] font-black">
+          Academics: {props.existingDeputyCounts.academics || 0}/1
+        </span>
+        <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-[10px] font-black">
+          Admin: {props.existingDeputyCounts.administration || 0}/1
+        </span>
+        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black">
+          Total: {props.existingDeputyCounts.total || 0}/2
+        </span>
+      </div>
+    </div>
+  )}
+</div>
 
-                    {/* ENHANCED ROLE SELECTION */}
-                    <div>
-                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
-                        <FaUserTie className="text-purple-600 text-lg" /> 
-                        <span>Role <span className="text-red-900">*</span></span>
-                      </label>
-                      <div className="grid grid-cols-2 gap-4">
-                        {ROLES.map((role) => (
-                          <div 
-                            key={role.value} 
-                            onClick={() => handleChange('role', role.value)}
-                            className={`p-5 rounded-xl border-2 cursor-pointer ${
-                              formData.role === role.value 
-                                ? 'border-blue-600 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-sm shadow-blue-200' 
-                                : 'border-gray-200 hover:border-gray-400 hover:bg-gray-50 '
-                            }`}
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className={`p-3 rounded-xl ${formData.role === role.value ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                                <role.icon className={`text-2xl ${role.color}`} />
-                              </div>
-                              <span className="font-black text-gray-900 text-base">{role.label}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* ENHANCED POSITION SELECT */}
-                    <div>
-                      <label className="flex text-md font-black text-gray-900 mb-4  items-center gap-3 ">
-                        <FaBriefcase className="text-green-600 text-lg" /> 
-                        <span>Position</span>
-                      </label>
-                      <select
-                        value={formData.position}
-                        onChange={(e) => handleChange('position', e.target.value)}
-                        className="w-full px-5 py-4 text-md  font-bold border-3 border-gray-300 rounded-2xl border focus:ring-4 focus:ring-orange-500/20 focus:border-2 bg-white shadow-sm transition-all"
-                      >
-                        <option value="">Select a position...</option>
-                        <optgroup label="Administration" className="font-black text-green-800 bg-green-50">
-                          <option value="Chief Principal">Chief Principal</option>
-                          <option value="Deputy Principal">Deputy Principal</option>
-                          <option value="Senior Teacher">Senior Teacher</option>
-                          <option value="Head of Department">Head of Department</option>
-                        </optgroup>
-                        <optgroup label="Teaching Staff" className="font-black text-blue-800 bg-blue-50">
-                          <option value="Teacher">Teacher</option>
-                          <option value="Subject Teacher">Subject Teacher</option>
-                          <option value="Class Teacher">Class Teacher</option>
-                          <option value="Assistant Teacher">Assistant Teacher</option>
-                        </optgroup>
-                        <optgroup label="Support & Finance" className="font-black text-orange-800 bg-orange-50">
-                          <option value="Librarian">Librarian</option>
-                          <option value="Laboratory Technician">Laboratory Technician</option>
-                          <option value="Accountant">Accountant</option>
-                          <option value="Secretary">Secretary</option>
-                          <option value="Support Staff">Support Staff</option>
-                        </optgroup>
-                      </select>
-                      <p className="mt-3 text-sm text-gray-600 italic px-2 font-medium">
-                        Select the primary role held at the institution
-                      </p>
-                    </div>
+{/* ENHANCED POSITION SELECT */}
+{/* ENHANCED POSITION SELECT - CONDITIONAL BASED ON ROLE */}
+<div>
+  <label className="flex text-md font-black text-gray-900 mb-4 items-center gap-3">
+    <FaBriefcase className="text-green-600 text-lg" /> 
+    <span>
+      {formData.role === 'Deputy Principal' ? 'Deputy Principal Type' : 'Position'}
+      {formData.role === 'Deputy Principal' && <span className="text-red-500 text-sm ml-2">(Required)</span>}
+    </span>
+  </label>
+  
+  {formData.role === 'Deputy Principal' ? (
+    // For Deputy Principal, position is already set by clicking the cards above
+    <div className="p-5 bg-gradient-to-r from-emerald-50 to-amber-50 border-2 border-emerald-200 rounded-2xl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {formData.position?.includes('Academics') ? (
+            <>
+              <div className="p-3 bg-emerald-600 text-white rounded-xl">
+                <FaGraduationCap className="text-xl" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Selected Position</p>
+                <p className="text-lg font-black text-gray-900">{formData.position || 'Not selected'}</p>
+                <p className="text-xs text-emerald-700 font-bold mt-1">Oversees curriculum, academics & examinations</p>
+              </div>
+            </>
+          ) : formData.position?.includes('Administration') ? (
+            <>
+              <div className="p-3 bg-amber-600 text-white rounded-xl">
+                <FaBuilding className="text-xl" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-gray-500 uppercase tracking-wider">Selected Position</p>
+                <p className="text-lg font-black text-gray-900">{formData.position || 'Not selected'}</p>
+                <p className="text-xs text-amber-700 font-bold mt-1">Oversees discipline, facilities & student affairs</p>
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-500 italic">Please select a Deputy Principal type above</div>
+          )}
+        </div>
+        
+        {formData.position && (
+          <button
+            type="button"
+            onClick={() => {
+              handleChange('position', '');
+              handleChange('role', ''); // Clear role too
+            }}
+            className="p-2 bg-white hover:bg-red-50 rounded-xl border border-gray-200 text-gray-400 hover:text-red-600 transition-colors"
+          >
+            <FiX size={18} />
+          </button>
+        )}
+      </div>
+    </div>
+  ) : (
+    // Original position dropdown for non-Deputy Principal roles
+    <select
+      value={formData.position}
+      onChange={(e) => handleChange('position', e.target.value)}
+      className="w-full px-5 py-4 text-md font-bold border-3 border-gray-300 rounded-2xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 bg-white shadow-sm transition-all"
+    >
+      <option value="">Select a position...</option>
+      <optgroup label="Administration" className="font-black text-green-800 bg-green-50">
+        <option value="Chief Principal">Chief Principal</option>
+        <option value="Senior Teacher">Senior Teacher</option>
+        <option value="Head of Department">Head of Department</option>
+      </optgroup>
+      <optgroup label="Teaching Staff" className="font-black text-blue-800 bg-blue-50">
+        <option value="Teacher">Teacher</option>
+        <option value="Subject Teacher">Subject Teacher</option>
+        <option value="Class Teacher">Class Teacher</option>
+        <option value="Assistant Teacher">Assistant Teacher</option>
+      </optgroup>
+      <optgroup label="Support & Finance" className="font-black text-orange-800 bg-orange-50">
+        <option value="Librarian">Librarian</option>
+        <option value="Laboratory Technician">Laboratory Technician</option>
+        <option value="Accountant">Accountant</option>
+        <option value="Secretary">Secretary</option>
+        <option value="Support Staff">Support Staff</option>
+      </optgroup>
+    </select>
+  )}
+  
+  <p className="mt-3 text-sm text-gray-600 italic px-2 font-medium">
+    {formData.role === 'Deputy Principal' 
+      ? 'Deputy Principal type is automatically set when you select from the cards above' 
+      : 'Select the primary role held at the institution'}
+  </p>
+</div>
                   </div>
 
                   <div className="space-y-6">
@@ -1757,6 +1958,28 @@ export default function StaffManager() {
   const roles = ['Principal', 'Deputy Principal', 'Teacher', 'BOM Member', 'Support Staff', 'Librarian', 'Counselor'];
   const departments = ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Administration', 'Sports', 'Guidance'];
 
+// In StaffManager component, add this to your stats calculation
+useEffect(() => {
+  const calculatedStats = {
+    total: staff.length,
+    teaching: staff.filter(s => s.role === 'Teacher').length,
+    administration: staff.filter(s => s.role === 'Principal' || s.role === 'Deputy Principal').length,
+    bom: staff.filter(s => s.role === 'BOM Member').length,
+    active: staff.filter(s => s.status === 'active').length,
+    onLeave: staff.filter(s => s.status === 'on-leave').length,
+    // Add deputy counts
+    deputyAcademics: staff.filter(s => 
+      s.role === 'Deputy Principal' && 
+      s.position?.includes('Academics')
+    ).length,
+    deputyAdmin: staff.filter(s => 
+      s.role === 'Deputy Principal' && 
+      s.position?.includes('Administration')
+    ).length,
+    deputyTotal: staff.filter(s => s.role === 'Deputy Principal').length
+  };
+  setStats(calculatedStats);
+}, [staff]);
 
 
   useEffect(() => {
