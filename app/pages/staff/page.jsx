@@ -678,9 +678,13 @@ export default function StaffDirectory() {
             </button>
             
             <Link href="/" className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">
-                MI
-              </div>
+                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
+                  <img 
+                    src="/katz.jpeg" 
+                    alt="School Logo" 
+                    className="w-full h-full object-contain p-2"
+                  />
+                </div>
               <div className="hidden sm:block">
                 <span className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
                   Katwanyaa High School Staff
@@ -787,7 +791,7 @@ export default function StaffDirectory() {
               </div>
 
               {/* HIERARCHY FILTER - Principal First in List */}
-              <div className="bg-white -z-10 rounded-[1rem] border border-gray-100 shadow-xl overflow-hidden">
+              <div className="bg-white rounded-[1rem] border border-gray-100 shadow-xl overflow-hidden">
                 <div className="p-5 bg-slate-900 border-b border-slate-800">
                   <h3 className="font-black text-white flex items-center gap-3 text-sm uppercase tracking-widest">
                     <FiUsers className="text-blue-400" /> 
