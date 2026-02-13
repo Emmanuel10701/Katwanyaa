@@ -100,7 +100,7 @@ const transformStaffData = (apiData) => {
     achievements: achievements,
     quote: apiData.quote || 'Education is the most powerful weapon which you can use to change the world.',
     joinDate: apiData.joinDate
-      ? new Date(apiData.createdAt).getFullYear().toString() 
+      ? new Date(apiData.joinDate).getFullYear().toString() 
       : '2020',
     officeHours: 'Monday - Friday: 8:00 AM - 4:00 PM',
     location: apiData.department ? `${apiData.department} Department` : 'Main Academic Building',
