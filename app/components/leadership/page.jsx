@@ -302,18 +302,6 @@ const ModernStaffLeadership = () => {
           {/* Featured Hero Card (Principal by default) */}
           <div className="lg:col-span-8 w-full mx-auto flex flex-col bg-white rounded-xl sm:rounded-2xl md:rounded-3xl shadow-lg sm:shadow-xl border border-slate-100 overflow-hidden min-h-[400px] sm:min-h-[550px] md:min-h-[500px] lg:min-h-[620px]">
             
-            {/* Header with Back Button (when viewing other staff) */}
-            {viewMode === 'other' && (
-              <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-50">
-                <button
-                  onClick={returnToPrincipal}
-                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/90 backdrop-blur-sm rounded-lg sm:rounded-xl text-slate-700 font-bold text-xs sm:text-sm hover:bg-white transition-all shadow-lg border border-slate-200"
-                >
-                  <FiArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" /> 
-                  <span className="whitespace-nowrap">Back to Principal</span>
-                </button>
-              </div>
-            )}
 
             {/* Image Section */}
             <div className="relative h-[60vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden">
