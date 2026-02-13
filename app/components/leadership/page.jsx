@@ -52,7 +52,8 @@ const ModernStaffLeadership = () => {
   const [staff, setStaff] = useState([]);
   const [principal, setPrincipal] = useState(null);
   const [featuredStaff, setFeaturedStaff] = useState(null);
-  const [deputies, setDeputies] = useState([]);
+  const [academicsDeputy, setAcademicsDeputy] = useState(null);
+  const [adminDeputy, setAdminDeputy] = useState(null);
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,7 +71,7 @@ const ModernStaffLeadership = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch staff data from API - FIXED to show Denis Kanzi
+  // Fetch staff data from API
   useEffect(() => {
     const fetchStaff = async () => {
       try {
@@ -92,14 +93,29 @@ const ModernStaffLeadership = () => {
           setPrincipal(foundPrincipal);
           setFeaturedStaff(foundPrincipal);
 
-          // 2. Identify ALL Deputy Principals (Mr. Paul Mwanzia - id: 2, Madam Beatrice Olum - id: 3)
+          // 2. Identify Deputy Principals and split into Academics and Administration
           const allDeputies = allStaff.filter(s => 
-            (s.id === 2 || s.id === 3) ||
-            (s.id !== foundPrincipal?.id && 
-            (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy')))
+            (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
           );
-          
-          setDeputies(allDeputies);
+
+          // Academics Deputy (Mr. Paul Mwanzia - id: 2 or position includes academics)
+          const foundAcademicsDeputy = allDeputies.find(s => 
+            s.id === 2 ||
+            s.position?.toLowerCase().includes('academics') || 
+            s.position?.toLowerCase().includes('academic') ||
+            s.department?.toLowerCase().includes('science') ||
+            s.department?.toLowerCase().includes('academic')
+          );
+
+          // Administration Deputy (Madam Beatrice Olum - id: 3 or position includes admin)
+          const foundAdminDeputy = allDeputies.find(s => 
+            s.id === 3 ||
+            s.position?.toLowerCase().includes('admin') ||
+            s.department?.toLowerCase().includes('administration')
+          );
+
+          setAcademicsDeputy(foundAcademicsDeputy || null);
+          setAdminDeputy(foundAdminDeputy || null);
 
           // 3. Find Mr. Denis Kanzi (Teacher - id: 4)
           const denisKanzi = allStaff.find(s => s.id === 4);
@@ -205,6 +221,16 @@ const ModernStaffLeadership = () => {
     if (staffMember.position) return staffMember.position;
     if (staffMember.role) return staffMember.role;
     return 'Staff Member';
+  };
+
+  // Get deputy display title
+  const getDeputyTitle = (deputy) => {
+    if (!deputy) return '';
+    if (deputy.position?.toLowerCase().includes('academics')) return 'Deputy Principal (Academics)';
+    if (deputy.position?.toLowerCase().includes('admin')) return 'Deputy Principal (Administration)';
+    if (deputy.id === 2) return 'Deputy Principal (Academics)';
+    if (deputy.id === 3) return 'Deputy Principal (Administration)';
+    return 'Deputy Principal';
   };
 
   // Loading state
@@ -317,7 +343,9 @@ const ModernStaffLeadership = () => {
               <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 bg-gradient-to-t from-black/90 via-black/20 to-transparent">
                 <div className="transform transition-transform duration-500 hover:translate-x-2">
                   <span className={`px-3 sm:px-4 py-1 ${getRoleColor(featuredStaff?.role)} text-white text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] rounded-sm inline-block mb-2 sm:mb-3 shadow-lg`}>
-                    {getRoleTitle(featuredStaff)}
+                    {featuredStaff?.role === 'Deputy Principal' && featuredStaff?.position 
+                      ? featuredStaff.position 
+                      : getRoleTitle(featuredStaff)}
                     {viewMode === 'other' && ' (Viewing)'}
                   </span>
                   
@@ -472,7 +500,7 @@ const ModernStaffLeadership = () => {
             </div>
           </div>
 
-          {/* ========== SUB-CARD SIDEBAR - 4 CARDS: Principal + 2 Deputies + Denis Kanzi (ALWAYS SHOW) ========== */}
+          {/* ========== SUB-CARD SIDEBAR - 4 CARDS: Principal + Academics Deputy + Admin Deputy + Denis Kanzi ========== */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
             
             {/* 1. PRINCIPAL CARD - Mr. David Muange */}
@@ -529,50 +557,50 @@ const ModernStaffLeadership = () => {
               </button>
             )}
 
-            {/* 2. FIRST DEPUTY CARD - Mr. Paul Mwanzia */}
-            {deputies.length > 0 && deputies[0] && (
+            {/* 2. ACADEMICS DEPUTY CARD - Mr. Paul Mwanzia */}
+            {academicsDeputy && (
               <button
-                onClick={() => handleStaffClick(deputies[0])}
+                onClick={() => handleStaffClick(academicsDeputy)}
                 className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                  featuredStaff?.id === deputies[0].id ? 'border-purple-500' : 'border-slate-100'
-                } hover:border-purple-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  featuredStaff?.id === academicsDeputy.id ? 'border-emerald-500' : 'border-slate-100'
+                } hover:border-emerald-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
               >
                 <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
                   <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                    {deputies[0].image ? (
+                    {academicsDeputy.image ? (
                       <img
-                        src={getImageUrl(deputies[0].image)}
-                        alt={deputies[0].name}
+                        src={getImageUrl(academicsDeputy.image)}
+                        alt={academicsDeputy.name}
                         className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(deputies[0].name)}&background=8b5cf6&color=fff&bold=true&size=128`;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(academicsDeputy.name)}&background=10b981&color=fff&bold=true&size=128`;
                         }}
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
                         <FiUser className="text-white text-sm sm:text-lg md:text-2xl" />
                       </div>
                     )}
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                        Deputy Principal
+                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                        Deputy Principal (Academics)
                       </span>
-                      {featuredStaff?.id === deputies[0].id && (
-                        <span className="flex items-center gap-1 text-purple-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                      {featuredStaff?.id === academicsDeputy.id && (
+                        <span className="flex items-center gap-1 text-emerald-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
                           <FiCheck className="text-xs" /> Viewing
                         </span>
                       )}
                     </div>
-                    <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                      {deputies[0].name}
+                    <h3 className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                      {academicsDeputy.name}
                     </h3>
                     <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                      {deputies[0].department || 'Administration'}
+                      {academicsDeputy.department || 'Academics Department'}
                     </p>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-purple-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-emerald-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
                       View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
@@ -580,50 +608,50 @@ const ModernStaffLeadership = () => {
               </button>
             )}
 
-            {/* 3. SECOND DEPUTY CARD - Madam Beatrice Olum */}
-            {deputies.length > 1 && deputies[1] && (
+            {/* 3. ADMINISTRATION DEPUTY CARD - Madam Beatrice Olum */}
+            {adminDeputy && (
               <button
-                onClick={() => handleStaffClick(deputies[1])}
+                onClick={() => handleStaffClick(adminDeputy)}
                 className={`w-full group relative bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 shadow border-2 ${
-                  featuredStaff?.id === deputies[1].id ? 'border-purple-500' : 'border-slate-100'
-                } hover:border-purple-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
+                  featuredStaff?.id === adminDeputy.id ? 'border-amber-500' : 'border-slate-100'
+                } hover:border-amber-300 hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 text-left overflow-hidden`}
               >
                 <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
                   <div className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 flex-shrink-0 rounded-lg sm:rounded-xl overflow-hidden">
-                    {deputies[1].image ? (
+                    {adminDeputy.image ? (
                       <img
-                        src={getImageUrl(deputies[1].image)}
-                        alt={deputies[1].name}
+                        src={getImageUrl(adminDeputy.image)}
+                        alt={adminDeputy.name}
                         className="w-full h-full object-cover object-top group-hover:scale-100 transition-transform duration-500"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(deputies[1].name)}&background=8b5cf6&color=fff&bold=true&size=128`;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminDeputy.name)}&background=f59e0b&color=fff&bold=true&size=128`;
                         }}
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
                         <FiUser className="text-white text-sm sm:text-lg md:text-2xl" />
                       </div>
                     )}
                   </div>
                   <div className="flex-grow min-w-0">
                     <div className="flex items-center justify-between mb-1 sm:mb-2">
-                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
-                        Deputy Principal
+                      <span className="px-2 sm:px-2.5 md:px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest rounded-full">
+                        Deputy Principal (Administration)
                       </span>
-                      {featuredStaff?.id === deputies[1].id && (
-                        <span className="flex items-center gap-1 text-purple-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
+                      {featuredStaff?.id === adminDeputy.id && (
+                        <span className="flex items-center gap-1 text-amber-600 text-[9px] sm:text-[10px] md:text-xs font-bold">
                           <FiCheck className="text-xs" /> Viewing
                         </span>
                       )}
                     </div>
-                    <h3 className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate text-sm sm:text-base md:text-lg">
-                      {deputies[1].name}
+                    <h3 className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate text-sm sm:text-base md:text-lg">
+                      {adminDeputy.name}
                     </h3>
                     <p className="text-slate-500 text-xs md:text-sm mt-0.5 sm:mt-1 truncate">
-                      {deputies[1].department || 'Administration'}
+                      {adminDeputy.department || 'Administration'}
                     </p>
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-purple-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
+                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] md:text-xs text-amber-600 mt-1.5 sm:mt-2 md:mt-3 font-bold tracking-tighter">
                       View Profile <FiChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>

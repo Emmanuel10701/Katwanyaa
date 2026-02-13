@@ -836,7 +836,7 @@ const getImageUrl = (imagePath) => {
 }
 
 
-function ModernStaffModal({ onClose, onSave, staff, loading }) {
+function ModernStaffModal({ onClose, onSave, staff, loading, existingDeputyCounts }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
     name: staff?.name || '',
@@ -937,7 +937,6 @@ const validateDeputyPrincipal = () => {
   return true;
 };
 
-// Modify your handleSubmit function to include validation
 const handleSubmit = async (e) => {
   e.preventDefault();
   if (currentStep < steps.length - 1) {
@@ -954,10 +953,29 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    // Rest of your submit code...
+    const formDataToSend = new FormData();
+    
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== undefined) {
+        if (Array.isArray(formData[key])) {
+          formDataToSend.append(key, JSON.stringify(formData[key]));
+        } else if (key !== 'image') {
+          formDataToSend.append(key, formData[key].toString());
+        }
+      }
+    });
+    
+    if (imageFile) {
+      formDataToSend.append('image', imageFile);
+    } else if (staff?.image && typeof staff.image === 'string' && staff.image.trim() !== '') {
+      formDataToSend.append('image', staff.image);
+    } else {
+      formDataToSend.append('image', '');
+    }
+    
+    await onSave(formDataToSend, staff?.id);
   } catch (error) {
-    // Show validation error to user
-    alert(error.message); // Or use your notification system
+    alert(error.message);
     return;
   }
 };
@@ -1258,23 +1276,23 @@ const handleSubmit = async (e) => {
     </div>
   </div>
   
-  {/* Show current Deputy Principal count if any exist - This would need to be passed as prop from parent */}
-  {props.existingDeputyCounts && (
-    <div className="mt-4 flex flex-wrap gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-gray-700">Current Deputy Principals:</span>
-        <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-[10px] font-black">
-          Academics: {props.existingDeputyCounts.academics || 0}/1
-        </span>
-        <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-[10px] font-black">
-          Admin: {props.existingDeputyCounts.administration || 0}/1
-        </span>
-        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black">
-          Total: {props.existingDeputyCounts.total || 0}/2
-        </span>
-      </div>
+{/* Show current Deputy Principal count if any exist - Now using existingDeputyCounts from parent */}
+{existingDeputyCounts && (
+  <div className="mt-4 flex flex-wrap gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-bold text-gray-700">Current Deputy Principals:</span>
+      <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-[10px] font-black">
+        Academics: {existingDeputyCounts.academics || 0}/1
+      </span>
+      <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-[10px] font-black">
+        Admin: {existingDeputyCounts.administration || 0}/1
+      </span>
+      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-black">
+        Total: {existingDeputyCounts.total || 0}/2
+      </span>
     </div>
-  )}
+  </div>
+)}
 </div>
 
 {/* ENHANCED POSITION SELECT */}
@@ -2632,14 +2650,20 @@ const handleSubmit = async (formData, id) => {
       )}
 
       {/* Modals */}
-      {showModal && (
-        <ModernStaffModal 
-          onClose={() => setShowModal(false)} 
-          onSave={handleSubmit} 
-          staff={editingStaff} 
-          loading={saving} 
-        />
-      )}
+{showModal && (
+  <ModernStaffModal 
+    onClose={() => setShowModal(false)} 
+    onSave={handleSubmit} 
+    staff={editingStaff} 
+    loading={saving}
+    existingDeputyCounts={{
+      academics: stats?.deputyAcademics || 0,
+      administration: stats?.deputyAdmin || 0,
+      total: stats?.deputyTotal || 0
+    }}
+  />
+)}
+
       {showDetailModal && selectedStaff && (
         <ModernStaffDetailModal 
           staff={selectedStaff} 
