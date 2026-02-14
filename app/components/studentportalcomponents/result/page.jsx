@@ -358,6 +358,22 @@ function SubjectDetailsModal({ result, onClose }) {
   );
 }
 
+  const handleZerakiClick = (e) => {
+    e.preventDefault();
+
+    // 1. Try to open the app using the custom URI scheme
+    window.location.href = "zeraki://";
+
+    // 2. Set a timer. If the app opens, this script pauses. 
+    // If the app is NOT installed, it redirects to the web login after 1.5 seconds.
+    const fallback = setTimeout(() => {
+      window.location.href = "https://zeraki.app/login"; 
+    }, 1500);
+
+    // Clean up timer if the user leaves the page/app opens
+    window.onblur = () => clearTimeout(fallback);
+  };
+
 // Result Card Component (kept but unused)
 function ResultCard({ result, studentAdmissionNumber, onViewSubjects }) {
   const overallStatus = getGradeStatus(result.overallGrade);
@@ -457,6 +473,12 @@ const getDisplayablePdfUrl = (url) => {
   
   return url;
 };
+
+
+
+
+
+
 
 // Document Card Component
 function DocumentCard({ document, type = 'additional' }) {
@@ -816,47 +838,23 @@ export default function ModernResultsView({
               </p>
             </div>
           {/* Login Button with Image */}
-<a
-  href="https://zeraki.app"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-105 active:scale-95 transition-all duration-300"
->
-  <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
-    <img 
-      src="/zeraki.jpg" 
-      alt="Zeraki Login" 
-      className="w-full h-full object-contain rounded-full"
-    />
-  </div>
-  <span>Go to Zeraki Login</span>
-  <FiExternalLink className="text-gray-400 text-sm sm:text-base" />
-</a>
 
-{/* Zeraki Analytics Link - Added below navigation items */}
 <a
-  href="https://analytics.zeraki.app/"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:bg-gray-50 text-gray-700 hover:text-gray-900 group"
->
-  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
-    <img 
-      src="/zeraki.jpg" 
-      alt="Zeraki Analytics" 
-      className="w-full h-full object-cover rounded-xl border border-gray-200 group-hover:border-blue-400 group-hover:shadow-md transition-all duration-300 group-hover:scale-105"
-    />
-  </div>
-  <div className="flex-1">
-    <span className="font-semibold text-left text-sm sm:text-base block">
-      Zeraki Analytics
-    </span>
-    <span className="text-xs text-gray-400 sm:hidden">
-      Analytics dashboard
-    </span>
-  </div>
-  <FiExternalLink className="text-gray-400 text-sm sm:text-base group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
-</a>
+      href="https://zeraki.app/login" // Fallback for SEO and right-clicks
+      onClick={handleZerakiClick}
+      className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+    >
+      <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+        <img 
+          src="/zeraki.jpg" 
+          alt="Zeraki Login" 
+          className="w-full h-full object-contain rounded-full"
+        />
+      </div>
+      <span>Open Zeraki</span>
+      <FiExternalLink className="text-gray-400 text-sm sm:text-base" />
+    </a>
+
           </div>
         </div>
       </div>
