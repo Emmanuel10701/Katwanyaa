@@ -170,7 +170,10 @@ function getRecipientTypeLabel(type) {
 // Add this helper function to detect sandbox
 const isSandbox = AT_USERNAME === 'sandbox';
 
-// Validate phone numbers function
+
+
+
+// Validate phone numbers function - FIXED for production
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
@@ -191,6 +194,7 @@ function validatePhoneNumbers(phoneNumbers) {
   }
   
   // Production validation - Kenyan phone numbers
+  // Accepts: 0712345678, 254712345678, +254712345678
   const regex = /^(?:(?:\+?254)|0)?(7[0-9]{8})$/;
   
   phoneNumbers.forEach(num => {
@@ -199,9 +203,11 @@ function validatePhoneNumbers(phoneNumbers) {
     
     if (match) {
       const subscriberNumber = match[1];
+      // Always format as 254XXXXXXXXX (12 digits)
       const formatted = '254' + subscriberNumber;
       
-      if (formatted.length === 12) {
+      // Verify final length (should be 12 digits)
+      if (formatted.length === 12 && /^[0-9]+$/.test(formatted)) {
         valid.push(formatted);
       } else {
         invalid.push(num);
@@ -214,7 +220,7 @@ function validatePhoneNumbers(phoneNumbers) {
   return { valid, invalid };
 }
 
-// Send SMS Campaign function - FIXED VERSION with proper number formatting
+// Send SMS Campaign function - FIXED VERSION with proper number formatting for production
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
   const message = campaign.message;
@@ -234,20 +240,43 @@ async function sendSmsCampaign(campaign) {
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
-      // Format numbers for Africa's Talking - remove any '+' prefix
-      const formattedBatch = batch.map(num => num.replace(/^\+/, ''));
+      // CRITICAL FIX: Format numbers exactly as Africa's Talking expects
+      // They want the number in international format WITHOUT the plus sign
+      // For Kenya: 254XXXXXXXXX (12 digits total)
+      const formattedBatch = batch.map(num => {
+        // Remove any whitespace, dashes, and plus signs
+        let cleaned = num.replace(/\s+/g, '').replace(/-/g, '').replace(/^\+/, '');
+        
+        // If it starts with 0 (e.g., 0712345678), convert to 254712345678
+        if (cleaned.startsWith('0')) {
+          cleaned = '254' + cleaned.substring(1);
+        }
+        
+        // If it doesn't start with 254, add it
+        if (!cleaned.startsWith('254')) {
+          cleaned = '254' + cleaned;
+        }
+        
+        // Ensure it's exactly 12 digits
+        cleaned = cleaned.substring(0, 12);
+        
+        return cleaned;
+      });
+
+      console.log(`📱 Formatted numbers:`, formattedBatch);
 
       const smsOptions = {
         to: formattedBatch,
         message: message,
       };
       
-      // Only add 'from' in production or if explicitly set
+      // Only add 'from' in production if we have a valid sender
       if (!isSandbox && finalSender && finalSender.trim() !== "") {
         smsOptions.from = finalSender;
       }
 
       console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers`);
+      console.log(`📱 SMS Options:`, JSON.stringify(smsOptions, null, 2));
       
       const result = await sms.send(smsOptions);
       console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
@@ -271,8 +300,8 @@ async function sendSmsCampaign(campaign) {
         });
       } else {
         console.log('⚠️ No Recipients in response, full response:', result);
-        // In sandbox, the response might be different
-        if (result?.data?.SMSMessageData?.Message?.includes("Sent to")) {
+        // Check if message was sent successfully
+        if (result?.data?.SMSMessageData?.Message === "Sent to 1 recipients") {
           batch.forEach(phone => {
             sent.push({
               campaignId: campaign.id,
@@ -300,6 +329,7 @@ async function sendSmsCampaign(campaign) {
       
     } catch (error) {
       console.error(`❌ Batch failed:`, error.message);
+      console.error('Full error:', error);
       
       batch.forEach(phone => {
         failed.push({
