@@ -814,7 +814,7 @@ export default function ModernResultsView({
     disabled:opacity-50 
     w-full sm:w-auto 
     flex items-center justify-center
-    active:scale-95
+    active:scale-98
   "
 >
   <span>
@@ -855,7 +855,7 @@ export default function ModernResultsView({
 <a
       href="https://zeraki.app" // Fallback for SEO and right-clicks
       onClick={handleZerakiClick}
-      className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+      className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-101 active:scale-98 transition-all duration-300 cursor-pointer"
     >
       <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
         <img 
