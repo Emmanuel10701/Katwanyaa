@@ -800,14 +800,27 @@ export default function ModernResultsView({
                 </p>
               </div>
             </div>
-            <button
-              onClick={fetchDocumentData}
-              disabled={documentLoading}
-              className="mt-2 sm:mt-0 px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-white/20 text-white rounded-xl font-bold text-xs sm:text-sm md:text-base hover:bg-white/30 disabled:opacity-50 flex items-center gap-1 sm:gap-2 justify-center w-full sm:w-auto"
-            >
-              <FiRefreshCw className={`text-sm sm:text-base ${documentLoading ? 'animate-spin' : ''}`} />
-              <span>{documentLoading ? 'Refreshing...' : 'Refresh Documents'}</span>
-            </button>
+           <button
+  onClick={fetchDocumentData}
+  disabled={documentLoading}
+  className="
+    mt-3 sm:mt-0 
+    px-5 py-2.5 sm:px-6 sm:py-3 
+    bg-white/20 hover:bg-white/30 
+    text-white font-semibold text-sm sm:text-base
+    rounded-full border border-white/10
+    backdrop-blur-sm
+    transition-all duration-200
+    disabled:opacity-50 
+    w-full sm:w-auto 
+    flex items-center justify-center
+    active:scale-95
+  "
+>
+  <span>
+    {documentLoading ? 'Updating...' : 'Refresh Documents'}
+  </span>
+</button>
           </div>
         </div>
       </div>
