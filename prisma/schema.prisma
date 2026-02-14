@@ -248,6 +248,8 @@ model EmailCampaign {
 model SmsCampaign {
   id            String    @id @default(cuid())
   title         String
+    idempotencyKey   String?   @unique
+
   message       String    @db.Text
   recipients    String    @db.Text   // comma-separated phone numbers
   recipientType String    @default("all")

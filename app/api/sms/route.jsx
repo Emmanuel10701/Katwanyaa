@@ -135,8 +135,8 @@ const authenticateRequest = (req) => {
 // ====================================================================
 const AT_API_KEY = process.env.AT_API_KEY;
 const AT_USERNAME = process.env.AT_USERNAME;
-const AT_SENDER_ID = process.env.AT_SENDER_ID || "AIC KATWANA"; // Your custom sender ID
-const AT_SENDER_TYPE = process.env.AT_SENDER_TYPE || "alphanumeric"; // "alphanumeric" or "shortcode" or "number"
+const AT_SENDER_ID = process.env.AT_SENDER_ID || "AIC KATWANA";
+const AT_SENDER_TYPE = process.env.AT_SENDER_TYPE || "alphanumeric";
 
 if (!AT_API_KEY || !AT_USERNAME) {
   console.error("Missing Africa's Talking credentials");
@@ -171,24 +171,16 @@ function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
   
-  // Kenyan phone numbers should be in format: 2547XXXXXXXX (12 digits total)
-  // Acceptable input formats: 07XX XXX XXX, 2547XX XXX XXX, +2547XX XXX XXX
   const regex = /^(?:(?:\+?254)|0)?(7[0-9]{8})$/;
   
   phoneNumbers.forEach(num => {
     const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
-    
-    // Test if it matches the pattern
     const match = cleaned.match(regex);
     
     if (match) {
-      // Extract the subscriber number (7XXXXXXXX)
       const subscriberNumber = match[1];
-      
-      // Format to international format: 254 + subscriber number
       const formatted = '254' + subscriberNumber;
       
-      // Verify final length (should be 12 digits: 254 + 9 digits)
       if (formatted.length === 12) {
         valid.push(formatted);
       } else {
@@ -202,13 +194,6 @@ function validatePhoneNumbers(phoneNumbers) {
   return { valid, invalid };
 }
 
-/**
- * Send SMS with custom sender ID
- * The sender can be:
- * - Alphanumeric: "AIC KATWANA" (needs registration)
- * - Short code: "12345" (dedicated short code)
- * - Phone number: "+254700123456" (virtual number)
- */
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
   const message = campaign.message;
@@ -216,28 +201,22 @@ async function sendSmsCampaign(campaign) {
   const sent = [];
   const failed = [];
 
-  // Prepare sender ID
   const senderId = AT_SENDER_ID;
-  
-  // For alphanumeric sender IDs, ensure it's not too long (max 11 characters)
   const finalSender = AT_SENDER_TYPE === "alphanumeric" 
     ? senderId.substring(0, 11).trim() 
     : senderId;
 
   console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
 
-  // Africa's Talking supports up to 100 numbers per request
   const BATCH_SIZE = 100;
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
-      // Prepare the SMS options
       const smsOptions = {
         to: batch,
         message: message,
       };
       
-      // Only add 'from' if we have a sender ID configured
       if (finalSender && finalSender.trim() !== "") {
         smsOptions.from = finalSender;
       }
@@ -246,7 +225,6 @@ async function sendSmsCampaign(campaign) {
       
       const result = await sms.send(smsOptions);
 
-      // AT returns per-recipient statuses in result.data.SMSMessageData.Recipients
       if (result?.data?.SMSMessageData?.Recipients) {
         const recipientStatuses = result.data.SMSMessageData.Recipients;
         recipientStatuses.forEach(rs => {
@@ -265,7 +243,6 @@ async function sendSmsCampaign(campaign) {
           }
         });
       } else {
-        // fallback: treat entire batch as success
         batch.forEach(phone => {
           sent.push({
             campaignId: campaign.id,
@@ -277,11 +254,9 @@ async function sendSmsCampaign(campaign) {
         });
       }
       
-      // Log success for debugging
       console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
       
     } catch (error) {
-      // whole batch failed
       console.error(`❌ Batch failed:`, error.message);
       batch.forEach(phone => {
         failed.push({
@@ -295,13 +270,11 @@ async function sendSmsCampaign(campaign) {
       });
     }
     
-    // Small delay between batches to avoid rate limiting
     if (i + BATCH_SIZE < recipients.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 
-  // Save logs to database
   if (sent.length > 0) {
     await prisma.smsLog.createMany({ data: sent });
   }
@@ -320,13 +293,52 @@ async function sendSmsCampaign(campaign) {
 }
 
 // ====================================================================
-// API HANDLERS
+// POST HANDLER - Create a new SMS campaign with idempotency support
 // ====================================================================
-
-// 🔹 POST - Create a new SMS campaign (PROTECTED)
 export async function POST(req) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
+    // ==================== IDEMPOTENCY CHECK ====================
+    const idempotencyKey = req.headers.get('x-idempotency-key');
+    
+    // If idempotency key is provided, check if we've seen it before
+    if (idempotencyKey) {
+      const existingCampaign = await prisma.smsCampaign.findFirst({
+        where: { idempotencyKey }
+      });
+      
+      if (existingCampaign) {
+        console.log('🔄 Idempotent request detected, returning existing campaign:', existingCampaign.id);
+        
+        const recipientCount = existingCampaign.recipients ? existingCampaign.recipients.split(',').length : 0;
+        
+        const responseData = {
+          id: existingCampaign.id,
+          title: existingCampaign.title,
+          message: existingCampaign.message,
+          recipients: existingCampaign.recipients,
+          recipientCount,
+          recipientType: existingCampaign.recipientType || 'all',
+          recipientTypeLabel: getRecipientTypeLabel(existingCampaign.recipientType || 'all'),
+          status: existingCampaign.status,
+          sentAt: existingCampaign.sentAt,
+          sentCount: existingCampaign.sentCount,
+          failedCount: existingCampaign.failedCount,
+          senderId: AT_SENDER_ID,
+          senderType: AT_SENDER_TYPE,
+          createdAt: existingCampaign.createdAt,
+          updatedAt: existingCampaign.updatedAt,
+        };
+
+        return NextResponse.json({
+          success: true,
+          campaign: responseData,
+          message: "Campaign already processed (idempotent request)"
+        });
+      }
+    }
+    // ==================== END IDEMPOTENCY CHECK ====================
+
+    // ==================== AUTHENTICATION ====================
     const auth = authenticateRequest(req);
     if (!auth.authenticated) {
       return auth.response;
@@ -337,6 +349,7 @@ export async function POST(req) {
     console.log(`Using sender ID: "${AT_SENDER_ID}" (type: ${AT_SENDER_TYPE})`);
     // ==================== END AUTHENTICATION ====================
 
+    // ==================== REQUEST PARSING ====================
     const { title, message, recipientType, recipients, status = "draft" } = await req.json();
 
     // Validate required fields
@@ -378,22 +391,33 @@ export async function POST(req) {
 
     // Remove duplicates
     const uniquePhones = [...new Set(valid)];
+    // ==================== END REQUEST PARSING ====================
+
+    // ==================== DATABASE OPERATION ====================
+    // Prepare campaign data
+    const campaignData = {
+      title,
+      message,
+      recipients: uniquePhones.join(", "),
+      recipientType: recipientType || "all",
+      status,
+      ...(status === "sent" && { sentAt: new Date() }),
+    };
+
+    // Add idempotency key if provided
+    if (idempotencyKey) {
+      campaignData.idempotencyKey = idempotencyKey;
+    }
 
     // Create campaign in database
     const campaign = await prisma.smsCampaign.create({
-      data: {
-        title,
-        message,
-        recipients: uniquePhones.join(", "),
-        recipientType: recipientType || "all",
-        status,
-        ...(status === "sent" && { sentAt: new Date() }),
-      },
+      data: campaignData,
     });
+    // ==================== END DATABASE OPERATION ====================
 
+    // ==================== SMS SENDING (if status is "sent") ====================
     let smsResults = null;
 
-    // Send SMS immediately if status is "sent"
     if (status === "sent") {
       try {
         smsResults = await sendSmsCampaign(campaign);
@@ -429,8 +453,9 @@ export async function POST(req) {
         };
       }
     }
+    // ==================== END SMS SENDING ====================
 
-    // Format response
+    // ==================== RESPONSE FORMATTING ====================
     const responseData = {
       id: campaign.id,
       title: campaign.title,
@@ -467,6 +492,7 @@ export async function POST(req) {
         }
       }
     );
+    // ==================== END RESPONSE FORMATTING ====================
 
   } catch (error) {
     console.error("POST /api/sms Error:", error);
@@ -493,7 +519,9 @@ export async function POST(req) {
   }
 }
 
-// 🔹 GET - Get all SMS campaigns with filtering (PUBLIC)
+// ====================================================================
+// GET HANDLER - Get all SMS campaigns with filtering
+// ====================================================================
 export async function GET(req) {
   try {
     const url = new URL(req.url);

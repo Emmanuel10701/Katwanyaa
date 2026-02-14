@@ -759,69 +759,54 @@ export default function SMSManager() {
 
   // ========== CRUD Operations ==========
 
-  const handleCreateOrUpdateCampaign = async () => {
-    if (!campaignForm.title || !campaignForm.message) {
-      toast.error("Title and message are required");
+// In your SMSManager component, add a state to track submission
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+const handleCreateOrUpdateCampaign = async () => {
+  // Prevent double submission
+  if (isSubmitting) return;
+  
+  if (!campaignForm.title || !campaignForm.message) {
+    toast.error("Title and message are required");
+    return;
+  }
+
+  try {
+    setIsSubmitting(true); // Set submitting state
+    const headers = getAuthHeaders("application/json");
+    setLoadingStates((prev) => ({ ...prev, create: true }));
+
+    const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
+    if (recipientNumbers.length === 0) {
+      toast.error("No recipients found for the selected group");
       return;
     }
 
-    try {
-      const headers = getAuthHeaders("application/json");
-      setLoadingStates((prev) => ({ ...prev, create: true }));
+    const payload = {
+      title: campaignForm.title.trim(),
+      message: campaignForm.message,
+      recipients: recipientNumbers.join(", "),
+      recipientType: campaignForm.recipientType,
+      status: campaignForm.status,
+    };
 
-      const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
-      if (recipientNumbers.length === 0) {
-        toast.error("No recipients found for the selected group");
-        setLoadingStates((prev) => ({ ...prev, create: false }));
-        return;
-      }
+    const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
+    const method = selectedCampaign ? "PUT" : "POST";
 
-      const payload = {
-        title: campaignForm.title.trim(),
-        message: campaignForm.message,
-        recipients: recipientNumbers.join(", "),
-        recipientType: campaignForm.recipientType,
-        status: campaignForm.status,
-      };
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(payload),
+    });
 
-      const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
-      const method = selectedCampaign ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      if (response.status === 401) throw new Error("Session expired");
-
-      const result = await response.json();
-
-      if (result.success) {
-        if (selectedCampaign) {
-          setCampaigns((prev) => prev.map((c) => (c.id === selectedCampaign.id ? result.campaign : c)));
-        } else {
-          setCampaigns((prev) => [result.campaign, ...prev]);
-        }
-        setShowCreateModal(false);
-        setSelectedCampaign(null);
-        toast.success(
-          campaignForm.status === "sent"
-            ? `Campaign created and ${result.smsResults?.summary?.successful || 0} messages sent`
-            : `Campaign ${selectedCampaign ? "updated" : "created"} successfully`
-        );
-      } else {
-        toast.error(result.error || "Operation failed");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      if (!handleAuthError(error)) {
-        toast.error(error.message || "Network error");
-      }
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, create: false }));
-    }
-  };
+    // ... rest of your code
+  } catch (error) {
+    // ... error handling
+  } finally {
+    setIsSubmitting(false); // Reset submitting state
+    setLoadingStates((prev) => ({ ...prev, create: false }));
+  }
+};
 
   const handleSendCampaign = async () => {
     if (!campaignToSend) return;
@@ -1410,7 +1395,7 @@ export default function SMSManager() {
                 <span className="font-bold">Required fields marked with *</span>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-4">
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold border-2 border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 min-w-[100px] shadow-sm"
@@ -1442,7 +1427,7 @@ export default function SMSManager() {
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
-                        Send Campaign
+                        Send 
                       </>
                     )}
                   </span>
