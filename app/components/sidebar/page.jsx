@@ -221,12 +221,6 @@ const handleLogout = () => {
       badge: 'purple'
     },
     {
-      id: 'results',
-      label: 'Exam Results',
-      icon: FiClipboard,
-      badge: 'teal'
-    },
-    {
       id: 'schooldocuments',
       label: 'School Documents',
       icon: FiArchive, 

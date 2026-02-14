@@ -52,7 +52,6 @@ import Resources from '../components/resources/page';
 import Careers from "../components/career/page";
 import Student from "../components/student/page";
 import Fees from "../components/fees/page";
-import Results from "../components/resultsUpload/page";
 import SchoolDocs from "../components/schooldocuments/page";
 import SMSManager from "../components/sms/page";
 export default function AdminDashboard() {
@@ -77,7 +76,6 @@ export default function AdminDashboard() {
     totalStudent: 0,
 
     totalFees: 0,
-    totalResults: 0
   });
 
   const router = useRouter();
@@ -468,7 +466,6 @@ export default function AdminDashboard() {
         studentRes,
         feesRes,
         schooldocumentsRes,
-        resultsRes,
         smsRes
       ] = await Promise.allSettled([
         fetch('/api/staff'),
@@ -484,7 +481,6 @@ export default function AdminDashboard() {
         fetch('/api/career'),
         fetch('/api/studentupload'),
         fetch('/api/feebalances'),
-        fetch('/api/results'),
         fetch('/api/schooldocuments')
       ]);
 
@@ -500,7 +496,6 @@ export default function AdminDashboard() {
       const careers = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { careers: [] };
       const student = studentRes.status === 'fulfilled' ? await studentRes.value.json() : { students: [] };
       const fees = feesRes.status === 'fulfilled' ? await feesRes.value.json() : { feebalances: [] };
-      const results = resultsRes.status === 'fulfilled' ? await resultsRes.value.json() : { results: [] };
       const schoolDocs = schooldocumentsRes.status === 'fulfilled' ? await schooldocumentsRes.value.json() : { documents: [] };
       const sms = smsRes.status === 'fulfilled' ? await smsRes.value.json() : { sms: [] };
 
@@ -525,7 +520,6 @@ export default function AdminDashboard() {
         Careers: careers.careers?.length || 0,
         totalStudent: student.students?.length || 0,
         totalFees: fees.feebalances?.length || 0,
-        totalResults: results.results?.length || 0,
         schooldocuments: schoolDocs.documents?.length || 0
       });
 
@@ -872,9 +866,7 @@ const handleLogout = () => {
       case 'admissions':
         return <ApplicationsManager />;
       case 'resources':
-        return <Resources />;
-      case 'results':
-        return <Results />;  
+        return <Resources />; 
       case 'newsevents':
         return <NewsEventsManager />;
       case 'gallery':
@@ -948,12 +940,6 @@ const handleLogout = () => {
       label: 'Resources',
       icon: FiFileText,
       badge: 'cyan' 
-    },
-    {
-      id: 'results',
-      label: 'Exam Results',
-      icon: FiClipboard,
-      badge: 'teal'
     },
     {
       id: 'student',
