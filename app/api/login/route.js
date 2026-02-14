@@ -40,7 +40,7 @@ function getVerificationEmailTemplate(user, verificationCode) {
         .header h1 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
         .content { padding: 35px; }
         .code-box { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 12px; text-align: center; margin: 25px 0; border: 1px solid #a5d6a7; }
-        .code { font-size: 40px; font-weight: 800; letter-spacing: 10px; color: #047857; font-family: monospace; margin: 15px 0; }
+        .code { font-size: 25px; font-weight: 800; letter-spacing: 10px; color: #047857; font-family: monospace; margin: 15px 0; }
         .warning { background: #fef3c7; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 14px; }
         .footer { background: #1a202c; color: #cbd5e0; padding: 25px; text-align: center; font-size: 12px; }
         .expiry-note { color: #718096; font-size: 13px; text-align: center; margin-top: 15px; }
