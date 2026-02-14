@@ -155,7 +155,7 @@ function ResultsStatisticsCard({ title, value, icon: Icon, color, trend = 0, pre
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 md:p-6 border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+    <div className="bg-white rounded-2xl p-4 md:p-6 border-2 border-gray-200 shadow-lg hover:shadow-md  transition-shadow duration-300">
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className={`p-2 md:p-3 rounded-xl bg-gradient-to-r ${color}`}>
           <Icon className="text-white text-xl md:text-2xl" />
@@ -387,7 +387,7 @@ function ResultCard({ result, studentAdmissionNumber, onViewSubjects }) {
         isStudentResult 
           ? 'border-blue-500 border-l-4 shadow-lg' 
           : 'border-gray-200'
-      } hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
+      } hover:shadow-md  transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group`}
     >
       {isStudentResult && (
         <div className="absolute top-0 right-0">
