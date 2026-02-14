@@ -170,7 +170,7 @@ function getRecipientTypeLabel(type) {
 // Add this helper function to detect sandbox
 const isSandbox = AT_USERNAME === 'sandbox';
 
-// Update your validatePhoneNumbers function to handle sandbox test numbers
+// Validate phone numbers function
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
@@ -180,9 +180,7 @@ function validatePhoneNumbers(phoneNumbers) {
     console.log('🧪 Sandbox mode: Accepting any phone numbers for testing');
     phoneNumbers.forEach(num => {
       const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
-      // In sandbox, just clean the number but don't validate strictly
       if (cleaned.length > 0) {
-        // Remove any '+' if present
         const formatted = cleaned.replace(/^\+/, '');
         valid.push(formatted);
       } else {
@@ -216,7 +214,7 @@ function validatePhoneNumbers(phoneNumbers) {
   return { valid, invalid };
 }
 
-// Also update your sendSmsCampaign function to use sandbox-friendly formatting
+// Send SMS Campaign function - FIXED VERSION with proper number formatting
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
   const message = campaign.message;
@@ -236,31 +234,20 @@ async function sendSmsCampaign(campaign) {
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
-      // Format numbers for Africa's Talking
-      const formattedBatch = batch.map(num => {
-        // Remove any '+' if present
-        let cleaned = num.replace(/^\+/, '');
-        
-        // In sandbox, you can use test numbers like +254700XXX123
-        // Just ensure no special characters
-        return cleaned;
-      });
+      // Format numbers for Africa's Talking - remove any '+' prefix
+      const formattedBatch = batch.map(num => num.replace(/^\+/, ''));
 
       const smsOptions = {
         to: formattedBatch,
         message: message,
       };
       
-      // In sandbox, you might need to omit the 'from' field or use a test sender
+      // Only add 'from' in production or if explicitly set
       if (!isSandbox && finalSender && finalSender.trim() !== "") {
         smsOptions.from = finalSender;
-      } else if (isSandbox) {
-        console.log('🧪 Sandbox: Using default sender');
-        // Don't set 'from' in sandbox or use a test value
-        // smsOptions.from = "TEST"; // Uncomment if needed
       }
 
-      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers:`, formattedBatch);
+      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers`);
       
       const result = await sms.send(smsOptions);
       console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
@@ -284,8 +271,8 @@ async function sendSmsCampaign(campaign) {
         });
       } else {
         console.log('⚠️ No Recipients in response, full response:', result);
-        // In sandbox, the response might be different - check for success
-        if (result?.data?.SMSMessageData?.Message === "Sent to 1 recipients") {
+        // In sandbox, the response might be different
+        if (result?.data?.SMSMessageData?.Message?.includes("Sent to")) {
           batch.forEach(phone => {
             sent.push({
               campaignId: campaign.id,
@@ -312,125 +299,7 @@ async function sendSmsCampaign(campaign) {
       console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Processed ${batch.length} numbers`);
       
     } catch (error) {
-      console.error(`❌ Batch failed:`, error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data
-      });
-      
-      batch.forEach(phone => {
-        failed.push({
-          campaignId: campaign.id,
-          phoneNumber: phone,
-          message,
-          providerMessageId: null,
-          status: "failed",
-          errorMessage: error.message,
-        });
-      });
-    }
-    
-    if (i + BATCH_SIZE < recipients.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-  }
-
-  if (sent.length > 0) {
-    await prisma.smsLog.createMany({ data: sent });
-  }
-  if (failed.length > 0) {
-    await prisma.smsLog.createMany({ data: failed });
-  }
-
-  const summary = {
-    total: recipients.length,
-    successful: sent.length,
-    failed: failed.length,
-    successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
-  };
-
-  return { sent, failed, summary };
-}
-
-async function sendSmsCampaign(campaign) {
-  const recipients = campaign.recipients.split(",").map(r => r.trim());
-  const message = campaign.message;
-
-  const sent = [];
-  const failed = [];
-
-  const senderId = AT_SENDER_ID;
-  const finalSender = AT_SENDER_TYPE === "alphanumeric" 
-    ? senderId.substring(0, 11).trim() 
-    : senderId;
-
-  console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
-
-  const BATCH_SIZE = 100;
-  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-    const batch = recipients.slice(i, i + BATCH_SIZE);
-    try {
-      // Format numbers for Africa's Talking - they expect the number WITHOUT the leading +
-      // For Kenyan numbers, they expect format: 2547XXXXXXXX (which you already have)
-      const formattedBatch = batch.map(num => {
-        // Remove any '+' if present
-        return num.replace(/^\+/, '');
-      });
-
-      const smsOptions = {
-        to: formattedBatch,
-        message: message,
-      };
-      
-      if (finalSender && finalSender.trim() !== "") {
-        smsOptions.from = finalSender;
-      }
-
-      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers:`, formattedBatch);
-      
-      const result = await sms.send(smsOptions);
-      console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
-
-      if (result?.data?.SMSMessageData?.Recipients) {
-        const recipientStatuses = result.data.SMSMessageData.Recipients;
-        recipientStatuses.forEach(rs => {
-          const logEntry = {
-            campaignId: campaign.id,
-            phoneNumber: rs.number,
-            message,
-            providerMessageId: rs.messageId || null,
-            status: rs.status === "Success" ? "success" : "failed",
-            errorMessage: rs.status !== "Success" ? rs.status : null,
-          };
-          if (rs.status === "Success") {
-            sent.push(logEntry);
-          } else {
-            failed.push(logEntry);
-          }
-        });
-      } else {
-        console.log('⚠️ No Recipients in response, full response:', result);
-        // Fallback: treat entire batch as success
-        batch.forEach(phone => {
-          sent.push({
-            campaignId: campaign.id,
-            phoneNumber: phone,
-            message,
-            providerMessageId: null,
-            status: "success",
-          });
-        });
-      }
-      
-      console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
-      
-    } catch (error) {
-      console.error(`❌ Batch failed:`, error);
-      console.error('Error details:', {
-        message: error.message,
-        stack: error.stack,
-        response: error.response?.data
-      });
+      console.error(`❌ Batch failed:`, error.message);
       
       batch.forEach(phone => {
         failed.push({
@@ -474,7 +343,6 @@ export async function POST(req) {
     // ==================== IDEMPOTENCY CHECK ====================
     const idempotencyKey = req.headers.get('x-idempotency-key');
     
-    // If idempotency key is provided, check if we've seen it before
     if (idempotencyKey) {
       const existingCampaign = await prisma.smsCampaign.findFirst({
         where: { idempotencyKey }
@@ -526,7 +394,6 @@ export async function POST(req) {
     // ==================== REQUEST PARSING ====================
     const { title, message, recipientType, recipients, status = "draft" } = await req.json();
 
-    // Validate required fields
     if (!title || !message || !recipients) {
       return NextResponse.json(
         { 
@@ -537,7 +404,6 @@ export async function POST(req) {
       );
     }
 
-    // Validate message length
     if (message.length > 1600) {
       return NextResponse.json(
         { 
@@ -548,7 +414,6 @@ export async function POST(req) {
       );
     }
 
-    // Validate and format phone numbers
     const phoneList = recipients.split(",").map(p => p.trim()).filter(Boolean);
     const { valid, invalid } = validatePhoneNumbers(phoneList);
     
@@ -563,12 +428,10 @@ export async function POST(req) {
       );
     }
 
-    // Remove duplicates
     const uniquePhones = [...new Set(valid)];
     // ==================== END REQUEST PARSING ====================
 
     // ==================== DATABASE OPERATION ====================
-    // Prepare campaign data
     const campaignData = {
       title,
       message,
@@ -578,25 +441,22 @@ export async function POST(req) {
       ...(status === "sent" && { sentAt: new Date() }),
     };
 
-    // Add idempotency key if provided
     if (idempotencyKey) {
       campaignData.idempotencyKey = idempotencyKey;
     }
 
-    // Create campaign in database
     const campaign = await prisma.smsCampaign.create({
       data: campaignData,
     });
     // ==================== END DATABASE OPERATION ====================
 
-    // ==================== SMS SENDING (if status is "sent") ====================
+    // ==================== SMS SENDING ====================
     let smsResults = null;
 
     if (status === "sent") {
       try {
         smsResults = await sendSmsCampaign(campaign);
         
-        // Update campaign with results
         await prisma.smsCampaign.update({
           where: { id: campaign.id },
           data: {
@@ -607,7 +467,6 @@ export async function POST(req) {
       } catch (smsError) {
         console.error("SMS sending failed:", smsError);
         
-        // Update campaign to reflect failure
         await prisma.smsCampaign.update({
           where: { id: campaign.id },
           data: {
@@ -701,7 +560,6 @@ export async function GET(req) {
     const url = new URL(req.url);
     const searchParams = url.searchParams;
     
-    // Build filter conditions
     const where = {};
     
     if (searchParams.has('status')) {
@@ -720,12 +578,10 @@ export async function GET(req) {
       ];
     }
     
-    // Pagination
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const skip = (page - 1) * limit;
     
-    // Get total count and campaigns
     const [totalCount, campaigns] = await Promise.all([
       prisma.smsCampaign.count({ where }),
       prisma.smsCampaign.findMany({
@@ -736,7 +592,6 @@ export async function GET(req) {
       })
     ]);
     
-    // Format response
     const formattedCampaigns = campaigns.map(campaign => {
       const recipientCount = campaign.recipients ? campaign.recipients.split(',').length : 0;
       
@@ -762,7 +617,6 @@ export async function GET(req) {
       };
     });
     
-    // Calculate summary statistics
     const summary = {
       totalCampaigns: totalCount,
       sentMessages: formattedCampaigns.reduce((sum, c) => sum + (c.sentCount || 0), 0),
