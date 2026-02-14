@@ -815,17 +815,48 @@ export default function ModernResultsView({
                 (admission number and default password). First-time users, click "Forgot Password" to set up your account.
               </p>
             </div>
-            
-            {/* Login Button */}
-            <a
-              href="https://zeraki.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm sm:text-base rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all active:scale-95"
-            >
-              <FiExternalLink className="text-lg" />
-              Go to Zeraki Login
-            </a>
+          {/* Login Button with Image */}
+<a
+  href="https://zeraki.app"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-105 active:scale-95 transition-all duration-300"
+>
+  <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+    <img 
+      src="/zeraki.jpg" 
+      alt="Zeraki Login" 
+      className="w-full h-full object-contain rounded-full"
+    />
+  </div>
+  <span>Go to Zeraki Login</span>
+  <FiExternalLink className="text-gray-400 text-sm sm:text-base" />
+</a>
+
+{/* Zeraki Analytics Link - Added below navigation items */}
+<a
+  href="https://analytics.zeraki.app/"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:bg-gray-50 text-gray-700 hover:text-gray-900 group"
+>
+  <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
+    <img 
+      src="/zeraki.jpg" 
+      alt="Zeraki Analytics" 
+      className="w-full h-full object-cover rounded-xl border border-gray-200 group-hover:border-blue-400 group-hover:shadow-md transition-all duration-300 group-hover:scale-105"
+    />
+  </div>
+  <div className="flex-1">
+    <span className="font-semibold text-left text-sm sm:text-base block">
+      Zeraki Analytics
+    </span>
+    <span className="text-xs text-gray-400 sm:hidden">
+      Analytics dashboard
+    </span>
+  </div>
+  <FiExternalLink className="text-gray-400 text-sm sm:text-base group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+</a>
           </div>
         </div>
       </div>
