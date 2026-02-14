@@ -806,7 +806,7 @@ export default function ModernResultsView({
   className="
     mt-3 sm:mt-0 
     px-5 py-2.5 sm:px-6 sm:py-3 
-    bg-white/20 hover:bg-white/30 
+    bg-white/10 hover:bg-white/10 
     text-white font-semibold text-sm sm:text-base
     rounded-full border border-white/10
     backdrop-blur-sm
@@ -853,7 +853,7 @@ export default function ModernResultsView({
           {/* Login Button with Image */}
 
 <a
-      href="https://zeraki.app/login" // Fallback for SEO and right-clicks
+      href="https://zeraki.app" // Fallback for SEO and right-clicks
       onClick={handleZerakiClick}
       className="inline-flex items-center gap-2 px-4 py-2.5 sm:px-6 sm:py-3 bg-white text-gray-700 font-medium text-sm sm:text-base rounded-full border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
     >
