@@ -68,7 +68,7 @@ function ResultsLoadingSpinner({ message = "Loading academic results...", size =
   );
 }
 
-// Grade Calculation Helper
+// Grade Calculation Helper (kept but unused)
 const calculateGrade = (score) => {
   const numericScore = parseFloat(score) || 0;
   if (numericScore >= 80) return 'A';
@@ -84,7 +84,7 @@ const calculateGrade = (score) => {
   return 'E';
 };
 
-// Grade Status Helper
+// Grade Status Helper (kept but unused)
 const getGradeStatus = (grade) => {
   const g = grade?.toUpperCase();
   if (['A'].includes(g)) return { 
@@ -145,7 +145,7 @@ const getGradeStatus = (grade) => {
   };
 };
 
-// Statistics Card Component
+// Statistics Card Component (kept but unused)
 function ResultsStatisticsCard({ title, value, icon: Icon, color, trend = 0, prefix = '', suffix = '' }) {
   const formatValue = (val) => {
     if (typeof val === 'number') {
@@ -167,7 +167,7 @@ function ResultsStatisticsCard({ title, value, icon: Icon, color, trend = 0, pre
   );
 }
 
-// Subject Details Modal Component
+// Subject Details Modal Component (kept but unused)
 function SubjectDetailsModal({ result, onClose }) {
   if (!result) return null;
 
@@ -358,7 +358,7 @@ function SubjectDetailsModal({ result, onClose }) {
   );
 }
 
-// Result Card Component
+// Result Card Component (kept but unused)
 function ResultCard({ result, studentAdmissionNumber, onViewSubjects }) {
   const overallStatus = getGradeStatus(result.overallGrade);
   const isStudentResult = result.admissionNumber === studentAdmissionNumber;
@@ -599,83 +599,29 @@ export default function ModernResultsView({
   resultsError, 
   onRefreshResults 
 }) {
+  // State for school documents only (results-related states are kept but unused)
+  const [documentData, setDocumentData] = useState(null);
+  const [documentLoading, setDocumentLoading] = useState(true);
+  const [documentError, setDocumentError] = useState(null);
+  
+  // States for results (unused now, but kept to avoid breaking props)
   const [selectedTerm, setSelectedTerm] = useState('all');
   const [selectedYear, setSelectedYear] = useState('all');
   const [viewMode, setViewMode] = useState('list');
   const [selectedResult, setSelectedResult] = useState(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [documentData, setDocumentData] = useState(null);
-  const [documentLoading, setDocumentLoading] = useState(true);
-  const [documentError, setDocumentError] = useState(null);
-  
-  const [stats, setStats] = useState({
-    totalResults: 0,
-    averageScore: 0,
-    yourGrade: 'N/A',
-    currentTerm: 'N/A',
-    currentTermResults: 0
-  });
 
-  // Transform studentResults
-  const transformedResults = useMemo(() => {
-    if (!studentResults || !Array.isArray(studentResults)) return [];
-    
-    return studentResults.map(result => ({
-      ...result,
-      class: result.form,
-      meanGrade: result.overallGrade,
-      subjects: Array.isArray(result.subjects) ? result.subjects : [],
-      averageScore: parseFloat(result.averageScore) || 0,
-      totalScore: parseFloat(result.totalScore) || 0
-    }));
-  }, [studentResults]);
-
-  // Fetch school document data - INDEPENDENTLY, ALWAYS FETCH
-  useEffect(() => {
-    const fetchDocumentData = async () => {
-      try {
-        setDocumentLoading(true);
-        setDocumentError(null);
-        
-        console.log('📥 Fetching school documents independently...');
-        const response = await fetch('/api/schooldocuments');
-        
-        if (!response.ok) {
-          // Don't throw error, just use empty structure
-          console.warn('⚠️ School documents API not available, using empty structure');
-          setDocumentData({
-            form1ResultsPdf: null,
-            form2ResultsPdf: null,
-            form3ResultsPdf: null,
-            form4ResultsPdf: null,
-            kcseResultsPdf: null,
-            mockExamsResultsPdf: null,
-            additionalDocuments: []
-          });
-          return;
-        }
-        
-        const data = await response.json();
-        
-        // Always set documentData regardless of response
-        if (data && data.document) {
-          setDocumentData(data.document);
-          console.log('✅ School documents loaded successfully');
-        } else {
-          // Empty but valid structure
-          setDocumentData({
-            form1ResultsPdf: null,
-            form2ResultsPdf: null,
-            form3ResultsPdf: null,
-            form4ResultsPdf: null,
-            kcseResultsPdf: null,
-            mockExamsResultsPdf: null,
-            additionalDocuments: []
-          });
-        }
-      } catch (error) {
-        console.error('❌ Error in school documents fetch:', error);
-        // Still set empty data - never break the UI
+  // Fetch school document data - ALWAYS FETCH
+  const fetchDocumentData = useCallback(async () => {
+    try {
+      setDocumentLoading(true);
+      setDocumentError(null);
+      
+      console.log('📥 Fetching school documents independently...');
+      const response = await fetch('/api/schooldocuments');
+      
+      if (!response.ok) {
+        console.warn('⚠️ School documents API not available, using empty structure');
         setDocumentData({
           form1ResultsPdf: null,
           form2ResultsPdf: null,
@@ -685,99 +631,46 @@ export default function ModernResultsView({
           mockExamsResultsPdf: null,
           additionalDocuments: []
         });
-      } finally {
-        setDocumentLoading(false);
+        return;
       }
-    };
+      
+      const data = await response.json();
+      
+      if (data && data.document) {
+        setDocumentData(data.document);
+        console.log('✅ School documents loaded successfully');
+      } else {
+        setDocumentData({
+          form1ResultsPdf: null,
+          form2ResultsPdf: null,
+          form3ResultsPdf: null,
+          form4ResultsPdf: null,
+          kcseResultsPdf: null,
+          mockExamsResultsPdf: null,
+          additionalDocuments: []
+        });
+      }
+    } catch (error) {
+      console.error('❌ Error in school documents fetch:', error);
+      setDocumentData({
+        form1ResultsPdf: null,
+        form2ResultsPdf: null,
+        form3ResultsPdf: null,
+        form4ResultsPdf: null,
+        kcseResultsPdf: null,
+        mockExamsResultsPdf: null,
+        additionalDocuments: []
+      });
+    } finally {
+      setDocumentLoading(false);
+    }
+  }, []);
 
-    // ALWAYS FETCH - NO CONDITIONS
-    fetchDocumentData();
-  }, []); // Empty dependency array - fetch once on mount
-
-  // Calculate statistics - STUDENT RESULTS ONLY
   useEffect(() => {
-    if (transformedResults.length > 0 && student?.admissionNumber) {
-      const studentResults = transformedResults.filter(result => 
-        result.admissionNumber === student.admissionNumber
-      );
-      
-      const totalResults = studentResults.length;
-      const averageScore = studentResults.reduce((sum, result) => 
-        sum + (result.averageScore || 0), 0) / totalResults;
-      
-      const currentTerm = selectedTerm !== 'all' 
-        ? selectedTerm 
-        : studentResults.length > 0 ? studentResults[studentResults.length - 1].term : 'N/A';
-      
-      const currentTermResults = studentResults.filter(result => 
-        result.term === currentTerm
-      ).length;
+    fetchDocumentData();
+  }, [fetchDocumentData]);
 
-      let yourGrade = 'N/A';
-      if (currentTerm !== 'N/A') {
-        const currentTermResult = studentResults.find(r => r.term === currentTerm);
-        yourGrade = currentTermResult?.overallGrade || 'N/A';
-      } else if (studentResults.length > 0) {
-        yourGrade = studentResults[studentResults.length - 1].overallGrade || 'N/A';
-      }
-
-      setStats({
-        totalResults,
-        averageScore: parseFloat(averageScore.toFixed(2)),
-        yourGrade,
-        currentTerm,
-        currentTermResults
-      });
-    } else {
-      setStats({
-        totalResults: 0,
-        averageScore: 0,
-        yourGrade: 'N/A',
-        currentTerm: 'N/A',
-        currentTermResults: 0
-      });
-    }
-  }, [transformedResults, selectedTerm, student]);
-
-  // Filter and sort results - ONLY STUDENT'S RESULTS
-  const filteredResults = useMemo(() => {
-    let results = [...transformedResults];
-    
-    if (student?.admissionNumber) {
-      results = results.filter(result => result.admissionNumber === student.admissionNumber);
-    }
-    
-    if (selectedTerm !== 'all') {
-      results = results.filter(result => result.term === selectedTerm);
-    }
-    
-    if (selectedYear !== 'all') {
-      results = results.filter(result => result.academicYear === selectedYear);
-    }
-    
-    results.sort((a, b) => {
-      if (a.academicYear !== b.academicYear) {
-        return b.academicYear.localeCompare(a.academicYear);
-      }
-      
-      const termOrder = { 'Term 1': 1, 'Term 2': 2, 'Term 3': 3 };
-      return (termOrder[a.term] || 0) - (termOrder[b.term] || 0);
-    });
-    
-    return results;
-  }, [transformedResults, selectedTerm, selectedYear, student]);
-
-  const uniqueTerms = useMemo(() => {
-    const terms = [...new Set(transformedResults.map(r => r.term))].filter(Boolean);
-    return ['all', ...terms];
-  }, [transformedResults]);
-
-  const uniqueYears = useMemo(() => {
-    const years = [...new Set(transformedResults.map(r => r.academicYear))].filter(Boolean);
-    return ['all', ...years];
-  }, [transformedResults]);
-
-  // Process exam results from documentData - ALWAYS PROCESS
+  // Process exam results from documentData
   const prioritizedExamResults = useMemo(() => {
     if (!documentData) return [];
     
@@ -815,7 +708,7 @@ export default function ModernResultsView({
     return results.sort((a, b) => a.priority - b.priority);
   }, [documentData, student]);
 
-  // Process additional documents - ALWAYS PROCESS
+  // Process additional documents
   const additionalResultsFiles = useMemo(() => {
     if (!documentData || !documentData.additionalDocuments) return [];
     
@@ -864,10 +757,6 @@ export default function ModernResultsView({
       }));
   }, [documentData]);
 
-  const handleViewSubjects = (result) => {
-    setSelectedResult(result);
-  };
-
   if (resultsLoading) {
     return <ResultsLoadingSpinner />;
   }
@@ -883,331 +772,65 @@ export default function ModernResultsView({
                 <FiAward className="text-lg sm:text-xl md:text-2xl text-yellow-300" />
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl md:text-3xl font-bold truncate">Academic Results Portal</h1>
+                <h1 className="text-lg sm:text-xl md:text-3xl font-bold truncate">Academic Resources</h1>
                 <p className="text-purple-100 text-xs sm:text-sm md:text-lg mt-0.5 truncate">
-                  Your personal academic performance
-                  {student?.admissionNumber && (
-                    <span className="ml-1 sm:ml-2 text-yellow-300 font-semibold">
-                      (Adm: {student.admissionNumber})
-                    </span>
-                  )}
+                  Access school exam documents and learning tools
                 </p>
               </div>
             </div>
             <button
-              onClick={onRefreshResults}
-              disabled={resultsLoading}
+              onClick={fetchDocumentData}
+              disabled={documentLoading}
               className="mt-2 sm:mt-0 px-3 py-1.5 sm:px-4 sm:py-2 md:px-6 md:py-3 bg-white/20 text-white rounded-xl font-bold text-xs sm:text-sm md:text-base hover:bg-white/30 disabled:opacity-50 flex items-center gap-1 sm:gap-2 justify-center w-full sm:w-auto"
             >
-              <FiRefreshCw className={`text-sm sm:text-base ${resultsLoading ? 'animate-spin' : ''}`} />
-              <span>{resultsLoading ? 'Refreshing...' : 'Refresh Results'}</span>
+              <FiRefreshCw className={`text-sm sm:text-base ${documentLoading ? 'animate-spin' : ''}`} />
+              <span>{documentLoading ? 'Refreshing...' : 'Refresh Documents'}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:grid-cols-4">
-        <ResultsStatisticsCard
-          title="Total Results"
-          value={stats.totalResults}
-          icon={FiBook}
-          color="from-purple-500 to-purple-700"
-          trend={8.5}
-        />
-        <ResultsStatisticsCard
-          title="Average Score"
-          value={stats.averageScore}
-          icon={FiTrendingUp}
-          color="from-blue-500 to-blue-700"
-          trend={2.3}
-          suffix="%"
-        />
-        <ResultsStatisticsCard
-          title="Your Grade"
-          value={stats.yourGrade}
-          icon={FiAward}
-          color="from-emerald-500 to-emerald-700"
-          trend={1.7}
-        />
-        <ResultsStatisticsCard
-          title={stats.currentTerm}
-          value={stats.currentTermResults}
-          icon={FiCalendar}
-          color="from-indigo-500 to-indigo-700"
-          trend={5.2}
-        />
-      </div>
-
-      {/* Filters and Controls */}
-      <div className="bg-white rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 border-2 border-gray-200">
-        <div className="flex flex-col gap-2.5 sm:gap-3 md:gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <IoFilterIcon className="text-purple-600 text-sm sm:text-base" />
-              <span className="text-sm sm:text-base md:text-lg font-bold text-gray-900">Filter Results</span>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="flex bg-gray-100 rounded-lg p-0.5">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs font-bold flex items-center gap-1 ${
-                    viewMode === 'list' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <FiList className="text-xs sm:text-sm" />
-                  <span className="hidden xs:inline">List</span>
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs font-bold flex items-center gap-1 ${
-                    viewMode === 'grid' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <FiGrid className="text-xs sm:text-sm" />
-                  <span className="hidden xs:inline">Grid</span>
-                </button>
-              </div>
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="p-1 sm:p-1.5 text-gray-600 hover:text-gray-900"
-              >
-                <FiChevronDown className={`text-sm sm:text-base transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
-              </button>
-            </div>
+      {/* NEW ZERAKI SECTION */}
+      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 p-4 sm:p-6 md:p-8 shadow-lg">
+        <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
+          {/* Icon/Illustration */}
+          <div className="flex-shrink-0 bg-gradient-to-br from-blue-600 to-indigo-700 p-4 rounded-2xl shadow-xl">
+            <IoSchool className="text-white text-4xl md:text-5xl" />
           </div>
           
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-1.5 sm:gap-2 md:grid-cols-4 md:gap-3">
-            <div className="xs:col-span-1">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Term</label>
-              <select
-                value={selectedTerm}
-                onChange={(e) => setSelectedTerm(e.target.value)}
-                className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border-2 border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-              >
-                {uniqueTerms.map(term => (
-                  <option key={term} value={term}>
-                    {term === 'all' ? 'All Terms' : term}
-                  </option>
-                ))}
-              </select>
+          {/* Content */}
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-2">
+              Zeraki Learning Platform
+            </h2>
+            <p className="text-gray-700 text-sm md:text-base mb-3 max-w-2xl">
+              Track your academic performance, access past papers, and get personalised learning recommendations. 
+              Zeraki helps you stay ahead with real-time progress reports and interactive study tools.
+            </p>
+            
+            {/* Instructions */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-xl p-3 mb-4 inline-block">
+              <p className="text-xs sm:text-sm font-medium text-gray-800">
+                <span className="font-bold text-indigo-700">How to log in:</span> Use your school credentials 
+                (admission number and default password). First-time users, click "Forgot Password" to set up your account.
+              </p>
             </div>
             
-            <div className="xs:col-span-1">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Year</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border-2 border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-              >
-                {uniqueYears.map(year => (
-                  <option key={year} value={year}>
-                    {year === 'all' ? 'All Years' : year}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="col-span-1 xs:col-span-2">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Quick Actions</label>
-              <div className="flex gap-1.5 sm:gap-2">
-                {(selectedTerm !== 'all' || selectedYear !== 'all') && (
-                  <button
-                    onClick={() => {
-                      setSelectedTerm('all');
-                      setSelectedYear('all');
-                    }}
-                    className="flex-1 px-2 py-1.5 sm:px-3 sm:py-2 bg-gray-100 text-gray-700 font-bold text-xs sm:text-sm hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-                <button
-                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  className="flex-1 px-2 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 font-bold text-xs sm:text-sm hover:from-purple-100 hover:to-purple-200 rounded-lg transition-colors flex items-center justify-center gap-1 sm:gap-2"
-                >
-                  <FiFilter className="text-xs sm:text-sm" />
-                  {showAdvancedFilters ? 'Hide Filters' : 'More Filters'}
-                </button>
-              </div>
-            </div>
+            {/* Login Button */}
+            <a
+              href="https://zeraki.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm sm:text-base rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all active:scale-95"
+            >
+              <FiExternalLink className="text-lg" />
+              Go to Zeraki Login
+            </a>
           </div>
-          
-          {showAdvancedFilters && (
-            <div className="pt-2 sm:pt-3 border-t border-gray-200">
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Min Grade</label>
-                  <select className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border-2 border-gray-300 rounded-lg text-xs sm:text-sm">
-                    <option value="">Any Grade</option>
-                    <option value="A">A</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B">B</option>
-                    <option value="B-">B-</option>
-                    <option value="C+">C+</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">Form/Class</label>
-                  <select className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border-2 border-gray-300 rounded-lg text-xs sm:text-sm">
-                    <option value="">All Forms</option>
-                    <option value="Form 4">Form 4</option>
-                    <option value="Form 3">Form 3</option>
-                    <option value="Form 2">Form 2</option>
-                    <option value="Form 1">Form 1</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* STUDENT RESULTS SECTION */}
-      {resultsError ? (
-        <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-xl md:rounded-2xl border-2 border-red-300 p-3 sm:p-4 md:p-6 text-center">
-          <FiAlertTriangle className="text-red-500 text-xl sm:text-2xl md:text-3xl mx-auto mb-2 sm:mb-3" />
-          <h3 className="text-sm sm:text-base md:text-xl font-bold text-red-800 mb-1 sm:mb-2">Unable to load results</h3>
-          <p className="text-red-600 text-xs sm:text-sm mb-3 sm:mb-4">{resultsError}</p>
-          <button
-            onClick={onRefreshResults}
-            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg font-bold text-xs sm:text-sm hover:shadow-lg"
-          >
-            Try Again
-          </button>
-        </div>
-      ) : filteredResults.length === 0 ? (
-        <div className="bg-white rounded-xl md:rounded-2xl border-2 border-gray-300 p-4 sm:p-6 md:p-8 text-center">
-          <FiAward className="text-gray-300 text-2xl sm:text-3xl md:text-4xl mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-sm sm:text-base md:text-xl font-bold text-gray-800 mb-1 sm:mb-2">No student results found</h3>
-          <p className="text-gray-600 text-xs sm:text-sm">
-            {selectedTerm !== 'all' || selectedYear !== 'all' 
-              ? 'Try changing your filters' 
-              : 'Your academic results will appear here when available'
-            }
-          </p>
-        </div>
-      ) : (
-        <>
-          {/* Results Display */}
-          <div>
-            <div className="mb-2 sm:mb-3 md:mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0">
-                <div className="min-w-0">
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-0.5 sm:mb-1 truncate">Your Academic Results</h3>
-                  <p className="text-gray-600 text-xs sm:text-sm truncate">
-                    Showing {filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''} • Click for details
-                  </p>
-                </div>
-                <div className="text-xs font-semibold text-gray-500 mt-1 sm:mt-0">
-                  {selectedTerm !== 'all' && `${selectedTerm} • `}
-                  {selectedYear !== 'all' && `${selectedYear}`}
-                </div>
-              </div>
-            </div>
-
-            {viewMode === 'list' ? (
-              <div className="bg-white rounded-xl md:rounded-2xl border-2 border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto -webkit-scrollbar-hide md:scrollbar-default">
-                  <div className="min-w-[600px]">
-                    <div className="bg-gradient-to-r from-gray-50 to-white border-b-2 border-gray-200">
-                      <div className="grid grid-cols-12 gap-1 sm:gap-2 px-2 sm:px-3 md:px-6 py-2 sm:py-3">
-                        <div className="col-span-3 text-xs font-bold text-gray-700 uppercase truncate">Admission</div>
-                        <div className="col-span-3 text-xs font-bold text-gray-700 uppercase truncate">Term & Year</div>
-                        <div className="col-span-2 text-xs font-bold text-gray-700 uppercase truncate hidden xs:block">Form</div>
-                        <div className="col-span-2 xs:col-span-1 text-xs font-bold text-gray-700 uppercase text-center truncate">Avg</div>
-                        <div className="col-span-2 xs:col-span-1 text-xs font-bold text-gray-700 uppercase text-center truncate">Grade</div>
-                        <div className="col-span-2 xs:col-span-1 text-xs font-bold text-gray-700 uppercase text-center truncate">View</div>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-gray-200">
-                      {filteredResults.map((result, index) => {
-                        const overallStatus = getGradeStatus(result.overallGrade);
-                        const isStudentResult = result.admissionNumber === student?.admissionNumber;
-                        
-                        return (
-                          <div 
-                            key={index} 
-                            className={`grid grid-cols-12 gap-1 sm:gap-2 px-2 sm:px-3 md:px-6 py-2 sm:py-3 hover:bg-gray-50 transition-colors ${isStudentResult ? 'bg-blue-50' : ''}`}
-                          >
-<div className="col-span-3 flex flex-col items-start gap-0.5">
-  <div className="flex items-center gap-2 max-w-full">
-    <div className="font-black text-slate-900 text-xs sm:text-sm tracking-tight truncate">
-      {result.admissionNumber}
-    </div>
-    
-    {isStudentResult && (
-      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] xs:text-[11px] font-black uppercase tracking-wider rounded-md border border-blue-100 leading-none">
-        You
-      </span>
-    )}
-  </div>
-
-  <button
-    onClick={() => handleViewSubjects(result)}
-    className="group flex items-center gap-1 mt-0.5 text-[11px] sm:text-xs text-blue-600 hover:text-blue-700 font-bold transition-all"
-  >
-    <span className="border-b border-blue-600/30 group-hover:border-blue-700 transition-colors">
-      View Results
-    </span>
-    <FiArrowRight  size={12} className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
-  </button>
-</div>
-
-                            <div className="col-span-3">
-                              <div className="font-bold text-gray-900 text-xs sm:text-sm truncate">{result.term}</div>
-                              <div className="text-gray-600 text-[10px] xs:text-xs truncate">{result.academicYear}</div>
-                            </div>
-                            <div className="col-span-2 hidden xs:block">
-                              <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">{result.form}</div>
-                            </div>
-                            <div className="col-span-2 xs:col-span-1 text-center">
-                              <div className="text-sm sm:text-base font-bold text-gray-900 truncate">{result.averageScore.toFixed(1)}%</div>
-                              <div className="text-gray-500 text-[10px] xs:text-xs hidden xs:block">Total: {result.totalScore}</div>
-                            </div>
-                            <div className="col-span-2 xs:col-span-1 text-center">
-                              <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg text-[10px] xs:text-xs font-bold ${overallStatus.badgeColor}`}>
-                                {result.overallGrade || 'N/A'}
-                              </span>
-                            </div>
-                            <div className="col-span-2 xs:col-span-1 text-center">
-                              <button
-                                onClick={() => handleViewSubjects(result)}
-                                className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-600 rounded-lg text-xs font-bold hover:from-blue-100 hover:to-blue-200 transition-all flex items-center gap-0.5 sm:gap-1 justify-center mx-auto"
-                              >
-                                <FiEye className="text-xs" />
-                                <span className="hidden xs:inline text-xs">View</span>
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3 md:gap-4">
-                {filteredResults.map((result, index) => (
-                  <ResultCard
-                    key={index}
-                    result={result}
-                    studentAdmissionNumber={student?.admissionNumber}
-                    onViewSubjects={handleViewSubjects}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* SCHOOL DOCUMENTS SECTION - ALWAYS SHOWS, INDEPENDENT OF STUDENT RESULTS */}
+      {/* SCHOOL DOCUMENTS SECTION - UNCHANGED */}
       <div className="mt-6 pt-6 border-t-2 border-gray-300">
         <div className="mb-2 sm:mb-3 md:mb-4">
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
@@ -1274,7 +897,7 @@ export default function ModernResultsView({
         )}
       </div>
 
-      {/* Subject Details Modal */}
+      {/* Subject Details Modal (unused but kept) */}
       {selectedResult && (
         <SubjectDetailsModal
           result={selectedResult}
