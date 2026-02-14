@@ -167,10 +167,32 @@ function getRecipientTypeLabel(type) {
   return labels[type] || type;
 }
 
+// Add this helper function to detect sandbox
+const isSandbox = AT_USERNAME === 'sandbox';
+
+// Update your validatePhoneNumbers function to handle sandbox test numbers
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
   
+  // For sandbox, accept any number format (for testing)
+  if (isSandbox) {
+    console.log('🧪 Sandbox mode: Accepting any phone numbers for testing');
+    phoneNumbers.forEach(num => {
+      const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
+      // In sandbox, just clean the number but don't validate strictly
+      if (cleaned.length > 0) {
+        // Remove any '+' if present
+        const formatted = cleaned.replace(/^\+/, '');
+        valid.push(formatted);
+      } else {
+        invalid.push(num);
+      }
+    });
+    return { valid, invalid };
+  }
+  
+  // Production validation - Kenyan phone numbers
   const regex = /^(?:(?:\+?254)|0)?(7[0-9]{8})$/;
   
   phoneNumbers.forEach(num => {
@@ -194,6 +216,7 @@ function validatePhoneNumbers(phoneNumbers) {
   return { valid, invalid };
 }
 
+// Also update your sendSmsCampaign function to use sandbox-friendly formatting
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
   const message = campaign.message;
@@ -207,23 +230,40 @@ async function sendSmsCampaign(campaign) {
     : senderId;
 
   console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
+  console.log(`📱 Environment: ${isSandbox ? 'SANDBOX' : 'PRODUCTION'}`);
 
   const BATCH_SIZE = 100;
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
+      // Format numbers for Africa's Talking
+      const formattedBatch = batch.map(num => {
+        // Remove any '+' if present
+        let cleaned = num.replace(/^\+/, '');
+        
+        // In sandbox, you can use test numbers like +254700XXX123
+        // Just ensure no special characters
+        return cleaned;
+      });
+
       const smsOptions = {
-        to: batch,
+        to: formattedBatch,
         message: message,
       };
       
-      if (finalSender && finalSender.trim() !== "") {
+      // In sandbox, you might need to omit the 'from' field or use a test sender
+      if (!isSandbox && finalSender && finalSender.trim() !== "") {
         smsOptions.from = finalSender;
+      } else if (isSandbox) {
+        console.log('🧪 Sandbox: Using default sender');
+        // Don't set 'from' in sandbox or use a test value
+        // smsOptions.from = "TEST"; // Uncomment if needed
       }
 
-      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${batch.length} numbers`);
+      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers:`, formattedBatch);
       
       const result = await sms.send(smsOptions);
+      console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
 
       if (result?.data?.SMSMessageData?.Recipients) {
         const recipientStatuses = result.data.SMSMessageData.Recipients;
@@ -243,6 +283,134 @@ async function sendSmsCampaign(campaign) {
           }
         });
       } else {
+        console.log('⚠️ No Recipients in response, full response:', result);
+        // In sandbox, the response might be different - check for success
+        if (result?.data?.SMSMessageData?.Message === "Sent to 1 recipients") {
+          batch.forEach(phone => {
+            sent.push({
+              campaignId: campaign.id,
+              phoneNumber: phone,
+              message,
+              providerMessageId: null,
+              status: "success",
+            });
+          });
+        } else {
+          batch.forEach(phone => {
+            failed.push({
+              campaignId: campaign.id,
+              phoneNumber: phone,
+              message,
+              providerMessageId: null,
+              status: "failed",
+              errorMessage: "Unknown response format",
+            });
+          });
+        }
+      }
+      
+      console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Processed ${batch.length} numbers`);
+      
+    } catch (error) {
+      console.error(`❌ Batch failed:`, error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data
+      });
+      
+      batch.forEach(phone => {
+        failed.push({
+          campaignId: campaign.id,
+          phoneNumber: phone,
+          message,
+          providerMessageId: null,
+          status: "failed",
+          errorMessage: error.message,
+        });
+      });
+    }
+    
+    if (i + BATCH_SIZE < recipients.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+
+  if (sent.length > 0) {
+    await prisma.smsLog.createMany({ data: sent });
+  }
+  if (failed.length > 0) {
+    await prisma.smsLog.createMany({ data: failed });
+  }
+
+  const summary = {
+    total: recipients.length,
+    successful: sent.length,
+    failed: failed.length,
+    successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
+  };
+
+  return { sent, failed, summary };
+}
+
+async function sendSmsCampaign(campaign) {
+  const recipients = campaign.recipients.split(",").map(r => r.trim());
+  const message = campaign.message;
+
+  const sent = [];
+  const failed = [];
+
+  const senderId = AT_SENDER_ID;
+  const finalSender = AT_SENDER_TYPE === "alphanumeric" 
+    ? senderId.substring(0, 11).trim() 
+    : senderId;
+
+  console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
+
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+    const batch = recipients.slice(i, i + BATCH_SIZE);
+    try {
+      // Format numbers for Africa's Talking - they expect the number WITHOUT the leading +
+      // For Kenyan numbers, they expect format: 2547XXXXXXXX (which you already have)
+      const formattedBatch = batch.map(num => {
+        // Remove any '+' if present
+        return num.replace(/^\+/, '');
+      });
+
+      const smsOptions = {
+        to: formattedBatch,
+        message: message,
+      };
+      
+      if (finalSender && finalSender.trim() !== "") {
+        smsOptions.from = finalSender;
+      }
+
+      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers:`, formattedBatch);
+      
+      const result = await sms.send(smsOptions);
+      console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
+
+      if (result?.data?.SMSMessageData?.Recipients) {
+        const recipientStatuses = result.data.SMSMessageData.Recipients;
+        recipientStatuses.forEach(rs => {
+          const logEntry = {
+            campaignId: campaign.id,
+            phoneNumber: rs.number,
+            message,
+            providerMessageId: rs.messageId || null,
+            status: rs.status === "Success" ? "success" : "failed",
+            errorMessage: rs.status !== "Success" ? rs.status : null,
+          };
+          if (rs.status === "Success") {
+            sent.push(logEntry);
+          } else {
+            failed.push(logEntry);
+          }
+        });
+      } else {
+        console.log('⚠️ No Recipients in response, full response:', result);
+        // Fallback: treat entire batch as success
         batch.forEach(phone => {
           sent.push({
             campaignId: campaign.id,
@@ -257,7 +425,13 @@ async function sendSmsCampaign(campaign) {
       console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
       
     } catch (error) {
-      console.error(`❌ Batch failed:`, error.message);
+      console.error(`❌ Batch failed:`, error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      
       batch.forEach(phone => {
         failed.push({
           campaignId: campaign.id,
