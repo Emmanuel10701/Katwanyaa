@@ -23,7 +23,6 @@ import {
   FiTarget,
   FiActivity,
   FiRefreshCw,
-  // Admission icons
   FiClipboard,
   FiCheckCircle,
   FiClock,
@@ -41,7 +40,8 @@ import {
   FiTrendingUp as FiTrendingUpSolid,
   FiTrendingDown as FiTrendingDownSolid,
   FiActivity as FiActivitySolid,
-  FiBriefcase  // Added for careers
+  FiBriefcase,
+  FiSend,          // SMS icon
 } from 'react-icons/fi';
 import { 
   IoPeopleCircle,
@@ -76,283 +76,91 @@ const decodeToken = () => {
   }
 };
 
-// ========== ENGAGEMENT CALCULATION LOGIC ==========
-const calculateStudentEngagement = (student, allResults) => {
-  // Get results for this specific student
-  const studentResults = allResults.filter(result => 
-    result.admissionNumber === student.admissionNumber
-  );
-  
-  if (studentResults.length === 0) {
-    return {
-      score: 0,
-      level: 'No Data',
-      reasons: ['No results data available'],
-      trend: 'stable',
-      resultsCount: 0,
-      lastActivity: student.updatedAt || student.createdAt,
-      subjects: []
-    };
+// ========== HELPER FUNCTIONS ==========
+const calculateMonthOverMonthGrowth = (currentCount, previousCount) => {
+  if (!previousCount || previousCount === 0) {
+    return currentCount > 0 ? 100 : 0;
   }
+  return ((currentCount - previousCount) / previousCount) * 100;
+};
+
+const countRecordsByMonth = (dataArray, monthOffset = 0) => {
+  const now = new Date();
+  const targetMonth = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
+  const nextMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 1);
   
-  let engagementScore = 0;
-  const reasons = [];
-  const recentSubjects = new Set();
-  
-  // 1. Recency of results (max 30 points)
-  const latestResult = studentResults.sort((a, b) => 
-    new Date(b.updatedAt) - new Date(a.updatedAt)
-  )[0];
-  
-  const daysSinceLastResult = Math.floor(
-    (new Date() - new Date(latestResult.updatedAt)) / (1000 * 60 * 60 * 24)
-  );
-  
-  if (daysSinceLastResult <= 7) {
-    engagementScore += 30;
-    reasons.push('Active in last week');
-  } else if (daysSinceLastResult <= 30) {
-    engagementScore += 20;
-    reasons.push('Active in last month');
-  } else if (daysSinceLastResult <= 90) {
-    engagementScore += 10;
-    reasons.push('Active in last quarter');
-  }
-  
-  // 2. Frequency of results (max 30 points)
-  const resultsLast90Days = studentResults.filter(result => {
-    const resultDate = new Date(result.updatedAt);
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    return resultDate >= ninetyDaysAgo;
+  return dataArray.filter(item => {
+    if (!item.createdAt) return false;
+    const itemDate = new Date(item.createdAt);
+    return itemDate >= targetMonth && itemDate < nextMonth;
   }).length;
-  
-  if (resultsLast90Days >= 3) {
-    engagementScore += 30;
-    reasons.push(`Consistent performance (${resultsLast90Days} results in 90 days)`);
-  } else if (resultsLast90Days >= 2) {
-    engagementScore += 20;
-    reasons.push(`Regular activity (${resultsLast90Days} results in 90 days)`);
-  } else if (resultsLast90Days >= 1) {
-    engagementScore += 10;
-    reasons.push(`Some activity (${resultsLast90Days} result in 90 days)`);
-  }
-  
-  // 3. Academic performance (max 40 points)
-  let totalAvgScore = 0;
-  let totalResultsWithScores = 0;
-  let subjectScores = {};
-  
-  studentResults.forEach(result => {
-    try {
-      let subjects = [];
-      if (typeof result.subjects === 'string') {
-        subjects = JSON.parse(result.subjects);
-      } else if (Array.isArray(result.subjects)) {
-        subjects = result.subjects;
-      }
-      
-      subjects.forEach(subject => {
-        const score = subject.score || 0;
-        if (score > 0) {
-          recentSubjects.add(subject.subject);
-          
-          if (!subjectScores[subject.subject]) {
-            subjectScores[subject.subject] = { total: 0, count: 0 };
-          }
-          subjectScores[subject.subject].total += score;
-          subjectScores[subject.subject].count++;
-        }
-      });
-      
-      if (subjects.length > 0) {
-        const resultAvg = subjects.reduce((sum, s) => sum + (s.score || 0), 0) / subjects.length;
-        totalAvgScore += resultAvg;
-        totalResultsWithScores++;
-      }
-    } catch (error) {
-      console.error('Error parsing subjects:', error);
-    }
-  });
-  
-  if (totalResultsWithScores > 0) {
-    const overallAvg = totalAvgScore / totalResultsWithScores;
-    
-    if (overallAvg >= 80) {
-      engagementScore += 40;
-      reasons.push(`Excellent performance (${overallAvg.toFixed(1)}% avg)`);
-    } else if (overallAvg >= 70) {
-      engagementScore += 30;
-      reasons.push(`Good performance (${overallAvg.toFixed(1)}% avg)`);
-    } else if (overallAvg >= 60) {
-      engagementScore += 20;
-      reasons.push(`Average performance (${overallAvg.toFixed(1)}% avg)`);
-    } else if (overallAvg >= 50) {
-      engagementScore += 10;
-      reasons.push(`Passing performance (${overallAvg.toFixed(1)}% avg)`);
-    }
-  }
-  
-  // Calculate subject performance metrics
-  const subjectPerformance = Object.keys(subjectScores).map(subjectName => ({
-    subject: subjectName,
-    average: subjectScores[subjectName].total / subjectScores[subjectName].count,
-    count: subjectScores[subjectName].count
-  }));
-  
-  // Determine engagement level
-  let engagementLevel = 'Low';
-  if (engagementScore >= 80) engagementLevel = 'Excellent';
-  else if (engagementScore >= 70) engagementLevel = 'High';
-  else if (engagementScore >= 50) engagementLevel = 'Medium';
-  else if (engagementScore >= 30) engagementLevel = 'Fair';
-  
-  // Calculate trend (simplified - compare last two results)
-  let trend = 'stable';
-  if (studentResults.length >= 2) {
-    const sortedResults = [...studentResults].sort((a, b) => 
-      new Date(a.updatedAt) - new Date(b.updatedAt)
-    );
-    const secondLastResult = sortedResults[sortedResults.length - 2];
-    
-    try {
-      let currentSubjects = [];
-      let previousSubjects = [];
-      
-      if (typeof latestResult.subjects === 'string') {
-        currentSubjects = JSON.parse(latestResult.subjects);
-      } else if (Array.isArray(latestResult.subjects)) {
-        currentSubjects = latestResult.subjects;
-      }
-      
-      if (typeof secondLastResult.subjects === 'string') {
-        previousSubjects = JSON.parse(secondLastResult.subjects);
-      } else if (Array.isArray(secondLastResult.subjects)) {
-        previousSubjects = secondLastResult.subjects;
-      }
-      
-      const currentAvg = currentSubjects.length > 0 
-        ? currentSubjects.reduce((sum, s) => sum + (s.score || 0), 0) / currentSubjects.length 
-        : 0;
-      
-      const previousAvg = previousSubjects.length > 0 
-        ? previousSubjects.reduce((sum, s) => sum + (s.score || 0), 0) / previousSubjects.length 
-        : 0;
-      
-      if (currentAvg > previousAvg) trend = 'up';
-      else if (currentAvg < previousAvg) trend = 'down';
-    } catch (error) {
-      console.error('Error calculating trend:', error);
-    }
-  }
-  
-  return {
-    score: Math.min(Math.round(engagementScore), 100),
-    level: engagementLevel,
-    reasons: reasons.slice(0, 3), // Top 3 reasons
-    trend,
-    resultsCount: studentResults.length,
-    lastActivity: latestResult.updatedAt,
-    subjectPerformance,
-    recentSubjects: Array.from(recentSubjects).slice(0, 5)
-  };
 };
 
-// Calculate overall engagement statistics
-const calculateEngagementStats = (students, allResults) => {
-  if (!students || students.length === 0 || !allResults) {
-    return {
-      totalStudents: 0,
-      engagedStudents: 0,
-      averageEngagement: 0,
-      engagementRate: 0,
-      distribution: { excellent: 0, high: 0, medium: 0, fair: 0, low: 0 },
-      topPerformingSubjects: [],
-      recentActivityCount: 0
-    };
+// Improved relative time function
+const getRelativeTime = (dateString) => {
+  if (!dateString) return 'Recently';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Recently';
+    
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (e) {
+    return 'Recently';
   }
-  
-  // Calculate engagement for each student
-  const engagements = students.map(student => 
-    calculateStudentEngagement(student, allResults)
-  );
-  
-  // Count engaged students (score >= 50)
-  const engagedStudents = engagements.filter(e => e.score >= 50).length;
-  const excellentEngagement = engagements.filter(e => e.level === 'Excellent').length;
-  const highEngagement = engagements.filter(e => e.level === 'High').length;
-  const mediumEngagement = engagements.filter(e => e.level === 'Medium').length;
-  const fairEngagement = engagements.filter(e => e.level === 'Fair').length;
-  const lowEngagement = engagements.filter(e => e.level === 'Low').length;
-  
-  // Calculate average engagement
-  const averageEngagement = engagements.reduce((sum, e) => sum + e.score, 0) / engagements.length;
-  
-  // Count recent activity (last 7 days)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const recentActivityCount = allResults.filter(result => 
-    new Date(result.updatedAt) >= sevenDaysAgo
-  ).length;
-  
-  // Find top performing subjects across all students
-  const subjectPerformanceMap = {};
-  allResults.forEach(result => {
-    try {
-      let subjects = [];
-      if (typeof result.subjects === 'string') {
-        subjects = JSON.parse(result.subjects);
-      } else if (Array.isArray(result.subjects)) {
-        subjects = result.subjects;
-      }
-      
-      subjects.forEach(subject => {
-        const score = subject.score || 0;
-        if (score > 0) {
-          if (!subjectPerformanceMap[subject.subject]) {
-            subjectPerformanceMap[subject.subject] = { total: 0, count: 0 };
-          }
-          subjectPerformanceMap[subject.subject].total += score;
-          subjectPerformanceMap[subject.subject].count++;
-        }
-      });
-    } catch (error) {
-      console.error('Error processing subject performance:', error);
-    }
-  });
-  
-  const topPerformingSubjects = Object.keys(subjectPerformanceMap)
-    .map(subject => ({
-      subject,
-      average: subjectPerformanceMap[subject].total / subjectPerformanceMap[subject].count,
-      count: subjectPerformanceMap[subject].count
-    }))
-    .sort((a, b) => b.average - a.average)
-    .slice(0, 5);
-  
-  return {
-    totalStudents: students.length,
-    engagedStudents,
-    averageEngagement: Math.round(averageEngagement),
-    engagementRate: Math.round((engagedStudents / students.length) * 100),
-    distribution: {
-      excellent: excellentEngagement,
-      high: highEngagement,
-      medium: mediumEngagement,
-      fair: fairEngagement,
-      low: lowEngagement
-    },
-    topPerformingSubjects,
-    recentActivityCount,
-    totalResults: allResults.length
-  };
 };
 
+// Format activity date for display
+const formatActivityDate = (dateString) => {
+  if (!dateString) return 'Unknown date';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    date.setHours(0, 0, 0, 0);
+    
+    if (date.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (date.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+  } catch (e) {
+    return 'Unknown date';
+  }
+};
+
+// ========== RECENT ACTIVITY FETCHER ==========
 const listenForRecentActivity = async () => {
   try {
     console.log('📊 Fetching recent activity data...');
     
-    // Poll for recent activity from all APIs with better error handling
     const [studentsRes, resultsRes, uploadsRes, guidanceRes] = await Promise.allSettled([
       fetch('/api/studentupload?limit=5&sortBy=updatedAt&sortOrder=desc', {
         headers: { 'Cache-Control': 'no-cache' }
@@ -371,72 +179,10 @@ const listenForRecentActivity = async () => {
     const activities = [];
     const now = new Date();
 
-    // Helper function to validate and format date
-    const formatActivityDate = (dateString) => {
-      if (!dateString) return 'Unknown date';
-      
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Invalid date';
-        
-        // Show "Today", "Yesterday", or date
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        date.setHours(0, 0, 0, 0);
-        
-        if (date.getTime() === today.getTime()) {
-          return 'Today';
-        } else if (date.getTime() === yesterday.getTime()) {
-          return 'Yesterday';
-        } else {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          });
-        }
-      } catch (e) {
-        return 'Unknown date';
-      }
-    };
-
-    // Helper function to get relative time
-    const getRelativeTime = (dateString) => {
-      if (!dateString) return 'Recently';
-      
-      try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Recently';
-        
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
-        
-        return date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric'
-        });
-      } catch (e) {
-        return 'Recently';
-      }
-    };
-
-    // Process recent students with improved validation
+    // Process recent students
     if (studentsRes.status === 'fulfilled' && studentsRes.value.ok) {
       try {
         const studentsData = await studentsRes.value.json();
-        console.log('📋 Students API response:', studentsData);
-        
         const students = studentsData.data?.students || studentsData.students || [];
         
         students.slice(0, 2).forEach(student => {
@@ -472,28 +218,16 @@ const listenForRecentActivity = async () => {
       } catch (error) {
         console.error('❌ Error processing students data:', error);
       }
-    } else {
-      console.warn('⚠️ Students API request failed:', studentsRes.reason);
     }
 
-    // Process recent results with improved validation
+    // Process recent results
     if (resultsRes.status === 'fulfilled' && resultsRes.value.ok) {
       try {
         const resultsData = await resultsRes.value.json();
-        console.log('📊 Results API response:', resultsData);
-        
         const results = resultsData.data?.results || resultsData.results || [];
         
         results.slice(0, 2).forEach(result => {
           if (!result?.id) return;
-          
-          const hasSubjects = result.subjects && 
-            (Array.isArray(result.subjects) || 
-             (typeof result.subjects === 'string' && result.subjects.length > 0));
-          
-          const subjectCount = hasSubjects ? 
-            (Array.isArray(result.subjects) ? result.subjects.length : 
-             JSON.parse(result.subjects).length) : 0;
           
           const term = result.term || result.Term || 'Unknown Term';
           const form = result.form || result.Form || 'Unknown Form';
@@ -512,7 +246,6 @@ const listenForRecentActivity = async () => {
             details: {
               term: term,
               form: form,
-              subjectCount: subjectCount,
               academicYear: result.academicYear || result.year || 'N/A'
             }
           });
@@ -520,16 +253,12 @@ const listenForRecentActivity = async () => {
       } catch (error) {
         console.error('❌ Error processing results data:', error);
       }
-    } else {
-      console.warn('⚠️ Results API request failed:', resultsRes.reason);
     }
 
-    // Process recent uploads with improved validation
+    // Process recent uploads
     if (uploadsRes.status === 'fulfilled' && uploadsRes.value.ok) {
       try {
         const uploadsData = await uploadsRes.value.json();
-        console.log('📤 Uploads API response:', uploadsData);
-        
         const uploads = uploadsData.uploads || uploadsData.data?.uploads || [];
         
         uploads.slice(0, 2).forEach(upload => {
@@ -569,16 +298,12 @@ const listenForRecentActivity = async () => {
       } catch (error) {
         console.error('❌ Error processing uploads data:', error);
       }
-    } else {
-      console.warn('⚠️ Uploads API request failed:', uploadsRes.reason);
     }
 
-    // Process recent guidance sessions with improved validation
+    // Process recent guidance sessions - FIXED TIMELINE
     if (guidanceRes.status === 'fulfilled' && guidanceRes.value.ok) {
       try {
         const guidanceData = await guidanceRes.value.json();
-        console.log('💬 Guidance API response:', guidanceData);
-        
         const sessions = guidanceData.events || guidanceData.sessions || guidanceData.data?.events || [];
         
         sessions.slice(0, 2).forEach(session => {
@@ -593,16 +318,19 @@ const listenForRecentActivity = async () => {
             `${counselor} with ${studentName}` : 
             `${counselor} - ${category}`;
           
+          // Use correct date field: session.date, session.createdAt, or session.updatedAt
+          const sessionDate = session.date || session.createdAt || session.updatedAt;
+          
           activities.push({
             id: `guidance-${session.id}-${Date.now()}`,
             action: 'Guidance session conducted',
             target: displayTarget,
-            time: getRelativeTime(session.date || session.createdAt),
-            formattedDate: formatActivityDate(session.date || session.createdAt),
+            time: getRelativeTime(sessionDate),
+            formattedDate: formatActivityDate(sessionDate),
             type: 'guidance',
             icon: FiMessageCircle,
             color: 'teal',
-            timestamp: new Date(session.date || session.createdAt || now),
+            timestamp: new Date(sessionDate || now),
             details: {
               counselor: counselor,
               category: category,
@@ -615,8 +343,6 @@ const listenForRecentActivity = async () => {
       } catch (error) {
         console.error('❌ Error processing guidance data:', error);
       }
-    } else {
-      console.warn('⚠️ Guidance API request failed:', guidanceRes.reason);
     }
 
     // Sort by timestamp (most recent first) and remove duplicates
@@ -631,57 +357,26 @@ const listenForRecentActivity = async () => {
 
     console.log(`✅ Loaded ${sortedActivities.length} recent activities`);
     
-    // Add activity summary for debugging
-    if (sortedActivities.length > 0) {
-      console.table(sortedActivities.map(act => ({
-        Type: act.type,
-        Action: act.action,
-        Time: act.time,
-        Target: act.target
-      })));
-    }
-
     return sortedActivities;
 
   } catch (error) {
-console.error('🚨 Critical error in listenForRecentActivity:', error);
+    console.error('🚨 Critical error in listenForRecentActivity:', error);
     
-    // Return fallback activities if everything fails
-return [{
-  id: 'fallback-activity',
-  action: 'System online',
-  target: 'Dashboard is monitoring activities',
-  time: 'Just now',
-  formattedDate: 'Today',
-  type: 'system',
-  icon: FiActivity,
-  color: 'blue',
-  timestamp: new Date(),
-  details: {
-    note: 'Activities will appear here as they occur'
+    return [{
+      id: 'fallback-activity',
+      action: 'System online',
+      target: 'Dashboard is monitoring activities',
+      time: 'Just now',
+      formattedDate: 'Today',
+      type: 'system',
+      icon: FiActivity,
+      color: 'blue',
+      timestamp: new Date(),
+      details: {
+        note: 'Activities will appear here as they occur'
+      }
+    }];
   }
-}];
-  }
-};
-
-// ========== HELPER FUNCTIONS ==========
-const calculateMonthOverMonthGrowth = (currentCount, previousCount) => {
-  if (!previousCount || previousCount === 0) {
-    return currentCount > 0 ? 100 : 0;
-  }
-  return ((currentCount - previousCount) / previousCount) * 100;
-};
-
-const countRecordsByMonth = (dataArray, monthOffset = 0) => {
-  const now = new Date();
-  const targetMonth = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
-  const nextMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 1);
-  
-  return dataArray.filter(item => {
-    if (!item.createdAt) return false;
-    const itemDate = new Date(item.createdAt);
-    return itemDate >= targetMonth && itemDate < nextMonth;
-  }).length;
 };
 
 // ========== DASHBOARD COMPONENT ==========
@@ -739,7 +434,7 @@ function ModernLoadingSpinner({ message = "Loading sessions from the database…
   );
 }
 
-// Add this helper function to decode JWT tokens
+// Decode JWT token helper
 const decodeJWTToken = (token) => {
   if (!token) return null;
   
@@ -763,6 +458,86 @@ const decodeJWTToken = (token) => {
   }
 };
 
+// ========== SMS OVERVIEW CARD (replaces Student Engagement) ==========
+const SmsOverviewCard = ({ smsStats, recentCampaigns }) => {
+  const total = smsStats?.total || 0;
+  const drafts = smsStats?.draft || 0;
+  const sent = smsStats?.sent || 0;
+  const campaigns = recentCampaigns || [];
+
+  return (
+    <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
+      
+      {/* Top Glow Accent */}
+      <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-blue-500/10 blur-2xl group-hover:bg-blue-500/20 transition-colors" />
+      
+      <div className="flex items-center justify-between mb-6 relative z-10">
+        <div>
+          <h3 className="text-lg font-black text-slate-800 tracking-tight">SMS Campaigns</h3>
+          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Communication Hub</p>
+        </div>
+        <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 text-blue-600 shadow-sm transition-transform group-hover:scale-100">
+          <FiSend className="text-xl" />
+        </div>
+      </div>
+      
+      {/* Stats Display */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Total</span>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-2xl font-black text-slate-900">{total}</span>
+            <span className="text-xs font-bold text-slate-400">campaigns</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-amber-50/80 rounded-xl p-3 border border-amber-100">
+            <span className="text-[10px] font-black text-amber-600 uppercase">Draft</span>
+            <p className="text-xl font-black text-amber-700 mt-1">{drafts}</p>
+          </div>
+          <div className="bg-emerald-50/80 rounded-xl p-3 border border-emerald-100">
+            <span className="text-[10px] font-black text-emerald-600 uppercase">Sent</span>
+            <p className="text-xl font-black text-emerald-700 mt-1">{sent}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Recent Campaigns */}
+      <div className="mb-4">
+        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">Recent Campaigns</h4>
+        <div className="space-y-3">
+          {campaigns.length > 0 ? (
+            campaigns.slice(0, 3).map((campaign, index) => (
+              <div key={index} className="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`p-1.5 rounded-lg ${campaign.status === 'sent' ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                    <FiSend className={`w-3 h-3 ${campaign.status === 'sent' ? 'text-emerald-600' : 'text-amber-600'}`} />
+                  </div>
+                  <span className="text-xs font-bold text-slate-700 truncate">{campaign.title || 'Untitled'}</span>
+                </div>
+                <span className="text-[10px] font-bold text-slate-400">{campaign.recipientCount || 0} recipients</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 text-center py-2">No recent campaigns</p>
+          )}
+        </div>
+      </div>
+      
+      {/* Quick Action */}
+      <div className="pt-4 border-t border-slate-100">
+        <button
+          onClick={() => window.location.href = '/pages/sms'}
+          className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:shadow-lg transition-all"
+        >
+          Manage SMS Campaigns
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ========== MAIN DASHBOARD COMPONENT ==========
 export default function DashboardOverview() {
   const [user, setUser] = useState(null);
@@ -772,7 +547,7 @@ export default function DashboardOverview() {
     totalSubscribers: 0,
     pendingEmails: 0,
     activeAssignments: 0,
-    totalCareers: 0, // Changed from upcomingEvents to totalCareers
+    totalCareers: 0,
     galleryItems: 0,
     guidanceSessions: 0,
     totalNews: 0,
@@ -804,6 +579,16 @@ export default function DashboardOverview() {
     averageAge: 0
   });
   
+  // New SMS stats
+  const [smsStats, setSmsStats] = useState({
+    total: 0,
+    draft: 0,
+    sent: 0,
+    totalRecipients: 0,
+    successRate: 0
+  });
+  const [recentSmsCampaigns, setRecentSmsCampaigns] = useState([]);
+  
   const [recentActivity, setRecentActivity] = useState([]);
   const [performanceData, setPerformanceData] = useState([]);
   const [quickStats, setQuickStats] = useState([]);
@@ -822,21 +607,7 @@ export default function DashboardOverview() {
   const [careers, setCareers] = useState([]);
   const [emailCampaigns, setEmailCampaigns] = useState([]);
   
-  // NEW: Engagement and performance state
-  const [engagementStats, setEngagementStats] = useState({
-    totalStudents: 0,
-    engagedStudents: 0,
-    averageEngagement: 0,
-    engagementRate: 0,
-    distribution: { excellent: 0, high: 0, medium: 0, fair: 0, low: 0 },
-    topPerformingSubjects: [],
-    recentActivityCount: 0,
-    totalResults: 0
-  });
-  
-  const [studentEngagements, setStudentEngagements] = useState([]);
-  
-  // NEW: Student Population & Distribution state
+  // Student Population & Distribution state
   const [studentPopulation, setStudentPopulation] = useState({
     total: 0,
     active: 0,
@@ -954,384 +725,376 @@ export default function DashboardOverview() {
     return user;
   }, []);
   
-// Fetch all data including engagement calculations - FIXED VERSION
-const fetchAllData = useCallback(async () => {
-  try {
-    setLoading(true);
-    
-    // First check authentication
-    const authenticatedUser = checkAuthentication();
-    if (!authenticatedUser) return;
-    
-    setUser(authenticatedUser);
-    
-    // Fetch data from all endpoints - USING CORRECT API ENDPOINTS
-    const [
-      studentsRes,
-      staffRes,
-      subscribersRes,
-      assignmentsRes,
-      careersRes, // Replaced eventsRes with careersRes
-      galleryRes,
-      guidanceRes,
-      newsRes,
-      schoolInfoRes,
-      adminsRes,
-      admissionsRes,
-      resourcesRes,
-      emailCampaignsRes,
-      resultsRes // Results data for engagement calculation
-    ] = await Promise.allSettled([
-      fetch('/api/studentupload?includeStats=true&limit=1000'), // Get all students with stats
-      fetch('/api/staff'),
-      fetch('/api/subscriber'),
-      fetch('/api/assignment'),
-      fetch('/api/career'), // Changed from events to career
-      fetch('/api/gallery'),
-      fetch('/api/guidance'),
-      fetch('/api/news'),
-      fetch('/api/school'),
-      fetch('/api/register'),
-      fetch('/api/applyadmission'),
-      fetch('/api/resources'),
-      fetch('/api/emails'),
-      fetch('/api/results?limit=1000&includeStudent=true') // Get all results with student data
-    ]);
-    
-    // Process responses with better error handling
-    const studentsData = studentsRes.status === 'fulfilled' 
-      ? await studentsRes.value.json() 
-      : { success: false, data: { students: [] } };
-    
-    const resultsData = resultsRes.status === 'fulfilled' 
-      ? await resultsRes.value.json() 
-      : { success: false, data: { results: [] } };
-    
-    const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
-    const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
-    const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
-    const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
-    const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
-    const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
-    const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
-    const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
-    const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
-    const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
-    const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
-    const emailCampaignsData = emailCampaignsRes.status === 'fulfilled' ? await emailCampaignsRes.value.json() : { campaigns: [] };
-    
-    // Store school video for quick tour
-    if (schoolInfo.school?.videoTour) {
-      setSchoolVideo({
-        url: schoolInfo.school.videoTour,
-        type: schoolInfo.school.videoType
-      });
-    }
-    
-    // Extract student and result data properly
-    const studentList = studentsData.success ? 
-      (studentsData.data?.students || studentsData.students || []) : [];
-    
-    const allResults = resultsData.success ?
-      (resultsData.data?.results || resultsData.results || []) : [];
-    
-    console.log('Student data loaded:', studentList.length, 'students');
-    console.log('Results data loaded:', allResults.length, 'results');
-    
-    // Calculate student population and distribution
-    if (studentList.length > 0) {
-      const formDistribution = { 'Form 1': 0, 'Form 2': 0, 'Form 3': 0, 'Form 4': 0 };
-      const genderDistribution = { male: 0, female: 0, other: 0 };
-      const streamDistribution = {};
-      const statusDistribution = { active: 0, inactive: 0 };
+  // Fetch all data
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
       
-      studentList.forEach(student => {
-        // Form distribution
-        const form = student.form || student.Form || '';
-        if (formDistribution[form] !== undefined) {
-          formDistribution[form]++;
-        } else if (form) {
-          formDistribution[form] = (formDistribution[form] || 0) + 1;
-        }
+      const authenticatedUser = checkAuthentication();
+      if (!authenticatedUser) return;
+      
+      setUser(authenticatedUser);
+      
+      // Fetch data from all endpoints
+      const [
+        studentsRes,
+        staffRes,
+        subscribersRes,
+        assignmentsRes,
+        careersRes,
+        galleryRes,
+        guidanceRes,
+        newsRes,
+        schoolInfoRes,
+        adminsRes,
+        admissionsRes,
+        resourcesRes,
+        emailCampaignsRes,
+        smsRes
+      ] = await Promise.allSettled([
+        fetch('/api/studentupload?includeStats=true&limit=1000'),
+        fetch('/api/staff'),
+        fetch('/api/subscriber'),
+        fetch('/api/assignment'),
+        fetch('/api/career'),
+        fetch('/api/gallery'),
+        fetch('/api/guidance'),
+        fetch('/api/news'),
+        fetch('/api/school'),
+        fetch('/api/register'),
+        fetch('/api/applyadmission'),
+        fetch('/api/resources'),
+        fetch('/api/emails'),
+        fetch('/api/sms')  // Added SMS campaigns fetch
+      ]);
+      
+      // Process responses
+      const studentsData = studentsRes.status === 'fulfilled' 
+        ? await studentsRes.value.json() 
+        : { success: false, data: { students: [] } };
+      
+      const staff = staffRes.status === 'fulfilled' ? await staffRes.value.json() : { staff: [] };
+      const subscribers = subscribersRes.status === 'fulfilled' ? await subscribersRes.value.json() : { subscribers: [] };
+      const assignments = assignmentsRes.status === 'fulfilled' ? await assignmentsRes.value.json() : { assignments: [] };
+      const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
+      const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
+      const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
+      const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
+      const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
+      const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
+      const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
+      const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
+      const emailCampaignsData = emailCampaignsRes.status === 'fulfilled' ? await emailCampaignsRes.value.json() : { campaigns: [] };
+      
+      // Process SMS campaigns
+      const smsData = smsRes.status === 'fulfilled' ? await smsRes.value.json() : { campaigns: [] };
+      if (smsData.success) {
+        const campaigns = smsData.campaigns || [];
+        const draftCount = campaigns.filter(c => c.status === 'draft').length;
+        const sentCount = campaigns.filter(c => c.status === 'sent').length;
+        const totalRecipients = campaigns.reduce((acc, c) => acc + (c.recipients ? c.recipients.split(',').length : 0), 0);
+        const successRate = sentCount > 0 ? Math.round((sentCount / campaigns.length) * 100) : 0;
         
-        // Gender distribution
-        const gender = student.gender?.toLowerCase() || student.Gender?.toLowerCase() || 'other';
-        if (gender === 'male' || gender === 'm') genderDistribution.male++;
-        else if (gender === 'female' || gender === 'f') genderDistribution.female++;
-        else genderDistribution.other++;
+        setSmsStats({
+          total: campaigns.length,
+          draft: draftCount,
+          sent: sentCount,
+          totalRecipients,
+          successRate
+        });
         
-        // Stream distribution
-        const stream = student.stream || student.Stream || '';
-        if (stream) {
-          streamDistribution[stream] = (streamDistribution[stream] || 0) + 1;
-        }
-        
-        // Status distribution
-        const status = student.status?.toLowerCase() || student.Status?.toLowerCase() || 'active';
-        if (status === 'active' || status === 'active') statusDistribution.active++;
-        else statusDistribution.inactive++;
-      });
-      
-      setStudentPopulation({
-        total: studentList.length,
-        active: statusDistribution.active,
-        inactive: statusDistribution.inactive,
-        byForm: formDistribution,
-        byGender: genderDistribution,
-        byStream: streamDistribution,
-        byStatus: statusDistribution
-      });
-    }
-    
-    // Calculate staff distribution
-    if (staff.staff && staff.staff.length > 0) {
-      const staffDist = calculatePercentages(staff.staff, 'department');
-      setStaffDistribution(staffDist);
-    }
-    
-    // Calculate assignments distribution
-    if (assignments.assignments && assignments.assignments.length > 0) {
-      const assignDist = calculatePercentages(assignments.assignments, 'status');
-      setAssignmentsDistribution(assignDist);
-    }
-    
-    // Calculate resources distribution
-    if (resources.resources && resources.resources.length > 0) {
-      const resourcesDist = calculatePercentages(resources.resources, 'category');
-      setResourcesDistribution(resourcesDist);
-    }
-    
-    // Set careers data
-    const totalCareers = careersData.jobs?.length || careersData.careers?.length || 0;
-    if (careersData.jobs && careersData.jobs.length > 0) {
-      setCareers(careersData.jobs.slice(0, 3));
-    }
-    
-    // Set email campaigns
-    if (emailCampaignsData.campaigns && emailCampaignsData.campaigns.length > 0) {
-      setEmailCampaigns(emailCampaignsData.campaigns.slice(0, 2));
-    }
-    
-    // Calculate statistics
-    const activeStudents = studentList.filter(s => 
-      (s.status || s.Status || '').toLowerCase() === 'active'
-    ).length || 0;
-    
-    const inactiveStudents = studentList.length - activeStudents;
-    const activeAssignments = assignments.assignments?.filter(a => 
-      (a.status || '').toLowerCase() === 'assigned'
-    ).length || 0;
-    
-    const guidanceSessionsCount = guidance.events?.length || 0;
-    const completedAssignments = assignments.assignments?.filter(a => 
-      (a.status || '').toLowerCase() === 'completed'
-    ).length || 0;
-    
-    const totalAssignments = assignments.assignments?.length || 1;
-    
-    // Calculate admission statistics
-    const applications = admissions.applications || [];
-    const today = new Date();
-    
-    const monthlyApplications = applications.filter(app => {
-      if (!app.createdAt) return false;
-      const appDate = new Date(app.createdAt);
-      return appDate.getMonth() === today.getMonth() && 
-             appDate.getFullYear() === today.getFullYear();
-    }).length;
-    
-    const dailyApplications = applications.filter(app => {
-      if (!app.createdAt) return false;
-      const appDate = new Date(app.createdAt);
-      return appDate.toDateString() === today.toDateString();
-    }).length;
-    
-    const pendingApps = applications.filter(app => 
-      (app.status || '').toUpperCase() === 'PENDING'
-    ).length;
-    
-    const acceptedApps = applications.filter(app => 
-      (app.status || '').toUpperCase() === 'ACCEPTED'
-    ).length;
-    
-    const rejectedApps = applications.filter(app => 
-      (app.status || '').toUpperCase() === 'REJECTED'
-    ).length;
-    
-    // Calculate conversion rate
-    const conversionRate = applications.length > 0 ? 
-      Math.round((acceptedApps / applications.length) * 100) : 0;
-    
-    // ========== ENGAGEMENT CALCULATIONS ==========
-    // Calculate engagement for each student
-    const engagements = studentList.map(student => ({
-      ...student,
-      engagement: calculateStudentEngagement(student, allResults)
-    }));
-    
-    // Calculate overall engagement statistics
-    const calculatedEngagementStats = calculateEngagementStats(studentList, allResults);
-    setEngagementStats(calculatedEngagementStats);
-    setStudentEngagements(engagements.slice(0, 10));
-    
-    // Update stats with careers data
-    const updatedStats = {
-      totalStudents: studentList.length || 0,
-      activeStudents,
-      inactiveStudents,
-      totalStaff: staff.staff?.length || 0,
-      totalSubscribers: subscribers.subscribers?.length || 0,
-      pendingEmails: 0,
-      activeAssignments,
-      totalCareers, // Changed from upcomingEvents to totalCareers
-      galleryItems: gallery.galleries?.length || 0,
-      guidanceSessions: guidanceSessionsCount,
-      totalNews: news.news?.length || 0,
-      completedAssignments,
-      totalAssignments,
-      
-      // Admission Applications
-      totalApplications: applications.length,
-      pendingApplications: pendingApps,
-      acceptedApplications: acceptedApps,
-      rejectedApplications: rejectedApps,
-      underReviewApplications: applications.filter(app => 
-        (app.status || '').toUpperCase() === 'UNDER_REVIEW'
-      ).length,
-      interviewedApplications: applications.filter(app => 
-        (app.status || '').toUpperCase() === 'INTERVIEWED'
-      ).length,
-      waitlistedApplications: applications.filter(app => 
-        (app.status || '').toUpperCase() === 'WAITLISTED'
-      ).length,
-      conditionalApplications: applications.filter(app => 
-        (app.status || '').toUpperCase() === 'CONDITIONAL_ACCEPTANCE'
-      ).length,
-      withdrawnApplications: applications.filter(app => 
-        (app.status || '').toUpperCase() === 'WITHDRAWN'
-      ).length,
-      monthlyApplications,
-      dailyApplications,
-      applicationConversionRate: conversionRate,
-      averageProcessingTime: 0, // You might want to calculate this
-      
-      // Admission Analytics
-      scienceApplications: applications.filter(app => 
-        (app.preferredStream || '').toUpperCase() === 'SCIENCE'
-      ).length,
-      artsApplications: applications.filter(app => 
-        (app.preferredStream || '').toUpperCase() === 'ARTS'
-      ).length,
-      businessApplications: applications.filter(app => 
-        (app.preferredStream || '').toUpperCase() === 'BUSINESS'
-      ).length,
-      technicalApplications: applications.filter(app => 
-        (app.preferredStream || '').toUpperCase() === 'TECHNICAL'
-      ).length,
-      maleApplications: applications.filter(app => 
-        (app.gender || '').toUpperCase() === 'MALE'
-      ).length,
-      femaleApplications: applications.filter(app => 
-        (app.gender || '').toUpperCase() === 'FEMALE'
-      ).length,
-      topCountyApplications: 'N/A', // You can calculate this
-      averageKCPEScore: 0,
-      averageAge: 0
-    };
-    
-    setStats(updatedStats);
-    
-    // ========== RECENT ACTIVITY ==========
-    const recentActivities = await listenForRecentActivity();
-    setRecentActivity(recentActivities);
-    
-    // ========== PERFORMANCE METRICS ==========
-    const studentGrowth = calculateMonthOverMonthGrowth(
-      updatedStats.totalStudents,
-      0 // You should track previous month's data
-    );
-    
-    const assignmentGrowth = calculateMonthOverMonthGrowth(
-      updatedStats.completedAssignments,
-      0
-    );
-    
-    const performanceMetrics = [
-      { 
-        label: 'Student Engagement', 
-        value: calculatedEngagementStats.engagementRate,
-        change: studentGrowth,
-        color: studentGrowth >= 0 ? 'green' : 'red',
-        description: 'Active and performing students'
-      },
-      { 
-        label: 'Academic Excellence', 
-        value: Math.round((completedAssignments / totalAssignments) * 100) || 0,
-        change: assignmentGrowth,
-        color: assignmentGrowth >= 0 ? 'blue' : 'red',
-        description: 'Assignment completion rate'
-      },
-      { 
-        label: 'Admission Conversion', 
-        value: conversionRate,
-        change: 0,
-        color: conversionRate > 50 ? 'purple' : 'red',
-        description: 'Applications to acceptances'
-      },
-      { 
-        label: 'Guidance Sessions', 
-        value: Math.round((guidanceSessionsCount / (studentList.length || 1)) * 100) || 0,
-        change: 0,
-        color: 'indigo',
-        description: 'Student support engagement'
-      },
-      { 
-        label: 'Recent Activity', 
-        value: Math.min(100, (calculatedEngagementStats.recentActivityCount / 10) * 100),
-        change: 0,
-        color: 'orange',
-        description: 'Recent submissions and updates'
+        // Get recent campaigns for display
+        const recent = campaigns
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+          .slice(0, 3)
+          .map(c => ({
+            ...c,
+            recipientCount: c.recipients ? c.recipients.split(',').length : 0
+          }));
+        setRecentSmsCampaigns(recent);
       }
-    ];
-    
-    setPerformanceData(performanceMetrics);
-    
-    // ========== QUICK STATS ==========
-    const quickStatsData = [
-      { 
-        label: 'Academic Excellence', 
-        value: `${Math.round((completedAssignments / totalAssignments) * 100) || 0}%`, 
-        change: parseFloat(assignmentGrowth.toFixed(1)), 
-        icon: assignmentGrowth >= 0 ? FiTrendingUp : FiTrendingDown, 
-        color: assignmentGrowth >= 0 ? 'green' : 'red',
-        calculation: 'Based on assignment completion'
-      },
-      { 
-        label: 'Student Engagement', 
-        value: `${calculatedEngagementStats.engagementRate}%`, 
-        change: parseFloat(studentGrowth.toFixed(1)), 
-        icon: studentGrowth >= 0 ? FiActivity : FiTrendingDown, 
-        color: studentGrowth >= 0 ? 'blue' : 'red',
-        calculation: 'Active and performing students'
-      },
-      { 
-        label: 'Admission Growth', 
-        value: `${monthlyApplications}`, 
-        change: 0, 
-        icon: monthlyApplications > 0 ? FiTrendingUp : FiTrendingDown, 
-        color: monthlyApplications > 0 ? 'purple' : 'red',
-        calculation: 'Monthly applications'
+      
+      // Store school video for quick tour
+      if (schoolInfo.school?.videoTour) {
+        setSchoolVideo({
+          url: schoolInfo.school.videoTour,
+          type: schoolInfo.school.videoType
+        });
       }
-    ];
-    
-    setQuickStats(quickStatsData);
-    
-  } catch (error) {
-    console.error('Error fetching dashboard data:', error);
-  } finally {
-    setLoading(false);
-  }
-}, [checkAuthentication]);
+      
+      // Extract student data
+      const studentList = studentsData.success ? 
+        (studentsData.data?.students || studentsData.students || []) : [];
+      
+      // Calculate student population and distribution
+      if (studentList.length > 0) {
+        const formDistribution = { 'Form 1': 0, 'Form 2': 0, 'Form 3': 0, 'Form 4': 0 };
+        const genderDistribution = { male: 0, female: 0, other: 0 };
+        const streamDistribution = {};
+        const statusDistribution = { active: 0, inactive: 0 };
+        
+        studentList.forEach(student => {
+          const form = student.form || student.Form || '';
+          if (formDistribution[form] !== undefined) {
+            formDistribution[form]++;
+          } else if (form) {
+            formDistribution[form] = (formDistribution[form] || 0) + 1;
+          }
+          
+          const gender = student.gender?.toLowerCase() || student.Gender?.toLowerCase() || 'other';
+          if (gender === 'male' || gender === 'm') genderDistribution.male++;
+          else if (gender === 'female' || gender === 'f') genderDistribution.female++;
+          else genderDistribution.other++;
+          
+          const stream = student.stream || student.Stream || '';
+          if (stream) {
+            streamDistribution[stream] = (streamDistribution[stream] || 0) + 1;
+          }
+          
+          const status = student.status?.toLowerCase() || student.Status?.toLowerCase() || 'active';
+          if (status === 'active' || status === 'active') statusDistribution.active++;
+          else statusDistribution.inactive++;
+        });
+        
+        setStudentPopulation({
+          total: studentList.length,
+          active: statusDistribution.active,
+          inactive: statusDistribution.inactive,
+          byForm: formDistribution,
+          byGender: genderDistribution,
+          byStream: streamDistribution,
+          byStatus: statusDistribution
+        });
+      }
+      
+      // Calculate staff distribution
+      if (staff.staff && staff.staff.length > 0) {
+        const staffDist = calculatePercentages(staff.staff, 'department');
+        setStaffDistribution(staffDist);
+      }
+      
+      // Calculate assignments distribution
+      if (assignments.assignments && assignments.assignments.length > 0) {
+        const assignDist = calculatePercentages(assignments.assignments, 'status');
+        setAssignmentsDistribution(assignDist);
+      }
+      
+      // Calculate resources distribution
+      if (resources.resources && resources.resources.length > 0) {
+        const resourcesDist = calculatePercentages(resources.resources, 'category');
+        setResourcesDistribution(resourcesDist);
+      }
+      
+      // Set careers data
+      const totalCareers = careersData.jobs?.length || careersData.careers?.length || 0;
+      if (careersData.jobs && careersData.jobs.length > 0) {
+        setCareers(careersData.jobs.slice(0, 3));
+      }
+      
+      // Set email campaigns
+      if (emailCampaignsData.campaigns && emailCampaignsData.campaigns.length > 0) {
+        setEmailCampaigns(emailCampaignsData.campaigns.slice(0, 2));
+      }
+      
+      // Calculate statistics
+      const activeStudents = studentList.filter(s => 
+        (s.status || s.Status || '').toLowerCase() === 'active'
+      ).length || 0;
+      
+      const inactiveStudents = studentList.length - activeStudents;
+      const activeAssignments = assignments.assignments?.filter(a => 
+        (a.status || '').toLowerCase() === 'assigned'
+      ).length || 0;
+      
+      const guidanceSessionsCount = guidance.events?.length || 0;
+      const completedAssignments = assignments.assignments?.filter(a => 
+        (a.status || '').toLowerCase() === 'completed'
+      ).length || 0;
+      
+      const totalAssignments = assignments.assignments?.length || 1;
+      
+      // Calculate admission statistics
+      const applications = admissions.applications || [];
+      const today = new Date();
+      
+      const monthlyApplications = applications.filter(app => {
+        if (!app.createdAt) return false;
+        const appDate = new Date(app.createdAt);
+        return appDate.getMonth() === today.getMonth() && 
+               appDate.getFullYear() === today.getFullYear();
+      }).length;
+      
+      const dailyApplications = applications.filter(app => {
+        if (!app.createdAt) return false;
+        const appDate = new Date(app.createdAt);
+        return appDate.toDateString() === today.toDateString();
+      }).length;
+      
+      const pendingApps = applications.filter(app => 
+        (app.status || '').toUpperCase() === 'PENDING'
+      ).length;
+      
+      const acceptedApps = applications.filter(app => 
+        (app.status || '').toUpperCase() === 'ACCEPTED'
+      ).length;
+      
+      const rejectedApps = applications.filter(app => 
+        (app.status || '').toUpperCase() === 'REJECTED'
+      ).length;
+      
+      // Calculate conversion rate
+      const conversionRate = applications.length > 0 ? 
+        Math.round((acceptedApps / applications.length) * 100) : 0;
+      
+      // Update stats
+      const updatedStats = {
+        totalStudents: studentList.length || 0,
+        activeStudents,
+        inactiveStudents,
+        totalStaff: staff.staff?.length || 0,
+        totalSubscribers: subscribers.subscribers?.length || 0,
+        pendingEmails: 0,
+        activeAssignments,
+        totalCareers,
+        galleryItems: gallery.galleries?.length || 0,
+        guidanceSessions: guidanceSessionsCount,
+        totalNews: news.news?.length || 0,
+        completedAssignments,
+        totalAssignments,
+        
+        totalApplications: applications.length,
+        pendingApplications: pendingApps,
+        acceptedApplications: acceptedApps,
+        rejectedApplications: rejectedApps,
+        underReviewApplications: applications.filter(app => 
+          (app.status || '').toUpperCase() === 'UNDER_REVIEW'
+        ).length,
+        interviewedApplications: applications.filter(app => 
+          (app.status || '').toUpperCase() === 'INTERVIEWED'
+        ).length,
+        waitlistedApplications: applications.filter(app => 
+          (app.status || '').toUpperCase() === 'WAITLISTED'
+        ).length,
+        conditionalApplications: applications.filter(app => 
+          (app.status || '').toUpperCase() === 'CONDITIONAL_ACCEPTANCE'
+        ).length,
+        withdrawnApplications: applications.filter(app => 
+          (app.status || '').toUpperCase() === 'WITHDRAWN'
+        ).length,
+        monthlyApplications,
+        dailyApplications,
+        applicationConversionRate: conversionRate,
+        averageProcessingTime: 0,
+        
+        scienceApplications: applications.filter(app => 
+          (app.preferredStream || '').toUpperCase() === 'SCIENCE'
+        ).length,
+        artsApplications: applications.filter(app => 
+          (app.preferredStream || '').toUpperCase() === 'ARTS'
+        ).length,
+        businessApplications: applications.filter(app => 
+          (app.preferredStream || '').toUpperCase() === 'BUSINESS'
+        ).length,
+        technicalApplications: applications.filter(app => 
+          (app.preferredStream || '').toUpperCase() === 'TECHNICAL'
+        ).length,
+        maleApplications: applications.filter(app => 
+          (app.gender || '').toUpperCase() === 'MALE'
+        ).length,
+        femaleApplications: applications.filter(app => 
+          (app.gender || '').toUpperCase() === 'FEMALE'
+        ).length,
+        topCountyApplications: 'N/A',
+        averageKCPEScore: 0,
+        averageAge: 0
+      };
+      
+      setStats(updatedStats);
+      
+      // ========== RECENT ACTIVITY ==========
+      const recentActivities = await listenForRecentActivity();
+      setRecentActivity(recentActivities);
+      
+      // ========== PERFORMANCE METRICS (excluding engagement) ==========
+      const studentGrowth = calculateMonthOverMonthGrowth(
+        updatedStats.totalStudents,
+        0
+      );
+      
+      const assignmentGrowth = calculateMonthOverMonthGrowth(
+        updatedStats.completedAssignments,
+        0
+      );
+      
+      const performanceMetrics = [
+        { 
+          label: 'Assignment Completion', 
+          value: Math.round((completedAssignments / totalAssignments) * 100) || 0,
+          change: assignmentGrowth,
+          color: assignmentGrowth >= 0 ? 'blue' : 'red',
+          description: 'Assignment completion rate'
+        },
+        { 
+          label: 'Admission Conversion', 
+          value: conversionRate,
+          change: 0,
+          color: conversionRate > 50 ? 'purple' : 'red',
+          description: 'Applications to acceptances'
+        },
+        { 
+          label: 'Guidance Sessions', 
+          value: Math.round((guidanceSessionsCount / (studentList.length || 1)) * 100) || 0,
+          change: 0,
+          color: 'indigo',
+          description: 'Student support engagement'
+        },
+        { 
+          label: 'SMS Campaigns', 
+          value: smsStats.total,
+          change: 0,
+          color: 'green',
+          description: 'Total SMS campaigns created'
+        }
+      ];
+      
+      setPerformanceData(performanceMetrics);
+      
+      // ========== QUICK STATS ==========
+      const quickStatsData = [
+        { 
+          label: 'Assignment Completion', 
+          value: `${Math.round((completedAssignments / totalAssignments) * 100) || 0}%`, 
+          change: parseFloat(assignmentGrowth.toFixed(1)), 
+          icon: assignmentGrowth >= 0 ? FiTrendingUp : FiTrendingDown, 
+          color: assignmentGrowth >= 0 ? 'green' : 'red',
+          calculation: 'Based on assignment completion'
+        },
+        { 
+          label: 'SMS Campaigns', 
+          value: `${smsStats.total}`, 
+          change: 0, 
+          icon: smsStats.total > 0 ? FiTrendingUp : FiTrendingDown, 
+          color: smsStats.total > 0 ? 'blue' : 'red',
+          calculation: 'Total campaigns'
+        },
+        { 
+          label: 'Admission Growth', 
+          value: `${monthlyApplications}`, 
+          change: 0, 
+          icon: monthlyApplications > 0 ? FiTrendingUp : FiTrendingDown, 
+          color: monthlyApplications > 0 ? 'purple' : 'red',
+          calculation: 'Monthly applications'
+        }
+      ];
+      
+      setQuickStats(quickStatsData);
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [checkAuthentication]);
   
   // Initialize dashboard
   useEffect(() => {
@@ -1363,95 +1126,95 @@ const fetchAllData = useCallback(async () => {
     setRefreshing(false);
   };
   
-// Quick Tour Modal Component
-const QuickTourModal = () => (
-  showQuickTour && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-      {/* Cinematic Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500" 
-        onClick={() => setShowQuickTour(false)}
-      />
-      
-      {/* Modal Container - Scrollbar Hidden */}
-      <div className="relative bg-white rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] w-full max-w-5xl 
-        max-h-[90vh] overflow-y-auto overflow-x-hidden 
-        [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
-        animate-in zoom-in-95 duration-300 flex flex-col"
-      >
+  // Quick Tour Modal Component
+  const QuickTourModal = () => (
+    showQuickTour && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        {/* Cinematic Backdrop */}
+        <div 
+          className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-500" 
+          onClick={() => setShowQuickTour(false)}
+        />
         
-        {/* Header Section */}
-        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/90 backdrop-blur-md sticky top-0 z-30">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
-            <div>
-              <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
-                Katwanyaa High School
-              </h2>
-              <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
-                "Education is Light"
+        {/* Modal Container */}
+        <div className="relative bg-white rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] w-full max-w-5xl 
+          max-h-[90vh] overflow-y-auto overflow-x-hidden 
+          [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]
+          animate-in zoom-in-95 duration-300 flex flex-col"
+        >
+          
+          {/* Header Section */}
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/90 backdrop-blur-md sticky top-0 z-30">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
+                  Katwanyaa High School
+                </h2>
+                <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
+                  "Education is Light"
+                </p>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => setShowQuickTour(false)}
+              className="group p-3 hover:bg-rose-50 rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-rose-100"
+            >
+              <FiX className="text-2xl text-slate-400 group-hover:text-rose-500" />
+            </button>
+          </div>
+          
+          {/* Video Content Area */}
+          <div className="p-2 sm:p-6 bg-slate-50 flex-grow">
+            <div className="relative aspect-video bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-inner ring-4 md:ring-8 ring-white">
+              {schoolVideo ? (
+                <div className="w-full h-full">
+                  {schoolVideo.type === 'youtube' ? (
+                    <iframe
+                      src={`${schoolVideo.url.replace('watch?v=', 'embed/')}?autoplay=1&rel=0`}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video src={schoolVideo.url} autoPlay controls className="w-full h-full object-cover" poster="/school-poster.jpg" />
+                  )}
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                  <FiPlay className="text-4xl text-slate-500 mb-4" />
+                  <h3 className="text-white font-bold text-lg mb-1">Tour Content Unavailable</h3>
+                  <p className="text-slate-500 text-xs md:text-sm max-w-xs">Please upload a campus video in settings.</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Footer Actions */}
+          <div className="px-8 py-6 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-30">
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />
+                ))}
+              </div>
+              <p className="text-[11px] font-bold text-slate-500 tracking-tight">
+                Join 1200+ students on the virtual tour
               </p>
             </div>
+            
+            <button
+              onClick={() => setShowQuickTour(false)}
+              className="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all"
+            >
+              Exit Tour
+            </button>
           </div>
-          
-          <button
-            onClick={() => setShowQuickTour(false)}
-            className="group p-3 hover:bg-rose-50 rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-rose-100"
-          >
-            <FiX className="text-2xl text-slate-400 group-hover:text-rose-500" />
-          </button>
-        </div>
-        
-        {/* Video Content Area */}
-        <div className="p-2 sm:p-6 bg-slate-50 flex-grow">
-          <div className="relative aspect-video bg-slate-900 rounded-[1.5rem] overflow-hidden shadow-inner ring-4 md:ring-8 ring-white">
-            {schoolVideo ? (
-              <div className="w-full h-full">
-                {schoolVideo.type === 'youtube' ? (
-                  <iframe
-                    src={`${schoolVideo.url.replace('watch?v=', 'embed/')}?autoplay=1&rel=0`}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  <video src={schoolVideo.url} autoPlay controls className="w-full h-full object-cover" poster="/school-poster.jpg" />
-                )}
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                <FiPlay className="text-4xl text-slate-500 mb-4" />
-                <h3 className="text-white font-bold text-lg mb-1">Tour Content Unavailable</h3>
-                <p className="text-slate-500 text-xs md:text-sm max-w-xs">Please upload a campus video in settings.</p>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Footer Actions */}
-        <div className="px-8 py-6 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-30">
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200" />
-              ))}
-            </div>
-            <p className="text-[11px] font-bold text-slate-500 tracking-tight">
-              Join 1200+ students on the virtual tour
-            </p>
-          </div>
-          
-          <button
-            onClick={() => setShowQuickTour(false)}
-            className="w-full sm:w-auto bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all"
-          >
-            Exit Tour
-          </button>
         </div>
       </div>
-    </div>
-  )
-);
+    )
+  );
   
   // StatCard Component
   const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) => {
@@ -1544,119 +1307,8 @@ const QuickTourModal = () => (
     </div>
   );
   
-  // Student Engagement Card Component
-  const StudentEngagementCard = () => (
-    <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
-      
-      {/* Top Glow Accent */}
-      <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-teal-500/10 blur-2xl group-hover:bg-teal-500/20 transition-colors" />
-      
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <div>
-          <h3 className="text-lg font-black text-slate-800 tracking-tight">Student Engagement</h3>
-          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Live Monitoring</p>
-        </div>
-        <div className="p-3 rounded-2xl bg-teal-50 border border-teal-100 text-teal-600 shadow-sm transition-transform group-hover:scale-100">
-          <FiActivity className="text-xl" />
-        </div>
-      </div>
-      
-      {/* Engagement Score Display */}
-      <div className="mb-6">
-        <div className="flex items-end justify-between mb-2">
-          <div>
-            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Overall Engagement</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-black text-slate-900">
-                {engagementStats.engagementRate}%
-              </span>
-              <span className="text-sm font-bold text-slate-400">
-                ({engagementStats.engagedStudents}/{engagementStats.totalStudents} students)
-              </span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
-              engagementStats.engagementRate >= 70 ? 'bg-emerald-50 text-emerald-600' :
-              engagementStats.engagementRate >= 50 ? 'bg-blue-50 text-blue-600' :
-              engagementStats.engagementRate >= 30 ? 'bg-yellow-50 text-yellow-600' :
-              'bg-rose-50 text-rose-600'
-            }`}>
-              <div className={`h-2 w-2 rounded-full ${
-                engagementStats.engagementRate >= 70 ? 'bg-emerald-500 animate-pulse' :
-                engagementStats.engagementRate >= 50 ? 'bg-blue-500' :
-                engagementStats.engagementRate >= 30 ? 'bg-yellow-500' :
-                'bg-rose-500'
-              }`} />
-              {engagementStats.engagementRate >= 70 ? 'Excellent' :
-               engagementStats.engagementRate >= 50 ? 'Good' :
-               engagementStats.engagementRate >= 30 ? 'Fair' : 'Needs Attention'}
-            </div>
-          </div>
-        </div>
-        
-        {/* Engagement Distribution */}
-        <div className="grid grid-cols-5 gap-2 mt-4">
-          {Object.entries(engagementStats.distribution).map(([level, count]) => (
-            <div key={level} className="text-center">
-              <div className={`h-8 rounded-lg mb-1 flex items-center justify-center text-xs font-bold text-white
-                ${level === 'excellent' ? 'bg-emerald-500' :
-                  level === 'high' ? 'bg-blue-500' :
-                  level === 'medium' ? 'bg-yellow-500' :
-                  level === 'fair' ? 'bg-orange-500' :
-                  'bg-rose-500'}`}
-              >
-                {count}
-              </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase">
-                {level}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Top Performing Subjects */}
-      <div className="mb-4">
-        <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">Top Performing Subjects</h4>
-        <div className="space-y-2">
-          {engagementStats.topPerformingSubjects.slice(0, 3).map((subject, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-700 truncate">{subject.subject}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900">{subject.average.toFixed(1)}%</span>
-                <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full ${
-                      subject.average >= 80 ? 'bg-emerald-500' :
-                      subject.average >= 70 ? 'bg-blue-500' :
-                      subject.average >= 60 ? 'bg-yellow-500' : 'bg-orange-500'
-                    }`}
-                    style={{ width: `${subject.average}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Recent Activity */}
-      <div className="pt-4 border-t border-slate-100">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Recent Activity</span>
-          <span className="text-xs font-bold text-blue-600">{engagementStats.recentActivityCount} updates</span>
-        </div>
-        <p className="text-sm text-slate-500">
-          Based on student results, uploads, and submissions from the last 7 days.
-        </p>
-      </div>
-    </div>
-  );
-  
   // Student Population Card Component
   const StudentPopulationCard = () => {
-    // Prepare data for form distribution bar chart
     const formData = Object.entries(studentPopulation.byForm).map(([form, count]) => ({
       name: form,
       students: count,
@@ -1665,7 +1317,6 @@ const QuickTourModal = () => (
              form === 'Form 3' ? '#F59E0B' : '#8B5CF6'
     }));
     
-    // Prepare data for gender distribution pie chart
     const genderData = [
       { name: 'Male', value: studentPopulation.byGender.male, color: '#3B82F6' },
       { name: 'Female', value: studentPopulation.byGender.female, color: '#EC4899' },
@@ -1757,7 +1408,6 @@ const QuickTourModal = () => (
   
   // Student Distribution Card Component
   const StudentDistributionCard = () => {
-    // Prepare data for detailed distribution
     const streamData = Object.entries(studentPopulation.byStream)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
@@ -1766,7 +1416,6 @@ const QuickTourModal = () => (
         students: count
       }));
     
-    // Calculate form percentages
     const formPercentages = Object.entries(studentPopulation.byForm).map(([form, count]) => ({
       form,
       percentage: studentPopulation.total > 0 ? (count / studentPopulation.total) * 100 : 0
@@ -1887,77 +1536,77 @@ const QuickTourModal = () => (
       
       <div className="p-6 space-y-6">
         {/* Welcome Section */}
-<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 ">
-  
-  {/* Abstract Mesh Gradient Background (Reacts to Hover) */}
-  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-blue-600/25 rounded-full blur-[100px] pointer-events-none  transition-transform duration-700" />
-  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-purple-600/15 rounded-full blur-[80px] pointer-events-none  transition-transform duration-700" />
-  
-  <div className="relative z-10">
-    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
-      <div>
-        {/* Institutional Branding - Compact Version */}
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="h-6 w-1 bg-blue-500 rounded-full shadow-[0_0_12px_rgba(59,99,235,0.4)]" />
-          <div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
-              Katwanyaa High School
-            </h2>
-            <p className="text-[9px] italic font-medium text-white/50 tracking-widest uppercase">
-              "Education is Light"
-            </p>
+        <div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 ">
+          
+          {/* Abstract Mesh Gradient Background */}
+          <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-blue-600/25 rounded-full blur-[100px] pointer-events-none  transition-transform duration-700" />
+          <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-purple-600/15 rounded-full blur-[80px] pointer-events-none  transition-transform duration-700" />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-6">
+              <div>
+                {/* Institutional Branding - Compact Version */}
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="h-6 w-1 bg-blue-500 rounded-full shadow-[0_0_12px_rgba(59,99,235,0.4)]" />
+                  <div>
+                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
+                      Katwanyaa High School
+                    </h2>
+                    <p className="text-[9px] italic font-medium text-white/50 tracking-widest uppercase">
+                      "Education is Light"
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
+                  {/* Sparkle Icon with Zoom Effect */}
+                  <div className="p-2 sm:p-2.5 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl border border-white/10 w-fit transition-transform group-hover:rotate-12">
+                    <IoSparkles className="text-xl sm:text-2xl text-yellow-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.5)]" />
+                  </div>
+                  <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
+                    Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-blue-200">{user?.name || 'Admin'}</span>!
+                  </h1>
+                </div>
+              </div>
+              
+              {/* Modern Glass Refresh Button */}
+              <button
+                onClick={refreshDashboard}
+                disabled={refreshing}
+                className="flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[12px] tracking-wide transition-all hover:bg-white/20 active:scale-95 disabled:opacity-50 w-full sm:w-fit"
+              >
+                <FiRefreshCw className={`text-base transition-transform ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'UPDATING...' : 'REFRESH DATA'}</span>
+              </button>
+            </div>
+            
+            {/* Summary Text */}
+            <div className="mb-6">
+              <p className="text-blue-100/70 text-sm sm:text-[15px] font-medium leading-relaxed max-w-3xl">
+                Overseeing <span className="text-white font-bold underline decoration-blue-500/40 decoration-1 underline-offset-4">{stats.totalStudents} students</span> and <span className="text-white font-bold underline decoration-purple-500/40 decoration-1 underline-offset-4">{stats.totalStaff} staff</span>. 
+                You have <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-yellow-400/15 text-yellow-300 border border-yellow-400/10 mx-1 text-[11px]">{stats.activeAssignments} tasks</span> 
+                and <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-500/15 text-green-400 border border-green-500/10 mx-1 text-[11px]">{stats.totalCareers} careers</span> listed.
+              </p>
+            </div>
+            
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <button
+                onClick={() => setShowQuickTour(true)}
+                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg sm:rounded-xl font-bold text-[12px] uppercase tracking-wider shadow-lg transition-all active:scale-95 w-full sm:w-auto"
+              >
+                <FiPlay className="text-xs" />
+                Video Tour
+              </button>
+              
+              <div className="hidden sm:block h-8 w-[1px] bg-white/10 mx-1" />
+              
+              <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center sm:text-left">
+                Status: <span className="text-emerald-400/80">Operational</span>
+              </p>
+            </div>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-          {/* Sparkle Icon with Zoom Effect */}
-          <div className="p-2 sm:p-2.5 bg-white/10 backdrop-blur-md rounded-lg sm:rounded-xl border border-white/10 w-fit transition-transform group-hover:rotate-12">
-            <IoSparkles className="text-xl sm:text-2xl text-yellow-300 drop-shadow-[0_0_6px_rgba(253,224,71,0.5)]" />
-          </div>
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
-            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-blue-200">{user?.name || 'Admin'}</span>!
-          </h1>
-        </div>
-      </div>
-      
-      {/* Modern Glass Refresh Button - Compact & Tactile */}
-      <button
-        onClick={refreshDashboard}
-        disabled={refreshing}
-        className="flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-[12px] tracking-wide transition-all hover:bg-white/20 active:scale-95 disabled:opacity-50 w-full sm:w-fit"
-      >
-        <FiRefreshCw className={`text-base transition-transform ${refreshing ? 'animate-spin' : ''}`} />
-        <span>{refreshing ? 'UPDATING...' : 'REFRESH DATA'}</span>
-      </button>
-    </div>
-    
-    {/* Summary Text - Refined Sizes */}
-    <div className="mb-6">
-      <p className="text-blue-100/70 text-sm sm:text-[15px] font-medium leading-relaxed max-w-3xl">
-        Overseeing <span className="text-white font-bold underline decoration-blue-500/40 decoration-1 underline-offset-4">{stats.totalStudents} students</span> and <span className="text-white font-bold underline decoration-purple-500/40 decoration-1 underline-offset-4">{stats.totalStaff} staff</span>. 
-        You have <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-yellow-400/15 text-yellow-300 border border-yellow-400/10 mx-1 text-[11px]">{stats.activeAssignments} tasks</span> 
-        and <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-500/15 text-green-400 border border-green-500/10 mx-1 text-[11px]">{stats.totalCareers} careers</span> listed.
-      </p>
-    </div>
-    
-    {/* Action Bar - Mobile Responsive & Scaled */}
-    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-      <button
-        onClick={() => setShowQuickTour(true)}
-        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg sm:rounded-xl font-bold text-[12px] uppercase tracking-wider shadow-lg transition-all active:scale-95 w-full sm:w-auto"
-      >
-        <FiPlay className="text-xs" />
-        Video Tour
-      </button>
-      
-      <div className="hidden sm:block h-8 w-[1px] bg-white/10 mx-1" />
-      
-      <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center sm:text-left">
-        Status: <span className="text-emerald-400/80">Operational</span>
-      </p>
-    </div>
-  </div>
-</div>
         
         {/* Quick Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2023,10 +1672,10 @@ const QuickTourModal = () => (
           })}
         </div>
         
-        {/* Main Stats Grid - Updated to include Engagement Card */}
+        {/* Main Stats Grid - Updated with SMS Overview Card replacing Student Engagement */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Student Engagement Card */}
-          <StudentEngagementCard />
+          {/* SMS Overview Card (replaces Student Engagement) */}
+          <SmsOverviewCard smsStats={smsStats} recentCampaigns={recentSmsCampaigns} />
           
           {/* Staff Distribution Card */}
           <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] overflow-hidden">
@@ -2261,16 +1910,16 @@ const QuickTourModal = () => (
           </div>
         </div>
         
-        {/* Additional Stat Cards - UPDATED with Total Careers */}
+        {/* Additional Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
-            icon={FiBriefcase} // Changed from FiCalendar to FiBriefcase
-            label="Total Careers" // Changed from "Upcoming Events" to "Total Careers"
-            value={stats.totalCareers} // Changed from stats.upcomingEvents to stats.totalCareers
-            change={0} // You can add career growth calculation if needed
-            trend="up" // You can adjust this based on your logic
-            color="green" // Changed color to green for careers
-            subtitle="Career opportunities" // Changed subtitle
+            icon={FiBriefcase}
+            label="Total Careers"
+            value={stats.totalCareers}
+            change={0}
+            trend="up"
+            color="green"
+            subtitle="Career opportunities"
           />
           <StatCard 
             icon={FiMessageCircle} 
@@ -2301,9 +1950,9 @@ const QuickTourModal = () => (
           />
         </div>
         
-        {/* Email Campaigns with Student Population Cards - NEW LAYOUT */}
+        {/* Email Campaigns with Student Population Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Email Campaigns Card - Now takes 2 columns */}
+          {/* Email Campaigns Card */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 relative overflow-hidden group h-full">
               {/* Decorative Glow */}
@@ -2360,11 +2009,11 @@ const QuickTourModal = () => (
             </div>
           </div>
           
-          {/* Student Population Card - NEW ADDITION */}
+          {/* Student Population Card */}
           <StudentPopulationCard />
         </div>
         
-        {/* Student Distribution Card - NEW ADDITION */}
+        {/* Student Distribution and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <StudentDistributionCard />
           
