@@ -93,26 +93,25 @@ const ModernStaffLeadership = () => {
           setPrincipal(foundPrincipal);
           setFeaturedStaff(foundPrincipal);
 
-          // 2. Identify Deputy Principals and split into Academics and Administration
-          const allDeputies = allStaff.filter(s => 
-            (s.role?.toLowerCase().includes('deputy') || s.position?.toLowerCase().includes('deputy'))
-          );
+ // Find all deputies
+const allDeputies = allStaff.filter(s => 
+  s.role?.toLowerCase().includes('deputy') || 
+  s.position?.toLowerCase().includes('deputy')
+);
 
-          // Academics Deputy (Mr. Paul Mwanzia - id: 2 or position includes academics)
-          const foundAcademicsDeputy = allDeputies.find(s => 
-            s.id === 2 ||
-            s.position?.toLowerCase().includes('academics') || 
-            s.position?.toLowerCase().includes('academic') ||
-            s.department?.toLowerCase().includes('science') ||
-            s.department?.toLowerCase().includes('academic')
-          );
+// Academics Deputy - based on position containing "academics"
+const foundAcademicsDeputy = allDeputies.find(s => 
+  s.position?.toLowerCase().includes('academics')
+);
 
-          // Administration Deputy (Madam Beatrice Olum - id: 3 or position includes admin)
-          const foundAdminDeputy = allDeputies.find(s => 
-            s.id === 3 ||
-            s.position?.toLowerCase().includes('admin') ||
-            s.department?.toLowerCase().includes('administration')
-          );
+// Administration Deputy - based on position containing "admin" or "administration"
+const foundAdminDeputy = allDeputies.find(s => 
+  s.position?.toLowerCase().includes('admin') || 
+  s.position?.toLowerCase().includes('administration')
+);
+
+
+
 
           setAcademicsDeputy(foundAcademicsDeputy || null);
           setAdminDeputy(foundAdminDeputy || null);
