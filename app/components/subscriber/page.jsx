@@ -1511,16 +1511,15 @@ const handleSendEmail = async (e) => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-3 rounded-2xl font-bold transition-all"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-1 rounded-2xl font-bold transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700 text-white px-6 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700 text-white px-6 py-1  rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
                 >
-                  <FiTrash2 />
-                  Delete Subscriber
+                  Delete 
                 </button>
               </div>
             </div>
