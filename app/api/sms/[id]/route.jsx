@@ -130,6 +130,17 @@ const authenticateRequest = (req) => {
 // ==================== END TOKEN VERIFICATION ====================
 
 // ====================================================================
+// CELCOM AFRICA CONFIGURATION
+// ====================================================================
+const CELCOM_API_KEY = process.env.CELCOM_API_KEY;
+const CELCOM_PARTNER_ID = process.env.CELCOM_PARTNER_ID;
+const CELCOM_SHORTCODE = process.env.CELCOM_SHORTCODE;
+
+if (!CELCOM_API_KEY || !CELCOM_PARTNER_ID || !CELCOM_SHORTCODE) {
+  console.error("❌ Missing Celcom Africa credentials. Please set CELCOM_API_KEY, CELCOM_PARTNER_ID, and CELCOM_SHORTCODE in .env");
+}
+
+// ====================================================================
 // HELPER FUNCTIONS
 // ====================================================================
 
@@ -177,6 +188,95 @@ function validatePhoneNumbers(phoneNumbers) {
   });
   
   return { valid, invalid };
+}
+
+/**
+ * Send SMS using Celcom Africa API
+ */
+async function sendCelcomSms(campaignId, phoneNumbers, message) {
+  const sent = [];
+  const failed = [];
+  
+  // Celcom accepts up to 100 numbers per request
+  const BATCH_SIZE = 100;
+  
+  for (let i = 0; i < phoneNumbers.length; i += BATCH_SIZE) {
+    const batch = phoneNumbers.slice(i, i + BATCH_SIZE);
+    
+    try {
+      const mobileList = batch.join(",");
+      
+      const requestBody = {
+        apikey: CELCOM_API_KEY,
+        partnerID: CELCOM_PARTNER_ID,
+        message: message,
+        shortcode: CELCOM_SHORTCODE,
+        mobile: mobileList,
+        pass_type: "plain"
+      };
+      
+      console.log(`📱 Sending batch ${Math.floor(i/BATCH_SIZE) + 1} to ${batch.length} numbers via Celcom Africa`);
+      
+      const response = await fetch("https://isms.celcomafrica.com/api/services/sendsms/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      
+      const data = await response.json();
+      
+      if (data.responses && Array.isArray(data.responses)) {
+        data.responses.forEach((item) => {
+          const logEntry = {
+            campaignId: campaignId,
+            phoneNumber: item.mobile,
+            message,
+            providerMessageId: item.messageid?.toString() || null,
+            status: item["response-code"] === 200 ? "success" : "failed",
+            errorMessage: item["response-description"] !== "Success" ? item["response-description"] : null,
+          };
+          
+          if (item["response-code"] === 200) {
+            sent.push(logEntry);
+          } else {
+            failed.push(logEntry);
+          }
+        });
+      } else {
+        // Unexpected response - mark all as failed
+        batch.forEach(phone => {
+          failed.push({
+            campaignId,
+            phoneNumber: phone,
+            message,
+            providerMessageId: null,
+            status: "failed",
+            errorMessage: "Invalid API response from Celcom",
+          });
+        });
+      }
+      
+    } catch (error) {
+      console.error(`❌ Batch failed:`, error.message);
+      batch.forEach(phone => {
+        failed.push({
+          campaignId,
+          phoneNumber: phone,
+          message,
+          providerMessageId: null,
+          status: "failed",
+          errorMessage: error.message,
+        });
+      });
+    }
+    
+    // Delay between batches
+    if (i + BATCH_SIZE < phoneNumbers.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  return { sent, failed };
 }
 
 // ====================================================================
@@ -231,7 +331,11 @@ export async function GET(req, { params }) {
       updatedAt: campaign.updatedAt,
       successRate: campaign.sentCount && recipientCount > 0 
         ? Math.round((campaign.sentCount / recipientCount) * 100)
-        : 0
+        : 0,
+      senderInfo: {
+        shortcode: CELCOM_SHORTCODE,
+        provider: "Celcom Africa"
+      }
     };
     
     return NextResponse.json({
@@ -444,7 +548,6 @@ export async function DELETE(req, { params }) {
   }
 }
 
-
 // 🔹 PATCH - Partial update (e.g., send campaign) (PROTECTED)
 export async function PATCH(req, { params }) {
   try {
@@ -454,8 +557,9 @@ export async function PATCH(req, { params }) {
       return auth.response;
     }
 
-    console.log("📝 PATCH /api/sms/[id] - Sending SMS campaign");
+    console.log("📝 PATCH /api/sms/[id] - Sending SMS campaign via Celcom Africa");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
+    console.log(`Using shortcode: "${CELCOM_SHORTCODE}"`);
     // ==================== END AUTHENTICATION ====================
 
     const { id } = await params;
@@ -484,17 +588,6 @@ export async function PATCH(req, { params }) {
     
     // If just updating status to sent
     if (status === 'sent' && existingCampaign.status !== 'sent') {
-      // ==================== ADD MISSING IMPORTS HERE ====================
-      const africastalking = require('africastalking');
-      
-      // Initialize Africa's Talking with proper credentials
-      const at = africastalking({
-        apiKey: process.env.AT_API_KEY,
-        username: process.env.AT_USERNAME,
-      });
-      
-      const sms = at.SMS;
-      
       const recipients = existingCampaign.recipients.split(",").map(r => r.trim());
       const message = existingCampaign.message;
       
@@ -516,92 +609,12 @@ export async function PATCH(req, { params }) {
         );
       }
       
-      console.log(`📱 Sending SMS to ${validPhones.length} valid recipients (${invalid.length} invalid skipped)`);
+      console.log(`📱 Sending SMS to ${validPhones.length} valid recipients via Celcom Africa (${invalid.length} invalid skipped)`);
       
-      // Prepare sender ID
-      const senderId = process.env.AT_SENDER_ID || "AIC KATWANA";
-      const senderType = process.env.AT_SENDER_TYPE || "alphanumeric";
+      // Send via Celcom Africa
+      const { sent, failed } = await sendCelcomSms(existingCampaign.id, validPhones, message);
       
-      // For alphanumeric sender IDs, ensure it's not too long (max 11 characters)
-      const finalSender = senderType === "alphanumeric" 
-        ? senderId.substring(0, 11).trim() 
-        : senderId;
-      
-      const sent = [];
-      const failed = [];
-      
-      // Send in batches
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < validPhones.length; i += BATCH_SIZE) {
-        const batch = validPhones.slice(i, i + BATCH_SIZE);
-        try {
-          const smsOptions = {
-            to: batch,
-            message,
-          };
-          
-          // Only add 'from' if we have a sender ID configured
-          if (finalSender && finalSender.trim() !== "") {
-            smsOptions.from = finalSender;
-          }
-          
-          console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${batch.length} numbers`);
-          
-          const result = await sms.send(smsOptions);
-          
-          if (result?.data?.SMSMessageData?.Recipients) {
-            const recipientStatuses = result.data.SMSMessageData.Recipients;
-            recipientStatuses.forEach(rs => {
-              const logEntry = {
-                campaignId: existingCampaign.id,
-                phoneNumber: rs.number,
-                message,
-                providerMessageId: rs.messageId || null,
-                status: rs.status === "Success" ? "success" : "failed",
-                errorMessage: rs.status !== "Success" ? rs.status : null,
-              };
-              if (rs.status === "Success") {
-                sent.push(logEntry);
-              } else {
-                failed.push(logEntry);
-              }
-            });
-          } else {
-            // fallback: treat entire batch as success
-            batch.forEach(phone => {
-              sent.push({
-                campaignId: existingCampaign.id,
-                phoneNumber: phone,
-                message,
-                providerMessageId: null,
-                status: "success",
-              });
-            });
-          }
-          
-          console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Sent to ${batch.length} numbers`);
-          
-        } catch (error) {
-          console.error(`❌ Batch failed:`, error.message);
-          batch.forEach(phone => {
-            failed.push({
-              campaignId: existingCampaign.id,
-              phoneNumber: phone,
-              message,
-              providerMessageId: null,
-              status: "failed",
-              errorMessage: error.message,
-            });
-          });
-        }
-        
-        // Small delay between batches to avoid rate limiting
-        if (i + BATCH_SIZE < validPhones.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-      
-      // Also add invalid numbers to failed list (optional)
+      // Also add invalid numbers to failed list
       invalid.forEach(phone => {
         failed.push({
           campaignId: existingCampaign.id,
@@ -651,7 +664,7 @@ export async function PATCH(req, { params }) {
           summary,
           invalidNumbers: invalid.length > 0 ? invalid : undefined
         },
-        message: `Campaign sent to ${sent.length} recipients successfully${invalid.length > 0 ? ` (${invalid.length} invalid numbers skipped)` : ''}`
+        message: `Campaign sent to ${sent.length} recipients successfully via Celcom Africa${invalid.length > 0 ? ` (${invalid.length} invalid numbers skipped)` : ''}`
       });
     } else {
       // Other partial updates
