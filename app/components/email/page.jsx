@@ -750,93 +750,40 @@ const CampaignCard = ({
 
 
 // Modern Email Skeleton Component
+
+
 const ModernEmailSkeleton = () => {
+  
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xs border border-gray-200/60 overflow-hidden animate-pulse">
-      {/* Header Skeleton */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="space-y-3">
-            <div className="h-7 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-lg bg-[length:200%_100%] animate-shimmer"></div>
-            <div className="h-4 w-32 bg-gray-200 rounded"></div>
-          </div>
-          <div className="flex gap-2">
-            <div className="h-10 w-24 bg-gray-200 rounded-xl"></div>
-            <div className="h-10 w-32 bg-gray-200 rounded-xl"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* View Toggle Skeleton */}
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="flex gap-2">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-10 w-24 bg-gray-200 rounded-xl"></div>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats Grid Skeleton */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white/50 rounded-xl border border-gray-200/60 p-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="h-3 w-16 bg-gray-200 rounded"></div>
-                  <div className="h-5 w-12 bg-gray-300 rounded-lg"></div>
-                </div>
-                <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
-              </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 w-full max-w-md">
+        <div className="p-12">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="relative">
+              {/* Outer Glow Ring */}
+              <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 animate-ping"></div>
+              
+              {/* Main Spinner Icon */}
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin relative z-10" />
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Filters Skeleton */}
-      <div className="p-6 border-b border-gray-100">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="flex-1">
-            <div className="h-11 bg-gray-200 rounded-lg"></div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-11 w-32 bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Cards Skeleton */}
-      <div className="p-6 space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white/50 rounded-xl border border-gray-200/60 p-4">
-            <div className="flex items-start gap-3">
-              <div className="h-4 w-4 bg-gray-200 rounded mt-1"></div>
-              <div className="flex-1 space-y-3">
-                <div className="flex justify-between">
-                  <div className="h-4 w-32 bg-gray-200 rounded"></div>
-                  <div className="h-6 w-20 bg-gray-200 rounded-full"></div>
-                </div>
-                <div className="h-3 w-48 bg-gray-200 rounded"></div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                </div>
-                <div className="h-3 w-full bg-gray-200 rounded"></div>
-                <div className="flex justify-between pt-3">
-                  <div className="h-6 w-24 bg-gray-200 rounded-lg"></div>
-                  <div className="h-6 w-24 bg-gray-200 rounded-lg"></div>
-                </div>
-              </div>
+            <div className="space-y-1 text-center">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                Fetching Campaigns
+              </h3>
+              <p className="text-sm font-bold text-slate-500 animate-pulse">
+                Please wait a moment...
+              </p>
             </div>
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
 };
+
+
+
 
 // Notification Toast Component
 const NotificationToast = ({ type, message, onClose }) => {
