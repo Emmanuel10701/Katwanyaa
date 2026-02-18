@@ -772,7 +772,7 @@ const handleCreateOrUpdateCampaign = async () => {
   }
 
   try {
-    setIsSubmitting(true); // Set submitting state
+    setIsSubmitting(true);
     const headers = getAuthHeaders("application/json");
     setLoadingStates((prev) => ({ ...prev, create: true }));
 
@@ -799,60 +799,200 @@ const handleCreateOrUpdateCampaign = async () => {
       body: JSON.stringify(payload),
     });
 
-    // ... rest of your code
+    if (response.status === 401) throw new Error("Session expired");
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Refresh campaigns list
+      await fetchData();
+      
+      // Show success message based on action
+      if (selectedCampaign) {
+        toast.success("Campaign updated successfully");
+      } else {
+        toast.success(campaignForm.status === "draft" ? 
+          "Campaign saved as draft" : 
+          "Campaign created successfully"
+        );
+      }
+      
+      // CLOSE THE MODAL
+      setShowCreateModal(false);
+      setSelectedCampaign(null);
+      setCampaignForm({
+        title: "",
+        message: "",
+        recipientType: "all",
+        status: "draft",
+        recipients: [],
+      });
+      
+    } else {
+      toast.error(result.error || "Failed to save campaign");
+    }
   } catch (error) {
-    // ... error handling
+    console.error("Error:", error);
+    if (!handleAuthError(error)) {
+      toast.error(error.message || "Network error");
+    }
   } finally {
-    setIsSubmitting(false); // Reset submitting state
+    setIsSubmitting(false);
     setLoadingStates((prev) => ({ ...prev, create: false }));
   }
 };
 
-  const handleSendCampaign = async () => {
-    if (!campaignToSend) return;
-    try {
-      const headers = getAuthHeaders("application/json");
-      setLoadingStates((prev) => ({ ...prev, send: true }));
 
-      const response = await fetch(`/api/sms/${campaignToSend.id}`, {
-        method: "PATCH",
+
+
+
+const handleSendCampaign = async () => {
+  if (!campaignToSend) return;
+  
+  try {
+    const headers = getAuthHeaders("application/json");
+    setLoadingStates((prev) => ({ ...prev, send: true }));
+
+    const response = await fetch(`/api/sms/${campaignToSend.id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ status: "sent" }),
+    });
+
+    if (response.status === 401) throw new Error("Session expired");
+
+    const result = await response.json();
+
+    // Log the response for debugging
+    console.log("📱 SMS API Response:", {
+      campaignId: campaignToSend.id,
+      status: response.status,
+      result: result
+    });
+
+    // Check for low credit issues
+    const hasLowCredit = result.smsResults?.responses?.some(r => r['response-code'] === 402);
+    
+    if (hasLowCredit) {
+      const lowCreditResponses = result.smsResults.responses.filter(r => r['response-code'] === 402);
+      console.warn("⚠️ Low credit detected:", lowCreditResponses);
+      
+      // Revert campaign back to draft status
+      const revertResponse = await fetch(`/api/sms/${campaignToSend.id}`, {
+        method: "PUT", // or PATCH depending on your API
         headers,
-        body: JSON.stringify({ status: "sent" }),
+        body: JSON.stringify({ 
+          status: "draft",
+          // Preserve other campaign data
+          title: campaignToSend.title,
+          message: campaignToSend.message,
+          recipientType: campaignToSend.recipientType,
+          recipients: campaignToSend.recipients
+        }),
       });
-
-      if (response.status === 401) throw new Error("Session expired");
-
-      const result = await response.json();
-
-      if (result.success) {
+      
+      if (revertResponse.ok) {
+        // Update local state to reflect draft status
         setCampaigns((prev) =>
           prev.map((c) =>
             c.id === campaignToSend.id
               ? {
                   ...c,
-                  status: "sent",
-                  sentAt: new Date().toISOString(),
-                  sentCount: result.smsResults?.summary?.successful || 0,
-                  failedCount: result.smsResults?.summary?.failed || 0,
+                  status: "draft",
+                  lastAttemptAt: new Date().toISOString(),
+                  lastError: lowCreditResponses[0]?.['response-description']
                 }
               : c
           )
         );
-        setShowSendConfirmationModal(false);
-        setCampaignToSend(null);
-        toast.success(`Campaign sent successfully! ${result.smsResults?.summary?.successful || 0} messages delivered.`);
+        
+        // Show low credit warning
+        toast.error(
+          `⚠️ Low Credit: ${lowCreditResponses[0]?.['response-description'] || 'Insufficient credit to send SMS'}. Campaign saved as draft.`,
+          {
+            duration: 8000,
+            action: {
+              label: "Add Credit",
+              onClick: () => window.open("/pages/billing", "_blank")
+            }
+          }
+        );
+        
+        // Log to monitoring
+        fetch("/api/monitoring/alert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "LOW_CREDIT",
+            message: lowCreditResponses[0]?.['response-description'],
+            campaignId: campaignToSend.id,
+            campaignTitle: campaignToSend.title,
+            details: lowCreditResponses,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(e => console.error("Failed to send monitoring alert:", e));
+      }
+    } else if (result.success) {
+      // Update campaigns list for successful send
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === campaignToSend.id
+            ? {
+                ...c,
+                status: "sent",
+                sentAt: new Date().toISOString(),
+                sentCount: result.smsResults?.summary?.successful || 0,
+                failedCount: result.smsResults?.summary?.failed || 0,
+                smsResponses: result.smsResults?.responses || []
+              }
+            : c
+        )
+      );
+      
+      // Show success message
+      const successful = result.smsResults?.summary?.successful || 0;
+      const failed = result.smsResults?.summary?.failed || 0;
+      const total = (result.smsResults?.responses?.length || 0);
+      
+      if (failed > 0) {
+        toast.success(
+          `Campaign sent with ${successful}/${total} messages delivered. ${failed} failed.`,
+          { duration: 6000 }
+        );
       } else {
-        toast.error(result.error || "Failed to send campaign");
+        toast.success(`Campaign sent successfully! ${successful} messages delivered.`);
       }
-    } catch (error) {
-      console.error("Error:", error);
-      if (!handleAuthError(error)) {
-        toast.error(error.message || "Network error");
-      }
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, send: false }));
+    } else {
+      // Handle other API errors
+      toast.error(result.error || "Failed to send campaign");
     }
-  };
+    
+    // ALWAYS CLOSE THE MODAL - regardless of outcome
+    setShowSendConfirmationModal(false);
+    setCampaignToSend(null);
+    
+  } catch (error) {
+    console.error("Error sending campaign:", error);
+    
+    // Log the error details
+    console.log("Full error details:", {
+      message: error.message,
+      stack: error.stack,
+      campaignId: campaignToSend?.id
+    });
+    
+    if (!handleAuthError(error)) {
+      toast.error(error.message || "Network error");
+    }
+    
+    // CLOSE MODAL EVEN ON ERROR (except auth errors which redirect)
+    setShowSendConfirmationModal(false);
+    setCampaignToSend(null);
+    
+  } finally {
+    setLoadingStates((prev) => ({ ...prev, send: false }));
+  }
+};
 
   const handleDeleteCampaign = async () => {
     if (!campaignToDelete) return;
