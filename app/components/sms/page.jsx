@@ -964,9 +964,10 @@ const handleCreateOrUpdateCampaign = async () => {
                   <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
                     SMS Campaign <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-emerald-200">Manager</span>
                   </h1>
-                  <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-cyan-100/90 font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-                    Create, send, and manage bulk SMS campaigns using Africa's Talking.
-                  </p>
+                 <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-cyan-100/90 font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+  Streamline school communication with powerful bulk SMS campaigns powered by Celcom Talking fast, reliable, and built for Katwanyaa High School.
+</p>
+
                 </div>
               </div>
             </div>
