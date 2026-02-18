@@ -1558,7 +1558,7 @@ const handleSendCampaign = async () => {
                     {selectedCampaign ? (
                       <>
                         <Save className="w-4 h-4" />
-                        Update Campaign
+                        Update 
                       </>
                     ) : campaignForm.status === "draft" ? (
                       <>
