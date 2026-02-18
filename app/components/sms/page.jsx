@@ -1320,8 +1320,24 @@ const handleSendCampaign = async () => {
       {/* Campaign List */}
       <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">Loading campaigns...</div>
-        ) : filteredCampaigns.length === 0 ? (
+<div className="flex flex-col items-center justify-center p-12 space-y-4">
+  <div className="relative">
+    {/* Outer Glow Ring */}
+    <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 animate-ping"></div>
+    
+    {/* Main Spinner Icon */}
+    <Loader2 className="w-10 h-10 text-blue-600 animate-spin relative z-10" />
+  </div>
+
+  <div className="space-y-1 text-center">
+    <h3 className="text-lg font-black text-slate-900 tracking-tight">
+      Fetching Campaigns
+    </h3>
+    <p className="text-sm font-bold text-slate-500 animate-pulse">
+      Please wait a moment...
+    </p>
+  </div>
+</div>        ) : filteredCampaigns.length === 0 ? (
           <div className="text-center py-16">
             <Smartphone className="text-gray-400 w-16 h-16 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Campaigns Found</h3>
