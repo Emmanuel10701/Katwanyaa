@@ -601,13 +601,13 @@ const CampaignCard = ({
   };
 
  return (
-    <div 
-      className={`group relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
-        isSelected 
-          ? 'border-blue-500 bg-blue-50/40 shadow-xl shadow-blue-100 ring-2 ring-blue-500/20' 
-          : 'border-slate-200 bg-white hover:border-blue-400 hover:shadow-2xl hover:shadow-slate-200'
-      }`}
-    >
+  <div 
+  className={`group relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+    isSelected 
+      ? 'border-blue-600 bg-blue-50/40 shadow-xl shadow-blue-200 ring-2 ring-blue-500/20' 
+      : 'border-blue-400 bg-white shadow-lg shadow-slate-200 hover:border-blue-500 hover:shadow-xl'
+  }`}
+>
       <div className={`absolute top-0 left-0 w-1.5 h-full ${campaign.status === 'published' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
 
       {/* Reduced outer padding */}
@@ -2653,7 +2653,11 @@ const CampaignAttachmentsDisplay = ({ campaign }) => {
       
       {/* Content Textarea - Enhanced */}
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2"
+        
+        
+        
+  >
           <label className=" text-md font-bold text-gray-800 flex items-center gap-2">
             <span className="text-red-500">*</span> Email Content
           </label>
@@ -2718,8 +2722,7 @@ const CampaignAttachmentsDisplay = ({ campaign }) => {
               rounded-xl 
               hover:shadow-lg 
               hover:from-emerald-600 hover:to-emerald-700
-              transition-all duration-200
-              shadow-sm
+              shadow-md
             "
           >
             <FileUp className="w-4 h-4" />
