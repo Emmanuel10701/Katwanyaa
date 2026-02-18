@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../libs/prisma";
-import africastalking from "africastalking";
 
 // ==================== TOKEN VERIFICATION ====================
 class DeviceTokenManager {
@@ -131,24 +130,15 @@ const authenticateRequest = (req) => {
 // ==================== END TOKEN VERIFICATION ====================
 
 // ====================================================================
-// CONFIGURATION
+// CELCOM AFRICA CONFIGURATION
 // ====================================================================
-const AT_API_KEY = process.env.AT_API_KEY;
-const AT_USERNAME = process.env.AT_USERNAME;
-const AT_SENDER_ID = process.env.AT_SENDER_ID || "AIC KATWANA";
-const AT_SENDER_TYPE = process.env.AT_SENDER_TYPE || "alphanumeric";
+const CELCOM_API_KEY = process.env.CELCOM_API_KEY;
+const CELCOM_PARTNER_ID = process.env.CELCOM_PARTNER_ID;
+const CELCOM_SHORTCODE = process.env.CELCOM_SHORTCODE;
 
-if (!AT_API_KEY || !AT_USERNAME) {
-  console.error("Missing Africa's Talking credentials");
+if (!CELCOM_API_KEY || !CELCOM_PARTNER_ID || !CELCOM_SHORTCODE) {
+  console.error("❌ Missing Celcom Africa credentials. Please set CELCOM_API_KEY, CELCOM_PARTNER_ID, and CELCOM_SHORTCODE in .env");
 }
-
-// Initialize Africa's Talking
-const at = africastalking({
-  apiKey: AT_API_KEY,
-  username: AT_USERNAME,
-});
-
-const sms = at.SMS;
 
 // ====================================================================
 // HELPER FUNCTIONS
@@ -167,31 +157,10 @@ function getRecipientTypeLabel(type) {
   return labels[type] || type;
 }
 
-// Add this helper function to detect sandbox
-const isSandbox = AT_USERNAME === 'sandbox';
-
-
-
-
-// Validate phone numbers function - FIXED for production
+// Validate phone numbers function (unchanged, already returns 254XXXXXXXXX)
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
-  
-  // For sandbox, accept any number format (for testing)
-  if (isSandbox) {
-    console.log('🧪 Sandbox mode: Accepting any phone numbers for testing');
-    phoneNumbers.forEach(num => {
-      const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
-      if (cleaned.length > 0) {
-        const formatted = cleaned.replace(/^\+/, '');
-        valid.push(formatted);
-      } else {
-        invalid.push(num);
-      }
-    });
-    return { valid, invalid };
-  }
   
   // Production validation - Kenyan phone numbers
   // Accepts: 0712345678, 254712345678, +254712345678
@@ -220,7 +189,9 @@ function validatePhoneNumbers(phoneNumbers) {
   return { valid, invalid };
 }
 
-// Send SMS Campaign function - FIXED VERSION with proper number formatting for production
+/**
+ * Send SMS campaign using Celcom Africa API (sendsms endpoint)
+ */
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
   const message = campaign.message;
@@ -228,110 +199,71 @@ async function sendSmsCampaign(campaign) {
   const sent = [];
   const failed = [];
 
-  const senderId = AT_SENDER_ID;
-  const finalSender = AT_SENDER_TYPE === "alphanumeric" 
-    ? senderId.substring(0, 11).trim() 
-    : senderId;
+  console.log(`📱 Sending SMS with shortcode: "${CELCOM_SHORTCODE}" via Celcom Africa`);
 
-  console.log(`📱 Sending SMS with sender: "${finalSender}" (type: ${AT_SENDER_TYPE})`);
-  console.log(`📱 Environment: ${isSandbox ? 'SANDBOX' : 'PRODUCTION'}`);
-
-  const BATCH_SIZE = 100;
+  const BATCH_SIZE = 100; // Adjust if Celcom has a different limit
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
-      // CRITICAL FIX: Format numbers exactly as Africa's Talking expects
-      // They want the number in international format WITHOUT the plus sign
-      // For Kenya: 254XXXXXXXXX (12 digits total)
-      const formattedBatch = batch.map(num => {
-        // Remove any whitespace, dashes, and plus signs
-        let cleaned = num.replace(/\s+/g, '').replace(/-/g, '').replace(/^\+/, '');
-        
-        // If it starts with 0 (e.g., 0712345678), convert to 254712345678
-        if (cleaned.startsWith('0')) {
-          cleaned = '254' + cleaned.substring(1);
-        }
-        
-        // If it doesn't start with 254, add it
-        if (!cleaned.startsWith('254')) {
-          cleaned = '254' + cleaned;
-        }
-        
-        // Ensure it's exactly 12 digits
-        cleaned = cleaned.substring(0, 12);
-        
-        return cleaned;
+      // Format numbers: they are already in 254XXXXXXXXX format from validatePhoneNumbers
+      // Join with commas for the 'mobile' field
+      const mobileList = batch.join(",");
+
+      const requestBody = {
+        apikey: CELCOM_API_KEY,
+        partnerID: CELCOM_PARTNER_ID,
+        message: message,
+        shortcode: CELCOM_SHORTCODE,
+        mobile: mobileList,
+        pass_type: "plain",      // optional, but recommended
+      };
+
+      console.log(`📱 Sending batch ${Math.floor(i/BATCH_SIZE) + 1} to ${batch.length} numbers`);
+      console.log(`📱 Request body:`, JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch("https://isms.celcomafrica.com/api/services/sendsms/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       });
 
-      console.log(`📱 Formatted numbers:`, formattedBatch);
+      const data = await response.json();
+      console.log(`📱 Response:`, JSON.stringify(data, null, 2));
 
-      const smsOptions = {
-        to: formattedBatch,
-        message: message,
-      };
-      
-      // Only add 'from' in production if we have a valid sender
-      if (!isSandbox && finalSender && finalSender.trim() !== "") {
-        smsOptions.from = finalSender;
-      }
-
-      console.log(`📱 Sending batch ${i/BATCH_SIZE + 1} to ${formattedBatch.length} numbers`);
-      console.log(`📱 SMS Options:`, JSON.stringify(smsOptions, null, 2));
-      
-      const result = await sms.send(smsOptions);
-      console.log('📱 SMS API Response:', JSON.stringify(result, null, 2));
-
-      if (result?.data?.SMSMessageData?.Recipients) {
-        const recipientStatuses = result.data.SMSMessageData.Recipients;
-        recipientStatuses.forEach(rs => {
+      // Celcom returns an object with a "responses" array
+      if (data.responses && Array.isArray(data.responses)) {
+        data.responses.forEach((item) => {
           const logEntry = {
             campaignId: campaign.id,
-            phoneNumber: rs.number,
+            phoneNumber: item.mobile,
             message,
-            providerMessageId: rs.messageId || null,
-            status: rs.status === "Success" ? "success" : "failed",
-            errorMessage: rs.status !== "Success" ? rs.status : null,
+            providerMessageId: item.messageid?.toString() || null,
+            status: item["response-code"] === 200 ? "success" : "failed",
+            errorMessage: item["response-description"] !== "Success" ? item["response-description"] : null,
           };
-          if (rs.status === "Success") {
+          if (item["response-code"] === 200) {
             sent.push(logEntry);
           } else {
             failed.push(logEntry);
           }
         });
       } else {
-        console.log('⚠️ No Recipients in response, full response:', result);
-        // Check if message was sent successfully
-        if (result?.data?.SMSMessageData?.Message === "Sent to 1 recipients") {
-          batch.forEach(phone => {
-            sent.push({
-              campaignId: campaign.id,
-              phoneNumber: phone,
-              message,
-              providerMessageId: null,
-              status: "success",
-            });
+        // Unexpected response format – treat the whole batch as failed
+        console.warn("⚠️ Unexpected API response format", data);
+        batch.forEach((phone) => {
+          failed.push({
+            campaignId: campaign.id,
+            phoneNumber: phone,
+            message,
+            providerMessageId: null,
+            status: "failed",
+            errorMessage: "Invalid API response",
           });
-        } else {
-          batch.forEach(phone => {
-            failed.push({
-              campaignId: campaign.id,
-              phoneNumber: phone,
-              message,
-              providerMessageId: null,
-              status: "failed",
-              errorMessage: "Unknown response format",
-            });
-          });
-        }
+        });
       }
-      
-      console.log(`✅ Batch ${i/BATCH_SIZE + 1}: Processed ${batch.length} numbers`);
-      
     } catch (error) {
       console.error(`❌ Batch failed:`, error.message);
-      console.error('Full error:', error);
-      
-      batch.forEach(phone => {
+      batch.forEach((phone) => {
         failed.push({
           campaignId: campaign.id,
           phoneNumber: phone,
@@ -342,12 +274,14 @@ async function sendSmsCampaign(campaign) {
         });
       });
     }
-    
+
+    // Delay between batches to avoid rate limiting
     if (i + BATCH_SIZE < recipients.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
+  // Save logs to database
   if (sent.length > 0) {
     await prisma.smsLog.createMany({ data: sent });
   }
@@ -395,8 +329,7 @@ export async function POST(req) {
           sentAt: existingCampaign.sentAt,
           sentCount: existingCampaign.sentCount,
           failedCount: existingCampaign.failedCount,
-          senderId: AT_SENDER_ID,
-          senderType: AT_SENDER_TYPE,
+          senderId: CELCOM_SHORTCODE,
           createdAt: existingCampaign.createdAt,
           updatedAt: existingCampaign.updatedAt,
         };
@@ -418,7 +351,7 @@ export async function POST(req) {
 
     console.log("📱 POST /api/sms - Creating SMS campaign");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    console.log(`Using sender ID: "${AT_SENDER_ID}" (type: ${AT_SENDER_TYPE})`);
+    console.log(`Using shortcode: "${CELCOM_SHORTCODE}"`);
     // ==================== END AUTHENTICATION ====================
 
     // ==================== REQUEST PARSING ====================
@@ -531,8 +464,7 @@ export async function POST(req) {
       sentAt: campaign.sentAt,
       sentCount: campaign.sentCount,
       failedCount: campaign.failedCount,
-      senderId: AT_SENDER_ID,
-      senderType: AT_SENDER_TYPE,
+      senderId: CELCOM_SHORTCODE,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
     };
@@ -664,8 +596,8 @@ export async function GET(req) {
       campaigns: formattedCampaigns,
       summary,
       senderInfo: {
-        id: AT_SENDER_ID,
-        type: AT_SENDER_TYPE
+        id: CELCOM_SHORTCODE,
+        type: "shortcode"   // or "alphanumeric" depending on your shortcode
       },
       pagination: {
         page,
