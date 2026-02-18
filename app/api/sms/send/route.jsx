@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "../../../../libs/prisma";
-import africastalking from "africastalking";
 
 // ==================== TOKEN VERIFICATION ====================
 class DeviceTokenManager {
@@ -131,21 +130,145 @@ const authenticateRequest = (req) => {
 // ==================== END TOKEN VERIFICATION ====================
 
 // ====================================================================
-// CONFIGURATION
+// CELCOM AFRICA CONFIGURATION
 // ====================================================================
-const AT_API_KEY = process.env.AT_API_KEY;
-const AT_USERNAME = process.env.AT_USERNAME;
+const CELCOM_API_KEY = process.env.CELCOM_API_KEY;
+const CELCOM_PARTNER_ID = process.env.CELCOM_PARTNER_ID;
+const CELCOM_SHORTCODE = process.env.CELCOM_SHORTCODE;
 
-if (!AT_API_KEY || !AT_USERNAME) {
-  console.error("Missing Africa's Talking credentials");
+if (!CELCOM_API_KEY || !CELCOM_PARTNER_ID || !CELCOM_SHORTCODE) {
+  console.error("❌ Missing Celcom Africa credentials. Please set CELCOM_API_KEY, CELCOM_PARTNER_ID, and CELCOM_SHORTCODE in .env");
 }
 
-const at = africastalking({
-  apiKey: AT_API_KEY,
-  username: AT_USERNAME,
-});
+// ====================================================================
+// HELPER FUNCTIONS
+// ====================================================================
 
-const sms = at.SMS;
+/**
+ * Validate and format phone numbers to 254XXXXXXXXX format
+ */
+function validatePhoneNumbers(phoneNumbers) {
+  const valid = [];
+  const invalid = [];
+  
+  // Kenyan phone numbers: 07XX XXX XXX, 2547XX XXX XXX, +2547XX XXX XXX
+  const regex = /^(?:(?:\+?254)|0)?(7[0-9]{8})$/;
+  
+  phoneNumbers.forEach(num => {
+    const cleaned = num.trim().replace(/\s+/g, '').replace(/-/g, '');
+    
+    const match = cleaned.match(regex);
+    
+    if (match) {
+      // Extract the subscriber number (7XXXXXXXX)
+      const subscriberNumber = match[1];
+      
+      // Format to international format: 254 + subscriber number
+      const formatted = '254' + subscriberNumber;
+      
+      // Verify final length (should be 12 digits: 254 + 9 digits)
+      if (formatted.length === 12) {
+        valid.push(formatted);
+      } else {
+        invalid.push(num);
+      }
+    } else {
+      invalid.push(num);
+    }
+  });
+  
+  return { valid, invalid };
+}
+
+/**
+ * Send SMS using Celcom Africa API
+ */
+async function sendCelcomSms(campaignId, phoneNumbers, message) {
+  const sent = [];
+  const failed = [];
+  
+  // Celcom accepts up to 100 numbers per request
+  const BATCH_SIZE = 100;
+  
+  for (let i = 0; i < phoneNumbers.length; i += BATCH_SIZE) {
+    const batch = phoneNumbers.slice(i, i + BATCH_SIZE);
+    
+    try {
+      const mobileList = batch.join(",");
+      
+      const requestBody = {
+        apikey: CELCOM_API_KEY,
+        partnerID: CELCOM_PARTNER_ID,
+        message: message,
+        shortcode: CELCOM_SHORTCODE,
+        mobile: mobileList,
+        pass_type: "plain"
+      };
+      
+      console.log(`📱 Sending batch ${Math.floor(i/BATCH_SIZE) + 1} to ${batch.length} numbers via Celcom Africa`);
+      
+      const response = await fetch("https://isms.celcomafrica.com/api/services/sendsms/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+      
+      const data = await response.json();
+      
+      if (data.responses && Array.isArray(data.responses)) {
+        data.responses.forEach((item) => {
+          const logEntry = {
+            campaignId: campaignId,
+            phoneNumber: item.mobile,
+            message,
+            providerMessageId: item.messageid?.toString() || null,
+            status: item["response-code"] === 200 ? "success" : "failed",
+            errorMessage: item["response-description"] !== "Success" ? item["response-description"] : null,
+          };
+          
+          if (item["response-code"] === 200) {
+            sent.push(logEntry);
+          } else {
+            failed.push(logEntry);
+          }
+        });
+      } else {
+        // Unexpected response - mark all as failed
+        console.warn("⚠️ Unexpected API response format", data);
+        batch.forEach(phone => {
+          failed.push({
+            campaignId,
+            phoneNumber: phone,
+            message,
+            providerMessageId: null,
+            status: "failed",
+            errorMessage: "Invalid API response from Celcom",
+          });
+        });
+      }
+      
+    } catch (error) {
+      console.error(`❌ Batch failed:`, error.message);
+      batch.forEach(phone => {
+        failed.push({
+          campaignId,
+          phoneNumber: phone,
+          message,
+          providerMessageId: null,
+          status: "failed",
+          errorMessage: error.message,
+        });
+      });
+    }
+    
+    // Delay between batches to avoid rate limiting
+    if (i + BATCH_SIZE < phoneNumbers.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  return { sent, failed };
+}
 
 // ====================================================================
 // API HANDLER
@@ -153,7 +276,7 @@ const sms = at.SMS;
 
 export async function POST(req) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
+    // ==================== AUTHENTICATION ====================
     const auth = authenticateRequest(req);
     if (!auth.authenticated) {
       return auth.response;
@@ -188,65 +311,45 @@ export async function POST(req) {
       );
     }
 
-    // Send SMS
+    // Get recipients and validate
     const recipients = campaign.recipients.split(",").map(r => r.trim());
     const message = campaign.message;
     
-    const sent = [];
-    const failed = [];
-
-    // Send in batches
-    const BATCH_SIZE = 100;
-    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-      const batch = recipients.slice(i, i + BATCH_SIZE);
-      try {
-        const result = await sms.send({
-          to: batch,
-          message,
-          from: process.env.AT_SHORT_CODE || "A.I.C Katwanyaa high school",
-        });
-        
-        if (result?.data?.SMSMessageData?.Recipients) {
-          const recipientStatuses = result.data.SMSMessageData.Recipients;
-          recipientStatuses.forEach(rs => {
-            const logEntry = {
-              campaignId: campaign.id,
-              phoneNumber: rs.number,
-              message,
-              providerMessageId: rs.messageId || null,
-              status: rs.status === "Success" ? "success" : "failed",
-              errorMessage: rs.status !== "Success" ? rs.status : null,
-            };
-            if (rs.status === "Success") {
-              sent.push(logEntry);
-            } else {
-              failed.push(logEntry);
-            }
-          });
-        } else {
-          batch.forEach(phone => {
-            sent.push({
-              campaignId: campaign.id,
-              phoneNumber: phone,
-              message,
-              providerMessageId: null,
-              status: "success",
-            });
-          });
-        }
-      } catch (error) {
-        batch.forEach(phone => {
-          failed.push({
-            campaignId: campaign.id,
-            phoneNumber: phone,
-            message,
-            providerMessageId: null,
-            status: "failed",
-            errorMessage: error.message,
-          });
-        });
-      }
+    // Validate and format phone numbers
+    const { valid: validPhones, invalid } = validatePhoneNumbers(recipients);
+    
+    if (invalid.length > 0) {
+      console.warn(`⚠️ Found ${invalid.length} invalid phone numbers:`, invalid);
     }
+    
+    if (validPhones.length === 0) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "No valid phone numbers found for this campaign",
+          invalidNumbers: invalid 
+        },
+        { status: 400 }
+      );
+    }
+
+    console.log(`📱 Sending SMS to ${validPhones.length} valid recipients via Celcom Africa`);
+    console.log(`📱 Using shortcode: "${CELCOM_SHORTCODE}"`);
+
+    // Send via Celcom Africa
+    const { sent, failed } = await sendCelcomSms(campaign.id, validPhones, message);
+    
+    // Also add invalid numbers to failed list
+    invalid.forEach(phone => {
+      failed.push({
+        campaignId: campaign.id,
+        phoneNumber: phone,
+        message,
+        providerMessageId: null,
+        status: "failed",
+        errorMessage: "Invalid phone number format",
+      });
+    });
 
     // Save logs
     if (sent.length > 0) {
@@ -269,16 +372,23 @@ export async function POST(req) {
 
     const summary = {
       total: recipients.length,
+      validCount: validPhones.length,
       successful: sent.length,
       failed: failed.length,
-      successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
+      invalidSkipped: invalid.length,
+      successRate: validPhones.length > 0 ? Math.round((sent.length / validPhones.length) * 100) : 0,
     };
 
     return NextResponse.json({
       success: true,
       campaign: updatedCampaign,
-      smsResults: { sent, failed, summary },
-      message: `Campaign sent to ${sent.length} recipients successfully`
+      smsResults: { 
+        sent: sent.slice(0, 10), // Return only first 10 logs to avoid huge response
+        failed: failed.slice(0, 10),
+        summary,
+        invalidNumbers: invalid.length > 0 ? invalid : undefined
+      },
+      message: `Campaign sent to ${sent.length} recipients successfully via Celcom Africa${invalid.length > 0 ? ` (${invalid.length} invalid numbers skipped)` : ''}`
     });
 
   } catch (error) {
