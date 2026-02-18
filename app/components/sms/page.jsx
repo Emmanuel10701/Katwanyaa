@@ -913,7 +913,7 @@ const handleSendCampaign = async () => {
             duration: 8000,
             action: {
               label: "Add Credit",
-              onClick: () => window.open("/pages/billing", "_blank")
+              onClick: () => window.open("https://celcomafrica.com/till-paybill-sms", "_blank")
             }
           }
         );
