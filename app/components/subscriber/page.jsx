@@ -187,51 +187,6 @@ function Notification({
   );
 }
 
-// Modern Action Menu Component
-function ActionMenu({ item, onView, onDelete }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
-      >
-        <FiMoreVertical className="text-lg" />
-      </button>
-      {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onView(item);
-              }}
-              className="w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <FiEye className="text-base" />
-              View Details
-            </button>
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onDelete(item);
-              }}
-              className="w-full text-left px-4 py-3 text-rose-600 hover:bg-rose-50 flex items-center gap-2"
-            >
-              <FiTrash2 className="text-base" />
-              Delete Subscriber
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 // Main Subscriber Manager Component
 export default function SubscriberManager() {
@@ -1037,16 +992,13 @@ const handleSendEmail = async (e) => {
                       >
                         <FiEye className="text-base" />
                       </button>
-                        <button
-                        onClick={() => {
-                          setIsOpen(false);
-                          onDelete(subscriber);
-                        }}
-                        className="w-full text-left px-4 py-3 text-rose-600 hover:bg-rose-50 flex items-center gap-2"
-                      >
-                        <FiTrash2 className="text-base" />
-                        Delete Subscriber
-                      </button>
+<button
+  onClick={() => handleDelete(subscriber)}
+  className="p-2.5 bg-gradient-to-r from-rose-50 to-orange-50 text-rose-600 rounded-xl border-2 border-rose-200 hover:border-rose-500 transition-colors"
+  aria-label="Delete subscriber"
+>
+  <FiTrash2 className="text-base" />
+</button>
                     </div>
                   </td>
                 </tr>
