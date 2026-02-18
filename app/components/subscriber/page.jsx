@@ -1037,11 +1037,16 @@ const handleSendEmail = async (e) => {
                       >
                         <FiEye className="text-base" />
                       </button>
-                      <ActionMenu 
-                        item={subscriber} 
-                        onView={viewSubscriberDetails}
-                        onDelete={handleDelete}
-                      />
+                        <button
+                        onClick={() => {
+                          setIsOpen(false);
+                          onDelete(subscriber);
+                        }}
+                        className="w-full text-left px-4 py-3 text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                      >
+                        <FiTrash2 className="text-base" />
+                        Delete Subscriber
+                      </button>
                     </div>
                   </td>
                 </tr>
