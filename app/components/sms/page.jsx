@@ -194,7 +194,7 @@ const SmsCampaignCard = ({
     }
   };
 
-  return (
+return (
     <div
       className={`group relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
         isSelected
@@ -204,7 +204,8 @@ const SmsCampaignCard = ({
     >
       <div className={`absolute top-0 left-0 w-1.5 h-full ${campaign.status === "sent" ? "bg-emerald-500" : "bg-amber-500"}`} />
 
-      <div className="p-4 md:p-6">
+      {/* Reduced padding from p-4 md:p-6 to p-3 md:p-4 for shorter height */}
+      <div className="p-3 md:p-4">
         <div className="flex flex-col lg:flex-row items-start gap-5">
           {/* Checkbox and Icon */}
           <div className="flex items-center lg:flex-col gap-4 w-full lg:w-auto pb-4 lg:pb-0 border-b lg:border-b-0 border-slate-100">
@@ -229,16 +230,18 @@ const SmsCampaignCard = ({
 
           {/* Main Content */}
           <div className="flex-1 min-w-0 w-full">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+            {/* Reduced margin bottom from mb-3 to mb-2 */}
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
               <div className="min-w-0 flex-1">
-                <h4 className="text-xl font-black text-slate-900 truncate tracking-tight mb-1">
+                <h4 className="text-xl font-black text-slate-900 truncate tracking-tight mb-0.5">
                   {campaign.title || "Untitled Campaign"}
                 </h4>
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-1.5 py-0.5 rounded">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest bg-slate-100 px-1.5 py-0.5 rounded">
                     Message
                   </span>
-                  <p className="font-semibold truncate text-sm sm:text-base">
+                  {/* Changed font-semibold to font-bold for better visibility */}
+                  <p className="font-bold truncate text-sm sm:text-base">
                     {campaign.message?.substring(0, 50)}
                     {campaign.message?.length > 50 ? "..." : ""}
                   </p>
@@ -247,50 +250,50 @@ const SmsCampaignCard = ({
               <div className="hidden lg:block flex-shrink-0">{getStatusBadge(campaign.status)}</div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">Recipients</span>
+            {/* Stats - Reduced mb-5 to mb-3 */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-black text-slate-500 mb-0.5">Recipients</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-lg font-black text-slate-800">{recipientCount}</span>
-                  <span className="text-[10px] text-slate-400 font-medium">Numbers</span>
+                  <span className="text-lg font-black text-slate-900">{recipientCount}</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase">Numbers</span>
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center">
-                <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">Target Group</span>
-                <span className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-tight bg-slate-100 text-slate-700 border border-slate-200 min-w-[70px] shadow-inner">
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-black text-slate-500 mb-0.5">Target Group</span>
+                <span className="inline-flex items-center justify-center px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-tight bg-slate-200 text-slate-800 border border-slate-300 min-w-[70px]">
                   {getRecipientGroupLabel(campaign.recipientType)}
                 </span>
               </div>
 
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2 md:col-span-1 flex items-center justify-between md:block">
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 col-span-2 md:col-span-1 flex items-center justify-between md:block">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">Delivery Date</span>
-                  <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-[10px] uppercase font-black text-slate-500 mb-0.5">Delivery Date</span>
+                  <div className="flex items-center gap-2 text-slate-900 font-black text-sm">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
                     {formatDate(campaign.sentAt || campaign.createdAt)}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Message Preview */}
-            <div className="mb-6">
-              <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-100 relative group/preview">
-                <p className="text-sm text-slate-600 leading-relaxed line-clamp-2 font-medium italic">
+            {/* Message Preview - Reduced mb-6 to mb-4 and changed font to font-bold */}
+            <div className="mb-4">
+              <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-100 relative group/preview">
+                <p className="text-sm text-slate-800 leading-relaxed line-clamp-1 font-bold italic">
                   "{campaign.message || 'No message preview'}"
                 </p>
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-5 border-t border-slate-100">
+            {/* Action Buttons - Reduced pt-5 to pt-3 */}
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
               <div className="flex flex-wrap flex-1 gap-2">
                 <button
                   onClick={() => onView(campaign)}
-                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 shadow-sm"
+                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-black text-slate-800 bg-white border-2 border-slate-300 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all active:scale-95 shadow-sm"
                 >
                   <Eye className="w-4 h-4" /> View
                 </button>
@@ -298,7 +301,7 @@ const SmsCampaignCard = ({
                 {campaign.status === "draft" && (
                   <button
                     onClick={() => onEdit(campaign)}
-                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 border-2 border-indigo-100 rounded-xl hover:bg-indigo-100 hover:border-indigo-200 transition-all active:scale-95 shadow-sm"
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-black text-indigo-800 bg-indigo-50 border-2 border-indigo-200 rounded-xl hover:bg-indigo-100 hover:border-indigo-300 transition-all active:scale-95 shadow-sm"
                   >
                     <Edit className="w-4 h-4" /> Edit
                   </button>
@@ -310,7 +313,7 @@ const SmsCampaignCard = ({
                   <button
                     onClick={() => onSend(campaign)}
                     disabled={loadingStates.send}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-md shadow-blue-200"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-md shadow-blue-200"
                   >
                     <Send className={`w-4 h-4 ${loadingStates.send ? "animate-pulse" : ""}`} />
                     {loadingStates.send ? "Sending..." : "Send Now"}
@@ -318,7 +321,7 @@ const SmsCampaignCard = ({
                 )}
                 <button
                   onClick={() => onDelete(campaign)}
-                  className="p-3 text-rose-500 bg-rose-50 border-2 border-rose-100 rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all active:scale-95 shadow-sm"
+                  className="p-2.5 text-rose-600 bg-rose-50 border-2 border-rose-100 rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all active:scale-95 shadow-sm"
                   title="Delete Campaign"
                 >
                   <Trash2 className="w-5 h-5" />
