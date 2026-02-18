@@ -201,12 +201,10 @@ async function sendSmsCampaign(campaign) {
 
   console.log(`📱 Sending SMS with shortcode: "${CELCOM_SHORTCODE}" via Celcom Africa`);
 
-  const BATCH_SIZE = 100; // Adjust if Celcom has a different limit
+  const BATCH_SIZE = 100;
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
-      // Format numbers: they are already in 254XXXXXXXXX format from validatePhoneNumbers
-      // Join with commas for the 'mobile' field
       const mobileList = batch.join(",");
 
       const requestBody = {
@@ -215,7 +213,7 @@ async function sendSmsCampaign(campaign) {
         message: message,
         shortcode: CELCOM_SHORTCODE,
         mobile: mobileList,
-        pass_type: "plain",      // optional, but recommended
+        pass_type: "plain",
       };
 
       console.log(`📱 Sending batch ${Math.floor(i/BATCH_SIZE) + 1} to ${batch.length} numbers`);
@@ -230,12 +228,11 @@ async function sendSmsCampaign(campaign) {
       const data = await response.json();
       console.log(`📱 Response:`, JSON.stringify(data, null, 2));
 
-      // Celcom returns an object with a "responses" array
       if (data.responses && Array.isArray(data.responses)) {
         data.responses.forEach((item) => {
           const logEntry = {
             campaignId: campaign.id,
-            phoneNumber: item.mobile,
+            phoneNumber: item.mobile?.toString() || '', // FIXED: Convert to string
             message,
             providerMessageId: item.messageid?.toString() || null,
             status: item["response-code"] === 200 ? "success" : "failed",
@@ -248,12 +245,11 @@ async function sendSmsCampaign(campaign) {
           }
         });
       } else {
-        // Unexpected response format – treat the whole batch as failed
         console.warn("⚠️ Unexpected API response format", data);
         batch.forEach((phone) => {
           failed.push({
             campaignId: campaign.id,
-            phoneNumber: phone,
+            phoneNumber: phone.toString(), // FIXED: Convert to string
             message,
             providerMessageId: null,
             status: "failed",
@@ -266,7 +262,7 @@ async function sendSmsCampaign(campaign) {
       batch.forEach((phone) => {
         failed.push({
           campaignId: campaign.id,
-          phoneNumber: phone,
+          phoneNumber: phone.toString(), // FIXED: Convert to string
           message,
           providerMessageId: null,
           status: "failed",
@@ -275,7 +271,6 @@ async function sendSmsCampaign(campaign) {
       });
     }
 
-    // Delay between batches to avoid rate limiting
     if (i + BATCH_SIZE < recipients.length) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
@@ -298,7 +293,6 @@ async function sendSmsCampaign(campaign) {
 
   return { sent, failed, summary };
 }
-
 // ====================================================================
 // POST HANDLER - Create a new SMS campaign with idempotency support
 // ====================================================================

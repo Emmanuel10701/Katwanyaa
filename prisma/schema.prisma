@@ -263,11 +263,12 @@ model SmsCampaign {
   @@map("sms_campaigns")
 }
 
+
 model SmsLog {
   id              String   @id @default(cuid())
   campaignId      String
   userId          String?  // optional, if you track users
-  phoneNumber     String
+  phoneNumber     String   // <-- Make sure this is String, not Int
   message         String   @db.Text
   providerMessageId String? // Africa's Talking messageId
   status          String   // success, failed
@@ -278,7 +279,6 @@ model SmsLog {
 
   @@map("sms_logs")
 }
-
 
 
 
