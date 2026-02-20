@@ -763,83 +763,90 @@ function ModernItemModal({ onClose, onSave, item, type, loading }) {
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [saving, setSaving] = useState(false); // Add this for local saving state
+  const [notification, setNotification] = useState({ // Add local notification
+    open: false,
+    type: 'success',
+    title: '',
+    message: ''
+  });
 
-useEffect(() => {
-  console.log('🔄 Loading item for editing:', item);
-  
-  if (item) {
-    const newFormData = { ...formData };
+  useEffect(() => {
+    console.log('🔄 Loading item for editing:', item);
     
-    if (item.title) newFormData.title = item.title;
-    
-    if (item.date) {
-      try {
-        const dateObj = new Date(item.date);
-        if (!isNaN(dateObj.getTime())) {
-          newFormData.date = dateObj.toISOString().split('T')[0];
+    if (item) {
+      const newFormData = { ...formData };
+      
+      if (item.title) newFormData.title = item.title;
+      
+      if (item.date) {
+        try {
+          const dateObj = new Date(item.date);
+          if (!isNaN(dateObj.getTime())) {
+            newFormData.date = dateObj.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.error('Error parsing date:', e);
         }
-      } catch (e) {
-        console.error('Error parsing date:', e);
-      }
-    }
-    
-    // Map category
-    if (item.category) newFormData.category = item.category;
-    
-    // Map image
-    if (item.image) {
-      newFormData.image = item.image;
-      setImagePreview(item.image);
-    }
-    
-    // Map featured ONLY for events
-    if (type === 'events' && item.featured !== undefined) {
-      newFormData.featured = item.featured;
-    }
-    
-    // Map status
-    if (item.status) newFormData.status = item.status;
-    
-    // 🚨 CRITICAL: For NEWS - PRESERVE existing excerpt and fullContent
-    if (type === 'news') {
-      // Map excerpt from either excerpt or description
-      if (item.excerpt) {
-        newFormData.excerpt = item.excerpt;
-      } else if (item.description) {
-        newFormData.excerpt = item.description;
       }
       
-      // Map fullContent from either fullContent or content
-      if (item.fullContent) {
-        newFormData.fullContent = item.fullContent;
-      } else if (item.content) {
-        newFormData.fullContent = item.content;
+      // Map category
+      if (item.category) newFormData.category = item.category;
+      
+      // Map image
+      if (item.image) {
+        newFormData.image = item.image;
+        setImagePreview(item.image);
       }
       
-      // Map author
-      if (item.author) newFormData.author = item.author;
-    } 
-    // 🚨 CRITICAL: For EVENTS - PRESERVE existing description
-    else if (type === 'events') {
-      // Map description
-      if (item.description) {
-        newFormData.description = item.description;
-      } else if (item.excerpt) {
-        newFormData.description = item.excerpt;
+      // Map featured ONLY for events
+      if (type === 'events' && item.featured !== undefined) {
+        newFormData.featured = item.featured;
       }
       
-      // Map other event fields
-      if (item.time) newFormData.time = item.time;
-      if (item.location) newFormData.location = item.location;
-      if (item.speaker) newFormData.speaker = item.speaker;
-      if (item.attendees) newFormData.attendees = item.attendees;
-      if (item.type) newFormData.type = item.type;
+      // Map status
+      if (item.status) newFormData.status = item.status;
+      
+      // For NEWS - PRESERVE existing excerpt and fullContent
+      if (type === 'news') {
+        // Map excerpt from either excerpt or description
+        if (item.excerpt) {
+          newFormData.excerpt = item.excerpt;
+        } else if (item.description) {
+          newFormData.excerpt = item.description;
+        }
+        
+        // Map fullContent from either fullContent or content
+        if (item.fullContent) {
+          newFormData.fullContent = item.fullContent;
+        } else if (item.content) {
+          newFormData.fullContent = item.content;
+        }
+        
+        // Map author
+        if (item.author) newFormData.author = item.author;
+      } 
+      // For EVENTS - PRESERVE existing description
+      else if (type === 'events') {
+        // Map description
+        if (item.description) {
+          newFormData.description = item.description;
+        } else if (item.excerpt) {
+          newFormData.description = item.excerpt;
+        }
+        
+        // Map other event fields
+        if (item.time) newFormData.time = item.time;
+        if (item.location) newFormData.location = item.location;
+        if (item.speaker) newFormData.speaker = item.speaker;
+        if (item.attendees) newFormData.attendees = item.attendees;
+        if (item.type) newFormData.type = item.type;
+      }
+      
+      console.log('✅ Form data loaded (preserved existing content):', newFormData);
+      setFormData(newFormData);
     }
-    
-    console.log('✅ Form data loaded (preserved existing content):', newFormData);
-    setFormData(newFormData);
-  }
-}, [item, type]);
+  }, [item, type]);
 
   const categories = {
     news: [
@@ -874,420 +881,379 @@ useEffect(() => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-// Inside ModernItemModal component - add this state at the top with other useState declarations
-const [saving, setSaving] = useState(false);
-
-// Updated handleSubmit function:
-const handleSubmit = async (e) => {
-  e.preventDefault(); // CRITICAL: Prevents page refresh
-  
-  setSaving(true);
-  try {
-    console.log('📥 Saving form data:', formData);
-    console.log('📥 Editing item:', item);
-    
-    // Create FormData for multipart/form-data
-    const submitFormData = new FormData();
-    
-    // Append all form fields
-    Object.keys(formData).forEach(key => {
-      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
-        submitFormData.append(key, formData[key]);
-        console.log(`Appending ${key}:`, formData[key]);
-      }
+  // Local notification helper
+  const showNotification = (type, title, message) => {
+    setNotification({
+      open: true,
+      type,
+      title,
+      message
     });
     
-    // Handle image file if present (new file uploaded)
-    if (imageFile) {
-      submitFormData.append('image', imageFile);
-      console.log('Appending image file:', imageFile.name);
-    } else if (formData.image) {
-      // Keep existing image if no new file was uploaded
-      submitFormData.append('existingImage', formData.image);
-      console.log('Keeping existing image:', formData.image);
-    }
-    
-    // Get authentication headers
-    const authHeaders = getAuthHeaders();
-    
-    // Determine endpoint and method based on whether we're editing or creating
-    const endpoint = item?.id 
-      ? (type === 'news' ? `/api/news/${item.id}` : `/api/events/${item.id}`)
-      : (type === 'news' ? '/api/news' : '/api/events');
-    
-    const method = item?.id ? 'PUT' : 'POST';
-    
-    console.log(`📤 Sending ${method} request to ${endpoint}`);
-    
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        ...authHeaders,
-        // Don't set Content-Type - browser will set it with boundary for FormData
-      },
-      body: submitFormData,
-    });
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, open: false }));
+    }, 5000);
+  };
 
-    const result = await response.json();
-    console.log('✅ API Response:', result);
-
-    if (result.success) {
-      // Success - close modal and notify parent
-      onSave(result.data || result.item || result);
-      onClose();
-      
-      // Optional: Show success message
-      alert(item?.id ? 'Updated successfully!' : 'Created successfully!');
-    } else {
-      throw new Error(result.error || result.message || 'Save failed');
-    }
-  } catch (error) {
-    console.error('❌ Error saving:', error);
-    alert(`Save failed: ${error.message}`);
-  } finally {
-    setSaving(false);
-  }
-};
-
-// Add getAuthHeaders helper inside the component
-const getAuthHeaders = () => {
-  try {
-    // Check if we're in a browser environment
-    if (typeof window === 'undefined') return {};
-    
-    const adminToken = localStorage.getItem('admin_token');
-    const deviceToken = localStorage.getItem('device_token');
-    
-    const headers = {};
-    if (adminToken) headers['x-admin-token'] = adminToken;
-    if (deviceToken) headers['x-device-token'] = deviceToken;
-    
-    return headers;
-  } catch (error) {
-    console.error('Error getting auth headers:', error);
-    return {};
-  }
-};
-
-
-
-
-// Add this to your component to retry failed submissions
-const retryFailedSubmissions = async () => {
-  const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
-  
-  if (failedSubmissions.length === 0) {
-    showNotification('info', 'No Pending Items', 'No failed submissions to retry.');
-    return;
-  }
-  
-  // Check if online
-  if (!navigator.onLine) {
-    showNotification('error', 'Offline', 'Please check your network connection and try again.');
-    return;
-  }
-  
-  showNotification('info', 'Retrying', `Attempting to sync ${failedSubmissions.length} items...`);
-  
-  const successfulRetries = [];
-  
-  for (const submission of failedSubmissions) {
+  // Get auth headers
+  const getAuthHeaders = () => {
     try {
-      // Reconstruct FormData from stored object
-      const formData = new FormData();
+      if (typeof window === 'undefined') return {};
       
-      for (const [key, value] of Object.entries(submission.data)) {
-        if (value && typeof value === 'object' && value.type === 'file') {
-          // Reconstruct file from data URL
-          const response = await fetch(value.data);
-          const blob = await response.blob();
-          const file = new File([blob], value.name);
-          formData.append(key, file);
-        } else {
-          formData.append(key, value);
+      const adminToken = localStorage.getItem('admin_token');
+      const deviceToken = localStorage.getItem('device_token');
+      
+      const headers = {};
+      if (adminToken) headers['x-admin-token'] = adminToken;
+      if (deviceToken) headers['x-device-token'] = deviceToken;
+      
+      return headers;
+    } catch (error) {
+      console.error('Error getting auth headers:', error);
+      return {};
+    }
+  };
+
+  // 🔥 FIXED: Proper form submission with spinner and notification
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // 👈 CRITICAL - prevents page refresh
+    
+    setSaving(true); // Show spinner
+    
+    // Show saving notification
+    showNotification('info', 'Saving', `${item?.id ? 'Updating' : 'Creating'} ${type === 'news' ? 'news' : 'event'}...`);
+    
+    try {
+      console.log('📥 Form data to save:', formData);
+      
+      // Create FormData for multipart/form-data
+      const submitFormData = new FormData();
+      
+      // Append all form fields
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+          submitFormData.append(key, formData[key]);
+          console.log(`Appending ${key}:`, formData[key]);
         }
-      }
-      
-      // Retry the submission
-      const endpoint = submission.isEdit 
-        ? (submission.type === 'news' ? `/api/news/${submission.itemId}` : `/api/events/${submission.itemId}`)
-        : (submission.type === 'news' ? '/api/news' : '/api/events');
-      
-      const method = submission.isEdit ? 'PUT' : 'POST';
-      const authHeaders = getAuthHeaders();
-      
-      const response = await fetch(endpoint, {
-        method,
-        headers: { ...authHeaders },
-        body: formData,
       });
       
-      const result = await response.json();
+      // Handle image
+      if (imageFile) {
+        // New image uploaded
+        submitFormData.append('image', imageFile);
+        console.log('Appending new image file:', imageFile.name);
+      } else if (formData.image && !imageFile) {
+        // Keep existing image - send as string
+        submitFormData.append('image', formData.image);
+        console.log('Keeping existing image:', formData.image);
+      }
       
+      // Get authentication headers
+      const authHeaders = getAuthHeaders();
+      
+      // Determine endpoint
+      const endpoint = item?.id 
+        ? (type === 'news' ? `/api/news/${item.id}` : `/api/events/${item.id}`)
+        : (type === 'news' ? '/api/news' : '/api/events');
+      
+      const method = item?.id ? 'PUT' : 'POST';
+      
+      console.log(`📤 Sending ${method} request to ${endpoint}`);
+      
+      // Make the API call
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          ...authHeaders,
+          // Don't set Content-Type - browser will set it with boundary
+        },
+        body: submitFormData,
+      });
+
+      const result = await response.json();
+      console.log('✅ API Response:', result);
+
       if (result.success) {
-        successfulRetries.push(submission.id);
+        // Success notification
+        showNotification(
+          'success', 
+          item?.id ? 'Updated!' : 'Created!', 
+          `${type === 'news' ? 'News' : 'Event'} ${item?.id ? 'updated' : 'created'} successfully!`
+        );
+        
+        // Call onSave with the result
+        onSave(result.data || result.item || result);
+        
+        // Close modal after short delay to show success message
+        setTimeout(() => {
+          onClose();
+        }, 1000);
+      } else {
+        throw new Error(result.error || result.message || 'Save failed');
       }
     } catch (error) {
-      console.error('Retry failed:', error);
+      console.error('❌ Error saving:', error);
+      
+      // Error notification
+      showNotification(
+        'error', 
+        'Save Failed', 
+        error.message || `Failed to ${item?.id ? 'update' : 'create'} ${type}`
+      );
+    } finally {
+      setSaving(false); // Hide spinner
     }
-  }
-  
-  // Remove successful retries from localStorage
-  if (successfulRetries.length > 0) {
-    const remaining = failedSubmissions.filter(s => !successfulRetries.includes(s.id));
-    localStorage.setItem('failedSubmissions', JSON.stringify(remaining));
-    
-    await fetchData(); // Refresh data
-    showNotification('success', 'Sync Complete', `${successfulRetries.length} items synced successfully.`);
-  }
-};
-
-// Add network status listener
-useEffect(() => {
-  const handleOnline = () => {
-    showNotification('info', 'Back Online', 'Network connection restored. Syncing pending items...');
-    retryFailedSubmissions();
   };
-  
-  window.addEventListener('online', handleOnline);
-  
-  return () => {
-    window.removeEventListener('online', handleOnline);
-  };
-}, []);
-
-
 
   const themeGradient = type === 'news' 
     ? 'from-purple-700 via-pink-600 to-rose-600' 
     : 'from-blue-700 via-cyan-600 to-teal-600';
 
   return (
-    <Modal open={true} onClose={loading ? undefined : onClose}>
-      <Box sx={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '95%', maxWidth: '1100px', maxHeight: '95vh',
-        bgcolor: '#ffffff', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-        overflow: 'hidden', outline: 'none'
-      }}>
-        
-        {/* Header */}
-        <div className={`p-8 text-white bg-gradient-to-r ${themeGradient}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-5">
-              <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
-                {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
+    <>
+      {/* Local Notification */}
+      <Notification
+        open={notification.open}
+        onClose={() => setNotification({ ...notification, open: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
+
+      <Modal open={true} onClose={saving ? undefined : onClose}>
+        <Box sx={{
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '95%', maxWidth: '1100px', maxHeight: '95vh',
+          bgcolor: '#ffffff', borderRadius: '2rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+          overflow: 'hidden', outline: 'none'
+        }}>
+          
+          {/* Header */}
+          <div className={`p-8 text-white bg-gradient-to-r ${themeGradient}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-5">
+                <div className="p-4 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30 shadow-xl">
+                  {type === 'news' ? <IoNewspaperOutline size={32} /> : <IoCalendarClearOutline size={32} />}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
+                    {item ? `EDITING: ${item.title?.substring(0, 30)}${item.title?.length > 30 ? '...' : ''}` : `CREATE NEW ${type.toUpperCase()}`}
+                  </h2>
+                  <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
+                    {item ? 'Edit existing content' : 'Add new content'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">
-                  {item ? `EDITING: ${item.title?.substring(0, 30)}${item.title?.length > 30 ? '...' : ''}` : `CREATE NEW ${type.toUpperCase()}`}
-                </h2>
-                <p className="text-white/80 font-bold text-xs mt-1 tracking-widest uppercase">
-                  {item ? 'Edit existing content' : 'Add new content'}
-                </p>
-              </div>
+              {!saving && (
+                <button onClick={onClose} className="p-3 bg-black/10 hover:bg-black/20 rounded-full transition-all active:scale-90">
+                  <FiX size={24} />
+                </button>
+              )}
             </div>
-            {!loading && (
-              <button onClick={onClose} className="p-3 bg-black/10 hover:bg-black/20 rounded-full transition-all active:scale-90">
-                <FiX size={24} />
-              </button>
-            )}
           </div>
-        </div>
 
-        <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
-          <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
-            
-            {/* Title Input */}
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400 shrink-0">
-                <FiStar className="text-amber-500 text-xs" />
-                Headline
-              </label>
-
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) => handleChange("title", e.target.value)}
-                className="
-                  flex-1
-                  px-4 py-3
-                  bg-transparent
-                  border border-slate-300
-                  rounded-lg
-                  focus:border-purple-500
-                  focus:ring-1 focus:ring-purple-500
-                  transition
-                  text-lg sm:text-xl
-                  font-semibold
-                  text-slate-900
-                  placeholder:text-slate-400
-                  outline-none
-                "
-                placeholder="Enter a catchy title..."
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              {/* Left Column - Visuals & Media */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="relative group">
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
-                    Featured Media {formData.image && '(Existing image loaded)'}
-                  </label>
-                  <div className="relative aspect-video sm:aspect-square rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
-                    {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
-                         <FiImage size={48} className="opacity-20" />
-                         <span className="text-[10px] font-bold">NO IMAGE SELECTED</span>
-                      </div>
-                    )}
-                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
-                      <FiUpload size={30} />
-                      <span className="font-black text-xs mt-2 uppercase tracking-widest">Change Photo</span>
-                      <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-
-                {/* Featured Toggle */}
-{type === 'events' && (
-  <div 
-    onClick={() => handleChange('featured', !formData.featured)}
-    className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-      formData.featured ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:border-slate-200'
-    }`}
-  >
-    <div>
-      <p className={`font-black text-sm uppercase ${formData.featured ? 'text-amber-700' : 'text-slate-700'}`}>Promote to Featured</p>
-      <p className="text-[10px] text-slate-400 font-bold uppercase">Displays in homepage slider</p>
-    </div>
-    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.featured ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
-      <FiStar />
-    </div>
-  </div>
-)}
-              </div>
-
-              {/* Right Column - Form Fields */}
-              <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                
-                {/* Category Selection */}
-                <div className="sm:col-span-1">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => handleChange('category', e.target.value)}
-                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all"
-                  >
-                    {categories[type].map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
-                  </select>
-                </div>
-
-                {/* Date Input */}
-                <div className="sm:col-span-1">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Scheduled Date</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleChange('date', e.target.value)}
-                    className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all"
-                  />
-                </div>
-
-                {/* Type-specific fields */}
-                {type === 'events' ? (
-                  <>
-                    <div className="sm:col-span-1">
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Event Time</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 08:00 AM - 04:00 PM"
-                        value={formData.time}
-                        onChange={(e) => handleChange('time', e.target.value)}
-                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
-                      />
-                    </div>
-                    <div className="sm:col-span-1">
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Venue / Location</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. School Main Hall"
-                        value={formData.location}
-                        onChange={(e) => handleChange('location', e.target.value)}
-                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Article Author</label>
-                    <input
-                      type="text"
-                      value={formData.author}
-                      onChange={(e) => handleChange('author', e.target.value)}
-                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all"
-                    />
-                  </div>
-                )}
-
-                {/* Long Text Areas */}
-                <div className="sm:col-span-2 space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">
-                      {type === 'news' ? 'Excerpt (Short Description)' : 'Description'}
-                    </label>
-                    <textarea
-                      rows="8"
-                      value={type === 'news' ? formData.excerpt : formData.description}
-                      onChange={(e) => handleChange(type === 'news' ? 'excerpt' : 'description', e.target.value)}
-                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all placeholder:text-slate-300"
-                      placeholder={type === 'news' ? 'Write a brief summary of this news article...' : 'Write a brief description...'}
-                    />
-                  </div>
-        
-                </div>
-              </div>
-            </div>
-
-            {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-10 border-t border-slate-100">
-              <button 
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                className="w-full sm:w-auto px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all active:scale-95"
-              >
-                Cancel Changes
-              </button>
+          <div className="max-h-[calc(95vh-160px)] overflow-y-auto bg-slate-50/50">
+            <form onSubmit={handleSubmit} className="p-8 sm:p-12 space-y-10">
               
-<button 
-  type="submit"
-  disabled={loading}
+              {/* Title Input */}
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.25em] text-slate-400 shrink-0">
+                  <FiStar className="text-amber-500 text-xs" />
+                  Headline
+                </label>
 
-  // Removed hover:brightness-110 and transition-all
-  className={`w-full sm:w-auto px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active:scale-95 flex items-center justify-center gap-3 bg-gradient-to-r ${themeGradient} ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
->
-  {loading ? (
-    <>
-      <CircularProgress size={18} thickness={6} sx={{ color: 'white' }} />
-      <span>Saving updates...</span> {/* Fixed: Wrapped text in a tag */}
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  disabled={saving}
+                  className="
+                    flex-1
+                    px-4 py-3
+                    bg-transparent
+                    border border-slate-300
+                    rounded-lg
+                    focus:border-purple-500
+                    focus:ring-1 focus:ring-purple-500
+                    transition
+                    text-lg sm:text-xl
+                    font-semibold
+                    text-slate-900
+                    placeholder:text-slate-400
+                    outline-none
+                    disabled:opacity-50
+                  "
+                  placeholder="Enter a catchy title..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Left Column - Visuals & Media */}
+                <div className="lg:col-span-4 space-y-8">
+                  <div className="relative group">
+                    <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
+                      Featured Media {formData.image && '(Existing image loaded)'}
+                    </label>
+                    <div className="relative aspect-video sm:aspect-square rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-200">
+                      {imagePreview ? (
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                           <FiImage size={48} className="opacity-20" />
+                           <span className="text-[10px] font-bold">NO IMAGE SELECTED</span>
+                        </div>
+                      )}
+                      {!saving && (
+                        <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
+                          <FiUpload size={30} />
+                          <span className="font-black text-xs mt-2 uppercase tracking-widest">Change Photo</span>
+                          <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" disabled={saving} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Featured Toggle - Only for Events */}
+                  {type === 'events' && (
+                    <div 
+                      onClick={() => !saving && handleChange('featured', !formData.featured)}
+                      className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                        formData.featured ? 'bg-amber-50 border-amber-200' : 'bg-white border-slate-100 hover:border-slate-200'
+                      } ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div>
+                        <p className={`font-black text-sm uppercase ${formData.featured ? 'text-amber-700' : 'text-slate-700'}`}>Promote to Featured</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Displays in homepage slider</p>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${formData.featured ? 'bg-amber-500 text-white' : 'bg-slate-100'}`}>
+                        <FiStar />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column - Form Fields */}
+                <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  
+                  {/* Category Selection */}
+                  <div className="sm:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => handleChange('category', e.target.value)}
+                      disabled={saving}
+                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all disabled:opacity-50"
+                    >
+                      {categories[type].map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Date Input */}
+                  <div className="sm:col-span-1">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Scheduled Date</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => handleChange('date', e.target.value)}
+                      disabled={saving}
+                      className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Type-specific fields */}
+                  {type === 'events' ? (
+                    <>
+                      <div className="sm:col-span-1">
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Event Time</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 08:00 AM - 04:00 PM"
+                          value={formData.time}
+                          onChange={(e) => handleChange('time', e.target.value)}
+                          disabled={saving}
+                          className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300 disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="sm:col-span-1">
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Venue / Location</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. School Main Hall"
+                          value={formData.location}
+                          onChange={(e) => handleChange('location', e.target.value)}
+                          disabled={saving}
+                          className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300 disabled:opacity-50"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Article Author</label>
+                      <input
+                        type="text"
+                        value={formData.author}
+                        onChange={(e) => handleChange('author', e.target.value)}
+                        disabled={saving}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-black text-slate-800 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all disabled:opacity-50"
+                      />
+                    </div>
+                  )}
+
+                  {/* Long Text Areas */}
+                  <div className="sm:col-span-2 space-y-6">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-2 ml-1">
+                        {type === 'news' ? 'Excerpt (Short Description)' : 'Description'}
+                      </label>
+                      <textarea
+                        rows="8"
+                        value={type === 'news' ? formData.excerpt : formData.description}
+                        onChange={(e) => handleChange(type === 'news' ? 'excerpt' : 'description', e.target.value)}
+                        disabled={saving}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl px-5 py-4 font-bold text-slate-700 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all placeholder:text-slate-300 disabled:opacity-50"
+                        placeholder={type === 'news' ? 'Write a brief summary of this news article...' : 'Write a brief description...'}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-10 border-t border-slate-100">
+                <button 
+                  type="button"
+                  onClick={onClose}
+                  disabled={saving}
+                  className="w-full sm:w-auto px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel Changes
+                </button>
+                
+                <button 
+                  type="submit"
+                  disabled={saving}
+                  className={`w-full sm:w-auto px-12 py-4 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl active:scale-95 flex items-center justify-center gap-3 bg-gradient-to-r ${themeGradient} ${saving ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {saving ? (
+                    <>
+                      <CircularProgress size={18} thickness={6} sx={{ color: 'white' }} />
+                      <span>Saving {type === 'news' ? 'News' : 'Event'}...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck size={18} />
+                      {item ? 'Save Updates' : `Create ${type === 'news' ? 'News' : 'Event'}`}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </Box>
+      </Modal>
     </>
-  ) : (
-    <>
-      <FiCheck size={18} />
-      {item ? 'Save Updates' : `Create ${type === 'news' ? 'News' : 'Event'}`}
-    </>
-  )}
-</button>
-            </div>
-          </form>
-        </div>
-      </Box>
-    </Modal>
   );
 }
 // Helper function to get authentication headers from localStorage
