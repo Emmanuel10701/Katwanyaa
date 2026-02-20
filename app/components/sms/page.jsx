@@ -276,7 +276,8 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
   );
 };
 
-// Campaign Card Component
+// Update the SmsCampaignCard component to properly handle both statuses
+
 const SmsCampaignCard = ({
   campaign,
   isSelected,
@@ -287,6 +288,7 @@ const SmsCampaignCard = ({
   onDelete,
   loadingStates = {},
 }) => {
+  // Safely get recipient count
   const recipientCount = campaign.recipients ? campaign.recipients.split(",").length : 0;
 
   const getStatusBadge = (status) => {
@@ -298,6 +300,7 @@ const SmsCampaignCard = ({
         </span>
       );
     }
+    // This handles both "draft" and any other status as draft
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 shadow-sm">
         <Clock className="w-3.5 h-3.5" />
@@ -326,7 +329,9 @@ const SmsCampaignCard = ({
           ? "border-blue-600 bg-blue-50/40 shadow-xl shadow-blue-200 ring-2 ring-blue-500/20"
           : campaign.lowCreditSaved
           ? "border-amber-400 bg-amber-50/20 shadow-lg shadow-amber-100 hover:border-amber-500"
-          : "border-blue-400 bg-white shadow-lg shadow-slate-200 hover:border-blue-500 hover:shadow-xl"
+          : campaign.status === "sent"
+          ? "border-emerald-400 bg-white shadow-lg shadow-slate-200 hover:border-emerald-500"
+          : "border-blue-400 bg-white shadow-lg shadow-slate-200 hover:border-blue-500"
       }`}
     >
       <div className={`absolute top-0 left-0 w-1.5 h-full ${
@@ -355,7 +360,8 @@ const SmsCampaignCard = ({
               )}
             </button>
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transform lg:-rotate-3 group-hover:rotate-0 transition-all duration-500 ${
-              campaign.lowCreditSaved ? 'bg-amber-600' : 'bg-slate-900'
+              campaign.lowCreditSaved ? 'bg-amber-600' : 
+              campaign.status === "sent" ? 'bg-emerald-600' : 'bg-slate-900'
             }`}>
               <Smartphone className="text-white w-6 h-6" />
             </div>
@@ -417,10 +423,12 @@ const SmsCampaignCard = ({
 
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 col-span-2 md:col-span-1 flex items-center justify-between md:block">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">Delivery Date</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 mb-1">
+                    {campaign.status === "sent" ? "Sent Date" : "Created Date"}
+                  </span>
                   <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    {formatDate(campaign.sentAt || campaign.createdAt)}
+                    {formatDate(campaign.status === "sent" ? campaign.sentAt : campaign.createdAt)}
                   </div>
                 </div>
               </div>
@@ -932,31 +940,26 @@ useEffect(() => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const updateStats = (campaignsList) => {
-    const newStats = {
-      total: campaignsList.length,
-      draft: 0,
-      sent: 0,
-      totalRecipients: 0,
-      successRate: 0,
-      lowCreditDrafts: 0,
-    };
-    campaignsList.forEach((campaign) => {
-      if (campaign.status === "draft") {
-        newStats.draft++;
-        if (campaign.lowCreditSaved) newStats.lowCreditDrafts++;
-      }
-      if (campaign.status === "sent") newStats.sent++;
-      const count = campaign.recipients ? campaign.recipients.split(",").length : 0;
-      newStats.totalRecipients += count;
-      if (campaign.successRate) newStats.successRate += campaign.successRate;
-    });
-    if (newStats.sent > 0) {
-      newStats.successRate = Math.round(newStats.successRate / newStats.sent);
-    }
-    setStats(newStats);
+// Update the stats calculation in fetchData
+const updateStats = (campaignsList) => {
+  const newStats = {
+    total: campaignsList.length,
+    draft: campaignsList.filter(c => c.status === 'draft').length,
+    sent: campaignsList.filter(c => c.status === 'sent').length,
+    totalRecipients: campaignsList.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
+    successRate: 0,
+    lowCreditDrafts: campaignsList.filter(c => c.status === 'draft' && c.lowCreditSaved).length,
   };
+  
+  // Calculate average success rate for sent campaigns
+  const sentCampaigns = campaignsList.filter(c => c.status === 'sent');
+  if (sentCampaigns.length > 0) {
+    const totalSuccessRate = sentCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
+    newStats.successRate = Math.round(totalSuccessRate / sentCampaigns.length);
+  }
+  
+  setStats(newStats);
+};
 
   // ========== Authentication ==========
 

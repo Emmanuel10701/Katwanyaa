@@ -234,15 +234,18 @@ export async function GET(req) {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const skip = (page - 1) * limit;
     
+    // Get all campaigns including drafts
     const [totalCount, campaigns] = await Promise.all([
       prisma.smsCampaign.count({ where }),
       prisma.smsCampaign.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" }, // Show newest first
       })
     ]);
+    
+    console.log(`📊 Found ${campaigns.length} campaigns (${campaigns.filter(c => c.status === 'draft').length} drafts, ${campaigns.filter(c => c.status === 'sent').length} sent)`);
     
     const formattedCampaigns = campaigns.map(campaign => {
       const recipientCount = campaign.recipients ? campaign.recipients.split(',').length : 0;
@@ -257,13 +260,13 @@ export async function GET(req) {
         recipientCount,
         recipientType: campaign.recipientType || 'all',
         recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-        status: campaign.status,
+        status: campaign.status, // This will be 'draft' or 'sent'
         sentAt: campaign.sentAt,
         sentCount: campaign.sentCount,
         failedCount: campaign.failedCount,
         createdAt: campaign.createdAt,
         updatedAt: campaign.updatedAt,
-        lowCreditSaved: campaign.lowCreditSaved || false, // NEW FIELD
+        lowCreditSaved: campaign.lowCreditSaved || false,
         successRate: campaign.sentCount && recipientCount > 0 
           ? Math.round((campaign.sentCount / recipientCount) * 100)
           : 0
@@ -277,7 +280,7 @@ export async function GET(req) {
       totalRecipients: formattedCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
       draftCampaigns: formattedCampaigns.filter(c => c.status === 'draft').length,
       sentCampaigns: formattedCampaigns.filter(c => c.status === 'sent').length,
-      lowCreditDrafts: formattedCampaigns.filter(c => c.status === 'draft' && c.lowCreditSaved).length, // NEW
+      lowCreditDrafts: formattedCampaigns.filter(c => c.status === 'draft' && c.lowCreditSaved).length,
       averageSuccessRate: formattedCampaigns.length > 0
         ? Math.round(formattedCampaigns.reduce((sum, c) => sum + c.successRate, 0) / formattedCampaigns.length)
         : 0
