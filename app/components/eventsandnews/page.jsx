@@ -875,7 +875,9 @@ useEffect(() => {
   };
 
   // 🔥 FIXED: Proper form submission with ALL data
-const handleSubmit = async (formData, id) => {
+// 🔥 FIXED: Add e.preventDefault() to prevent page refresh
+const handleSubmit = async (e) => {
+  e.preventDefault(); // 👈 THIS IS CRITICAL - prevents page refresh
   setSaving(true);
   try {
     console.log('📥 Received from modal:', formData);
@@ -1603,7 +1605,9 @@ const confirmDelete = async () => {
   }
 };
 
-const handleSubmit = async (formData, id) => {
+// 🔥 FIXED: Add e.preventDefault() to prevent page refresh
+const handleSubmit = async (e) => {
+  e.preventDefault(); // 👈 THIS IS CRITICAL - prevents page refresh
   setSaving(true);
   try {
     console.log('📥 Received from modal:', formData);
@@ -1666,10 +1670,8 @@ const handleSubmit = async (formData, id) => {
     console.log('✅ API Response:', result);
 
     if (result.success) {
-      // 🚨 AUTO-CLOSE MODAL on success
+      // ✅ SUCCESS: Close modal and refresh
       setShowModal(false);
-      
-      // 🚨 Refresh data
       await fetchData();
       
       showNotification(
@@ -1682,11 +1684,78 @@ const handleSubmit = async (formData, id) => {
     }
   } catch (error) {
     console.error(`Error saving ${activeSection}:`, error);
-    showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+    
+    // 🔥 CHECK FOR NETWORK ERRORS
+    const isNetworkError = !navigator.onLine || 
+                          error.message === 'Failed to fetch' || 
+                          error.message.includes('network') ||
+                          error.message.includes('NetworkError') ||
+                          error.name === 'TypeError'; // Common for network issues
+    
+    if (isNetworkError) {
+      console.log('🌐 Network error detected - saving to localStorage and keeping modal open');
+      
+      // Store the failed submission in localStorage
+      const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
+      
+      // Convert FormData to a plain object for storage
+      const formDataObj = {};
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          // Convert file to data URL for storage
+          const reader = new FileReader();
+          reader.readAsDataURL(value);
+          await new Promise((resolve) => {
+            reader.onload = () => {
+              formDataObj[key] = {
+                type: 'file',
+                name: value.name,
+                data: reader.result
+              };
+              resolve();
+            };
+          });
+        } else {
+          formDataObj[key] = value;
+        }
+      }
+      
+      // Store the submission with metadata
+      failedSubmissions.push({
+        id: Date.now(), // Unique ID for this failed submission
+        type: activeSection,
+        data: formDataObj,
+        isEdit: !!id,
+        itemId: id,
+        timestamp: new Date().toISOString(),
+        formData: formData // Keep reference to original FormData
+      });
+      
+      localStorage.setItem('failedSubmissions', JSON.stringify(failedSubmissions));
+      
+      // Show network error notification but KEEP MODAL OPEN
+      showNotification(
+        'error',
+        'Network Error',
+        'Failed to connect to server. Your data has been saved locally. Please check your connection and try again.'
+      );
+      
+      // DON'T close the modal - keep it open with all data
+      // DON'T clear formData
+      
+    } else {
+      // Other types of errors - still keep modal open to preserve data
+      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+    }
+    
+    // Always keep modal open on error
+    // setShowModal(false); ❌ REMOVE THIS - we want to keep the modal open
+    
   } finally {
     setSaving(false);
   }
 };
+
   useEffect(() => {
     const calculatedStats = {
       totalNews: news.length,
