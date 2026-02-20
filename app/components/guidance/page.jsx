@@ -1991,7 +1991,7 @@ const handleSubmit = async (e) => {
       ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
   }`}
-  placeholder="+1 (123) 456-7890"
+  placeholder="0707070707"
   disabled={isLoading}
   inputMode="tel"
 />
@@ -2017,7 +2017,7 @@ const handleSubmit = async (e) => {
                             ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
                             : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
                         }`}
-                        placeholder="member@university.edu"
+                        placeholder="katz@gmail.com"
                         disabled={isLoading}
                         inputMode="email"
                       />
