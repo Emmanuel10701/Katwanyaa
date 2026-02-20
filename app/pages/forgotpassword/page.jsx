@@ -1,42 +1,22 @@
 "use client";
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ShieldQuestion, LoaderCircle, CheckCircle, X } from 'lucide-react';
-
-const MessageBox = ({ message, type, onClose }) => {
-  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-  const icon = type === 'success' ? (
-    <CheckCircle size={24} />
-  ) : (
-    <X size={24} />
-  );
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={`fixed top-4 right-4 z-50 p-4 rounded-xl text-white shadow-lg flex items-center gap-3 ${bgColor}`}
-    >
-      {icon}
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-auto text-white opacity-70 hover:opacity-100">
-        <X size={20} />
-      </button>
-    </motion.div>
-  );
-};
+import { Mail, ShieldQuestion, LoaderCircle } from 'lucide-react';
+import { toast, Toaster } from 'sonner'; // Add this import
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [gmailEnabled, setGmailEnabled] = useState(false);
-  const [message, setMessage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
+
+    // Show loading toast
+    const loadingToast = toast.loading('Sending reset link...', {
+      position: 'top-right',
+    });
 
     try {
       const res = await fetch("/api/forgotpassword", {
@@ -48,14 +28,64 @@ const ForgotPasswordPage = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage({ type: "success", text: data.message });
+        // Dismiss loading and show success
+        toast.dismiss(loadingToast);
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-bold">✅ Reset Link Sent!</span>
+            <span className="text-sm opacity-90">{data.message}</span>
+          </div>,
+          {
+            duration: 5000,
+            icon: '📧',
+            position: 'top-right',
+            style: {
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+              border: 'none',
+            },
+          }
+        );
+        
         setEmail("");
         setGmailEnabled(true);
       } else {
-        setMessage({ type: "error", text: data.message });
+        // Dismiss loading and show error
+        toast.dismiss(loadingToast);
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-bold">❌ Failed to Send</span>
+            <span className="text-sm opacity-90">{data.message}</span>
+          </div>,
+          {
+            duration: 5000,
+            position: 'top-right',
+            style: {
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+              border: 'none',
+            },
+          }
+        );
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Failed to send reset link" });
+      // Dismiss loading and show error
+      toast.dismiss(loadingToast);
+      toast.error(
+        <div className="flex flex-col gap-1">
+          <span className="font-bold">❌ Network Error</span>
+          <span className="text-sm opacity-90">Failed to send reset link. Please try again.</span>
+        </div>,
+        {
+          duration: 5000,
+          position: 'top-right',
+          style: {
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            color: 'white',
+            border: 'none',
+          },
+        }
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -63,11 +93,29 @@ const ForgotPasswordPage = () => {
   };
 
   const handleGmailClick = () => {
-    window.location.href = `mailto:${email}`;
-  };
-
-  const handleCloseMessage = () => {
-    setMessage(null);
+    if (!email) {
+      toast.warning('Please enter your email first', {
+        position: 'top-right',
+        style: {
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          color: 'white',
+          border: 'none',
+        },
+      });
+      return;
+    }
+    
+    toast.info('Opening Gmail...', {
+      position: 'top-right',
+      duration: 2000,
+      style: {
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        color: 'white',
+        border: 'none',
+      },
+    });
+    
+    window.location.href = `https://mail.google.com/mail/u/0/#search/${encodeURIComponent(email)}`;
   };
 
   const containerVariants = {
@@ -79,6 +127,45 @@ const ForgotPasswordPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-indigo-900 text-white flex items-center justify-center p-3 sm:p-4">
+      {/* Add Toaster component */}
+      <Toaster 
+        position="top-right"
+        richColors
+        expand={true}
+        toastOptions={{
+          style: {
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+          success: {
+            style: {
+              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              color: 'white',
+            },
+          },
+          error: {
+            style: {
+              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+              color: 'white',
+            },
+          },
+          warning: {
+            style: {
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              color: 'white',
+            },
+          },
+          info: {
+            style: {
+              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              color: 'white',
+            },
+          },
+        }}
+      />
+
       <motion.div
         className="max-w-sm sm:max-w-md md:max-w-xl w-full mx-auto p-6 sm:p-8 md:p-10 backdrop-blur-lg bg-white/10 rounded-2xl sm:rounded-3xl shadow-2xl relative overflow-hidden transform-gpu"
         variants={containerVariants}
@@ -168,9 +255,6 @@ const ForgotPasswordPage = () => {
           </p>
         </motion.div>
       </motion.div>
-      <AnimatePresence>
-        {message && <MessageBox message={message.text} type={message.type} onClose={handleCloseMessage} />}
-      </AnimatePresence>
     </div>
   );
 };
