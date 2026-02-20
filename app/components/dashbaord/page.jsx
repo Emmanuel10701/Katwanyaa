@@ -524,16 +524,7 @@ const SmsOverviewCard = ({ smsStats, recentCampaigns }) => {
           )}
         </div>
       </div>
-      
-      {/* Quick Action */}
-      <div className="pt-4 border-t border-slate-100">
-        <button
-          onClick={() => window.location.href = '/pages/sms'}
-          className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:shadow-lg transition-all"
-        >
-          Manage SMS Campaigns
-        </button>
-      </div>
+    
     </div>
   );
 };
