@@ -2062,7 +2062,7 @@ const handleSubmit = async (e) => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 h-12 md:h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl md:rounded-2xl font-bold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 text-base md:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="flex-1 h-12 md:h-14 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl md:rounded-2xl font-bold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3 text-base md:text-lg shadow-lg hover:shadow-xl"
                   >
                     {isLoading ? (
                       <>
