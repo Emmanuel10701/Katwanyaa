@@ -141,6 +141,184 @@ if (!CELCOM_API_KEY || !CELCOM_PARTNER_ID || !CELCOM_SHORTCODE) {
 }
 
 // ====================================================================
+// BALANCE CHECK FUNCTION - NEW
+// ====================================================================
+async function checkCelcomBalance() {
+  try {
+    const response = await fetch("https://isms.celcomafrica.com/api/services/balance/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apikey: CELCOM_API_KEY,
+        partnerID: CELCOM_PARTNER_ID
+      })
+    });
+
+    const data = await response.json();
+    
+    // Parse balance from response
+    // Celcom returns something like: { "balance": "150.50" }
+    const balance = parseFloat(data.balance) || 0;
+    
+    return {
+      success: true,
+      balance: balance,
+      currency: "credits",
+      canSend: balance >= 1 // At least 1 credit needed per SMS
+    };
+  } catch (error) {
+    console.error("❌ Failed to check Celcom balance:", error);
+    return {
+      success: false,
+      balance: 0,
+      currency: "credits",
+      canSend: false,
+      error: error.message
+    };
+  }
+}
+
+// ====================================================================
+// NEW ENDPOINT: GET BALANCE
+// ====================================================================
+export async function GET(req) {
+  try {
+    const url = new URL(req.url);
+    const path = url.pathname.split('/').pop();
+    
+    // Handle balance check endpoint
+    if (url.searchParams.has('balance') || path === 'balance') {
+      const auth = authenticateRequest(req);
+      if (!auth.authenticated) {
+        return auth.response;
+      }
+      
+      const balanceInfo = await checkCelcomBalance();
+      
+      return NextResponse.json({
+        success: true,
+        ...balanceInfo,
+        message: balanceInfo.canSend 
+          ? `Your balance is ${balanceInfo.balance} credits. You can send SMS.`
+          : `Insufficient credits. Current balance: ${balanceInfo.balance} credits. Please top up.`
+      });
+    }
+    
+    // ==================== GET ALL CAMPAIGNS ====================
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
+    }
+    
+    const searchParams = url.searchParams;
+    
+    const where = {};
+    
+    if (searchParams.has('status')) {
+      where.status = searchParams.get('status');
+    }
+    
+    if (searchParams.has('recipientType')) {
+      where.recipientType = searchParams.get('recipientType');
+    }
+    
+    if (searchParams.has('search')) {
+      const searchTerm = searchParams.get('search');
+      where.OR = [
+        { title: { contains: searchTerm, mode: 'insensitive' } },
+        { message: { contains: searchTerm, mode: 'insensitive' } },
+      ];
+    }
+    
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const skip = (page - 1) * limit;
+    
+    const [totalCount, campaigns] = await Promise.all([
+      prisma.smsCampaign.count({ where }),
+      prisma.smsCampaign.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      })
+    ]);
+    
+    const formattedCampaigns = campaigns.map(campaign => {
+      const recipientCount = campaign.recipients ? campaign.recipients.split(',').length : 0;
+      
+      return {
+        id: campaign.id,
+        title: campaign.title,
+        message: campaign.message.length > 100 
+          ? campaign.message.substring(0, 100) + '...' 
+          : campaign.message,
+        recipients: campaign.recipients,
+        recipientCount,
+        recipientType: campaign.recipientType || 'all',
+        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
+        status: campaign.status,
+        sentAt: campaign.sentAt,
+        sentCount: campaign.sentCount,
+        failedCount: campaign.failedCount,
+        createdAt: campaign.createdAt,
+        updatedAt: campaign.updatedAt,
+        lowCreditSaved: campaign.lowCreditSaved || false, // NEW FIELD
+        successRate: campaign.sentCount && recipientCount > 0 
+          ? Math.round((campaign.sentCount / recipientCount) * 100)
+          : 0
+      };
+    });
+    
+    const summary = {
+      totalCampaigns: totalCount,
+      sentMessages: formattedCampaigns.reduce((sum, c) => sum + (c.sentCount || 0), 0),
+      failedMessages: formattedCampaigns.reduce((sum, c) => sum + (c.failedCount || 0), 0),
+      totalRecipients: formattedCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
+      draftCampaigns: formattedCampaigns.filter(c => c.status === 'draft').length,
+      sentCampaigns: formattedCampaigns.filter(c => c.status === 'sent').length,
+      lowCreditDrafts: formattedCampaigns.filter(c => c.status === 'draft' && c.lowCreditSaved).length, // NEW
+      averageSuccessRate: formattedCampaigns.length > 0
+        ? Math.round(formattedCampaigns.reduce((sum, c) => sum + c.successRate, 0) / formattedCampaigns.length)
+        : 0
+    };
+    
+    return NextResponse.json({
+      success: true,
+      campaigns: formattedCampaigns,
+      summary,
+      senderInfo: {
+        id: CELCOM_SHORTCODE,
+        type: "shortcode"
+      },
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNextPage: page * limit < totalCount,
+        hasPreviousPage: page > 1
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=30',
+      }
+    });
+    
+  } catch (error) {
+    console.error("GET /api/sms Error:", error);
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message || "Failed to retrieve campaigns"
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// ====================================================================
 // HELPER FUNCTIONS
 // ====================================================================
 
@@ -157,7 +335,7 @@ function getRecipientTypeLabel(type) {
   return labels[type] || type;
 }
 
-// Validate phone numbers function (unchanged, already returns 254XXXXXXXXX)
+// Validate phone numbers function
 function validatePhoneNumbers(phoneNumbers) {
   const valid = [];
   const invalid = [];
@@ -190,7 +368,8 @@ function validatePhoneNumbers(phoneNumbers) {
 }
 
 /**
- * Send SMS campaign using Celcom Africa API (sendsms endpoint)
+ * Send SMS campaign using Celcom Africa API
+ * MODIFIED: Now returns detailed info about low credit
  */
 async function sendSmsCampaign(campaign) {
   const recipients = campaign.recipients.split(",").map(r => r.trim());
@@ -202,6 +381,10 @@ async function sendSmsCampaign(campaign) {
   console.log(`📱 Sending SMS with shortcode: "${CELCOM_SHORTCODE}" via Celcom Africa`);
 
   const BATCH_SIZE = 100;
+  let lowCreditDetected = false;
+  let currentBalance = 0;
+  let requiredCredit = 0;
+
   for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
     const batch = recipients.slice(i, i + BATCH_SIZE);
     try {
@@ -217,7 +400,6 @@ async function sendSmsCampaign(campaign) {
       };
 
       console.log(`📱 Sending batch ${Math.floor(i/BATCH_SIZE) + 1} to ${batch.length} numbers`);
-      console.log(`📱 Request body:`, JSON.stringify(requestBody, null, 2));
 
       const response = await fetch("https://isms.celcomafrica.com/api/services/sendsms/", {
         method: "POST",
@@ -232,13 +414,24 @@ async function sendSmsCampaign(campaign) {
         data.responses.forEach((item) => {
           const logEntry = {
             campaignId: campaign.id,
-            phoneNumber: item.mobile?.toString() || '', // FIXED: Convert to string
+            phoneNumber: item.mobile?.toString() || '',
             message,
             providerMessageId: item.messageid?.toString() || null,
             status: item["response-code"] === 200 ? "success" : "failed",
             errorMessage: item["response-description"] !== "Success" ? item["response-description"] : null,
           };
-          if (item["response-code"] === 200) {
+          
+          // Check for low credit (402)
+          if (item["response-code"] === 402) {
+            lowCreditDetected = true;
+            // Parse balance from error message
+            const balanceMatch = item["response-description"]?.match(/Current balance ([\d.]+)/);
+            const requiredMatch = item["response-description"]?.match(/Required ([\d.]+)/);
+            currentBalance = balanceMatch ? parseFloat(balanceMatch[1]) : 0;
+            requiredCredit = requiredMatch ? parseFloat(requiredMatch[1]) : 1;
+            
+            failed.push(logEntry);
+          } else if (item["response-code"] === 200) {
             sent.push(logEntry);
           } else {
             failed.push(logEntry);
@@ -249,7 +442,7 @@ async function sendSmsCampaign(campaign) {
         batch.forEach((phone) => {
           failed.push({
             campaignId: campaign.id,
-            phoneNumber: phone.toString(), // FIXED: Convert to string
+            phoneNumber: phone.toString(),
             message,
             providerMessageId: null,
             status: "failed",
@@ -262,7 +455,7 @@ async function sendSmsCampaign(campaign) {
       batch.forEach((phone) => {
         failed.push({
           campaignId: campaign.id,
-          phoneNumber: phone.toString(), // FIXED: Convert to string
+          phoneNumber: phone.toString(),
           message,
           providerMessageId: null,
           status: "failed",
@@ -291,10 +484,19 @@ async function sendSmsCampaign(campaign) {
     successRate: recipients.length > 0 ? Math.round((sent.length / recipients.length) * 100) : 0,
   };
 
-  return { sent, failed, summary };
+  return { 
+    sent, 
+    failed, 
+    summary,
+    lowCreditDetected,
+    currentBalance,
+    requiredCredit
+  };
 }
+
 // ====================================================================
-// POST HANDLER - Create a new SMS campaign with idempotency support
+// POST HANDLER - Create a new SMS campaign
+// MODIFIED: Auto-draft when low credit
 // ====================================================================
 export async function POST(req) {
   try {
@@ -323,6 +525,7 @@ export async function POST(req) {
           sentAt: existingCampaign.sentAt,
           sentCount: existingCampaign.sentCount,
           failedCount: existingCampaign.failedCount,
+          lowCreditSaved: existingCampaign.lowCreditSaved || false,
           senderId: CELCOM_SHORTCODE,
           createdAt: existingCampaign.createdAt,
           updatedAt: existingCampaign.updatedAt,
@@ -394,7 +597,8 @@ export async function POST(req) {
       message,
       recipients: uniquePhones.join(", "),
       recipientType: recipientType || "all",
-      status,
+      status, // Will be updated if low credit detected
+      lowCreditSaved: false, // Initialize
       ...(status === "sent" && { sentAt: new Date() }),
     };
 
@@ -409,18 +613,74 @@ export async function POST(req) {
 
     // ==================== SMS SENDING ====================
     let smsResults = null;
+    let finalStatus = campaign.status;
+    let lowCreditSaved = false;
 
     if (status === "sent") {
       try {
-        smsResults = await sendSmsCampaign(campaign);
+        // Check balance first (optional but recommended)
+        const balanceInfo = await checkCelcomBalance();
         
-        await prisma.smsCampaign.update({
-          where: { id: campaign.id },
-          data: {
-            sentCount: smsResults.summary.successful,
-            failedCount: smsResults.summary.failed,
-          },
-        });
+        // If insufficient credit, auto-save as draft
+        if (!balanceInfo.canSend) {
+          console.log(`⚠️ Insufficient credit (${balanceInfo.balance}). Auto-saving as draft.`);
+          
+          await prisma.smsCampaign.update({
+            where: { id: campaign.id },
+            data: {
+              status: 'draft',
+              lowCreditSaved: true,
+              // Store balance info in metadata if you have a field
+            },
+          });
+          
+          finalStatus = 'draft';
+          lowCreditSaved = true;
+          
+          smsResults = {
+            lowCreditDetected: true,
+            currentBalance: balanceInfo.balance,
+            requiredCredit: 1,
+            summary: {
+              total: uniquePhones.length,
+              successful: 0,
+              failed: uniquePhones.length,
+              successRate: 0
+            }
+          };
+        } else {
+          // Sufficient credit, proceed with sending
+          smsResults = await sendSmsCampaign(campaign);
+          
+          // Check if low credit was detected during sending
+          if (smsResults.lowCreditDetected) {
+            // Update campaign to draft
+            await prisma.smsCampaign.update({
+              where: { id: campaign.id },
+              data: {
+                status: 'draft',
+                lowCreditSaved: true,
+                sentCount: smsResults.summary.successful,
+                failedCount: smsResults.summary.failed,
+              },
+            });
+            
+            finalStatus = 'draft';
+            lowCreditSaved = true;
+          } else {
+            // All good - update with sent counts
+            await prisma.smsCampaign.update({
+              where: { id: campaign.id },
+              data: {
+                sentCount: smsResults.summary.successful,
+                failedCount: smsResults.summary.failed,
+                lowCreditSaved: false,
+              },
+            });
+            
+            finalStatus = 'sent';
+          }
+        }
       } catch (smsError) {
         console.error("SMS sending failed:", smsError);
         
@@ -429,8 +689,12 @@ export async function POST(req) {
           data: {
             failedCount: uniquePhones.length,
             status: 'draft',
+            lowCreditSaved: true,
           },
         });
+        
+        finalStatus = 'draft';
+        lowCreditSaved = true;
         
         smsResults = {
           error: smsError.message,
@@ -454,23 +718,40 @@ export async function POST(req) {
       recipientCount: uniquePhones.length,
       recipientType: campaign.recipientType || 'all',
       recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-      status: campaign.status,
+      status: finalStatus,
       sentAt: campaign.sentAt,
-      sentCount: campaign.sentCount,
-      failedCount: campaign.failedCount,
+      sentCount: campaign.sentCount || 0,
+      failedCount: campaign.failedCount || 0,
+      lowCreditSaved: lowCreditSaved,
       senderId: CELCOM_SHORTCODE,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
     };
+
+    // Prepare appropriate message
+    let responseMessage = "";
+    if (status === "sent") {
+      if (lowCreditSaved) {
+        responseMessage = `⚠️ Campaign saved as draft due to low credit. Current balance: ${smsResults?.currentBalance || 'unknown'} credits. Please top up to send.`;
+      } else {
+        responseMessage = `✅ Campaign created and ${smsResults?.summary?.successful || 0} messages sent successfully`;
+      }
+    } else {
+      responseMessage = "Campaign saved as draft successfully";
+    }
 
     return NextResponse.json(
       {
         success: true,
         campaign: responseData,
         smsResults,
-        message: status === "sent"
-          ? `Campaign created and ${smsResults?.summary?.successful || 0} messages sent successfully`
-          : "Campaign saved as draft successfully"
+        lowCreditInfo: lowCreditSaved ? {
+          detected: true,
+          currentBalance: smsResults?.currentBalance,
+          requiredCredit: smsResults?.requiredCredit || 1,
+          message: `Insufficient credits. Current: ${smsResults?.currentBalance}, Required: ${smsResults?.requiredCredit || 1} per message`
+        } : null,
+        message: responseMessage
       },
       { 
         status: 201,
@@ -509,112 +790,121 @@ export async function POST(req) {
 }
 
 // ====================================================================
-// GET HANDLER - Get all SMS campaigns with filtering
+// PATCH HANDLER - Update campaign status (for sending)
+// MODIFIED: Auto-draft when low credit
 // ====================================================================
-export async function GET(req) {
+export async function PATCH(req, { params }) {
   try {
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
-    
-    const where = {};
-    
-    if (searchParams.has('status')) {
-      where.status = searchParams.get('status');
+    const auth = authenticateRequest(req);
+    if (!auth.authenticated) {
+      return auth.response;
     }
-    
-    if (searchParams.has('recipientType')) {
-      where.recipientType = searchParams.get('recipientType');
+
+    const { id } = params;
+    const { status } = await req.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Campaign ID is required" },
+        { status: 400 }
+      );
     }
-    
-    if (searchParams.has('search')) {
-      const searchTerm = searchParams.get('search');
-      where.OR = [
-        { title: { contains: searchTerm, mode: 'insensitive' } },
-        { message: { contains: searchTerm, mode: 'insensitive' } },
-      ];
-    }
-    
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
-    const skip = (page - 1) * limit;
-    
-    const [totalCount, campaigns] = await Promise.all([
-      prisma.smsCampaign.count({ where }),
-      prisma.smsCampaign.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      })
-    ]);
-    
-    const formattedCampaigns = campaigns.map(campaign => {
-      const recipientCount = campaign.recipients ? campaign.recipients.split(',').length : 0;
-      
-      return {
-        id: campaign.id,
-        title: campaign.title,
-        message: campaign.message.length > 100 
-          ? campaign.message.substring(0, 100) + '...' 
-          : campaign.message,
-        recipients: campaign.recipients,
-        recipientCount,
-        recipientType: campaign.recipientType || 'all',
-        recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-        status: campaign.status,
-        sentAt: campaign.sentAt,
-        sentCount: campaign.sentCount,
-        failedCount: campaign.failedCount,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-        successRate: campaign.sentCount && recipientCount > 0 
-          ? Math.round((campaign.sentCount / recipientCount) * 100)
-          : 0
-      };
+
+    const campaign = await prisma.smsCampaign.findUnique({
+      where: { id }
     });
-    
-    const summary = {
-      totalCampaigns: totalCount,
-      sentMessages: formattedCampaigns.reduce((sum, c) => sum + (c.sentCount || 0), 0),
-      failedMessages: formattedCampaigns.reduce((sum, c) => sum + (c.failedCount || 0), 0),
-      totalRecipients: formattedCampaigns.reduce((sum, c) => sum + (c.recipientCount || 0), 0),
-      draftCampaigns: formattedCampaigns.filter(c => c.status === 'draft').length,
-      sentCampaigns: formattedCampaigns.filter(c => c.status === 'sent').length,
-      averageSuccessRate: formattedCampaigns.length > 0
-        ? Math.round(formattedCampaigns.reduce((sum, c) => sum + c.successRate, 0) / formattedCampaigns.length)
-        : 0
-    };
-    
+
+    if (!campaign) {
+      return NextResponse.json(
+        { success: false, error: "Campaign not found" },
+        { status: 404 }
+      );
+    }
+
+    // If changing to "sent", attempt to send SMS
+    if (status === "sent" && campaign.status !== "sent") {
+      // Check balance first
+      const balanceInfo = await checkCelcomBalance();
+      
+      if (!balanceInfo.canSend) {
+        return NextResponse.json({
+          success: false,
+          error: "INSUFFICIENT_CREDIT",
+          message: `Cannot send SMS. Current balance: ${balanceInfo.balance} credits. At least 1 credit required per message.`,
+          balance: balanceInfo.balance,
+          requiredCredit: 1,
+          autoSavedAsDraft: true,
+          campaign: {
+            ...campaign,
+            status: 'draft',
+            lowCreditSaved: true
+          }
+        }, { status: 402 }); // 402 Payment Required
+      }
+
+      const smsResults = await sendSmsCampaign(campaign);
+      
+      // Check if low credit was detected during sending
+      if (smsResults.lowCreditDetected) {
+        // Update as draft with low credit flag
+        const updatedCampaign = await prisma.smsCampaign.update({
+          where: { id },
+          data: {
+            status: 'draft',
+            lowCreditSaved: true,
+            sentCount: smsResults.summary.successful,
+            failedCount: smsResults.summary.failed,
+          }
+        });
+
+        return NextResponse.json({
+          success: false,
+          error: "INSUFFICIENT_CREDIT",
+          message: `Sending interrupted due to low credit. Current balance: ${smsResults.currentBalance}, Required: ${smsResults.requiredCredit} per message. Campaign saved as draft.`,
+          balance: smsResults.currentBalance,
+          requiredCredit: smsResults.requiredCredit,
+          autoSavedAsDraft: true,
+          campaign: updatedCampaign,
+          smsResults
+        }, { status: 402 });
+      }
+
+      // Update as sent with counts
+      const updatedCampaign = await prisma.smsCampaign.update({
+        where: { id },
+        data: {
+          status: 'sent',
+          sentAt: new Date(),
+          sentCount: smsResults.summary.successful,
+          failedCount: smsResults.summary.failed,
+          lowCreditSaved: false,
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        campaign: updatedCampaign,
+        smsResults,
+        message: `Campaign sent with ${smsResults.summary.successful} successful deliveries`
+      });
+    }
+
+    // For other status changes (e.g., draft -> draft, just update status)
+    const updatedCampaign = await prisma.smsCampaign.update({
+      where: { id },
+      data: { status }
+    });
+
     return NextResponse.json({
       success: true,
-      campaigns: formattedCampaigns,
-      summary,
-      senderInfo: {
-        id: CELCOM_SHORTCODE,
-        type: "shortcode"   // or "alphanumeric" depending on your shortcode
-      },
-      pagination: {
-        page,
-        limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        hasNextPage: page * limit < totalCount,
-        hasPreviousPage: page > 1
-      }
-    }, {
-      headers: {
-        'Cache-Control': 'public, max-age=60, stale-while-revalidate=30',
-      }
+      campaign: updatedCampaign,
+      message: `Campaign status updated to ${status}`
     });
-    
+
   } catch (error) {
-    console.error("GET /api/sms Error:", error);
-    
+    console.error("PATCH /api/sms Error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || "Failed to retrieve campaigns"
-      },
+      { success: false, error: error.message },
       { status: 500 }
     );
   }
