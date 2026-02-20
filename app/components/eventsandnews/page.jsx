@@ -1627,8 +1627,8 @@ const handleSubmit = async (formData, id) => {
    <button
   onClick={fetchData}
   className={`flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-              text-white px-5 py-3 rounded-2xl font-semibold shadow-lg 
-              hover:scale-105 hover:shadow-xl transition-transform duration-300
+              text-white px-10 py-3 rounded-2xl font-semibold shadow-lg 
+               hover:shadow-xl transition-transform duration-300
               cursor-pointer text-sm`}
 >
   {/* Loading spinner */}
@@ -1636,10 +1636,10 @@ const handleSubmit = async (formData, id) => {
     <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
   )}
   
-  {loading ? 'Refreshing...' : 'Refresh'}
+  {loading ? 'Refreshing...' : 'Refresh updates'}
 </button>
 
-            <button onClick={handleCreate} className={`flex items-center gap-2 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm ${
+            <button onClick={handleCreate} className={`flex items-center gap-2 text-white px-10 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm ${
               activeSection === 'news' 
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
                 : 'bg-gradient-to-r from-blue-600 to-cyan-600'
