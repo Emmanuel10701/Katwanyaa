@@ -253,6 +253,9 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
                 Current: {balance.balance} credits<br />
                 Required: 1 credit per SMS
               </p>
+              <h4>
+                call them on <a href="tel:+254700000000" className="text-amber-600 font-bold hover:text-amber-800">+254 700 000 000</a> or top up via the link below.
+              </h4>
               <a
                 href="https://celcomafrica.com/till-paybill-sms"
                 target="_blank"
