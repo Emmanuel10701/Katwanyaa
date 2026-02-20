@@ -141,6 +141,42 @@ if (!CELCOM_API_KEY || !CELCOM_PARTNER_ID || !CELCOM_SHORTCODE) {
 }
 
 // ====================================================================
+// BALANCE CHECK FUNCTION
+// ====================================================================
+async function checkCelcomBalance() {
+  try {
+    const response = await fetch("https://isms.celcomafrica.com/api/services/balance/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apikey: CELCOM_API_KEY,
+        partnerID: CELCOM_PARTNER_ID
+      })
+    });
+
+    const data = await response.json();
+    
+    const balance = parseFloat(data.balance) || 0;
+    
+    return {
+      success: true,
+      balance: balance,
+      currency: "credits",
+      canSend: balance >= 1
+    };
+  } catch (error) {
+    console.error("❌ Failed to check Celcom balance:", error);
+    return {
+      success: false,
+      balance: 0,
+      currency: "credits",
+      canSend: false,
+      error: error.message
+    };
+  }
+}
+
+// ====================================================================
 // HELPER FUNCTIONS
 // ====================================================================
 
@@ -170,13 +206,9 @@ function validatePhoneNumbers(phoneNumbers) {
     const match = cleaned.match(regex);
     
     if (match) {
-      // Extract the subscriber number (7XXXXXXXX)
       const subscriberNumber = match[1];
-      
-      // Format to international format: 254 + subscriber number
       const formatted = '254' + subscriberNumber;
       
-      // Verify final length (should be 12 digits: 254 + 9 digits)
       if (formatted.length === 12) {
         valid.push(formatted);
       } else {
@@ -191,13 +223,15 @@ function validatePhoneNumbers(phoneNumbers) {
 }
 
 /**
- * Send SMS using Celcom Africa API
+ * Send SMS using Celcom Africa API with low credit detection
  */
 async function sendCelcomSms(campaignId, phoneNumbers, message) {
   const sent = [];
   const failed = [];
+  let lowCreditDetected = false;
+  let currentBalance = 0;
+  let requiredCredit = 0;
   
-  // Celcom accepts up to 100 numbers per request
   const BATCH_SIZE = 100;
   
   for (let i = 0; i < phoneNumbers.length; i += BATCH_SIZE) {
@@ -229,21 +263,29 @@ async function sendCelcomSms(campaignId, phoneNumbers, message) {
         data.responses.forEach((item) => {
           const logEntry = {
             campaignId: campaignId,
-            phoneNumber: item.mobile,
+            phoneNumber: item.mobile?.toString() || '',
             message,
             providerMessageId: item.messageid?.toString() || null,
             status: item["response-code"] === 200 ? "success" : "failed",
             errorMessage: item["response-description"] !== "Success" ? item["response-description"] : null,
           };
           
-          if (item["response-code"] === 200) {
+          // Check for low credit (402)
+          if (item["response-code"] === 402) {
+            lowCreditDetected = true;
+            const balanceMatch = item["response-description"]?.match(/Current balance ([\d.]+)/);
+            const requiredMatch = item["response-description"]?.match(/Required ([\d.]+)/);
+            currentBalance = balanceMatch ? parseFloat(balanceMatch[1]) : 0;
+            requiredCredit = requiredMatch ? parseFloat(requiredMatch[1]) : 1;
+            
+            failed.push(logEntry);
+          } else if (item["response-code"] === 200) {
             sent.push(logEntry);
           } else {
             failed.push(logEntry);
           }
         });
       } else {
-        // Unexpected response - mark all as failed
         batch.forEach(phone => {
           failed.push({
             campaignId,
@@ -270,20 +312,25 @@ async function sendCelcomSms(campaignId, phoneNumbers, message) {
       });
     }
     
-    // Delay between batches
     if (i + BATCH_SIZE < phoneNumbers.length) {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   
-  return { sent, failed };
+  return { 
+    sent, 
+    failed,
+    lowCreditDetected,
+    currentBalance,
+    requiredCredit
+  };
 }
 
 // ====================================================================
 // API HANDLERS
 // ====================================================================
 
-// 🔹 GET - Retrieve a specific campaign by ID (PUBLIC)
+// 🔹 GET - Retrieve a specific campaign by ID
 export async function GET(req, { params }) {
   try {
     const { id } = await params;
@@ -300,7 +347,7 @@ export async function GET(req, { params }) {
       include: {
         logs: {
           orderBy: { timestamp: 'desc' },
-          take: 100 // Limit logs for performance
+          take: 100
         }
       }
     });
@@ -326,6 +373,7 @@ export async function GET(req, { params }) {
       sentAt: campaign.sentAt,
       sentCount: campaign.sentCount,
       failedCount: campaign.failedCount,
+      lowCreditSaved: campaign.lowCreditSaved || false,
       logs: campaign.logs,
       createdAt: campaign.createdAt,
       updatedAt: campaign.updatedAt,
@@ -353,10 +401,9 @@ export async function GET(req, { params }) {
   }
 }
 
-// 🔹 PUT - Update an existing campaign (PROTECTED)
+// 🔹 PUT - Update an existing campaign
 export async function PUT(req, { params }) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(req);
     if (!auth.authenticated) {
       return auth.response;
@@ -364,7 +411,6 @@ export async function PUT(req, { params }) {
 
     console.log("✏️ PUT /api/sms/[id] - Updating SMS campaign");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    // ==================== END AUTHENTICATION ====================
 
     const { id } = await params;
     
@@ -378,7 +424,6 @@ export async function PUT(req, { params }) {
     const data = await req.json();
     const { title, message, recipients, recipientType, status } = data;
     
-    // Check if campaign exists
     const existingCampaign = await prisma.smsCampaign.findUnique({
       where: { id }
     });
@@ -390,7 +435,17 @@ export async function PUT(req, { params }) {
       );
     }
     
-    // Build update data
+    // Don't allow updating sent campaigns
+    if (existingCampaign.status === 'sent' && status !== 'sent') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "Cannot modify a campaign that has already been sent" 
+        },
+        { status: 400 }
+      );
+    }
+    
     const updateData = {};
     
     if (title !== undefined) updateData.title = title;
@@ -437,7 +492,6 @@ export async function PUT(req, { params }) {
     if (recipientType !== undefined) updateData.recipientType = recipientType;
     if (status !== undefined) updateData.status = status;
     
-    // Update campaign in database
     const updatedCampaign = await prisma.smsCampaign.update({
       where: { id },
       data: updateData,
@@ -459,6 +513,7 @@ export async function PUT(req, { params }) {
         sentAt: updatedCampaign.sentAt,
         sentCount: updatedCampaign.sentCount,
         failedCount: updatedCampaign.failedCount,
+        lowCreditSaved: updatedCampaign.lowCreditSaved || false,
         createdAt: updatedCampaign.createdAt,
         updatedAt: updatedCampaign.updatedAt
       },
@@ -486,10 +541,9 @@ export async function PUT(req, { params }) {
   }
 }
 
-// 🔹 DELETE - Delete a campaign (PROTECTED)
+// 🔹 DELETE - Delete a campaign
 export async function DELETE(req, { params }) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(req);
     if (!auth.authenticated) {
       return auth.response;
@@ -497,7 +551,6 @@ export async function DELETE(req, { params }) {
 
     console.log("🗑️ DELETE /api/sms/[id] - Deleting SMS campaign");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
-    // ==================== END AUTHENTICATION ====================
 
     const { id } = await params;
     
@@ -508,7 +561,6 @@ export async function DELETE(req, { params }) {
       );
     }
     
-    // Check if campaign exists
     const campaign = await prisma.smsCampaign.findUnique({
       where: { id }
     });
@@ -520,14 +572,20 @@ export async function DELETE(req, { params }) {
       );
     }
     
-    // Delete campaign (logs will cascade delete due to schema relation)
+    // Optional: Warn if deleting a sent campaign
+    if (campaign.status === 'sent') {
+      console.log(`⚠️ Deleting sent campaign: ${id}`);
+    }
+    
     await prisma.smsCampaign.delete({
       where: { id },
     });
     
     return NextResponse.json({
       success: true,
-      message: 'Campaign deleted successfully',
+      message: campaign.status === 'sent' 
+        ? 'Sent campaign deleted successfully' 
+        : 'Campaign deleted successfully',
     });
     
   } catch (error) {
@@ -548,10 +606,9 @@ export async function DELETE(req, { params }) {
   }
 }
 
-// 🔹 PATCH - Partial update (e.g., send campaign) (PROTECTED)
+// 🔹 PATCH - Send campaign with low credit handling
 export async function PATCH(req, { params }) {
   try {
-    // ==================== ADD AUTHENTICATION HERE ====================
     const auth = authenticateRequest(req);
     if (!auth.authenticated) {
       return auth.response;
@@ -560,7 +617,6 @@ export async function PATCH(req, { params }) {
     console.log("📝 PATCH /api/sms/[id] - Sending SMS campaign via Celcom Africa");
     console.log(`Request from: ${auth.user.name} (${auth.user.role})`);
     console.log(`Using shortcode: "${CELCOM_SHORTCODE}"`);
-    // ==================== END AUTHENTICATION ====================
 
     const { id } = await params;
     
@@ -574,7 +630,6 @@ export async function PATCH(req, { params }) {
     const data = await req.json();
     const { status } = data;
     
-    // Check if campaign exists
     const existingCampaign = await prisma.smsCampaign.findUnique({
       where: { id }
     });
@@ -586,12 +641,49 @@ export async function PATCH(req, { params }) {
       );
     }
     
-    // If just updating status to sent
+    // If just updating status (not sending)
+    if (status !== 'sent') {
+      const updatedCampaign = await prisma.smsCampaign.update({
+        where: { id },
+        data: { status },
+      });
+      
+      return NextResponse.json({
+        success: true,
+        campaign: updatedCampaign,
+        message: `Campaign status updated to ${status}`
+      });
+    }
+    
+    // Handle sending the campaign
     if (status === 'sent' && existingCampaign.status !== 'sent') {
+      // Check balance first
+      const balanceInfo = await checkCelcomBalance();
+      
+      if (!balanceInfo.canSend) {
+        // Auto-save as draft with low credit flag
+        const updatedCampaign = await prisma.smsCampaign.update({
+          where: { id },
+          data: {
+            status: 'draft',
+            lowCreditSaved: true,
+          }
+        });
+        
+        return NextResponse.json({
+          success: false,
+          error: "INSUFFICIENT_CREDIT",
+          message: `Cannot send SMS. Current balance: ${balanceInfo.balance} credits. At least 1 credit required per message. Campaign saved as draft.`,
+          balance: balanceInfo.balance,
+          requiredCredit: 1,
+          autoSavedAsDraft: true,
+          campaign: updatedCampaign
+        }, { status: 402 });
+      }
+      
       const recipients = existingCampaign.recipients.split(",").map(r => r.trim());
       const message = existingCampaign.message;
       
-      // Validate and format phone numbers
       const { valid: validPhones, invalid } = validatePhoneNumbers(recipients);
       
       if (invalid.length > 0) {
@@ -611,10 +703,11 @@ export async function PATCH(req, { params }) {
       
       console.log(`📱 Sending SMS to ${validPhones.length} valid recipients via Celcom Africa (${invalid.length} invalid skipped)`);
       
-      // Send via Celcom Africa
-      const { sent, failed } = await sendCelcomSms(existingCampaign.id, validPhones, message);
+      // Send via Celcom Africa with low credit detection
+      const { sent, failed, lowCreditDetected, currentBalance, requiredCredit } = 
+        await sendCelcomSms(existingCampaign.id, validPhones, message);
       
-      // Also add invalid numbers to failed list
+      // Add invalid numbers to failed list
       invalid.forEach(phone => {
         failed.push({
           campaignId: existingCampaign.id,
@@ -634,7 +727,44 @@ export async function PATCH(req, { params }) {
         await prisma.smsLog.createMany({ data: failed });
       }
       
-      // Update campaign
+      // Handle low credit during sending
+      if (lowCreditDetected) {
+        const updatedCampaign = await prisma.smsCampaign.update({
+          where: { id },
+          data: {
+            status: 'draft',
+            lowCreditSaved: true,
+            sentCount: sent.length,
+            failedCount: failed.length,
+          }
+        });
+        
+        const summary = {
+          total: validPhones.length,
+          successful: sent.length,
+          failed: failed.length,
+          invalidSkipped: invalid.length,
+          successRate: validPhones.length > 0 ? Math.round((sent.length / validPhones.length) * 100) : 0,
+        };
+        
+        return NextResponse.json({
+          success: false,
+          error: "INSUFFICIENT_CREDIT",
+          message: `Sending interrupted due to low credit. Current balance: ${currentBalance}, Required: ${requiredCredit} per message. Campaign saved as draft.`,
+          balance: currentBalance,
+          requiredCredit,
+          autoSavedAsDraft: true,
+          campaign: updatedCampaign,
+          smsResults: {
+            sent: sent.slice(0, 10),
+            failed: failed.slice(0, 10),
+            summary,
+            invalidNumbers: invalid.length > 0 ? invalid : undefined
+          }
+        }, { status: 402 });
+      }
+      
+      // All good - update as sent
       const updatedCampaign = await prisma.smsCampaign.update({
         where: { id },
         data: {
@@ -642,6 +772,7 @@ export async function PATCH(req, { params }) {
           sentAt: new Date(),
           sentCount: sent.length,
           failedCount: failed.length,
+          lowCreditSaved: false,
         },
       });
       
@@ -658,28 +789,13 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({
         success: true,
         campaign: updatedCampaign,
-        smsResults: { 
-          sent: sent.slice(0, 10), // Return only first 10 logs to avoid huge response
+        smsResults: {
+          sent: sent.slice(0, 10),
           failed: failed.slice(0, 10),
           summary,
           invalidNumbers: invalid.length > 0 ? invalid : undefined
         },
         message: `Campaign sent to ${sent.length} recipients successfully via Celcom Africa${invalid.length > 0 ? ` (${invalid.length} invalid numbers skipped)` : ''}`
-      });
-    } else {
-      // Other partial updates
-      const updateData = {};
-      if (status !== undefined) updateData.status = status;
-      
-      const updatedCampaign = await prisma.smsCampaign.update({
-        where: { id },
-        data: updateData,
-      });
-      
-      return NextResponse.json({
-        success: true,
-        campaign: updatedCampaign,
-        message: 'Campaign updated successfully'
       });
     }
     
