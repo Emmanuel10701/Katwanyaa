@@ -310,21 +310,6 @@ const ModernHero = () => {
     backdrop-blur-xl rounded-full border border-white/30 shadow-lg sm:shadow-2xl
     max-w-[90%] sm:max-w-none overflow-hidden">
 
-    {/* Glow */}
-    <div className="absolute inset-0 rounded-full bg-white/10 blur-xl -z-10" />
-
-    {/* Text - Reduced size only on mobile */}
-    <span className="text-white text-xs sm:text-sm md:text-base 
-      font-semibold italic tracking-wide whitespace-nowrap overflow-hidden text-ellipsis">
-      Welcome to <span className="font-bold hidden sm:inline">Katwanyaa High School</span>
-      <span className="font-bold inline sm:hidden">Katwanyaa high</span>
-    </span>
-
-    {/* Live Indicator */}
-    <div className="flex items-center gap-1 flex-shrink-0">
-      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400 rounded-full animate-pulse" />
-      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400/50 rounded-full animate-ping" />
-    </div>
   </div>
 </div>
 
