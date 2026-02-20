@@ -1504,14 +1504,23 @@ useEffect(() => {
               <BalanceChecker onBalanceCheck={setBalance} />
 
               <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
-                <button
-                  onClick={fetchData}
-                  disabled={refreshing || loadingStates.fetching}
-                  className="group relative flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold hover:bg-white/15 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto"
-                >
-                  <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-                  <span className="text-xs sm:text-sm">{refreshing ? "Refreshing…" : "Refresh"}</span>
-                </button>
+             <button
+  onClick={fetchData}
+  disabled={refreshing || loadingStates.fetching}
+  className="group relative flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold hover:bg-white/15 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto"
+>
+  {refreshing ? (
+    /* Custom Spinner */
+    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+  ) : (
+    /* Static State Icon (Optional: can be removed if you want text only) */
+    <div className="w-4 h-4 border-2 border-white/10 rounded-full" />
+  )}
+  
+  <span className="text-xs sm:text-sm">
+    {refreshing ? "Refreshing…" : "Refresh"}
+  </span>
+</button>
                 <button
                   onClick={openCreateModal}
                   className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl sm:rounded-2xl font-semibold hover:shadow-xl hover:shadow-emerald-500/30 active:scale-95 transition-all w-full xs:w-auto"
