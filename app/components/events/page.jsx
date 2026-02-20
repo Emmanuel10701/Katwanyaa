@@ -884,7 +884,7 @@ const ModernEventsNewsSection = () => {
                     const currentItem = selectedTab === 'events' ? currentEvent : currentNews;
                     if (!currentItem) return;
                     
-                    navigator.clipboard.writeText(`${window.location.origin}/${selectedTab}/${currentItem.id}`);
+                    navigator.clipboard.writeText(`${window.location.origin}/eventsandnews`);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
