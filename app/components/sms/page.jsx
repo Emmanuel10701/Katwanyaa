@@ -246,7 +246,17 @@ const SmsCampaignCard = ({
               </div>
               <div className="hidden lg:block flex-shrink-0">{getStatusBadge(campaign.status)}</div>
             </div>
-
+<div className="flex items-center gap-2">
+  {getStatusBadge(campaign.status)}
+  
+  {/* Add low credit indicator */}
+  {campaign.lowCreditSaved && (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
+      <AlertCircle className="w-3 h-3" />
+      Low Credit
+    </span>
+  )}
+</div>
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center">
@@ -388,6 +398,105 @@ export default function SMSManager() {
     totalRecipients: 0,
     successRate: 0,
   });
+
+
+
+  // Add this component inside your SMSManager.js file
+const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
+  const [balance, setBalance] = useState(initialBalance);
+  const [loading, setLoading] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const checkBalance = async () => {
+    try {
+      setLoading(true);
+      const adminToken = localStorage.getItem("admin_token");
+      const deviceToken = localStorage.getItem("device_token");
+
+      const response = await fetch("/api/sms?balance=true", {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          "x-device-token": deviceToken,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setBalance(data);
+        if (onBalanceCheck) onBalanceCheck(data);
+        
+        if (!data.canSend) {
+          toast.warning(
+            <div>
+              <p className="font-bold">⚠️ Low Credit Warning</p>
+              <p>Current balance: {data.balance} credits</p>
+              <p>You need at least 1 credit per SMS</p>
+            </div>,
+            { duration: 8000 }
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Balance check failed:", error);
+      toast.error("Failed to check balance");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-check on mount
+  useEffect(() => {
+    checkBalance();
+  }, []);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={checkBalance}
+        disabled={loading}
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <>
+            <span className="text-sm font-bold">Credits:</span>
+            <span className={`text-lg font-black ${balance?.canSend ? 'text-green-200' : 'text-yellow-200'}`}>
+              {balance?.balance?.toFixed(2) || '0.00'}
+            </span>
+          </>
+        )}
+      </button>
+
+      {balance && !balance.canSend && (
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border-2 border-red-200 p-4 z-50 animate-in slide-in-from-top-2">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-900 mb-1">Insufficient Credit</h4>
+              <p className="text-sm text-gray-600 mb-2">
+                Current: {balance.balance} credits<br />
+                Required: 1 credit per SMS
+              </p>
+              <a
+                href="https://celcomafrica.com/till-paybill-sms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-purple-600 hover:text-purple-800"
+              >
+                Top Up Now
+                <ChevronRight className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
   // ========== Helper Functions ==========
 
@@ -1112,6 +1221,8 @@ const handleSendCampaign = async () => {
               </div>
             </div>
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
+                <BalanceChecker />
+
               <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
                 <button
                   onClick={fetchData}
@@ -1175,6 +1286,13 @@ const handleSendCampaign = async () => {
             { label: "Sent", value: stats.sent, icon: CheckCircle2, bg: "hover:border-emerald-200" },
             { label: "Recipients", value: stats.totalRecipients, icon: Users, bg: "hover:border-purple-200" },
             { label: "Success", value: `${stats.successRate}%`, icon: BarChart3, bg: "hover:border-cyan-200" },
+            // Add to stats array
+{ 
+  label: "Low Credit", 
+  value: stats.lowCreditDrafts || 0, 
+  icon: AlertCircle, 
+  bg: "hover:border-amber-200" 
+}
           ].map((stat) => (
             <div
               key={stat.label}
