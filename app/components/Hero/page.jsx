@@ -305,12 +305,6 @@ const ModernHero = () => {
 
       {/* Welcome Banner - Mobile Responsive */}
   <div className="absolute top-2 sm:top-6 left-0 right-0 z-30 flex justify-center px-2">
-  <div className="relative inline-flex items-center gap-1 sm:gap-3 px-3 sm:px-6 md:px-8 py-1.5 sm:py-3 md:py-4
-    bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-pink-500/30
-    backdrop-blur-xl rounded-full border border-white/30 shadow-lg sm:shadow-2xl
-    max-w-[90%] sm:max-w-none overflow-hidden">
-
-  </div>
 </div>
 
       {/* Main Content Area - Responsive adjustments */}
