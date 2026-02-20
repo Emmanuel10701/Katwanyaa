@@ -17,7 +17,10 @@ import {
   FiMenu,
   FiX,
   FiArrowLeft
+ 
 } from 'react-icons/fi';
+ import {  Loader2
+  } from "lucide-react"
 import { IoPeopleOutline, IoRibbonOutline } from 'react-icons/io5';
 import { GiGraduateCap } from 'react-icons/gi';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -235,12 +238,24 @@ const foundAdminDeputy = allDeputies.find(s =>
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
-        <div className="text-center">
-          <CircularProgress className="text-blue-600" size={60} />
-          <p className="mt-4 text-slate-600 font-medium">Loading leadership team...</p>
-        </div>
-      </div>
+  <div className="flex flex-col items-center justify-center p-12 space-y-4">
+  <div className="relative">
+    {/* Outer Glow Ring */}
+    <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 animate-ping"></div>
+    
+    {/* Main Spinner Icon */}
+    <Loader2 className="w-10 h-10 text-blue-600 animate-spin relative z-10" />
+  </div>
+
+  <div className="space-y-1 text-center">
+    <h3 className="text-lg font-black text-slate-900 tracking-tight">
+      Fetching our Fauculty
+    </h3>
+    <p className="text-sm font-bold text-slate-500 animate-pulse">
+      Please wait a moment...
+    </p>
+  </div>
+</div>
     );
   }
 
