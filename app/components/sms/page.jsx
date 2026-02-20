@@ -180,7 +180,7 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
                   You need at least 1 credit per SMS. Please top up to send campaigns.
                 </p>
                 <h4 className="text-sm text-gray-900 mb-4">
-                  Contact support at <a href="tel:+254700000000" className="text-amber-600 font-bold hover:text-amber-800">+254 700 000 000</a> or top up via the link below.
+                  Contact support at <a href="tel:+254700000000" className="text-amber-800 font-bold hover:text-amber-800">+254 700 000 000</a> or top up via the link below.
                 </h4>
                 <div className="flex gap-2">
                   <a
