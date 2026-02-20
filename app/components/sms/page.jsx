@@ -32,13 +32,12 @@ import {
   CheckSquare,
   ChevronRight,
   ChevronLeft,
+  CreditCard,
+  AlertTriangle,
+  DollarSign,
 } from "lucide-react";
 
-// Reuse your existing ConfirmationModal and ModernModal components (or copy them here)
-// For brevity, I'll reference them; you already have them in your email component.
-// You can import or copy them. For completeness, I'll include simplified versions.
-
-// Modern Scrollbar Styles (same as email)
+// Modern Scrollbar Styles
 const modernScrollbarStyles = `
   .modern-scrollbar::-webkit-scrollbar {
     width: 8px;
@@ -57,7 +56,7 @@ const modernScrollbarStyles = `
   }
 `;
 
-// Simplified ConfirmationModal (copy from your email component)
+// Confirmation Modal Component
 const ConfirmationModal = ({ open, onClose, title, message, confirmText = "Delete", cancelText = "Cancel", onConfirm, isDanger = true, loading = false }) => {
   if (!open) return null;
   return (
@@ -104,7 +103,7 @@ const ConfirmationModal = ({ open, onClose, title, message, confirmText = "Delet
   );
 };
 
-// ModernModal (copy from your email component)
+// Modern Modal Component
 const ModernModal = ({ children, open, onClose, maxWidth = "800px" }) => {
   if (!open) return null;
   return (
@@ -125,18 +124,6 @@ const ModernModal = ({ children, open, onClose, maxWidth = "800px" }) => {
   );
 };
 
-// Helper: get file icon (unused in SMS but keep for consistency)
-const getFileIcon = () => "📄";
-
-// Helper: format file size (unused)
-const formatFileSize = () => "";
-
-// Helper: parse attachments (unused)
-const parseCampaignAttachments = () => [];
-
-// Helper: format phone number display (optional)
-const formatPhone = (phone) => phone;
-
 // Helper: get recipient group label
 const getRecipientGroupLabel = (group) => {
   const labels = {
@@ -151,7 +138,136 @@ const getRecipientGroupLabel = (group) => {
   return labels[group] || group;
 };
 
-// Campaign Card Component (simplified, no attachments)
+// Balance Checker Component
+const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
+  const [balance, setBalance] = useState(initialBalance);
+  const [loading, setLoading] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const checkBalance = async () => {
+    try {
+      setLoading(true);
+      const adminToken = localStorage.getItem("admin_token");
+      const deviceToken = localStorage.getItem("device_token");
+
+      const response = await fetch("/api/sms?balance=true", {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          "x-device-token": deviceToken,
+        },
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setBalance(data);
+        if (onBalanceCheck) onBalanceCheck(data);
+        
+        if (!data.canSend) {
+          toast.custom((t) => (
+            <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+              <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                  <h3 className="font-bold text-white">⚠️ Low Credit Warning</h3>
+                </div>
+              </div>
+              <div className="p-4">
+                <p className="text-gray-700 mb-3">
+                  Current balance: <span className="font-bold text-amber-600">{data.balance} credits</span>
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  You need at least 1 credit per SMS. Please top up to send campaigns.
+                </p>
+                <div className="flex gap-2">
+                  <a
+                    href="https://celcomafrica.com/till-paybill-sms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+                  >
+                    Top Up Now
+                  </a>
+                  <button
+                    onClick={() => toast.dismiss(t)}
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          ), { duration: 10000 });
+        }
+      }
+    } catch (error) {
+      console.error("Balance check failed:", error);
+      toast.error("Failed to check balance");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkBalance();
+    const interval = setInterval(checkBalance, 300000); // Check every 5 minutes
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={checkBalance}
+        disabled={loading}
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 ${
+          balance?.canSend 
+            ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700' 
+            : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 animate-pulse'
+        }`}
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <>
+            <CreditCard className="w-4 h-4" />
+            <span className="text-sm font-bold">Credits:</span>
+            <span className={`text-lg font-black ${balance?.canSend ? 'text-white' : 'text-yellow-200'}`}>
+              {balance?.balance?.toFixed(2) || '0.00'}
+            </span>
+          </>
+        )}
+      </button>
+
+      {balance && !balance.canSend && showDetails && (
+        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border-2 border-amber-200 p-4 z-50 animate-in slide-in-from-top-2">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <DollarSign className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-gray-900 mb-1">Insufficient Credit</h4>
+              <p className="text-sm text-gray-600 mb-2">
+                Current: {balance.balance} credits<br />
+                Required: 1 credit per SMS
+              </p>
+              <a
+                href="https://celcomafrica.com/till-paybill-sms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-amber-600 hover:text-amber-800"
+              >
+                Top Up Now
+                <ChevronRight className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Campaign Card Component
 const SmsCampaignCard = ({
   campaign,
   isSelected,
@@ -195,14 +311,22 @@ const SmsCampaignCard = ({
   };
 
   return (
-  <div
-  className={`group relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
-    isSelected
-      ? "border-blue-600 bg-blue-50/40 shadow-xl shadow-blue-200 ring-2 ring-blue-500/20"
-      : "border-blue-400 bg-white shadow-lg shadow-slate-200 hover:border-blue-500 hover:shadow-xl"
-  }`}
->
-      <div className={`absolute top-0 left-0 w-1.5 h-full ${campaign.status === "sent" ? "bg-emerald-500" : "bg-amber-500"}`} />
+    <div
+      className={`group relative w-full rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+        isSelected
+          ? "border-blue-600 bg-blue-50/40 shadow-xl shadow-blue-200 ring-2 ring-blue-500/20"
+          : campaign.lowCreditSaved
+          ? "border-amber-400 bg-amber-50/20 shadow-lg shadow-amber-100 hover:border-amber-500"
+          : "border-blue-400 bg-white shadow-lg shadow-slate-200 hover:border-blue-500 hover:shadow-xl"
+      }`}
+    >
+      <div className={`absolute top-0 left-0 w-1.5 h-full ${
+        campaign.status === "sent" 
+          ? "bg-emerald-500" 
+          : campaign.lowCreditSaved 
+          ? "bg-amber-500" 
+          : "bg-amber-500"
+      }`} />
 
       <div className="p-4 md:p-6">
         <div className="flex flex-col lg:flex-row items-start gap-5">
@@ -221,10 +345,20 @@ const SmsCampaignCard = ({
                 <Square className="w-6 h-6 text-slate-300" />
               )}
             </button>
-            <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg transform lg:-rotate-3 group-hover:rotate-0 transition-all duration-500">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transform lg:-rotate-3 group-hover:rotate-0 transition-all duration-500 ${
+              campaign.lowCreditSaved ? 'bg-amber-600' : 'bg-slate-900'
+            }`}>
               <Smartphone className="text-white w-6 h-6" />
             </div>
-            <div className="lg:hidden ml-auto">{getStatusBadge(campaign.status)}</div>
+            <div className="lg:hidden ml-auto flex items-center gap-2">
+              {getStatusBadge(campaign.status)}
+              {campaign.lowCreditSaved && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
+                  <AlertCircle className="w-3 h-3" />
+                  Low Credit
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Main Content */}
@@ -244,19 +378,17 @@ const SmsCampaignCard = ({
                   </p>
                 </div>
               </div>
-              <div className="hidden lg:block flex-shrink-0">{getStatusBadge(campaign.status)}</div>
+              <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+                {getStatusBadge(campaign.status)}
+                {campaign.lowCreditSaved && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
+                    <AlertCircle className="w-3 h-3" />
+                    Low Credit
+                  </span>
+                )}
+              </div>
             </div>
-<div className="flex items-center gap-2">
-  {getStatusBadge(campaign.status)}
-  
-  {/* Add low credit indicator */}
-  {campaign.lowCreditSaved && (
-    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300">
-      <AlertCircle className="w-3 h-3" />
-      Low Credit
-    </span>
-  )}
-</div>
+
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
               <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col justify-center">
@@ -320,10 +452,14 @@ const SmsCampaignCard = ({
                   <button
                     onClick={() => onSend(campaign)}
                     disabled={loadingStates.send}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-black text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-md shadow-blue-200"
+                    className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-black text-white rounded-xl transition-all active:scale-95 shadow-md ${
+                      campaign.lowCreditSaved
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700'
+                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <Send className={`w-4 h-4 ${loadingStates.send ? "animate-pulse" : ""}`} />
-                    {loadingStates.send ? "Sending..." : "Send Now"}
+                    {loadingStates.send ? "Sending..." : campaign.lowCreditSaved ? "Retry Send" : "Send Now"}
                   </button>
                 )}
                 <button
@@ -344,11 +480,12 @@ const SmsCampaignCard = ({
 
 // Main Component
 export default function SMSManager() {
- const [campaigns, setCampaigns] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [students, setStudents] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [balance, setBalance] = useState(null);
 
   // View States
   const [activeView, setActiveView] = useState("all");
@@ -397,106 +534,8 @@ export default function SMSManager() {
     sent: 0,
     totalRecipients: 0,
     successRate: 0,
+    lowCreditDrafts: 0,
   });
-
-
-
-  // Add this component inside your SMSManager.js file
-const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
-  const [balance, setBalance] = useState(initialBalance);
-  const [loading, setLoading] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-
-  const checkBalance = async () => {
-    try {
-      setLoading(true);
-      const adminToken = localStorage.getItem("admin_token");
-      const deviceToken = localStorage.getItem("device_token");
-
-      const response = await fetch("/api/sms?balance=true", {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-          "x-device-token": deviceToken,
-        },
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setBalance(data);
-        if (onBalanceCheck) onBalanceCheck(data);
-        
-        if (!data.canSend) {
-          toast.warning(
-            <div>
-              <p className="font-bold">⚠️ Low Credit Warning</p>
-              <p>Current balance: {data.balance} credits</p>
-              <p>You need at least 1 credit per SMS</p>
-            </div>,
-            { duration: 8000 }
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Balance check failed:", error);
-      toast.error("Failed to check balance");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Auto-check on mount
-  useEffect(() => {
-    checkBalance();
-  }, []);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={checkBalance}
-        disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50"
-      >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <>
-            <span className="text-sm font-bold">Credits:</span>
-            <span className={`text-lg font-black ${balance?.canSend ? 'text-green-200' : 'text-yellow-200'}`}>
-              {balance?.balance?.toFixed(2) || '0.00'}
-            </span>
-          </>
-        )}
-      </button>
-
-      {balance && !balance.canSend && (
-        <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border-2 border-red-200 p-4 z-50 animate-in slide-in-from-top-2">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-gray-900 mb-1">Insufficient Credit</h4>
-              <p className="text-sm text-gray-600 mb-2">
-                Current: {balance.balance} credits<br />
-                Required: 1 credit per SMS
-              </p>
-              <a
-                href="https://celcomafrica.com/till-paybill-sms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-purple-600 hover:text-purple-800"
-              >
-                Top Up Now
-                <ChevronRight className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
   // ========== Helper Functions ==========
 
@@ -510,9 +549,8 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
       const safeStudents = Array.isArray(students) ? students : [];
       const safeStaff = Array.isArray(staff) ? staff : [];
 
-      // Adjust these fields to match your actual data structure
-      const parentPhones = getPhoneList(safeStudents, "parentPhone"); // parent's phone
-      const staffPhones = getPhoneList(safeStaff, "phone"); // staff phone
+      const parentPhones = getPhoneList(safeStudents, "parentPhone");
+      const staffPhones = getPhoneList(safeStaff, "phone");
 
       switch (recipientType) {
         case "parents":
@@ -636,7 +674,7 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
 
       const [campaignsRes, studentRes, staffRes] = await Promise.all([
         fetch("/api/sms"),
-        fetch("/api/s"), // parent/student data
+        fetch("/api/s"),
         fetch("/api/staff"),
       ]);
 
@@ -657,7 +695,7 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
           id: student.admissionNumber || student.id,
           firstName: student.firstName || "",
           lastName: student.lastName || "",
-          parentPhone: student.parentPhone || student.phone || "", // adjust field name
+          parentPhone: student.parentPhone || student.phone || "",
           admissionNumber: student.admissionNumber || "",
           form: student.form || "",
           stream: student.stream || "",
@@ -702,9 +740,13 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
       sent: 0,
       totalRecipients: 0,
       successRate: 0,
+      lowCreditDrafts: 0,
     };
     campaignsList.forEach((campaign) => {
-      if (campaign.status === "draft") newStats.draft++;
+      if (campaign.status === "draft") {
+        newStats.draft++;
+        if (campaign.lowCreditSaved) newStats.lowCreditDrafts++;
+      }
       if (campaign.status === "sent") newStats.sent++;
       const count = campaign.recipients ? campaign.recipients.split(",").length : 0;
       newStats.totalRecipients += count;
@@ -854,6 +896,46 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
 
   const openSendConfirmationModal = (campaign) => {
     if (!campaign) return;
+    
+    // Check balance before opening modal
+    if (balance && !balance.canSend) {
+      toast.custom((t) => (
+        <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-white" />
+              <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-gray-700 mb-3">
+              Current balance: <span className="font-bold text-amber-600">{balance.balance} credits</span>
+            </p>
+            <p className="text-sm text-gray-600 mb-4">
+              You need at least 1 credit per SMS. This campaign has {campaign.recipients?.split(",").length || 0} recipients.
+            </p>
+            <div className="flex gap-2">
+              <a
+                href="https://celcomafrica.com/till-paybill-sms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+              >
+                Top Up Now
+              </a>
+              <button
+                onClick={() => toast.dismiss(t)}
+                className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+              >
+                Later
+              </button>
+            </div>
+          </div>
+        </div>
+      ), { duration: 10000 });
+      return;
+    }
+    
     setCampaignToSend(campaign);
     setShowSendConfirmationModal(true);
   };
@@ -868,240 +950,228 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
 
   // ========== CRUD Operations ==========
 
-// In your SMSManager component, add a state to track submission
-const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-const handleCreateOrUpdateCampaign = async () => {
-  // Prevent double submission
-  if (isSubmitting) return;
-  
-  if (!campaignForm.title || !campaignForm.message) {
-    toast.error("Title and message are required");
-    return;
-  }
-
-  try {
-    setIsSubmitting(true);
-    const headers = getAuthHeaders("application/json");
-    setLoadingStates((prev) => ({ ...prev, create: true }));
-
-    const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
-    if (recipientNumbers.length === 0) {
-      toast.error("No recipients found for the selected group");
+  const handleCreateOrUpdateCampaign = async () => {
+    if (isSubmitting) return;
+    
+    if (!campaignForm.title || !campaignForm.message) {
+      toast.error("Title and message are required");
       return;
     }
 
-    const payload = {
-      title: campaignForm.title.trim(),
-      message: campaignForm.message,
-      recipients: recipientNumbers.join(", "),
-      recipientType: campaignForm.recipientType,
-      status: campaignForm.status,
-    };
+    try {
+      setIsSubmitting(true);
+      const headers = getAuthHeaders("application/json");
+      setLoadingStates((prev) => ({ ...prev, create: true }));
 
-    const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
-    const method = selectedCampaign ? "PUT" : "POST";
-
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: JSON.stringify(payload),
-    });
-
-    if (response.status === 401) throw new Error("Session expired");
-
-    const result = await response.json();
-
-    if (result.success) {
-      // Refresh campaigns list
-      await fetchData();
-      
-      // Show success message based on action
-      if (selectedCampaign) {
-        toast.success("Campaign updated successfully");
-      } else {
-        toast.success(campaignForm.status === "draft" ? 
-          "Campaign saved as draft" : 
-          "Campaign created successfully"
-        );
+      const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
+      if (recipientNumbers.length === 0) {
+        toast.error("No recipients found for the selected group");
+        return;
       }
-      
-      // CLOSE THE MODAL
-      setShowCreateModal(false);
-      setSelectedCampaign(null);
-      setCampaignForm({
-        title: "",
-        message: "",
-        recipientType: "all",
-        status: "draft",
-        recipients: [],
-      });
-      
-    } else {
-      toast.error(result.error || "Failed to save campaign");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    if (!handleAuthError(error)) {
-      toast.error(error.message || "Network error");
-    }
-  } finally {
-    setIsSubmitting(false);
-    setLoadingStates((prev) => ({ ...prev, create: false }));
-  }
-};
 
+      const payload = {
+        title: campaignForm.title.trim(),
+        message: campaignForm.message,
+        recipients: recipientNumbers.join(", "),
+        recipientType: campaignForm.recipientType,
+        status: campaignForm.status,
+      };
 
+      const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
+      const method = selectedCampaign ? "PUT" : "POST";
 
-
-
-const handleSendCampaign = async () => {
-  if (!campaignToSend) return;
-  
-  try {
-    const headers = getAuthHeaders("application/json");
-    setLoadingStates((prev) => ({ ...prev, send: true }));
-
-    const response = await fetch(`/api/sms/${campaignToSend.id}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ status: "sent" }),
-    });
-
-    if (response.status === 401) throw new Error("Session expired");
-
-    const result = await response.json();
-
-    // Log the response for debugging
-    console.log("📱 SMS API Response:", {
-      campaignId: campaignToSend.id,
-      status: response.status,
-      result: result
-    });
-
-    // Check for low credit issues
-    const hasLowCredit = result.smsResults?.responses?.some(r => r['response-code'] === 402);
-    
-    if (hasLowCredit) {
-      const lowCreditResponses = result.smsResults.responses.filter(r => r['response-code'] === 402);
-      console.warn("⚠️ Low credit detected:", lowCreditResponses);
-      
-      // Revert campaign back to draft status
-      const revertResponse = await fetch(`/api/sms/${campaignToSend.id}`, {
-        method: "PUT", // or PATCH depending on your API
+      const response = await fetch(url, {
+        method,
         headers,
-        body: JSON.stringify({ 
-          status: "draft",
-          // Preserve other campaign data
-          title: campaignToSend.title,
-          message: campaignToSend.message,
-          recipientType: campaignToSend.recipientType,
-          recipients: campaignToSend.recipients
-        }),
+        body: JSON.stringify(payload),
       });
-      
-      if (revertResponse.ok) {
+
+      if (response.status === 401) throw new Error("Session expired");
+
+      const result = await response.json();
+
+      if (result.success) {
+        await fetchData();
+        
+        if (selectedCampaign) {
+          toast.success("Campaign updated successfully");
+        } else {
+          if (result.lowCreditInfo) {
+            toast.custom((t) => (
+              <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-white" />
+                    <h3 className="font-bold text-white">⚠️ Low Credit - Saved as Draft</h3>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="text-gray-700 mb-2">{result.message}</p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Current balance: {result.lowCreditInfo.currentBalance} credits<br />
+                    Required: {result.lowCreditInfo.requiredCredit} credit per SMS
+                  </p>
+                  <div className="flex gap-2">
+                    <a
+                      href="https://celcomafrica.com/till-paybill-sms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+                    >
+                      Top Up Now
+                    </a>
+                    <button
+                      onClick={() => toast.dismiss(t)}
+                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ), { duration: 10000 });
+          } else {
+            toast.success(campaignForm.status === "draft" ? 
+              "Campaign saved as draft" : 
+              "Campaign created successfully"
+            );
+          }
+        }
+        
+        setShowCreateModal(false);
+        setSelectedCampaign(null);
+        setCampaignForm({
+          title: "",
+          message: "",
+          recipientType: "all",
+          status: "draft",
+          recipients: [],
+        });
+        
+      } else {
+        toast.error(result.error || "Failed to save campaign");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      if (!handleAuthError(error)) {
+        toast.error(error.message || "Network error");
+      }
+    } finally {
+      setIsSubmitting(false);
+      setLoadingStates((prev) => ({ ...prev, create: false }));
+    }
+  };
+
+  const handleSendCampaign = async () => {
+    if (!campaignToSend) return;
+    
+    try {
+      const headers = getAuthHeaders("application/json");
+      setLoadingStates((prev) => ({ ...prev, send: true }));
+
+      const response = await fetch(`/api/sms/${campaignToSend.id}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ status: "sent" }),
+      });
+
+      if (response.status === 401) throw new Error("Session expired");
+
+      const result = await response.json();
+
+      if (response.status === 402) {
+        // Low credit detected
+        toast.custom((t) => (
+          <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-white" />
+                <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
+              </div>
+            </div>
+            <div className="p-4">
+              <p className="text-gray-700 mb-2">{result.message}</p>
+              <p className="text-sm text-gray-600 mb-4">
+                Current balance: {result.balance} credits<br />
+                Required: {result.requiredCredit} credit per SMS
+              </p>
+              <div className="flex gap-2">
+                <a
+                  href="https://celcomafrica.com/till-paybill-sms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+                >
+                  Top Up Now
+                </a>
+                <button
+                  onClick={() => toast.dismiss(t)}
+                  className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        ), { duration: 10000 });
+        
         // Update local state to reflect draft status
+        setCampaigns((prev) =>
+          prev.map((c) =>
+            c.id === campaignToSend.id
+              ? { ...c, status: "draft", lowCreditSaved: true }
+              : c
+          )
+        );
+      } else if (result.success) {
+        // Success
         setCampaigns((prev) =>
           prev.map((c) =>
             c.id === campaignToSend.id
               ? {
                   ...c,
-                  status: "draft",
-                  lastAttemptAt: new Date().toISOString(),
-                  lastError: lowCreditResponses[0]?.['response-description']
+                  status: "sent",
+                  sentAt: new Date().toISOString(),
+                  sentCount: result.smsResults?.summary?.successful || 0,
+                  failedCount: result.smsResults?.summary?.failed || 0,
+                  lowCreditSaved: false,
                 }
               : c
           )
         );
         
-        // Show low credit warning
-        toast.error(
-          `⚠️ Low Credit: ${lowCreditResponses[0]?.['response-description'] || 'Insufficient credit to send SMS'}. Campaign saved as draft.`,
-          {
-            duration: 8000,
-            action: {
-              label: "Add Credit",
-              onClick: () => window.open("https://celcomafrica.com/till-paybill-sms", "_blank")
-            }
-          }
-        );
+        const successful = result.smsResults?.summary?.successful || 0;
+        const failed = result.smsResults?.summary?.failed || 0;
+        const total = successful + failed;
         
-        // Log to monitoring
-        fetch("/api/monitoring/alert", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "LOW_CREDIT",
-            message: lowCreditResponses[0]?.['response-description'],
-            campaignId: campaignToSend.id,
-            campaignTitle: campaignToSend.title,
-            details: lowCreditResponses,
-            timestamp: new Date().toISOString()
-          })
-        }).catch(e => console.error("Failed to send monitoring alert:", e));
-      }
-    } else if (result.success) {
-      // Update campaigns list for successful send
-      setCampaigns((prev) =>
-        prev.map((c) =>
-          c.id === campaignToSend.id
-            ? {
-                ...c,
-                status: "sent",
-                sentAt: new Date().toISOString(),
-                sentCount: result.smsResults?.summary?.successful || 0,
-                failedCount: result.smsResults?.summary?.failed || 0,
-                smsResponses: result.smsResults?.responses || []
-              }
-            : c
-        )
-      );
-      
-      // Show success message
-      const successful = result.smsResults?.summary?.successful || 0;
-      const failed = result.smsResults?.summary?.failed || 0;
-      const total = (result.smsResults?.responses?.length || 0);
-      
-      if (failed > 0) {
         toast.success(
-          `Campaign sent with ${successful}/${total} messages delivered. ${failed} failed.`,
+          <div>
+            <p className="font-bold">✅ Campaign Sent!</p>
+            <p className="text-sm">{successful}/{total} messages delivered</p>
+            {failed > 0 && <p className="text-xs text-red-200 mt-1">{failed} failed</p>}
+          </div>,
           { duration: 6000 }
         );
       } else {
-        toast.success(`Campaign sent successfully! ${successful} messages delivered.`);
+        toast.error(result.error || "Failed to send campaign");
       }
-    } else {
-      // Handle other API errors
-      toast.error(result.error || "Failed to send campaign");
+      
+      setShowSendConfirmationModal(false);
+      setCampaignToSend(null);
+      
+    } catch (error) {
+      console.error("Error sending campaign:", error);
+      if (!handleAuthError(error)) {
+        toast.error(error.message || "Network error");
+      }
+      setShowSendConfirmationModal(false);
+      setCampaignToSend(null);
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, send: false }));
     }
-    
-    // ALWAYS CLOSE THE MODAL - regardless of outcome
-    setShowSendConfirmationModal(false);
-    setCampaignToSend(null);
-    
-  } catch (error) {
-    console.error("Error sending campaign:", error);
-    
-    // Log the error details
-    console.log("Full error details:", {
-      message: error.message,
-      stack: error.stack,
-      campaignId: campaignToSend?.id
-    });
-    
-    if (!handleAuthError(error)) {
-      toast.error(error.message || "Network error");
-    }
-    
-    // CLOSE MODAL EVEN ON ERROR (except auth errors which redirect)
-    setShowSendConfirmationModal(false);
-    setCampaignToSend(null);
-    
-  } finally {
-    setLoadingStates((prev) => ({ ...prev, send: false }));
-  }
-};
+  };
 
   const handleDeleteCampaign = async () => {
     if (!campaignToDelete) return;
@@ -1189,7 +1259,18 @@ const handleSendCampaign = async () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/20 p-4 md:p-6 modern-scrollbar">
       <style>{modernScrollbarStyles}</style>
-      <Toaster position="top-right" richColors />
+      <Toaster 
+        position="top-right" 
+        richColors 
+        expand={true}
+        toastOptions={{
+          style: {
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '14px',
+          },
+        }}
+      />
 
       {/* Header */}
       <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-blue-700 via-cyan-700 to-emerald-700 p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl">
@@ -1213,15 +1294,14 @@ const handleSendCampaign = async () => {
                   <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
                     SMS Campaign <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-emerald-200">Manager</span>
                   </h1>
-                 <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-cyan-100/90 font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-  Streamline school communication with powerful bulk SMS campaigns powered by Celcom Talking fast, reliable, and built for Katwanyaa High School.
-</p>
-
+                  <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-cyan-100/90 font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
+                    Streamline school communication with powerful bulk SMS campaigns powered by Celcom. Fast, reliable, and built for Katwanyaa High School.
+                  </p>
                 </div>
               </div>
             </div>
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
-                <BalanceChecker />
+              <BalanceChecker onBalanceCheck={setBalance} />
 
               <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
                 <button
@@ -1279,18 +1359,20 @@ const handleSendCampaign = async () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
             { label: "Campaigns", value: stats.total, icon: Smartphone, bg: "hover:border-blue-200" },
             { label: "Draft", value: stats.draft, icon: Clock, bg: "hover:border-amber-200" },
             { label: "Sent", value: stats.sent, icon: CheckCircle2, bg: "hover:border-emerald-200" },
+            { label: "Recipients", value: stats.totalRecipients, icon: Users, bg: "hover:border-purple-200" },
             { label: "Success", value: `${stats.successRate}%`, icon: BarChart3, bg: "hover:border-cyan-200" },
-{ 
-  label: "Low Credit", 
-  value: stats.lowCreditDrafts || 0, 
-  icon: AlertCircle, 
-  bg: "hover:border-amber-200" 
-}
+            { 
+              label: "Low Credit", 
+              value: stats.lowCreditDrafts, 
+              icon: AlertCircle, 
+              bg: "hover:border-amber-200",
+              color: stats.lowCreditDrafts > 0 ? "text-amber-600" : "text-gray-700"
+            },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -1299,13 +1381,15 @@ const handleSendCampaign = async () => {
               <div className="flex flex-col items-start gap-4">
                 <div className="relative">
                   <div className="absolute inset-0 bg-current opacity-10 blur-xl rounded-full group-hover:opacity-20 transition-opacity" />
-                  <div className="relative text-3xl sm:text-4xl transition-transform duration-500 group-hover:scale-100 group-hover:rotate-3">
-                    <stat.icon className="w-8 h-8 text-gray-700" />
+                  <div className={`relative text-3xl sm:text-4xl transition-transform duration-500 group-hover:scale-100 group-hover:rotate-3 ${stat.color || 'text-gray-700'}`}>
+                    <stat.icon className="w-8 h-8" />
                   </div>
                 </div>
                 <div className="space-y-1 w-full">
                   <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-[0.15em]">{stat.label}</p>
-                  <p className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tighter">{stat.value}</p>
+                  <p className={`text-2xl sm:text-3xl font-black tracking-tighter ${stat.color || 'text-gray-900'}`}>
+                    {stat.value}
+                  </p>
                 </div>
               </div>
               <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/40 to-transparent rounded-t-[2rem] pointer-events-none" />
