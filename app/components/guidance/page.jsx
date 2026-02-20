@@ -2486,7 +2486,7 @@ const handleSubmit = async (e) => {
             
             <button 
               onClick={onClose}
-              className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-2xl transition-all duration-300 hover:scale-100"
+              className="p-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-2xl transition-all duration-300 -100"
               disabled={isLoading}
             >
               <FiX className="w-6 h-6" />
@@ -3549,7 +3549,7 @@ const confirmDeleteTeam = async () => {
 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
   {/* Total Sessions Card */}
   <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-purple-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-purple-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-purple-500/20">
@@ -3580,7 +3580,7 @@ const confirmDeleteTeam = async () => {
   
   {/* High Priority Card */}
   <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-red-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-red-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-red-500/20">
@@ -3611,7 +3611,7 @@ const confirmDeleteTeam = async () => {
   
   {/* Today's Sessions Card */}
   <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-emerald-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-emerald-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-emerald-500/20">
@@ -3642,7 +3642,7 @@ const confirmDeleteTeam = async () => {
   
   {/* Teams Card */}
   <div className="group relative bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-500 hover:-translate-y-1">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-slate-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-slate-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-slate-500/20">
@@ -3684,7 +3684,7 @@ const confirmDeleteTeam = async () => {
   className="group relative inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl text-base font-bold tracking-tight shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5"
 >
   <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-  <FiUserPlus className="w-5 h-5 transition-transform group-hover:scale-100 group-hover:-rotate-12" />
+  <FiUserPlus className="w-5 h-5 transition-transform group--100 group-hover:-rotate-12" />
   <span className="relative">Add Team Member</span>
 </button>
           </div>
@@ -3738,7 +3738,7 @@ const confirmDeleteTeam = async () => {
   {/* Total Members Card */}
   <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
     {/* Background Accent */}
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-blue-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-blue-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-blue-500/20">
@@ -3769,7 +3769,7 @@ const confirmDeleteTeam = async () => {
   
   {/* Patrons Card */}
   <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-purple-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-purple-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-purple-500/20">
@@ -3800,7 +3800,7 @@ const confirmDeleteTeam = async () => {
   
   {/* Matrons Card */}
   <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-pink-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-pink-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-pink-500/20">
@@ -3831,7 +3831,7 @@ const confirmDeleteTeam = async () => {
   
   {/* Teachers Card */}
   <div className="relative group overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-xl hover:shadow-2xl border border-slate-100 dark:border-slate-800">
-    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 duration-500 bg-gray-500" />
+    <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full opacity-10 transition-transform group--150 duration-500 bg-gray-500" />
     
     <div className="relative z-10">
       <div className="inline-flex p-3 rounded-2xl mb-4 transition-colors duration-300 bg-gray-500/20">

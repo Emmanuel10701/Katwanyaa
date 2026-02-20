@@ -611,7 +611,7 @@ function ModernItemCard({ item, type, onEdit, onDelete, onView }) {
       src={getImageUrl(item.image)}
       alt={item.title}
       /* Cleaned up classes: removed fixed width/height and internal rounding */
-      className="w-full h-full object-cover shadow-2xl transition-transform duration-500 hover:scale-[1.05]"
+      className="w-full h-full object-cover shadow-2xl transition-transform duration-500 "
       onError={(e) => {
         e.target.onerror = null;
         e.target.src = type === 'news' ? '/default-news.jpg' : '/default-event.jpg';

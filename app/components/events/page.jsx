@@ -293,7 +293,7 @@ const ModernEventsNewsSection = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
             <button 
               onClick={() => window.location.reload()}
-              className="group flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 bg-gray-900 text-white font-bold rounded-xl sm:rounded-2xl hover:bg-black transition-all hover:scale-[1.02] active:scale-95 shadow-lg sm:shadow-xl shadow-gray-200 text-sm sm:text-base"
+              className="group flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-12 py-3 sm:py-4 md:py-5 bg-gray-900 text-white font-bold rounded-xl sm:rounded-2xl hover:bg-black transition-all  active:scale-95 shadow-lg sm:shadow-xl shadow-gray-200 text-sm sm:text-base"
             >
               <svg 
                 className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-180 transition-transform duration-700" 
@@ -637,7 +637,7 @@ const ModernEventsNewsSection = () => {
                             <img
                               src={event.image} 
                               alt={event.title}
-                              className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
+                              className="w-full h-full object-cover "
                             />
                           ) : (
                             <div className={`absolute inset-0 ${colors.dark} flex items-center justify-center`}>
@@ -860,7 +860,7 @@ const ModernEventsNewsSection = () => {
                         window.open(shareUrls[item.platform], '_blank');
                       }
                     }}
-                    className="flex flex-col items-center justify-center p-2 sm:p-3 rounded-lg sm:rounded-xl hover:scale-100 active:scale-95 transition-all"
+                    className="flex flex-col items-center justify-center p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all"
                   >
                     <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 ${item.color}`}>
                       <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
