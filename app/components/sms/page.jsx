@@ -587,83 +587,274 @@ export default function SMSManager() {
     [students, staff]
   );
 
-  const recipientGroups = useMemo(() => {
-    const safeStudents = Array.isArray(students) ? students : [];
-    const safeStaff = Array.isArray(staff) ? staff : [];
+// ========== Phone Number Normalization Function ==========
+const normalizePhoneNumber = (phone) => {
+  if (!phone || typeof phone !== 'string') return null;
+  
+  // Remove all non-digit characters (spaces, dashes, plus signs, etc.)
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // Handle different valid Kenyan phone number formats
+  
+  // Case 1: Already in 07XXXXXXXX format (10 digits starting with 07)
+  if (cleaned.length === 10 && cleaned.startsWith('07')) {
+    return cleaned; // Valid 07 format
+  }
+  
+  // Case 2: 254XXXXXXXXX format (12 digits starting with 254)
+  if (cleaned.length === 12 && cleaned.startsWith('254')) {
+    return '0' + cleaned.slice(3); // Convert 2547... to 07...
+  }
+  
+  // Case 3: 7XXXXXXXX format (9 digits starting with 7 - missing leading 0)
+  if (cleaned.length === 9 && cleaned.startsWith('7')) {
+    return '0' + cleaned; // Add leading 0
+  }
+  
+  // Case 4: 254 with plus sign already removed, but check if it's actually 13 digits (unlikely)
+  if (cleaned.length === 13 && cleaned.startsWith('254')) {
+    return '0' + cleaned.slice(3, 12); // Take first 12 digits only
+  }
+  
+  // Case 5: 07 with more than 10 digits (invalid but try to salvage)
+  if (cleaned.startsWith('07') && cleaned.length > 10) {
+    return cleaned.slice(0, 10); // Truncate to first 10 digits
+  }
+  
+  // Case 6: 01 format (Safaricom lines) - keep as is if valid
+  if (cleaned.length === 10 && cleaned.startsWith('01')) {
+    return cleaned;
+  }
+  
+  // Case 7: 011 format (Telkom) - keep as is if valid
+  if (cleaned.length === 10 && cleaned.startsWith('011')) {
+    return cleaned;
+  }
+  
+  // Invalid format
+  return null;
+};
 
-    const getParentCount = () => safeStudents.filter((s) => s.parentPhone && s.parentPhone.trim() !== "").length;
-    const getStaffCount = () => safeStaff.filter((s) => s.phone && s.phone.trim() !== "").length;
-    const getTeacherCount = () =>
-      safeStaff.filter(
-        (s) => (s.role === "Teacher" || ["Sciences", "Mathematics", "Languages", "Humanities", "Sports"].includes(s.department)) && s.phone
-      ).length;
-    const getAdminCount = () =>
-      safeStaff.filter((s) => (s.role === "Principal" || s.role === "Deputy Principal" || s.department === "Administration") && s.phone)
-        .length;
-    const getBOMCount = () =>
-      safeStaff.filter((s) => (s.role === "BOM Member" || (s.position && s.position.toLowerCase().includes("board"))) && s.phone).length;
-    const getSupportCount = () =>
-      safeStaff.filter((s) => (s.role === "Support Staff" || s.role === "Librarian" || s.role === "Counselor") && s.phone).length;
+// ========== Validate if phone number is valid for SMS ==========
+const isValidPhoneForSMS = (phone) => {
+  const normalized = normalizePhoneNumber(phone);
+  if (!normalized) return false;
+  
+  // Must be exactly 10 digits and start with 07 or 01
+  return normalized.length === 10 && (normalized.startsWith('07') || normalized.startsWith('01'));
+};
 
-    return [
-      {
-        value: "all",
-        label: "All Recipients",
-        shortLabel: "All",
-        count: getParentCount() + getStaffCount(),
-        color: "from-blue-500 to-cyan-500",
-        icon: Users,
-      },
-      {
-        value: "parents",
-        label: "Parents & Guardians",
-        shortLabel: "Parents",
-        count: getParentCount(),
-        color: "from-green-500 to-emerald-500",
-        icon: Users,
-      },
-      {
-        value: "teachers",
-        label: "Teaching Staff",
-        shortLabel: "Teachers",
-        count: getTeacherCount(),
-        color: "from-purple-500 to-pink-500",
-        icon: GraduationCap,
-      },
-      {
-        value: "administration",
-        label: "Administration",
-        shortLabel: "Admin",
-        count: getAdminCount(),
-        color: "from-orange-500 to-amber-500",
-        icon: ShieldCheck,
-      },
-      {
-        value: "bom",
-        label: "Board of Management",
-        shortLabel: "BOM",
-        count: getBOMCount(),
-        color: "from-red-500 to-rose-500",
-        icon: ShieldCheck,
-      },
-      {
-        value: "support",
-        label: "Support Staff",
-        shortLabel: "Support",
-        count: getSupportCount(),
-        color: "from-indigo-500 to-violet-500",
-        icon: Users,
-      },
-      {
-        value: "staff",
-        label: "All School Staff",
-        shortLabel: "Staff",
-        count: getStaffCount(),
-        color: "from-cyan-500 to-blue-500",
-        icon: Users,
-      },
-    ];
-  }, [students, staff]);
+// ========== Updated recipientGroups with validation ==========
+const recipientGroups = useMemo(() => {
+  const safeStudents = Array.isArray(students) ? students : [];
+  const safeStaff = Array.isArray(staff) ? staff : [];
+
+  // Helper to get valid phone numbers with logging for debugging
+  const getValidPhones = (items, phoneField, itemName = 'unknown') => {
+    return items.filter(item => {
+      const phone = item[phoneField];
+      if (!phone || typeof phone !== 'string' || phone.trim() === '') {
+        return false;
+      }
+      
+      const isValid = isValidPhoneForSMS(phone.trim());
+      
+      // Log invalid numbers for debugging (optional, can be removed in production)
+      if (!isValid) {
+        console.warn(`Invalid ${phoneField} format:`, {
+          name: item.name || `${item.firstName} ${item.lastName}` || itemName,
+          original: phone,
+          normalized: normalizePhoneNumber(phone)
+        });
+      }
+      
+      return isValid;
+    }).length;
+  };
+
+  // Get counts with validation
+  const getParentCount = () => getValidPhones(safeStudents, 'parentPhone', 'student');
+  const getStaffCount = () => getValidPhones(safeStaff, 'phone', 'staff');
+  
+  const getTeacherCount = () => {
+    const teachers = safeStaff.filter(s => 
+      s.role === "Teacher" || 
+      ["Sciences", "Mathematics", "Languages", "Humanities", "Sports"].includes(s.department)
+    );
+    return getValidPhones(teachers, 'phone', 'teacher');
+  };
+  
+  const getAdminCount = () => {
+    const admins = safeStaff.filter(s => 
+      s.role === "Principal" || 
+      s.role === "Deputy Principal" || 
+      s.department === "Administration"
+    );
+    return getValidPhones(admins, 'phone', 'admin');
+  };
+  
+  const getBOMCount = () => {
+    const bom = safeStaff.filter(s => 
+      s.role === "BOM Member" || 
+      (s.position && s.position.toLowerCase().includes("board"))
+    );
+    return getValidPhones(bom, 'phone', 'BOM');
+  };
+  
+  const getSupportCount = () => {
+    const support = safeStaff.filter(s => 
+      s.role === "Support Staff" || 
+      s.role === "Librarian" || 
+      s.role === "Counselor"
+    );
+    return getValidPhones(support, 'phone', 'support');
+  };
+
+  // Calculate all counts once for performance
+  const parentCount = getParentCount();
+  const staffCount = getStaffCount();
+  const teacherCount = getTeacherCount();
+  const adminCount = getAdminCount();
+  const bomCount = getBOMCount();
+  const supportCount = getSupportCount();
+
+  // Log summary for debugging
+  console.log('📊 Recipient Groups Summary:', {
+    parents: parentCount,
+    staff: staffCount,
+    teachers: teacherCount,
+    admins: adminCount,
+    bom: bomCount,
+    support: supportCount,
+    total: parentCount + staffCount
+  });
+
+  return [
+    {
+      value: "all",
+      label: "All Recipients",
+      shortLabel: "All",
+      count: parentCount + staffCount,
+      color: "from-blue-500 to-cyan-500",
+      icon: Users,
+      description: "Parents + Staff with valid phone numbers"
+    },
+    {
+      value: "parents",
+      label: "Parents & Guardians",
+      shortLabel: "Parents",
+      count: parentCount,
+      color: "from-green-500 to-emerald-500",
+      icon: Users,
+      description: "Parents with valid phone numbers"
+    },
+    {
+      value: "teachers",
+      label: "Teaching Staff",
+      shortLabel: "Teachers",
+      count: teacherCount,
+      color: "from-purple-500 to-pink-500",
+      icon: GraduationCap,
+      description: "Teachers with valid phone numbers"
+    },
+    {
+      value: "administration",
+      label: "Administration",
+      shortLabel: "Admin",
+      count: adminCount,
+      color: "from-orange-500 to-amber-500",
+      icon: ShieldCheck,
+      description: "Admin staff with valid phone numbers"
+    },
+    {
+      value: "bom",
+      label: "Board of Management",
+      shortLabel: "BOM",
+      count: bomCount,
+      color: "from-red-500 to-rose-500",
+      icon: ShieldCheck,
+      description: "BOM members with valid phone numbers"
+    },
+    {
+      value: "support",
+      label: "Support Staff",
+      shortLabel: "Support",
+      count: supportCount,
+      color: "from-indigo-500 to-violet-500",
+      icon: Users,
+      description: "Support staff with valid phone numbers"
+    },
+    {
+      value: "staff",
+      label: "All School Staff",
+      shortLabel: "Staff",
+      count: staffCount,
+      color: "from-cyan-500 to-blue-500",
+      icon: Users,
+      description: "All staff with valid phone numbers"
+    },
+  ];
+}, [students, staff]);
+
+
+
+// ========== Debug function to check all phone numbers ==========
+const debugAllPhoneNumbers = useCallback(() => {
+  console.group('📱 Complete Phone Numbers Debug');
+  
+  // Check students
+  console.group('Students Parent Phones:');
+  students.forEach(s => {
+    if (s.parentPhone) {
+      const normalized = normalizePhoneNumber(s.parentPhone);
+      console.log({
+        student: `${s.firstName} ${s.lastName}`,
+        original: s.parentPhone,
+        normalized: normalized,
+        isValid: isValidPhoneForSMS(s.parentPhone)
+      });
+    }
+  });
+  console.groupEnd();
+  
+  // Check staff
+  console.group('Staff Phones:');
+  staff.forEach(s => {
+    if (s.phone) {
+      const normalized = normalizePhoneNumber(s.phone);
+      console.log({
+        name: s.name,
+        role: s.role,
+        original: s.phone,
+        normalized: normalized,
+        isValid: isValidPhoneForSMS(s.phone)
+      });
+    }
+  });
+  console.groupEnd();
+  
+  // Summary
+  const validParentPhones = students.filter(s => isValidPhoneForSMS(s.parentPhone)).length;
+  const validStaffPhones = staff.filter(s => isValidPhoneForSMS(s.phone)).length;
+  
+  console.log('📊 Summary:', {
+    totalStudents: students.length,
+    studentsWithValidPhones: validParentPhones,
+    totalStaff: staff.length,
+    staffWithValidPhones: validStaffPhones,
+    totalValidRecipients: validParentPhones + validStaffPhones
+  });
+  
+  console.groupEnd();
+}, [students, staff]);
+
+// Call debug when data loads
+useEffect(() => {
+  if (students.length > 0 || staff.length > 0) {
+    debugAllPhoneNumbers();
+  }
+}, [students, staff, debugAllPhoneNumbers]);
+
 
   const statusOptions = [
     { value: "all", label: "All Status" },
