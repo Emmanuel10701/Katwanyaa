@@ -1094,51 +1094,54 @@ useEffect(() => {
     setShowDeleteModal(true);
   };
 
-  const openSendConfirmationModal = (campaign) => {
-    if (!campaign) return;
-    
-    // Check balance before opening modal
-    if (balance && !balance.canSend) {
-      toast.custom((t) => (
-        <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
-          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-white" />
-              <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
-            </div>
-          </div>
-          <div className="p-4">
-            <p className="text-gray-700 mb-3">
-              Current balance: <span className="font-bold text-amber-600">{balance.balance} credits</span>
-            </p>
-            <p className="text-sm text-gray-600 mb-4">
-              You need at least 1 credit per SMS. This campaign has {campaign.recipients?.split(",").length || 0} recipients.
-            </p>
-            <div className="flex gap-2">
-              <a
-                href="https://celcomafrica.com/till-paybill-sms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
-              >
-                Top Up Now
-              </a>
-              <button
-                onClick={() => toast.dismiss(t)}
-                className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
-              >
-                Later
-              </button>
-            </div>
+const openSendConfirmationModal = (campaign) => {
+  if (!campaign) return;
+  
+  // Check balance first if available
+  if (balance && !balance.canSend) {
+    toast.custom((t) => (
+      <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-white" />
+            <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
           </div>
         </div>
-      ), { duration: 10000 });
-      return;
-    }
-    
-    setCampaignToSend(campaign);
-    setShowSendConfirmationModal(true);
-  };
+        <div className="p-4">
+          <p className="text-gray-700 mb-3">
+            Current balance: <span className="font-bold text-amber-600">{balance.balance} credits</span>
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            You need at least 1 credit per SMS. This campaign has {campaign.recipients?.split(",").length || 0} recipients.
+          </p>
+          <p className="text-sm text-gray-900 mb-4">
+            Call <a href="tel:+254700000000" className="text-amber-600 font-bold">+254 700 000 000</a> or top up via the link below.
+          </p>
+          <div className="flex gap-2">
+            <a
+              href="https://celcomafrica.com/till-paybill-sms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+            >
+              Top Up Now
+            </a>
+            <button
+              onClick={() => toast.dismiss(t)}
+              className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+            >
+              Later
+            </button>
+          </div>
+        </div>
+      </div>
+    ), { duration: 10000 });
+    return;
+  }
+  
+  setCampaignToSend(campaign);
+  setShowSendConfirmationModal(true);
+};
 
   const openBulkDeleteModal = () => {
     if (selectedCampaigns.size === 0) {
@@ -1152,150 +1155,83 @@ useEffect(() => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleCreateOrUpdateCampaign = async () => {
-    if (isSubmitting) return;
+ // In the SMSManager component, replace the handleCreateOrUpdateCampaign function:
+
+const handleCreateOrUpdateCampaign = async () => {
+  if (isSubmitting) return;
+  
+  if (!campaignForm.title || !campaignForm.message) {
+    toast.error("Title and message are required");
+    return;
+  }
+
+  try {
+    setIsSubmitting(true);
+    setLoadingStates((prev) => ({ ...prev, create: true }));
     
-    if (!campaignForm.title || !campaignForm.message) {
-      toast.error("Title and message are required");
+    // Check authentication first
+    const headers = getAuthHeaders("application/json");
+    
+    const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
+    
+    if (recipientNumbers.length === 0) {
+      toast.error("No recipients with valid phone numbers found for the selected group");
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      const headers = getAuthHeaders("application/json");
-      setLoadingStates((prev) => ({ ...prev, create: true }));
+    // Log recipient count for debugging
+    console.log(`📱 Found ${recipientNumbers.length} valid recipients`);
 
-      const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
-      if (recipientNumbers.length === 0) {
-        toast.error("No recipients found for the selected group");
-        return;
-      }
+    // Prepare payload
+    const payload = {
+      title: campaignForm.title.trim(),
+      message: campaignForm.message,
+      recipients: recipientNumbers.join(", "),
+      recipientType: campaignForm.recipientType,
+      status: campaignForm.status, // 'draft' or 'sent'
+    };
 
-      const payload = {
-        title: campaignForm.title.trim(),
-        message: campaignForm.message,
-        recipients: recipientNumbers.join(", "),
-        recipientType: campaignForm.recipientType,
-        status: campaignForm.status,
-      };
+    const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
+    const method = selectedCampaign ? "PUT" : "POST";
 
-      const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
-      const method = selectedCampaign ? "PUT" : "POST";
+    console.log(`📤 Sending ${method} request to ${url}`, payload);
 
-      const response = await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(payload),
-      });
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(payload),
+    });
 
-      if (response.status === 401) throw new Error("Session expired");
-
-      const result = await response.json();
-
-      if (result.success) {
-        await fetchData();
-        
-        if (selectedCampaign) {
-          toast.success("Campaign updated successfully");
-        } else {
-          if (result.lowCreditInfo) {
-            toast.custom((t) => (
-              <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
-                <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-5 h-5 text-white" />
-                    <h3 className="font-bold text-white">⚠️ Low Credit - Saved as Draft</h3>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-gray-700 mb-2">{result.message}</p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Current balance: {result.lowCreditInfo.currentBalance} credits<br />
-                    Required: {result.lowCreditInfo.requiredCredit} credit per SMS
-                  </p>
-                  <div className="flex gap-2">
-                    <a
-                      href="https://celcomafrica.com/till-paybill-sms"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
-                    >
-                      Top Up Now
-                    </a>
-                    <button
-                      onClick={() => toast.dismiss(t)}
-                      className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ), { duration: 10000 });
-          } else {
-            toast.success(campaignForm.status === "draft" ? 
-              "Campaign saved as draft" : 
-              "Campaign created successfully"
-            );
-          }
-        }
-        
-        setShowCreateModal(false);
-        setSelectedCampaign(null);
-        setCampaignForm({
-          title: "",
-          message: "",
-          recipientType: "all",
-          status: "draft",
-          recipients: [],
-        });
-        
-      } else {
-        toast.error(result.error || "Failed to save campaign");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      if (!handleAuthError(error)) {
-        toast.error(error.message || "Network error");
-      }
-    } finally {
-      setIsSubmitting(false);
-      setLoadingStates((prev) => ({ ...prev, create: false }));
+    if (response.status === 401) {
+      throw new Error("Session expired. Please login again.");
     }
-  };
 
-  const handleSendCampaign = async () => {
-    if (!campaignToSend) return;
-    
-    try {
-      const headers = getAuthHeaders("application/json");
-      setLoadingStates((prev) => ({ ...prev, send: true }));
+    const result = await response.json();
+    console.log("✅ API Response:", result);
 
-      const response = await fetch(`/api/sms/${campaignToSend.id}`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({ status: "sent" }),
-      });
-
-      if (response.status === 401) throw new Error("Session expired");
-
-      const result = await response.json();
-
-      if (response.status === 402) {
-        // Low credit detected
+    if (result.success) {
+      // Handle successful creation/update
+      await fetchData(); // Refresh the campaigns list
+      
+      // Show appropriate message based on result
+      if (result.lowCreditInfo) {
+        // Low credit scenario - saved as draft
         toast.custom((t) => (
           <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-white" />
-                <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
+                <h3 className="font-bold text-white">⚠️ Low Credit - Saved as Draft</h3>
               </div>
             </div>
             <div className="p-4">
               <p className="text-gray-700 mb-2">{result.message}</p>
               <p className="text-sm text-gray-600 mb-4">
-                Current balance: {result.balance} credits<br />
-                Required: {result.requiredCredit} credit per SMS
+                Current balance: {result.lowCreditInfo.currentBalance} credits<br />
+                Required: {result.lowCreditInfo.requiredCredit} credit per SMS
+              </p>
+              <p className="text-sm text-gray-900 mb-4">
+                Call <a href="tel:+254700000000" className="text-amber-600 font-bold">+254 700 000 000</a> or top up via the link below.
               </p>
               <div className="flex gap-2">
                 <a
@@ -1316,62 +1252,169 @@ useEffect(() => {
             </div>
           </div>
         ), { duration: 10000 });
-        
-        // Update local state to reflect draft status
-        setCampaigns((prev) =>
-          prev.map((c) =>
-            c.id === campaignToSend.id
-              ? { ...c, status: "draft", lowCreditSaved: true }
-              : c
-          )
-        );
-      } else if (result.success) {
-        // Success
-        setCampaigns((prev) =>
-          prev.map((c) =>
-            c.id === campaignToSend.id
-              ? {
-                  ...c,
-                  status: "sent",
-                  sentAt: new Date().toISOString(),
-                  sentCount: result.smsResults?.summary?.successful || 0,
-                  failedCount: result.smsResults?.summary?.failed || 0,
-                  lowCreditSaved: false,
-                }
-              : c
-          )
-        );
-        
-        const successful = result.smsResults?.summary?.successful || 0;
-        const failed = result.smsResults?.summary?.failed || 0;
-        const total = successful + failed;
-        
+      } else if (campaignForm.status === "sent") {
+        // Successfully sent
         toast.success(
           <div>
             <p className="font-bold">✅ Campaign Sent!</p>
-            <p className="text-sm">{successful}/{total} messages delivered</p>
-            {failed > 0 && <p className="text-xs text-red-200 mt-1">{failed} failed</p>}
+            <p className="text-sm">{result.smsResults?.summary?.successful || 0} messages delivered</p>
           </div>,
           { duration: 6000 }
         );
       } else {
-        toast.error(result.error || "Failed to send campaign");
+        // Draft saved successfully
+        toast.success(
+          <div>
+            <p className="font-bold">✅ Campaign Saved!</p>
+            <p className="text-sm">Your campaign has been saved as draft</p>
+          </div>,
+          { duration: 4000 }
+        );
       }
       
-      setShowSendConfirmationModal(false);
-      setCampaignToSend(null);
+      // Close modal and reset form
+      setShowCreateModal(false);
+      setSelectedCampaign(null);
+      setCampaignForm({
+        title: "",
+        message: "",
+        recipientType: "all",
+        status: "draft",
+        recipients: [],
+      });
       
-    } catch (error) {
-      console.error("Error sending campaign:", error);
-      if (!handleAuthError(error)) {
-        toast.error(error.message || "Network error");
-      }
-      setShowSendConfirmationModal(false);
-      setCampaignToSend(null);
-    } finally {
-      setLoadingStates((prev) => ({ ...prev, send: false }));
+    } else {
+      // Handle API error
+      toast.error(result.error || "Failed to save campaign");
     }
-  };
+  } catch (error) {
+    console.error("Error saving campaign:", error);
+    
+    // Handle authentication errors
+    if (handleAuthError(error, (type, msg) => toast.error(msg))) {
+      return;
+    }
+    
+    // Network or other errors
+    toast.error(error.message || "Network error. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+    setLoadingStates((prev) => ({ ...prev, create: false }));
+  }
+};
+
+
+const handleSendCampaign = async () => {
+  if (!campaignToSend) return;
+  
+  try {
+    const headers = getAuthHeaders("application/json");
+    setLoadingStates((prev) => ({ ...prev, send: true }));
+
+    const response = await fetch(`/api/sms/${campaignToSend.id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ status: "sent" }),
+    });
+
+    if (response.status === 401) throw new Error("Session expired");
+
+    const result = await response.json();
+
+    if (response.status === 402) {
+      // Low credit detected - show custom toast
+      toast.custom((t) => (
+        <div className="bg-white rounded-2xl shadow-2xl border-l-4 border-amber-500 overflow-hidden w-96">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-white" />
+              <h3 className="font-bold text-white">⚠️ Insufficient Credit</h3>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-gray-700 mb-2">{result.message}</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Current balance: {result.balance} credits<br />
+              Required: {result.requiredCredit} credit per SMS
+            </p>
+            <p className="text-sm text-gray-900 mb-4">
+              Call <a href="tel:+254700000000" className="text-amber-600 font-bold">+254 700 000 000</a> or top up via the link below.
+            </p>
+            <div className="flex gap-2">
+              <a
+                href="https://celcomafrica.com/till-paybill-sms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:from-amber-600 hover:to-orange-600 transition-all text-center"
+              >
+                Top Up Now
+              </a>
+              <button
+                onClick={() => toast.dismiss(t)}
+                className="px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      ), { duration: 10000 });
+      
+      // Update local state to reflect draft status
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === campaignToSend.id
+            ? { ...c, status: "draft", lowCreditSaved: true }
+            : c
+        )
+      );
+    } else if (result.success) {
+      // Success - campaign sent
+      setCampaigns((prev) =>
+        prev.map((c) =>
+          c.id === campaignToSend.id
+            ? {
+                ...c,
+                status: "sent",
+                sentAt: new Date().toISOString(),
+                sentCount: result.smsResults?.summary?.successful || 0,
+                failedCount: result.smsResults?.summary?.failed || 0,
+                lowCreditSaved: false,
+              }
+            : c
+        )
+      );
+      
+      const successful = result.smsResults?.summary?.successful || 0;
+      const failed = result.smsResults?.summary?.failed || 0;
+      const total = successful + failed;
+      
+      toast.success(
+        <div>
+          <p className="font-bold">✅ Campaign Sent!</p>
+          <p className="text-sm">{successful}/{total} messages delivered</p>
+          {failed > 0 && <p className="text-xs text-red-200 mt-1">{failed} failed</p>}
+        </div>,
+        { duration: 6000 }
+      );
+    } else {
+      toast.error(result.error || "Failed to send campaign");
+    }
+    
+    setShowSendConfirmationModal(false);
+    setCampaignToSend(null);
+    
+  } catch (error) {
+    console.error("Error sending campaign:", error);
+    if (!handleAuthError(error, (type, msg) => toast.error(msg))) {
+      toast.error(error.message || "Network error");
+    }
+    setShowSendConfirmationModal(false);
+    setCampaignToSend(null);
+  } finally {
+    setLoadingStates((prev) => ({ ...prev, send: false }));
+  }
+};
 
   const handleDeleteCampaign = async () => {
     if (!campaignToDelete) return;

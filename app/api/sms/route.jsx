@@ -496,7 +496,9 @@ async function sendSmsCampaign(campaign) {
 
 // ====================================================================
 // POST HANDLER - Create a new SMS campaign
-// MODIFIED: Auto-draft when low credit
+// ====================================================================
+// POST HANDLER - Create a new SMS campaign
+// MODIFIED: Properly save drafts to database
 // ====================================================================
 export async function POST(req) {
   try {
@@ -592,50 +594,53 @@ export async function POST(req) {
     // ==================== END REQUEST PARSING ====================
 
     // ==================== DATABASE OPERATION ====================
+    // Always create the campaign in database first
     const campaignData = {
       title,
       message,
       recipients: uniquePhones.join(", "),
       recipientType: recipientType || "all",
-      status, // Will be updated if low credit detected
-      lowCreditSaved: false, // Initialize
-      ...(status === "sent" && { sentAt: new Date() }),
+      status: "draft", // Always start as draft, will update to 'sent' only if successful
+      lowCreditSaved: false,
     };
 
     if (idempotencyKey) {
       campaignData.idempotencyKey = idempotencyKey;
     }
 
+    // Create the campaign in database
     const campaign = await prisma.smsCampaign.create({
       data: campaignData,
     });
+    
+    console.log(`✅ Campaign created in database with ID: ${campaign.id}, status: draft`);
     // ==================== END DATABASE OPERATION ====================
 
-    // ==================== SMS SENDING ====================
+    // ==================== SMS SENDING (ONLY IF STATUS IS "sent") ====================
     let smsResults = null;
-    let finalStatus = campaign.status;
+    let finalStatus = "draft"; // Default to draft
     let lowCreditSaved = false;
 
+    // Only attempt to send if status is explicitly "sent"
     if (status === "sent") {
       try {
-        // Check balance first (optional but recommended)
+        // Check balance first
         const balanceInfo = await checkCelcomBalance();
         
-        // If insufficient credit, auto-save as draft
+        // If insufficient credit, keep as draft
         if (!balanceInfo.canSend) {
-          console.log(`⚠️ Insufficient credit (${balanceInfo.balance}). Auto-saving as draft.`);
+          console.log(`⚠️ Insufficient credit (${balanceInfo.balance}). Keeping as draft.`);
           
+          // Update campaign to mark low credit
           await prisma.smsCampaign.update({
             where: { id: campaign.id },
             data: {
-              status: 'draft',
               lowCreditSaved: true,
-              // Store balance info in metadata if you have a field
             },
           });
           
-          finalStatus = 'draft';
           lowCreditSaved = true;
+          finalStatus = "draft";
           
           smsResults = {
             lowCreditDetected: true,
@@ -644,7 +649,7 @@ export async function POST(req) {
             summary: {
               total: uniquePhones.length,
               successful: 0,
-              failed: uniquePhones.length,
+              failed: 0,
               successRate: 0
             }
           };
@@ -654,7 +659,7 @@ export async function POST(req) {
           
           // Check if low credit was detected during sending
           if (smsResults.lowCreditDetected) {
-            // Update campaign to draft
+            // Update campaign to draft with low credit flag
             await prisma.smsCampaign.update({
               where: { id: campaign.id },
               data: {
@@ -668,10 +673,12 @@ export async function POST(req) {
             finalStatus = 'draft';
             lowCreditSaved = true;
           } else {
-            // All good - update with sent counts
+            // All good - update to sent
             await prisma.smsCampaign.update({
               where: { id: campaign.id },
               data: {
+                status: 'sent',
+                sentAt: new Date(),
                 sentCount: smsResults.summary.successful,
                 failedCount: smsResults.summary.failed,
                 lowCreditSaved: false,
@@ -684,11 +691,10 @@ export async function POST(req) {
       } catch (smsError) {
         console.error("SMS sending failed:", smsError);
         
+        // Update campaign to mark failure but keep as draft
         await prisma.smsCampaign.update({
           where: { id: campaign.id },
           data: {
-            failedCount: uniquePhones.length,
-            status: 'draft',
             lowCreditSaved: true,
           },
         });
@@ -701,31 +707,41 @@ export async function POST(req) {
           summary: {
             total: uniquePhones.length,
             successful: 0,
-            failed: uniquePhones.length,
+            failed: 0,
             successRate: 0
           }
         };
       }
+    } else {
+      // If status is "draft", we're done - campaign already saved as draft
+      console.log(`📝 Campaign saved as draft (no SMS sending attempted)`);
     }
     // ==================== END SMS SENDING ====================
 
+    // ==================== FETCH FINAL CAMPAIGN DATA ====================
+    // Get the updated campaign from database
+    const updatedCampaign = await prisma.smsCampaign.findUnique({
+      where: { id: campaign.id }
+    });
+    // ==================== END FETCH FINAL CAMPAIGN DATA ====================
+
     // ==================== RESPONSE FORMATTING ====================
     const responseData = {
-      id: campaign.id,
-      title: campaign.title,
-      message: campaign.message,
-      recipients: campaign.recipients,
+      id: updatedCampaign.id,
+      title: updatedCampaign.title,
+      message: updatedCampaign.message,
+      recipients: updatedCampaign.recipients,
       recipientCount: uniquePhones.length,
-      recipientType: campaign.recipientType || 'all',
-      recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-      status: finalStatus,
-      sentAt: campaign.sentAt,
-      sentCount: campaign.sentCount || 0,
-      failedCount: campaign.failedCount || 0,
-      lowCreditSaved: lowCreditSaved,
+      recipientType: updatedCampaign.recipientType || 'all',
+      recipientTypeLabel: getRecipientTypeLabel(updatedCampaign.recipientType || 'all'),
+      status: updatedCampaign.status, // This will be 'draft' for draft saves
+      sentAt: updatedCampaign.sentAt,
+      sentCount: updatedCampaign.sentCount || 0,
+      failedCount: updatedCampaign.failedCount || 0,
+      lowCreditSaved: updatedCampaign.lowCreditSaved || false,
       senderId: CELCOM_SHORTCODE,
-      createdAt: campaign.createdAt,
-      updatedAt: campaign.updatedAt,
+      createdAt: updatedCampaign.createdAt,
+      updatedAt: updatedCampaign.updatedAt,
     };
 
     // Prepare appropriate message
@@ -737,7 +753,7 @@ export async function POST(req) {
         responseMessage = `✅ Campaign created and ${smsResults?.summary?.successful || 0} messages sent successfully`;
       }
     } else {
-      responseMessage = "Campaign saved as draft successfully";
+      responseMessage = "✅ Campaign saved as draft successfully";
     }
 
     return NextResponse.json(
@@ -788,7 +804,6 @@ export async function POST(req) {
     );
   }
 }
-
 // ====================================================================
 // PATCH HANDLER - Update campaign status (for sending)
 // MODIFIED: Auto-draft when low credit
