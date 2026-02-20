@@ -1155,8 +1155,6 @@ const openSendConfirmationModal = (campaign) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
- // In the SMSManager component, replace the handleCreateOrUpdateCampaign function:
-
 const handleCreateOrUpdateCampaign = async () => {
   if (isSubmitting) return;
   
@@ -1169,7 +1167,6 @@ const handleCreateOrUpdateCampaign = async () => {
     setIsSubmitting(true);
     setLoadingStates((prev) => ({ ...prev, create: true }));
     
-    // Check authentication first
     const headers = getAuthHeaders("application/json");
     
     const recipientNumbers = getRecipientNumbers(campaignForm.recipientType);
@@ -1179,22 +1176,19 @@ const handleCreateOrUpdateCampaign = async () => {
       return;
     }
 
-    // Log recipient count for debugging
     console.log(`📱 Found ${recipientNumbers.length} valid recipients`);
 
-    // Prepare payload
+    // Prepare payload - send the status as is (draft or sent)
     const payload = {
       title: campaignForm.title.trim(),
       message: campaignForm.message,
       recipients: recipientNumbers.join(", "),
       recipientType: campaignForm.recipientType,
-      status: campaignForm.status, // 'draft' or 'sent'
+      status: campaignForm.status, // This will be 'draft' or 'sent'
     };
 
     const url = selectedCampaign ? `/api/sms/${selectedCampaign.id}` : "/api/sms";
     const method = selectedCampaign ? "PUT" : "POST";
-
-    console.log(`📤 Sending ${method} request to ${url}`, payload);
 
     const response = await fetch(url, {
       method,
@@ -1210,8 +1204,8 @@ const handleCreateOrUpdateCampaign = async () => {
     console.log("✅ API Response:", result);
 
     if (result.success) {
-      // Handle successful creation/update
-      await fetchData(); // Refresh the campaigns list
+      // Refresh the campaigns list
+      await fetchData();
       
       // Show appropriate message based on result
       if (result.lowCreditInfo) {
@@ -1227,11 +1221,7 @@ const handleCreateOrUpdateCampaign = async () => {
             <div className="p-4">
               <p className="text-gray-700 mb-2">{result.message}</p>
               <p className="text-sm text-gray-600 mb-4">
-                Current balance: {result.lowCreditInfo.currentBalance} credits<br />
-                Required: {result.lowCreditInfo.requiredCredit} credit per SMS
-              </p>
-              <p className="text-sm text-gray-900 mb-4">
-                Call <a href="tel:+254700000000" className="text-amber-600 font-bold">+254 700 000 000</a> or top up via the link below.
+                Current balance: {result.lowCreditInfo.currentBalance} credits
               </p>
               <div className="flex gap-2">
                 <a
@@ -1252,7 +1242,7 @@ const handleCreateOrUpdateCampaign = async () => {
             </div>
           </div>
         ), { duration: 10000 });
-      } else if (campaignForm.status === "sent") {
+      } else if (campaignForm.status === "sent" && result.campaign.status === "sent") {
         // Successfully sent
         toast.success(
           <div>
@@ -1284,25 +1274,19 @@ const handleCreateOrUpdateCampaign = async () => {
       });
       
     } else {
-      // Handle API error
       toast.error(result.error || "Failed to save campaign");
     }
   } catch (error) {
     console.error("Error saving campaign:", error);
-    
-    // Handle authentication errors
     if (handleAuthError(error, (type, msg) => toast.error(msg))) {
       return;
     }
-    
-    // Network or other errors
     toast.error(error.message || "Network error. Please try again.");
   } finally {
     setIsSubmitting(false);
     setLoadingStates((prev) => ({ ...prev, create: false }));
   }
 };
-
 
 const handleSendCampaign = async () => {
   if (!campaignToSend) return;
