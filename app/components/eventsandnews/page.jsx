@@ -875,65 +875,244 @@ useEffect(() => {
   };
 
   // 🔥 FIXED: Proper form submission with ALL data
-// In ModernItemModal component, update the formData initialization
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log('🚀 Submitting form with data:', formData);
-  
-  const submitData = new FormData();
-  
-  // 🚨 CRITICAL: For NEWS, ALWAYS include both excerpt and fullContent
-  if (type === 'news') {
-    // Always include these fields - empty fields will be handled by backend
-    submitData.append('title', formData.title.trim());
-    submitData.append('excerpt', formData.excerpt.trim());
-    submitData.append('fullContent', formData.fullContent.trim());
-    submitData.append('category', formData.category);
-    submitData.append('author', formData.author.trim());
-    submitData.append('date', formData.date);
+const handleSubmit = async (formData, id) => {
+  setSaving(true);
+  try {
+    console.log('📥 Received from modal:', formData);
     
-    // If editing, include the ID
-    if (item?.id) {
-      submitData.append('id', item.id.toString());
+    // Get authentication headers
+    const authHeaders = getAuthHeaders();
+    
+    showNotification('info', 'Saving', `${id ? 'Updating' : 'Creating'} ${activeSection}...`);
+    
+    const endpoint = id 
+      ? (activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`)
+      : (activeSection === 'news' ? '/api/news' : '/api/events');
+    
+    const method = id ? 'PUT' : 'POST';
+    
+    // 🚨 CRITICAL: Ensure ALL existing data is included when updating
+    if (id && editingItem) {
+      console.log('🔄 Including existing data for update:', editingItem);
+      
+      // For News - ensure excerpt and fullContent are preserved if not changed
+      if (activeSection === 'news') {
+        const excerpt = formData.get('excerpt');
+        const fullContent = formData.get('fullContent');
+        
+        // If excerpt is empty but we have existing excerpt, use existing
+        if (!excerpt && editingItem.excerpt) {
+          formData.set('excerpt', editingItem.excerpt);
+        }
+        
+        // If fullContent is empty but we have existing fullContent, use existing
+        if (!fullContent && editingItem.fullContent) {
+          formData.set('fullContent', editingItem.fullContent);
+        }
+      }
+      
+      // For Events - ensure description is preserved if not changed
+      if (activeSection === 'events') {
+        const description = formData.get('description');
+        if (!description && editingItem.description) {
+          formData.set('description', editingItem.description);
+        }
+      }
     }
-  } 
-  // 🚨 For EVENTS, send event fields
-  else if (type === 'events') {
-    submitData.append('title', formData.title.trim());
-    submitData.append('description', formData.description.trim());
-    submitData.append('category', formData.category);
-    submitData.append('date', formData.date);
     
-    // Event-specific fields
-    if (formData.time) submitData.append('time', formData.time);
-    if (formData.location) submitData.append('location', formData.location);
-    if (formData.speaker) submitData.append('speaker', formData.speaker);
-    if (formData.attendees) submitData.append('attendees', formData.attendees);
-    if (formData.type) submitData.append('type', formData.type);
-    
-    // ✅ ONLY for events: Include featured field
-    if (formData.featured !== undefined) {
-      submitData.append('featured', formData.featured.toString());
+    // Debug: Show what's being sent
+    console.log('📤 Sending to API:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
     }
     
-    // If editing, include the ID
-    if (item?.id) {
-      submitData.append('id', item.id.toString());
+    const response = await fetch(endpoint, {
+      method,
+      headers: {
+        ...authHeaders,
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    console.log('✅ API Response:', result);
+
+    if (result.success) {
+      // ✅ SUCCESS: Close modal and refresh
+      setShowModal(false);
+      await fetchData();
+      
+      showNotification(
+        'success',
+        id ? 'Updated' : 'Created',
+        `${activeSection === 'news' ? 'News' : 'Event'} ${id ? 'updated' : 'created'} successfully!`
+      );
+    } else {
+      throw new Error(result.error || result.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
     }
+  } catch (error) {
+    console.error(`Error saving ${activeSection}:`, error);
+    
+    // 🔥 CHECK FOR NETWORK ERRORS
+    const isNetworkError = !navigator.onLine || 
+                          error.message === 'Failed to fetch' || 
+                          error.message.includes('network') ||
+                          error.message.includes('NetworkError') ||
+                          error.name === 'TypeError'; // Common for network issues
+    
+    if (isNetworkError) {
+      console.log('🌐 Network error detected - saving to localStorage and keeping modal open');
+      
+      // Store the failed submission in localStorage
+      const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
+      
+      // Convert FormData to a plain object for storage
+      const formDataObj = {};
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          // Convert file to data URL for storage
+          const reader = new FileReader();
+          reader.readAsDataURL(value);
+          await new Promise((resolve) => {
+            reader.onload = () => {
+              formDataObj[key] = {
+                type: 'file',
+                name: value.name,
+                data: reader.result
+              };
+              resolve();
+            };
+          });
+        } else {
+          formDataObj[key] = value;
+        }
+      }
+      
+      // Store the submission with metadata
+      failedSubmissions.push({
+        id: Date.now(), // Unique ID for this failed submission
+        type: activeSection,
+        data: formDataObj,
+        isEdit: !!id,
+        itemId: id,
+        timestamp: new Date().toISOString(),
+        formData: formData // Keep reference to original FormData
+      });
+      
+      localStorage.setItem('failedSubmissions', JSON.stringify(failedSubmissions));
+      
+      // Show network error notification but KEEP MODAL OPEN
+      showNotification(
+        'error',
+        'Network Error',
+        'Failed to connect to server. Your data has been saved locally. Please check your connection and try again.'
+      );
+      
+      // DON'T close the modal - keep it open with all data
+      // DON'T clear formData
+      
+    } else {
+      // Other types of errors - still keep modal open to preserve data
+      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+    }
+    
+    // Always keep modal open on error
+    // setShowModal(false); ❌ REMOVE THIS - we want to keep the modal open
+    
+  } finally {
+    setSaving(false);
   }
-  
-  // Add image if changed
-  if (imageFile) {
-    submitData.append('image', imageFile);
-  }
-  
-  console.log('📤 Sending form data to parent:');
-  for (let [key, value] of submitData.entries()) {
-    console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
-  }
-  
-  await onSave(submitData, item?.id);
 };
+
+
+
+
+
+// Add this to your component to retry failed submissions
+const retryFailedSubmissions = async () => {
+  const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
+  
+  if (failedSubmissions.length === 0) {
+    showNotification('info', 'No Pending Items', 'No failed submissions to retry.');
+    return;
+  }
+  
+  // Check if online
+  if (!navigator.onLine) {
+    showNotification('error', 'Offline', 'Please check your network connection and try again.');
+    return;
+  }
+  
+  showNotification('info', 'Retrying', `Attempting to sync ${failedSubmissions.length} items...`);
+  
+  const successfulRetries = [];
+  
+  for (const submission of failedSubmissions) {
+    try {
+      // Reconstruct FormData from stored object
+      const formData = new FormData();
+      
+      for (const [key, value] of Object.entries(submission.data)) {
+        if (value && typeof value === 'object' && value.type === 'file') {
+          // Reconstruct file from data URL
+          const response = await fetch(value.data);
+          const blob = await response.blob();
+          const file = new File([blob], value.name);
+          formData.append(key, file);
+        } else {
+          formData.append(key, value);
+        }
+      }
+      
+      // Retry the submission
+      const endpoint = submission.isEdit 
+        ? (submission.type === 'news' ? `/api/news/${submission.itemId}` : `/api/events/${submission.itemId}`)
+        : (submission.type === 'news' ? '/api/news' : '/api/events');
+      
+      const method = submission.isEdit ? 'PUT' : 'POST';
+      const authHeaders = getAuthHeaders();
+      
+      const response = await fetch(endpoint, {
+        method,
+        headers: { ...authHeaders },
+        body: formData,
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        successfulRetries.push(submission.id);
+      }
+    } catch (error) {
+      console.error('Retry failed:', error);
+    }
+  }
+  
+  // Remove successful retries from localStorage
+  if (successfulRetries.length > 0) {
+    const remaining = failedSubmissions.filter(s => !successfulRetries.includes(s.id));
+    localStorage.setItem('failedSubmissions', JSON.stringify(remaining));
+    
+    await fetchData(); // Refresh data
+    showNotification('success', 'Sync Complete', `${successfulRetries.length} items synced successfully.`);
+  }
+};
+
+// Add network status listener
+useEffect(() => {
+  const handleOnline = () => {
+    showNotification('info', 'Back Online', 'Network connection restored. Syncing pending items...');
+    retryFailedSubmissions();
+  };
+  
+  window.addEventListener('online', handleOnline);
+  
+  return () => {
+    window.removeEventListener('online', handleOnline);
+  };
+}, []);
+
+
 
   const themeGradient = type === 'news' 
     ? 'from-purple-700 via-pink-600 to-rose-600' 
