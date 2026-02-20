@@ -1284,7 +1284,6 @@ const handleSendCampaign = async () => {
             { label: "Campaigns", value: stats.total, icon: Smartphone, bg: "hover:border-blue-200" },
             { label: "Draft", value: stats.draft, icon: Clock, bg: "hover:border-amber-200" },
             { label: "Sent", value: stats.sent, icon: CheckCircle2, bg: "hover:border-emerald-200" },
-            { label: "Recipients", value: stats.totalRecipients, icon: Users, bg: "hover:border-purple-200" },
             { label: "Success", value: `${stats.successRate}%`, icon: BarChart3, bg: "hover:border-cyan-200" },
             // Add to stats array
 { 
