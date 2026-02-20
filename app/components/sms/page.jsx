@@ -1285,7 +1285,6 @@ const handleSendCampaign = async () => {
             { label: "Draft", value: stats.draft, icon: Clock, bg: "hover:border-amber-200" },
             { label: "Sent", value: stats.sent, icon: CheckCircle2, bg: "hover:border-emerald-200" },
             { label: "Success", value: `${stats.successRate}%`, icon: BarChart3, bg: "hover:border-cyan-200" },
-            // Add to stats array
 { 
   label: "Low Credit", 
   value: stats.lowCreditDrafts || 0, 

@@ -244,25 +244,26 @@ model EmailCampaign {
 
 
 
+
 model SmsCampaign {
   id              String    @id @default(cuid())
   title           String
-  idempotencyKey  String?   @unique  // <-- Fixed: moved to its own line
-  message         String    @db.Text
-  recipients      String    @db.Text   // comma-separated phone numbers
-  recipientType   String    @default("all")
-  status          String    @default("draft") // draft, sent, failed
+  message         String
+  recipients      String    // Comma-separated phone numbers
+  recipientType   String?   @default("all")
+  status          String    @default("draft") // "draft" or "sent"
   sentAt          DateTime?
-  sentCount       Int?
-  failedCount     Int?
+  sentCount       Int?      @default(0)
+  failedCount     Int?      @default(0)
+  lowCreditSaved  Boolean   @default(false) // Add this line
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-
+  
+  // Relations
   logs            SmsLog[]
-
+  
   @@map("sms_campaigns")
 }
-
 
 model SmsLog {
   id              String   @id @default(cuid())
