@@ -874,158 +874,100 @@ useEffect(() => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // 🔥 FIXED: Proper form submission with ALL data
-// 🔥 FIXED: Add e.preventDefault() to prevent page refresh
+// Inside ModernItemModal component - add this state at the top with other useState declarations
+const [saving, setSaving] = useState(false);
+
+// Updated handleSubmit function:
 const handleSubmit = async (e) => {
-  e.preventDefault(); // 👈 THIS IS CRITICAL - prevents page refresh
+  e.preventDefault(); // CRITICAL: Prevents page refresh
+  
   setSaving(true);
   try {
-    console.log('📥 Received from modal:', formData);
+    console.log('📥 Saving form data:', formData);
+    console.log('📥 Editing item:', item);
+    
+    // Create FormData for multipart/form-data
+    const submitFormData = new FormData();
+    
+    // Append all form fields
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+        submitFormData.append(key, formData[key]);
+        console.log(`Appending ${key}:`, formData[key]);
+      }
+    });
+    
+    // Handle image file if present (new file uploaded)
+    if (imageFile) {
+      submitFormData.append('image', imageFile);
+      console.log('Appending image file:', imageFile.name);
+    } else if (formData.image) {
+      // Keep existing image if no new file was uploaded
+      submitFormData.append('existingImage', formData.image);
+      console.log('Keeping existing image:', formData.image);
+    }
     
     // Get authentication headers
     const authHeaders = getAuthHeaders();
     
-    showNotification('info', 'Saving', `${id ? 'Updating' : 'Creating'} ${activeSection}...`);
+    // Determine endpoint and method based on whether we're editing or creating
+    const endpoint = item?.id 
+      ? (type === 'news' ? `/api/news/${item.id}` : `/api/events/${item.id}`)
+      : (type === 'news' ? '/api/news' : '/api/events');
     
-    const endpoint = id 
-      ? (activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`)
-      : (activeSection === 'news' ? '/api/news' : '/api/events');
+    const method = item?.id ? 'PUT' : 'POST';
     
-    const method = id ? 'PUT' : 'POST';
-    
-    // 🚨 CRITICAL: Ensure ALL existing data is included when updating
-    if (id && editingItem) {
-      console.log('🔄 Including existing data for update:', editingItem);
-      
-      // For News - ensure excerpt and fullContent are preserved if not changed
-      if (activeSection === 'news') {
-        const excerpt = formData.get('excerpt');
-        const fullContent = formData.get('fullContent');
-        
-        // If excerpt is empty but we have existing excerpt, use existing
-        if (!excerpt && editingItem.excerpt) {
-          formData.set('excerpt', editingItem.excerpt);
-        }
-        
-        // If fullContent is empty but we have existing fullContent, use existing
-        if (!fullContent && editingItem.fullContent) {
-          formData.set('fullContent', editingItem.fullContent);
-        }
-      }
-      
-      // For Events - ensure description is preserved if not changed
-      if (activeSection === 'events') {
-        const description = formData.get('description');
-        if (!description && editingItem.description) {
-          formData.set('description', editingItem.description);
-        }
-      }
-    }
-    
-    // Debug: Show what's being sent
-    console.log('📤 Sending to API:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
-    }
+    console.log(`📤 Sending ${method} request to ${endpoint}`);
     
     const response = await fetch(endpoint, {
       method,
       headers: {
         ...authHeaders,
+        // Don't set Content-Type - browser will set it with boundary for FormData
       },
-      body: formData,
+      body: submitFormData,
     });
 
     const result = await response.json();
     console.log('✅ API Response:', result);
 
     if (result.success) {
-      // ✅ SUCCESS: Close modal and refresh
-      setShowModal(false);
-      await fetchData();
+      // Success - close modal and notify parent
+      onSave(result.data || result.item || result);
+      onClose();
       
-      showNotification(
-        'success',
-        id ? 'Updated' : 'Created',
-        `${activeSection === 'news' ? 'News' : 'Event'} ${id ? 'updated' : 'created'} successfully!`
-      );
+      // Optional: Show success message
+      alert(item?.id ? 'Updated successfully!' : 'Created successfully!');
     } else {
-      throw new Error(result.error || result.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+      throw new Error(result.error || result.message || 'Save failed');
     }
   } catch (error) {
-    console.error(`Error saving ${activeSection}:`, error);
-    
-    // 🔥 CHECK FOR NETWORK ERRORS
-    const isNetworkError = !navigator.onLine || 
-                          error.message === 'Failed to fetch' || 
-                          error.message.includes('network') ||
-                          error.message.includes('NetworkError') ||
-                          error.name === 'TypeError'; // Common for network issues
-    
-    if (isNetworkError) {
-      console.log('🌐 Network error detected - saving to localStorage and keeping modal open');
-      
-      // Store the failed submission in localStorage
-      const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
-      
-      // Convert FormData to a plain object for storage
-      const formDataObj = {};
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          // Convert file to data URL for storage
-          const reader = new FileReader();
-          reader.readAsDataURL(value);
-          await new Promise((resolve) => {
-            reader.onload = () => {
-              formDataObj[key] = {
-                type: 'file',
-                name: value.name,
-                data: reader.result
-              };
-              resolve();
-            };
-          });
-        } else {
-          formDataObj[key] = value;
-        }
-      }
-      
-      // Store the submission with metadata
-      failedSubmissions.push({
-        id: Date.now(), // Unique ID for this failed submission
-        type: activeSection,
-        data: formDataObj,
-        isEdit: !!id,
-        itemId: id,
-        timestamp: new Date().toISOString(),
-        formData: formData // Keep reference to original FormData
-      });
-      
-      localStorage.setItem('failedSubmissions', JSON.stringify(failedSubmissions));
-      
-      // Show network error notification but KEEP MODAL OPEN
-      showNotification(
-        'error',
-        'Network Error',
-        'Failed to connect to server. Your data has been saved locally. Please check your connection and try again.'
-      );
-      
-      // DON'T close the modal - keep it open with all data
-      // DON'T clear formData
-      
-    } else {
-      // Other types of errors - still keep modal open to preserve data
-      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
-    }
-    
-    // Always keep modal open on error
-    // setShowModal(false); ❌ REMOVE THIS - we want to keep the modal open
-    
+    console.error('❌ Error saving:', error);
+    alert(`Save failed: ${error.message}`);
   } finally {
     setSaving(false);
   }
 };
 
+// Add getAuthHeaders helper inside the component
+const getAuthHeaders = () => {
+  try {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') return {};
+    
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    const headers = {};
+    if (adminToken) headers['x-admin-token'] = adminToken;
+    if (deviceToken) headers['x-device-token'] = deviceToken;
+    
+    return headers;
+  } catch (error) {
+    console.error('Error getting auth headers:', error);
+    return {};
+  }
+};
 
 
 
@@ -1605,157 +1547,99 @@ const confirmDelete = async () => {
   }
 };
 
-// 🔥 FIXED: Add e.preventDefault() to prevent page refresh
+// Inside ModernItemModal component - add this state at the top with other useState declarations
+
+// Updated handleSubmit function:
 const handleSubmit = async (e) => {
-  e.preventDefault(); // 👈 THIS IS CRITICAL - prevents page refresh
+  e.preventDefault(); // CRITICAL: Prevents page refresh
+  
   setSaving(true);
   try {
-    console.log('📥 Received from modal:', formData);
+    console.log('📥 Saving form data:', formData);
+    console.log('📥 Editing item:', item);
+    
+    // Create FormData for multipart/form-data
+    const submitFormData = new FormData();
+    
+    // Append all form fields
+    Object.keys(formData).forEach(key => {
+      if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+        submitFormData.append(key, formData[key]);
+        console.log(`Appending ${key}:`, formData[key]);
+      }
+    });
+    
+    // Handle image file if present (new file uploaded)
+    if (imageFile) {
+      submitFormData.append('image', imageFile);
+      console.log('Appending image file:', imageFile.name);
+    } else if (formData.image) {
+      // Keep existing image if no new file was uploaded
+      submitFormData.append('existingImage', formData.image);
+      console.log('Keeping existing image:', formData.image);
+    }
     
     // Get authentication headers
     const authHeaders = getAuthHeaders();
     
-    showNotification('info', 'Saving', `${id ? 'Updating' : 'Creating'} ${activeSection}...`);
+    // Determine endpoint and method based on whether we're editing or creating
+    const endpoint = item?.id 
+      ? (type === 'news' ? `/api/news/${item.id}` : `/api/events/${item.id}`)
+      : (type === 'news' ? '/api/news' : '/api/events');
     
-    const endpoint = id 
-      ? (activeSection === 'news' ? `/api/news/${id}` : `/api/events/${id}`)
-      : (activeSection === 'news' ? '/api/news' : '/api/events');
+    const method = item?.id ? 'PUT' : 'POST';
     
-    const method = id ? 'PUT' : 'POST';
-    
-    // 🚨 CRITICAL: Ensure ALL existing data is included when updating
-    if (id && editingItem) {
-      console.log('🔄 Including existing data for update:', editingItem);
-      
-      // For News - ensure excerpt and fullContent are preserved if not changed
-      if (activeSection === 'news') {
-        const excerpt = formData.get('excerpt');
-        const fullContent = formData.get('fullContent');
-        
-        // If excerpt is empty but we have existing excerpt, use existing
-        if (!excerpt && editingItem.excerpt) {
-          formData.set('excerpt', editingItem.excerpt);
-        }
-        
-        // If fullContent is empty but we have existing fullContent, use existing
-        if (!fullContent && editingItem.fullContent) {
-          formData.set('fullContent', editingItem.fullContent);
-        }
-      }
-      
-      // For Events - ensure description is preserved if not changed
-      if (activeSection === 'events') {
-        const description = formData.get('description');
-        if (!description && editingItem.description) {
-          formData.set('description', editingItem.description);
-        }
-      }
-    }
-    
-    // Debug: Show what's being sent
-    console.log('📤 Sending to API:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`${key}: ${value instanceof File ? `File (${value.name})` : value}`);
-    }
+    console.log(`📤 Sending ${method} request to ${endpoint}`);
     
     const response = await fetch(endpoint, {
       method,
       headers: {
         ...authHeaders,
+        // Don't set Content-Type - browser will set it with boundary for FormData
       },
-      body: formData,
+      body: submitFormData,
     });
 
     const result = await response.json();
     console.log('✅ API Response:', result);
 
     if (result.success) {
-      // ✅ SUCCESS: Close modal and refresh
-      setShowModal(false);
-      await fetchData();
+      // Success - close modal and notify parent
+      onSave(result.data || result.item || result);
+      onClose();
       
-      showNotification(
-        'success',
-        id ? 'Updated' : 'Created',
-        `${activeSection === 'news' ? 'News' : 'Event'} ${id ? 'updated' : 'created'} successfully!`
-      );
+      // Optional: Show success message
+      alert(item?.id ? 'Updated successfully!' : 'Created successfully!');
     } else {
-      throw new Error(result.error || result.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
+      throw new Error(result.error || result.message || 'Save failed');
     }
   } catch (error) {
-    console.error(`Error saving ${activeSection}:`, error);
-    
-    // 🔥 CHECK FOR NETWORK ERRORS
-    const isNetworkError = !navigator.onLine || 
-                          error.message === 'Failed to fetch' || 
-                          error.message.includes('network') ||
-                          error.message.includes('NetworkError') ||
-                          error.name === 'TypeError'; // Common for network issues
-    
-    if (isNetworkError) {
-      console.log('🌐 Network error detected - saving to localStorage and keeping modal open');
-      
-      // Store the failed submission in localStorage
-      const failedSubmissions = JSON.parse(localStorage.getItem('failedSubmissions') || '[]');
-      
-      // Convert FormData to a plain object for storage
-      const formDataObj = {};
-      for (let [key, value] of formData.entries()) {
-        if (value instanceof File) {
-          // Convert file to data URL for storage
-          const reader = new FileReader();
-          reader.readAsDataURL(value);
-          await new Promise((resolve) => {
-            reader.onload = () => {
-              formDataObj[key] = {
-                type: 'file',
-                name: value.name,
-                data: reader.result
-              };
-              resolve();
-            };
-          });
-        } else {
-          formDataObj[key] = value;
-        }
-      }
-      
-      // Store the submission with metadata
-      failedSubmissions.push({
-        id: Date.now(), // Unique ID for this failed submission
-        type: activeSection,
-        data: formDataObj,
-        isEdit: !!id,
-        itemId: id,
-        timestamp: new Date().toISOString(),
-        formData: formData // Keep reference to original FormData
-      });
-      
-      localStorage.setItem('failedSubmissions', JSON.stringify(failedSubmissions));
-      
-      // Show network error notification but KEEP MODAL OPEN
-      showNotification(
-        'error',
-        'Network Error',
-        'Failed to connect to server. Your data has been saved locally. Please check your connection and try again.'
-      );
-      
-      // DON'T close the modal - keep it open with all data
-      // DON'T clear formData
-      
-    } else {
-      // Other types of errors - still keep modal open to preserve data
-      showNotification('error', 'Save Failed', error.message || `Failed to ${id ? 'update' : 'create'} ${activeSection}`);
-    }
-    
-    // Always keep modal open on error
-    // setShowModal(false); ❌ REMOVE THIS - we want to keep the modal open
-    
+    console.error('❌ Error saving:', error);
+    alert(`Save failed: ${error.message}`);
   } finally {
     setSaving(false);
   }
 };
 
+// Add getAuthHeaders helper inside the component
+const getAuthHeaders = () => {
+  try {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined') return {};
+    
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
+    
+    const headers = {};
+    if (adminToken) headers['x-admin-token'] = adminToken;
+    if (deviceToken) headers['x-device-token'] = deviceToken;
+    
+    return headers;
+  } catch (error) {
+    console.error('Error getting auth headers:', error);
+    return {};
+  }
+};
   useEffect(() => {
     const calculatedStats = {
       totalNews: news.length,
