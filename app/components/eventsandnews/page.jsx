@@ -1687,8 +1687,6 @@ const handleSubmit = async (formData, id) => {
     setSaving(false);
   }
 };
-
-
   useEffect(() => {
     const calculatedStats = {
       totalNews: news.length,
