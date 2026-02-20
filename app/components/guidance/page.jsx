@@ -1991,7 +1991,7 @@ const handleSubmit = async (e) => {
       ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
   }`}
-  placeholder="0707070707"
+  placeholder="+254 712 345 678"
   disabled={isLoading}
   inputMode="tel"
 />
