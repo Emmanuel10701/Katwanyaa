@@ -216,27 +216,30 @@ const BalanceChecker = ({ onBalanceCheck, initialBalance = null }) => {
 
   return (
     <div className="relative">
-      <button
-        onClick={checkBalance}
-        disabled={loading}
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 ${
-          balance?.canSend 
-            ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700' 
-            : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 animate-pulse'
-        }`}
-      >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <>
-            <CreditCard className="w-4 h-4" />
-            <span className="text-sm font-bold">Credits:</span>
-            <span className={`text-lg font-black ${balance?.canSend ? 'text-white' : 'text-yellow-200'}`}>
-              {balance?.balance?.toFixed(2) || '0.00'}
-            </span>
-          </>
-        )}
-      </button>
+<button
+  onClick={checkBalance}
+  disabled={loading}
+  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 ${
+    balance?.canSend 
+      ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700' 
+      : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
+  } ${!balance?.canSend && !loading ? 'animate-pulse' : ''}`}
+>
+  {loading ? (
+    <div className="flex items-center gap-2">
+      <Loader2 className="w-4 h-4 animate-spin" />
+      <span className="text-sm font-medium">Refreshing...</span>
+    </div>
+  ) : (
+    <>
+      <CreditCard className="w-4 h-4" />
+      <span className="text-sm font-bold">Credits:</span>
+      <span className={`text-lg font-black ${balance?.canSend ? 'text-white' : 'text-yellow-100'}`}>
+        {balance?.balance?.toFixed(2) || '0.00'}
+      </span>
+    </>
+  )}
+</button>
 
       {balance && !balance.canSend && showDetails && (
         <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border-2 border-amber-200 p-4 z-50 animate-in slide-in-from-top-2">
