@@ -27,7 +27,7 @@ import {
   FiUsers, FiBook, FiCalendar, FiFileText, FiTrendingDown, FiTrendingUp,
   FiEye, FiDownload, FiMail, FiUserPlus, FiArrowUpRight, FiStar,
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
-  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity,FiInfo  
+  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity,FiInfo , FiMapPin  
 } from 'react-icons/fi';
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
 
@@ -1856,7 +1856,7 @@ const handleDeleteSchool = async () => {
       {hasSchoolInfo && (
         <div className="flex flex-wrap items-center gap-3 mt-4">
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
-            <MapPin className="w-3 h-3 text-blue-300" />
+            <FiMapPin className="w-3 h-3 text-blue-300" />
             <span className="text-[10px] font-bold text-white/80">Location Configured</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
