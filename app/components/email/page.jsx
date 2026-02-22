@@ -1067,8 +1067,8 @@ const recipientGroups = useMemo(() => {
   ];
   
 
-// Replace your fetchData function and useEffect with this:
-const fetchData = useCallback(async () => {
+// Define fetchData as a regular async function
+const fetchData = async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
     setRefreshing(true);
@@ -1090,7 +1090,6 @@ const fetchData = useCallback(async () => {
       const campaignsList = campaignsData.campaigns || [];
       setCampaigns(campaignsList);
       
-      // Calculate stats directly
       const newStats = {
         total: campaignsList.length,
         draft: campaignsList.filter(c => c.status === 'draft').length,
@@ -1103,7 +1102,6 @@ const fetchData = useCallback(async () => {
         openedRate: 0
       };
       
-      // Calculate success rate for published campaigns
       const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
       if (publishedCampaigns.length > 0) {
         const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
@@ -1117,7 +1115,7 @@ const fetchData = useCallback(async () => {
       }
     }
 
-    // Normalize student data
+    // Student data normalization
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
       studentsArray = studentData.data.map(student => ({
@@ -1138,7 +1136,7 @@ const fetchData = useCallback(async () => {
     }
     setStudents(studentsArray);
 
-    // Normalize staff data
+    // Staff data normalization
     let staffArray = [];
     if (Array.isArray(staffData)) {
       staffArray = staffData;
@@ -1162,11 +1160,12 @@ const fetchData = useCallback(async () => {
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
-}, []);
-// SINGLE useEffect - exactly like your SMS version
+};
+
+// ✅ Simple useEffect
 useEffect(() => {
   fetchData();
-}, [fetchData]);
+}, []); // Empty array - run once on mount
 
  
   const filteredCampaigns = useMemo(() => {
