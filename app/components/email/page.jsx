@@ -749,30 +749,36 @@ const CampaignCard = ({
 };
 
 
-// Modern Email Skeleton Component
-
-// Replace this entire component:
+// Replace your existing ModernEmailSkeleton with this enhanced version
 const ModernEmailSkeleton = () => {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 w-full max-w-md">
         <div className="p-12">
-          <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="flex flex-col items-center justify-center space-y-6">
             <div className="relative">
-              {/* Outer Glow Ring */}
-              <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 animate-ping"></div>
+              {/* Outer Glow Ring - More prominent */}
+              <div className="absolute inset-0 rounded-full bg-blue-400 opacity-30 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full bg-blue-500 opacity-20 animate-pulse"></div>
               
               {/* Main Spinner Icon */}
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin relative z-10" />
+              <div className="relative">
+                <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+              </div>
             </div>
 
-            <div className="space-y-1 text-center">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">
+            <div className="space-y-2 text-center">
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">
                 Fetching Campaigns
               </h3>
               <p className="text-sm font-bold text-slate-500 animate-pulse">
-                Please wait a moment...
+                Please wait while we load your data...
               </p>
+              <div className="flex justify-center gap-1 mt-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
             </div>
           </div>
         </div>
@@ -780,7 +786,6 @@ const ModernEmailSkeleton = () => {
     </div>
   );
 };
-
 
 
 // Notification Toast Component
@@ -1061,6 +1066,10 @@ const recipientGroups = useMemo(() => {
     { value: 'published', label: 'Sent', color: 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50', icon: CheckCircle2 }
   ];
   
+
+  
+
+
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
@@ -1125,9 +1134,9 @@ const fetchData = useCallback(async () => {
     setStaff(staffArray);
     console.log(`Loaded ${staffArray.length} staff members from API`);
     
-    // Ensure minimum loading time of 500ms to prevent flicker
+    // Calculate elapsed time and ensure minimum loading duration of 800ms
     const elapsedTime = Date.now() - startTime;
-    const minimumLoadTime = 500;
+    const minimumLoadTime = 800; // Increased from 500ms to 800ms for better visibility
     
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
@@ -1136,15 +1145,27 @@ const fetchData = useCallback(async () => {
   } catch (error) {
     console.error('Error fetching data:', error);
     showNotification('error', 'Network error. Please check connection.');
+    
+    // Even on error, ensure minimum loading time to prevent flicker
+    const elapsedTime = Date.now() - startTime;
+    const minimumLoadTime = 800;
+    
+    if (elapsedTime < minimumLoadTime) {
+      await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
+    }
   } finally {
     setLoading(false);
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
 }, [refreshing]);
-  useEffect(() => {
-    fetchData();
-  }, []);
+
+
+
+useEffect(() => {
+  setLoading(true); 
+  fetchData();
+}, [fetchData]); // Note: Add fetchData to dependency array
   
   const updateStats = (campaignsList) => {
     const newStats = {
