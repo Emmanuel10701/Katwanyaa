@@ -23,7 +23,7 @@ import {
   FaPencilAlt, FaEllipsisV, FaExclamationCircle, FaAlignLeft 
 } from 'react-icons/fa';
 
-import {FiInfo, FiBook,FiDollarSign   } from 'react-icons/fi';
+import {FiInfo, FiBook, FiDollarSign   } from 'react-icons/fi';
 
 import { 
   CircularProgress, Modal, Box, TextField,
