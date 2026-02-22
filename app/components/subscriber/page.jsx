@@ -747,45 +747,126 @@ const handleSendEmail = async (e) => {
         message={notification.message}
       />
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-white to-blue-50 rounded-2xl shadow-2xl border border-blue-200 p-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl">
-                <IoMailOutline className="text-white text-2xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                  Subscriber Manager
-                </h1>
-                <p className="text-gray-600 mt-1 text-sm lg:text-base">
-                  Manage and communicate with your audience
-                </p>
-              </div>
+ {/* Modern Header - Inspired by the Dashboard Overview */}
+<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
+  
+  {/* Abstract Mesh Gradient Background - Floating Orbs */}
+  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-gradient-to-br from-blue-600/30 via-cyan-600/20 to-transparent rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-gradient-to-tr from-purple-600/20 via-pink-600/10 to-transparent rounded-full blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  
+  {/* Subtle Grid Pattern Overlay */}
+  <div className="absolute inset-0 opacity-[0.02]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      
+      {/* Left Section - Brand & Title */}
+      <div className="flex-1">
+        {/* Institutional Badge - Compact & Premium */}
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="h-7 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+          <div>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
+              Subscriber Management
+            </h2>
+            <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
+              Audience Communication Hub
+            </p>
+          </div>
+        </div>
+        
+        {/* Title with Icon - Animated */}
+        <div className="flex items-center gap-4 mb-2">
+          <div className="relative">
+            {/* Icon with Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+            <div className="relative p-3.5 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl shadow-2xl transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+              <IoMailOutline className="text-white text-2xl md:text-3xl" />
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <button
-              onClick={exportToCSV}
-              className="px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm lg:text-base hover:bg-gray-50 transition-all hover:shadow-lg"
-            >
-              <FiDownload className="text-base" />
-              Export CSV
-            </button>
-            
-            <button
-              onClick={() => setShowEmailModal(true)}
-              disabled={subscribers.length === 0}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
-            >
-              <IoSendOutline className="text-base" />
-              Send Campaign
-            </button>
-          </div>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+            <span className="text-white">Subscriber</span>
+            <br className="sm:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-cyan-200 to-white ml-1 sm:ml-2">
+              Manager
+            </span>
+          </h1>
         </div>
+        
+        {/* Description with Highlighted Stats */}
+        <p className="text-blue-100/70 text-sm md:text-[15px] font-medium leading-relaxed max-w-2xl">
+          Manage and communicate with your audience. 
+          <span className="inline-flex items-center gap-1.5 mx-1.5 px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/20 text-[11px] font-bold">
+            {subscribers.length} subscribers
+          </span>
+          ready for engagement.
+        </p>
       </div>
+      
+      {/* Right Section - Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+        {/* Export CSV Button - Glass Effect */}
+        <button
+          onClick={exportToCSV}
+          className="group/btn relative overflow-hidden flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 active:scale-95 w-full sm:w-auto"
+        >
+          {/* Button Shine Effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          
+          <FiDownload className="text-base text-white/80 group-hover/btn:text-white transition-colors" />
+          <span className="text-white/90 group-hover/btn:text-white">Export CSV</span>
+          
+          {/* Subtle Badge */}
+          <span className="hidden sm:inline-block ml-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-black text-white/60 border border-white/10">
+            {subscribers.length}
+          </span>
+        </button>
+        
+        {/* Send Campaign Button - Gradient Primary */}
+        <button
+          onClick={() => setShowEmailModal(true)}
+          disabled={subscribers.length === 0}
+          className="group/btn relative overflow-hidden flex items-center justify-center gap-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-cyan-600 shadow-[0_8px_20px_rgba(6,182,212,0.3)] hover:shadow-[0_12px_30px_rgba(6,182,212,0.4)] w-full sm:w-auto"
+        >
+          {/* Button Shine Effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          
+          <IoSendOutline className="text-base group-hover/btn:translate-x-0.5 transition-transform" />
+          <span>Send Campaign</span>
+          
+          {/* Pulse Indicator for Active State */}
+          {subscribers.length > 0 && (
+            <span className="relative flex h-2 w-2 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+    
+    {/* Status Bar - Optional Enhancement */}
+    <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+      <div className="flex items-center gap-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-white/40">System Status:</span>
+        <span className="text-emerald-400">Operational</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <FiMail className="text-white/30" />
+        <span className="text-white/40">Ready to send</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <FiUsers className="text-white/30" />
+        <span className="text-white/40">{subscribers.length} active subscribers</span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Modern Stats Cards with Agenda Info */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
