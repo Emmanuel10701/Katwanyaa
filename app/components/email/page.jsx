@@ -1087,37 +1087,38 @@ const fetchData = useCallback(async () => {
     const studentData = await studentRes.json();
     const staffData = await staffRes.json();
 
-    if (campaignsData.success) {
-      const campaignsList = campaignsData.campaigns || [];
-      setCampaigns(campaignsList);
-      
-      // Calculate stats directly (like your SMS version)
-      const newStats = {
-        total: campaignsList.length,
-        draft: campaignsList.filter(c => c.status === 'draft').length,
-        published: campaignsList.filter(c => c.status === 'published').length,
-        totalRecipients: campaignsList.reduce((total, campaign) => {
-          if (!campaign || !campaign.recipients) return total;
-          return total + campaign.recipients.split(',').length;
-        }, 0),
-        successRate: 0,
-        openedRate: 0
-      };
-      
-      // Calculate success rate for published campaigns
-      const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
-      if (publishedCampaigns.length > 0) {
-        const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
-        newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
-      }
-      
-      setStats(newStats);
-      
-      if (refreshing) {
-        showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
-      }
-    }
-
+if (campaignsData.success) {
+  const campaignsList = campaignsData.campaigns || [];
+  setCampaigns(campaignsList);
+  
+  // Calculate stats directly
+  const newStats = {
+    total: campaignsList.length,
+    draft: campaignsList.filter(c => c.status === 'draft').length,
+    published: campaignsList.filter(c => c.status === 'published').length,
+    totalRecipients: campaignsList.reduce((total, campaign) => {
+      if (!campaign || !campaign.recipients) return total;
+      return total + campaign.recipients.split(',').length;
+    }, 0),
+    successRate: 0,
+    openedRate: 0
+  };
+  
+  // Calculate success rate for published campaigns
+  const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
+  if (publishedCampaigns.length > 0) {
+    const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
+    newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
+  }
+  
+  setStats(newStats); // ✅ Only set stats once
+  
+  // ❌ REMOVE THIS LINE: updateStats(campaignsList);
+  
+  if (refreshing) {
+    showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
+  }
+}
     // Normalize student data
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
@@ -1171,37 +1172,6 @@ useEffect(() => {
 }, [fetchData]);
 
  
-  const updateStats = (campaignsList) => {
-    const newStats = {
-      total: campaignsList.length,
-      draft: 0,
-      published: 0,
-      totalRecipients: 0,
-      successRate: 0,
-      openedRate: 0
-    };
-    
-    campaignsList.forEach(campaign => {
-      if (campaign.status === 'draft') newStats.draft++;
-      if (campaign.status === 'published') newStats.published++;
-      
-      const count = getRecipientCount(campaign);
-      newStats.totalRecipients += count;
-      
-      if (campaign.successRate) {
-        newStats.successRate += campaign.successRate;
-      }
-    });
-    
-    if (newStats.published > 0) {
-      newStats.successRate = Math.round(newStats.successRate / newStats.published);
-    }
-    
-    setStats(newStats);
-  };
-  
-  // ==================== FILTERING & SORTING ====================
-  
   const filteredCampaigns = useMemo(() => {
     if (!Array.isArray(campaigns)) return [];
     
