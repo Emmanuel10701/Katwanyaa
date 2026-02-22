@@ -1069,7 +1069,6 @@ const recipientGroups = useMemo(() => {
 
   
 
-
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
@@ -1147,7 +1146,7 @@ const fetchData = useCallback(async () => {
     showNotification('error', 'Network error. Please check connection.');
     
     // Even on error, ensure minimum loading time to prevent flicker
-    const elapsedTime = Date.now() - startTime;
+    const elapsedTime = Date.now() - startTime; // Fixed: Now startTime is accessible
     const minimumLoadTime = 800;
     
     if (elapsedTime < minimumLoadTime) {
@@ -1160,6 +1159,11 @@ const fetchData = useCallback(async () => {
   }
 }, [refreshing]);
 
+// Also fix the useEffect dependency
+useEffect(() => {
+  setLoading(true); 
+  fetchData();
+}, [fetchData]); // This is correct now that fetchData is memoized with useCallback
 
 
 useEffect(() => {
