@@ -1761,81 +1761,182 @@ const handleDeleteSchool = async () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
       <Toaster position="top-right" richColors />
-
-      {/* MODERN HEADER */}
-      <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+{/* Modern School Information Header */}
+<div className="group relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden">
+  
+  {/* Animated Gradient Orbs */}
+  <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/15 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+  <div className="absolute top-[40%] left-[20%] w-40 h-40 bg-purple-400/20 rounded-full blur-3xl animate-ping opacity-20" />
+  
+  {/* Floating Particles */}
+  <div className="absolute inset-0 opacity-10">
+    {[...Array(5)].map((_, i) => (
+      <div 
+        key={i}
+        className="absolute w-1 h-1 bg-white rounded-full animate-ping"
+        style={{
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+          animationDelay: `${i * 0.5}s`
+        }}
+      />
+    ))}
+  </div>
+  
+  {/* Subtle Grid Pattern */}
+  <div className="absolute inset-0 opacity-[0.03]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  {/* Shine Effect Overlay */}
+  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full" style={{ transform: 'skewX(-20deg)' }} />
+  
+  <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+    
+    {/* Left Section */}
+    <div className="flex-1 min-w-0">
+      
+      {/* Icon and Title Row */}
+      <div className="flex flex-wrap items-center gap-4 mb-4">
         
-        <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+        {/* Icon Container with Enhanced Animation */}
+        <div className="relative">
+          {/* Multi-layer Glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
+          <div className="absolute inset-0 bg-white/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
           
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-              <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-                <FaSchool className="text-white text-3xl group-hover:scale-100 transition-transform" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-                    School Management
-                  </span>
-                </div>
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm">
-                  School Information
-                </h1>
-              </div>
+          {/* Main Icon */}
+          <div className="relative p-3.5 bg-white/10 backdrop-blur-md rounded-2xl ring-1 ring-white/40 shadow-inner transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+            <FaSchool className="text-white text-3xl group-hover:scale-110 transition-transform" />
+          </div>
+          
+          {/* Animated Ring */}
+          <div className="absolute -inset-1 border-2 border-white/30 rounded-2xl opacity-0 group-hover:opacity-100 animate-ping" />
+        </div>
+        
+        {/* Title with Badge */}
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            {/* Status Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-400/20 backdrop-blur-md rounded-full border border-emerald-400/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-300">
+                {hasSchoolInfo ? 'Active' : 'Setup Required'}
+              </span>
             </div>
             
-            <p className="text-blue-50/80 text-sm md:text-lg font-bold max-w-2xl leading-relaxed">
-              {hasSchoolInfo ? 'Manage your school profile and information' : 'Set up your school information to get started'}
-            </p>
+            {/* Institution Badge */}
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40">
+              School Management
+            </span>
           </div>
-
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-4 sm:p-0 rounded-[2rem] sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none">
-            
-        <button 
-  onClick={loadData} 
-  disabled={loading}
-  className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
->
-  {loading ? (
-    <CircularProgress size={14} color="inherit" /> 
-  ) : (
-    <FaSync className="text-xs" />
-  )}
-  <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
-</button>
-            
-            {hasSchoolInfo && (
-              <button 
-                onClick={() => setShowDeleteModal(true)} 
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-6 py-3 sm:py-2.5 rounded-xl hover:bg-white/20 transition-all duration-200 font-bold text-sm active:scale-[0.98]"
-              >
-                <FaTrash className="text-sm" /> 
-                <span className="whitespace-nowrap font-bold">Delete</span>
-              </button>
-            )}
-            
-            {/* ✅ DYNAMIC MODAL BUTTON - "Add School Info" when none exists, "Edit School Info" when exists */}
-            <button 
-              onClick={() => setShowModal(true)} 
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98]"
-            >
-              {hasSchoolInfo ? (
-                <>
-                  <FaEdit className="text-sm" />
-                  <span className="whitespace-nowrap font-bold">Edit School Info</span>
-                </>
-              ) : (
-                <>
-                  <FaPlus className="text-sm" />
-                  <span className="whitespace-nowrap font-bold">Add School Info</span>
-                </>
-              )}
-            </button>
-          </div>
+          
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm leading-tight">
+            School{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+              Information
+            </span>
+          </h1>
         </div>
       </div>
+      
+      {/* Description with Icon */}
+      <div className="flex items-start gap-2 max-w-2xl">
+        <FiInfo className="w-4 h-4 text-white/50 mt-0.5 flex-shrink-0" />
+        <p className="text-blue-50/80 text-sm md:text-base font-medium leading-relaxed">
+          {hasSchoolInfo 
+            ? 'Manage your school profile, contact details, and institutional information'
+            : 'Set up your school information to get started with the management system'}
+        </p>
+      </div>
+      
+      {/* Quick Stats - Only show if school info exists */}
+      {hasSchoolInfo && (
+        <div className="flex flex-wrap items-center gap-3 mt-4">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <MapPin className="w-3 h-3 text-blue-300" />
+            <span className="text-[10px] font-bold text-white/80">Location Configured</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <Users className="w-3 h-3 text-purple-300" />
+            <span className="text-[10px] font-bold text-white/80">Contact Info Set</span>
+          </div>
+        </div>
+      )}
+    </div>
+
+    {/* Right Section - Action Buttons */}
+    <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full xl:w-auto bg-white/10 backdrop-blur-lg sm:bg-transparent p-5 sm:p-0 rounded-[2rem] sm:rounded-none shadow-lg sm:shadow-none border border-white/20 sm:border-none">
+      
+      {/* Refresh Button - Enhanced */}
+      <button 
+        onClick={loadData} 
+        disabled={loading}
+        className="group/btn relative overflow-hidden flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-3 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50 min-w-[120px]"
+      >
+        {/* Button Shine Effect */}
+        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        
+        {loading ? (
+          <>
+            <CircularProgress size={14} color="inherit" className="relative z-10" />
+            <span className="relative z-10">Refreshing...</span>
+          </>
+        ) : (
+          <>
+            <FaSync className="text-xs relative z-10 group-hover/btn:rotate-180 transition-transform duration-500" />
+            <span className="relative z-10">Refresh</span>
+          </>
+        )}
+      </button>
+      
+      {/* Delete Button - Only if school exists */}
+      {hasSchoolInfo && (
+        <button 
+          onClick={() => setShowDeleteModal(true)} 
+          className="group/btn relative overflow-hidden flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white/10 backdrop-blur-sm text-white border border-white/30 px-6 py-3 rounded-xl hover:bg-red-500/20 hover:border-red-400/30 transition-all duration-200 font-bold text-sm active:scale-[0.98]"
+        >
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          
+          <FaTrash className="text-sm relative z-10 group-hover/btn:scale-110 transition-transform" />
+          <span className="relative z-10 whitespace-nowrap font-bold">Delete</span>
+        </button>
+      )}
+      
+      {/* Dynamic Primary Button - Add/Edit */}
+      <button 
+        onClick={() => setShowModal(true)} 
+        className="group/btn relative overflow-hidden flex-1 sm:flex-initial flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-3 rounded-xl hover:bg-white/90 transition-all duration-200 font-bold text-sm shadow-lg active:scale-[0.98] min-w-[160px]"
+      >
+        {/* Button Shine Effect */}
+        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-blue-100 to-transparent" />
+        
+        {hasSchoolInfo ? (
+          <>
+            <FaEdit className="text-sm relative z-10 group-hover/btn:scale-110 transition-transform" />
+            <span className="relative z-10 whitespace-nowrap font-bold">Edit School Info</span>
+          </>
+        ) : (
+          <>
+            <FaPlus className="text-sm relative z-10 group-hover/btn:rotate-90 transition-transform duration-300" />
+            <span className="relative z-10 whitespace-nowrap font-bold">Add School Info</span>
+            
+            {/* Pulse Indicator for Add Button */}
+            <span className="relative flex h-2 w-2 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+          </>
+        )}
+      </button>
+    </div>
+  </div>
+  
+  {/* Bottom Accent */}
+  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+</div>
 
       {!hasSchoolInfo ? (
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-14 text-center my-8 transition-all duration-300">
