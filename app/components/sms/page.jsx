@@ -1501,71 +1501,180 @@ const handleSendCampaign = async () => {
           },
         }}
       />
-
-      {/* Header */}
-      <div className="relative mb-6 sm:mb-8 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem] md:rounded-[2.5rem] bg-gradient-to-br from-blue-700 via-cyan-700 to-emerald-700 p-4 sm:p-6 md:p-8 shadow-xl sm:shadow-2xl">
-        <div className="absolute inset-0 opacity-[0.08] sm:opacity-10 pointer-events-none" />
-        <div className="absolute -right-16 sm:-right-24 -top-16 sm:-top-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-cyan-500 to-blue-400 rounded-full opacity-15 sm:opacity-20 blur-xl sm:blur-2xl md:blur-3xl" />
-        <div className="absolute -left-16 sm:-left-24 -bottom-16 sm:-bottom-24 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full opacity-10 sm:opacity-15 blur-xl sm:blur-2xl md:blur-3xl" />
-        <div className="relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 sm:gap-6">
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-                <div className="relative shrink-0">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl sm:rounded-2xl blur-md sm:blur-lg opacity-70" />
-                  <div className="relative p-3 sm:p-4 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl sm:rounded-2xl shadow-2xl">
-                    <Smartphone className="text-white w-5 h-5 sm:w-6 sm:h-6" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="hidden xs:inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full mb-2 sm:mb-3 max-w-max">
-                    <span className="text-[10px] xs:text-xs font-bold text-white uppercase tracking-widest">Communication</span>
-                  </div>
-                  <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                    SMS Campaign <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-emerald-200">Manager</span>
-                  </h1>
-                  <p className="mt-2 sm:mt-3 text-sm xs:text-base sm:text-lg text-cyan-100/90 font-medium max-w-2xl leading-relaxed line-clamp-2 sm:line-clamp-none">
-                    Streamline school communication with powerful bulk SMS campaigns powered by Celcom. Fast, reliable, and built for Katwanyaa High School.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-3 sm:gap-4">
-              <BalanceChecker onBalanceCheck={setBalance} />
-
-              <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 w-full xs:w-auto">
-             <button
-  onClick={fetchData}
-  disabled={refreshing || loadingStates.fetching}
-  className="group relative flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl sm:rounded-2xl text-white font-semibold hover:bg-white/15 active:scale-95 transition-all disabled:opacity-60 w-full xs:w-auto"
->
-  {refreshing ? (
-    /* Custom Spinner */
-    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-  ) : (
-    /* Static State Icon (Optional: can be removed if you want text only) */
-    <div className="w-4 h-4 border-2 border-white/10 rounded-full" />
-  )}
+{/* Modern SMS Campaign Manager Header */}
+<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2.5rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 mb-6 sm:mb-8">
   
-  <span className="text-xs sm:text-sm">
-    {refreshing ? "Refreshing…" : "Refresh"}
-  </span>
-</button>
-                <button
-                  onClick={openCreateModal}
-                  className="group relative overflow-hidden px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-xl sm:rounded-2xl font-semibold hover:shadow-xl hover:shadow-emerald-500/30 active:scale-95 transition-all w-full xs:w-auto"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center justify-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    <span className="text-xs sm:text-sm whitespace-nowrap">New Campaign</span>
-                  </div>
-                </button>
-              </div>
+  {/* Abstract Gradient Orbs - Cyan/Emerald Theme */}
+  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-gradient-to-br from-cyan-600/30 via-emerald-600/20 to-transparent rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-gradient-to-tr from-emerald-600/20 via-teal-600/10 to-transparent rounded-full blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  
+  {/* Additional Floating Orb for Depth */}
+  <div className="absolute top-[40%] right-[15%] w-[150px] h-[150px] bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-full blur-[60px] pointer-events-none animate-pulse" />
+  
+  {/* Subtle Grid Pattern Overlay */}
+  <div className="absolute inset-0 opacity-[0.02]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+      
+      {/* Left Section - Brand & Title */}
+      <div className="flex-1 min-w-0">
+        {/* Premium Institution Badge */}
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="h-7 w-1 bg-gradient-to-b from-cyan-500 to-emerald-500 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
+          <div>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400">
+              Katwanyaa High School
+            </h2>
+            <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
+              "Education is Light"
+            </p>
+          </div>
+        </div>
+        
+        {/* Title with Animated Icon */}
+        <div className="flex items-start gap-4 mb-3">
+          <div className="relative shrink-0">
+            {/* Icon with Multi-layer Glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-emerald-500 rounded-xl md:rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl md:rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative p-3 md:p-4 bg-gradient-to-br from-cyan-600 to-emerald-600 rounded-xl md:rounded-2xl shadow-2xl transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+              <Smartphone className="text-white w-5 h-5 md:w-6 md:h-6" />
             </div>
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
+              <span className="text-white">SMS Campaign</span>
+              <br className="sm:hidden" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-emerald-200 to-white ml-0 sm:ml-2">
+                Manager
+              </span>
+            </h1>
+          </div>
+        </div>
+        
+        {/* Description with Celcom Highlight */}
+        <p className="text-cyan-100/70 text-sm md:text-[15px] font-medium leading-relaxed max-w-3xl">
+          Streamline school communication with powerful bulk SMS campaigns powered by{' '}
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 text-cyan-300 border border-cyan-500/20 font-bold">
+            <Zap className="w-3 h-3" />
+            Celcom
+          </span>
+          . Fast, reliable, and built for Katwanyaa High School.
+        </p>
+        
+        {/* Quick Stats Pills */}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Service: Active</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <Mail className="w-3 h-3 text-cyan-400" />
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Bulk SMS Ready</span>
           </div>
         </div>
       </div>
+      
+      {/* Right Section - Actions & Balance */}
+      <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between lg:flex-col lg:items-end gap-4 w-full lg:w-auto">
+        
+        {/* Balance Checker - Enhanced */}
+        <div className="w-full lg:w-auto order-2 lg:order-1">
+          <BalanceChecker onBalanceCheck={setBalance} />
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col xs:flex-row gap-3 w-full lg:w-auto order-1 lg:order-2">
+          
+          {/* Refresh Button - Glass Effect with Loading */}
+          <button
+            onClick={fetchData}
+            disabled={refreshing || loadingStates.fetching}
+            className="group/btn relative overflow-hidden flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-3 rounded-xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full xs:w-auto min-w-[120px]"
+          >
+            {/* Button Shine Effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            
+            {refreshing || loadingStates.fetching ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="text-white/90">Refreshing</span>
+              </>
+            ) : (
+              <>
+                <FiRefreshCw className="text-base text-white/80 group-hover/btn:rotate-180 transition-transform duration-500" />
+                <span className="text-white/90">Refresh</span>
+              </>
+            )}
+            
+            {/* Live Badge */}
+            <span className="hidden sm:inline-block ml-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-black text-white/60 border border-white/10">
+              LIVE
+            </span>
+          </button>
+          
+          {/* New Campaign Button - Gradient Primary */}
+          <button
+            onClick={openCreateModal}
+            className="group/btn relative overflow-hidden flex items-center justify-center gap-2.5 px-6 py-3 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-700 hover:to-emerald-700 text-white rounded-xl font-bold text-sm tracking-wide transition-all active:scale-95 shadow-[0_8px_20px_rgba(6,182,212,0.3)] hover:shadow-[0_12px_30px_rgba(6,182,212,0.4)] w-full xs:w-auto"
+          >
+            {/* Button Shine Effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            
+            <Plus className="w-4 h-4 group-hover/btn:rotate-90 transition-transform duration-300" />
+            <span className="whitespace-nowrap">New Campaign</span>
+            
+            {/* Pulse Indicator */}
+            <span className="relative flex h-2 w-2 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    {/* Enhanced Status Bar with Real-time Info */}
+    <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] font-bold uppercase tracking-wider">
+      
+      {/* System Status */}
+      <div className="flex items-center gap-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-white/40">System:</span>
+        <span className="text-emerald-400">Operational</span>
+      </div>
+      
+      {/* Celcom Integration */}
+      <div className="flex items-center gap-2">
+        <Zap className="w-3 h-3 text-cyan-400" />
+        <span className="text-white/40">Provider:</span>
+        <span className="text-cyan-400">Celcom</span>
+      </div>
+      
+      {/* Balance Indicator - If balance exists */}
+      {balance && (
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-3 h-3 text-emerald-400" />
+          <span className="text-white/40">Balance:</span>
+          <span className="text-emerald-400 font-black">{balance}</span>
+        </div>
+      )}
+      
+      {/* Last Updated - Dynamic */}
+      <div className="flex items-center gap-2 ml-auto">
+        <FiClock className="w-3 h-3 text-white/30" />
+        <span className="text-white/40">
+          Updated: {new Date().toLocaleTimeString()}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* View Toggle */}
       <div className="mb-8 space-y-6">
