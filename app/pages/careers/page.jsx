@@ -36,7 +36,7 @@ import {
   FiFileText,
   FiSend
 } from 'react-icons/fi';
-import { FaGraduationCap, FaBuilding as FiBuilding } from 'react-icons/fa';
+import { FaGraduationCap, FaBuilding as FiBuilding, FaWhatsapp } from 'react-icons/fa';
 
 
 import {
@@ -93,6 +93,14 @@ const ModernModal = ({ children, open, onClose, maxWidth = '800px', blur = true 
 const ModernJobCard = ({ job, onView, onBookmark, onShare, viewMode = 'grid' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  const handleWhatsAppShare = (e) => {
+    e.stopPropagation();
+    const text = `Job Opening: ${job?.jobTitle} at Katwanyaa High School. ${job?.jobType} position in ${job?.department || 'various departments'}.`;
+    const url = window.location.href;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const getJobTypeStyle = (type) => {
     const styles = {
@@ -191,15 +199,24 @@ const ModernJobCard = ({ job, onView, onBookmark, onShare, viewMode = 'grid' }) 
                 {job?.category || 'General'}
               </span>
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onBookmark(job);
-              }}
-              className={`p-2 rounded-lg ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-slate-500'}`}
-            >
-              <FiBookmark className={isBookmarked ? 'fill-current' : ''} size={16} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleWhatsAppShare}
+                className="p-2 rounded-lg text-green-500 hover:text-green-600 hover:bg-green-50"
+                title="Share on WhatsApp"
+              >
+                <FaWhatsapp size={16} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookmark(job);
+                }}
+                className={`p-2 rounded-lg ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-slate-500'}`}
+              >
+                <FiBookmark className={isBookmarked ? 'fill-current' : ''} size={16} />
+              </button>
+            </div>
           </div>
 
           {/* Job Title */}
@@ -322,6 +339,13 @@ const ModernJobCard = ({ job, onView, onBookmark, onShare, viewMode = 'grid' }) 
               {/* Action Buttons */}
               <div className="flex items-center gap-1">
                 <button
+                  onClick={handleWhatsAppShare}
+                  className="p-1.5 rounded-lg text-green-500 hover:text-green-600 hover:bg-green-50"
+                  title="Share on WhatsApp"
+                >
+                  <FaWhatsapp size={14} />
+                </button>
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onBookmark(job);
@@ -419,6 +443,13 @@ const ModernStatCard = ({ stat }) => {
 const ModernJobDetailModal = ({ job, onClose, onApply }) => {
   if (!job) return null;
 
+  const handleWhatsAppShare = () => {
+    const text = `Check out this job opportunity at Katwanyaa High School: ${job.jobTitle} - ${job.department || 'Various Departments'}`;
+    const url = window.location.href;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const getJobTypeStyle = (type) => {
     const styles = {
       'full-time': { gradient: 'from-emerald-500 to-green-500' },
@@ -494,6 +525,17 @@ return (
                   </h2>
                   <p className="text-slate-600 text-sm sm:text-base md:text-lg">{job.department || 'School Department'}</p>
                 </div>
+              </div>
+
+              {/* WhatsApp Share Button - Added here */}
+              <div className="flex items-center gap-2 mt-2">
+                <button
+                  onClick={handleWhatsAppShare}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95"
+                >
+                  <FaWhatsapp size={18} />
+                  <span className="text-sm font-medium">Share on WhatsApp</span>
+                </button>
               </div>
 
               {/* Quick Info Bar */}
@@ -865,6 +907,13 @@ export default function ModernCareersPage() {
     setActiveTab('all');
   };
 
+  const handleShareAllJobs = () => {
+    const text = `Check out current job openings at Katwanyaa High School! ${filteredJobs.length} positions available.`;
+    const url = window.location.href;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
 if (loading) {
   return (
     <Box 
@@ -1084,6 +1133,17 @@ return (
                     {filteredJobs.length} Positions Available
                   </p>
                 </div>
+              </div>
+              {/* WhatsApp Share All Jobs Button - Added here */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleShareAllJobs}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95"
+                >
+                  <FaWhatsapp size={18} />
+                  <span className="text-sm font-medium hidden sm:inline">Share All Jobs</span>
+                  <span className="text-sm font-medium sm:hidden">Share</span>
+                </button>
               </div>
             </div>
 
