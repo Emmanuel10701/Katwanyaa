@@ -1150,20 +1150,22 @@ const handleSaveAdmin = async (e) => {
               <Shield className="text-white w-5 h-5 md:w-6 md:h-6" />
             </div>
           </div>
-          
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
-              <span className="text-white">Admin</span>
-              <br className="sm:hidden" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 ml-0 sm:ml-2">
-                Management Dashboard
-              </span>
-            </h1>
-          </div>
-        </div>
+      <div className="flex-1">
+  <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold tracking-tight leading-snug">
+    <span className="text-white">Admin</span>
+    <br className="sm:hidden" />
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 ml-0 sm:ml-2">
+      Management Dashboard
+    </span>
+  </h1>
+</div>
+        </div>{/* Main Icon */}
+<div className="relative p-2 md:p-3 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg md:rounded-xl shadow-xl transform group-hover:scale-105 group-hover:rotate-2 transition-all duration-300">
+  <Shield className="text-white w-4 h-4 md:w-5 md:h-5" />
+</div>
         
         {/* Enhanced Description */}
-        <p className="text-blue-100/70 text-sm md:text-[15px] font-medium leading-relaxed max-w-3xl">
+        <p className="text-blue-100/70 text-sm md:text-[13px] font-medium leading-relaxed max-w-3xl">
           Access the central authority hub to oversee system custodians. Regulate 
           administrative privileges, monitor security protocols, and orchestrate 
           high-level permissions to ensure total platform integrity and seamless 
