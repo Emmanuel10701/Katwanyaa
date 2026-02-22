@@ -25,6 +25,7 @@ import {
   Plus,
   Save,
   Eye,
+  Zap,
   Calendar,
   FileText,
   UserCheck,
@@ -37,6 +38,9 @@ import {
   DollarSign,
 } from "lucide-react";
 
+
+
+import {FiFileText, FiClock } from 'react-icons/fi';
 // Modern Scrollbar Styles
 const modernScrollbarStyles = `
   .modern-scrollbar::-webkit-scrollbar {
