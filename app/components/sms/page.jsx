@@ -35,6 +35,7 @@ import {
   ChevronLeft,
   CreditCard,
   AlertTriangle,
+  Mail,
   DollarSign,
 } from "lucide-react";
 
