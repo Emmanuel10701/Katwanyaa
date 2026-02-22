@@ -1860,7 +1860,7 @@ const handleDeleteSchool = async () => {
             <span className="text-[10px] font-bold text-white/80">Location Configured</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
-            <Users className="w-3 h-3 text-purple-300" />
+            <FiUsers className="w-3 h-3 text-purple-300" />
             <span className="text-[10px] font-bold text-white/80">Contact Info Set</span>
           </div>
         </div>
