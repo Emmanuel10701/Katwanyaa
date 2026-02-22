@@ -498,13 +498,17 @@ export default function ModernApplicationsDashboard() {
   const [showDeleteModal, setShowDeleteModal] = useState(false) // New state for delete modal
   
   // Filter States
+  // Filter States
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterStream, setFilterStream] = useState('all')
+  const [topPerformersFilter, setTopPerformersFilter] = useState('all') // Changed from filterStream
+  const [minMarks, setMinMarks] = useState('')
+  const [maxMarks, setMaxMarks] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [sortBy, setSortBy] = useState('newest')
-  
+
+
   // Decision State
   const [decisionType, setDecisionType] = useState('')
 const [decisionData, setDecisionData] = useState({
@@ -752,7 +756,7 @@ const [decisionData, setDecisionData] = useState({
   
   // Filter and sort applications
   const filteredApplications = useMemo(() => {
-    return applications
+    let filtered = applications
       .filter(app => {
         const matchesSearch = 
           (app.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -762,7 +766,6 @@ const [decisionData, setDecisionData] = useState({
           (app.applicationNumber?.includes(searchTerm) || false)
         
         const matchesStatus = filterStatus === 'all' || app.status === filterStatus
-        const matchesStream = filterStream === 'all' || app.preferredStream === filterStream
         
         let matchesDate = true
         if (startDate || endDate) {
@@ -784,7 +787,33 @@ const [decisionData, setDecisionData] = useState({
           matchesView = app.status !== 'PENDING' && app.status !== 'UNDER_REVIEW'
         }
         
-        return matchesSearch && matchesStatus && matchesStream && matchesDate && matchesView
+        // NEW: Apply top performers filter based on KCPE marks
+        let matchesTopPerformer = true
+        const marks = app.kcpeMarks || 0
+        
+        if (topPerformersFilter === 'top10') {
+          // Get top 10% threshold
+          const sortedMarks = applications.map(a => a.kcpeMarks || 0).sort((a, b) => b - a)
+          const top10Threshold = sortedMarks[Math.floor(sortedMarks.length * 0.1)] || 0
+          matchesTopPerformer = marks >= top10Threshold
+        } else if (topPerformersFilter === 'top25') {
+          // Get top 25% threshold
+          const sortedMarks = applications.map(a => a.kcpeMarks || 0).sort((a, b) => b - a)
+          const top25Threshold = sortedMarks[Math.floor(sortedMarks.length * 0.25)] || 0
+          matchesTopPerformer = marks >= top25Threshold
+        } else if (topPerformersFilter === 'top50') {
+          // Get top 50% threshold
+          const sortedMarks = applications.map(a => a.kcpeMarks || 0).sort((a, b) => b - a)
+          const top50Threshold = sortedMarks[Math.floor(sortedMarks.length * 0.5)] || 0
+          matchesTopPerformer = marks >= top50Threshold
+        } else if (topPerformersFilter === 'custom') {
+          // Apply custom marks range
+          const min = minMarks ? parseInt(minMarks) : 0
+          const max = maxMarks ? parseInt(maxMarks) : 500
+          matchesTopPerformer = marks >= min && marks <= max
+        }
+        
+        return matchesSearch && matchesStatus && matchesDate && matchesView && matchesTopPerformer
       })
       .sort((a, b) => {
         switch (sortBy) {
@@ -804,8 +833,27 @@ const [decisionData, setDecisionData] = useState({
             return 0
         }
       })
-  }, [applications, searchTerm, filterStatus, filterStream, startDate, endDate, activeView, sortBy])
+    
+    return filtered
+  }, [applications, searchTerm, filterStatus, startDate, endDate, activeView, sortBy, topPerformersFilter, minMarks, maxMarks])
   
+    // Calculate top performers stats
+  const topPerformersStats = useMemo(() => {
+    const marks = applications.map(a => a.kcpeMarks || 0).filter(m => m > 0)
+    if (marks.length === 0) return { average: 0, highest: 0, lowest: 0, top10Threshold: 0 }
+    
+    marks.sort((a, b) => b - a)
+    return {
+      average: Math.round(marks.reduce((a, b) => a + b, 0) / marks.length),
+      highest: marks[0] || 0,
+      lowest: marks[marks.length - 1] || 0,
+      top10Threshold: marks[Math.floor(marks.length * 0.1)] || 0,
+      top25Threshold: marks[Math.floor(marks.length * 0.25)] || 0,
+      top50Threshold: marks[Math.floor(marks.length * 0.5)] || 0
+    }
+  }, [applications])
+
+
   // Group filtered applications by date
   const groupedApplications = useMemo(() => {
     return groupApplicationsByDate(filteredApplications);
@@ -1283,11 +1331,14 @@ const deleteApplications = async () => {
     toast.success('Applications exported successfully')
   }
   
-  // Reset filters - FIXED FUNCTION
+      
+          // Reset filters - UPDATED
   const resetFilters = () => {
     setSearchTerm('')
     setFilterStatus('all')
-    setFilterStream('all')
+    setTopPerformersFilter('all')
+    setMinMarks('')
+    setMaxMarks('')
     setStartDate('')
     setEndDate('')
     setSortBy('newest')
@@ -1662,28 +1713,77 @@ const EmptyState = () => (
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
       </div>
 
-      {/* Stream Filter */}
+
+
+            {/* NEW: Custom Marks Range Inputs (shown only when custom is selected) */}
+            {topPerformersFilter === 'custom' && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-amber-50/50 to-amber-50/30 p-2 rounded-2xl border border-amber-200/20 animate-in fade-in slide-in-from-left-4 duration-300">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-xs">Min</span>
+                  <input
+                    type="number"
+                    value={minMarks}
+                    onChange={(e) => setMinMarks(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    max="500"
+                    className="
+                      pl-12 pr-3 py-2.5 w-28
+                      bg-white border border-amber-200 rounded-xl
+                      text-xs font-bold text-gray-700
+                      focus:outline-none focus:ring-2 focus:ring-amber-500/30
+                      transition-all
+                    "
+                  />
+                </div>
+                <span className="text-amber-400 font-bold">-</span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500 font-bold text-xs">Max</span>
+                  <input
+                    type="number"
+                    value={maxMarks}
+                    onChange={(e) => setMaxMarks(e.target.value)}
+                    placeholder="500"
+                    min="0"
+                    max="500"
+                    className="
+                      pl-12 pr-3 py-2.5 w-28
+                      bg-white border border-amber-200 rounded-xl
+                      text-xs font-bold text-gray-700
+                      focus:outline-none focus:ring-2 focus:ring-amber-500/30
+                      transition-all
+                    "
+                  />
+                </div>
+              </div>
+            )}
+
+
+      {/* NEW: Top Performers Filter */}
       <div className="relative flex-1 min-w-[160px] sm:flex-none group">
-        <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+          <Trophy className="w-4 h-4 text-amber-500" />
+        </div>
         <select 
-          value={filterStream}
-          onChange={(e) => setFilterStream(e.target.value)}
+          value={topPerformersFilter}
+          onChange={(e) => setTopPerformersFilter(e.target.value)}
           className="
             w-full pl-11 pr-10 py-3.5 
-            bg-gradient-to-r from-gray-100/50 to-gray-100/30 
+            bg-gradient-to-r from-amber-50/50 to-amber-50/30 
             border-none rounded-2xl 
             text-xs font-bold text-gray-600 
             appearance-none 
-            focus:ring-2 focus:ring-blue-500/20 
+            focus:ring-2 focus:ring-amber-500/20 
             cursor-pointer 
-            hover:from-gray-200/50 hover:to-gray-200/30 
+            hover:from-amber-100/50 hover:to-amber-100/30 
             transition-all duration-200
           "
         >
-          <option value="all">All Streams</option>
-          {streams.map(stream => (
-            <option key={stream.value} value={stream.value}>{stream.label}</option>
-          ))}
+          <option value="all">All Applicants</option>
+          <option value="top10">Top 10% Performers</option>
+          <option value="top25">Top 25% Performers</option>
+          <option value="top50">Top 50% Performers</option>
+          <option value="custom">Custom Marks Range</option>
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
       </div>
@@ -1780,6 +1880,39 @@ const EmptyState = () => (
     </div>
   </div>
 </div>
+
+
+
+
+        {/* NEW: Top Performers Stats Summary */}
+        {(topPerformersFilter === 'top10' || topPerformersFilter === 'top25' || topPerformersFilter === 'top50' || topPerformersFilter === 'custom') && (
+          <div className="mt-4 pt-4 border-t border-gray-200/50 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-lg">
+                <Trophy className="w-3.5 h-3.5 text-amber-600" />
+                <span className="font-bold text-amber-800">
+                  {topPerformersFilter === 'top10' && `Top 10%: ${topPerformersStats.top10Threshold}+ marks`}
+                  {topPerformersFilter === 'top25' && `Top 25%: ${topPerformersStats.top25Threshold}+ marks`}
+                  {topPerformersFilter === 'top50' && `Top 50%: ${topPerformersStats.top50Threshold}+ marks`}
+                  {topPerformersFilter === 'custom' && `Custom Range: ${minMarks || '0'} - ${maxMarks || '500'} marks`}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500">Showing:</span>
+                <span className="font-bold text-amber-700">{filteredApplications.length} applicants</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500">Avg Score:</span>
+                <span className="font-bold text-blue-600">{topPerformersStats.average}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500">Highest:</span>
+                <span className="font-bold text-emerald-600">{topPerformersStats.highest}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
 
    {/* Applications Container */}
 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
