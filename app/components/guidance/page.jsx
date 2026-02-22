@@ -11,6 +11,17 @@ import {
   FiLinkedin, FiTwitter, FiStar, FiFilter, FiTrash2, FiCheck, FiTrendingDown, FiTrendingUp as FiTrendingUp2
 } from 'react-icons/fi';
 
+
+import { 
+  MessageCircle, 
+  Shield, 
+  RotateCw, 
+  Plus, 
+  Clock, 
+  Users 
+} from 'lucide-react';
+
+
 // ============= CATEGORY CONFIG (MOVED BEFORE COMPONENTS) =============
 const CATEGORY_CONFIG = {
   Drugs: {
