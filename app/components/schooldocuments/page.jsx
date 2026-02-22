@@ -3496,72 +3496,232 @@ const hasDocuments = documents && (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 md:p-6">
         <Toaster position="top-right" richColors />
         
-        {/* MODERN HEADER WITH INTEGRATED ACTIONS */}
-        <div className="relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
-          {/* Decorative Background Elements */}
-          <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
+ {/* Modern School Documents Header */}
+<div className="group relative bg-gradient-to-br from-[#1e40af] via-[#7c3aed] to-[#2563eb] rounded-[2.5rem] shadow-[0_20px_50px_rgba(31,38,135,0.37)] p-6 md:p-10 mb-10 border border-white/20 overflow-hidden transition-all duration-500">
+  
+  {/* Animated Gradient Orbs */}
+  <div className="absolute top-[-10%] left-[-5%] w-64 h-64 bg-white/15 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-[-20%] right-[-5%] w-80 h-80 bg-blue-400/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+  <div className="absolute top-[30%] right-[20%] w-40 h-40 bg-purple-400/20 rounded-full blur-3xl animate-ping opacity-20" />
+  <div className="absolute bottom-[40%] left-[15%] w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+  
+  {/* Floating Particles */}
+  <div className="absolute inset-0 opacity-10">
+    {[...Array(8)].map((_, i) => (
+      <div 
+        key={i}
+        className="absolute w-1 h-1 bg-white rounded-full animate-ping"
+        style={{
+          top: `${Math.random() * 100}%`,
+          left: `${Math.random() * 100}%`,
+          animationDelay: `${i * 0.3}s`,
+          animationDuration: `${2 + Math.random()}s`
+        }}
+      />
+    ))}
+  </div>
+  
+  {/* Subtle Grid Pattern */}
+  <div className="absolute inset-0 opacity-[0.03]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  {/* Shine Effect Overlay */}
+  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full" style={{ transform: 'skewX(-20deg)' }} />
+  
+  <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
+    
+    {/* Left Section */}
+    <div className="flex-1 min-w-0">
+      
+      {/* Icon and Title Row */}
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        
+        {/* Icon Container with Enhanced Animation */}
+        <div className="relative">
+          {/* Multi-layer Glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent rounded-2xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity" />
+          <div className="absolute inset-0 bg-white/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
           
-          <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-4 mb-4">
-                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md ring-1 ring-white/40 shadow-inner group transition-all duration-500 hover:bg-white/20">
-                  <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-emerald-400/20 text-emerald-300 text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border border-emerald-400/30 backdrop-blur-md">
-                      Document Management
-                    </span>
-                    <FaShieldAlt className="text-blue-300 text-[10px]" />
-                  </div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tighter drop-shadow-sm">
-                    School Documents
-                  </h1>
-                </div>
-              </div>
-              
-              <p className="text-blue-50/80 text-sm md:text-lg font-medium max-w-2xl leading-relaxed">
-                Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
-              </p>
+          {/* Main Icon */}
+          <div className="relative p-3.5 bg-white/10 backdrop-blur-md rounded-2xl ring-1 ring-white/40 shadow-inner transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+            <FaFilePdf className="text-white text-3xl group-hover:scale-110 transition-transform" />
+          </div>
+          
+          {/* Animated Ring */}
+          <div className="absolute -inset-1 border-2 border-white/30 rounded-2xl opacity-0 group-hover:opacity-100 animate-ping" />
+          
+          {/* Document Count Badge */}
+          {hasDocuments && (
+            <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full min-w-[22px] text-center shadow-lg border-2 border-white/50">
+              {documentCount || '3'}
             </div>
-
-            {/* ACTION BUTTON GROUP */}
-            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-              
-              {/* 1. REFRESH BUTTON (Always Visible) */}
-              <button 
-                onClick={loadData} 
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-2.5 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50"
-              >
-                {loading ? <CircularProgress size={14} color="inherit" /> : <FaSync className="text-xs" />}
-                <span>{loading ? 'Syncing...' : 'Refresh'}</span>
-              </button>
-
-              {/* 2. UPLOAD/EDIT BUTTON (Conditional Style) */}
-              <button 
-                onClick={() => setShowModal(true)} 
-                className="flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-2.5 rounded-xl hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95"
-              >
-                {hasDocuments ? <FaPencilAlt className="text-xs" /> : <FaUpload className="text-xs" />}
-                <span>{hasDocuments ? 'Edit Documents' : 'Upload Documents'}</span>
-              </button>
-
-              {/* 3. DELETE BUTTON (ONLY IF DOCUMENTS EXIST) */}
-              {hasDocuments && (
-                <button 
-                  onClick={() => setDeleteDialogOpen(true)} 
-                  className="group flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-2.5 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95"
-                >
-                  <FaTrash className="text-xs group-hover:animate-bounce" />
-                  <span>Delete All</span>
-                </button>
-              )}
+          )}
+        </div>
+        
+        {/* Title with Badges */}
+        <div>
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            {/* Category Badge */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-400/20 backdrop-blur-md rounded-full border border-emerald-400/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-300">
+                Document Management
+              </span>
+            </div>
+            
+            {/* Security Badge */}
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 backdrop-blur-md rounded-full border border-blue-400/30">
+              <FaShieldAlt className="text-blue-300 text-[8px]" />
+              <span className="text-[8px] font-black uppercase tracking-wider text-blue-300">
+                Secured
+              </span>
+            </div>
+            
+            {/* Document Status */}
+            <div className={`flex items-center gap-1 px-2 py-1 backdrop-blur-md rounded-full border ${
+              hasDocuments 
+                ? 'bg-white/10 text-white border-white/20' 
+                : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+            }`}>
+              <span className={`w-1 h-1 rounded-full ${hasDocuments ? 'bg-white' : 'bg-amber-400 animate-pulse'}`} />
+              <span className="text-[8px] font-black uppercase tracking-wider">
+                {hasDocuments ? `${documentCount || '3'} Documents` : 'No Documents'}
+              </span>
             </div>
           </div>
+          
+          <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter drop-shadow-sm leading-tight">
+            School{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+              Documents
+            </span>
+          </h1>
         </div>
+      </div>
+      
+      {/* Description with Icons */}
+      <div className="flex items-start gap-2 max-w-2xl">
+        <FiInfo className="w-4 h-4 text-white/50 mt-0.5 flex-shrink-0" />
+        <p className="text-blue-50/80 text-sm md:text-base font-medium leading-relaxed">
+          Manage all school documents including curriculum, dynamic fee structures, admission forms, and exam results.
+        </p>
+      </div>
+      
+      {/* Document Categories Quick Stats */}
+      <div className="flex flex-wrap items-center gap-2 mt-4">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+          <FiBook className="w-3 h-3 text-blue-300" />
+          <span className="text-[9px] font-bold text-white/80">Curriculum</span>
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+          <FiDollarSign className="w-3 h-3 text-emerald-300" />
+          <span className="text-[9px] font-bold text-white/80">Fee Structure</span>
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+          <FiFileText className="w-3 h-3 text-purple-300" />
+          <span className="text-[9px] font-bold text-white/80">Admission Forms</span>
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+          <FiBarChart2 className="w-3 h-3 text-amber-300" />
+          <span className="text-[9px] font-bold text-white/80">Exam Results</span>
+        </div>
+      </div>
+    </div>
+
+    {/* ACTION BUTTON GROUP - Enhanced */}
+    <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto bg-white/5 backdrop-blur-lg xl:bg-transparent p-4 xl:p-0 rounded-2xl xl:rounded-none border border-white/10 xl:border-none">
+      
+      {/* 1. REFRESH BUTTON - Enhanced */}
+      <button 
+        onClick={loadData} 
+        disabled={loading}
+        className="group/btn relative overflow-hidden flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/30 px-5 py-3 rounded-xl transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50 min-w-[110px]"
+      >
+        {/* Button Shine Effect */}
+        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        
+        {loading ? (
+          <>
+            <CircularProgress size={14} color="inherit" className="relative z-10" />
+            <span className="relative z-10">Syncing...</span>
+          </>
+        ) : (
+          <>
+            <FaSync className="text-xs relative z-10 group-hover/btn:rotate-180 transition-transform duration-500" />
+            <span className="relative z-10">Refresh</span>
+          </>
+        )}
+        
+        {/* Live Badge */}
+        <span className="absolute -top-1 -right-1 w-2 h-2">
+          <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping" />
+          <span className="relative block w-2 h-2 rounded-full bg-emerald-500" />
+        </span>
+      </button>
+
+      {/* 2. UPLOAD/EDIT BUTTON - Enhanced */}
+      <button 
+        onClick={() => setShowModal(true)} 
+        className="group/btn relative overflow-hidden flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-xl hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-200 font-bold text-sm shadow-lg active:scale-95 min-w-[150px]"
+      >
+        {/* Button Shine Effect */}
+        <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-blue-100 to-transparent" />
+        
+        {hasDocuments ? (
+          <>
+            <FaPencilAlt className="text-xs relative z-10 group-hover/btn:scale-110 transition-transform" />
+            <span className="relative z-10">Edit Documents</span>
+          </>
+        ) : (
+          <>
+            <FaUpload className="text-xs relative z-10 group-hover/btn:translate-y-[-2px] transition-transform" />
+            <span className="relative z-10">Upload Documents</span>
+            
+            {/* Pulse Indicator for Upload */}
+            <span className="relative flex h-2 w-2 ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+          </>
+        )}
+      </button>
+
+      {/* 3. DELETE BUTTON - Enhanced (ONLY IF DOCUMENTS EXIST) */}
+      {hasDocuments && (
+        <button 
+          onClick={() => setDeleteDialogOpen(true)} 
+          className="group/btn relative overflow-hidden flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500 backdrop-blur-md text-red-200 hover:text-white border border-red-500/30 px-5 py-3 rounded-xl transition-all duration-300 font-bold text-sm shadow-lg active:scale-95 min-w-[120px]"
+        >
+          {/* Button Shine Effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          
+          <FaTrash className="text-xs relative z-10 group-hover/btn:animate-bounce" />
+          <span className="relative z-10">Delete All</span>
+          
+          {/* Warning Indicator */}
+          <span className="absolute -top-1 -right-1 w-2 h-2">
+            <span className="absolute inset-0 rounded-full bg-red-400 animate-ping" />
+            <span className="relative block w-2 h-2 rounded-full bg-red-500" />
+          </span>
+        </button>
+      )}
+    </div>
+  </div>
+  
+  {/* Bottom Accent with Document Count */}
+  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+  
+  {/* Document Stats Bar */}
+  {hasDocuments && (
+    <div className="absolute bottom-3 right-6 flex items-center gap-3 text-[9px] font-bold text-white/40 uppercase tracking-wider">
+      <span>Total Size: 24.5 MB</span>
+      <span className="w-1 h-1 rounded-full bg-white/20" />
+      <span>Last Updated: Today</span>
+    </div>
+  )}
+</div>
 
         {!hasDocuments ? (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center my-6">
