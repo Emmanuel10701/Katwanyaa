@@ -1066,6 +1066,7 @@ const recipientGroups = useMemo(() => {
     { value: 'published', label: 'Sent', color: 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50', icon: CheckCircle2 }
   ];
   
+// Replace the fetchData function and useEffect with this:
 
 const fetchData = useCallback(async () => {
   try {
@@ -1088,7 +1089,29 @@ const fetchData = useCallback(async () => {
     if (campaignsData.success) {
       const campaignsList = campaignsData.campaigns || [];
       setCampaigns(campaignsList);
-      updateStats(campaignsList);
+      
+      // Calculate stats directly without calling updateStats
+      const newStats = {
+        total: campaignsList.length,
+        draft: campaignsList.filter(c => c.status === 'draft').length,
+        published: campaignsList.filter(c => c.status === 'published').length,
+        totalRecipients: campaignsList.reduce((total, campaign) => {
+          if (!campaign || !campaign.recipients) return total;
+          return total + campaign.recipients.split(',').length;
+        }, 0),
+        successRate: 0,
+        openedRate: 0
+      };
+      
+      // Calculate success rate
+      const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
+      if (publishedCampaigns.length > 0) {
+        const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
+        newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
+      }
+      
+      setStats(newStats);
+      
       if (refreshing) {
         showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
       }
@@ -1141,20 +1164,13 @@ const fetchData = useCallback(async () => {
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
-}, []); // ← Empty dependency array – function never changes
+}, []); // Empty dependency array - function never changes
 
-// ✅ SINGLE useEffect hook - remove the duplicate one below
+// SINGLE useEffect hook
 useEffect(() => {
-  setLoading(true); 
   fetchData();
-}, [fetchData]); // This is correct now that fetchData is memoized with useCallback
+}, [fetchData]); // This is correct
 
-// ❌ REMOVE THIS DUPLICATE useEffect COMPLETELY
-// useEffect(() => {
-//   setLoading(true); 
-//   fetchData();
-// }, [fetchData]); // Note: Add fetchData to dependency array
-// Also fix the useEffect dependency
 
  
   const updateStats = (campaignsList) => {
