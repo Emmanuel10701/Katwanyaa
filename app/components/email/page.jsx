@@ -1068,27 +1068,24 @@ const recipientGroups = useMemo(() => {
   
 
   
-
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
     setRefreshing(true);
-    setLoading(true); // Ensure loading is set to true
-    
-    // Track start time for minimum loading duration
+    setLoading(true);
+
     const startTime = Date.now();
-    
-    // Use /api/s endpoint for student emails
+
     const [campaignsRes, studentRes, staffRes] = await Promise.all([
       fetch('/api/emails'),
       fetch('/api/s'),
       fetch('/api/staff')
     ]);
-    
+
     const campaignsData = await campaignsRes.json();
     const studentData = await studentRes.json();
     const staffData = await staffRes.json();
-    
+
     if (campaignsData.success) {
       const campaignsList = campaignsData.campaigns || [];
       setCampaigns(campaignsList);
@@ -1097,8 +1094,8 @@ const fetchData = useCallback(async () => {
         showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
       }
     }
-    
-    // Handle student data from /api/s endpoint
+
+    // Normalize student data from /api/s
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
       studentsArray = studentData.data.map(student => ({
@@ -1117,11 +1114,10 @@ const fetchData = useCallback(async () => {
     } else if (Array.isArray(studentData?.students)) {
       studentsArray = studentData.students;
     }
-    
     setStudents(studentsArray);
     console.log(`Loaded ${studentsArray.length} students/parents from API /api/s`);
-    
-    // Normalize staff data to always be an array
+
+    // Normalize staff data
     let staffArray = [];
     if (Array.isArray(staffData)) {
       staffArray = staffData;
@@ -1132,32 +1128,21 @@ const fetchData = useCallback(async () => {
     }
     setStaff(staffArray);
     console.log(`Loaded ${staffArray.length} staff members from API`);
-    
-    // Calculate elapsed time and ensure minimum loading duration of 800ms
-    const elapsedTime = Date.now() - startTime;
-    const minimumLoadTime = 800; // Increased from 500ms to 800ms for better visibility
-    
-    if (elapsedTime < minimumLoadTime) {
-      await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
-    }
-    
+
   } catch (error) {
     console.error('Error fetching data:', error);
     showNotification('error', 'Network error. Please check connection.');
-    
-    // Even on error, ensure minimum loading time to prevent flicker
-    const elapsedTime = Date.now() - startTime; // Fixed: Now startTime is accessible
+  } finally {
+    const elapsedTime = Date.now() - startTime;
     const minimumLoadTime = 800;
-    
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
     }
-  } finally {
     setLoading(false);
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
-}, [refreshing]);
+}, []); // ← Empty dependency array – function never changes
 
 // Also fix the useEffect dependency
 useEffect(() => {
