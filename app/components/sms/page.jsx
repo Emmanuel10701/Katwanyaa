@@ -880,11 +880,11 @@ useEffect(() => {
       setLoadingStates((prev) => ({ ...prev, fetching: true }));
       setRefreshing(true);
 
-      const [campaignsRes, studentRes, staffRes] = await Promise.all([
-        fetch("/api/sms"),
-        fetch("/api/s"),
-        fetch("/api/staff"),
-      ]);
+     const [campaignsRes, studentRes, staffRes] = await Promise.all([
+  fetch("/api/sms?limit=1000"),
+  fetch("/api/s"),
+  fetch("/api/staff"),
+]);
 
       const campaignsData = await campaignsRes.json();
       const studentData = await studentRes.json();
