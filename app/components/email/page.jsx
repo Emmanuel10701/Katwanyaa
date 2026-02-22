@@ -1067,7 +1067,6 @@ const recipientGroups = useMemo(() => {
   ];
   
 
-  
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
@@ -1144,18 +1143,20 @@ const fetchData = useCallback(async () => {
   }
 }, []); // ← Empty dependency array – function never changes
 
-// Also fix the useEffect dependency
+// ✅ SINGLE useEffect hook - remove the duplicate one below
 useEffect(() => {
   setLoading(true); 
   fetchData();
 }, [fetchData]); // This is correct now that fetchData is memoized with useCallback
 
+// ❌ REMOVE THIS DUPLICATE useEffect COMPLETELY
+// useEffect(() => {
+//   setLoading(true); 
+//   fetchData();
+// }, [fetchData]); // Note: Add fetchData to dependency array
+// Also fix the useEffect dependency
 
-useEffect(() => {
-  setLoading(true); 
-  fetchData();
-}, [fetchData]); // Note: Add fetchData to dependency array
-  
+ 
   const updateStats = (campaignsList) => {
     const newStats = {
       total: campaignsList.length,
