@@ -1008,30 +1008,30 @@ const resetForm = useCallback(() => {
               </button>
             </div>
             
-            {/* Summary Text */}
-            <div className="mb-8">
-              <p className="text-blue-100/80 text-base sm:text-md font-medium leading-relaxed">
-                Managing <span className="text-white font-bold underline decoration-cyan-500/50 decoration-2 underline-offset-4">{stats.total} galleries</span> with <span className="text-white font-bold underline decoration-purple-500/50 decoration-2 underline-offset-4">{stats.totalFiles} files</span>. 
-                You have <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-0.5 rounded-lg bg-cyan-400/20 text-cyan-300 border border-cyan-400/20 mx-1">{stats.images} images</span> 
-              </p>
-            </div>
-            
-            {/* Call to Action */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl sm:rounded-2xl font-bold sm:font-black text-sm uppercase tracking-widest shadow-lg transition-all w-full sm:w-auto"
-              >
-                <FiUpload />
-                Upload Gallery
-              </button>
-              
-              <div className="h-[1px] w-full sm:h-10 sm:w-[1px] bg-white/10 sm:mx-2" />
-              
-              <p className="text-xs font-bold text-white/40 uppercase tracking-widest text-center sm:text-left">
-                Storage Status: <span className="text-emerald-400">{(stats.totalFiles * 5).toLocaleString()} MB used</span>
-              </p>
-            </div>
+        {/* Summary Text */}
+<div className="mb-6">
+  <p className="text-blue-100/80 text-sm font-medium leading-relaxed">
+    Managing <span className="text-white font-bold underline decoration-cyan-500/50 underline-offset-4">{stats.total} galleries</span> with <span className="text-white font-bold underline decoration-purple-500/50 underline-offset-4">{stats.totalFiles} files</span>. 
+    You have <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-cyan-400/20 text-cyan-300 border border-cyan-400/20 mx-1">{stats.images} images</span> 
+  </p>
+</div>
+
+{/* Call to Action */}
+<div className="flex flex-col sm:flex-row items-center gap-3">
+  <button
+    onClick={() => setShowCreateModal(true)}
+    className="flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg transition-all w-full sm:w-auto"
+  >
+    <FiUpload className="w-4 h-4" />
+    Upload Gallery
+  </button>
+  
+  <div className="h-[1px] w-full sm:h-8 sm:w-[1px] bg-white/10" />
+  
+  <p className="text-xs font-bold text-white/40 uppercase tracking-widest text-center sm:text-left">
+    Storage: <span className="text-emerald-400">{(stats.totalFiles * 5).toLocaleString()} MB</span>
+  </p>
+</div>
           </div>
         </div>
 
