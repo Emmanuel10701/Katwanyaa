@@ -1712,7 +1712,7 @@ const getAuthHeaders = () => {
         loading={deleting}
       />
 
-  {/* Modern News & Events Manager Header */}
+{/* Modern News & Events Manager Header */}
 <div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
   
   {/* Abstract Gradient Orbs - Purple/Pink Theme */}
