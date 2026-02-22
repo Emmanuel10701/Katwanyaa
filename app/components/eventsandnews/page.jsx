@@ -1712,39 +1712,165 @@ const getAuthHeaders = () => {
         loading={deleting}
       />
 
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl shadow-lg border border-purple-200 p-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">News & Events Manager</h1>
-            <p className="text-gray-600 text-sm lg:text-base">Manage school news articles and events</p>
-          </div>
-          <div className="flex items-center gap-3">
-   <button
-  onClick={fetchData}
-  className={`flex items-center gap-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-              text-white px-10 py-3 rounded-2xl font-semibold shadow-lg 
-               hover:shadow-xl transition-transform duration-300
-              cursor-pointer text-sm`}
->
-  {/* Loading spinner */}
-  {loading && (
-    <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-  )}
+  {/* Modern News & Events Manager Header */}
+<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
   
-  {loading ? 'Refreshing...' : 'Refresh updates'}
-</button>
-
-            <button onClick={handleCreate} className={`flex items-center gap-2 text-white px-10 lg:px-6 py-2 lg:py-3 rounded-2xl font-bold shadow-lg cursor-pointer text-sm ${
-              activeSection === 'news' 
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600' 
-                : 'bg-gradient-to-r from-blue-600 to-cyan-600'
-            }`}>
-              <FiPlus className="text-xs" /> Create {activeSection === 'news' ? 'News' : 'Event'}
-            </button>
+  {/* Abstract Gradient Orbs - Purple/Pink Theme */}
+  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-gradient-to-br from-purple-600/30 via-pink-600/20 to-transparent rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-gradient-to-tr from-pink-600/20 via-rose-600/10 to-transparent rounded-full blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  
+  {/* Subtle Grid Pattern Overlay */}
+  <div className="absolute inset-0 opacity-[0.02]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+      
+      {/* Left Section - Title & Description */}
+      <div className="flex-1">
+        {/* Premium Badge */}
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="h-7 w-1 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+          <div>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-purple-400">
+              School Communication
+            </h2>
+            <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
+              Keep everyone informed
+            </p>
           </div>
         </div>
+        
+        {/* Title with Dynamic Active Section */}
+        <div className="flex items-center gap-4 mb-2">
+          <div className="relative">
+            {/* Animated Icon Container */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-80 transition-opacity" />
+            <div className={`relative p-3.5 rounded-2xl shadow-2xl transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500 ${
+              activeSection === 'news' 
+                ? 'bg-gradient-to-br from-purple-600 to-pink-600' 
+                : 'bg-gradient-to-br from-blue-600 to-cyan-600'
+            }`}>
+              {activeSection === 'news' ? (
+                <FiFileText className="text-white text-2xl md:text-3xl" />
+              ) : (
+                <FiCalendar className="text-white text-2xl md:text-3xl" />
+              )}
+            </div>
+          </div>
+          
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
+            <span className="text-white">{activeSection === 'news' ? 'News' : 'Events'}</span>
+            <br className="sm:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-white ml-1 sm:ml-2">
+              Manager
+            </span>
+          </h1>
+        </div>
+        
+        {/* Dynamic Description */}
+        <p className="text-purple-100/70 text-sm md:text-[15px] font-medium leading-relaxed max-w-2xl">
+          {activeSection === 'news' 
+            ? 'Manage school news articles and announcements.'
+            : 'Create and manage school events and activities.'
+          }
+          <span className="inline-flex items-center gap-1.5 mx-1.5 px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/20 text-[11px] font-bold">
+            {activeSection === 'news' ? `${news.length} articles` : `${events.length} events`}
+          </span>
+          ready for publication.
+        </p>
       </div>
+      
+      {/* Right Section - Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+        
+        {/* Refresh Button - Glass Effect with Loading State */}
+        <button
+          onClick={fetchData}
+          disabled={loading}
+          className="group/btn relative overflow-hidden flex items-center justify-center gap-2.5 bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all hover:bg-white/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto min-w-[140px]"
+        >
+          {/* Button Shine Effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          
+          {loading ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+              <span className="text-white/90">Refreshing...</span>
+            </>
+          ) : (
+            <>
+              <FiRefreshCw className="text-base text-white/80 group-hover/btn:rotate-180 transition-transform duration-500" />
+              <span className="text-white/90">Refresh Updates</span>
+            </>
+          )}
+          
+          {/* Subtle Badge with Count */}
+          {!loading && (
+            <span className="hidden sm:inline-block ml-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[9px] font-black text-white/60 border border-white/10">
+              LIVE
+            </span>
+          )}
+        </button>
+        
+        {/* Create Button - Gradient with Dynamic Colors */}
+        <button
+          onClick={handleCreate}
+          className={`group/btn relative overflow-hidden flex items-center justify-center gap-2.5 px-8 py-3 rounded-xl font-bold text-sm tracking-wide transition-all active:scale-95 shadow-lg hover:shadow-xl w-full sm:w-auto ${
+            activeSection === 'news' 
+              ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-purple-600/30' 
+              : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-blue-600/30'
+          }`}
+        >
+          {/* Button Shine Effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          
+          <FiPlus className="text-base group-hover/btn:rotate-90 transition-transform duration-300" />
+          <span>Create {activeSection === 'news' ? 'News' : 'Event'}</span>
+          
+          {/* Pulse Indicator */}
+          <span className="relative flex h-2 w-2 ml-1">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+    
+    {/* Status Bar - Dynamic Based on Active Section */}
+    <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+      <div className="flex items-center gap-2">
+        <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+          activeSection === 'news' ? 'bg-purple-400' : 'bg-blue-400'
+        }`} />
+        <span className="text-white/40">Status:</span>
+        <span className={`${
+          activeSection === 'news' ? 'text-purple-400' : 'text-blue-400'
+        }`}>Active</span>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        {activeSection === 'news' ? (
+          <FiFileText className="text-white/30" />
+        ) : (
+          <FiCalendar className="text-white/30" />
+        )}
+        <span className="text-white/40">
+          {activeSection === 'news' ? `${news.length} published` : `${events.length} scheduled`}
+        </span>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <FiClock className="text-white/30" />
+        <span className="text-white/40">
+          Last updated: {new Date().toLocaleTimeString()}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 
       {/* Stats Overview */}
       {stats && (
