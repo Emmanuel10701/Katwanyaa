@@ -42,6 +42,8 @@ import {
   FaLogOut
 } from 'react-icons/fa6';
 
+import {FiClock } from 'react-icons/fi';
+
 // Import Lucide React icons for the rest
 import {
   Search,
