@@ -27,7 +27,7 @@ import {
   FiUsers, FiBook, FiCalendar, FiFileText, FiTrendingDown, FiTrendingUp,
   FiEye, FiDownload, FiMail, FiUserPlus, FiArrowUpRight, FiStar,
   FiUser, FiImage as FiImageIcon, FiMessageCircle, FiX, FiPlay as FiPlayIcon,
-  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity 
+  FiBarChart2, FiAward as FiAwardIcon, FiTarget, FiActivity,FiInfo  
 } from 'react-icons/fi';
 import { CircularProgress, Modal, Box, TextareaAutosize } from '@mui/material';
 
