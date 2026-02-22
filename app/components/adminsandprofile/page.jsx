@@ -1159,7 +1159,7 @@ const handleSaveAdmin = async (e) => {
     </span>
   </h1>
 </div>
-        </div>{/* Main Icon */
+        </div>{/* Main Icon */}
         
         {/* Enhanced Description */}
         <p className="text-blue-100/70 text-sm md:text-[13px] font-medium leading-relaxed max-w-3xl">
