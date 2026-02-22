@@ -23,6 +23,8 @@ import {
   FaPencilAlt, FaEllipsisV, FaExclamationCircle, FaAlignLeft 
 } from 'react-icons/fa';
 
+import {FiInfo } from 'react-icons/fi';
+
 import { 
   CircularProgress, Modal, Box, TextField,
   IconButton, Button, Chip, Stack, FormControl,
