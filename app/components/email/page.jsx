@@ -751,9 +751,8 @@ const CampaignCard = ({
 
 // Modern Email Skeleton Component
 
-
+// Replace this entire component:
 const ModernEmailSkeleton = () => {
-  
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl animate-in zoom-in-95 duration-300 w-full max-w-md">
@@ -781,7 +780,6 @@ const ModernEmailSkeleton = () => {
     </div>
   );
 };
-
 
 
 
@@ -822,7 +820,7 @@ export default function ModernEmailCampaignsManager() {
   const [campaigns, setCampaigns] = useState([]);
   const [students, setStudents] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Make sure this is true
   const [refreshing, setRefreshing] = useState(false);
   
   // View States
@@ -1063,16 +1061,19 @@ const recipientGroups = useMemo(() => {
     { value: 'published', label: 'Sent', color: 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50', icon: CheckCircle2 }
   ];
   
-
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
     setRefreshing(true);
+    setLoading(true); // Ensure loading is set to true
+    
+    // Track start time for minimum loading duration
+    const startTime = Date.now();
     
     // Use /api/s endpoint for student emails
     const [campaignsRes, studentRes, staffRes] = await Promise.all([
       fetch('/api/emails'),
-      fetch('/api/s'),  // Changed from /api/studentupload to /api/s
+      fetch('/api/s'),
       fetch('/api/staff')
     ]);
     
@@ -1092,18 +1093,16 @@ const fetchData = useCallback(async () => {
     // Handle student data from /api/s endpoint
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
-      // Map the data structure from /api/s endpoint
       studentsArray = studentData.data.map(student => ({
         id: student.admissionNumber || student.id,
         firstName: student.firstName || '',
         lastName: student.lastName || '',
-        email: student.email || '',  // Parent's email
+        email: student.email || '',
         admissionNumber: student.admissionNumber || '',
         form: student.form || '',
         stream: student.stream || ''
       }));
     } else if (Array.isArray(studentData)) {
-      // Fallback for array response
       studentsArray = studentData;
     } else if (Array.isArray(studentData?.data)) {
       studentsArray = studentData.data;
@@ -1126,6 +1125,14 @@ const fetchData = useCallback(async () => {
     setStaff(staffArray);
     console.log(`Loaded ${staffArray.length} staff members from API`);
     
+    // Ensure minimum loading time of 500ms to prevent flicker
+    const elapsedTime = Date.now() - startTime;
+    const minimumLoadTime = 500;
+    
+    if (elapsedTime < minimumLoadTime) {
+      await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
+    }
+    
   } catch (error) {
     console.error('Error fetching data:', error);
     showNotification('error', 'Network error. Please check connection.');
@@ -1135,7 +1142,6 @@ const fetchData = useCallback(async () => {
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
 }, [refreshing]);
-  
   useEffect(() => {
     fetchData();
   }, []);
@@ -2134,114 +2140,131 @@ const CampaignAttachmentsDisplay = ({ campaign }) => {
   </div>
 </div>
 
-      {/* Campaigns List */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 overflow-hidden">
-        {loading ? (
-          <ModernEmailSkeleton />
-        ) : filteredCampaigns.length === 0 ? (
-          <div className="text-center py-16">
-            <Mail className="text-gray-400 w-16 h-16 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Campaigns Found</h3>
-            <p className="text-gray-600 mb-6">
-              {activeView === 'draft' 
-                ? 'No draft campaigns found'
-                : activeView === 'published'
-                ? 'No sent campaigns found'
-                : 'No campaigns match your filters'
-              }
-            </p>
+{/* Campaigns List */}
+<div className="bg-white/60 backdrop-blur-sm rounded-xl shadow-xs border border-gray-200/60 overflow-hidden">
+  {loading ? (
+    <div className="flex flex-col items-center justify-center p-12 space-y-4">
+      <div className="relative">
+        {/* Outer Glow Ring */}
+        <div className="absolute inset-0 rounded-full bg-blue-400 opacity-20 animate-ping"></div>
+        
+        {/* Main Spinner Icon */}
+        <Loader2 className="w-10 h-10 text-blue-600 animate-spin relative z-10" />
+      </div>
+
+      <div className="space-y-1 text-center">
+        <h3 className="text-lg font-black text-slate-900 tracking-tight">
+          Fetching Campaigns
+        </h3>
+        <p className="text-sm font-bold text-slate-500 animate-pulse">
+          Please wait a moment...
+        </p>
+      </div>
+    </div>
+  ) : filteredCampaigns.length === 0 ? (
+    <div className="text-center py-16">
+      <Mail className="text-gray-400 w-16 h-16 mx-auto mb-4" />
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">No Campaigns Found</h3>
+      <p className="text-gray-600 mb-6">
+        {activeView === 'draft' 
+          ? 'No draft campaigns found'
+          : activeView === 'published'
+          ? 'No sent campaigns found'
+          : 'No campaigns match your filters'
+        }
+      </p>
+      <button
+        onClick={openCreateModal}
+        className="
+          inline-flex items-center gap-2
+          bg-gradient-to-r from-blue-500 to-cyan-500
+          text-white px-4 py-2.5 rounded-xl
+          transition-all duration-300 font-medium
+          hover:scale-101
+          hover:from-blue-600 hover:to-cyan-600
+          hover:shadow-blue-500/25
+        "
+      >
+        <Plus className="w-4 h-4" />
+        Create Your First Campaign
+      </button>
+    </div>
+  ) : (
+    <>
+      {/* List Header */}
+      <div className="p-4 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/50 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
-              onClick={openCreateModal}
+              onClick={toggleSelectAll}
+              className="p-1.5 rounded hover:bg-gray-100/50"
+            >
+              {selectedCampaigns.size === filteredCampaigns.length && filteredCampaigns.length > 0 ? (
+                <CheckSquare className="w-4 h-4 text-blue-600" />
+              ) : (
+                <Square className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+              )}
+            </button>
+            <span className="text-sm font-medium text-gray-600">
+              Select All ({filteredCampaigns.length})
+            </span>
+          </div>
+          <div className="text-sm text-gray-600">
+            Showing {filteredCampaigns.length} of {campaigns.length} campaigns
+          </div>
+        </div>
+      </div>
+
+      {/* Campaign Cards */}
+      <div className="p-4 space-y-4 modern-scrollbar max-h-[600px] overflow-y-auto">
+        {filteredCampaigns.map((campaign) => (
+          <CampaignCard
+            key={campaign.id}
+            campaign={campaign}
+            isSelected={selectedCampaigns.has(campaign.id)}
+            onSelect={toggleSelectCampaign}
+            onView={openDetailModal}
+            onEdit={openEditModal}
+            onSend={openSendConfirmationModal}
+            onDelete={openDeleteModal}
+            loadingStates={loadingStates}
+          />
+        ))}
+      </div>
+      
+      {/* List Footer */}
+      <div className="px-6 py-4 border-t border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/50 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing <span className="font-semibold">{filteredCampaigns.length}</span> of{' '}
+            <span className="font-semibold">{campaigns.length}</span> campaigns
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={openBulkDeleteModal}
+              disabled={selectedCampaigns.size === 0}
               className="
                 inline-flex items-center gap-2
-                bg-gradient-to-r from-blue-500 to-cyan-500
-                text-white px-4 py-2.5 rounded-xl
-                transition-all duration-300 font-medium
-                hover:scale-101
-                hover:from-blue-600 hover:to-cyan-600
-                hover:shadow-blue-500/25
+                bg-white/40 backdrop-blur-md
+                border border-gray-200/50
+                rounded-lg transition-all duration-300
+                text-sm font-medium text-gray-700
+                disabled:opacity-50
+                hover:bg-red-50/60
+                hover:text-red-600
+                hover:border-red-200/60
+                hover:shadow-sm
               "
             >
-              <Plus className="w-4 h-4" />
-              Create Your First Campaign
+              <Trash2 className="w-4 h-4" />
+              Delete Selected ({selectedCampaigns.size})
             </button>
           </div>
-        ) : (
-          <>
-            {/* List Header */}
-            <div className="p-4 border-b border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/50 backdrop-blur-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={toggleSelectAll}
-                    className="p-1.5 rounded hover:bg-gray-100/50"
-                  >
-                    {selectedCampaigns.size === filteredCampaigns.length && filteredCampaigns.length > 0 ? (
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Square className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-                    )}
-                  </button>
-                  <span className="text-sm font-medium text-gray-600">
-                    Select All ({filteredCampaigns.length})
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Showing {filteredCampaigns.length} of {campaigns.length} campaigns
-                </div>
-              </div>
-            </div>
-
-            {/* Campaign Cards */}
-            <div className="p-4 space-y-4 modern-scrollbar max-h-[600px] overflow-y-auto">
-              {filteredCampaigns.map((campaign) => (
-                <CampaignCard
-                  key={campaign.id}
-                  campaign={campaign}
-                  isSelected={selectedCampaigns.has(campaign.id)}
-                  onSelect={toggleSelectCampaign}
-                  onView={openDetailModal}
-                  onEdit={openEditModal}
-                  onSend={openSendConfirmationModal}
-                  onDelete={openDeleteModal}
-                  loadingStates={loadingStates}
-                />
-              ))}
-            </div>
-            
-            {/* List Footer */}
-            <div className="px-6 py-4 border-t border-gray-100/50 bg-gradient-to-r from-gray-50/80 to-gray-100/50 backdrop-blur-sm">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Showing <span className="font-semibold">{filteredCampaigns.length}</span> of{' '}
-                  <span className="font-semibold">{campaigns.length}</span> campaigns
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={openBulkDeleteModal}
-                    disabled={selectedCampaigns.size === 0}
-                    className="
-                      inline-flex items-center gap-2
-                      bg-white/40 backdrop-blur-md
-                      border border-gray-200/50
-                      rounded-lg transition-all duration-300
-                      text-sm font-medium text-gray-700
-                      disabled:opacity-50
-                      hover:bg-red-50/60
-                      hover:text-red-600
-                      hover:border-red-200/60
-                      hover:shadow-sm
-                    "
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete Selected ({selectedCampaigns.size})
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        </div>
       </div>
+    </>
+  )}
+</div>
 
       {/* Single Delete Confirmation Modal */}
       <ConfirmationModal
