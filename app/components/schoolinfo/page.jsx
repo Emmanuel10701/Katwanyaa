@@ -1808,8 +1808,8 @@ const handleDeleteSchool = async () => {
           <div className="absolute inset-0 bg-white/20 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
           
           {/* Main Icon */}
-          <div className="relative p-3.5 bg-white/10 backdrop-blur-md rounded-2xl ring-1 ring-white/40 shadow-inner transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
-            <FaSchool className="text-white text-3xl group-hover:scale-110 transition-transform" />
+          <div className="relative p-3.5 bg-white/10 backdrop-blur-md rounded-2xl">
+            <FaSchool className="text-white text-3xl group-hover:scale-102 transition-transform" />
           </div>
           
           {/* Animated Ring */}
