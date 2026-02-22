@@ -1067,14 +1067,15 @@ const recipientGroups = useMemo(() => {
   ];
   
 const fetchData = async () => {
+  // Define startTime at the function level, not inside try block
+  const startTime = Date.now();
+  
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
     setRefreshing(true);
     setLoading(true);
 
-    const startTime = Date.now();
-    
-    console.log('Starting fetchData...'); // Debug log
+    console.log('Starting fetchData...');
 
     const [campaignsRes, studentRes, staffRes] = await Promise.all([
       fetch('/api/emails'),
@@ -1103,9 +1104,9 @@ const fetchData = async () => {
     const studentData = await studentRes.json();
     const staffData = await staffRes.json();
 
-    console.log('Campaigns data:', campaignsData); // Debug log
-    console.log('Students data:', studentData); // Debug log
-    console.log('Staff data:', staffData); // Debug log
+    console.log('Campaigns data:', campaignsData);
+    console.log('Students data:', studentData);
+    console.log('Staff data:', staffData);
 
     // Process campaigns data
     if (campaignsData && campaignsData.success) {
@@ -1202,14 +1203,14 @@ const fetchData = async () => {
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
     }
-    console.log('Setting loading to false'); // Debug log
+    console.log('Setting loading to false');
     setLoading(false);
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
 };
 
-// useEffect with cleanup to prevent state updates if component unmounts
+// useEffect with cleanup
 useEffect(() => {
   let isMounted = true;
   
@@ -1225,11 +1226,6 @@ useEffect(() => {
     isMounted = false;
   };
 }, []); // Empty dependency array - run once on mount
-// ✅ Simple useEffect
-useEffect(() => {
-  fetchData();
-}, []); // Empty array - run once on mount
-
  
   const filteredCampaigns = useMemo(() => {
     if (!Array.isArray(campaigns)) return [];
