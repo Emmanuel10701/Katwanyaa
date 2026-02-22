@@ -1318,20 +1318,20 @@ const handleSaveAdmin = async (e) => {
       <div className="flex items-center gap-2">
         <Shield className="w-3 h-3 text-emerald-400" />
         <span className="text-white/40">Security:</span>
-        <span className="text-emerald-400">Level 5</span>
+        <span className="text-emerald-400">2 factor</span>
       </div>
       
       {/* Encryption */}
       <div className="flex items-center gap-2">
         <div className="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
         <span className="text-white/40">Encryption:</span>
-        <span className="text-cyan-400">AES-256</span>
+        <span className="text-cyan-400">Token based</span>
       </div>
       
       {/* MFA Status */}
       <div className="flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-        <span className="text-white/40">MFA:</span>
+        <span className="text-white/40">Token storage:</span>
         <span className="text-purple-400">Enabled</span>
       </div>
       
