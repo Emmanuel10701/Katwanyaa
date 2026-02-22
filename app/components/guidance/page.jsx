@@ -3449,7 +3449,7 @@ const confirmDeleteTeam = async () => {
         loading={deleteMemberModal.loading}
       />
       
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto space-y-6">
         {/* Header */}
 {/* Modern Guidance & Counseling Header - Bronze/Gold Theme */}
 <div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2.5rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 mb-6 sm:mb-8">
@@ -3509,7 +3509,7 @@ const confirmDeleteTeam = async () => {
               <span className="text-[9px] font-bold text-amber-300 uppercase tracking-wider">Secure Portal</span>
             </div>
             
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
               <span className="text-white">Guidance</span>
               <span className="text-white mx-1">&</span>
               <br className="sm:hidden" />
