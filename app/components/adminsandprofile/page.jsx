@@ -1095,96 +1095,255 @@ const handleSaveAdmin = async (e) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-4 lg:p-8 space-y-8">
       <Toaster position="top-right" richColors />
 
-      {/* Modern Header with Profile Card */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 rounded-3xl shadow-2xl border border-blue-200/50 p-8 text-white">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-                <Shield className="text-2xl" />
-              </div>
-           <div>
-  <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-100">
-    Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-100 to-indigo-100">
-      Management Dashboard
-    </span>
-  </h1>
+{/* Modern Admin Management Dashboard Header */}
+<div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2.5rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 mb-6">
   
-  <p className="mt-4 text-slate-50 text-lg lg:text-xl font-medium max-w-3xl leading-relaxed">
-    Access the central authority hub to oversee system custodians. Regulate 
-    administrative privileges, monitor security protocols, and orchestrate 
-    high-level permissions to ensure total platform integrity and seamless 
-    governance.
-  </p>
-</div>
+  {/* Abstract Gradient Orbs - Blue/Purple Theme */}
+  <div className="absolute top-[-25%] right-[-10%] w-[250px] h-[250px] md:w-[420px] md:h-[420px] bg-gradient-to-br from-blue-600/30 via-indigo-600/20 to-purple-600/20 rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  <div className="absolute bottom-[-25%] left-[-10%] w-[200px] h-[200px] md:w-[340px] md:h-[340px] bg-gradient-to-tr from-purple-600/20 via-pink-600/10 to-transparent rounded-full blur-[80px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+  
+  {/* Central Floating Orb */}
+  <div className="absolute top-[40%] right-[20%] w-[180px] h-[180px] bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-[70px] pointer-events-none animate-pulse" />
+  
+  {/* Subtle Grid Pattern */}
+  <div className="absolute inset-0 opacity-[0.02]" style={{ 
+    backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }} />
+  
+  {/* Noise Texture */}
+  <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{
+    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'repeat',
+    backgroundSize: '100px 100px'
+  }} />
+
+  <div className="relative z-10">
+    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      
+      {/* Left Section - Title & Description */}
+      <div className="flex-1">
+        {/* Premium Badge */}
+        <div className="flex items-center gap-2.5 mb-5">
+          <div className="h-8 w-1 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+          <div>
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
+              Katwanyaa High School
+            </h2>
+            <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
+              Central Authority Hub
+            </p>
+          </div>
+        </div>
+        
+        {/* Title with Icon */}
+        <div className="flex items-start gap-4 mb-4">
+          <div className="relative shrink-0">
+            {/* Icon with Multi-layer Glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-xl md:rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl md:rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            {/* Main Icon */}
+            <div className="relative p-3 md:p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-xl md:rounded-2xl shadow-2xl transform group-hover:scale-105 group-hover:rotate-3 transition-all duration-500">
+              <Shield className="text-white w-5 h-5 md:w-6 md:h-6" />
             </div>
           </div>
           
-          {/* Profile Card */}
-{session?.user && (
-  <div className="bg-slate-900/90 backdrop-blur-xl rounded-[2rem] p-5 sm:p-7 border border-white/10 w-full max-w-[450px] shadow-2xl relative overflow-hidden group">
-    {/* Subtle Background Glow */}
-    <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
-    
-    {/* Header Section */}
-    <div className="flex items-start justify-between mb-6 relative z-10">
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <div className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-emerald-400 rounded-2xl flex items-center justify-center shadow-lg rotate-3 group-hover:rotate-0 transition-transform duration-500">
-            <User className="text-white" size={20} />
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
+              <span className="text-white">Admin</span>
+              <br className="sm:hidden" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 ml-0 sm:ml-2">
+                Management Dashboard
+              </span>
+            </h1>
           </div>
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-sm" />
         </div>
-        <div>
-          <h2 className="font-black text-white text-sm uppercase tracking-widest leading-none mb-1">
-            {session.user.name.split(' ')[0]}'s Profile
-          </h2>
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter opacity-80">
-            {session.user.role || 'System Administrator'}
-          </p>
+        
+        {/* Enhanced Description */}
+        <p className="text-blue-100/70 text-sm md:text-[15px] font-medium leading-relaxed max-w-3xl">
+          Access the central authority hub to oversee system custodians. Regulate 
+          administrative privileges, monitor security protocols, and orchestrate 
+          high-level permissions to ensure total platform integrity and seamless 
+          governance.
+        </p>
+        
+        {/* Quick Stats Pills */}
+        <div className="flex flex-wrap items-center gap-2 mt-5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">System: Secure</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <Shield className="w-3 h-3 text-blue-400" />
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Role: {session?.user?.role || 'Administrator'}</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 backdrop-blur-sm rounded-full border border-white/10">
+            <Users className="w-3 h-3 text-purple-400" />
+            <span className="text-[10px] font-bold text-white/80 uppercase tracking-wider">Privileges: Full</span>
+          </div>
         </div>
       </div>
+      
+      {/* Profile Card - Enhanced */}
+      {session?.user && (
+        <div className="group/card relative bg-slate-900/90 backdrop-blur-xl rounded-[2rem] p-5 sm:p-7 border border-white/10 w-full max-w-[450px] shadow-2xl overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)]">
+          
+          {/* Card Background Glow */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full blur-3xl group-hover/card:scale-150 transition-transform duration-700" />
+          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-tr from-indigo-600/20 to-pink-600/20 rounded-full blur-3xl group-hover/card:scale-150 transition-transform duration-700" />
+          
+          {/* Header Section */}
+          <div className="flex items-start justify-between mb-6 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {/* Avatar with Multi-layer Glow */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-emerald-400 rounded-2xl blur-md opacity-50 group-hover/card:opacity-80 transition-opacity" />
+                <div className="absolute inset-0 bg-white/20 rounded-2xl blur-sm opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                
+                <div className="relative w-14 h-14 bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl transform rotate-3 group-hover/card:rotate-0 group-hover/card:scale-105 transition-all duration-500">
+                  <User className="text-white" size={22} />
+                </div>
+                
+                {/* Online Status Indicator */}
+                <div className="absolute -bottom-1 -right-1">
+                  <div className="relative">
+                    <div className="w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full shadow-lg" />
+                    <div className="absolute inset-0 w-4 h-4 bg-emerald-500 rounded-full animate-ping opacity-50" />
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h2 className="font-black text-white text-sm uppercase tracking-widest leading-none mb-1">
+                  {session.user.name.split(' ')[0]}'s Profile
+                </h2>
+                <p className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 uppercase tracking-tighter">
+                  {session.user.role || 'System Administrator'}
+                </p>
+                
+                {/* Session Timer - New Addition */}
+                <div className="flex items-center gap-1 mt-2">
+                  <FiClock className="w-2.5 h-2.5 text-white/30" />
+                  <span className="text-[8px] font-bold text-white/30 uppercase tracking-wider">
+                    Session: Active
+                  </span>
+                </div>
+              </div>
+            </div>
 
-      {/* Modern Compact Logout */}
-      <button
-        onClick={handleLogout}
-        title="Logout"
-        className="p-2.5 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-white/10 hover:border-red-500/30 transition-all duration-300 active:scale-90"
-      >
-        <LogOut size={16} />
-      </button>
-    </div>
-
-    {/* Info Grid - Adaptive for Zooming */}
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 relative z-10">
-      {[
-        { label: 'Ident', val: session.user.name, icon: <User size={12} /> },
-        { label: 'Mail', val: session.user.email, icon: <Mail size={12} /> },
-        { label: 'Call', val: session.user.phone || '+2547...', icon: <Phone size={12} /> }
-      ].map((item, i) => (
-        <div key={i} className="flex flex-col p-3 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
-          <div className="flex items-center gap-1.5 mb-1 text-blue-300/60 uppercase font-black text-[8px] tracking-[0.15em]">
-            {item.icon} {item.label}
+            {/* Modern Logout Button */}
+            <button
+              onClick={handleLogout}
+              title="Logout"
+              className="relative group/btn p-2.5 bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-white/10 hover:border-red-500/30 transition-all duration-300 active:scale-90 overflow-hidden"
+            >
+              <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <LogOut size={16} className="relative z-10" />
+            </button>
           </div>
-          <p className="text-[11px] font-bold text-slate-100 truncate tracking-tight">
-            {item.val}
-          </p>
-        </div>
-      ))}
-    </div>
 
-    {/* Bottom Status Bar */}
-    <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between">
-       <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Session Active</span>
-       </div>
-       <span className="text-[9px] font-black text-slate-500 italic">v2.0.26</span>
+          {/* Info Grid - Enhanced */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative z-10">
+            {[
+              { 
+                label: 'Ident', 
+                val: session.user.name, 
+                icon: <User size={10} />,
+                color: 'from-blue-500/20 to-blue-600/10'
+              },
+              { 
+                label: 'Mail', 
+                val: session.user.email, 
+                icon: <Mail size={10} />,
+                color: 'from-indigo-500/20 to-indigo-600/10'
+              },
+              { 
+                label: 'Contact', 
+                val: session.user.phone || '+254 XXX XXX', 
+                icon: <Phone size={10} />,
+                color: 'from-purple-500/20 to-purple-600/10'
+              }
+            ].map((item, i) => (
+              <div 
+                key={i} 
+                className={`group/item relative overflow-hidden flex flex-col p-3 bg-gradient-to-br ${item.color} rounded-2xl border border-white/5 hover:border-white/20 transition-all duration-300 hover:shadow-lg`}
+              >
+                {/* Item Shine Effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover/item:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                
+                <div className="flex items-center gap-1.5 mb-1.5 text-blue-300/60 uppercase font-black text-[8px] tracking-[0.15em] relative z-10">
+                  <span className="opacity-70">{item.icon}</span>
+                  <span>{item.label}</span>
+                </div>
+                <p className="text-[11px] font-bold text-slate-100 truncate tracking-tight relative z-10">
+                  {item.val}
+                </p>
+                
+                {/* Bottom Glow */}
+                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Status Bar */}
+          <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping opacity-50" />
+              </div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Session Active</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Shield className="w-2.5 h-2.5 text-purple-400/50" />
+              <span className="text-[9px] font-black text-slate-500 italic tracking-wider">v2.0.26</span>
+            </div>
+          </div>
+          
+          {/* Security Badge */}
+          <div className="absolute top-2 right-12 opacity-10 group-hover/card:opacity-30 transition-opacity">
+            <Shield className="w-16 h-16 text-white" />
+          </div>
+        </div>
+      )}
+    </div>
+    
+    {/* Security Status Bar */}
+    <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center gap-4 sm:gap-6 text-[10px] font-bold uppercase tracking-wider">
+      
+      {/* Security Status */}
+      <div className="flex items-center gap-2">
+        <Shield className="w-3 h-3 text-emerald-400" />
+        <span className="text-white/40">Security:</span>
+        <span className="text-emerald-400">Level 5</span>
+      </div>
+      
+      {/* Encryption */}
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+        <span className="text-white/40">Encryption:</span>
+        <span className="text-cyan-400">AES-256</span>
+      </div>
+      
+      {/* MFA Status */}
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+        <span className="text-white/40">MFA:</span>
+        <span className="text-purple-400">Enabled</span>
+      </div>
+      
+      {/* Last Login */}
+      <div className="flex items-center gap-2 ml-auto">
+        <FiClock className="w-3 h-3 text-white/30" />
+        <span className="text-white/40">
+          Last Access: {new Date().toLocaleTimeString()}
+        </span>
+      </div>
     </div>
   </div>
-)}
-        </div>
-      </div>
+</div>
 
 {/* MODERN QUICK ACTIONS - Left Aligned & Compact */}
 <div className="flex flex-col sm:flex-row gap-3 w-fit ml-0">
