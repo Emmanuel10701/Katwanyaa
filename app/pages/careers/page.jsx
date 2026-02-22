@@ -531,7 +531,7 @@ return (
               <div className="flex items-center gap-2 mt-2">
                 <button
                   onClick={handleWhatsAppShare}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
                 >
                   <FaWhatsapp size={18} />
                   <span className="text-sm font-medium">Share on WhatsApp</span>
@@ -1138,7 +1138,7 @@ return (
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleShareAllJobs}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl transition-all active:scale-95"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
                 >
                   <FaWhatsapp size={18} />
                   <span className="text-sm font-medium hidden sm:inline">Share All Jobs</span>
