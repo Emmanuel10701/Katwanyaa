@@ -308,6 +308,7 @@ function DynamicFeeCategory({ category, index, onChange, onRemove, type = 'day' 
   );
 }
 
+// Fee Breakdown Modal Component - REPLACE ENTIRE COMPONENT
 function FeeBreakdownModal({ 
   open, 
   onClose, 
@@ -316,30 +317,47 @@ function FeeBreakdownModal({
   existingBreakdown = [],
   type = 'day'
 }) {
-  // FIXED: Initialize with existing data or empty array, never with placeholders in edit mode
+  // FIXED: Better initialization with proper check for existing data
   const [categories, setCategories] = useState(() => {
     console.log('FeeBreakdownModal initializing with existingBreakdown:', existingBreakdown);
     
-    // Only use existingBreakdown if it's a valid array with data
-    if (Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
-      console.log('Edit Mode: Loading existing fee breakdown data', existingBreakdown);
+    // Check if we have valid existing data
+    if (existingBreakdown && Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      console.log('Edit Mode: Loading existing fee breakdown data');
       return existingBreakdown.map((cat, index) => ({
-        ...cat,
         id: cat.id || `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        amount: parseFloat(cat.amount) || 0,
-        order: cat.order || index,
-        // Ensure proper boolean values
+        name: cat.name || '',
+        amount: typeof cat.amount === 'number' ? cat.amount : parseFloat(cat.amount) || 0,
+        description: cat.description || '',
         optional: Boolean(cat.optional),
-        boardingOnly: Boolean(cat.boardingOnly && type === 'boarding')
+        boardingOnly: Boolean(cat.boardingOnly) && type === 'boarding',
+        order: typeof cat.order === 'number' ? cat.order : index
       }));
     }
+    
     console.log('Add Mode: Starting with empty categories');
-    return []; // Start with empty array for new entries
+    return [];
   });
 
   const [totalAmount, setTotalAmount] = useState(0);
   const [errors, setErrors] = useState([]);
-  const [isEditMode, setIsEditMode] = useState(false);
+
+  // FIXED: Add useEffect to sync with existingBreakdown when modal opens
+  useEffect(() => {
+    if (open && existingBreakdown && Array.isArray(existingBreakdown) && existingBreakdown.length > 0) {
+      setCategories(existingBreakdown.map((cat, index) => ({
+        id: cat.id || `category_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: cat.name || '',
+        amount: typeof cat.amount === 'number' ? cat.amount : parseFloat(cat.amount) || 0,
+        description: cat.description || '',
+        optional: Boolean(cat.optional),
+        boardingOnly: Boolean(cat.boardingOnly) && type === 'boarding',
+        order: typeof cat.order === 'number' ? cat.order : index
+      })));
+    } else if (open && (!existingBreakdown || existingBreakdown.length === 0)) {
+      setCategories([]);
+    }
+  }, [open, existingBreakdown, type]);
 
   useEffect(() => {
     const total = Array.isArray(categories) 
@@ -347,16 +365,6 @@ function FeeBreakdownModal({
       : 0;
     setTotalAmount(total);
   }, [categories]);
-
-  // FIXED: Detect edit mode and prevent preset loading
-  useEffect(() => {
-    if (open && existingBreakdown && existingBreakdown.length > 0) {
-      setIsEditMode(true);
-      console.log('Edit Mode detected with', existingBreakdown.length, 'existing categories');
-    } else {
-      setIsEditMode(false);
-    }
-  }, [open, existingBreakdown]);
 
   const handleAddCategory = () => {
     const newCategory = {
@@ -435,10 +443,8 @@ function FeeBreakdownModal({
     { name: 'Development Levy', amount: 0, description: 'School development fund' },
   ];
 
-  // FIXED: Preset loading only allowed when no existing data
   const loadPreset = (preset) => {
-    // Only allow preset loading if there are NO existing categories
-    if (categories.length === 0 && !isEditMode) {
+    if (categories.length === 0) {
       const loaded = preset.map((cat, index) => ({
         ...cat,
         id: `preset_${Date.now()}_${index}`,
@@ -449,7 +455,7 @@ function FeeBreakdownModal({
       setCategories(loaded);
       toast.success('Preset categories loaded. Update amounts as needed.');
     } else {
-      toast.info('Cannot load preset when editing existing fee structure. Edit current categories instead.');
+      toast.info('Cannot load preset when categories already exist.');
     }
   };
 
@@ -477,7 +483,7 @@ function FeeBreakdownModal({
                 <p className="text-white/90 text-sm mt-1 font-bold">
                   {type === 'day' ? 'Day School' : 'Boarding School'} Fee Structure Breakdown
                 </p>
-                {isEditMode && (
+                {existingBreakdown?.length > 0 && (
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-xs bg-white/30 px-2 py-1 rounded-full font-bold">
                       📝 Edit Mode
@@ -517,8 +523,7 @@ function FeeBreakdownModal({
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">Fee Categories</h3>
               <div className="flex gap-2">
-                {/* FIXED: Show Load Preset button only when NOT in edit mode */}
-                {!isEditMode && categories.length === 0 && (
+                {categories.length === 0 && (
                   <button
                     type="button"
                     onClick={() => loadPreset(presetCategories)}
@@ -542,9 +547,7 @@ function FeeBreakdownModal({
                 <FaMoneyBillWave className="mx-auto text-4xl text-gray-400 mb-4" />
                 <h4 className="text-lg font-bold text-gray-700 mb-2">No Fee Categories</h4>
                 <p className="text-gray-600 text-sm mb-4 max-w-md mx-auto font-bold">
-                  {isEditMode 
-                    ? 'No existing fee categories found. Start by adding new categories.' 
-                    : 'Start by adding fee categories or load a preset to get started.'}
+                  Start by adding fee categories or load a preset to get started.
                 </p>
                 <button
                   onClick={handleAddCategory}
@@ -608,7 +611,6 @@ function FeeBreakdownModal({
                   <h3 className="text-lg font-bold text-gray-900">Fee Summary</h3>
                   <p className="text-sm text-gray-600 font-bold">
                     {categories.length} categories defined
-                    {isEditMode && <span className="text-blue-600 ml-2">(Editing existing)</span>}
                   </p>
                 </div>
               </div>
@@ -651,15 +653,14 @@ function FeeBreakdownModal({
               <p>Total: <span className="text-emerald-700">KES {totalAmount.toLocaleString()}</span></p>
               <p className="text-xs mt-1 font-bold">
                 {categories.length} fee categories configured
-                {isEditMode && <span className="text-blue-600 ml-2">(Edit Mode)</span>}
               </p>
             </div>
             
-            <div className="flex gap-3 w-full sm:w-auto mb-7">
+            <div className="flex gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
-                className="mb-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold w-full sm:w-auto"
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold w-full sm:w-auto"
               >
                 Cancel
               </button>
@@ -667,9 +668,9 @@ function FeeBreakdownModal({
                 type="button"
                 onClick={handleSave}
                 disabled={categories.length === 0}
-                className="mb-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
               >
-                {isEditMode ? 'Update Breakdown' : 'Save Breakdown'}
+                {existingBreakdown?.length > 0 ? 'Update Breakdown' : 'Save Breakdown'}
               </button>
             </div>
           </div>
@@ -678,7 +679,6 @@ function FeeBreakdownModal({
     </Modal>
   );
 }
-
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
