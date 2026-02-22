@@ -1066,8 +1066,6 @@ const recipientGroups = useMemo(() => {
     { value: 'published', label: 'Sent', color: 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50', icon: CheckCircle2 }
   ];
   
-
-// Define fetchData as a regular async function
 const fetchData = async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
@@ -1075,6 +1073,8 @@ const fetchData = async () => {
     setLoading(true);
 
     const startTime = Date.now();
+    
+    console.log('Starting fetchData...'); // Debug log
 
     const [campaignsRes, studentRes, staffRes] = await Promise.all([
       fetch('/api/emails'),
@@ -1082,12 +1082,35 @@ const fetchData = async () => {
       fetch('/api/staff')
     ]);
 
+    console.log('API Responses:', { 
+      campaignsStatus: campaignsRes.status, 
+      studentStatus: studentRes.status, 
+      staffStatus: staffRes.status 
+    });
+
+    // Check if responses are OK
+    if (!campaignsRes.ok) {
+      throw new Error(`Campaigns API returned ${campaignsRes.status}`);
+    }
+    if (!studentRes.ok) {
+      throw new Error(`Students API returned ${studentRes.status}`);
+    }
+    if (!staffRes.ok) {
+      throw new Error(`Staff API returned ${staffRes.status}`);
+    }
+
     const campaignsData = await campaignsRes.json();
     const studentData = await studentRes.json();
     const staffData = await staffRes.json();
 
-    if (campaignsData.success) {
+    console.log('Campaigns data:', campaignsData); // Debug log
+    console.log('Students data:', studentData); // Debug log
+    console.log('Staff data:', staffData); // Debug log
+
+    // Process campaigns data
+    if (campaignsData && campaignsData.success) {
       const campaignsList = campaignsData.campaigns || [];
+      console.log('Setting campaigns:', campaignsList.length);
       setCampaigns(campaignsList);
       
       const newStats = {
@@ -1108,60 +1131,100 @@ const fetchData = async () => {
         newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
       }
       
+      console.log('Setting stats:', newStats);
       setStats(newStats);
       
       if (refreshing) {
         showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
       }
+    } else {
+      console.warn('Campaigns data unsuccessful or missing:', campaignsData);
+      setCampaigns([]);
     }
 
-    // Student data normalization
+    // Process student data
     let studentsArray = [];
-    if (studentData.success && Array.isArray(studentData.data)) {
-      studentsArray = studentData.data.map(student => ({
-        id: student.admissionNumber || student.id,
-        firstName: student.firstName || '',
-        lastName: student.lastName || '',
-        email: student.email || '',
-        admissionNumber: student.admissionNumber || '',
-        form: student.form || '',
-        stream: student.stream || ''
-      }));
-    } else if (Array.isArray(studentData)) {
-      studentsArray = studentData;
-    } else if (Array.isArray(studentData?.data)) {
-      studentsArray = studentData.data;
-    } else if (Array.isArray(studentData?.students)) {
-      studentsArray = studentData.students;
+    if (studentData) {
+      if (studentData.success && Array.isArray(studentData.data)) {
+        studentsArray = studentData.data.map(student => ({
+          id: student.admissionNumber || student.id,
+          firstName: student.firstName || '',
+          lastName: student.lastName || '',
+          email: student.email || '',
+          admissionNumber: student.admissionNumber || '',
+          form: student.form || '',
+          stream: student.stream || ''
+        }));
+      } else if (Array.isArray(studentData)) {
+        studentsArray = studentData;
+      } else if (Array.isArray(studentData?.data)) {
+        studentsArray = studentData.data;
+      } else if (Array.isArray(studentData?.students)) {
+        studentsArray = studentData.students;
+      }
     }
+    console.log('Setting students:', studentsArray.length);
     setStudents(studentsArray);
 
-    // Staff data normalization
+    // Process staff data
     let staffArray = [];
-    if (Array.isArray(staffData)) {
-      staffArray = staffData;
-    } else if (Array.isArray(staffData?.staff)) {
-      staffArray = staffData.staff;
-    } else if (Array.isArray(staffData?.data)) {
-      staffArray = staffData.data;
+    if (staffData) {
+      if (Array.isArray(staffData)) {
+        staffArray = staffData;
+      } else if (Array.isArray(staffData?.staff)) {
+        staffArray = staffData.staff;
+      } else if (Array.isArray(staffData?.data)) {
+        staffArray = staffData.data;
+      }
     }
+    console.log('Setting staff:', staffArray.length);
     setStaff(staffArray);
 
   } catch (error) {
-    console.error('Error fetching data:', error);
-    showNotification('error', 'Network error. Please check connection.');
+    console.error('Error in fetchData:', error);
+    showNotification('error', `Error: ${error.message}`);
+    
+    // Set empty arrays on error to prevent infinite loading
+    setCampaigns([]);
+    setStudents([]);
+    setStaff([]);
+    setStats({
+      total: 0,
+      draft: 0,
+      published: 0,
+      totalRecipients: 0,
+      successRate: 0,
+      openedRate: 0
+    });
   } finally {
     const elapsedTime = Date.now() - startTime;
     const minimumLoadTime = 800;
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
     }
+    console.log('Setting loading to false'); // Debug log
     setLoading(false);
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
 };
 
+// useEffect with cleanup to prevent state updates if component unmounts
+useEffect(() => {
+  let isMounted = true;
+  
+  const loadData = async () => {
+    if (isMounted) {
+      await fetchData();
+    }
+  };
+  
+  loadData();
+  
+  return () => {
+    isMounted = false;
+  };
+}, []); // Empty dependency array - run once on mount
 // ✅ Simple useEffect
 useEffect(() => {
   fetchData();
