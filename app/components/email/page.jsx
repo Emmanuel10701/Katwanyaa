@@ -1066,7 +1066,8 @@ const recipientGroups = useMemo(() => {
     { value: 'published', label: 'Sent', color: 'bg-emerald-100/80 backdrop-blur-sm text-emerald-800 border-emerald-200/50', icon: CheckCircle2 }
   ];
   
-// Replace the fetchData function and useEffect with this:
+
+// Replace your fetchData function and useEffect with this:
 
 const fetchData = useCallback(async () => {
   try {
@@ -1090,7 +1091,7 @@ const fetchData = useCallback(async () => {
       const campaignsList = campaignsData.campaigns || [];
       setCampaigns(campaignsList);
       
-      // Calculate stats directly without calling updateStats
+      // Calculate stats directly (like your SMS version)
       const newStats = {
         total: campaignsList.length,
         draft: campaignsList.filter(c => c.status === 'draft').length,
@@ -1103,7 +1104,7 @@ const fetchData = useCallback(async () => {
         openedRate: 0
       };
       
-      // Calculate success rate
+      // Calculate success rate for published campaigns
       const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
       if (publishedCampaigns.length > 0) {
         const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
@@ -1117,7 +1118,7 @@ const fetchData = useCallback(async () => {
       }
     }
 
-    // Normalize student data from /api/s
+    // Normalize student data
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
       studentsArray = studentData.data.map(student => ({
@@ -1137,7 +1138,6 @@ const fetchData = useCallback(async () => {
       studentsArray = studentData.students;
     }
     setStudents(studentsArray);
-    console.log(`Loaded ${studentsArray.length} students/parents from API /api/s`);
 
     // Normalize staff data
     let staffArray = [];
@@ -1149,14 +1149,13 @@ const fetchData = useCallback(async () => {
       staffArray = staffData.data;
     }
     setStaff(staffArray);
-    console.log(`Loaded ${staffArray.length} staff members from API`);
 
   } catch (error) {
     console.error('Error fetching data:', error);
     showNotification('error', 'Network error. Please check connection.');
   } finally {
     const elapsedTime = Date.now() - startTime;
-    const minimumLoadTime = 800;
+    const minimumLoadTime = 800; // Match your SMS version
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
     }
@@ -1164,13 +1163,12 @@ const fetchData = useCallback(async () => {
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
-}, []); // Empty dependency array - function never changes
+}, []); // Empty dependency array
 
-// SINGLE useEffect hook
+// SINGLE useEffect - exactly like your SMS version
 useEffect(() => {
   fetchData();
-}, [fetchData]); // This is correct
-
+}, [fetchData]);
 
  
   const updateStats = (campaignsList) => {
