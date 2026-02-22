@@ -1892,13 +1892,12 @@ const CampaignAttachmentsDisplay = ({ campaign }) => {
               </span>
             </div>
             
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
-              <span className="text-white">Email Campaign</span>
-              <br className="sm:hidden" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-cyan-200 to-emerald-200 ml-0 sm:ml-2">
-                Manager
-              </span>
-            </h1>
+       <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+  <span className="text-white">Email</span>{' '}
+  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 via-cyan-200 to-emerald-200">
+    Campaign Manager
+  </span>
+</h1>
           </div>
         </div>
         
