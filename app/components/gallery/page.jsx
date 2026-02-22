@@ -987,14 +987,14 @@ const resetForm = useCallback(() => {
                   </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-2">
-                  <div className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/10 w-fit">
-                    <FiImage className="text-2xl sm:text-3xl text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]" />
-                  </div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight leading-tight">
-                    Media Gallery <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 via-white to-purple-200">Manager</span>
-                  </h1>
-                </div>
+              <div className="flex items-center gap-3 mb-2">
+  <div className="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
+    <FiImage className="text-xl text-cyan-300" />
+  </div>
+  <h1 className="text-xl md:text-2xl font-black tracking-tight">
+    Media Gallery <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-100 via-white to-purple-200">Manager</span>
+  </h1>
+</div>
               </div>
               
               {/* Modern Glass Refresh Button */}
