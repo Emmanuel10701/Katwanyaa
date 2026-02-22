@@ -18,6 +18,8 @@ import {
   FilePlus, CheckCheck, Plus, Eye, Bold, Image, Link, Save, Calendar, Paperclip, FileText as FileText2, Users as Users2, Send as Send2
 } from 'lucide-react';
 
+import {FiFileText} from 'react-icons/fi';
+
 import CircularProgress from "@mui/material/CircularProgress";
 
 
