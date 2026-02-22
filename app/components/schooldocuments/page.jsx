@@ -3554,12 +3554,7 @@ const hasDocuments = documents && (
           {/* Animated Ring */}
           <div className="absolute -inset-1 border-2 border-white/30 rounded-2xl opacity-0 group-hover:opacity-100 animate-ping" />
           
-          {/* Document Count Badge */}
-          {hasDocuments && (
-            <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full min-w-[22px] text-center shadow-lg border-2 border-white/50">
-              {documentCount || '3'}
-            </div>
-          )}
+        
         </div>
         
         {/* Title with Badges */}
@@ -3588,9 +3583,6 @@ const hasDocuments = documents && (
                 : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
             }`}>
               <span className={`w-1 h-1 rounded-full ${hasDocuments ? 'bg-white' : 'bg-amber-400 animate-pulse'}`} />
-              <span className="text-[8px] font-black uppercase tracking-wider">
-                {hasDocuments ? `${documentCount || '3'} Documents` : 'No Documents'}
-              </span>
             </div>
           </div>
           
