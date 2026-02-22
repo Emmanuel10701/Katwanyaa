@@ -1506,7 +1506,8 @@ const handleSendCampaign = async () => {
           },
         }}
       />
-{/* Modern SMS Campaign Manager Header */}
+
+
 <div className="group relative bg-[#0F172A] rounded-xl md:rounded-[2.5rem] p-5 md:p-8 text-white overflow-hidden shadow-2xl border border-white/5 transition-all duration-500 mb-6 sm:mb-8">
   
   {/* Abstract Gradient Orbs - Cyan/Emerald Theme */}
@@ -1552,7 +1553,7 @@ const handleSendCampaign = async () => {
           </div>
           
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight">
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
               <span className="text-white">SMS Campaign</span>
               <br className="sm:hidden" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-emerald-200 to-white ml-0 sm:ml-2">
@@ -1661,12 +1662,14 @@ const handleSendCampaign = async () => {
         <span className="text-cyan-400">Celcom</span>
       </div>
       
-      {/* Balance Indicator - If balance exists */}
+      {/* FIXED: Balance Indicator - Now accessing balance.balance instead of balance object */}
       {balance && (
         <div className="flex items-center gap-2">
           <DollarSign className="w-3 h-3 text-emerald-400" />
           <span className="text-white/40">Balance:</span>
-          <span className="text-emerald-400 font-black">{balance}</span>
+          <span className="text-emerald-400 font-black">
+            {balance.balance?.toFixed(2) || '0.00'}
+          </span>
         </div>
       )}
       
@@ -1680,7 +1683,6 @@ const handleSendCampaign = async () => {
     </div>
   </div>
 </div>
-
       {/* View Toggle */}
       <div className="mb-8 space-y-6">
         <div className="inline-flex p-1.5 bg-white/80 backdrop-blur-xl rounded-2xl border border-gray-200/60 shadow-sm overflow-x-auto max-w-full no-scrollbar">
