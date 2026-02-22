@@ -507,21 +507,26 @@ export default function ModernApplicationsDashboard() {
   
   // Decision State
   const [decisionType, setDecisionType] = useState('')
-  const [decisionData, setDecisionData] = useState({
-    status: '',
-    notes: '',
-    admissionClass: '',
-    assignedStream: '',
-    reportingDate: '',
-    conditions: '',
-    conditionDeadline: '',
-    rejectionReason: '',
-    alternativeSuggestions: '',
-    waitlistPosition: '',
-    waitlistNotes: '',
-    sendEmail: true,
-    admissionOfficer: 'Admissions Committee'
-  })
+const [decisionData, setDecisionData] = useState({
+  status: '',
+  notes: '',
+  admissionClass: '',
+  assignedStream: '',
+  reportingDate: '',
+  conditions: '',
+  conditionDeadline: '',
+  rejectionReason: '',
+  alternativeSuggestions: '',
+  waitlistPosition: '',
+  waitlistNotes: '',
+  // new fields for interview
+  interviewDate: '',
+  interviewTime: '',
+  interviewVenue: '',
+  interviewNotes: '',
+  sendEmail: true,
+  admissionOfficer: 'Admissions Committee'
+})
   
   // Bulk Decision State
   const [bulkDecisionType, setBulkDecisionType] = useState('')
@@ -983,6 +988,13 @@ const updateApplicationStatus = async () => {
       requestBody.conditions = decisionData.conditions;
       requestBody.conditionDeadline = decisionData.conditionDeadline;
     }
+
+else if (decisionType === 'INTERVIEW_SCHEDULED') {
+  requestBody.interviewDate = decisionData.interviewDate;
+  requestBody.interviewTime = decisionData.interviewTime;
+  requestBody.interviewVenue = decisionData.interviewVenue;
+  requestBody.interviewNotes = decisionData.interviewNotes;
+}
     
     // Make the API call with authentication headers
     const response = await fetch(`/api/applyadmission/${selectedApplication.id}`, {
@@ -2107,6 +2119,94 @@ const EmptyState = () => (
                 </div>
               </div>
             )}
+
+
+{decisionType === 'INTERVIEW_SCHEDULED' && (
+  <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Interview Date</label>
+        <ModernCalendar
+          value={decisionData.interviewDate}
+          onChange={(value) => setDecisionData({...decisionData, interviewDate: value})}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Interview Time</label>
+        <input
+          type="time"
+          value={decisionData.interviewTime}
+          onChange={(e) => setDecisionData({...decisionData, interviewTime: e.target.value})}
+          className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+        />
+      </div>
+    </div>
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Interview Venue</label>
+      <input
+        type="text"
+        value={decisionData.interviewVenue}
+        onChange={(e) => setDecisionData({...decisionData, interviewVenue: e.target.value})}
+        placeholder="e.g. Room 101, Main Building"
+        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Interview Notes</label>
+      <textarea
+        value={decisionData.interviewNotes}
+        onChange={(e) => setDecisionData({...decisionData, interviewNotes: e.target.value})}
+        placeholder="Any special instructions or notes for the interview..."
+        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all min-h-[100px]"
+      />
+    </div>
+  </div>
+)}
+
+{decisionType === 'CONDITIONAL_ACCEPTANCE' && (
+  <div className="space-y-4">
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Conditions</label>
+      <textarea
+        value={decisionData.conditions}
+        onChange={(e) => setDecisionData({...decisionData, conditions: e.target.value})}
+        placeholder="Specify the conditions that must be met..."
+        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all min-h-[100px]"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Condition Deadline</label>
+      <ModernCalendar
+        value={decisionData.conditionDeadline}
+        onChange={(value) => setDecisionData({...decisionData, conditionDeadline: value})}
+      />
+    </div>
+  </div>
+)}
+
+{decisionType === 'WAITLISTED' && (
+  <div className="space-y-4">
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Waitlist Position</label>
+      <input
+        type="number"
+        value={decisionData.waitlistPosition}
+        onChange={(e) => setDecisionData({...decisionData, waitlistPosition: e.target.value})}
+        placeholder="e.g. 5"
+        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+      />
+    </div>
+    <div>
+      <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Waitlist Notes</label>
+      <textarea
+        value={decisionData.waitlistNotes}
+        onChange={(e) => setDecisionData({...decisionData, waitlistNotes: e.target.value})}
+        placeholder="Additional notes about waitlist..."
+        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all min-h-[100px]"
+      />
+    </div>
+  </div>
+)}
 
             {/* Notes/Reason Input */}
             <div>

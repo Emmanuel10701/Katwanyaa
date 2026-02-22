@@ -1867,11 +1867,11 @@ function getStatusUpdateTemplate(application, newStatus, updateData = {}) {
           ${actionSection}
           
           <div class="contact-section">
-            <h3 class="contact-title">📞 Need Assistance?</h3>
+            <h3 class="contact-title">Need Assistance?</h3>
             <div class="contact-buttons">
               <a href="tel:${CONTACT_PHONE}" class="contact-btn">
                 <div class="contact-icon">☎</div>
-                <span>${CONTACT_PHONE}</span>
+                <span>call us</span>
               </a>
               <a href="mailto:${CONTACT_EMAIL}" class="contact-btn">
                 <div class="contact-icon">✉</div>
