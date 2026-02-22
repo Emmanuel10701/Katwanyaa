@@ -1159,10 +1159,7 @@ const handleSaveAdmin = async (e) => {
     </span>
   </h1>
 </div>
-        </div>{/* Main Icon */}
-<div className="relative p-2 md:p-3 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-lg md:rounded-xl shadow-xl transform group-hover:scale-105 group-hover:rotate-2 transition-all duration-300">
-  <Shield className="text-white w-4 h-4 md:w-5 md:h-5" />
-</div>
+        </div>{/* Main Icon */
         
         {/* Enhanced Description */}
         <p className="text-blue-100/70 text-sm md:text-[13px] font-medium leading-relaxed max-w-3xl">
