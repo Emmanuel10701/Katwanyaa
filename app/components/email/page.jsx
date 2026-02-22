@@ -1068,7 +1068,6 @@ const recipientGroups = useMemo(() => {
   
 
 // Replace your fetchData function and useEffect with this:
-
 const fetchData = useCallback(async () => {
   try {
     setLoadingStates(prev => ({ ...prev, fetching: true }));
@@ -1087,38 +1086,37 @@ const fetchData = useCallback(async () => {
     const studentData = await studentRes.json();
     const staffData = await staffRes.json();
 
-if (campaignsData.success) {
-  const campaignsList = campaignsData.campaigns || [];
-  setCampaigns(campaignsList);
-  
-  // Calculate stats directly
-  const newStats = {
-    total: campaignsList.length,
-    draft: campaignsList.filter(c => c.status === 'draft').length,
-    published: campaignsList.filter(c => c.status === 'published').length,
-    totalRecipients: campaignsList.reduce((total, campaign) => {
-      if (!campaign || !campaign.recipients) return total;
-      return total + campaign.recipients.split(',').length;
-    }, 0),
-    successRate: 0,
-    openedRate: 0
-  };
-  
-  // Calculate success rate for published campaigns
-  const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
-  if (publishedCampaigns.length > 0) {
-    const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
-    newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
-  }
-  
-  setStats(newStats); // ✅ Only set stats once
-  
-  // ❌ REMOVE THIS LINE: updateStats(campaignsList);
-  
-  if (refreshing) {
-    showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
-  }
-}
+    if (campaignsData.success) {
+      const campaignsList = campaignsData.campaigns || [];
+      setCampaigns(campaignsList);
+      
+      // Calculate stats directly
+      const newStats = {
+        total: campaignsList.length,
+        draft: campaignsList.filter(c => c.status === 'draft').length,
+        published: campaignsList.filter(c => c.status === 'published').length,
+        totalRecipients: campaignsList.reduce((total, campaign) => {
+          if (!campaign || !campaign.recipients) return total;
+          return total + campaign.recipients.split(',').length;
+        }, 0),
+        successRate: 0,
+        openedRate: 0
+      };
+      
+      // Calculate success rate for published campaigns
+      const publishedCampaigns = campaignsList.filter(c => c.status === 'published');
+      if (publishedCampaigns.length > 0) {
+        const totalSuccessRate = publishedCampaigns.reduce((sum, c) => sum + (c.successRate || 0), 0);
+        newStats.successRate = Math.round(totalSuccessRate / publishedCampaigns.length);
+      }
+      
+      setStats(newStats);
+      
+      if (refreshing) {
+        showNotification('success', `Refreshed ${campaignsList.length} campaigns`);
+      }
+    }
+
     // Normalize student data
     let studentsArray = [];
     if (studentData.success && Array.isArray(studentData.data)) {
@@ -1156,7 +1154,7 @@ if (campaignsData.success) {
     showNotification('error', 'Network error. Please check connection.');
   } finally {
     const elapsedTime = Date.now() - startTime;
-    const minimumLoadTime = 800; // Match your SMS version
+    const minimumLoadTime = 800;
     if (elapsedTime < minimumLoadTime) {
       await new Promise(resolve => setTimeout(resolve, minimumLoadTime - elapsedTime));
     }
@@ -1164,8 +1162,7 @@ if (campaignsData.success) {
     setRefreshing(false);
     setLoadingStates(prev => ({ ...prev, fetching: false }));
   }
-}, []); // Empty dependency array
-
+}, []);
 // SINGLE useEffect - exactly like your SMS version
 useEffect(() => {
   fetchData();
