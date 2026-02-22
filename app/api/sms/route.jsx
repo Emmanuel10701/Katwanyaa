@@ -186,7 +186,7 @@ export async function GET(req) {
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
     
-    // Handle balance check endpoint
+    // --- Balance check (still requires authentication) ---
     if (url.searchParams.has('balance') || path === 'balance') {
       const auth = authenticateRequest(req);
       if (!auth.authenticated) {
@@ -204,12 +204,7 @@ export async function GET(req) {
       });
     }
     
-    // ==================== GET ALL CAMPAIGNS ====================
-    const auth = authenticateRequest(req);
-    if (!auth.authenticated) {
-      return auth.response;
-    }
-    
+    // ==================== GET ALL CAMPAIGNS - NO AUTH REQUIRED ====================
     const searchParams = url.searchParams;
     
     const where = {};
@@ -231,7 +226,7 @@ export async function GET(req) {
     }
     
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+    const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     const skip = (page - 1) * limit;
     
     // Get all campaigns including drafts
@@ -260,7 +255,7 @@ const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '
         recipientCount,
         recipientType: campaign.recipientType || 'all',
         recipientTypeLabel: getRecipientTypeLabel(campaign.recipientType || 'all'),
-        status: campaign.status, // This will be 'draft' or 'sent'
+        status: campaign.status, // 'draft' or 'sent'
         sentAt: campaign.sentAt,
         sentCount: campaign.sentCount,
         failedCount: campaign.failedCount,
@@ -320,7 +315,6 @@ const limit = Math.min(1000, Math.max(1, parseInt(searchParams.get('limit') || '
     );
   }
 }
-
 // ====================================================================
 // HELPER FUNCTIONS
 // ====================================================================
