@@ -34,6 +34,7 @@ import {
   FiUser,
   FiUsers,
   FiX,
+  FiFileText, 
   FiZap
 } from 'react-icons/fi';
 
