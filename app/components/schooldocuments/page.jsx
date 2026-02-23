@@ -679,6 +679,8 @@ function FeeBreakdownModal({
     </Modal>
   );
 }
+
+
 function AdmissionFeeBreakdownModal({ 
   open, 
   onClose, 
@@ -1177,7 +1179,7 @@ function AdmissionFeeBreakdownModal({
           </div>
 
           {/* Summary Section */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 p-6 mb-6">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border-2 border-purple-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-purple-500 text-white rounded-xl">
@@ -1228,7 +1230,10 @@ function AdmissionFeeBreakdownModal({
               </div>
             </div>
           </div>
-               <div className="border-t border-gray-200 p-6 bg-white">
+        </div>
+
+        {/* Footer Section */}
+        <div className="border-t border-gray-200 p-6 bg-white">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-gray-600 font-bold">
               <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
@@ -1243,7 +1248,7 @@ function AdmissionFeeBreakdownModal({
               </p>
             </div>
             
-            <div className="flex gap-3 w-full sm:w-auto mb-7">
+            <div className="flex gap-3 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
@@ -1262,7 +1267,6 @@ function AdmissionFeeBreakdownModal({
             </div>
           </div>
         </div>
-        </div>   
       </Box>
     </Modal>
   );
