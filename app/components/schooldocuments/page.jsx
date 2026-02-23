@@ -3347,7 +3347,6 @@ const getExistingPdfData = (field) => {
 }
 
 
-// Helper functions for file display
 
 
 const formatFileSize = (bytes) => {
