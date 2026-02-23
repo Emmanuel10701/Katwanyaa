@@ -20,10 +20,11 @@ import {
   FaEdit, FaList, FaCaretDown, FaCaretUp,
   FaSort, FaSortUp, FaSortDown, FaCalculator,
   FaInfo, FaQuestionCircle, FaDatabase,
-  FaPencilAlt, FaEllipsisV, FaExclamationCircle, FaAlignLeft, FiBarChart2 
+  FaPencilAlt, FaEllipsisV, FaExclamationCircle, 
 } from 'react-icons/fa';
 
-import {FiInfo, FiBook, FiDollarSign, FiFileText   } from 'react-icons/fi';
+
+import {FiInfo, FiBook, FiDollarSign, FiFileText, FiBarChart2   } from 'react-icons/fi';
 
 import { 
   CircularProgress, Modal, Box, TextField,
