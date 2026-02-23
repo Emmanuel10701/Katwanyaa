@@ -9,6 +9,7 @@ import {
   FiAward,
   FiBell,
   FiBook,
+  FiRefreshCw,
   FiBriefcase,
   FiCalendar,
   FiCheck,
