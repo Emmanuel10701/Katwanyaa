@@ -9,7 +9,6 @@ import {
   FiAward,
   FiBell,
   FiBook,
-  FiRefreshCw,
   FiBriefcase,
   FiCalendar,
   FiCheck,
@@ -25,7 +24,6 @@ import {
   FiMapPin,
   FiPlus, 
   FiRotateCw,
-  FiRefreshCw, 
   FiSearch, 
   FiShare2,
   FiStar,
@@ -1805,7 +1803,6 @@ const getAuthHeaders = () => {
             </>
           ) : (
             <>
-              <FiRefreshCw className="text-base text-white/80 group-hover/btn:rotate-180 transition-transform duration-500" />
               <span className="text-white/90">Refresh Updates</span>
             </>
           )}
