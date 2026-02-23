@@ -1027,6 +1027,46 @@ const handleSubmit = async (e) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+
+
+  // Add this function after your imports but before the StaffManager component
+const getStaffHierarchy = (staff) => {
+  const hierarchyOrder = {
+    'Principal': 1,
+    'Deputy Principal': 2,
+    'Teacher': 3,
+    'BOM Member': 4,
+    'Support Staff': 5,
+    'Librarian': 6,
+    'Counselor': 7
+  };
+
+  return [...staff].sort((a, b) => {
+    // First sort by hierarchy order
+    const orderA = hierarchyOrder[a.role] || 999;
+    const orderB = hierarchyOrder[b.role] || 999;
+    
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    
+    // If same role, sort Deputy Principals by type (Academics first, then Administration)
+    if (a.role === 'Deputy Principal' && b.role === 'Deputy Principal') {
+      const deputyOrder = {
+        'Deputy Principal (Academics)': 1,
+        'Deputy Principal (Administration)': 2
+      };
+      const deputyA = deputyOrder[a.position] || 999;
+      const deputyB = deputyOrder[b.position] || 999;
+      return deputyA - deputyB;
+    }
+    
+    // If same role and not Deputy Principal, sort by name
+    return a.name.localeCompare(b.name);
+  });
+};
+
+
   const handleArrayChange = (field, items) => {
     setFormData(prev => ({ ...prev, [field]: items }));
   };
@@ -1037,6 +1077,34 @@ const handleSubmit = async (e) => {
       gender 
     }));
   };
+
+
+  useEffect(() => {
+  let filtered = staff;
+
+  if (searchTerm) {
+    filtered = filtered.filter(staffMember =>
+      staffMember.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staffMember.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staffMember.department.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (selectedDepartment !== 'all') {
+    filtered = filtered.filter(staffMember => staffMember.department === selectedDepartment);
+  }
+
+  if (selectedRole !== 'all') {
+    filtered = filtered.filter(staffMember => staffMember.role === selectedRole);
+  }
+
+  // Apply hierarchy sorting
+  const sortedFiltered = getStaffHierarchy(filtered);
+  setFilteredStaff(sortedFiltered);
+  setCurrentPage(1);
+}, [searchTerm, selectedDepartment, selectedRole, staff]);
+
+
 
   const isStepValid = () => {
     switch (currentStep) {
@@ -1976,6 +2044,8 @@ export default function StaffManager() {
   const roles = ['Principal', 'Deputy Principal', 'Teacher', 'BOM Member', 'Support Staff', 'Librarian', 'Counselor'];
   const departments = ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Administration', 'Sports', 'Guidance'];
 
+
+
 // In StaffManager component, add this to your stats calculation
 useEffect(() => {
   const calculatedStats = {
@@ -1998,7 +2068,6 @@ useEffect(() => {
   };
   setStats(calculatedStats);
 }, [staff]);
-
 
   useEffect(() => {
   // Check authentication on component mount
@@ -2052,8 +2121,9 @@ const fetchStaff = async (isRefresh = false) => {
     const data = await response.json();
     
     if (data.success) {
-      setStaff(data.staff || []);
-      setFilteredStaff(data.staff || []);
+      const sortedStaff = getStaffHierarchy(data.staff || []);
+      setStaff(sortedStaff);
+      setFilteredStaff(sortedStaff);
     } else {
       console.error('Failed to fetch staff:', data.error);
       setStaff([]);
@@ -2073,7 +2143,6 @@ const fetchStaff = async (isRefresh = false) => {
     }
   }
 };
-
 
 
 
