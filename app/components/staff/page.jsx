@@ -1029,42 +1029,6 @@ const handleSubmit = async (e) => {
 
 
 
-  // Add this function after your imports but before the StaffManager component
-const getStaffHierarchy = (staff) => {
-  const hierarchyOrder = {
-    'Principal': 1,
-    'Deputy Principal': 2,
-    'Teacher': 3,
-    'BOM Member': 4,
-    'Support Staff': 5,
-    'Librarian': 6,
-    'Counselor': 7
-  };
-
-  return [...staff].sort((a, b) => {
-    // First sort by hierarchy order
-    const orderA = hierarchyOrder[a.role] || 999;
-    const orderB = hierarchyOrder[b.role] || 999;
-    
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
-    
-    // If same role, sort Deputy Principals by type (Academics first, then Administration)
-    if (a.role === 'Deputy Principal' && b.role === 'Deputy Principal') {
-      const deputyOrder = {
-        'Deputy Principal (Academics)': 1,
-        'Deputy Principal (Administration)': 2
-      };
-      const deputyA = deputyOrder[a.position] || 999;
-      const deputyB = deputyOrder[b.position] || 999;
-      return deputyA - deputyB;
-    }
-    
-    // If same role and not Deputy Principal, sort by name
-    return a.name.localeCompare(b.name);
-  });
-};
 
 
   const handleArrayChange = (field, items) => {
@@ -2044,6 +2008,44 @@ export default function StaffManager() {
   const roles = ['Principal', 'Deputy Principal', 'Teacher', 'BOM Member', 'Support Staff', 'Librarian', 'Counselor'];
   const departments = ['Sciences', 'Mathematics', 'Languages', 'Humanities', 'Administration', 'Sports', 'Guidance'];
 
+
+
+    // Add this function after your imports but before the StaffManager component
+const getStaffHierarchy = (staff) => {
+  const hierarchyOrder = {
+    'Principal': 1,
+    'Deputy Principal': 2,
+    'Teacher': 3,
+    'BOM Member': 4,
+    'Support Staff': 5,
+    'Librarian': 6,
+    'Counselor': 7
+  };
+
+  return [...staff].sort((a, b) => {
+    // First sort by hierarchy order
+    const orderA = hierarchyOrder[a.role] || 999;
+    const orderB = hierarchyOrder[b.role] || 999;
+    
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    
+    // If same role, sort Deputy Principals by type (Academics first, then Administration)
+    if (a.role === 'Deputy Principal' && b.role === 'Deputy Principal') {
+      const deputyOrder = {
+        'Deputy Principal (Academics)': 1,
+        'Deputy Principal (Administration)': 2
+      };
+      const deputyA = deputyOrder[a.position] || 999;
+      const deputyB = deputyOrder[b.position] || 999;
+      return deputyA - deputyB;
+    }
+    
+    // If same role and not Deputy Principal, sort by name
+    return a.name.localeCompare(b.name);
+  });
+};
 
 
 // In StaffManager component, add this to your stats calculation
