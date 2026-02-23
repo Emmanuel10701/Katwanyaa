@@ -1323,7 +1323,7 @@ const handleSaveAdmin = async (e) => {
       
       {/* Encryption */}
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+        <div className="w-3 h-3 rounded-full border-2 border-cyan-400 border-t-transparent" />
         <span className="text-white/40">Encryption:</span>
         <span className="text-cyan-400">Token based</span>
       </div>
