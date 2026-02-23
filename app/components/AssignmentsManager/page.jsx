@@ -55,6 +55,7 @@ import {
   FiMoreVertical,
   FiCopy,
   FiShare2,
+  FiInfo, 
   FiHeart
 } from 'react-icons/fi';
 
