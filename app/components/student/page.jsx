@@ -395,8 +395,24 @@ function ModernFileUpload({ onFileSelect, file, onRemove, dragActive, onDrag }) 
 }
 
 // Student Detail Modal
+// Student Detail Modal
 function StudentDetailModal({ student, onClose, onEdit, onDelete }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = (id, name) => {
+    // Close the detail modal first, then trigger the delete
+    onDelete(id, name);
+    setShowDeleteModal(false);
+    onClose(); // Close the detail modal
+  };
+
+  const handleDeleteClose = () => {
+    setShowDeleteModal(false);
+  };
 
   if (!student) return null;
 
@@ -564,7 +580,7 @@ function StudentDetailModal({ student, onClose, onEdit, onDelete }) {
                 Edit Student
               </button>
               <button
-                onClick={() => setShowDeleteModal(true)}
+                onClick={handleDeleteClick}
                 className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
               >
                 <FiTrash2 />
@@ -577,11 +593,8 @@ function StudentDetailModal({ student, onClose, onEdit, onDelete }) {
 
       {showDeleteModal && (
         <ModernDeleteModal
-          onClose={() => setShowDeleteModal(false)}
-          onConfirm={() => {
-            onDelete(student.id, `${student.firstName} ${student.lastName}`);
-            setShowDeleteModal(false);
-          }}
+          onClose={handleDeleteClose}
+          onConfirm={() => handleDeleteConfirm(student.id, `${student.firstName} ${student.lastName}`)}
           loading={false}
           type="student"
           itemName={`${student.firstName} ${student.lastName}`}
@@ -590,7 +603,6 @@ function StudentDetailModal({ student, onClose, onEdit, onDelete }) {
     </>
   );
 }
-
 // Student Edit Modal
 function StudentEditModal({ student, onClose, onSave, loading }) {
   const [formData, setFormData] = useState({
