@@ -2067,9 +2067,13 @@ export default function ModernStudentBulkUpload() {
 
 
 
-  // Helper function to get authentication tokens
 // Helper function for protected operations only
 const getAuthTokensForProtectedOps = () => {
+  // Check if we're in a browser environment
+  if (typeof window === 'undefined') {
+    throw new Error('Cannot access localStorage on server side');
+  }
+  
   const adminToken = localStorage.getItem('admin_token');
   const deviceToken = localStorage.getItem('device_token');
   
@@ -2080,16 +2084,24 @@ const getAuthTokensForProtectedOps = () => {
   return { adminToken, deviceToken };
 };
 
-// Helper function for GET requests (no auth required)
+// Helper function for protected operations
 const getAuthHeaders = (isProtected = false) => {
   if (isProtected) {
-    const { adminToken, deviceToken } = getAuthTokensForProtectedOps();
-    return {
-      'Authorization': `Bearer ${adminToken}`,
-      'x-device-token': deviceToken
-    };
+    try {
+      const { adminToken, deviceToken } = getAuthTokensForProtectedOps();
+      return {
+        'Authorization': `Bearer ${adminToken}`,
+        'x-device-token': deviceToken,
+        'Content-Type': 'application/json'
+      };
+    } catch (error) {
+      console.error('Auth error:', error);
+      throw error;
+    }
   }
-  return {}; // No headers for GET requests
+  return {
+    'Content-Type': 'application/json'
+  };
 };
 
   // Enhanced loadStats function
@@ -2589,7 +2601,8 @@ const confirmDelete = async () => {
     if (deleteTarget.type === 'batch') {
       url = `/api/studentupload?batchId=${deleteTarget.id}`;
     } else {
-      url = `/api/studentupload?studentId=${deleteTarget.id}`;
+      // For student deletion, use the dynamic route with the student ID
+      url = `/api/studentupload/${deleteTarget.id}`;
     }
 
     const res = await fetch(url, { 
