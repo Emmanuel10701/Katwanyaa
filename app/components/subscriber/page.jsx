@@ -1547,66 +1547,80 @@ const handleSendEmail = async (e) => {
         </div>
       )}
 
-      {/* Enhanced Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl w-full max-w-md border-2 border-gray-300 shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-rose-600 to-orange-600 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
-                    <FiAlertTriangle className="text-white text-xl" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">Confirm Deletion</h2>
-                    <p className="text-rose-100 opacity-90 mt-1 text-sm">This action cannot be undone</p>
-                  </div>
-                </div>
-              </div>
+{/* Enhanced Delete Confirmation Modal */}
+{showDeleteConfirm && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl w-full max-w-md border-2 border-gray-300 shadow-2xl overflow-hidden">
+      <div className="bg-gradient-to-r from-rose-600 to-orange-600 p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+              <FiAlertTriangle className="text-white text-xl" />
             </div>
-            
-            <div className="p-6">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
-                  <FiAlertTriangle className="text-xl" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    Delete "{subscriberToDelete?.email}"?
-                  </h3>
-                  <p className="text-gray-600">
-                    This subscriber will be permanently deleted from your list.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-rose-50 rounded-xl p-4 mb-6 border-2 border-rose-200">
-                <div className="flex items-start gap-2">
-                  <FiAlertCircle className="text-rose-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-rose-700 text-sm">
-                    <span className="font-bold">Warning:</span> This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-1 rounded-2xl font-bold transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700 text-white px-6 py-1  rounded-2xl font-bold transition-all flex items-center justify-center gap-2"
-                >
-                  Delete 
-                </button>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold">Confirm Deletion</h2>
+              <p className="text-rose-100 opacity-90 mt-1 text-sm">This action cannot be undone</p>
             </div>
           </div>
         </div>
-      )}
+      </div>
+      
+      <div className="p-6">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
+            <FiAlertTriangle className="text-xl" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              Delete "{subscriberToDelete?.email}"?
+            </h3>
+            <p className="text-gray-600">
+              This subscriber will be permanently deleted from your list.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-rose-50 rounded-xl p-4 mb-6 border-2 border-rose-200">
+          <div className="flex items-start gap-2">
+            <FiAlertCircle className="text-rose-600 mt-0.5 flex-shrink-0" />
+            <p className="text-rose-700 text-sm">
+              <span className="font-bold">Warning:</span> This action cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={() => setShowDeleteConfirm(false)}
+            disabled={sendingEmail} // Reuse sendingEmail state or create a new deleting state
+            className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmDelete}
+            disabled={sendingEmail} // Reuse sendingEmail state or create a new deleting state
+            className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {sendingEmail ? ( // Replace with your deleting state
+              <>
+                <CircularProgress size={20} sx={{ color: 'white' }} />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <FiTrash2 className="text-base" />
+                Delete Subscriber
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {/* Subscriber Detail Modal */}
       {showDetailModal && selectedSubscriber && (
