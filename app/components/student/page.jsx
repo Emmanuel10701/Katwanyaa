@@ -570,23 +570,7 @@ function StudentDetailModal({ student, onClose, onEdit, onDelete }) {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
-              <button
-                onClick={onEdit}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
-              >
-                <FiEdit />
-                Edit Student
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="flex-1 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all"
-              >
-                <FiTrash2 />
-                Delete Student
-              </button>
-            </div>
+   
           </div>
         </Box>
       </Modal>
