@@ -85,14 +85,23 @@ const calculateMonthOverMonthGrowth = (currentCount, previousCount) => {
 };
 
 const countRecordsByMonth = (dataArray, monthOffset = 0) => {
+  // Add this guard clause at the beginning
+  if (!dataArray || !Array.isArray(dataArray) || dataArray.length === 0) {
+    return 0;
+  }
+  
   const now = new Date();
   const targetMonth = new Date(now.getFullYear(), now.getMonth() - monthOffset, 1);
   const nextMonth = new Date(targetMonth.getFullYear(), targetMonth.getMonth() + 1, 1);
   
   return dataArray.filter(item => {
-    if (!item.createdAt) return false;
-    const itemDate = new Date(item.createdAt);
-    return itemDate >= targetMonth && itemDate < nextMonth;
+    if (!item?.createdAt) return false;
+    try {
+      const itemDate = new Date(item.createdAt);
+      return !isNaN(itemDate.getTime()) && itemDate >= targetMonth && itemDate < nextMonth;
+    } catch {
+      return false;
+    }
   }).length;
 };
 
@@ -598,6 +607,9 @@ export default function DashboardOverview() {
   const [careers, setCareers] = useState([]);
   const [emailCampaigns, setEmailCampaigns] = useState([]);
   
+
+
+  
   // Student Population & Distribution state
   const [studentPopulation, setStudentPopulation] = useState({
     total: 0,
@@ -1001,6 +1013,39 @@ export default function DashboardOverview() {
       };
       
       setStats(updatedStats);
+
+
+
+
+            // ========== CALCULATE GROWTH METRICS ==========
+      // Calculate month-over-month growth for various metrics
+      const currentMonthApplications = countRecordsByMonth(applications, 0);
+      const previousMonthApplications = countRecordsByMonth(applications, 1);
+      const applicationGrowth = calculateMonthOverMonthGrowth(currentMonthApplications, previousMonthApplications);
+
+      const currentMonthGuidance = countRecordsByMonth(guidance.events || [], 0);
+      const previousMonthGuidance = countRecordsByMonth(guidance.events || [], 1);
+      const guidanceGrowth = calculateMonthOverMonthGrowth(currentMonthGuidance, previousMonthGuidance);
+
+      const currentMonthNews = countRecordsByMonth(news.news || [], 0);
+      const previousMonthNews = countRecordsByMonth(news.news || [], 1);
+      const newsGrowth = calculateMonthOverMonthGrowth(currentMonthNews, previousMonthNews);
+
+      const currentMonthGallery = countRecordsByMonth(gallery.galleries || [], 0);
+      const previousMonthGallery = countRecordsByMonth(gallery.galleries || [], 1);
+      const galleryGrowth = calculateMonthOverMonthGrowth(currentMonthGallery, previousMonthGallery);
+
+      setGrowthMetrics({
+        guidanceGrowth,
+        newsGrowth,
+        galleryGrowth
+      });
+
+      setAdmissionGrowth({
+        monthlyGrowth: applicationGrowth
+      });
+
+
       
       // ========== RECENT ACTIVITY ==========
       const recentActivities = await listenForRecentActivity();
@@ -1930,6 +1975,7 @@ export default function DashboardOverview() {
             color="pink" 
             subtitle="Media content" 
           />
+
           <StatCard 
             icon={IoNewspaper} 
             label="News Articles" 
@@ -1939,6 +1985,36 @@ export default function DashboardOverview() {
             color="amber" 
             subtitle="Published news" 
           />
+
+          <StatCard 
+  icon={FiMessageCircle} 
+  label="Guidance Sessions" 
+  value={stats.guidanceSessions} 
+  change={growthMetrics.guidanceGrowth || 0} 
+  trend={growthMetrics.guidanceGrowth >= 0 ? "up" : "down"}
+  color="teal" 
+  subtitle="Counseling sessions" 
+/>
+
+<StatCard 
+  icon={FiImage} 
+  label="Gallery Items" 
+  value={stats.galleryItems} 
+  change={growthMetrics.galleryGrowth || 0} 
+  trend={growthMetrics.galleryGrowth >= 0 ? "up" : "down"}
+  color="pink" 
+  subtitle="Media content" 
+/>
+
+<StatCard 
+  icon={IoNewspaper} 
+  label="News Articles" 
+  value={stats.totalNews} 
+  change={growthMetrics.newsGrowth || 0} 
+  trend={growthMetrics.newsGrowth >= 0 ? "up" : "down"}
+  color="amber" 
+  subtitle="Published news" 
+/>
         </div>
         
         {/* Email Campaigns with Student Population Cards */}
