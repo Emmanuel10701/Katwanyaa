@@ -240,28 +240,27 @@ useEffect(() => {
     message: ''
   });
 
-  // Enhanced Email Templates with dynamic agenda data
-  const [emailData, setEmailData] = useState({
-    subject: '',
-    template: 'admission',
-    audience: 'all',
-    customMessage: '',
-    templateData: {
-      schoolYear: '2025',
-      deadline: '',
-      month: new Date().toLocaleString('default', { month: 'long' }),
-      eventName: 'Annual Science Fair',
-      date: new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      time: '9:00 AM - 3:00 PM',
-      selectedAdmissionDate: '',
-      selectedAnnouncement: '',
-      selectedEvent: ''
-    }
-  });
+// Enhanced Email Templates with dynamic agenda data
+const [emailData, setEmailData] = useState({
+  subject: '',
+  template: 'admission',
+  audience: 'all',
+  customMessage: '',
+  templateData: {
+    schoolYear: new Date().getFullYear() , 
+    deadline: '',
+    month: new Date().toLocaleString('default', { month: 'long' }),
+    eventName: '',
+    date: '',
+    time: '',
+    location: '',
+    admissionTitle: '',
+    admissionInfo: '',
+    announcementTitle: '',
+    announcementDate: '',
+    effectiveDate: ''
+  }
+});
 
   // Enhanced Email Templates with agenda integration
   const emailTemplates = {
@@ -1153,402 +1152,412 @@ const handleSendEmail = async (e) => {
       </div>
 
       {/* Enhanced Email Modal with Agenda Integration */}
-      {showEmailModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl border-2 border-gray-300">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
-                    <IoSendOutline className="text-white text-2xl" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl lg:text-2xl font-bold">Create Email Campaign</h2>
-                    <p className="text-blue-100 opacity-90 mt-1 text-sm">
-                      Send communications with dynamic agenda data
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowEmailModal(false)}
-                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
-                  aria-label="Close modal"
-                >
-                  <FiX className="text-xl" />
-                </button>
-              </div>
+{/* Enhanced Email Modal with Input Fields (No Dropdowns) */}
+{showEmailModal && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl border-2 border-gray-300">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
+              <IoSendOutline className="text-white text-2xl" />
             </div>
+            <div>
+              <h2 className="text-xl lg:text-2xl font-bold">Create Email Campaign</h2>
+              <p className="text-blue-100 opacity-90 mt-1 text-sm">
+                Send customized emails to your subscribers
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowEmailModal(false)}
+            className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+            aria-label="Close modal"
+          >
+            <FiX className="text-xl" />
+          </button>
+        </div>
+      </div>
 
-            {/* Content */}
-            <form onSubmit={handleSendEmail} className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-              {/* Template Selection */}
-              <div>
-                <label className="block text-gray-900 font-bold mb-3">Email Template</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {Object.entries(emailTemplates).map(([key, template]) => (
-                    <div
-                      key={key}
-                      onClick={() => updateCampaignTemplate(key)}
-                      className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                        emailData.template === key
-                          ? `ring-4 ring-opacity-30 border-transparent bg-gradient-to-r ${template.color} text-white`
-                          : 'border-gray-200 hover:border-blue-300 bg-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={`p-2 ${
-                          emailData.template === key ? 'bg-white/30' : template.iconBg
-                        } rounded-lg text-xl`}>
-                          {template.icon}
-                        </span>
-                        <div>
-                          <h3 className={`font-bold ${emailData.template === key ? 'text-white' : 'text-gray-900'}`}>
-                            {template.name}
-                          </h3>
-                          <p className={`text-sm ${emailData.template === key ? 'text-blue-100' : 'text-gray-600'}`}>
-                            {template.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dynamic Agenda Data Section */}
-              {emailTemplates[emailData.template].fields.includes('admissionDates') && (
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-200">
-                  <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
-                    <FiBook className="text-blue-600" />
-                    Select Admission Date
-                  </label>
-                  {loadingAgenda ? (
-                    <div className="text-center py-4">
-                      <Spinner size={24} />
-                      <p className="text-gray-600 text-sm mt-2">Loading admission dates...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <select
-                        value={emailData.templateData.selectedAdmissionDate}
-                        onChange={(e) => setEmailData({
-                          ...emailData,
-                          templateData: {
-                            ...emailData.templateData,
-                            selectedAdmissionDate: e.target.value,
-                         deadline: e.target.value ? (
-                          agendaData.admissionDates.find(ad => ad.id === e.target.value)?.deadline || ''
-                        ) : ''
-                          }
-                        })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
-                      >
-                        <option value="">Select an admission date</option>
-                        {agendaData.admissionDates.map((admission) => (
-                          <option key={admission.id} value={admission.id}>
-                            {admission.title || 'Admission'} - {admission.schoolYear || '2025'} (Deadline: {new Date(admission.deadline || admission.date).toLocaleDateString()})
-                          </option>
-                        ))}
-                      </select>
-                      <div className="p-3 bg-white rounded-xl border border-gray-200">
-                        <p className="text-sm text-gray-600">
-                          Available admission dates will be included in your email
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {emailTemplates[emailData.template].fields.includes('announcements') && (
-                <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200">
-                  <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
-                    <FiBell className="text-amber-600" />
-                    Select Announcement
-                  </label>
-                  {loadingAgenda ? (
-                    <div className="text-center py-4">
-                      <Spinner size={24} />
-                      <p className="text-gray-600 text-sm mt-2">Loading announcements...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <select
-                        value={emailData.templateData.selectedAnnouncement}
-                        onChange={(e) => setEmailData({
-                          ...emailData,
-                          templateData: {
-                            ...emailData.templateData,
-                            selectedAnnouncement: e.target.value
-                          }
-                        })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500"
-                      >
-                        <option value="">Select an announcement</option>
-                        {agendaData.announcements.map((announcement) => (
-                          <option key={announcement.id} value={announcement.id}>
-                            {announcement.title} - {new Date(announcement.date || announcement.createdAt).toLocaleDateString()}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="p-3 bg-white rounded-xl border border-gray-200">
-                        <p className="text-sm text-gray-600">
-                          Selected announcement will be featured in your email
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {emailTemplates[emailData.template].fields.includes('schoolEvents') && (
-                <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-200">
-                  <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
-                    <FiCalendar className="text-emerald-600" />
-                    Select School Event
-                  </label>
-                  {loadingAgenda ? (
-                    <div className="text-center py-4">
-                      <Spinner size={24} />
-                      <p className="text-gray-600 text-sm mt-2">Loading school events...</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <select
-                        value={emailData.templateData.selectedEvent}
-                        onChange={(e) => {
-                          const selectedEvent = agendaData.schoolEvents.find(
-                            ev => ev.id === e.target.value
-                          );
-                          setEmailData({
-                            ...emailData,
-                            templateData: {
-                              ...emailData.templateData,
-                              selectedEvent: e.target.value,
-                              eventName: selectedEvent?.title || '',
-                              date: selectedEvent?.date || '',
-                              time: selectedEvent?.time || '',
-                              location: selectedEvent?.location || ''
-                            }
-                          });
-                        }}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
-                      >
-                        <option value="">Select a school event</option>
-                        {agendaData.schoolEvents.map((event) => (
-                          <option key={event.id} value={event.id}>
-                            {event.title} - {new Date(event.date).toLocaleDateString()}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="p-3 bg-white rounded-xl border border-gray-200">
-                        <p className="text-sm text-gray-600">
-                          Event details will be automatically populated
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Template-specific fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {emailData.template === 'admission' && (
-                  <>
-                    <div>
-                      <label className="block text-gray-900 font-bold mb-2">School Year</label>
-                      <input
-                        type="text"
-                        value={emailData.templateData.schoolYear}
-                        onChange={(e) => setEmailData({
-                          ...emailData,
-                          templateData: { ...emailData.templateData, schoolYear: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
-                        placeholder="2025"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-900 font-bold mb-2">Application Deadline</label>
-                      <input
-                        type="text"
-                        value={emailData.templateData.deadline}
-                        onChange={(e) => setEmailData({
-                          ...emailData,
-                          templateData: { ...emailData.templateData, deadline: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
-                        placeholder="January 31, 2025"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {emailData.template === 'event' && (
-                  <>
-                    <div>
-                      <label className="block text-gray-900 font-bold mb-2">Event Name</label>
-                      <input
-                        type="text"
-                        value={emailData.templateData.eventName}
-                        onChange={(e) => setEmailData({
-                          ...emailData,
-                          templateData: { ...emailData.templateData, eventName: e.target.value }
-                        })}
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
-                        placeholder="Annual Science Fair"
-                      />
-                    </div>
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-gray-900 font-bold mb-2">Date</label>
-                        <input
-                          type="text"
-                          value={emailData.templateData.date}
-                          onChange={(e) => setEmailData({
-                            ...emailData,
-                            templateData: { ...emailData.templateData, date: e.target.value }
-                          })}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
-                          placeholder="November 30, 2024"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-gray-900 font-bold mb-2">Time</label>
-                        <input
-                          type="text"
-                          value={emailData.templateData.time}
-                          onChange={(e) => setEmailData({
-                            ...emailData,
-                            templateData: { ...emailData.templateData, time: e.target.value }
-                          })}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
-                          placeholder="9:00 AM - 3:00 PM"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {emailData.template === 'newsletter' && (
+      {/* Content */}
+      <form onSubmit={handleSendEmail} className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        {/* Template Selection */}
+        <div>
+          <label className="block text-gray-900 font-bold mb-3">Email Template</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(emailTemplates).map(([key, template]) => (
+              <div
+                key={key}
+                onClick={() => updateCampaignTemplate(key)}
+                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                  emailData.template === key
+                    ? `ring-4 ring-opacity-30 border-transparent bg-gradient-to-r ${template.color} text-white`
+                    : 'border-gray-200 hover:border-blue-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <span className={`p-2 ${
+                    emailData.template === key ? 'bg-white/30' : template.iconBg
+                  } rounded-lg text-xl`}>
+                    {template.icon}
+                  </span>
                   <div>
-                    <label className="block text-gray-900 font-bold mb-2">Month</label>
-                    <input
-                      type="text"
-                      value={emailData.templateData.month}
-                      onChange={(e) => setEmailData({
-                        ...emailData,
-                        templateData: { ...emailData.templateData, month: e.target.value }
-                      })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500"
-                      placeholder="December"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Campaign Details */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-900 font-bold mb-2">Email Subject *</label>
-                  <input
-                    type="text"
-                    required
-                    value={emailData.subject}
-                    onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
-                    placeholder="Enter email subject line"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-900 font-bold mb-2">Target Audience</label>
-                  <select
-                    value={emailData.audience}
-                    onChange={(e) => setEmailData({ ...emailData, audience: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
-                  >
-                    <option value="all">All Subscribers ({subscribers.length})</option>
-                    <option value="selected">Selected Subscribers ({selectedSubscribers.size})</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Custom Message */}
-              <div>
-                <label className="block text-gray-900 font-bold mb-2">
-                  {emailData.template === 'custom' ? 'Email Content *' : 'Additional Message'}
-                </label>
-                <textarea
-                  value={emailData.customMessage}
-                  onChange={(e) => setEmailData({ ...emailData, customMessage: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm lg:text-base"
-                  placeholder={
-                    emailData.template === 'custom' 
-                      ? 'Write your email content here...' 
-                      : 'Add any additional message here...'
-                  }
-                  required={emailData.template === 'custom'}
-                />
-              </div>
-
-              {/* Recipient Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-4 border-2 border-blue-200">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-gray-900 font-bold mb-1">Ready to Send</h3>
-                    <p className="text-gray-600 text-sm">
-                      {emailData.audience === 'selected' && selectedSubscribers.size > 0
-                        ? `${selectedSubscribers.size} selected subscribers`
-                        : `All ${subscribers.length} subscribers`
-                      }
+                    <h3 className={`font-bold ${emailData.template === key ? 'text-white' : 'text-gray-900'}`}>
+                      {template.name}
+                    </h3>
+                    <p className={`text-sm ${emailData.template === key ? 'text-blue-100' : 'text-gray-600'}`}>
+                      {template.description}
                     </p>
                   </div>
-                  <div className="text-center sm:text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {emailData.audience === 'selected' && selectedSubscribers.size > 0 
-                        ? selectedSubscribers.size 
-                        : subscribers.length
-                      }
-                    </div>
-                    <div className="text-gray-600 text-sm">subscribers</div>
-                  </div>
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t-2 border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-3.5 rounded-2xl font-bold transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={sendingEmail}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {sendingEmail ? (
-                    <>
-                      <CircularProgress size={20} sx={{ color: 'white' }} />
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <IoSendOutline className="text-base" />
-                      Send Campaign
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Dynamic Content Fields - All Input Fields, No Dropdowns */}
+        
+        {/* Admission Dates Section - Input Fields Only */}
+        {emailTemplates[emailData.template].fields.includes('admissionDates') && (
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-200">
+            <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
+              <FiBook className="text-blue-600" />
+              Admission Information
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Admission Title
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.admissionTitle || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      admissionTitle: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., Fall 2025 Admissions"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  School Year
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.schoolYear}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { ...emailData.templateData, schoolYear: e.target.value }
+                  })}
+                  placeholder="e.g., 2025"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Application Deadline
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.deadline}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { ...emailData.templateData, deadline: e.target.value }
+                  })}
+                  placeholder="e.g., January 31, 2025"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Additional Info
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.admissionInfo || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      admissionInfo: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., Requirements, fees, etc."
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Announcements Section - Input Fields Only */}
+        {emailTemplates[emailData.template].fields.includes('announcements') && (
+          <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-200">
+            <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
+              <FiBell className="text-amber-600" />
+              Announcement Details
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Announcement Title
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.announcementTitle || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      announcementTitle: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., School Reopening Announcement"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Announcement Date
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.announcementDate || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      announcementDate: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., January 10, 2025"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Effective From
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.effectiveDate || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      effectiveDate: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., January 15, 2025"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* School Events Section - Input Fields Only */}
+        {emailTemplates[emailData.template].fields.includes('schoolEvents') && (
+          <div className="p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-200">
+            <label className="block text-gray-900 font-bold mb-3 flex items-center gap-2">
+              <FiCalendar className="text-emerald-600" />
+              Event Details
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Event Name
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.eventName}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      eventName: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., Annual Science Fair"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Date
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.date}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { ...emailData.templateData, date: e.target.value }
+                  })}
+                  placeholder="e.g., November 30, 2024"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Time
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.time}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { ...emailData.templateData, time: e.target.value }
+                  })}
+                  placeholder="e.g., 9:00 AM - 3:00 PM"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={emailData.templateData.location || ''}
+                  onChange={(e) => setEmailData({
+                    ...emailData,
+                    templateData: { 
+                      ...emailData.templateData, 
+                      location: e.target.value 
+                    }
+                  })}
+                  placeholder="e.g., School Auditorium"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Campaign Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-gray-900 font-bold mb-2">Email Subject *</label>
+            <input
+              type="text"
+              required
+              value={emailData.subject}
+              onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+              placeholder="Enter email subject line"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-900 font-bold mb-2">Target Audience</label>
+            <select
+              value={emailData.audience}
+              onChange={(e) => setEmailData({ ...emailData, audience: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500"
+            >
+              <option value="all">All Subscribers ({subscribers.length})</option>
+              <option value="selected">Selected Subscribers ({selectedSubscribers.size})</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Newsletter Month Input (if newsletter template) */}
+        {emailData.template === 'newsletter' && (
+          <div>
+            <label className="block text-gray-900 font-bold mb-2">Month</label>
+            <input
+              type="text"
+              value={emailData.templateData.month}
+              onChange={(e) => setEmailData({
+                ...emailData,
+                templateData: { ...emailData.templateData, month: e.target.value }
+              })}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500"
+              placeholder="e.g., December"
+            />
+          </div>
+        )}
+
+        {/* Custom Message */}
+        <div>
+          <label className="block text-gray-900 font-bold mb-2">
+            {emailData.template === 'custom' ? 'Email Content *' : 'Additional Message'}
+          </label>
+          <textarea
+            value={emailData.customMessage}
+            onChange={(e) => setEmailData({ ...emailData, customMessage: e.target.value })}
+            rows={4}
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-sm lg:text-base"
+            placeholder={
+              emailData.template === 'custom' 
+                ? 'Write your email content here...' 
+                : 'Add any additional message here...'
+            }
+            required={emailData.template === 'custom'}
+          />
+        </div>
+
+        {/* Recipient Info */}
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-4 border-2 border-blue-200">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h3 className="text-gray-900 font-bold mb-1">Ready to Send</h3>
+              <p className="text-gray-600 text-sm">
+                {emailData.audience === 'selected' && selectedSubscribers.size > 0
+                  ? `${selectedSubscribers.size} selected subscribers`
+                  : `All ${subscribers.length} subscribers`
+                }
+              </p>
+            </div>
+            <div className="text-center sm:text-right">
+              <div className="text-2xl font-bold text-gray-900">
+                {emailData.audience === 'selected' && selectedSubscribers.size > 0 
+                  ? selectedSubscribers.size 
+                  : subscribers.length
+                }
+              </div>
+              <div className="text-gray-600 text-sm">subscribers</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t-2 border-gray-200">
+          <button
+            type="button"
+            onClick={() => setShowEmailModal(false)}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-3.5 rounded-2xl font-bold transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={sendingEmail}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {sendingEmail ? (
+              <>
+                <CircularProgress size={20} sx={{ color: 'white' }} />
+                Sending...
+              </>
+            ) : (
+              <>
+                <IoSendOutline className="text-base" />
+                Send Campaign
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
 {/* Enhanced Delete Confirmation Modal */}
 {showDeleteConfirm && (
