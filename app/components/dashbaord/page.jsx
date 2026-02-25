@@ -1986,35 +1986,7 @@ export default function DashboardOverview() {
             subtitle="Published news" 
           />
 
-          <StatCard 
-  icon={FiMessageCircle} 
-  label="Guidance Sessions" 
-  value={stats.guidanceSessions} 
-  change={growthMetrics.guidanceGrowth || 0} 
-  trend={growthMetrics.guidanceGrowth >= 0 ? "up" : "down"}
-  color="teal" 
-  subtitle="Counseling sessions" 
-/>
-
-<StatCard 
-  icon={FiImage} 
-  label="Gallery Items" 
-  value={stats.galleryItems} 
-  change={growthMetrics.galleryGrowth || 0} 
-  trend={growthMetrics.galleryGrowth >= 0 ? "up" : "down"}
-  color="pink" 
-  subtitle="Media content" 
-/>
-
-<StatCard 
-  icon={IoNewspaper} 
-  label="News Articles" 
-  value={stats.totalNews} 
-  change={growthMetrics.newsGrowth || 0} 
-  trend={growthMetrics.newsGrowth >= 0 ? "up" : "down"}
-  color="amber" 
-  subtitle="Published news" 
-/>
+ 
         </div>
         
         {/* Email Campaigns with Student Population Cards */}
@@ -2074,6 +2046,7 @@ export default function DashboardOverview() {
                 </div>
               )}
             </div>
+
           </div>
           
           {/* Student Population Card */}
