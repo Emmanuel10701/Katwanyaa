@@ -612,35 +612,29 @@ const exportToCSV = () => {
   }
 };
 
-  // Update template and auto-fill subject with agenda data
-  const updateCampaignTemplate = (template) => {
-    const templateConfig = emailTemplates[template];
-    
-    // Get appropriate subject based on selected agenda item
-    let subject = templateConfig.subject;
-    
-    if (template === 'admission' && emailData.templateData.selectedAdmissionDate) {
-      const admission = agendaData.admissionDates.find(
-        ad => ad.id === emailData.templateData.selectedAdmissionDate
-      );
-      if (admission) {
-        subject = subject.replace('{schoolYear}', admission.schoolYear || '2025');
-      }
-    } else if (template === 'event' && emailData.templateData.selectedEvent) {
-      const event = agendaData.schoolEvents.find(
-        ev => ev.id === emailData.templateData.selectedEvent
-      );
-      if (event) {
-        subject = subject.replace('{eventName}', event.title || 'School Event');
-      }
-    }
-    
-    setEmailData({
-      ...emailData,
-      template,
-      subject
-    });
-  };
+// Update template and auto-fill subject with agenda data
+const updateCampaignTemplate = (template) => {
+  const templateConfig = emailTemplates[template];
+  
+  // Get appropriate subject based on template type
+  let subject = templateConfig.subject;
+  
+  if (template === 'admission') {
+    subject = subject.replace('{schoolYear}', emailData.templateData.schoolYear || '2025');
+  } else if (template === 'event') {
+    subject = subject.replace('{eventName}', emailData.templateData.eventName || 'School Event');
+  } else if (template === 'newsletter') {
+    subject = subject.replace('{month}', emailData.templateData.month || 'Monthly');
+  } else if (template === 'custom') {
+    subject = subject.replace('{subject}', emailData.subject || 'Message');
+  }
+  
+  setEmailData({
+    ...emailData,
+    template,
+    subject
+  });
+};
 
   // Handle email sending with agenda data
 // Handle email sending with agenda data
