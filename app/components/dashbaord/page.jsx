@@ -782,8 +782,37 @@ export default function DashboardOverview() {
       const careersData = careersRes.status === 'fulfilled' ? await careersRes.value.json() : { jobs: [] };
       const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
-      const news = newsRes.status === 'fulfilled' ? await newsRes.value.json() : { news: [] };
-      const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
+// Process news - FIXED VERSION
+let newsArticles = [];
+if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
+  try {
+    const newsData = await newsRes.value.json();
+    console.log('News API response:', newsData);
+    
+    // Handle different response structures
+    if (newsData.success && newsData.data && Array.isArray(newsData.data)) {
+      // Case: { success: true, data: [...] }
+      newsArticles = newsData.data;
+    } else if (newsData.data && Array.isArray(newsData.data)) {
+      // Case: { data: [...] }
+      newsArticles = newsData.data;
+    } else if (newsData.news && Array.isArray(newsData.news)) {
+      // Case: { news: [...] }
+      newsArticles = newsData.news;
+    } else if (Array.isArray(newsData)) {
+      // Case: [...] (direct array)
+      newsArticles = newsData;
+    }
+    
+    console.log(`✅ Found ${newsArticles.length} news articles`);
+  } catch (error) {
+    console.error('❌ Error parsing news data:', error);
+    newsArticles = [];
+  }
+} else {
+  console.warn('⚠️ News fetch failed or returned non-OK status');
+  newsArticles = [];
+}      const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
       const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
@@ -961,8 +990,8 @@ export default function DashboardOverview() {
         totalCareers,
         galleryItems: gallery.galleries?.length || 0,
         guidanceSessions: guidanceSessionsCount,
-        totalNews: news.news?.length || 0,
-        completedAssignments,
+totalNews: newsArticles.length || 0,    
+    completedAssignments,
         totalAssignments,
         
         totalApplications: applications.length,
