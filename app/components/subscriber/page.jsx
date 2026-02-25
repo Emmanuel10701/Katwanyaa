@@ -197,6 +197,7 @@ export default function SubscriberManager() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [subscriberToDelete, setSubscriberToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleting, setDeleting] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [selectedSubscribers, setSelectedSubscribers] = useState(new Set());
@@ -534,14 +535,15 @@ useEffect(() => {
     setSubscriberToDelete(subscriber);
     setShowDeleteConfirm(true);
   };
-
 const confirmDelete = async () => {
   if (!subscriberToDelete) return;
   
+  setDeleting(true); // Set loading to true
+  
   try {
-    // Get admin token from localStorage - using correct key
-    const adminToken = localStorage.getItem('admin_token'); // Changed
-    const deviceToken = localStorage.getItem('device_token'); // Changed
+    // Get admin token from localStorage
+    const adminToken = localStorage.getItem('admin_token');
+    const deviceToken = localStorage.getItem('device_token');
 
     if (!adminToken || !deviceToken) {
       showToast('error', 'Authentication Error', 'Please log in again');
@@ -572,6 +574,7 @@ const confirmDelete = async () => {
     console.error('Error deleting subscriber:', error);
     showToast('error', 'Delete Failed', error.message || 'Failed to delete subscriber');
   } finally {
+    setDeleting(false); // Set loading to false
     setShowDeleteConfirm(false);
     setSubscriberToDelete(null);
   }
@@ -1591,18 +1594,21 @@ const handleSendEmail = async (e) => {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button
-            onClick={() => setShowDeleteConfirm(false)}
-            disabled={sendingEmail} // Reuse sendingEmail state or create a new deleting state
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setSubscriberToDelete(null);
+            }}
+            disabled={deleting}
             className="flex-1 bg-gray-100 hover:bg-gray-200 border-2 border-gray-300 text-gray-700 px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={confirmDelete}
-            disabled={sendingEmail} // Reuse sendingEmail state or create a new deleting state
+            disabled={deleting}
             className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-700 hover:to-orange-700 text-white px-6 py-3.5 rounded-2xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {sendingEmail ? ( // Replace with your deleting state
+            {deleting ? (
               <>
                 <CircularProgress size={20} sx={{ color: 'white' }} />
                 Deleting...
@@ -1619,7 +1625,6 @@ const handleSendEmail = async (e) => {
     </div>
   </div>
 )}
-
 
 
       {/* Subscriber Detail Modal */}
