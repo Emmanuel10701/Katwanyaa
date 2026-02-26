@@ -563,7 +563,7 @@ if (loading) {
       {/* Stats Grid - Responsive */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8 lg:mb-10">
         <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-blue-100">
-          <FiCalendar className="text-blue-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiCalendar className="text-blue-500 mb-1 sm:mb-2" size={16}  />
           <FiCalendar className="text-blue-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
           <FiCalendar className="text-blue-500 mb-2 hidden lg:block" size={20} />
           <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.joinDate}</p>
