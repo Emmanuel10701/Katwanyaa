@@ -410,8 +410,9 @@ if (loading) {
 
             <div className="flex gap-1 sm:gap-2">
               <button 
-                onClick={() => setShowShareModal(true)}
-                className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray-100 sm:to-gray-50 rounded-lg sm:rounded-xl flex items-center justify-center text-gray-600 hover:text-blue-600"
+
+
+className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray-100 sm:to-gray-50 rounded-lg sm:rounded-xl flex items-center justify-center text-gray-600 hover:text-blue-600"
                 title="Share Profile"
               >
                 <FiShare2 size={14} />
@@ -501,7 +502,9 @@ if (loading) {
               <FiPhone size={18} className="hidden lg:block" />
             </a>
           )}
-          <button className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-purple-50 rounded-lg sm:rounded-xl flex items-center justify-center text-purple-600 hover:bg-purple-100 transition-all hover:scale-110">
+          <button                  onClick={() => setShowShareModal(true)}
+ className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-purple-50 rounded-lg sm:rounded-xl flex items-center justify-center text-purple-600 hover:bg-purple-100 transition-all hover:scale-110">
+
             <FiShare2 size={14} className="sm:hidden" />
             <FiShare2 size={16} className="hidden sm:block lg:hidden" />
             <FiShare2 size={18} className="hidden lg:block" />
