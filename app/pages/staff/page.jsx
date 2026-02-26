@@ -299,7 +299,6 @@ const HierarchySection = ({ title, icon, staff, viewMode, isFirst = false }) => 
   );
 };
 
-
 const StaffCard = ({ staff }) => {
   const deptConfig = DEPARTMENTS.find(d => d.id === staff.departmentId);
   const hierarchy = getStaffHierarchy(staff.position);
@@ -310,179 +309,150 @@ const StaffCard = ({ staff }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm">
+    <div className="bg-white rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm flex flex-col h-full">
       
-      {/* Clean top accent - static */}
-      <div className="h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400" />
-      
-      <div className="flex flex-col sm:flex-row p-4 sm:p-5 gap-4">
+      {/* Image Section - Large at top */}
+      <div className="relative w-full aspect-[4/3] sm:aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200">
+        <Image
+          src={getImageSrc(staff)}
+          alt={staff.name}
+          fill
+          className="object-cover object-top"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          priority={hierarchy === 'leadership'}
+          onError={(e) => { e.target.src = '/images/default-staff.jpg'; }}
+        />
         
-        {/* ===== LEFT COLUMN: Profile ===== */}
-        <div className="flex flex-row sm:flex-col items-center sm:items-start gap-4 sm:w-28 shrink-0">
-          
-          {/* Image Container */}
-          <div className="relative shrink-0">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden ring-4 ring-white shadow-md">
-              <Image
-                src={getImageSrc(staff)}
-                alt={staff.name}
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 640px) 80px, 96px"
-                onError={(e) => { e.target.src = '/images/default-staff.jpg'; }}
-              />
-            </div>
-            {/* Simple status dot */}
-            <div className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white" />
-          </div>
-
-          {/* Desktop Education - static */}
-          <div className="hidden sm:block w-full mt-1">
-            <div className="flex items-center gap-2 text-[11px] font-medium text-gray-500 bg-gray-50 p-2 rounded-lg">
-              <FiBookOpen className="text-blue-500 shrink-0" size={14} />
-              <span className="truncate">{staff.education?.split('–')[0] || 'Educator'}</span>
-            </div>
-          </div>
-
-          {/* Mobile Quick Actions */}
-          <div className="flex sm:hidden flex-1 gap-2">
-            {staff.email && (
-              <a 
-                href={`mailto:${staff.email}`} 
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium"
-              >
-                <FiMail size={14} />
-                <span>Email</span>
-              </a>
-            )}
-            {staff.phone && (
-              <a 
-                href={`tel:${staff.phone}`} 
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-gray-50 text-gray-600 rounded-lg text-xs font-medium"
-              >
-                <FiPhone size={14} />
-                <span>Call</span>
-              </a>
-            )}
+        {/* Gradient overlay for text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        
+        {/* Status Badge - Positioned on image */}
+        <div className="absolute top-3 right-3 flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+            <div className="h-2 w-2 rounded-full bg-green-500" />
+            <span className="text-xs font-medium text-gray-700">Active</span>
           </div>
         </div>
 
-        {/* ===== RIGHT COLUMN: Content ===== */}
-        <div className="flex-1 min-w-0">
-          
-          {/* Desktop Header */}
-          <div className="hidden sm:flex justify-between items-start mb-2">
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="text-lg font-bold text-gray-900">{staff.name}</h3>
-                {hierarchy === 'leadership' && (
-                  <span className="px-2 py-0.5 bg-blue-600 text-white text-[8px] font-bold rounded uppercase tracking-wider">
-                    LEADERSHIP
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-blue-600">{staff.position}</span>
-                <span className="w-1 h-1 rounded-full bg-gray-300" />
-                <Badge color={deptConfig?.color} className="text-[10px] font-medium px-2 py-0.5">
-                  {staff.department}
-                </Badge>
-              </div>
-            </div>
+        {/* Department Badge - On image */}
+        <div className="absolute bottom-3 left-3">
+          <Badge color={deptConfig?.color} icon={deptConfig?.icon} className="text-xs font-medium px-3 py-1.5 bg-white/90 backdrop-blur-sm shadow-lg">
+            {staff.department}
+          </Badge>
+        </div>
 
-            {/* Desktop Action Icons */}
-            <div className="flex gap-1">
-              {staff.email && (
-                <a href={`mailto:${staff.email}`} className="p-2 text-gray-400 bg-gray-50 rounded-lg">
-                  <FiMail size={16} />
-                </a>
-              )}
-              {staff.phone && (
-                <a href={`tel:${staff.phone}`} className="p-2 text-gray-400 bg-gray-50 rounded-lg">
-                  <FiPhone size={16} />
-                </a>
-              )}
-            </div>
+        {/* Leadership Crown - If applicable */}
+        {hierarchy === 'leadership' && (
+          <div className="absolute top-3 left-3 bg-amber-400 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+            <span>👑</span>
+            <span>LEADERSHIP</span>
           </div>
+        )}
+      </div>
 
-          {/* Mobile Header */}
-          <div className="sm:hidden mb-2">
-            <h3 className="font-bold text-gray-900">{staff.name}</h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs font-medium text-blue-600">{staff.position}</span>
-              <Badge color={deptConfig?.color} className="text-[8px] font-medium px-2 py-0.5">
-                {staff.department}
-              </Badge>
-            </div>
-          </div>
-
-          {/* Quote/Bio */}
-          <p className="text-sm text-gray-600 line-clamp-2 mb-3 leading-relaxed">
-            "{staff.quote || staff.bio}"
+      {/* Content Section */}
+      <div className="p-5 flex-1 flex flex-col">
+        
+        {/* Name and Position */}
+        <div className="mb-3">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight mb-1">
+            {staff.name}
+          </h3>
+          <p className="text-base font-medium text-blue-600">
+            {staff.position}
           </p>
+        </div>
 
-          {/* Expertise Tags */}
-          {staff.expertise && staff.expertise.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {staff.expertise.slice(0, 3).map((tag, idx) => (
-                <span 
-                  key={idx} 
-                  className="px-2.5 py-1 bg-white border border-gray-200 text-gray-600 text-[10px] font-medium rounded-lg"
-                >
-                  #{tag.replace(/\s+/g, '').substring(0, 15)}
-                  {tag.length > 15 ? '...' : ''}
-                </span>
-              ))}
-              {staff.expertise.length > 3 && (
-                <span className="px-2.5 py-1 bg-gray-100 text-gray-500 text-[10px] font-medium rounded-lg">
-                  +{staff.expertise.length - 3}
-                </span>
-              )}
-            </div>
+        {/* Quote/Bio */}
+        <p className="text-sm text-gray-600 line-clamp-2 mb-4 leading-relaxed">
+          "{staff.quote || staff.bio}"
+        </p>
+
+        {/* Expertise Tags */}
+        {staff.expertise && staff.expertise.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {staff.expertise.slice(0, 3).map((tag, idx) => (
+              <span 
+                key={idx} 
+                className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+            {staff.expertise.length > 3 && (
+              <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-full">
+                +{staff.expertise.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <span className="block text-lg font-bold text-gray-900">{staff.expertise?.length || 0}</span>
+            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Skills</span>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <span className="block text-lg font-bold text-gray-900">{staff.responsibilities?.length || 0}</span>
+            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Roles</span>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 text-center">
+            <span className="block text-lg font-bold text-gray-900">{staff.achievements?.length || 0}</span>
+            <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Awards</span>
+          </div>
+        </div>
+
+        {/* Contact Row */}
+        <div className="flex items-center gap-2 mb-3">
+          {staff.email && (
+            <a 
+              href={`mailto:${staff.email}`} 
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium"
+            >
+              <FiMail size={16} />
+              <span className="hidden sm:inline">Email</span>
+            </a>
           )}
+          {staff.phone && (
+            <a 
+              href={`tel:${staff.phone}`} 
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gray-50 text-gray-600 rounded-xl text-sm font-medium"
+            >
+              <FiPhone size={16} />
+              <span className="hidden sm:inline">Call</span>
+            </a>
+          )}
+        </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-gray-50 rounded-xl p-2 text-center">
-              <span className="block text-sm font-bold text-gray-900">{staff.expertise?.length || 0}</span>
-              <span className="text-[9px] font-medium text-gray-500 uppercase tracking-wider">Skills</span>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-2 text-center">
-              <span className="block text-sm font-bold text-gray-900">{staff.responsibilities?.length || 0}</span>
-              <span className="text-[9px] font-medium text-gray-500 uppercase tracking-wider">Roles</span>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-2 text-center">
-              <span className="block text-sm font-bold text-gray-900">{staff.achievements?.length || 0}</span>
-              <span className="text-[9px] font-medium text-gray-500 uppercase tracking-wider">Awards</span>
-            </div>
-          </div>
+        {/* Profile Button */}
+        <Link
+          href={`/pages/staff/${staff.id}/${generateSlug(staff.name, staff.id)}`}
+          className="flex items-center justify-center gap-2 py-3 bg-gray-900 text-white text-sm font-medium rounded-xl"
+        >
+          <FiUser size={16} />
+          <span>View Full Profile</span>
+          <FiArrowRight size={16} />
+        </Link>
 
-          {/* Action Button */}
-          <Link
-            href={`/pages/staff/${staff.id}/${generateSlug(staff.name, staff.id)}`}
-            className="flex items-center justify-center gap-2 py-2.5 bg-gray-900 text-white text-xs font-medium rounded-xl"
-          >
-            <FiUser size={14} />
-            <span>VIEW PROFILE</span>
-            <FiArrowRight size={14} />
-          </Link>
-
-          {/* Mobile Location/Date */}
-          <div className="sm:hidden flex items-center justify-between mt-3 pt-3 border-t border-gray-100 text-[10px] font-medium text-gray-400">
-            <span className="flex items-center gap-1">
-              <FiMapPin size={10} className="text-blue-500" />
-              {staff.location || 'Katwanyaa'}
-            </span>
-            <span className="flex items-center gap-1">
-              <FiCalendar size={10} className="text-indigo-500" />
-              Joined {new Date(staff.joinDate).getFullYear()}
-            </span>
-          </div>
+        {/* Footer Info */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <FiMapPin size={12} className="text-blue-500" />
+            {staff.location || 'Katwanyaa High School'}
+          </span>
+          <span className="flex items-center gap-1">
+            <FiCalendar size={12} className="text-indigo-500" />
+            Joined {new Date(staff.joinDate).getFullYear()}
+          </span>
         </div>
       </div>
     </div>
   );
 };
+
+
+
 const StaffListCard = ({ staff }) => {
   const deptConfig = DEPARTMENTS.find(d => d.id === staff.departmentId);
   const hierarchy = getStaffHierarchy(staff.position);
