@@ -325,7 +325,7 @@ if (loading) {
       {/* Loading Text with Modern Letter Spacing */}
       <div className="space-y-3">
         <h2 className="text-xs font-black tracking-[0.3em] text-slate-900 uppercase">
-          Authenticating
+          Opening the profile
         </h2>
         <div className="flex items-center justify-center gap-1">
           {[0, 1, 2].map((i) => (
@@ -426,314 +426,293 @@ if (loading) {
             </div>
           </div>
         </div>
-
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-8">
-          {/* MOBILE Profile Header */}
-{/* MOBILE Profile Header - ONLY CHANGES FOR SMALL SCREENS */}
-<div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl overflow-hidden shadow-lg mb-4 sm:mb-8">
-  <div className="relative p-6 text-white">
+{/* COMPLETE PROFILE SECTION - Fully Responsive & Zoom-Friendly */}
+<div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+  
+  {/* Main Profile Card */}
+  <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-lg sm:shadow-xl overflow-hidden">
     
-    {/* Large Image - Centered and Prominent - Mobile Only */}
-    <div className="flex flex-col items-center sm:items-start">
+    {/* Header with Pattern - Responsive height */}
+    <div className="relative h-28 sm:h-36 lg:h-48 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600">
+      {/* Abstract Pattern - scales with container */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-40 sm:w-60 lg:w-80 h-40 sm:h-60 lg:h-80 bg-white rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-60 sm:w-80 lg:w-96 h-60 sm:h-80 lg:h-96 bg-white rounded-full translate-x-1/3 translate-y-1/3"></div>
+      </div>
       
-      {/* Image - Larger on mobile, normal on desktop */}
-      <div className="relative w-36 h-36 sm:w-28 sm:h-28 lg:w-40 lg:h-40 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl mb-4 sm:mb-0 sm:mr-6">
-        {staff.image && staff.image.startsWith('http') ? (
-          <img
-            src={staff.image}
-            alt={staff.name}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = '/male.png';
-            }}
-          />
-        ) : (
-          <Image
-            src={staff.image || '/male.png'}
-            alt={staff.name}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 640px) 144px, (max-width: 1024px) 112px, 160px"
-          />
-        )}
-        
-        {/* Status Badge */}
-        <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white shadow" />
-      </div>
-
-      {/* Mobile Centered Text - Only on small screens */}
-      <div className="text-center sm:text-left sm:flex-1">
-        <h1 className="text-2xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white mb-1">
-          {staff.name}
-        </h1>
-        
-        <div className="inline-flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full mb-2 mx-auto sm:mx-0">
-          <FaChalkboardTeacher className="text-blue-200 text-sm" />
-          <span className="font-semibold text-sm">{staff.department}</span>
-        </div>
-        
-        <p className="text-blue-100 text-base font-semibold mb-3">
-          {staff.position}
-        </p>
-      </div>
-    </div>
-
-    {/* Bio - Full width on mobile */}
-    <p className="text-blue-100/90 text-sm leading-relaxed text-center sm:text-left mt-4 sm:mt-0">
-      {staff.bio}
-    </p>
-
-    {/* Quick Info Row - Mobile optimized */}
-    <div className="flex flex-wrap gap-2 justify-center sm:justify-start border-t border-white/20 mt-4 pt-4">
-      <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-lg">
-        <FiCalendar className="text-blue-200 text-xs" />
-        <span className="font-medium text-xs">Since {staff.joinDate}</span>
-      </div>
-      <div className="flex items-center gap-1.5 bg-white/10 px-3 py-2 rounded-lg">
-        <FiMapPin className="text-blue-200 text-xs" />
-        <span className="font-medium text-xs truncate max-w-[140px]">{staff.location}</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* MODERN BENTO GRID - Zoom & Mobile Optimized */}
-<div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 auto-rows-min">
-  
-  {/* LEFT COLUMN: Profile Context (md: 4-cols) */}
-  <div className="md:col-span-4 space-y-4 sm:space-y-6 lg:space-y-8">
-    
-    {/* School Trust Banner - Compact & Modern */}
-    <div className="bg-slate-900 rounded-[2rem] p-6 text-white relative overflow-hidden group shadow-2xl">
-      <div className="absolute -right-4 -bottom-4 text-white/5 text-8xl rotate-12 group-hover:scale-101 transition-transform duration-500">
-        <FiHome />
-      </div>
-      <div className="relative z-10 flex items-center gap-4 mb-4">
-        <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center">
-          <FiHome className="text-white text-lg" />
-        </div>
-        <div>
-          <h3 className="font-black text-xs uppercase tracking-widest leading-tight">Katwanyaa High School</h3>
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-tighter">Excellence in Education</p>
-        </div>
-      </div>
-      <p className="relative z-10 text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-        {schoolDescription}
-      </p>
-    </div>
-
-    {/* Contact Card - High Contrast */}
-    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
-      <h3 className="font-black text-slate-900 text-sm uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-        <FiUsers className="text-blue-600" /> Contact
-      </h3>
-      <div className="space-y-3">
-        {[
-{ 
-  label: 'Email', 
-  val: staff.email, 
-  icon: <FiMail />, 
-  color: 'red', 
-  href: `https://mail.google.com/mail/?view=cm&fs=1&to=${staff.email}&su=${encodeURIComponent("Inquiry regarding " + staff.name)}` 
-},          { label: 'Phone', val: staff.phone, icon: <FiPhone />, color: 'emerald', href: `tel:${staff.phone}` }
-        ].map((item, i) => (
-          item.val && (
-            <a key={i} href={item.href} className={`flex items-center gap-4 p-3 rounded-2xl bg-${item.color}-50/50 border border-${item.color}-100 hover:bg-${item.color}-100 transition-all group`}>
-              <div className={`w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-${item.color}-600 group-hover:scale-102 transition-transform`}>
-                {item.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
-                <p className="font-bold text-slate-800 text-xs truncate">{item.val}</p>
-              </div>
-            </a>
-          )
-        ))}
-      </div>
-    </div>
-
-{/* Skills Card - Enhanced Neumorphic Design */}
-<div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden group">
-  {/* Sublte Background Glow */}
-  <div className="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors duration-700" />
-  
-  <h3 className="font-black text-slate-900 text-[11px] uppercase tracking-[0.25em] mb-8 flex items-center gap-3">
-    <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shadow-sm">
-      <FiActivity size={16} className="animate-pulse" />
-    </div> 
-    Core Competencies
-  </h3>
-
-  <div className="space-y-7">
-    {staff.skills?.slice(0, 4).map((skill, i) => (
-      <div key={i} className="group/item relative">
-        {/* Label Row */}
-        <div className="flex justify-between items-center mb-2.5 px-1">
-          <div className="flex flex-col">
-            <span className="font-black text-[10px] uppercase tracking-wider text-slate-700 group-hover/item:text-blue-600 transition-colors">
-              {skill.name}
-            </span>
-          </div>
-          <div className="bg-slate-900 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg group-hover/item:scale-102 transition-transform">
-            {skill.level}%
-          </div>
-        </div>
-
-        {/* Outer Track */}
-        <div className="h-3 bg-slate-100 rounded-full p-[3px] shadow-inner relative overflow-hidden">
-          {/* Inner Shimmering Progress */}
-          <div 
-            className="h-full rounded-full bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 relative transition-all duration-[1500ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/item:from-blue-600 group-hover/item:to-indigo-600 shadow-[0_2px_10px_rgba(0,0,0,0.1)]"
-            style={{ 
-              width: `${skill.level}%`,
-              transitionDelay: `${i * 150}ms` // Staggered entry effect
-            }}
-          >
-            {/* Animated Highlight Streak */}
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-
-  {/* Footer Indicator - Only visible on wide/zoom */}
-  <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
-    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Verified by Academic Board</p>
-    <div className="flex gap-1">
-      {[1, 2, 3].map(dot => <div key={dot} className="w-1 h-1 rounded-full bg-slate-200" />)}
-    </div>
-  </div>
-
-  <style jsx>{`
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-  `}</style>
-</div>
-  </div>
-
-{/* RIGHT COLUMN: Expertise & Impact (Adaptive md: 8-cols) */}
-<div className="md:col-span-8 space-y-6 sm:space-y-8 lg:space-y-10">
-  
-  {/* Specialized Expertise - Bento Tag Cloud */}
-  <div className="bg-white rounded-[3rem] p-8 sm:p-12 border border-slate-100 shadow-2xl shadow-slate-200/40 group relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[5rem] transition-transform group-hover:scale-102" />
-    
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 relative z-10">
-      <div className="flex items-center gap-5">
-        <div className="w-14 h-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl shadow-amber-200 rotate-3 group-hover:rotate-0 transition-transform">
-          <FiStar />
-        </div>
-        <div>
-          <h3 className="font-black text-2xl text-slate-900 tracking-tight uppercase">Expertise</h3>
-          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Specialized Knowledge</p>
-        </div>
-      </div>
-      <div className="px-4 py-2 bg-slate-50 rounded-full border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-        {staff.expertise?.length || 0} Domains
-      </div>
-    </div>
-
-    <div className="flex flex-wrap gap-3 relative z-10">
-      {staff.expertise?.map((item, i) => (
-        <span 
-          key={i} 
-          className="px-5 py-3 bg-white hover:bg-slate-900 hover:text-white text-slate-700 text-xs font-black rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md cursor-default active:scale-97"
-        >
-          {item}
+      {/* School Badge - responsive sizing */}
+      <div className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 bg-white/10 backdrop-blur-md px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full border border-white/20">
+        <span className="text-white text-[10px] sm:text-xs lg:text-sm font-medium tracking-wide whitespace-nowrap">
+          🏫 Katwanyaa High School
         </span>
-      ))}
+      </div>
     </div>
-  </div>
-
-  {/* Feature Grid: Responsibilities & Achievements */}
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
     
-    {/* Focus Areas (Responsibilities) */}
-    <div className="bg-slate-900 rounded-[3rem] p-8 sm:p-10 text-white shadow-2xl relative overflow-hidden group">
-      <div className="absolute inset-0 bg-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <h4 className="font-black text-xs uppercase tracking-[0.3em] mb-8 flex items-center gap-3 text-blue-400 relative z-10">
-        <FiBriefcase /> Focus Areas
-      </h4>
-      <ul className="space-y-6 relative z-10">
-        {staff.responsibilities?.map((item, i) => (
-          <li key={i} className="flex gap-4 items-start group/item">
-            <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-blue-500 transition-colors">
-              <FiCheckCircle className="text-blue-400 group-hover/item:text-white transition-colors" size={14} />
+    {/* Profile Content - Responsive padding */}
+    <div className="relative px-4 sm:px-5 lg:px-8 pb-6 sm:pb-7 lg:pb-10">
+      
+      {/* Profile Image - Dramatic Overlap with responsive sizing */}
+      <div className="relative -mt-10 sm:-mt-12 lg:-mt-16 mb-4 sm:mb-5 lg:mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="relative flex items-center gap-3 sm:gap-4">
+          <div className="relative shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-28 lg:h-28 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 sm:border-3 lg:border-4 border-white shadow-lg sm:shadow-xl lg:shadow-2xl overflow-hidden bg-white">
+              <Image
+                src={staff.image || '/male.png'}
+                alt={staff.name}
+                width={112}
+                height={112}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
-            <span className="text-sm font-bold text-slate-300 group-hover/item:text-white leading-relaxed transition-colors tracking-tight">
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-
-    {/* Key Milestones (Achievements) */}
-    <div className="bg-white rounded-[3rem] p-8 sm:p-10 border border-slate-100 shadow-xl relative group">
-      <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-[5rem] -mr-2 -mt-2 transition-all group-hover:w-32 group-hover:h-32" />
-      <h4 className="font-black text-xs uppercase tracking-[0.3em] mb-8 flex items-center gap-3 text-amber-600 relative z-10">
-        <FiAward /> Milestones
-      </h4>
-      <ul className="space-y-6 relative z-10">
-        {staff.achievements?.map((item, i) => (
-          <li key={i} className="flex gap-4 items-start group/item">
-            <div className="w-2 h-2 rounded-full bg-amber-400 mt-2 shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.6)] group-hover/item:scale-130 transition-transform" />
-            <span className="text-sm font-bold text-slate-600 group-hover/item:text-slate-900 leading-relaxed transition-colors">
-              {item}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
-
-  {/* Summary Dashboard - Optimized for High-Zoom & Mobile */}
-  <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
-    
-    {/* Dynamic Stats Row */}
-    <div className="xl:col-span-7 bg-gradient-to-br from-slate-800 to-slate-900 rounded-[2.5rem] p-8 text-white flex justify-around items-center border border-white/5 shadow-2xl">
-      {[
-        { v: staff.expertise?.length || 0, l: 'Skills', c: 'text-blue-400' },
-        { v: staff.responsibilities?.length || 0, l: 'Roles', c: 'text-emerald-400' },
-        { v: 'Lvl 4', l: 'Tier', c: 'text-amber-400' }
-      ].map((stat, i) => (
-        <div key={i} className="text-center group">
-          <div className={`text-3xl font-black mb-1 transition-transform group-hover:-translate-y-1 ${stat.c}`}>
-            {stat.v}
+            {/* Status Indicator with Pulse - responsive sizing */}
+            <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-full w-full bg-green-500 border-1 sm:border-2 border-white"></span>
+              </span>
+            </div>
           </div>
-          <div className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-            {stat.l}
+          
+          {/* Mobile: Name next to image */}
+          <div className="lg:hidden">
+            <h1 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+              {staff.name}
+            </h1>
+            <p className="text-xs sm:text-sm text-blue-600 font-medium">{staff.position}</p>
           </div>
         </div>
-      ))}
-    </div>
+        
+        {/* Action Icons - responsive */}
+        <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
+          {staff.email && (
+            <a href={`mailto:${staff.email}`} 
+               className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-blue-50 rounded-lg sm:rounded-xl flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-all hover:scale-110">
+              <FiMail size={14} className="sm:hidden" />
+              <FiMail size={16} className="hidden sm:block lg:hidden" />
+              <FiMail size={18} className="hidden lg:block" />
+            </a>
+          )}
+          {staff.phone && (
+            <a href={`tel:${staff.phone}`} 
+               className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-green-50 rounded-lg sm:rounded-xl flex items-center justify-center text-green-600 hover:bg-green-100 transition-all hover:scale-110">
+              <FiPhone size={14} className="sm:hidden" />
+              <FiPhone size={16} className="hidden sm:block lg:hidden" />
+              <FiPhone size={18} className="hidden lg:block" />
+            </a>
+          )}
+          <button className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-purple-50 rounded-lg sm:rounded-xl flex items-center justify-center text-purple-600 hover:bg-purple-100 transition-all hover:scale-110">
+            <FiShare2 size={14} className="sm:hidden" />
+            <FiShare2 size={16} className="hidden sm:block lg:hidden" />
+            <FiShare2 size={18} className="hidden lg:block" />
+          </button>
+        </div>
+      </div>
 
-    {/* Quote Card - Modern Glassmorphism */}
-    <div className="xl:col-span-5 bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-xl shadow-blue-200">
-      <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all" />
-      <FiBook className="absolute -right-2 -top-2 text-white/10 text-7xl rotate-12" />
-      
-      <div className="relative z-10 h-full flex flex-col justify-center">
-        <p className="text-sm font-black italic leading-relaxed mb-4 tracking-tight">
-          "{staff.quote}"
-        </p>
-        <div className="flex items-center gap-3">
-          <div className="h-px w-6 bg-blue-300" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200">
-            {staff.name.split(' ')[0]}
+      {/* Desktop: Name & Title - Hidden on mobile */}
+      <div className="hidden lg:block mb-6">
+        <div className="flex items-center gap-4 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            {staff.name}
+          </h1>
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full whitespace-nowrap">
+            {staff.joinDate} Present
           </span>
         </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-medium text-blue-600">{staff.position}</span>
+          <span className="text-gray-300 text-xl">•</span>
+          <div className="flex items-center gap-2">
+            <FiMapPin className="text-gray-400" size={16} />
+            <span className="text-gray-600 font-medium">{staff.department} Department</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tablet: Name & Title */}
+      <div className="hidden sm:block lg:hidden mb-4">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
+          <h1 className="text-xl font-bold text-gray-900">{staff.name}</h1>
+          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full">
+            Since {staff.joinDate}
+          </span>
+        </div>
+        <p className="text-base font-medium text-blue-600">{staff.position}</p>
+        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+          <FiMapPin size={12} /> {staff.department} Department
+        </p>
+      </div>
+
+      {/* Quote Card - Responsive */}
+      {staff.quote && (
+        <div className="relative mb-5 sm:mb-6 lg:mb-8">
+          <div className="absolute -left-1 -top-1 sm:-left-2 sm:-top-2 text-3xl sm:text-4xl lg:text-6xl text-blue-200 font-serif">"</div>
+          <div className="relative pl-5 sm:pl-6 lg:pl-8 pr-3 sm:pr-4 py-2 sm:py-3 lg:py-4 bg-gradient-to-r from-blue-50 to-transparent rounded-xl sm:rounded-2xl">
+            <p className="text-gray-700 text-xs sm:text-sm lg:text-base italic leading-relaxed font-light">
+              {staff.quote}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Bio - Responsive text */}
+      <p className="text-gray-600 leading-relaxed mb-5 sm:mb-6 lg:mb-8 text-xs sm:text-sm lg:text-base border-l-2 sm:border-l-3 lg:border-l-4 border-blue-200 pl-3 sm:pl-4 py-1">
+        {staff.bio}
+      </p>
+
+      {/* Stats Grid - Responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-6 sm:mb-8 lg:mb-10">
+        <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-blue-100">
+          <FiCalendar className="text-blue-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiCalendar className="text-blue-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
+          <FiCalendar className="text-blue-500 mb-2 hidden lg:block" size={20} />
+          <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.joinDate}</p>
+          <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 uppercase tracking-wide">Joined</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-purple-100">
+          <FiStar className="text-purple-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiStar className="text-purple-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
+          <FiStar className="text-purple-500 mb-2 hidden lg:block" size={20} />
+          <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.expertise?.length || 0}</p>
+          <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 uppercase tracking-wide">Expertise</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-green-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-green-100">
+          <FiBriefcase className="text-green-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiBriefcase className="text-green-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
+          <FiBriefcase className="text-green-500 mb-2 hidden lg:block" size={20} />
+          <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.responsibilities?.length || 0}</p>
+          <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 uppercase tracking-wide">Roles</p>
+        </div>
+        
+        <div className="bg-gradient-to-br from-amber-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-amber-100">
+          <FiAward className="text-amber-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiAward className="text-amber-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
+          <FiAward className="text-amber-500 mb-2 hidden lg:block" size={20} />
+          <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.achievements?.length || 0}</p>
+          <p className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 uppercase tracking-wide">Awards</p>
+        </div>
+      </div>
+
+      {/* Main Content Grid - Responsive */}
+      <div className="grid lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8">
+        
+        {/* Left Column */}
+        <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+          
+          {/* Expertise - Responsive Tags */}
+          <div>
+            <h3 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
+              <span className="w-4 sm:w-6 lg:w-8 h-0.5 bg-blue-400 rounded-full"></span>
+              Areas of Expertise
+            </h3>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              {staff.expertise?.map((item, i) => (
+                <span 
+                  key={i}
+                  className="px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 bg-white text-gray-700 text-[10px] sm:text-xs lg:text-sm rounded-lg sm:rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 transition-all cursor-default"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Skills - Modern without percentages */}
+          {staff.skills && staff.skills.length > 0 && (
+            <div>
+              <h3 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
+                <span className="w-4 sm:w-6 lg:w-8 h-0.5 bg-purple-400 rounded-full"></span>
+                Professional Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {staff.skills.slice(0, 4).map((skill, i) => (
+                  <span key={i} className="px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-50 text-purple-700 text-[10px] sm:text-xs rounded-lg border border-purple-200">
+                    {skill.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+          
+          {/* Responsibilities - Responsive List */}
+          <div>
+            <h3 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
+              <span className="w-4 sm:w-6 lg:w-8 h-0.5 bg-green-400 rounded-full"></span>
+              Key Responsibilities
+            </h3>
+            <div className="space-y-1.5 sm:space-y-2">
+              {staff.responsibilities?.map((item, i) => (
+                <div key={i} className="flex items-start gap-2 p-2 sm:p-2.5 lg:p-3 bg-gray-50 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-colors">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-green-100 rounded-lg flex items-center justify-center text-green-600 shrink-0 mt-0.5">
+                    <FiCheckCircle size={10} className="sm:hidden" />
+                    <FiCheckCircle size={12} className="hidden sm:block lg:hidden" />
+                    <FiCheckCircle size={14} className="hidden lg:block" />
+                  </div>
+                  <span className="text-gray-700 text-[10px] sm:text-xs lg:text-sm leading-relaxed">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Achievements - Responsive Cards */}
+          <div>
+            <h3 className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2 sm:mb-3 lg:mb-4 flex items-center gap-2">
+              <span className="w-4 sm:w-6 lg:w-8 h-0.5 bg-amber-400 rounded-full"></span>
+              Notable Achievements
+            </h3>
+            <div className="space-y-1.5 sm:space-y-2">
+              {staff.achievements?.map((item, i) => (
+                <div key={i} className="bg-white border border-amber-100 rounded-lg sm:rounded-xl p-2 sm:p-2.5 lg:p-3 hover:border-amber-200 transition-all">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600 font-bold text-[10px] sm:text-xs shrink-0">
+                      {i + 1}
+                    </div>
+                    <span className="text-gray-700 text-[10px] sm:text-xs lg:text-sm font-medium">{item}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Contact Bar - Responsive */}
+      <div className="mt-5 sm:mt-6 lg:mt-10 pt-4 sm:pt-5 lg:pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4">
+          {staff.email && (
+            <a href={`mailto:${staff.email}`} className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 text-gray-600 hover:text-blue-600 transition-colors text-[10px] sm:text-xs lg:text-sm">
+              <FiMail size={12} className="sm:hidden" />
+              <FiMail size={14} className="hidden sm:block lg:hidden" />
+              <FiMail size={16} className="hidden lg:block" />
+              <span className="hidden sm:inline">{staff.email}</span>
+              <span className="sm:hidden">Email</span>
+            </a>
+          )}
+          {staff.phone && (
+            <a href={`tel:${staff.phone}`} className="flex items-center gap-1 sm:gap-1.5 lg:gap-2 text-gray-600 hover:text-green-600 transition-colors text-[10px] sm:text-xs lg:text-sm">
+              <FiPhone size={12} className="sm:hidden" />
+              <FiPhone size={14} className="hidden sm:block lg:hidden" />
+              <FiPhone size={16} className="hidden lg:block" />
+              <span className="hidden sm:inline">{staff.phone}</span>
+              <span className="sm:hidden">Call</span>
+            </a>
+          )}
+        </div>
+        <div className="flex items-center gap-1.5 text-[8px] sm:text-[10px] lg:text-xs text-gray-400">
+          <span className="whitespace-nowrap">Updated 2024</span>
+          <span className="w-0.5 h-0.5 sm:w-1 sm:h-1 bg-gray-300 rounded-full"></span>
+          <span className="whitespace-nowrap">Katwanyaa High School</span>
+        </div>
       </div>
     </div>
   </div>
 </div>
-</div>
-        </div>
 
 {/* MODERN BRAND FOOTER - Zoom & Mobile Optimized */}
 <footer className="mt-12 sm:mt-20 border-t border-slate-100 bg-white/50 backdrop-blur-sm relative overflow-hidden">
