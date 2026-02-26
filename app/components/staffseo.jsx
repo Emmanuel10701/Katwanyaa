@@ -571,7 +571,7 @@ if (loading) {
         </div>
         
         <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-purple-100">
-          <FiStar className="text-purple-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiStar className="text-purple-500 mb-1 sm:mb-2" size={16}/>
           <FiStar className="text-purple-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
           <FiStar className="text-purple-500 mb-2 hidden lg:block" size={20} />
           <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.expertise?.length || 0}</p>
@@ -579,7 +579,7 @@ if (loading) {
         </div>
         
         <div className="bg-gradient-to-br from-green-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-green-100">
-          <FiBriefcase className="text-green-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiBriefcase className="text-green-500 mb-1 sm:mb-2" size={16}  />
           <FiBriefcase className="text-green-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
           <FiBriefcase className="text-green-500 mb-2 hidden lg:block" size={20} />
           <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.responsibilities?.length || 0}</p>
@@ -587,7 +587,7 @@ if (loading) {
         </div>
         
         <div className="bg-gradient-to-br from-amber-50 to-white rounded-lg sm:rounded-xl p-2 sm:p-3 lg:p-4 border border-amber-100">
-          <FiAward className="text-amber-500 mb-1 sm:mb-2" size={16} className="sm:hidden" />
+          <FiAward className="text-amber-500 mb-1 sm:mb-2" size={16} />
           <FiAward className="text-amber-500 mb-1 sm:mb-2 hidden sm:block lg:hidden" size={18} />
           <FiAward className="text-amber-500 mb-2 hidden lg:block" size={20} />
           <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900">{staff.achievements?.length || 0}</p>
