@@ -13,6 +13,7 @@ import {
   FiChevronDown, 
   FiChevronRight, 
   FiBriefcase,
+  FiCalendar, 
   FiUser,
   FiX,
   FiMenu,
