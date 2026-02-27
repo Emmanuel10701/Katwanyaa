@@ -403,7 +403,7 @@ export default function AdminDashboard() {
               <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 animate-gradient-loading"></div>
             </div>
             
-            <p className="text-white/60 text-xs md:text-sm">Loading resources...</p>
+            <p className="text-white/60 text-xs md:text-sm">Loading Admin Dashboard...</p>
           </div>
         </div>
       </div>
