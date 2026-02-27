@@ -598,6 +598,7 @@ const getHighlightColorClass = (color) => {
   }
 };
 
+
 const getBorderColorClass = (color) => {
   switch(color) {
     case 'blue': return 'border-blue-500';
