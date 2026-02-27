@@ -1239,8 +1239,7 @@ function AdmissionFeeBreakdownModal({
         </div>
              
 
-
-<div className="flex gap-3 w-full sm:w-auto">
+<div className="flex gap-3 w-full sm:w-auto ">
   <button
     type="button"
     onClick={onClose}
