@@ -1232,24 +1232,8 @@ function AdmissionFeeBreakdownModal({
             </div>
           </div>
         </div>
-
-        {/* Footer Section */}
-        <div className="border-t border-gray-200 p-6 bg-white mb-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-600 font-bold">
-              <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
-              <p className="text-xs mt-1 font-bold">
-                {categories.length} admission fee categories configured
-                {isEditMode ? <span className="text-blue-600 ml-2">(Edit Mode)</span> : <span className="text-emerald-600 ml-2">(New Setup)</span>}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {isEditMode 
-                  ? 'Editing existing admission fee categories' 
-                  : 'All fields start empty to prevent autofill from other fee types'}
-              </p>
-            </div>
-            
-            <div className="flex gap-3 w-full sm:w-auto mb-8">
+             
+            <div className="flex gap-3 w-full sm:w-auto mb-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -1266,6 +1250,23 @@ function AdmissionFeeBreakdownModal({
                 {isEditMode ? 'Update Fees' : 'Save Fees'}
               </button>
             </div>
+
+        {/* Footer Section */}
+        <div className="border-t border-gray-200 p-6 bg-white ">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 font-bold">
+              <p>Total Admission Fees: <span className="text-purple-700">KES {totalAmount.toLocaleString()}</span></p>
+              <p className="text-xs mt-1 font-bold">
+                {categories.length} admission fee categories configured
+                {isEditMode ? <span className="text-blue-600 ml-2">(Edit Mode)</span> : <span className="text-emerald-600 ml-2">(New Setup)</span>}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {isEditMode 
+                  ? 'Editing existing admission fee categories' 
+                  : 'All fields start empty to prevent autofill from other fee types'}
+              </p>
+            </div>
+       
           </div>
         </div>
       </Box>
