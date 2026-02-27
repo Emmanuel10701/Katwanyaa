@@ -903,19 +903,19 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
 
         {/* Floating Title on Image for Mobile */}
         <div className="absolute bottom-4 left-4 right-4 md:hidden">
-            <h3 className="font-black text-white text-lg tracking-tight leading-none  italic">
-                {path.title}
-            </h3>
+          <h3 className="font-black text-white text-lg tracking-tight leading-none italic">
+            {path.title}
+          </h3>
         </div>
       </div>
 
-      {/* 2. Content Body */}
+      {/* Content Body */}
       <div className="p-6 md:p-6 flex flex-col flex-1">
         {/* Desktop Title (Hidden on Mobile because it's on the image) */}
         <div className="hidden md:flex items-center gap-5 mb-6">
           <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${path.color} p-0.5 shadow-lg`}>
             <div className="w-full h-full bg-white rounded-[calc(1rem-1px)] flex items-center justify-center">
-               {path.icon({ className: `text-2xl text-${themeColor}-600` })}
+              {path.icon({ className: `text-2xl text-${themeColor}-600` })}
             </div>
           </div>
           <h3 className="font-black text-slate-800 md:text-lg text-md tracking-tighter uppercase leading-none">
@@ -923,31 +923,31 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
           </h3>
         </div>
 
-        <p className="text-slate-500 text-sm md:text-base  leading-relaxed mb-6">
+        <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-6">
           {path.description}
         </p>
 
-    {/* Features: Compact & Grid-optimized for Mobile */}
-<div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 mb-6">
-  {path.features.slice(0, isMobile ? 4 : 3).map((feature, idx) => (
-    <div 
-      key={idx} 
-      className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-slate-50 rounded-lg md:rounded-xl border border-slate-100"
-    >
-      <IoCheckmarkCircle className={`text-${themeColor}-500 text-[10px] md:text-sm shrink-0`} />
-      <span className="text-[10px] md:text-sm text-slate-700 font-bold md:font-medium truncate tracking-tight">
-        {feature}
-      </span>
-    </div>
-  ))}
-</div>
+        {/* Features - Using CSS grid that adapts naturally */}
+        <div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 mb-6">
+          {path.features.slice(0, 4).map((feature, idx) => (
+            <div 
+              key={idx} 
+              className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-slate-50 rounded-lg md:rounded-xl border border-slate-100"
+            >
+              <IoCheckmarkCircle className={`text-${themeColor}-500 text-[10px] md:text-sm shrink-0`} />
+              <span className="text-[10px] md:text-sm text-slate-700 font-bold md:font-medium truncate tracking-tight">
+                {feature}
+              </span>
+            </div>
+          ))}
+        </div>
 
-        {/* 3. Footer Action */}
+        {/* Footer Action */}
         <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-100 rounded-lg">
-                 <IoCalendarOutline className="text-slate-500" />
+                <IoCalendarOutline className="text-slate-500" />
               </div>
               <div className="flex flex-col">
                 <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Deadline</span>
@@ -961,36 +961,28 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
             </span>
           </div>
           
-      <button
-  onClick={onApply}
-  className={`
-    /* Layout */
-    w-full md:w-max flex items-center justify-center gap-3 
-    px-8 py-4 md:px-10 md:py-5
-    
-    /* Style & Color */
-    bg-gradient-to-r ${path.color} 
-    text-white rounded-xl md:rounded-2xl 
-    shadow-xl md:shadow-2xl
-    
-    /* Typography */
-    font-black text-[10px] md:text-[11px] 
-    uppercase tracking-[0.2em]
-    
-  
-    transition-transform duration-300
-    md:active:scale-95
-    md:hover:brightness-110
-  `}
->
-   Apply now
-</button>
+          <button
+            onClick={onApply}
+            className={`
+              w-full md:w-max flex items-center justify-center gap-3 
+              px-8 py-4 md:px-10 md:py-5
+              bg-gradient-to-r ${path.color} 
+              text-white rounded-xl md:rounded-2xl 
+              shadow-xl md:shadow-2xl
+              font-black text-[10px] md:text-[11px] 
+              uppercase tracking-[0.2em]
+              transition-transform duration-300
+              md:active:scale-95
+              md:hover:brightness-110
+            `}
+          >
+            Apply now
+          </button>
         </div>
       </div>
     </div>
   );
 };
-
 const FeatureCard = ({ feature, onLearnMore }) => {
   const FeatureIcon = feature.icon;
   
