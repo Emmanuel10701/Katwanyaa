@@ -592,7 +592,7 @@ export default function ModernNavbar() {
               {/* Mobile Footer - Responsive */}
               <div className="mt-6 xs:mt-8 pt-4 xs:pt-6 border-t border-white/20 text-center">
                 <p className="text-white/70 text-xs xs:text-sm font-medium">
-                  Excellence in Education Since 1995
+                  Education is light
                 </p>
               </div>
             </div>
