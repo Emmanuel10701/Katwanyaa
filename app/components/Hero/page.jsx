@@ -281,431 +281,310 @@ const ModernHero = () => {
 
   const slide = heroSlides[currentSlide];
   const IconComponent = slide.icon;
+return (
+  <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
+    {/* Background Image Layers with Enhanced Dark Overlay - STRONGER TOP VISIBILITY, DARKER BOTTOM */}
+    {heroSlides.map((s, idx) => (
+      <div
+        key={idx}
+        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+          idx === currentSlide ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
+          style={{ backgroundImage: `url(${s.image})` }}
+        />
+        
+        {/* PRIMARY GRADIENT - Main darkening effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-black/95" />
+        
+        {/* SECONDARY GRADIENT - Extra darkness at bottom only */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent" />
+        
+        {/* TOP VISIBILITY ENHANCER - Keeps top portion brighter */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+        
+        {/* CONTENT SPOTLIGHT - Radial gradient to highlight center */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-transparent" />
+        
+        {/* Color overlay based on slide theme - very subtle */}
+        <div className={`absolute inset-0 opacity-15 mix-blend-overlay ${s.background}`} />
+        
+        {/* EDGE VIGNETTE - Darkens corners */}
+        <div className="absolute inset-0 shadow-[inset_0_-150px_100px_-50px_rgba(0,0,0,0.8),inset_150px_0_100px_-50px_rgba(0,0,0,0.3),inset_-150px_0_100px_-50px_rgba(0,0,0,0.3)]" />
+        
+        {/* BOTTOM FADE - Extra dark at very bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
+      </div>
+    ))}
 
-  return (
-    <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
-      {/* Background Image Layers with Enhanced Dark Overlay - MUCH DARKER AT BOTTOM */}
-      {heroSlides.map((s, idx) => (
-        <div
-          key={idx}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            idx === currentSlide ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {/* Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
-            style={{ backgroundImage: `url(${s.image})` }}
-          />
-          
-          {/* Enhanced Multi-Layer Gradient Overlay - MUCH DARKER AT BOTTOM */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/95 to-black/80" />
-          
-          {/* Second layer gradient for extra depth at bottom */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
-          
-          {/* Third layer - radial gradient for spotlight effect on content */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/30 to-transparent" />
-          
-          {/* Color overlay based on slide theme - very subtle */}
-          <div className={`absolute inset-0 opacity-20 mix-blend-overlay ${s.background}`} />
-          
-          {/* Extra dark vignette at edges */}
-          <div className="absolute inset-0 shadow-[inset_0_-200px_100px_-100px_rgba(0,0,0,0.9)]" />
+    {/* Main Content Area - Pushed higher for better visibility */}
+    <div className="relative z-20 h-full flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 lg:px-12 text-center">
+      <div className={`w-full max-w-4xl transition-all duration-500 transform ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} px-2 mt-[-8%] sm:mt-[-5%]`}>
+        
+        {/* Tagline - with glow effect */}
+        <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4 px-2">
+          <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/60" />
+
+          <span
+            className={`
+              uppercase
+              text-base xs:text-lg sm:text-base md:text-lg
+              tracking-[0.08em] xs:tracking-[0.1em] sm:tracking-[0.15em]
+              font-semibold sm:font-bold
+              text-center
+              leading-snug
+              drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]
+              ${getHighlightColorClass(slide.highlightColor)}
+            `}
+          >
+            {slide.subtitle}
+          </span>
+
+          <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/60" />
         </div>
-      ))}
 
-      {/* Main Content Area - Responsive adjustments - PUSHED HIGHER */}
-      <div className="relative z-20 h-full flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 lg:px-12 text-center">
-        <div className={`w-full max-w-4xl transition-all duration-500 transform ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} px-2 mt-[-5%] sm:mt-[-3%]`}>
-          
-          {/* Tagline - Reduced size */}
-          <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4 px-2">
-            <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/40" />
-
+        {/* Dynamic Heading with stronger glow */}
+        <h1 className="
+          text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl
+          font-extrabold
+          text-white
+          leading-tight
+          mb-3 sm:mb-4 md:mb-5
+          drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)_0_0_20px_rgba(255,255,255,0.2)]
+          px-2
+        ">
+          {slide.title.split(' ').map((word, i) => (
             <span
+              key={i}
               className={`
-                uppercase
-                text-base xs:text-lg sm:text-base md:text-lg
-                tracking-[0.08em] xs:tracking-[0.1em] sm:tracking-[0.15em]
-                font-semibold sm:font-bold
-                text-center
-                leading-snug
-                ${getHighlightColorClass(slide.highlightColor)}
+                ${i === slide.title.split(' ').length - 1 ? getHighlightColorClass(slide.highlightColor) : ""}
+                ${isMobile && word.length > 8 ? 'block' : ''}
+                drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]
               `}
             >
-              {slide.subtitle}
+              {word}{' '}
             </span>
-
-            <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/40" />
-          </div>
-
-          {/* Dynamic Heading */}
-          <h1 className="
-            text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-5xl
-            font-extrabold
-            text-white
-            leading-tight
-            mb-3 sm:mb-4 md:mb-5
-            drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]
-            px-2
-          ">
-            {slide.title.split(' ').map((word, i) => (
-              <span
-                key={i}
-                className={`
-                  ${i === slide.title.split(' ').length - 1 ? getHighlightColorClass(slide.highlightColor) : ""}
-                  ${isMobile && word.length > 8 ? 'block' : ''}
-                  drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]
-                `}
-              >
-                {word}{' '}
-              </span>
-            ))}
-          </h1>
-
-          {/* Description - with better readability */}
-          <p className="
-            text-sm xs:text-base sm:text-lg
-            text-gray-200
-            mb-4 sm:mb-5 md:mb-6
-            mx-auto
-            max-w-sm xs:max-w-md sm:max-w-xl md:max-w-2xl
-            font-medium
-            leading-relaxed
-            line-clamp-3 sm:line-clamp-none
-            drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]
-          ">
-            {isMobile ? slide.description.substring(0, 120) + '...' : slide.description}
-          </p>
-
-          {/* Stats - Enhanced visibility */}
-          <div className="grid grid-cols-3 gap-1 xs:gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-2xl mx-auto">
-            {Object.entries(slide.stats).map(([key, value], i) => (
-              <div key={i} className="flex flex-col items-center justify-center bg-black/60 backdrop-blur-md border border-white/20 p-1 xs:p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl hover:bg-black/70 transition-all duration-300 shadow-lg">
-                <div className={`text-sm xs:text-base sm:text-lg md:text-xl font-bold ${getHighlightColorClass(slide.highlightColor)} mb-0.5 sm:mb-1 drop-shadow-lg`}>
-                  {value.split(' ')[0]}
-                </div>
-                <span className="text-white/90 text-[8px] xs:text-xs uppercase tracking-wider text-center leading-tight font-medium">
-                  {isMobile ? value.split(' ').slice(1, 2).join(' ') + '...' : value.split(' ').slice(1).join(' ')}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Features - Enhanced visibility */}
-          <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-8 max-w-xs xs:max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
-            {slide.features.map((feature, i) => (
-              <div key={i} className="flex items-center justify-center space-x-1 xs:space-x-2 
-                bg-black/60 backdrop-blur-md border border-white/20 p-1 xs:p-2 sm:p-3 rounded-lg sm:rounded-xl 
-                hover:bg-black/70 transition-all duration-300 group overflow-hidden shadow-lg">
-                <IconComponent className={`w-3 h-3 xs:w-4 xs:h-4 ${getHighlightColorClass(slide.highlightColor)} flex-shrink-0`} />
-                <span className="text-white font-medium text-[10px] xs:text-xs sm:text-sm group-hover:text-white whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-md">
-                  {isMobile && feature.length > 12 ? feature.substring(0, 10) + '...' : feature}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Testimonial - Enhanced visibility */}
-          <div className="mb-3 sm:mb-4 md:mb-6 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-xl mx-auto">
-            <div className={`border-l-2 sm:border-l-4 ${getBorderColorClass(slide.highlightColor)} pl-2 sm:pl-3 md:pl-4 py-1 sm:py-2 bg-black/60 backdrop-blur-md rounded-r-lg shadow-lg`}>
-              <p className="text-white/90 text-[10px] xs:text-xs sm:text-sm italic font-medium drop-shadow-md">
-                {isMobile ? slide.testimonial.substring(0, 80) + '...' : slide.testimonial}
-              </p>
-            </div>
-          </div>
-
-          {/* Action Buttons - Enhanced */}
-          <div className="
-            flex items-center justify-center gap-3
-            sm:flex-row sm:gap-4
-            px-2
-          ">
-            <button
-              onClick={handleSlideButtonClick}
-              disabled={navigationBlocked}
-              className="
-                px-4 sm:px-6
-                py-2 sm:py-3
-                bg-white text-black
-                rounded-full font-semibold
-                text-sm
-                hover:bg-gray-200
-                transition-all
-                flex items-center justify-center gap-2
-                shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:shadow-[0_12px_25px_rgba(0,0,0,0.5)]
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
-            >
-              {slide.cta}
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-
-            <button
-              onClick={openVideoModal}
-              className="
-                px-4 sm:px-6
-                py-2 sm:py-3
-                bg-white/20
-                border border-white/40
-                text-white
-                rounded-full font-semibold
-                text-sm
-                hover:bg-white/30 hover:border-white/60
-                backdrop-blur-md
-                transition-all duration-300
-                flex items-center justify-center gap-2
-                shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_25px_rgba(0,0,0,0.4)]
-              "
-            >
-              <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              {isMobile ? 'Tour' : 'View Tour'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Modern Controls - Mobile Responsive Position */}
-      <div className={`absolute z-30 flex space-x-3 sm:space-y-3 sm:flex-col ${isMobile ? 'bottom-4 right-4 flex-row' : 'bottom-10 right-8 flex-col'}`}>
-        <button 
-          onClick={prevSlide}
-          className={`rounded-full border border-white/20 text-white hover:bg-white hover:text-black 
-            transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/40
-            ${isMobile ? 'p-2' : 'p-3'}`}
-        >
-          <ChevronLeft className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-        </button>
-        <button 
-          onClick={nextSlide}
-          className={`rounded-full border border-white/20 text-white hover:bg-white hover:text-black 
-            transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/40
-            ${isMobile ? 'p-2' : 'p-3'}`}
-        >
-          <ChevronRight className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-        </button>
-      </div>
-
-      {/* Progress Indicators - Mobile Responsive */}
-      {!isMobile && (
-        <div className="absolute top-1/2 right-4 sm:right-6 md:right-8 -translate-y-1/2 z-30 hidden sm:flex flex-col space-y-4 sm:space-y-6">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handleSlideChange(index)}
-              className="group flex items-center justify-end"
-            >
-              <span className={`mr-2 sm:mr-3 text-[8px] sm:text-[10px] font-mono transition-all ${currentSlide === index ? 'text-white' : 'text-white/30 opacity-0 group-hover:opacity-100'}`}>
-                0{index + 1}
-              </span>
-              <div className={`w-[1px] sm:w-[2px] transition-all duration-300 rounded-full ${currentSlide === index ? `h-6 sm:h-8 ${getProgressColorClass(heroSlides[index].highlightColor)}` : 'h-2 sm:h-3 bg-white/20 group-hover:bg-white/40'}`} />
-            </button>
           ))}
-        </div>
-      )}
+        </h1>
 
-      {/* Mobile Progress Dots */}
-      {isMobile && (
-        <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handleSlideChange(index)}
-              className="w-2 h-2 rounded-full transition-all duration-300"
-              style={{
-                backgroundColor: currentSlide === index 
-                  ? getProgressColorValue(heroSlides[index].highlightColor)
-                  : 'rgba(255, 255, 255, 0.3)'
-              }}
-            />
-          ))}
-        </div>
-      )}
+        {/* Description - better contrast */}
+        <p className="
+          text-sm xs:text-base sm:text-lg
+          text-gray-100
+          mb-4 sm:mb-5 md:mb-6
+          mx-auto
+          max-w-sm xs:max-w-md sm:max-w-xl md:max-w-2xl
+          font-medium
+          leading-relaxed
+          line-clamp-3 sm:line-clamp-none
+          drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]
+        ">
+          {isMobile ? slide.description.substring(0, 120) + '...' : slide.description}
+        </p>
 
-      {/* Bottom Info Strip - Darker, more visible */}
-      <div className={`absolute bottom-0 left-0 w-full z-10 py-2 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 lg:px-12 
-        border-t border-white/10 bg-black/90 backdrop-blur-md 
-        ${isMobile ? 'flex flex-col items-center justify-center gap-1' : 'hidden md:flex items-center justify-between'} 
-        text-white/80 text-[8px] xs:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase font-semibold shadow-[0_-10px_20px_rgba(0,0,0,0.5)]`}>
-        
-        {isMobile ? (
-          <>
-            <div className="flex items-center space-x-4">
-              <span className="flex items-center text-nowrap">
-                <BookOpen className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
-                Matungulu
-              </span>
-              <span className="flex items-center text-nowrap">
-                <Trophy className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
-                Public School
+        {/* Stats - Enhanced with stronger backdrop */}
+        <div className="grid grid-cols-3 gap-1 xs:gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-2xl mx-auto">
+          {Object.entries(slide.stats).map(([key, value], i) => (
+            <div key={i} className="flex flex-col items-center justify-center bg-black/70 backdrop-blur-md border border-white/25 p-1 xs:p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl hover:bg-black/80 transition-all duration-300 shadow-2xl">
+              <div className={`text-sm xs:text-base sm:text-lg md:text-xl font-bold ${getHighlightColorClass(slide.highlightColor)} mb-0.5 sm:mb-1 drop-shadow-[0_0_10px_currentColor]`}>
+                {value.split(' ')[0]}
+              </div>
+              <span className="text-white/95 text-[8px] xs:text-xs uppercase tracking-wider text-center leading-tight font-semibold">
+                {isMobile ? value.split(' ').slice(1, 2).join(' ') + '...' : value.split(' ').slice(1).join(' ')}
               </span>
             </div>
+          ))}
+        </div>
+
+        {/* Features - Enhanced visibility */}
+        <div className="grid grid-cols-2 gap-1 xs:gap-2 sm:gap-3 mb-3 sm:mb-4 md:mb-8 max-w-xs xs:max-w-sm sm:max-w-lg md:max-w-2xl lg:max-w-3xl mx-auto">
+          {slide.features.map((feature, i) => (
+            <div key={i} className="flex items-center justify-center space-x-1 xs:space-x-2 
+              bg-black/70 backdrop-blur-md border border-white/25 p-1 xs:p-2 sm:p-3 rounded-lg sm:rounded-xl 
+              hover:bg-black/80 transition-all duration-300 group overflow-hidden shadow-2xl">
+              <IconComponent className={`w-3 h-3 xs:w-4 xs:h-4 ${getHighlightColorClass(slide.highlightColor)} flex-shrink-0 drop-shadow-[0_0_5px_currentColor]`} />
+              <span className="text-white font-semibold text-[10px] xs:text-xs sm:text-sm group-hover:text-white whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-md">
+                {isMobile && feature.length > 12 ? feature.substring(0, 10) + '...' : feature}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonial - Enhanced with glow */}
+        <div className="mb-3 sm:mb-4 md:mb-6 max-w-xs xs:max-w-sm sm:max-w-md md:max-w-xl mx-auto">
+          <div className={`border-l-2 sm:border-l-4 ${getBorderColorClass(slide.highlightColor)} pl-2 sm:pl-3 md:pl-4 py-1 sm:py-2 bg-black/70 backdrop-blur-md rounded-r-lg shadow-2xl`}>
+            <p className="text-white/95 text-[10px] xs:text-xs sm:text-sm italic font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              {isMobile ? slide.testimonial.substring(0, 80) + '...' : slide.testimonial}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons - Enhanced with glow */}
+        <div className="
+          flex items-center justify-center gap-3
+          sm:flex-row sm:gap-4
+          px-2
+        ">
+          <button
+            onClick={handleSlideButtonClick}
+            disabled={navigationBlocked}
+            className="
+              px-4 sm:px-6
+              py-2 sm:py-3
+              bg-white text-black
+              rounded-full font-semibold
+              text-sm
+              hover:bg-gray-200
+              transition-all
+              flex items-center justify-center gap-2
+              shadow-[0_8px_25px_rgba(0,0,0,0.6)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.8)]
+              disabled:opacity-50 disabled:cursor-not-allowed
+              drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]
+            "
+          >
+            {slide.cta}
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+
+          <button
+            onClick={openVideoModal}
+            className="
+              px-4 sm:px-6
+              py-2 sm:py-3
+              bg-white/25
+              border border-white/40
+              text-white
+              rounded-full font-semibold
+              text-sm
+              hover:bg-white/35 hover:border-white/70
+              backdrop-blur-md
+              transition-all duration-300
+              flex items-center justify-center gap-2
+              shadow-[0_8px_25px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_30px_rgba(0,0,0,0.7)]
+              drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]
+            "
+          >
+            <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            {isMobile ? 'Tour' : 'View Tour'}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {/* Modern Controls - Mobile Responsive Position */}
+    <div className={`absolute z-30 flex space-x-3 sm:space-y-3 sm:flex-col ${isMobile ? 'bottom-4 right-4 flex-row' : 'bottom-10 right-8 flex-col'}`}>
+      <button 
+        onClick={prevSlide}
+        className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
+          transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
+          ${isMobile ? 'p-2' : 'p-3'}`}
+      >
+        <ChevronLeft className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+      </button>
+      <button 
+        onClick={nextSlide}
+        className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
+          transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
+          ${isMobile ? 'p-2' : 'p-3'}`}
+      >
+        <ChevronRight className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+      </button>
+    </div>
+
+    {/* Progress Indicators - Mobile Responsive */}
+    {!isMobile && (
+      <div className="absolute top-1/2 right-4 sm:right-6 md:right-8 -translate-y-1/2 z-30 hidden sm:flex flex-col space-y-4 sm:space-y-6">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => handleSlideChange(index)}
+            className="group flex items-center justify-end"
+          >
+            <span className={`mr-2 sm:mr-3 text-[8px] sm:text-[10px] font-mono transition-all ${currentSlide === index ? 'text-white drop-shadow-[0_0_5px_white]' : 'text-white/30 opacity-0 group-hover:opacity-100'}`}>
+              0{index + 1}
+            </span>
+            <div className={`w-[1px] sm:w-[2px] transition-all duration-300 rounded-full ${currentSlide === index ? `h-6 sm:h-8 ${getProgressColorClass(heroSlides[index].highlightColor)} shadow-[0_0_10px_currentColor]` : 'h-2 sm:h-3 bg-white/20 group-hover:bg-white/40'}`} />
+          </button>
+        ))}
+      </div>
+    )}
+
+    {/* Mobile Progress Dots */}
+    {isMobile && (
+      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
+        {heroSlides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => handleSlideChange(index)}
+            className="w-2 h-2 rounded-full transition-all duration-300 shadow-[0_0_5px_currentColor]"
+            style={{
+              backgroundColor: currentSlide === index 
+                ? getProgressColorValue(heroSlides[index].highlightColor)
+                : 'rgba(255, 255, 255, 0.3)'
+            }}
+          />
+        ))}
+      </div>
+    )}
+
+    {/* Bottom Info Strip - Much darker */}
+    <div className={`absolute bottom-0 left-0 w-full z-10 py-2 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 lg:px-12 
+      border-t border-white/15 bg-black/95 backdrop-blur-md 
+      ${isMobile ? 'flex flex-col items-center justify-center gap-1' : 'hidden md:flex items-center justify-between'} 
+      text-white/90 text-[8px] xs:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase font-semibold shadow-[0_-15px_30px_rgba(0,0,0,0.8)]`}>
+      
+      {isMobile ? (
+        <>
+          <div className="flex items-center space-x-4">
+            <span className="flex items-center text-nowrap">
+              <BookOpen className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
+              Matungulu
+            </span>
+            <span className="flex items-center text-nowrap">
+              <Trophy className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
+              Public School
+            </span>
+          </div>
+          <button 
+            onClick={openVideoModal}
+            className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group text-nowrap"
+          >
+            <Play className="w-2 h-2 xs:w-3 xs:h-3 mr-1 group-hover:scale-110 transition-transform" />
+            Virtual Tour
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
+            <span className="flex items-center">
+              <BookOpen className="w-3 h-3 mr-2" />
+              Matungulu, Machakos
+            </span>
+            <span className="flex items-center">
+              <Trophy className="w-3 h-3 mr-2" />
+              Public Secondary School
+            </span>
+          </div>
+          <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
+            <span className="flex items-center">
+              <Clock className="w-3 h-3 mr-2" />
+              Quality Education
+            </span>
             <button 
               onClick={openVideoModal}
-              className="flex items-center text-white/80 hover:text-white transition-colors duration-300 group text-nowrap"
+              className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group"
             >
-              <Play className="w-2 h-2 xs:w-3 xs:h-3 mr-1 group-hover:scale-110 transition-transform" />
+              <Play className="w-3 h-3 mr-2 group-hover:scale-110 transition-transform" />
               Virtual Tour
             </button>
-          </>
-        ) : (
-          <>
-            <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
-              <span className="flex items-center">
-                <BookOpen className="w-3 h-3 mr-2" />
-                Matungulu, Machakos
-              </span>
-              <span className="flex items-center">
-                <Trophy className="w-3 h-3 mr-2" />
-                Public Secondary School
-              </span>
-            </div>
-            <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
-              <span className="flex items-center">
-                <Clock className="w-3 h-3 mr-2" />
-                Quality Education
-              </span>
-              <button 
-                onClick={openVideoModal}
-                className="flex items-center text-white/80 hover:text-white transition-colors duration-300 group"
-              >
-                <Play className="w-3 h-3 mr-2 group-hover:scale-110 transition-transform" />
-                Virtual Tour
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Video Tour Modal - Mobile Responsive */}
-      {showVideoModal && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="relative w-full max-w-full sm:max-w-4xl md:max-w-5xl lg:max-w-6xl rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
-            {/* Modal Header */}
-            <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-r from-black/90 to-transparent p-2 sm:p-3 md:p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-lg 
-                  bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 flex items-center justify-center flex-shrink-0">
-                  <Play className="text-white w-3 h-3 sm:w-4 sm:h-4" />
-                </div>
-                <div className="overflow-hidden">
-                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Katwanyaa High School Tour</h4>
-                  <p className="text-white/60 text-[10px] sm:text-xs md:text-sm truncate">
-                    {schoolData?.name || 'Katwanyaa High School - Matungulu'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={closeVideoModal}
-                className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-black/50 text-white 
-                  hover:bg-black/70 transition-colors flex items-center justify-center 
-                  hover:scale-110 duration-300 flex-shrink-0"
-                aria-label="Close video"
-              >
-                <X className="w-3 h-3 sm:w-4 sm:h-4 md:w-6 md:h-6" />
-              </button>
-            </div>
-            
-            {/* Video Container */}
-            <div className="relative bg-black aspect-video">
-              {loading ? (
-                // Loading state
-                <div className="w-full h-full flex flex-col items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-white mb-2 sm:mb-4"></div>
-                  <p className="text-white text-sm sm:text-base">Loading video tour...</p>
-                </div>
-              ) : error ? (
-                // Error state
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
-                  <div className="text-3xl sm:text-4xl md:text-5xl text-red-500 mb-2 sm:mb-4">!</div>
-                  <p className="text-white text-center text-xs sm:text-sm md:text-base mb-2 sm:mb-4 px-2">{error}</p>
-                  <button
-                    onClick={retryVideoLoad}
-                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white 
-                      rounded-lg transition-colors text-xs sm:text-sm"
-                  >
-                    Retry Loading
-                  </button>
-                </div>
-              ) : schoolData?.videoType === 'youtube' && schoolData?.videoTour ? (
-                // YouTube Video
-                <iframe
-                  src={`https://www.youtube.com/embed/${extractYouTubeId(schoolData.videoTour)}?autoplay=1&rel=0&modestbranding=1&controls=1`}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title={`${schoolData.name} Virtual Tour`}
-                />
-              ) : schoolData?.videoType === 'file' && schoolData?.videoTour ? (
-                // Local MP4 Video
-                <div className="relative w-full h-full">
-                  <video
-                    src={schoolData.videoTour}
-                    className="w-full h-full"
-                    autoPlay
-                    controls
-                    title={`${schoolData.name} Virtual Tour`}
-                    poster={schoolData?.videoThumbnail}
-                    onLoadedData={() => console.log('Video loaded successfully')}
-                  >
-                    {/* Fallback message */}
-                    <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
-                      <div className="text-3xl sm:text-4xl md:text-5xl text-gray-400 mb-2 sm:mb-4">!</div>
-                      <p className="text-white text-center text-sm sm:text-base">
-                        Your browser does not support the video tag.
-                      </p>
-                    </div>
-                  </video>
-                </div>
-              ) : (
-                // No video available or no schoolData yet
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
-                  <div className="text-3xl sm:text-4xl md:text-5xl text-gray-400 mb-2 sm:mb-4">!</div>
-                  <p className="text-white text-center text-xs sm:text-sm md:text-base mb-2 sm:mb-4">
-                    {schoolData ? 'No video tour available' : 'Loading...'}
-                  </p>
-                  <p className="text-white/60 text-xs sm:text-sm text-center px-2">
-                    {schoolData 
-                      ? 'Please check back later for our virtual tour' 
-                      : 'Fetching video data...'
-                    }
-                  </p>
-                </div>
-              )}
-            </div>
-            
-            {/* Modal Footer - Darker */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-r from-transparent to-black/90 p-2 sm:p-3 md:p-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
-                <div className="text-white/80 text-xs sm:text-sm hidden sm:block truncate drop-shadow-md">
-                  {schoolData?.description?.substring(0, isMobile ? 50 : 100) + '...' || 'Experience Katwanyaa High School from anywhere in the world'}
-                </div>
-                <button
-                  onClick={handleContactClick}
-                  className="px-3 sm:px-4 md:px-6 lg:px-8 py-1.5 sm:py-2 md:py-3 
-                    text-xs sm:text-sm md:text-base bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 
-                    text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 
-                    disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-lg"
-                  disabled={navigationBlocked}
-                >
-                  {isMobile ? 'Learn More' : 'Get To Know Us More'}
-                </button>
-              </div>
-            </div>
           </div>
-        </div>
-      )}
-
-      {/* Navigation Blocker Overlay (temporary) */}
-      {navigationBlocked && (
-        <div className="absolute inset-0 z-40 pointer-events-none">
-          <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 
-            bg-black/70 text-white text-[10px] xs:text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
-            Navigation cooling period... {new Date().getSeconds() % 2 === 0 ? '▰▰▰▰▰' : '▰▰▱▱▱'}
-          </div>
-        </div>
+        </>
       )}
     </div>
+  </div>
   );
 };
 
