@@ -1231,9 +1231,8 @@ function AdmissionFeeBreakdownModal({
               </div>
             </div>
           </div>
-        </div>
-             
-            <div className="flex gap-3 w-full sm:w-auto mb-4">
+
+         <div className="flex gap-3 w-full sm:w-auto mb-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -1250,6 +1249,13 @@ function AdmissionFeeBreakdownModal({
                 {isEditMode ? 'Update Fees' : 'Save Fees'}
               </button>
             </div>
+
+
+
+
+        </div>
+             
+   
 
         {/* Footer Section */}
         <div className="border-t border-gray-200 p-6 bg-white ">
