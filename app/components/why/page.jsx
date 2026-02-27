@@ -35,7 +35,7 @@ const ModernSchoolLayout = () => {
       title: "Academic Excellence",
       gradient: "from-blue-500 to-cyan-500",
       description: "Consistently ranked among top-performing schools in Machakos County, Matungulu subcounty with impressive KCSE results year after year.",
-      metrics: "Top Machakos Extra County School "
+      metrics: "Top Machakos County School "
     },
     {
       title: "Holistic Development",

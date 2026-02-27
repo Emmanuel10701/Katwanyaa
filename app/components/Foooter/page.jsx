@@ -238,7 +238,7 @@ export default function ModernFooter() {
 
               {/* Description */}
               <p className="text-gray-300 text-sm sm:text-base font-normal leading-relaxed break-words max-w-prose">
-                A Extra County learning institution in Matungulu Machakos, dedicated to academic excellence, 
+                A County learning institution in Matungulu Machakos, dedicated to academic excellence, 
                 holistic development, and nurturing future leaders through quality education since 1990.
               </p>
 
