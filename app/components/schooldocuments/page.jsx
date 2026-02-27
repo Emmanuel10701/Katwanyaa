@@ -1257,7 +1257,6 @@ function AdmissionFeeBreakdownModal({
   </button>
 </div>
    
-
         {/* Footer Section */}
         <div className="border-t border-gray-200 p-6 bg-white ">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
