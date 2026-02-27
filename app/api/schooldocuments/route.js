@@ -524,34 +524,41 @@ export async function POST(req) {
     };
 
 
-    // Parse JSON fields
-    const feesDayDistributionJson = formData.get("feesDayDistributionJson");
-    const feesBoardingDistributionJson = formData.get("feesBoardingDistributionJson");
-    const admissionFeeDistribution = formData.get("admissionFeeDistribution");
+ // Parse JSON fields
+const feesDayDistributionJson = formData.get("feesDayDistributionJson");
+const feesBoardingDistributionJson = formData.get("feesBoardingDistributionJson");
+const admissionFeeDistribution = formData.get("admissionFeeDistribution");
 
-    if (feesDayDistributionJson) {
-      try {
-        updateData.feesDayDistributionJson = JSON.parse(feesDayDistributionJson);
-      } catch (e) {
-        console.error("❌ Error parsing feesDayDistributionJson:", e);
-      }
-    }
-    
-    if (feesBoardingDistributionJson) {
-      try {
-        updateData.feesBoardingDistributionJson = JSON.parse(feesBoardingDistributionJson);
-      } catch (e) {
-        console.error("❌ Error parsing feesBoardingDistributionJson:", e);
-      }
-    }
-    
-    if (admissionFeeDistribution) {
-      try {
-        updateData.admissionFeeDistribution = JSON.parse(admissionFeeDistribution);
-      } catch (e) {
-        console.error("❌ Error parsing admissionFeeDistribution:", e);
-      }
-    }
+if (feesDayDistributionJson) {
+  try {
+    // Make sure to properly parse the JSON string
+    const parsed = JSON.parse(feesDayDistributionJson);
+    updateData.feesDayDistributionJson = parsed;
+    console.log('✅ Parsed feesDayDistributionJson:', parsed);
+  } catch (e) {
+    console.error("❌ Error parsing feesDayDistributionJson:", e);
+  }
+}
+
+if (feesBoardingDistributionJson) {
+  try {
+    const parsed = JSON.parse(feesBoardingDistributionJson);
+    updateData.feesBoardingDistributionJson = parsed;
+    console.log('✅ Parsed feesBoardingDistributionJson:', parsed);
+  } catch (e) {
+    console.error("❌ Error parsing feesBoardingDistributionJson:", e);
+  }
+}
+
+if (admissionFeeDistribution) {
+  try {
+    const parsed = JSON.parse(admissionFeeDistribution);
+    updateData.admissionFeeDistribution = parsed;
+    console.log('✅ Parsed admissionFeeDistribution:', parsed);
+  } catch (e) {
+    console.error("❌ Error parsing admissionFeeDistribution:", e);
+  }
+}
 
     // Process all fields (documents + exams)
     for (const field of allFields) {

@@ -2770,7 +2770,77 @@ const handleSubmitAfterReview = async () => {
     
     const data = new FormData();
     
-    // ... (your existing form data code remains exactly the same) ...
+    // Append files and their metadata
+    Object.keys(formData).forEach(key => {
+      const fileData = formData[key];
+      if (!fileData || fileData.markedForDeletion) return;
+      
+      if (fileData.file instanceof File) {
+        // New file upload
+        data.append(key, fileData.file);
+        
+        // Append metadata for exam results
+        if (key.includes('Results')) {
+          if (fileData.year) data.append(key.replace('Pdf', 'Year'), fileData.year);
+          if (fileData.term) data.append(key.replace('Pdf', 'Term'), fileData.term);
+          if (fileData.description) data.append(key.replace('Pdf', 'Description'), fileData.description);
+        }
+      }
+    });
+    
+    // IMPORTANT: Append fee breakdowns as JSON strings
+    if (feeBreakdowns.feesDay && feeBreakdowns.feesDay.length > 0) {
+      data.append('feesDayDistributionJson', JSON.stringify(feeBreakdowns.feesDay));
+      console.log('✅ Appending feesDayDistributionJson:', feeBreakdowns.feesDay);
+    }
+    
+    if (feeBreakdowns.feesBoarding && feeBreakdowns.feesBoarding.length > 0) {
+      data.append('feesBoardingDistributionJson', JSON.stringify(feeBreakdowns.feesBoarding));
+      console.log('✅ Appending feesBoardingDistributionJson:', feeBreakdowns.feesBoarding);
+    }
+    
+    if (feeBreakdowns.admissionFee && feeBreakdowns.admissionFee.length > 0) {
+      data.append('admissionFeeDistribution', JSON.stringify(feeBreakdowns.admissionFee));
+      console.log('✅ Appending admissionFeeDistribution:', feeBreakdowns.admissionFee);
+    }
+    
+    // Append year/term/description for fee documents
+    if (formData.feesDayDistributionPdf?.year) {
+      data.append('feesDayYear', formData.feesDayDistributionPdf.year);
+    }
+    if (formData.feesDayDistributionPdf?.term) {
+      data.append('feesDayTerm', formData.feesDayDistributionPdf.term);
+    }
+    if (formData.feesDayDistributionPdf?.description) {
+      data.append('feesDayDescription', formData.feesDayDistributionPdf.description);
+    }
+    
+    if (formData.feesBoardingDistributionPdf?.year) {
+      data.append('feesBoardingYear', formData.feesBoardingDistributionPdf.year);
+    }
+    if (formData.feesBoardingDistributionPdf?.term) {
+      data.append('feesBoardingTerm', formData.feesBoardingDistributionPdf.term);
+    }
+    if (formData.feesBoardingDistributionPdf?.description) {
+      data.append('feesBoardingDescription', formData.feesBoardingDistributionPdf.description);
+    }
+    
+    if (formData.admissionFeePdf?.year) {
+      data.append('admissionFeeYear', formData.admissionFeePdf.year);
+    }
+    if (formData.admissionFeePdf?.term) {
+      data.append('admissionFeeTerm', formData.admissionFeePdf.term);
+    }
+    if (formData.admissionFeePdf?.description) {
+      data.append('admissionFeeDescription', formData.admissionFeePdf.description);
+    }
+    
+    // Append exam metadata
+    Object.keys(examMetadata).forEach(key => {
+      if (examMetadata[key]) {
+        data.append(key, examMetadata[key]);
+      }
+    });
     
     // Send request with authentication
     const response = await fetch('/api/schooldocuments', {
@@ -2826,6 +2896,7 @@ const handleSubmitAfterReview = async () => {
     setActionLoading(false);
   }
 };
+
 
   // FIXED: Handle file change properly for both new and existing files
   const handleFileChange = (field, file, year, description, term) => {
