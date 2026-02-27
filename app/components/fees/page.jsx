@@ -3283,12 +3283,14 @@ if (loading && view === 'fees' && schoolFees.length === 0) {
   >
     {uploading ? (
       <>
-        <CircularProgress size={16} className="text-white" />
+        <CircularProgress size={16} className="text-white"   style={{ color: 'white' }}
+ />
         <span className="text-white/90">Processing...</span>
       </>
     ) : validationLoading ? (
       <>
-        <CircularProgress size={16} className="text-white" />
+        <CircularProgress size={16} className="text-white"   style={{ color: 'white' }}
+ />
         <span className="text-white/90">Checking...</span>
       </>
     ) : (
