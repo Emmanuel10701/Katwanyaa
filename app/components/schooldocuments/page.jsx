@@ -1232,29 +1232,31 @@ function AdmissionFeeBreakdownModal({
             </div>
           </div>
 
-         <div className="flex gap-3 w-full sm:w-auto mb-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition duration-200 font-bold w-full sm:w-auto"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={categories.length === 0}
-                className="px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition duration-200 font-bold shadow disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
-              >
-                {isEditMode ? 'Update Fees' : 'Save Fees'}
-              </button>
-            </div>
-
+   
 
 
 
         </div>
              
+
+
+<div className="flex gap-3 w-full sm:w-auto">
+  <button
+    type="button"
+    onClick={onClose}
+    className="px-5 py-2 border border-gray-200 text-gray-600 rounded-lg hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 font-medium text-sm tracking-wide w-full sm:w-auto"
+  >
+    Cancel
+  </button>
+  <button
+    type="button"
+    onClick={handleSave}
+    disabled={categories.length === 0}
+    className="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 hover:shadow-md transition-all duration-200 font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+  >
+    {isEditMode ? 'Update Fees' : 'Save Fees'}
+  </button>
+</div>
    
 
         {/* Footer Section */}
