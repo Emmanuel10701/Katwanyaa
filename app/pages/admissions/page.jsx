@@ -927,15 +927,20 @@ const AdmissionPathCard = ({ path, onApply, index }) => {
           {path.description}
         </p>
 
-        {/* Features: Compact on Mobile */}
-        <div className="grid grid-cols-1 gap-2 md:gap-3 mb-8">
-          {path.features.slice(0, 3).map((feature, idx) => (
-            <div key={idx} className="flex items-center gap-3 text-md md:text-sm text-slate-700   bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <IoCheckmarkCircle className={`text-${themeColor}-500 text-sm shrink-0`} />
-              <span className="truncate">{feature}</span>
-            </div>
-          ))}
-        </div>
+    {/* Features: Compact & Grid-optimized for Mobile */}
+<div className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 mb-6">
+  {path.features.slice(0, isMobile ? 4 : 3).map((feature, idx) => (
+    <div 
+      key={idx} 
+      className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-slate-50 rounded-lg md:rounded-xl border border-slate-100"
+    >
+      <IoCheckmarkCircle className={`text-${themeColor}-500 text-[10px] md:text-sm shrink-0`} />
+      <span className="text-[10px] md:text-sm text-slate-700 font-bold md:font-medium truncate tracking-tight">
+        {feature}
+      </span>
+    </div>
+  ))}
+</div>
 
         {/* 3. Footer Action */}
         <div className="mt-auto pt-6 border-t border-slate-100 flex flex-col gap-4">
