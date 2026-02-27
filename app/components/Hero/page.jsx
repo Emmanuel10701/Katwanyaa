@@ -298,13 +298,13 @@ return (
         />
         
         {/* PRIMARY GRADIENT - Main darkening effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-black/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-black/75" />
         
         {/* SECONDARY GRADIENT - Extra darkness at bottom only */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-transparent" />
         
         {/* TOP VISIBILITY ENHANCER - Keeps top portion brighter */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30" />
         
         {/* CONTENT SPOTLIGHT - Radial gradient to highlight center */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-transparent" />
@@ -316,7 +316,7 @@ return (
         <div className="absolute inset-0 shadow-[inset_0_-150px_100px_-50px_rgba(0,0,0,0.8),inset_150px_0_100px_-50px_rgba(0,0,0,0.3),inset_-150px_0_100px_-50px_rgba(0,0,0,0.3)]" />
         
         {/* BOTTOM FADE - Extra dark at very bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
       </div>
     ))}
 
