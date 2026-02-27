@@ -595,8 +595,12 @@ export default function DashboardOverview() {
   const [admissionStats, setAdmissionStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [growthMetrics, setGrowthMetrics] = useState({});
-  const [admissionGrowth, setAdmissionGrowth] = useState({});
+const [growthMetrics, setGrowthMetrics] = useState({
+  guidanceGrowth: 0,
+  newsGrowth: 0,
+  galleryGrowth: 0
+});
+const [admissionGrowth, setAdmissionGrowth] = useState({});
   const [showQuickTour, setShowQuickTour] = useState(false);
   const [schoolVideo, setSchoolVideo] = useState(null);
   
@@ -783,6 +787,7 @@ export default function DashboardOverview() {
       const gallery = galleryRes.status === 'fulfilled' ? await galleryRes.value.json() : { galleries: [] };
       const guidance = guidanceRes.status === 'fulfilled' ? await guidanceRes.value.json() : { events: [] };
 // Process news - FIXED VERSION
+// Process news - FIXED VERSION
 let newsArticles = [];
 if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
   try {
@@ -812,7 +817,10 @@ if (newsRes.status === 'fulfilled' && newsRes.value.ok) {
 } else {
   console.warn('⚠️ News fetch failed or returned non-OK status');
   newsArticles = [];
-}      const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
+}
+
+
+     const schoolInfo = schoolInfoRes.status === 'fulfilled' ? await schoolInfoRes.value.json() : { school: {} };
       const admins = adminsRes.status === 'fulfilled' ? await adminsRes.value.json() : { users: [] };
       const admissions = admissionsRes.status === 'fulfilled' ? await admissionsRes.value.json() : { applications: [] };
       const resources = resourcesRes.status === 'fulfilled' ? await resourcesRes.value.json() : { resources: [] };
@@ -1045,30 +1053,36 @@ totalNews: newsArticles.length || 0,
 
 
 
+// ========== CALCULATE GROWTH METRICS ==========
+// Calculate month-over-month growth for various metrics
+const currentMonthApplications = countRecordsByMonth(applications, 0);
+const previousMonthApplications = countRecordsByMonth(applications, 1);
+const applicationGrowth = calculateMonthOverMonthGrowth(currentMonthApplications, previousMonthApplications);
 
-            // ========== CALCULATE GROWTH METRICS ==========
-      // Calculate month-over-month growth for various metrics
-      const currentMonthApplications = countRecordsByMonth(applications, 0);
-      const previousMonthApplications = countRecordsByMonth(applications, 1);
-      const applicationGrowth = calculateMonthOverMonthGrowth(currentMonthApplications, previousMonthApplications);
+// Calculate guidance growth with safe defaults
+const guidanceEvents = guidance.events || guidance.sessions || [];
+const currentMonthGuidance = countRecordsByMonth(guidanceEvents, 0);
+const previousMonthGuidance = countRecordsByMonth(guidanceEvents, 1);
+const guidanceGrowth = calculateMonthOverMonthGrowth(currentMonthGuidance, previousMonthGuidance);
 
-      const currentMonthGuidance = countRecordsByMonth(guidance.events || [], 0);
-      const previousMonthGuidance = countRecordsByMonth(guidance.events || [], 1);
-      const guidanceGrowth = calculateMonthOverMonthGrowth(currentMonthGuidance, previousMonthGuidance);
+// Calculate news growth with safe defaults
+const newsItems = newsArticles || [];
+const currentMonthNews = countRecordsByMonth(newsItems, 0);
+const previousMonthNews = countRecordsByMonth(newsItems, 1);
+const newsGrowth = calculateMonthOverMonthGrowth(currentMonthNews, previousMonthNews);
 
-      const currentMonthNews = countRecordsByMonth(news.news || [], 0);
-      const previousMonthNews = countRecordsByMonth(news.news || [], 1);
-      const newsGrowth = calculateMonthOverMonthGrowth(currentMonthNews, previousMonthNews);
+// Calculate gallery growth with safe defaults
+const galleryItems = gallery.galleries || gallery.items || [];
+const currentMonthGallery = countRecordsByMonth(galleryItems, 0);
+const previousMonthGallery = countRecordsByMonth(galleryItems, 1);
+const galleryGrowth = calculateMonthOverMonthGrowth(currentMonthGallery, previousMonthGallery);
 
-      const currentMonthGallery = countRecordsByMonth(gallery.galleries || [], 0);
-      const previousMonthGallery = countRecordsByMonth(gallery.galleries || [], 1);
-      const galleryGrowth = calculateMonthOverMonthGrowth(currentMonthGallery, previousMonthGallery);
-
-      setGrowthMetrics({
-        guidanceGrowth,
-        newsGrowth,
-        galleryGrowth
-      });
+// Set growth metrics with proper fallback values
+setGrowthMetrics({
+  guidanceGrowth: isNaN(guidanceGrowth) ? 0 : (guidanceGrowth || 0),
+  newsGrowth: isNaN(newsGrowth) ? 0 : (newsGrowth || 0),
+  galleryGrowth: isNaN(galleryGrowth) ? 0 : (galleryGrowth || 0)
+});
 
       setAdmissionGrowth({
         monthlyGrowth: applicationGrowth
@@ -1281,71 +1295,165 @@ totalNews: newsArticles.length || 0,
     )
   );
   
-  // StatCard Component
-  const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) => {
-    const isPositive = trend === 'up' || change > 0;
-    
-    const colorMap = {
-      blue: 'from-blue-500/10 to-blue-500/5 text-blue-600 border-blue-100',
-      green: 'from-emerald-500/10 to-emerald-500/5 text-emerald-600 border-emerald-100',
-      red: 'from-rose-500/10 to-rose-500/5 text-rose-600 border-rose-100',
-      purple: 'from-purple-500/10 to-purple-500/5 text-purple-600 border-purple-100',
-      orange: 'from-orange-500/10 to-orange-500/5 text-orange-600 border-orange-100',
-      yellow: 'from-yellow-500/10 to-yellow-500/5 text-yellow-600 border-yellow-100',
-      indigo: 'from-indigo-500/10 to-indigo-500/5 text-indigo-600 border-indigo-100',
-      teal: 'from-teal-500/10 to-teal-500/5 text-teal-600 border-teal-100'
-    };
-    
-    const selectedColor = colorMap[color] || colorMap.blue;
-    
-    return (
-      <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hove overflow-hidden">
-        
-        {/* Background Decorative Glow */}
-        <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${selectedColor} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity`} />
-        
-        <div className="flex justify-between items-start relative z-10">
-          <div className="space-y-3">
-            {/* Label Section */}
-            <div>
-              <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
-                {label}
-              </span>
-              <h3 className="text-3xl font-black text-slate-900 tracking-tight mt-1">
-                {value.toLocaleString()}
-              </h3>
-            </div>
-            
-            {/* Change & Subtitle Section */}
-            <div className="flex flex-col gap-1.5">
-              {change !== undefined && (
-                <div className={`inline-flex items-center w-fit gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border ${
-                  isPositive 
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                    : 'bg-rose-50 text-rose-600 border-rose-100'
-                }`}>
-                  {isPositive ? <FiTrendingUp /> : <FiTrendingDown />}
-                  <span>{change > 0 ? '+' : ''}{change}%</span>
-                </div>
-              )}
-              
-              {subtitle && (
-                <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                  <span className="h-1 w-1 rounded-full bg-slate-300" />
-                  {subtitle}
-                </span>
-              )}
-            </div>
+// StatCard Component
+const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) => {
+  // Safely handle change value - ensure it's a number and not NaN
+  const safeChange = typeof change === 'number' && !isNaN(change) ? change : 0;
+  const isPositive = trend === 'up' || safeChange > 0;
+  
+  // Safely handle value - ensure it's a number for toLocaleString
+  const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+  
+  const colorMap = {
+    blue: {
+      gradient: 'from-blue-500/10 to-blue-500/5',
+      text: 'text-blue-600',
+      border: 'border-blue-100',
+      iconBg: 'bg-blue-50',
+      iconBorder: 'border-blue-100',
+      iconText: 'text-blue-600'
+    },
+    green: {
+      gradient: 'from-emerald-500/10 to-emerald-500/5',
+      text: 'text-emerald-600',
+      border: 'border-emerald-100',
+      iconBg: 'bg-emerald-50',
+      iconBorder: 'border-emerald-100',
+      iconText: 'text-emerald-600'
+    },
+    red: {
+      gradient: 'from-rose-500/10 to-rose-500/5',
+      text: 'text-rose-600',
+      border: 'border-rose-100',
+      iconBg: 'bg-rose-50',
+      iconBorder: 'border-rose-100',
+      iconText: 'text-rose-600'
+    },
+    purple: {
+      gradient: 'from-purple-500/10 to-purple-500/5',
+      text: 'text-purple-600',
+      border: 'border-purple-100',
+      iconBg: 'bg-purple-50',
+      iconBorder: 'border-purple-100',
+      iconText: 'text-purple-600'
+    },
+    orange: {
+      gradient: 'from-orange-500/10 to-orange-500/5',
+      text: 'text-orange-600',
+      border: 'border-orange-100',
+      iconBg: 'bg-orange-50',
+      iconBorder: 'border-orange-100',
+      iconText: 'text-orange-600'
+    },
+    yellow: {
+      gradient: 'from-yellow-500/10 to-yellow-500/5',
+      text: 'text-yellow-600',
+      border: 'border-yellow-100',
+      iconBg: 'bg-yellow-50',
+      iconBorder: 'border-yellow-100',
+      iconText: 'text-yellow-600'
+    },
+    indigo: {
+      gradient: 'from-indigo-500/10 to-indigo-500/5',
+      text: 'text-indigo-600',
+      border: 'border-indigo-100',
+      iconBg: 'bg-indigo-50',
+      iconBorder: 'border-indigo-100',
+      iconText: 'text-indigo-600'
+    },
+    teal: {
+      gradient: 'from-teal-500/10 to-teal-500/5',
+      text: 'text-teal-600',
+      border: 'border-teal-100',
+      iconBg: 'bg-teal-50',
+      iconBorder: 'border-teal-100',
+      iconText: 'text-teal-600'
+    },
+    pink: {
+      gradient: 'from-pink-500/10 to-pink-500/5',
+      text: 'text-pink-600',
+      border: 'border-pink-100',
+      iconBg: 'bg-pink-50',
+      iconBorder: 'border-pink-100',
+      iconText: 'text-pink-600'
+    },
+    amber: {
+      gradient: 'from-amber-500/10 to-amber-500/5',
+      text: 'text-amber-600',
+      border: 'border-amber-100',
+      iconBg: 'bg-amber-50',
+      iconBorder: 'border-amber-100',
+      iconText: 'text-amber-600'
+    }
+  };
+  
+  const selectedColorScheme = colorMap[color] || colorMap.blue;
+  
+  // Format the change display
+  const formatChange = () => {
+    if (safeChange === 0) return '0%';
+    return `${safeChange > 0 ? '+' : ''}${safeChange.toFixed(1)}%`;
+  };
+  
+  return (
+    <div className="group relative bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:scale-[1.02] overflow-hidden">
+      
+      {/* Background Decorative Glow */}
+      <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full bg-gradient-to-br ${selectedColorScheme.gradient} blur-2xl opacity-20 group-hover:opacity-40 transition-opacity`} />
+      
+      <div className="flex justify-between items-start relative z-10">
+        <div className="space-y-3">
+          {/* Label Section */}
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
+              {label}
+            </span>
+            <h3 className="text-3xl font-black text-slate-900 tracking-tight mt-1">
+              {safeValue.toLocaleString()}
+            </h3>
           </div>
           
-          {/* Modern Icon Container */}
-          <div className={`p-4 rounded-2xl bg-gradient-to-br border shadow-sm ${selectedColor}`}>
-            <Icon className="text-2xl" />
+          {/* Change & Subtitle Section */}
+          <div className="flex flex-col gap-1.5">
+            {change !== undefined && (
+              <div className={`inline-flex items-center w-fit gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border ${
+                isPositive 
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                  : 'bg-rose-50 text-rose-600 border-rose-100'
+              }`}>
+                {isPositive ? (
+                  <FiTrendingUp className="w-3.5 h-3.5" />
+                ) : (
+                  <FiTrendingDown className="w-3.5 h-3.5" />
+                )}
+                <span className="tabular-nums">{formatChange()}</span>
+              </div>
+            )}
+            
+            {subtitle && (
+              <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                {subtitle}
+              </span>
+            )}
           </div>
         </div>
+        
+        {/* Modern Icon Container */}
+        <div className={`
+          p-4 rounded-2xl bg-gradient-to-br border shadow-sm transition-all duration-300 
+          group-hover:scale-110 group-hover:rotate-3
+          ${selectedColorScheme.iconBg} ${selectedColorScheme.iconBorder} ${selectedColorScheme.iconText}
+        `}>
+          <Icon className="text-2xl" />
+        </div>
       </div>
-    );
-  };
+      
+      {/* Subtle Bottom Border Accent */}
+      <div className={`absolute bottom-0 left-6 right-6 h-0.5 rounded-full bg-gradient-to-r from-transparent ${selectedColorScheme.text} to-transparent opacity-0 group-hover:opacity-30 transition-opacity`} />
+    </div>
+  );
+};
   
   const PerformanceBar = ({ label, value, change, color, description }) => (
     <div className="flex items-center justify-between py-3">
