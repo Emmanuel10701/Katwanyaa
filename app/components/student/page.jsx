@@ -3127,36 +3127,36 @@ const downloadExcelTemplate = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <button
-                          onClick={() => setFile(null)}
-                          className="p-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
-                        >
-                          <FiX className="text-xl" />
-                        </button>
-                        <button
-                          onClick={handleUploadWithStrategy}
-                          disabled={uploading || validationLoading || !uploadStrategy}
-                          className="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-xl font-bold flex items-center gap-3 text-base shadow-xl disabled:opacity-50 hover:shadow-2xl transition-all duration-300"
-                        >
-                          {uploading ? (
-                            <>
-                              <CircularProgress size={18} className="text-white" />
-                              <span>Processing...</span>
-                            </>
-                          ) : validationLoading ? (
-                            <>
-                              <CircularProgress size={18} className="text-white" />
-                              <span>Checking...</span>
-                            </>
-                          ) : (
-                            <>
-                              <FiUpload className="text-base" />
-                              <span>Upload Now</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+                 <div className="flex items-center gap-3">
+  <button
+    onClick={() => setFile(null)}
+    className="p-2.5 rounded-xl text-gray-600 hover:bg-gray-100 transition-colors"
+  >
+    <FiX className="text-lg" />
+  </button>
+  <button
+    onClick={handleUploadWithStrategy}
+    disabled={uploading || validationLoading || !uploadStrategy}
+    className="px-5 py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white rounded-xl font-bold flex items-center gap-2.5 text-sm shadow-lg disabled:opacity-70 hover:shadow-xl transition-all duration-300"
+  >
+    {uploading ? (
+      <>
+        <CircularProgress size={16} className="text-white" />
+        <span className="text-white/90">Processing...</span>
+      </>
+    ) : validationLoading ? (
+      <>
+        <CircularProgress size={16} className="text-white" />
+        <span className="text-white/90">Checking...</span>
+      </>
+    ) : (
+      <>
+        <FiUpload className="text-sm" />
+        <span>Upload Now</span>
+      </>
+    )}
+  </button>
+</div>
                     </div>
                   </div>
                 )}
