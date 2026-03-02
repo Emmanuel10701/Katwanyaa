@@ -646,7 +646,6 @@ const ModernHero = () => {
   );
 };
 
-// Helper functions for dynamic color classes
 const getHighlightColorClass = (color) => {
   switch(color) {
     case 'blue': return 'text-blue-400';
