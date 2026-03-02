@@ -281,50 +281,44 @@ const ModernHero = () => {
 
   const slide = heroSlides[currentSlide];
   const IconComponent = slide.icon;
-return (
-  <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
-    {/* Background Image Layers with Enhanced Dark Overlay - STRONGER TOP VISIBILITY, DARKER BOTTOM */}
-    {heroSlides.map((s, idx) => (
-      <div
-        key={idx}
-        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-          idx === currentSlide ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
-          style={{ backgroundImage: `url(${s.image})` }}
-        />
-        
-        {/* PRIMARY GRADIENT - Main darkening effect */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/60 to-black/75" />
-        
-        {/* SECONDARY GRADIENT - Extra darkness at bottom only */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-transparent" />
-        
-        {/* TOP VISIBILITY ENHANCER - Keeps top portion brighter */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/30" />
-        
-        {/* CONTENT SPOTLIGHT - Radial gradient to highlight center */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-transparent" />
-        
-        {/* Color overlay based on slide theme - very subtle */}
-        <div className={`absolute inset-0 opacity-15 mix-blend-overlay ${s.background}`} />
-        
-        {/* EDGE VIGNETTE - Darkens corners */}
-        <div className="absolute inset-0 shadow-[inset_0_-150px_100px_-50px_rgba(0,0,0,0.8),inset_150px_0_100px_-50px_rgba(0,0,0,0.3),inset_-150px_0_100px_-50px_rgba(0,0,0,0.3)]" />
-        
-        {/* BOTTOM FADE - Extra dark at very bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
-      </div>
-    ))}
 
-    {/* Main Content Area - Pushed higher for better visibility */}
-    <div className="relative z-20 h-full flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 lg:px-12 text-center">
-      <div className={`w-full max-w-4xl transition-all duration-500 transform ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'} px-2 mt-[-8%] sm:mt-[-5%]`}>
-        
-        {/* Tagline - with glow effect */}
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
+      {/* Background Image Layers with Enhanced Dark Overlay - STRONGER TOP VISIBILITY, DARKER BOTTOM */}
+      {heroSlides.map((s, idx) => (
+        <div
+          key={idx}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            idx === currentSlide ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
+            style={{ backgroundImage: `url(${s.image})` }}
+          />
+          
+          {/* PRIMARY GRADIENT - Evenly distributed overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/35 to-black/45" />
+          
+          {/* SECONDARY GRADIENT - Subtle radial enhancement */}
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 100%)'
+          }} />
+          
+          {/* MODERN VIGNETTE - Soft edge darkening */}
+          <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
+          
+          {/* Color overlay - very subtle */}
+          <div className={`absolute inset-0 opacity-5 mix-blend-overlay ${s.background}`} />
+          
+          {/* Bottom fade - extra dark at very bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none" />
+        </div>
+      ))}
+
+      {/* Main Content Area - Pushed higher for better visibility */}
+      <div className="relative z-20 h-full flex flex-col items-center justify-center px-3 sm:px-4 md:px-6 lg:px-12 text-center">
         <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4 px-2">
           <div className="h-[1px] w-4 sm:w-6 md:w-8 bg-white/60" />
 
@@ -432,6 +426,7 @@ return (
             onClick={handleSlideButtonClick}
             disabled={navigationBlocked}
             className="
+              group
               px-4 sm:px-6
               py-2 sm:py-3
               bg-white text-black
@@ -452,6 +447,7 @@ return (
           <button
             onClick={openVideoModal}
             className="
+              group
               px-4 sm:px-6
               py-2 sm:py-3
               bg-white/25
@@ -472,119 +468,181 @@ return (
           </button>
         </div>
       </div>
-    </div>
 
-    {/* Modern Controls - Mobile Responsive Position */}
-    <div className={`absolute z-30 flex space-x-3 sm:space-y-3 sm:flex-col ${isMobile ? 'bottom-4 right-4 flex-row' : 'bottom-10 right-8 flex-col'}`}>
-      <button 
-        onClick={prevSlide}
-        className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
-          transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
-          ${isMobile ? 'p-2' : 'p-3'}`}
-      >
-        <ChevronLeft className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-      </button>
-      <button 
-        onClick={nextSlide}
-        className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
-          transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
-          ${isMobile ? 'p-2' : 'p-3'}`}
-      >
-        <ChevronRight className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
-      </button>
-    </div>
-
-    {/* Progress Indicators - Mobile Responsive */}
-    {!isMobile && (
-      <div className="absolute top-1/2 right-4 sm:right-6 md:right-8 -translate-y-1/2 z-30 hidden sm:flex flex-col space-y-4 sm:space-y-6">
-        {heroSlides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => handleSlideChange(index)}
-            className="group flex items-center justify-end"
-          >
-            <span className={`mr-2 sm:mr-3 text-[8px] sm:text-[10px] font-mono transition-all ${currentSlide === index ? 'text-white drop-shadow-[0_0_5px_white]' : 'text-white/30 opacity-0 group-hover:opacity-100'}`}>
-              0{index + 1}
-            </span>
-            <div className={`w-[1px] sm:w-[2px] transition-all duration-300 rounded-full ${currentSlide === index ? `h-6 sm:h-8 ${getProgressColorClass(heroSlides[index].highlightColor)} shadow-[0_0_10px_currentColor]` : 'h-2 sm:h-3 bg-white/20 group-hover:bg-white/40'}`} />
-          </button>
-        ))}
+      {/* Modern Controls - Mobile Responsive Position */}
+      <div className={`absolute z-30 flex space-x-3 sm:space-y-3 sm:flex-col ${isMobile ? 'bottom-4 right-4 flex-row' : 'bottom-10 right-8 flex-col'}`}>
+        <button 
+          onClick={prevSlide}
+          className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
+            transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
+            ${isMobile ? 'p-2' : 'p-3'}`}
+        >
+          <ChevronLeft className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+        </button>
+        <button 
+          onClick={nextSlide}
+          className={`rounded-full border border-white/30 text-white hover:bg-white hover:text-black 
+            transition-all group backdrop-blur-md hover:scale-110 duration-300 bg-black/50 shadow-2xl
+            ${isMobile ? 'p-2' : 'p-3'}`}
+        >
+          <ChevronRight className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
+        </button>
       </div>
-    )}
 
-    {/* Mobile Progress Dots */}
-    {isMobile && (
-      <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
-        {heroSlides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => handleSlideChange(index)}
-            className="w-2 h-2 rounded-full transition-all duration-300 shadow-[0_0_5px_currentColor]"
-            style={{
-              backgroundColor: currentSlide === index 
-                ? getProgressColorValue(heroSlides[index].highlightColor)
-                : 'rgba(255, 255, 255, 0.3)'
-            }}
-          />
-        ))}
-      </div>
-    )}
+      {/* Progress Indicators - Mobile Responsive */}
+      {!isMobile && (
+        <div className="absolute top-1/2 right-4 sm:right-6 md:right-8 -translate-y-1/2 z-30 hidden sm:flex flex-col space-y-4 sm:space-y-6">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleSlideChange(index)}
+              className="group flex items-center justify-end"
+            >
+              <span className={`mr-2 sm:mr-3 text-[8px] sm:text-[10px] font-mono transition-all ${currentSlide === index ? 'text-white drop-shadow-[0_0_5px_white]' : 'text-white/30 opacity-0 group-hover:opacity-100'}`}>
+                0{index + 1}
+              </span>
+              <div className={`w-[1px] sm:w-[2px] transition-all duration-300 rounded-full ${currentSlide === index ? `h-6 sm:h-8 ${getProgressColorClass(heroSlides[index].highlightColor)} shadow-[0_0_10px_currentColor]` : 'h-2 sm:h-3 bg-white/20 group-hover:bg-white/40'}`} />
+            </button>
+          ))}
+        </div>
+      )}
 
-    {/* Bottom Info Strip - Much darker */}
-    <div className={`absolute bottom-0 left-0 w-full z-10 py-2 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 lg:px-12 
-      border-t border-white/15 bg-black/95 backdrop-blur-md 
-      ${isMobile ? 'flex flex-col items-center justify-center gap-1' : 'hidden md:flex items-center justify-between'} 
-      text-white/90 text-[8px] xs:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase font-semibold shadow-[0_-15px_30px_rgba(0,0,0,0.8)]`}>
-      
-      {isMobile ? (
-        <>
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center text-nowrap">
-              <BookOpen className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
-              Matungulu
-            </span>
-            <span className="flex items-center text-nowrap">
-              <Trophy className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
-              Public School
-            </span>
-          </div>
-          <button 
-            onClick={openVideoModal}
-            className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group text-nowrap"
-          >
-            <Play className="w-2 h-2 xs:w-3 xs:h-3 mr-1 group-hover:scale-110 transition-transform" />
-            Virtual Tour
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
-            <span className="flex items-center">
-              <BookOpen className="w-3 h-3 mr-2" />
-              Matungulu, Machakos
-            </span>
-            <span className="flex items-center">
-              <Trophy className="w-3 h-3 mr-2" />
-              Public Secondary School
-            </span>
-          </div>
-          <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
-            <span className="flex items-center">
-              <Clock className="w-3 h-3 mr-2" />
-              Quality Education
-            </span>
+      {/* Mobile Progress Dots */}
+      {isMobile && (
+        <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => handleSlideChange(index)}
+              className="w-2 h-2 rounded-full transition-all duration-300 shadow-[0_0_5px_currentColor]"
+              style={{
+                backgroundColor: currentSlide === index 
+                  ? getProgressColorValue(heroSlides[index].highlightColor)
+                  : 'rgba(255, 255, 255, 0.3)'
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Bottom Info Strip - Much darker */}
+      <div className={`absolute bottom-0 left-0 w-full z-10 py-2 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 lg:px-12 
+        border-t border-white/15 bg-black/95 backdrop-blur-md 
+        ${isMobile ? 'flex flex-col items-center justify-center gap-1' : 'hidden md:flex items-center justify-between'} 
+        text-white/90 text-[8px] xs:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase font-semibold shadow-[0_-15px_30px_rgba(0,0,0,0.8)]`}>
+        
+        {isMobile ? (
+          <>
+            <div className="flex items-center space-x-4">
+              <span className="flex items-center text-nowrap">
+                <BookOpen className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
+                Matungulu
+              </span>
+              <span className="flex items-center text-nowrap">
+                <Trophy className="w-2 h-2 xs:w-3 xs:h-3 mr-1" />
+                Public School
+              </span>
+            </div>
             <button 
               onClick={openVideoModal}
-              className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group"
+              className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group text-nowrap"
             >
-              <Play className="w-3 h-3 mr-2 group-hover:scale-110 transition-transform" />
+              <Play className="w-2 h-2 xs:w-3 xs:h-3 mr-1 group-hover:scale-110 transition-transform" />
               Virtual Tour
             </button>
+          </>
+        ) : (
+          <>
+            <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
+              <span className="flex items-center">
+                <BookOpen className="w-3 h-3 mr-2" />
+                Matungulu, Machakos
+              </span>
+              <span className="flex items-center">
+                <Trophy className="w-3 h-3 mr-2" />
+                Public Secondary School
+              </span>
+            </div>
+            <div className="flex space-x-4 md:space-x-6 lg:space-x-8">
+              <span className="flex items-center">
+                <Clock className="w-3 h-3 mr-2" />
+                Quality Education
+              </span>
+              <button 
+                onClick={openVideoModal}
+                className="flex items-center text-white/90 hover:text-white transition-colors duration-300 group"
+              >
+                <Play className="w-3 h-3 mr-2 group-hover:scale-110 transition-transform" />
+                Virtual Tour
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Video Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4">
+          <div className="relative w-full max-w-4xl bg-black/95 rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-white font-semibold text-lg">Virtual Tour - {schoolData?.name || 'Katwanyaa High School'}</h3>
+              <button 
+                onClick={closeVideoModal}
+                className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Modal Content */}
+            <div className="p-4">
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+                </div>
+              )}
+              
+              {error && (
+                <div className="text-center py-8">
+                  <p className="text-red-400 mb-4">Error loading video: {error}</p>
+                  <button 
+                    onClick={retryVideoLoad}
+                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+              
+              {!loading && !error && schoolData?.videoTour && (
+                <div className="aspect-video w-full">
+                  <iframe
+                    src={`https://www.youtube.com/embed/${extractYouTubeId(schoolData.videoTour)}?autoplay=1`}
+                    title="School Virtual Tour"
+                    className="w-full h-full rounded-lg"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              )}
+              
+              {!loading && !error && !schoolData?.videoTour && (
+                <div className="text-center py-12">
+                  <p className="text-white/70">No video tour available at the moment.</p>
+                  <button 
+                    onClick={handleContactClick}
+                    className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    Contact Us for More Info
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
-  </div>
   );
 };
 
@@ -597,7 +655,6 @@ const getHighlightColorClass = (color) => {
     default: return 'text-blue-400';
   }
 };
-
 
 const getBorderColorClass = (color) => {
   switch(color) {
