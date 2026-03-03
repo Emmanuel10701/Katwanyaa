@@ -285,13 +285,13 @@ const ModernHero = () => {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black font-sans">
       {/* Background Image Layers with Enhanced Dark Overlay - STRONGER TOP VISIBILITY, DARKER BOTTOM */}
-      {heroSlides.map((s, idx) => (
-        <div
-          key={idx}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            idx === currentSlide ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
+    {heroSlides.map((s, idx) => (
+  <div
+    key={idx}
+    className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+      idx === currentSlide ? 'opacity-100' : 'opacity-0'
+    }`}
+  >
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
@@ -355,7 +355,7 @@ const ModernHero = () => {
               key={i}
               className={`
                 ${i === slide.title.split(' ').length - 1 ? getHighlightColorClass(slide.highlightColor) : ""}
-                ${isMobile && word.length > 8 ? 'block' : ''}
+                ${isMobile && word.length > 8 ? 'block' : ""}
                 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]
               `}
             >
@@ -580,65 +580,130 @@ const ModernHero = () => {
         )}
       </div>
 
-      {/* Video Modal */}
-      {showVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-lg p-4">
-          <div className="relative w-full max-w-4xl bg-black/95 rounded-2xl border border-white/20 shadow-2xl overflow-hidden">
+   {showVideoModal && (
+        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="relative w-full max-w-full sm:max-w-4xl md:max-w-5xl lg:max-w-6xl rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-lg">Virtual Tour - {schoolData?.name || 'Katwanyaa High School'}</h3>
-              <button 
+            <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-r from-black/80 to-transparent p-2 sm:p-3 md:p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-lg sm:rounded-lg 
+                  bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 flex items-center justify-center flex-shrink-0">
+                  <Play className="text-white w-3 h-3 sm:w-4 sm:h-4" />
+                </div>
+                <div className="overflow-hidden">
+                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Mary Immculate Girls High School Tour</h4>
+                  <p className="text-white/60 text-[10px] sm:text-xs md:text-sm truncate">
+                    {schoolData?.name || 'Mary Immculate Girls High School - Mweiga, Nyeri'}
+                  </p>
+                </div>
+              </div>
+              <button
                 onClick={closeVideoModal}
-                className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-black/50 text-white 
+                  hover:bg-black/70 transition-colors flex items-center justify-center 
+                  hover:scale-110 duration-300 flex-shrink-0"
+                aria-label="Close video"
               >
-                <X className="w-5 h-5" />
+                <X className="w-3 h-3 sm:w-4 sm:h-4 md:w-6 md:h-6" />
               </button>
             </div>
             
-            {/* Modal Content */}
-            <div className="p-4">
-              {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+            {/* Video Container */}
+            <div className="relative bg-black aspect-video">
+              {loading ? (
+                // Loading state
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-white mb-2 sm:mb-4"></div>
+                  <p className="text-white text-sm sm:text-base">Loading video tour...</p>
                 </div>
-              )}
-              
-              {error && (
-                <div className="text-center py-8">
-                  <p className="text-red-400 mb-4">Error loading video: {error}</p>
-                  <button 
+              ) : error ? (
+                // Error state
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
+                  <div className="text-3xl sm:text-4xl md:text-5xl text-red-500 mb-2 sm:mb-4">!</div>
+                  <p className="text-white text-center text-xs sm:text-sm md:text-base mb-2 sm:mb-4 px-2">{error}</p>
+                  <button
                     onClick={retryVideoLoad}
-                    className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white 
+                      rounded-lg transition-colors text-xs sm:text-sm"
                   >
-                    Retry
+                    Retry Loading
                   </button>
                 </div>
-              )}
-              
-              {!loading && !error && schoolData?.videoTour && (
-                <div className="aspect-video w-full">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${extractYouTubeId(schoolData.videoTour)}?autoplay=1`}
-                    title="School Virtual Tour"
-                    className="w-full h-full rounded-lg"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              )}
-              
-              {!loading && !error && !schoolData?.videoTour && (
-                <div className="text-center py-12">
-                  <p className="text-white/70">No video tour available at the moment.</p>
-                  <button 
-                    onClick={handleContactClick}
-                    className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              ) : schoolData?.videoType === 'youtube' && schoolData?.videoTour ? (
+                // YouTube Video
+                <iframe
+                  src={`https://www.youtube.com/embed/${extractYouTubeId(schoolData.videoTour)}?autoplay=1&rel=0&modestbranding=1&controls=1`}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title={`${schoolData.name} Virtual Tour`}
+                />
+              ) : schoolData?.videoType === 'file' && schoolData?.videoTour ? (
+                // Local MP4 Video
+                <div className="relative w-full h-full">
+                  <video
+                    src={schoolData.videoTour}
+                    className="w-full h-full"
+                    autoPlay
+                    controls
+                    title={`${schoolData.name} Virtual Tour`}
+                    poster={schoolData?.videoThumbnail}
+                    onLoadedData={() => console.log('Video loaded successfully')}
                   >
-                    Contact Us for More Info
-                  </button>
+                    {/* Fallback message */}
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
+                      <div className="text-3xl sm:text-4xl md:text-5xl text-gray-400 mb-2 sm:mb-4">!</div>
+                      <p className="text-white text-center text-sm sm:text-base">
+                        Your browser does not support the video tag.
+                      </p>
+                    </div>
+                  </video>
+                </div>
+              ) : (
+                // No video available or no schoolData yet
+                <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-8">
+                  <div className="text-3xl sm:text-4xl md:text-5xl text-gray-400 mb-2 sm:mb-4">!</div>
+                  <p className="text-white text-center text-xs sm:text-sm md:text-base mb-2 sm:mb-4">
+                    {schoolData ? 'No video tour available' : 'Loading...'}
+                  </p>
+                  <p className="text-white/60 text-xs sm:text-sm text-center px-2">
+                    {schoolData 
+                      ? 'Please check back later for our virtual tour' 
+                      : 'Fetching video data...'
+                    }
+                  </p>
                 </div>
               )}
             </div>
+            
+            {/* Modal Footer */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-r from-transparent to-black/80 p-2 sm:p-3 md:p-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
+                <div className="text-white/80 text-xs sm:text-sm hidden sm:block truncate">
+                  {schoolData?.description?.substring(0, isMobile ? 50 : 100) + '...' || 'Experience Mary Immculate Girls High School from anywhere in the world'}
+                </div>
+                <button
+                  onClick={handleContactClick}
+                  className="px-3 sm:px-4 md:px-6 lg:px-8 py-1.5 sm:py-2 md:py-3 
+                    text-xs sm:text-sm md:text-base bg-gradient-to-br from-amber-900 via-orange-900 to-red-900 
+                    text-white font-medium rounded-lg hover:opacity-90 transition-all duration-300 
+                    disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  disabled={navigationBlocked}
+                >
+                  {isMobile ? 'Learn More' : 'Get To Know Us More'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Blocker Overlay (temporary) */}
+      {navigationBlocked && (
+        <div className="absolute inset-0 z-40 pointer-events-none">
+          <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 
+            bg-black/70 text-white text-[10px] xs:text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">
+            Navigation cooling period... {new Date().getSeconds() % 2 === 0 ? '▰▰▰▰▰' : '▰▰▱▱▱'}
           </div>
         </div>
       )}
