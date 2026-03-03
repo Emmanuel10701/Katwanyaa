@@ -32,7 +32,6 @@ import {
   FiCoffee,
   FiAward
 } from 'react-icons/fi';
-import CircularProgress from "@mui/material/CircularProgress";
 import { 
   IoNewspaperOutline,
   IoCalendarClearOutline,
