@@ -121,7 +121,12 @@ export default function ModernNavbar() {
       name: 'Contact', 
       href: '/pages/contact', 
       icon: FiMail 
-    }
+    },
+    { 
+      name: 'Fees', 
+      href: '/pages/fees', 
+      icon: FiGrid 
+    },
   ];
 
   const academicDropdownItems = [
