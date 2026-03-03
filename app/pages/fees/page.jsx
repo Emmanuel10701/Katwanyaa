@@ -32,6 +32,7 @@ import {
   FiCoffee,
   FiAward
 } from 'react-icons/fi';
+import CircularProgress from "@mui/material/CircularProgress";
 import { 
   IoNewspaperOutline,
   IoCalendarClearOutline,
@@ -473,18 +474,32 @@ export default function ModernFeesPage() {
                 </p>
               </div>
               
-              <button
-                onClick={refreshData}
-                disabled={refreshing}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-white hover:bg-blue-50 text-slate-950 font-black text-xs sm:text-sm uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-              >
-                {refreshing ? (
-                  <div className="w-3 h-3 border-2 border-slate-900/20 border-t-slate-900 rounded-full animate-spin" />
-                ) : (
-                  <FiRotateCw className="text-sm" />
-                )}
-                <span>{refreshing ? "Updating..." : "REFRESH"}</span>
-              </button>
+        <button
+  onClick={refreshData}
+  disabled={refreshing}
+  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 
+             px-5 py-3 sm:px-8 sm:py-4 
+             rounded-xl sm:rounded-2xl 
+             bg-white hover:bg-blue-50 
+             text-slate-950 font-black 
+             text-xs sm:text-sm 
+             uppercase tracking-widest 
+             transition-all active:scale-95 
+             disabled:opacity-50 disabled:cursor-not-allowed
+             shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+>
+  {refreshing && (
+    <CircularProgress 
+      size={18} 
+      thickness={5} 
+      sx={{ color: "#0f172a" }} 
+    />
+  )}
+  
+  <span>
+    {refreshing ? "Updating..." : "Refresh"}
+  </span>
+</button>
             </div>
           </div>
         </div>
