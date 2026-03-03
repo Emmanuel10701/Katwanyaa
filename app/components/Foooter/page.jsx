@@ -46,7 +46,7 @@ export default function ModernFooter() {
   const quickLinks = [
     { name: 'Home', href: '/', icon: FiHome },
     { name: 'About Us', href: '/pages/AboutUs', icon: FiUsers },
-    { name: 'Academics', href: '/pages/academics', icon: FiBook },
+    { name: 'Fees', href: '/pages/fees', icon: FiBook },
     { name: 'Admissions', href: '/pages/admissions', icon: FiUserCheck },
     { name: 'Gallery', href: '/pages/gallery', icon: FiImage },
     { name: 'News & Events', href: '/pages/eventsandnews', icon: FiCalendar },
