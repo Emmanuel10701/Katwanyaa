@@ -591,7 +591,7 @@ const ModernHero = () => {
                   <Play className="text-white w-3 h-3 sm:w-4 sm:h-4" />
                 </div>
                 <div className="overflow-hidden">
-                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Katz High School Virtual Tour</h4>
+                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Katz High School Tour</h4>
                   <p className="text-white/60 text-[10px] sm:text-xs md:text-sm truncate">
                     {schoolData?.name || 'Katwanyaa Senior School'} - {schoolData?.videoType === 'youtube' ? 'YouTube Video' : schoolData?.videoType === 'file' ? 'MP4 Video' : 'Loading...'}
                   </p>
