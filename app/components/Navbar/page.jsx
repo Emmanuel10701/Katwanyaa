@@ -16,6 +16,7 @@ import {
   FiBriefcase,
   FiChevronRight,
   FiLock,
+  FiDollarSign,
   FiGrid
 } from 'react-icons/fi';
 import Image from 'next/image';
@@ -125,7 +126,7 @@ export default function ModernNavbar() {
     { 
       name: 'Fees', 
       href: '/pages/fees', 
-      icon: FiGrid 
+      icon: FiDollarSign 
     },
   ];
 
