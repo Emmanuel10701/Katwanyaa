@@ -374,18 +374,27 @@ const ModernEventsNewsSection = () => {
           {/* Main Featured Card (LEFT SIDE) */}
           <div className="lg:col-span-8 flex flex-col bg-white rounded-xl sm:rounded-2xl md:rounded-3xl shadow-lg sm:shadow-xl border border-slate-100 overflow-hidden">
             
-            {/* Image Section */}
+            {/* Image Section - FIXED: Added support for all image formats */}
             <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80 2xl:h-96 overflow-hidden">
               {selectedTab === 'events' ? (
                 currentEvent ? (
                   <>
                     {currentEvent.image ? (
-                      <Image
+                      // Using img tag instead of Next.js Image for better format support
+                      <img
                         src={currentEvent.image} 
                         alt={currentEvent.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.parentElement.classList.add('bg-gradient-to-br', 'from-blue-500', 'to-purple-600');
+                          // Add fallback icon
+                          const fallback = document.createElement('div');
+                          fallback.className = 'absolute inset-0 flex items-center justify-center';
+                          fallback.innerHTML = '<svg class="text-white w-16 h-16 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15M9 11l3 3m0 0l3-3m-3 3V8" /></svg>';
+                          e.target.parentElement.appendChild(fallback);
+                        }}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -426,12 +435,21 @@ const ModernEventsNewsSection = () => {
                 currentNews ? (
                   <>
                     {currentNews.image ? (
-                      <Image
+                      // Using img tag instead of Next.js Image for better format support
+                      <img
                         src={currentNews.image} 
                         alt={currentNews.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 60vw, 50vw"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.parentElement.classList.add('bg-gradient-to-br', 'from-purple-500', 'to-pink-600');
+                          // Add fallback icon
+                          const fallback = document.createElement('div');
+                          fallback.className = 'absolute inset-0 flex items-center justify-center';
+                          fallback.innerHTML = '<svg class="text-white w-16 h-16 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15M9 11l3 3m0 0l3-3m-3 3V8" /></svg>';
+                          e.target.parentElement.appendChild(fallback);
+                        }}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
@@ -611,9 +629,9 @@ const ModernEventsNewsSection = () => {
             </div>
           </div>
 
-          {/* Sidebar Cards (RIGHT SIDE) */}
+          {/* Sidebar Cards (RIGHT SIDE) - FIXED: Endless loading skeleton when no data */}
           <div className="lg:col-span-4 space-y-3 sm:space-y-4 md:space-y-6 mt-4 sm:mt-5 md:mt-6 lg:mt-0">
-            {/* List Items */}
+            {/* List Items - Events Sidebar */}
             {selectedTab === 'events' ? (
               events.length > 0 ? (
                 events.map((event, index) => {
@@ -637,7 +655,17 @@ const ModernEventsNewsSection = () => {
                             <img
                               src={event.image} 
                               alt={event.title}
-                              className="w-full h-full object-cover "
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.parentElement.classList.add(colors.dark);
+                                // Add fallback icon
+                                const fallback = document.createElement('div');
+                                fallback.className = 'absolute inset-0 flex items-center justify-center text-white';
+                                fallback.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>';
+                                e.target.parentElement.appendChild(fallback);
+                              }}
                             />
                           ) : (
                             <div className={`absolute inset-0 ${colors.dark} flex items-center justify-center`}>
@@ -672,26 +700,44 @@ const ModernEventsNewsSection = () => {
                   );
                 })
               ) : (
-                <div className="w-full bg-gradient-to-br from-white to-purple-50/30 rounded-xl sm:rounded-2xl border border-purple-100 p-4 sm:p-6 md:p-8 text-center">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    <FiCalendar className="text-purple-400 text-xl sm:text-2xl md:text-3xl" />
+                // FIX: Endless Loading Skeleton - Shows continuously when no events
+                <div className="w-full space-y-3 sm:space-y-4 animate-pulse">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-full bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-slate-100">
+                      <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 rounded-lg sm:rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 animate-pulse" />
+                        <div className="flex-grow min-w-0 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="w-16 h-4 sm:w-20 sm:h-5 bg-slate-200 rounded-full animate-pulse" />
+                            <div className="w-12 h-3 bg-slate-100 rounded animate-pulse" />
+                          </div>
+                          <div className="w-3/4 h-5 sm:h-6 bg-slate-300 rounded animate-pulse" />
+                          <div className="w-1/2 h-3 sm:h-4 bg-slate-200 rounded animate-pulse" />
+                          <div className="w-20 h-3 sm:h-4 bg-blue-100 rounded animate-pulse mt-2" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Stats Card Skeleton */}
+                  <div className="bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 animate-pulse">
+                    <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/30 rounded-lg sm:rounded-xl" />
+                      <div className="space-y-1">
+                        <div className="w-16 h-2 bg-white/30 rounded" />
+                        <div className="w-12 h-4 bg-white/30 rounded" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                    </div>
                   </div>
-                  
-                  <h3 className="text-slate-800 font-bold text-base sm:text-lg mb-1 sm:mb-2">
-                    No Upcoming Events
-                  </h3>
-                  
-                  <p className="text-slate-600 text-sm sm:text-base mb-3 sm:mb-4">
-                    Events will appear here once scheduled
-                  </p>
-                  
-                  <button className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white border border-purple-200 text-purple-600 rounded-lg text-xs sm:text-sm font-medium hover:bg-purple-50 transition-colors duration-200">
-                    <span>Get Notified</span>
-                    <FiCalendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
                 </div>
               )
             ) : (
+              // News Sidebar
               news.length > 0 ? (
                 news.map((newsItem, index) => {
                   const colors = getCategoryColor(newsItem.category);
@@ -714,7 +760,17 @@ const ModernEventsNewsSection = () => {
                             <img
                               src={newsItem.image} 
                               alt={newsItem.title}
-                              className="w-full h-full object-cover group-hover:scale-100 transition-transform duration-500"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                e.target.parentElement.classList.add(colors.dark);
+                                // Add fallback icon
+                                const fallback = document.createElement('div');
+                                fallback.className = 'absolute inset-0 flex items-center justify-center text-white';
+                                fallback.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" /></svg>';
+                                e.target.parentElement.appendChild(fallback);
+                              }}
                             />
                           ) : (
                             <div className={`absolute inset-0 ${colors.dark} flex items-center justify-center`}>
@@ -749,69 +805,85 @@ const ModernEventsNewsSection = () => {
                   );
                 })
               ) : (
-                <div className="w-full bg-gradient-to-br from-white via-purple-50/50 to-pink-50/30 rounded-xl sm:rounded-2xl border border-purple-100/70 p-4 sm:p-6 md:p-8 text-center shadow-sm hover:shadow-md transition-shadow duration-300 backdrop-blur-sm">
-                  <div className="relative inline-flex mb-3 sm:mb-4 md:mb-5">
-                    <IoNewspaperOutline className="text-purple-400 text-3xl sm:text-4xl md:text-5xl relative z-10" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-200/40 to-pink-200/20 blur-xl rounded-full" />
-                  </div>
+                // FIX: Endless Loading Skeleton - Shows continuously when no news
+                <div className="w-full space-y-3 sm:space-y-4 animate-pulse">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-full bg-white rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 border border-slate-100">
+                      <div className="flex items-start gap-2.5 sm:gap-3 md:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 rounded-lg sm:rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 animate-pulse" />
+                        <div className="flex-grow min-w-0 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="w-16 h-4 sm:w-20 sm:h-5 bg-slate-200 rounded-full animate-pulse" />
+                            <div className="w-12 h-3 bg-slate-100 rounded animate-pulse" />
+                          </div>
+                          <div className="w-3/4 h-5 sm:h-6 bg-slate-300 rounded animate-pulse" />
+                          <div className="w-1/2 h-3 sm:h-4 bg-slate-200 rounded animate-pulse" />
+                          <div className="w-20 h-3 sm:h-4 bg-purple-100 rounded animate-pulse mt-2" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   
-                  <p className="text-slate-700 font-semibold text-base sm:text-lg md:text-xl mb-1.5 sm:mb-2">
-                    No News Articles Yet
-                  </p>
-                  
-                  <p className="text-slate-500 text-sm sm:text-base max-w-xs mx-auto leading-relaxed">
-                    We'll be sharing updates and announcements here soon
-                  </p>
-                  
-                  {/* Optional decorative elements */}
-                  <div className="mt-4 sm:mt-6 flex justify-center items-center gap-2 sm:gap-3 text-purple-300/50">
-                    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-transparent to-purple-300/30" />
-                    <span className="text-xs font-medium tracking-wider">COMING SOON</span>
-                    <div className="h-px w-6 sm:w-8 md:w-12 bg-gradient-to-r from-purple-300/30 to-transparent" />
+                  {/* Stats Card Skeleton */}
+                  <div className="bg-gradient-to-br from-slate-200 to-slate-300 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 animate-pulse">
+                    <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/30 rounded-lg sm:rounded-xl" />
+                      <div className="space-y-1">
+                        <div className="w-16 h-2 bg-white/30 rounded" />
+                        <div className="w-12 h-4 bg-white/30 rounded" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                      <div className="w-full h-3 bg-white/20 rounded" />
+                    </div>
                   </div>
                 </div>
               )
             )}
 
-            {/* Stats Card */}
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 text-white">
-              <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
-                <div className="p-1.5 sm:p-2 md:p-3 bg-white/20 rounded-lg sm:rounded-xl md:rounded-2xl">
-                  <IoNewspaperOutline className="text-base sm:text-lg md:text-xl" />
+            {/* Stats Card - Only show if data exists */}
+            {(selectedTab === 'events' && events.length > 0) || (selectedTab === 'news' && news.length > 0) ? (
+              <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 text-white">
+                <div className="flex items-center gap-2 md:gap-3 mb-2.5 sm:mb-3 md:mb-4">
+                  <div className="p-1.5 sm:p-2 md:p-3 bg-white/20 rounded-lg sm:rounded-xl md:rounded-2xl">
+                    <IoNewspaperOutline className="text-base sm:text-lg md:text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] opacity-90 mb-0.5 sm:mb-1">Latest Updates</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-black">
+                      {selectedTab === 'events' ? `${events.length} Events` : `${news.length} News`}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.1em] sm:tracking-[0.2em] opacity-90 mb-0.5 sm:mb-1">Latest Updates</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-black">
-                    {selectedTab === 'events' ? `${events.length} Events` : `${news.length} News`}
-                  </p>
+                
+                <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm opacity-90">Upcoming Events</span>
+                    <span className="font-bold text-sm sm:text-base">{events.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm opacity-90">News Articles</span>
+                    <span className="font-bold text-sm sm:text-base">{news.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs sm:text-sm opacity-90">Active Updates</span>
+                    <span className="font-bold text-sm sm:text-base">{events.length + news.length}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-2.5 sm:mt-3 md:mt-4 pt-2.5 sm:pt-3 md:pt-4 border-t border-white/20">
+                  <button 
+                    onClick={() => window.location.href = selectedTab === 'events' ? '/pages/eventsandnews' : '/pages/eventsandnews'}
+                    className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                  >
+                    <span className="truncate">View All {selectedTab === 'events' ? 'Events' : 'News'}</span>
+                    <FiChevronRight className="text-xs" />
+                  </button>
                 </div>
               </div>
-              
-              <div className="space-y-1.5 sm:space-y-2 md:space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm opacity-90">Upcoming Events</span>
-                  <span className="font-bold text-sm sm:text-base">{events.length}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm opacity-90">News Articles</span>
-                  <span className="font-bold text-sm sm:text-base">{news.length}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs sm:text-sm opacity-90">Active Updates</span>
-                  <span className="font-bold text-sm sm:text-base">{events.length + news.length}</span>
-                </div>
-              </div>
-              
-              <div className="mt-2.5 sm:mt-3 md:mt-4 pt-2.5 sm:pt-3 md:pt-4 border-t border-white/20">
-                <button 
-                  onClick={() => window.location.href = selectedTab === 'events' ? '/pages/eventsandnews' : '/pages/eventsandnews'}
-                  className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-colors flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
-                >
-                  <span className="truncate">View All {selectedTab === 'events' ? 'Events' : 'News'}</span>
-                  <FiChevronRight className="text-xs" />
-                </button>
-              </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -841,7 +913,7 @@ const ModernEventsNewsSection = () => {
                   <button 
                     key={item.platform}
                     onClick={() => {
-                      const currentItem = selectedTab === 'eventsandnews' ? currentEvent : currentNews;
+                      const currentItem = selectedTab === 'events' ? currentEvent : currentNews;
                       if (!currentItem) return;
                       
                       const url = `${window.location.origin}/${selectedTab}`;
