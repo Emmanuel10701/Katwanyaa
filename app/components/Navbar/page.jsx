@@ -242,7 +242,7 @@ export default function ModernNavbar() {
 
             {/* Desktop Navigation - Centered */}
             <div className="hidden lg:flex items-center justify-center flex-1 mx-8 min-w-0">
-              <div className="flex items-center justify-between w-full max-w-4xl">
+              <div className="flex items-center justify-between w-full max-w-4xl gap-1">
                 {mainNavigation.map((item) => {
                   const isActive = isActiveLink(item.href, item.exact);
                   
@@ -256,7 +256,7 @@ export default function ModernNavbar() {
                         onMouseLeave={() => setIsAcademicDropdownOpen(false)}
                       >
                         <button
-                          className={`group flex items-center gap-1.5 font-bold transition-all text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-3 py-2.5 relative min-w-[80px] ${
+                          className={`group flex items-center gap-0.5 xs:gap-1 font-bold transition-all text-[0.65rem] xs:text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-2 xs:px-2.5 py-2 relative ${
                             isActive || isAcademicDropdownOpen
                               ? 'text-white' 
                               : 'text-white/85 hover:text-white'
@@ -272,7 +272,7 @@ export default function ModernNavbar() {
                           
                           {/* Active underline indicator */}
                           {(isActive || isAcademicDropdownOpen) && (
-                            <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-10 h-0.5 bg-white rounded-full"></span>
+                            <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></span>
                           )}
                         </button>
 
@@ -330,7 +330,7 @@ export default function ModernNavbar() {
                     <a
                       key={item.name}
                       href={item.href}
-                      className={`group flex items-center gap-1.5 font-bold transition-all text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-3 py-2.5 relative min-w-[70px] ${
+                      className={`group flex items-center gap-0.5 xs:gap-1 font-bold transition-all text-[0.65rem] xs:text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-2 xs:px-2.5 py-2 relative ${
                         isActive 
                           ? 'text-white' 
                           : 'text-white/85 hover:text-white'
@@ -341,11 +341,11 @@ export default function ModernNavbar() {
                       
                       {/* Active underline indicator */}
                       {isActive && (
-                        <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-white rounded-full"></span>
+                        <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-5 h-0.5 bg-white rounded-full"></span>
                       )}
                       
                       {/* Hover underline indicator */}
-                      <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white/50 rounded-full group-hover:w-6 transition-all duration-300"></span>
+                      <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-0 h-0.5 bg-white/50 rounded-full group-hover:w-5 transition-all duration-300"></span>
                     </a>
                   );
                 })}
@@ -358,7 +358,7 @@ export default function ModernNavbar() {
                   onMouseLeave={() => setIsResourcesDropdownOpen(false)}
                 >
                   <button
-                    className={`group flex items-center gap-1.5 font-bold transition-all text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-3 py-2.5 relative min-w-[80px] ${
+                    className={`group flex items-center gap-0.5 xs:gap-1 font-bold transition-all text-[0.65rem] xs:text-[0.7rem] uppercase tracking-wide whitespace-nowrap px-2 xs:px-2.5 py-2 relative ${
                       isResourcesDropdownOpen || 
                       isActiveLink('/pages/staff') || 
                       isActiveLink('/pages/career') ||
@@ -380,7 +380,7 @@ export default function ModernNavbar() {
                       isActiveLink('/pages/staff') || 
                       isActiveLink('/pages/career') ||
                       isActiveLink('/pages/adminLogin')) && (
-                      <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-10 h-0.5 bg-white rounded-full"></span>
+                      <span className="absolute bottom-1.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"></span>
                     )}
                   </button>
 
