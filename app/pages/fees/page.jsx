@@ -66,6 +66,7 @@ import {
 import { MdOutlineSchool, MdOutlineBoardingSchool, MdOutlineAdUnits } from 'react-icons/md';
 import { FaWhatsapp, FaTelegram, FaEnvelope, FaRegCopy } from 'react-icons/fa';
 import { CircularProgress, Stack } from '@mui/material';
+import { useRouter } from 'next/navigation';
 
 // Modern Modal Component
 const ModernModal = ({ children, open, onClose, maxWidth = '800px' }) => {
@@ -281,6 +282,9 @@ export default function ModernFeesPage() {
     { id: 'boarding', name: 'Boarding Fees', icon: IoBedOutline, color: 'purple' },
     { id: 'admission', name: 'Admission Fees', icon: MdOutlineAdUnits, color: 'amber' }
   ];
+
+
+const router = useRouter();
 
   // Fetch document data
   const fetchDocuments = async (showRefresh = false) => {
@@ -732,7 +736,7 @@ export default function ModernFeesPage() {
                 Contact our finance office for payment plans and financial aid information.
               </p>
             </div>
-            <button className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-100 transition-all active:scale-95 flex-shrink-0">
+            <button onclick={() => (router.push("/pages/contact"))} className="px-4 sm:px-6 py-2 sm:py-3 bg-white text-slate-900 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-100 transition-all active:scale-95 flex-shrink-0">
               Contact
             </button>
           </div>
