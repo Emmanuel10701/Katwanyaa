@@ -506,7 +506,7 @@ const router = useRouter();
   )}
   
   <span>
-    {refreshing ? "Refreshing fees..." : "Refresh"}
+    {refreshing ? "Fetching fees..." : "Refresh"}
   </span>
 </button>
             </div>
