@@ -186,7 +186,7 @@ const getCategoryStyle = (category) => {
                 e.stopPropagation();
                 onBookmark(event);
               }}
-              className={`p-1.5 sm:p-2 sm:p-2.5 rounded-lg sm:rounded-xl backdrop-blur-md border shadow-sm transition-all ${
+              className={`p-1.5 sm:p-2  rounded-lg sm:rounded-xl backdrop-blur-md border shadow-sm transition-all ${
                 isBookmarked 
                   ? 'bg-amber-500 border-amber-500 text-white' 
                   : 'bg-white/90 border-white/10 text-slate-700'
@@ -417,7 +417,7 @@ const ModernNewsCard = ({ news, onView, onShare, onBookmark, viewMode = 'grid' }
                 e.stopPropagation();
                 onBookmark(news);
               }}
-              className="p-1.5 sm:p-2 sm:p-2.5 rounded-lg sm:rounded-xl backdrop-blur-md bg-white/90 border border-white/20 text-slate-700 shadow-sm transition-all"
+              className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl backdrop-blur-md bg-white/90 border border-white/20 text-slate-700 shadow-sm transition-all"
             >
               <FiBookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
