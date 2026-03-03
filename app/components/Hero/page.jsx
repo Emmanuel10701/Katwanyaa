@@ -591,9 +591,9 @@ const ModernHero = () => {
                   <Play className="text-white w-3 h-3 sm:w-4 sm:h-4" />
                 </div>
                 <div className="overflow-hidden">
-                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Mary Immculate Girls High School Tour</h4>
+                  <h4 className="text-white font-bold text-xs sm:text-sm md:text-base truncate">Katz High School Virtual Tour</h4>
                   <p className="text-white/60 text-[10px] sm:text-xs md:text-sm truncate">
-                    {schoolData?.name || 'Mary Immculate Girls High School - Mweiga, Nyeri'}
+                    {schoolData?.name || 'Katwanyaa Senior School'} - {schoolData?.videoType === 'youtube' ? 'YouTube Video' : schoolData?.videoType === 'file' ? 'MP4 Video' : 'Loading...'}
                   </p>
                 </div>
               </div>
@@ -680,7 +680,7 @@ const ModernHero = () => {
             <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-r from-transparent to-black/80 p-2 sm:p-3 md:p-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
                 <div className="text-white/80 text-xs sm:text-sm hidden sm:block truncate">
-                  {schoolData?.description?.substring(0, isMobile ? 50 : 100) + '...' || 'Experience Mary Immculate Girls High School from anywhere in the world'}
+                  {schoolData?.description?.substring(0, isMobile ? 50 : 100) + '...' || 'Experience Katwanyaa Senior School from anywhere in the world'}
                 </div>
                 <button
                   onClick={handleContactClick}
