@@ -26,6 +26,7 @@ import {
   FiBookOpen,
   FiTruck,
   FiHeart,
+  FiCheckmarkCircleOutline,
   FiShield,
   FiWifi,
   FiCoffee,
