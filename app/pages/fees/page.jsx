@@ -522,15 +522,19 @@ const router = useRouter();
               <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                 <IoBusinessOutline size={18} className="sm:w-6 sm:h-6 md:w-6 md:h-6" />
               </div>
+
+              {/* Visible Download Button (Day Fees) */}
               <div className="flex items-center gap-2">
                 <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Day</span>
                 {documentData?.feesDayDistributionPdf && (
                   <button
                     onClick={() => handleDownloadPDF(documentData.feesDayDistributionPdf, documentData.feesDayPdfName)}
-                    className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-                    title="Download Day Fees PDF"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-bold transition-colors"
+                    title="Download Day Fees Document"
                   >
-                    <FiDownload size={14} />
+                    <FiDownload className="w-4 h-4" />
+                    <span className="hidden sm:inline">Download</span>
+                    <span className="sm:hidden text-[10px]">PDF</span>
                   </button>
                 )}
               </div>
@@ -547,15 +551,19 @@ const router = useRouter();
               <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
                 <IoBedOutline size={18} className="sm:w-6 sm:h-6 md:w-6 md:h-6" />
               </div>
+
+              {/* Visible Download Button (Boarding Fees) */}
               <div className="flex items-center gap-2">
                 <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Boarding</span>
                 {documentData?.feesBoardingDistributionPdf && (
                   <button
                     onClick={() => handleDownloadPDF(documentData.feesBoardingDistributionPdf, documentData.feesBoardingPdfName)}
-                    className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
-                    title="Download Boarding Fees PDF"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-sm hover:bg-slate-50 text-sm font-bold transition-colors"
+                    title="Download Boarding Fees Document"
                   >
-                    <FiDownload size={14} />
+                    <FiDownload className="w-4 h-4" />
+                    <span className="hidden sm:inline">Download</span>
+                    <span className="sm:hidden text-[10px]">PDF</span>
                   </button>
                 )}
               </div>
