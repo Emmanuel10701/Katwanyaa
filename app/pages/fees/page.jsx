@@ -522,7 +522,18 @@ const router = useRouter();
               <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                 <IoBusinessOutline size={18} className="sm:w-6 sm:h-6 md:w-6 md:h-6" />
               </div>
-              <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Day</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Day</span>
+                {documentData?.feesDayDistributionPdf && (
+                  <button
+                    onClick={() => handleDownloadPDF(documentData.feesDayDistributionPdf, documentData.feesDayPdfName)}
+                    className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                    title="Download Day Fees PDF"
+                  >
+                    <FiDownload size={14} />
+                  </button>
+                )}
+              </div>
             </div>
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 mb-1">Day Scholars</h3>
             <p className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 mb-2 leading-tight">
@@ -536,7 +547,18 @@ const router = useRouter();
               <div className="p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
                 <IoBedOutline size={18} className="sm:w-6 sm:h-6 md:w-6 md:h-6" />
               </div>
-              <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Boarding</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[8px] sm:text-xs md:text-xs font-bold text-slate-400 uppercase">Boarding</span>
+                {documentData?.feesBoardingDistributionPdf && (
+                  <button
+                    onClick={() => handleDownloadPDF(documentData.feesBoardingDistributionPdf, documentData.feesBoardingPdfName)}
+                    className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                    title="Download Boarding Fees PDF"
+                  >
+                    <FiDownload size={14} />
+                  </button>
+                )}
+              </div>
             </div>
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 mb-1">Boarders</h3>
             <p className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 mb-2 leading-tight">
