@@ -1332,26 +1332,17 @@ if (data.kjseaGrade && data.kjseaGrade.trim() !== '') {
       guardianOccupation: data.guardianOccupation?.trim(),
       
     // Academic - CBC System
+
+
 // Academic - CBC System
 previousSchool: data.previousSchool.trim(),
 previousClass: data.previousClass.trim(),
 
-// New CBC fields
+// CBC fields - USE ONLY THESE (remove all duplicates)
 kpseaYear: data.kpseaYear ? parseInt(data.kpseaYear) : null,
 kpseaIndex: data.kpseaIndex?.trim(),
 kpseaMarks: data.kpseaMarks ? parseInt(data.kpseaMarks) : null,
 kjseaGrade: data.kjseaGrade?.trim(),
-
-// Keep old fields for backward compatibility
-kcpeYear: data.kpseaYear ? parseInt(data.kpseaYear) : null,
-kcpeIndex: data.kpseaIndex?.trim(),
-kcpeMarks: data.kpseaMarks ? parseInt(data.kpseaMarks) : null,
-meanGrade: data.kjseaGrade?.trim(),
-// Keep old fields for backward compatibility
-kcpeYear: data.kpseaYear ? parseInt(data.kpseaYear) : null,
-kcpeIndex: data.kpseaIndex?.trim(),
-kcpeMarks: data.kpseaMarks ? parseInt(data.kpseaMarks) : null,
-meanGrade: data.kjseaGrade?.trim(),
       // Medical
       medicalCondition: data.medicalCondition?.trim(),
       allergies: data.allergies?.trim(),

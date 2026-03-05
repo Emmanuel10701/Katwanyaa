@@ -492,10 +492,13 @@ model AdmissionApplication {
   guardianOccupation     String?
   previousSchool         String
   previousClass          String
-  kcpeYear               Int?
-  kcpeIndex              String?
-  kcpeMarks              Int?
-  meanGrade              String?
+  
+  // ✅ CHANGE THESE TO NEW CBC FIELD NAMES
+  kpseaYear               Int?      // was kcpeYear
+  kpseaIndex              String?   // was kcpeIndex
+  kpseaMarks              Int?      // was kcpeMarks
+  kjseaGrade              String?   // was meanGrade
+  
   // Removed preferredStream field
   medicalCondition       String?   @db.Text
   allergies              String?   @db.Text
@@ -537,7 +540,7 @@ model AdmissionApplication {
   @@index([createdAt])
   @@index([decisionDate])
   @@index([county])
-  @@index([kcpeMarks])
+  @@index([kpseaMarks])  // ✅ Update index name too
 }
 
 model CareerJob {
