@@ -290,8 +290,8 @@ kjseaGrade: '',         // Changed from meanGrade
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Matungulu Girls High School Admission - ${applicationNumber}`,
-          text: `I've submitted my admission application to Matungulu Girls High  School. Application Number: ${applicationNumber}`,
+          title: `Katwanyaa  High School Admission - ${applicationNumber}`,
+          text: `I've submitted my admission application to Katwanyaa  High  School. Application Number: ${applicationNumber}`,
           url: window.location.href,
         });
       } catch (error) {
@@ -645,7 +645,7 @@ kjseaGrade: '',         // Changed from meanGrade
               <h4 className="text-[10px] font-black text-gray-400 mb-3 uppercase tracking-widest">Need Help?</h4>
               <div className="text-[11px] sm:text-sm text-gray-600 space-y-1">
                 <p>Office: <span className="text-gray-900 font-bold">0712 345 678</span></p>
-                <p className="truncate">Email: <span className="text-blue-600 font-bold">admissions@matungulugirls.ac.ke</span></p>
+                <p className="truncate">Email: <span className="text-blue-600 font-bold">admissions@katwanyaake</span></p>
               </div>
             </div>
           </div>
@@ -1554,7 +1554,7 @@ kjseaGrade: '',         // Changed from meanGrade
                 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 rounded focus:ring-blue-500 mt-0.5 sm:mt-1"
               />
               <span className="text-xs sm:text-sm md:text-base text-gray-800 font-semibold">
-                I agree to the terms and conditions of Matungulu Girls High School's admission process.
+                I agree to the terms and conditions of Katwanyaa  High School's admission process.
               </span>
             </label>
             <label className="flex items-start space-x-2 sm:space-x-3 cursor-pointer">
@@ -1636,7 +1636,7 @@ kjseaGrade: '',         // Changed from meanGrade
           )}
         </div>
 
-{/* --- Matungulu Girls MODERN RESPONSIVE FOOTER --- */}
+{/* --- Katwanyaa  MODERN RESPONSIVE FOOTER --- */}
 <div className="mt-8 md:mt-16 text-center relative z-10 px-4 mb-6">
   <div className="max-w-4xl mx-auto bg-white/40 backdrop-blur-lg rounded-[1.5rem] md:rounded-[2.5rem] p-4 md:p-10 border border-white/60 shadow-xl shadow-blue-900/5 mb-6 transition-all duration-500">
     
@@ -1691,7 +1691,7 @@ kjseaGrade: '',         // Changed from meanGrade
   <div className="max-w-2xl mx-auto space-y-3 opacity-80">
     <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-4">
       <p className="text-gray-800 text-[9px] md:text-xs font-bold uppercase tracking-wider">
-        © {new Date().getFullYear()} Matungulu Girls High School
+        © {new Date().getFullYear()} Katwanyaa  High School
       </p>
       <p className="text-blue-600 text-[9px] md:text-xs font-medium italic">
         "Excellence Through Discipline"
