@@ -750,6 +750,7 @@ kjseaGrade: '',         // Changed from meanGrade
                 required
               >
                 <option value="" className="text-gray-400">Select Gender</option>
+                <option value="MALE" className="text-gray-800">Male</option>
                 <option value="FEMALE" className="text-gray-800">Female</option>
               </select>
             </div>
