@@ -493,7 +493,6 @@ model AdmissionApplication {
   previousSchool         String
   previousClass          String
   
-  // ✅ CHANGE THESE TO NEW CBC FIELD NAMES
   kpseaYear               Int?      // was kcpeYear
   kpseaIndex              String?   // was kcpeIndex
   kpseaMarks              Int?      // was kcpeMarks

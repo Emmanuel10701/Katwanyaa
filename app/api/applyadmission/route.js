@@ -14,11 +14,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const SCHOOL_NAME = 'Matungulu Girls High  School';
+const SCHOOL_NAME = ' Katwnayaa High  School';
 const SCHOOL_LOCATION = 'Matungulu, Machakos County';
-const SCHOOL_MOTTO = 'Strive to Excel';
+const SCHOOL_MOTTO = 'Education Is Light';
 const CONTACT_PHONE = '+254720123456';
-const CONTACT_EMAIL = 'admissions@matungulugirls.sc.ke';
+const CONTACT_EMAIL = 'admissions@katwanyaa.sc.ke';
 // ====================================================================
 // UTILITY FUNCTIONS
 // ====================================================================
@@ -37,7 +37,7 @@ function calculateAge(dateOfBirth) {
 function generateApplicationNumber() {
   const year = new Date().getFullYear();
   const randomNum = randomBytes(4).toString('hex').toUpperCase();
-  return `MatG/${year}/${randomNum}`;
+  return `KATZ/${year}/${randomNum}`;
 }
 
 function validatePhone(phone) {
