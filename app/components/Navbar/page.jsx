@@ -230,7 +230,7 @@ export default function ModernNavbar() {
                   sizes="(max-width: 480px) 48px, (max-width: 640px) 56px, 64px"
                 />
               </div>
-              <div className="block">
+              <div className="hidden sm:block">
                 <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
                    Katz
                 </h1>
