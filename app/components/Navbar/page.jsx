@@ -242,7 +242,7 @@ export default function ModernNavbar() {
 
             {/* Desktop Navigation - Centered */}
             <div className="hidden lg:flex items-center justify-center flex-1 mx-8 min-w-0">
-              <div className="flex items-center justify-between w-full max-w-4xl gap-1">
+              <div className="flex items-center justify-between w-full max-w-7xl gap-1">
                 {mainNavigation.map((item) => {
                   const isActive = isActiveLink(item.href, item.exact);
                   
