@@ -201,8 +201,8 @@ export default function ModernNavbar() {
       <nav 
         className={`fixed w-full z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-gradient-to-r from-blue-700/95 via-indigo-700/95 to-purple-800/95 backdrop-blur-lg shadow-xl border-b border-white/10' 
-            : 'bg-gradient-to-r from-blue-600 via-indigo-700 to-purple-800 shadow-lg'
+            ? 'bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 backdrop-blur-lg shadow-xl border-b border-white/10' 
+            : 'bg-gradient-to-r from-blue-900 via-indigo-900 to-purple-900 shadow-lg'
         }`}
       >
         <div className="w-full px-3 xs:px-4 sm:px-6 lg:px-8">
