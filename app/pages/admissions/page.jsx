@@ -1536,171 +1536,9 @@ const VisionMissionSection = ({ vision, mission, motto, videoTour, videoType, vi
 };
 
 
-const ModernUniformRequirementsSection = ({ 
-  admissionFeeDistribution, 
-  admissionFeePdf, 
-  admissionFeePdfName,
-  admissionFeeDescription,
-  admissionFeeYear,
-  admissionFeeTerm
-}) => {
-  const uniformItems = admissionFeeDistribution || [];
-  const totalCost = uniformItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-
-  return (
-    /* Removed margins and rounding on mobile (rounded-none), restored for desktop */
-    <div className="bg-white rounded-none md:rounded-[2.5rem] border-x-0 border-t-0 md:border border-slate-100 shadow-2xl overflow-hidden max-w-full">
-      
-      {/* Header Section: Edge-to-edge on mobile */}
-      <div className="relative p-6 md:p-12 bg-[#0F172A] text-white">
-        {/* Glow effect - adjusted for mobile center */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 blur-[80px] md:blur-[100px] rounded-full -mr-32 -mt-32"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shrink-0">
-              <IoShirtOutline className="text-blue-400 text-2xl md:text-3xl" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-xl md:text-3xl font-black uppercase tracking-tighter leading-tight">
-                Admission <span className="text-blue-500">Breakdown</span>
-              </h3>
-              <div className="flex flex-wrap items-center gap-2 mt-1">
-                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">
-                  {admissionFeeYear || '2026'} • {admissionFeeTerm || 'Full Session'}
-                </p>
-                {admissionFeeDescription && (
-                  <span className="hidden md:inline text-white/20 text-[10px]">•</span>
-                )}
-                {admissionFeeDescription && (
-                  <p className="text-white/40 text-[10px] italic font-bold truncate max-w-[150px] md:max-w-none">
-                    {admissionFeeDescription}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {admissionFeePdf && (
-            <a 
-              href={admissionFeePdf}
-              download={admissionFeePdfName}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-blue-900/40 active:scale-95"
-            >
-              <IoCloudDownloadOutline className="text-lg" />
-              <span>Full Document (PDF)</span>
-            </a>
-          )}
-        </div>
-      </div>
-
-      {/* Content Section: Individual Item Cards */}
-      <div className="p-4 md:p-12 bg-slate-50/50">
-        {uniformItems.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
-            {uniformItems.map((item, index) => (
-              <div 
-                key={item.id || index}
-                className="group bg-white border border-slate-200 rounded-2xl p-6 transition-all shadow-sm md:hover:shadow-xl md:hover:border-blue-200"
-              >
-                <div className="flex justify-between items-start mb-5">
-                  <div className="min-w-0">
-                    <h4 className="font-black text-slate-900 text-[12px] uppercase tracking-wider mb-1">
-                      {item.name}
-                    </h4>
-                    <p className="text-slate-400 text-[10px] font-bold leading-relaxed line-clamp-2">
-                      {item.description || 'Standard requirement'}
-                    </p>
-                  </div>
-                  <div className={`p-2 rounded-xl shrink-0 ${item.optional ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
-                    {item.optional ? <FiCheckCircle size={16} /> : <IoCheckmarkCircleOutline size={16} />}
-                  </div>
-                </div>
-
-                <div className="flex items-end justify-between mt-6">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fee Amount</span>
-                    <span className="text-xl font-black text-slate-900 tabular-nums">
-                      KSh {parseInt(item.amount || 0).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    {item.optional && (
-                      <span className="text-[9px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md font-black uppercase tracking-tighter">Optional</span>
-                    )}
-                    {item.boardingOnly && (
-                      <span className="text-[9px] bg-blue-100 text-blue-700 px-2 py-1 rounded-md font-black uppercase tracking-tighter">Boarding</span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Visual Progress Line */}
-                <div className="w-full h-1.5 bg-slate-100 rounded-full mt-5 overflow-hidden">
-                  <div 
-                    className={`h-full transition-all duration-1000 ${item.optional ? 'bg-emerald-500' : 'bg-blue-600'}`}
-                    style={{ width: '100%' }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-white border-2 border-dashed border-slate-200 rounded-[2rem]">
-            <FiAlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h4 className="text-slate-900 font-black uppercase tracking-widest text-sm">No items found</h4>
-            <p className="text-slate-400 text-xs font-bold mt-2">The admission list is being updated by the registrar.</p>
-          </div>
-        )}
-
-        {/* Total Cost Summary Bento - Full width on Mobile */}
-        {uniformItems.length > 0 && (
-          <div className="mt-8 md:mt-12 p-8 md:p-12 bg-slate-900 rounded-[2rem] text-white shadow-2xl flex flex-col lg:flex-row justify-between items-center gap-10 border border-white/5">
-            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-              <div className="p-5 bg-blue-600 rounded-[1.5rem] shadow-xl shadow-blue-600/20">
-                <FiDollarSign size={28} className="text-white" />
-              </div>
-              <div className="text-center sm:text-left">
-                <h4 className="text-[10px] md:text-xs font-black text-blue-400 uppercase tracking-[0.4em] mb-2">
-                  Total Admission Cost
-                </h4>
-                <div className="text-2xl md:text-3xl font-black tracking-tighter tabular-nums leading-none">
-                  KSh {totalCost.toLocaleString()}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-around w-full lg:w-auto lg:border-l border-white/10 lg:pl-12 gap-10 border-t lg:border-t-0 pt-8 lg:pt-0">
-              <div className="flex flex-col items-center lg:items-start">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mb-1">Mandatory</span>
-                <span className="text-2xl font-black text-white">{uniformItems.filter(i => !i.optional).length} Items</span>
-              </div>
-              <div className="flex flex-col items-center lg:items-start">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] mb-1">Optional</span>
-                <span className="text-2xl font-black text-emerald-400">{uniformItems.filter(i => i.optional).length} Items</span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 // NEW: Academic Results Section Component
 const AcademicResultsSection = ({ documentData }) => {
   const resultsData = [
-    {
-      name: 'Mock Exams',
-      pdf: documentData?.mockExamsResultsPdf,
-      pdfName: documentData?.mockExamsPdfName,
-      description: documentData?.mockExamsDescription,
-      year: documentData?.mockExamsYear,
-      term: documentData?.mockExamsTerm,
-      icon: FiFileText,
-      accent: 'text-rose-400',
-      bg: 'bg-rose-400/10'
-    },
     {
       name: 'KCSE Results',
       pdf: documentData?.kcseResultsPdf,
@@ -1731,7 +1569,7 @@ const AcademicResultsSection = ({ documentData }) => {
               <IoStatsChartOutline className="text-blue-400 text-2xl md:text-3xl" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-xl md:text-3xl font-black uppercase tracking-tighter">Academic <span className="text-blue-400">Reports</span></h3>
+              <h3 className="text-lg md:text-3xl font-black uppercase tracking-tighter">Academic KCSE <span className="text-blue-400">Reports</span></h3>
               <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">Official Performance Archives</p>
             </div>
           </div>
@@ -1825,67 +1663,256 @@ const AcademicResultsSection = ({ documentData }) => {
   );
 };
 
+
+
+const ModernUniformRequirementsSection = ({ 
+  admissionFeeDistribution, 
+  admissionFeePdf, 
+  admissionFeePdfName,
+  admissionFeeDescription,
+  admissionFeeYear,
+  admissionFeeTerm
+}) => {
+  const uniformItems = admissionFeeDistribution || [];
+  const totalCost = uniformItems.reduce((sum, item) => sum + (item.amount || 0), 0);
+
+  return (
+    <div className="bg-white rounded-lg md:rounded-2xl border border-slate-200 overflow-hidden">
+      
+      {/* Header Section */}
+      <div className="p-6 md:p-8 bg-slate-900 text-white">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <IoShirtOutline className="text-emerald-400 text-2xl md:text-3xl" />
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold tracking-tight">
+                Admission <span className="text-emerald-400">Breakdown</span>
+              </h3>
+              <div className="flex items-center gap-2 mt-1 text-sm text-slate-400">
+                <span>{admissionFeeYear || '2026'} • {admissionFeeTerm || 'Full Session'}</span>
+                {admissionFeeDescription && (
+                  <>
+                    <span>•</span>
+                    <span className="italic">{admissionFeeDescription}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {admissionFeePdf && (
+            <a 
+              href={admissionFeePdf}
+              download={admissionFeePdfName}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <IoCloudDownloadOutline className="text-lg" />
+              <span>Download PDF</span>
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6 md:p-8 bg-slate-50">
+        {uniformItems.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {uniformItems.map((item, index) => (
+                <div 
+                  key={item.id || index}
+                  className="bg-white border border-slate-200 rounded-lg p-5"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h4 className="font-semibold text-slate-900">
+                      {item.name}
+                    </h4>
+                    <div className={`px-2 py-1 rounded text-xs font-medium ${
+                      item.optional ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {item.optional ? 'Optional' : 'Required'}
+                    </div>
+                  </div>
+                  
+                  {item.description && (
+                    <p className="text-sm text-slate-500 mb-4">
+                      {item.description}
+                    </p>
+                  )}
+                  
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                    <span className="text-sm text-slate-500">Amount</span>
+                    <span className="text-lg font-bold text-slate-900">
+                      KSh {parseInt(item.amount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Total Summary */}
+            <div className="mt-6 p-6 bg-white border border-slate-200 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <FiDollarSign className="text-emerald-600 text-xl" />
+                  <div>
+                    <span className="text-sm text-slate-500 block">Total Admission Cost</span>
+                    <span className="text-2xl font-bold text-slate-900">
+                      KSh {totalCost.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-6 text-sm">
+                  <div>
+                    <span className="text-slate-500 block">Mandatory</span>
+                    <span className="font-semibold text-slate-900">{uniformItems.filter(i => !i.optional).length} items</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">Optional</span>
+                    <span className="font-semibold text-emerald-600">{uniformItems.filter(i => i.optional).length} items</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <FiAlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h4 className="text-lg font-semibold text-slate-900 mb-1">No Items Available</h4>
+            <p className="text-sm text-slate-500">The admission breakdown is being updated.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
 const ModernFAQItem = ({ faq, index, openFaq, setOpenFaq }) => {
   const isOpen = openFaq === index;
-  
+
   return (
-    /* Responsive rounding: rounded-none on mobile for edge-to-edge feel */
     <div className={`
-      transition-all duration-300 border-b md:border border-slate-200/80 
-      md:rounded-2xl overflow-hidden 
-      ${isOpen ? 'bg-white shadow-xl md:shadow-blue-900/5' : 'bg-transparent md:bg-white/50'}
+      group relative transition-all duration-500
+      ${isOpen ? 'scale-[1.02] md:scale-100' : 'hover:scale-[1.01]'}
     `}>
-      <button
-        onClick={() => setOpenFaq(isOpen ? null : index)}
-        className="w-full px-5 md:px-8 py-5 md:py-6 text-left flex items-center justify-between transition-colors active:bg-slate-50"
-      >
-        <div className="flex items-start gap-4 md:gap-6 flex-1">
-          {/* Number badge - refined sizing */}
-          <div className={`
-            flex-shrink-0 w-7 h-7 md:w-9 md:h-9 rounded-lg flex items-center justify-center mt-0.5 transition-colors
-            ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}
-          `}>
-            <span className="font-black text-[10px] md:text-xs">
-              {String(index + 1).padStart(2, '0')}
-            </span>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h3 className={`
-              font-black tracking-tight text-[13px] md:text-lg transition-colors
-              ${isOpen ? 'text-blue-600' : 'text-slate-900'}
-            `}>
-              {faq.question}
-            </h3>
-          </div>
-        </div>
-
-        {/* Improved Icon with background ring */}
-        <div className={`
-          ml-4 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center border transition-all
-          ${isOpen ? 'rotate-180 border-blue-200 bg-blue-50' : 'border-slate-200 bg-white'}
-        `}>
-          <FiChevronDown className={isOpen ? 'text-blue-600' : 'text-slate-400'} size={14} />
-        </div>
-      </button>
-      
-      {/* Animated Answer Section */}
+      {/* Background Glow on Open */}
       {isOpen && (
-        <div className="px-5 md:px-8 pb-6 md:pb-8 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="pl-[44px] md:pl-[60px]"> {/* Aligns text perfectly with the start of the question text */}
-            <div className="h-px w-full bg-slate-100 mb-5" />
-            <p className="text-slate-600 font-medium leading-relaxed text-xs md:text-base">
-              {faq.answer}
-            </p>
-            
-            {/* Contextual Action - Optional visual touch */}
-            <div className="mt-4 flex items-center gap-2 text-[10px] font-black text-blue-500 uppercase tracking-widest">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-              Official School Policy
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-xl" />
+      )}
+      
+      <div className={`
+        relative bg-white rounded-2xl overflow-hidden border transition-all duration-500
+        ${isOpen 
+          ? 'border-emerald-200 shadow-2xl shadow-emerald-900/10' 
+          : 'border-slate-200 shadow-md hover:border-emerald-200/50'
+        }
+      `}>
+        {/* Top Accent Bar */}
+        <div className={`
+          absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500
+          transform origin-left transition-transform duration-500
+          ${isOpen ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}
+        `} />
+
+        <button
+          onClick={() => setOpenFaq(isOpen ? null : index)}
+          className="w-full px-6 md:px-8 py-5 md:py-6 text-left relative"
+        >
+          <div className="flex items-start gap-4 md:gap-6">
+            {/* Animated Number Badge */}
+            <div className="relative">
+              <div className={`
+                absolute inset-0 rounded-xl blur-md transition-opacity duration-500
+                ${isOpen ? 'opacity-100 bg-emerald-500/30' : 'opacity-0'}
+              `} />
+              <div className={`
+                relative w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center
+                transition-all duration-500 font-black text-sm md:text-base
+                ${isOpen 
+                  ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg scale-110' 
+                  : 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
+                }
+              `}>
+                {String(index + 1).padStart(2, '0')}
+              </div>
+            </div>
+
+            {/* Question */}
+            <div className="flex-1 pt-1">
+              <h3 className={`
+                font-black tracking-tight text-sm md:text-lg pr-8
+                transition-colors duration-500
+                ${isOpen ? 'text-emerald-600' : 'text-slate-900'}
+              `}>
+                {faq.question}
+              </h3>
+            </div>
+
+            {/* Chevron with Animation */}
+            <div className={`
+              absolute right-6 top-1/2 -translate-y-1/2
+              w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center
+              border-2 transition-all duration-500
+              ${isOpen 
+                ? 'rotate-180 border-emerald-200 bg-emerald-50' 
+                : 'border-slate-200 bg-white group-hover:border-emerald-200'
+              }
+            `}>
+              <FiChevronDown className={`
+                transition-all duration-500 text-sm md:text-base
+                ${isOpen ? 'text-emerald-600' : 'text-slate-400 group-hover:text-emerald-500'}
+              `} />
+            </div>
+          </div>
+        </button>
+
+        {/* Answer Section */}
+        <div className={`
+          grid transition-all duration-500 ease-in-out
+          ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}
+        `}>
+          <div className="overflow-hidden">
+            <div className="px-6 md:px-8 pb-6 md:pb-8">
+              <div className="pl-[48px] md:pl-[64px]">
+                {/* Divider with Animation */}
+                <div className={`
+                  h-px bg-gradient-to-r from-emerald-200 via-teal-200 to-transparent
+                  transform origin-left transition-all duration-700 delay-300
+                  ${isOpen ? 'scale-x-100' : 'scale-x-0'}
+                `} />
+                
+                {/* Answer Text */}
+                <div className="mt-5">
+                  <p className="text-slate-600 font-medium leading-relaxed text-sm md:text-base">
+                    {faq.answer}
+                  </p>
+                  
+                  {/* Footer Note */}
+                  <div className="flex items-center gap-3 mt-5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="relative">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping absolute" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 relative" />
+                      </div>
+                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-wider">
+                        Official Policy
+                      </span>
+                    </div>
+                    <div className="w-px h-3 bg-slate-200" />
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">
+                      Updated 2026
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
