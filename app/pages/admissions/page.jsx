@@ -1408,98 +1408,132 @@ const VideoTourSection = ({ videoTour, videoType, videoThumbnail }) => {
 };
 
 
-// Vision & Mission Section
-const VisionMissionSection = ({ vision, mission, motto }) => {
+
+// Vision & Mission Section - Redesigned
+const VisionMissionSection = ({ vision, mission, motto, videoTour, videoType, videoThumbnail }) => {
   return (
-    /* We remove outer padding on mobile (px-0) so the cards can touch the screen edges */
-    <div className="w-full max-w-6xl mx-auto px-0 md:px-4 py-0 md:py-8">
-      {/* Bento Grid: gap-0 on mobile to stack perfectly, gap-4 on desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-4">
-        
-{/* 1. Vision Card - Compact & Full bleed on mobile */}
-{/* 1. Vision Card - Optimized Padding & Fonts */}
-<div className="md:col-span-7 bg-slate-900 rounded-none md:rounded-[2.5rem] p-5 md:p-8 relative overflow-hidden border-b border-white/5 md:border md:border-slate-800 shadow-xl flex flex-col justify-center">
-  
-  <div className="absolute top-0 right-0 w-32 md:w-40 h-32 md:h-40 bg-blue-600/10 blur-[40px] md:blur-[50px] rounded-full -mr-8 -mt-8"></div>
-  
-  <div className="relative z-10">
-    <div className="inline-flex items-center gap-2 px-2 py-1 bg-white/5 backdrop-blur-md rounded-lg border border-white/10 mb-3 md:mb-4">
-      <IoEyeOutline className="text-blue-400 text-sm md:text-base" />
-      <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-blue-100">Our Vision</span>
-    </div>
-
-    {/* Heading: Smaller, tighter leading */}
-    <h3 className="text-lg md:text-xl font-black text-white mb-2 tracking-tighter uppercase italic leading-none">
-      The <span className="text-blue-500">Future</span> we build
-    </h3>
-
-    {/* Description: Reduced from text-lg to text-sm/base */}
-    <p className="text-slate-400 text-[12px] md:text-[15px] font-bold leading-snug max-w-lg">
-      {vision || "To be a premier center of academic excellence in Machakos, nurturing globally competitive leaders through integrity."}
-    </p>
-  </div>
-</div>
-
-{/* 2. Mission Card - Optimized Padding & Fonts */}
-<div className="md:col-span-5 bg-white rounded-none md:rounded-[2.5rem] p-5 md:p-8 border-b md:border-2 border-slate-100 shadow-md flex flex-col justify-center">
-  
-  {/* Icon: Smaller footprint */}
-  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-50 rounded-lg md:rounded-xl flex items-center justify-center border border-blue-100 mb-3 md:mb-4 shrink-0">
-    <FiTarget className="text-blue-600 text-lg md:text-xl" />
-  </div>
-  
-  <div>
-    <h3 className="text-sm md:text-base font-black text-slate-900 mb-1.5 uppercase tracking-tighter leading-tight">
-      Our Mission
-    </h3>
-    
-    <p className="text-slate-600 text-[12px] md:text-[14px] font-bold leading-snug">
-      {mission || "Providing quality education via modern infrastructure, fostering discipline, innovation, and self-reliance."}
-    </p>
-  </div>
-</div>
-
-{/* 3. Motto Banner - Full bleed & Tightened for mobile */}
-<div className="md:col-span-12 bg-gradient-to-br from-blue-700 to-indigo-900 rounded-none md:rounded-[3rem] p-6 md:p-10 relative overflow-hidden shadow-lg">
-  {/* Large background icon - Pushed further to the edge on mobile */}
-  <FiZap className="absolute right-[-5%] md:right-[-2%] top-1/2 -translate-y-1/2 text-white/5 text-5xl md:text-6xl -rotate-12 pointer-events-none" />
-  
-  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 md:gap-8">
-    
-    {/* Header Part: Icon + Label */}
-    <div className="flex items-center gap-3 md:gap-5 self-start md:self-center w-full md:w-auto">
-      {/* Icon: Scaled to w-10 for mobile to match the Mission card's rhythm */}
-      <div className="w-10 h-10 md:w-14 md:h-14 bg-white/10 backdrop-blur-xl rounded-xl md:rounded-2xl flex items-center justify-center border border-white/20 shrink-0 shadow-2xl">
-        <FiAward className="text-white text-xl md:text-3xl" />
-      </div>
+    <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-12 space-y-12 md:space-y-16">
       
-      <div className="text-left">
-        <span className="text-blue-200 text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] block mb-0">
-          The Spirit of the School
-        </span>
-        <h3 className="text-white text-base md:text-lg font-black tracking-tighter uppercase leading-none">
-          School Motto
-        </h3>
+      {/* Vision & Mission Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+        
+        {/* Vision */}
+        <div className="md:col-span-7">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] md:text-xs font-black text-emerald-600 uppercase tracking-[0.3em]">
+                Our Vision
+              </span>
+              <div className="flex-1 h-px bg-emerald-100" />
+            </div>
+            
+            <h3 className="text-2xl md:text-3xl lg:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+              The <span className="text-emerald-600">Future</span> We Build
+            </h3>
+            
+            <p className="text-slate-600 text-sm md:text-base lg:text-lg leading-relaxed max-w-xl">
+              {vision || "To be a premier center of academic excellence in Machakos, nurturing globally competitive leaders through integrity, innovation, and holistic development."}
+            </p>
+            
+            <div className="pt-4">
+              <div className="flex items-center gap-2 text-emerald-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                <span className="text-[10px] font-black uppercase tracking-wider">Est. 1985 • Excellence Since</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mission */}
+        <div className="md:col-span-5">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] md:text-xs font-black text-emerald-600 uppercase tracking-[0.3em]">
+                Our Mission
+              </span>
+              <div className="flex-1 h-px bg-emerald-100" />
+            </div>
+            
+            <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-slate-900 tracking-tight">
+              What Drives Us
+            </h3>
+            
+            <p className="text-slate-600 text-sm md:text-base lg:text-lg leading-relaxed">
+              {mission || "Providing quality education through modern infrastructure, fostering discipline, innovation, and self-reliance in every student who walks through our gates."}
+            </p>
+            
+            <div className="pt-4 grid grid-cols-2 gap-4">
+              <div>
+                <div className="text-2xl font-black text-emerald-600">500+</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Students</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black text-emerald-600">98%</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Success Rate</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    {/* Motto Card: Reduced padding for mobile (px-5 py-3) */}
-    <div className="w-full md:w-auto">
-      <div className="bg-white/10 backdrop-blur-md border border-white/20 px-5 py-3 md:px-8 md:py-5 rounded-xl md:rounded-[2rem] text-center shadow-inner active:scale-[0.98] transition-transform">
-        <p className="text-white text-md md:text-lg font-black italic tracking-tighter leading-tight md:leading-none">
-          "{motto || "Strive for Excellence"}"
-        </p>
-      </div>
-    </div>
+      {/* Video Tour Section - Full Width */}
+      {videoTour && (
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-[10px] md:text-xs font-black text-emerald-600 uppercase tracking-[0.3em]">
+              Virtual Experience
+            </span>
+            <div className="flex-1 h-px bg-emerald-100" />
+          </div>
+          
+          <VideoTourSection 
+            videoTour={videoTour}
+            videoType={videoType}
+            videoThumbnail={videoThumbnail}
+          />
+        </div>
+      )}
 
-  </div>
-</div>
+      {/* Motto - Separated with elegance */}
+      <div className="relative pt-8 md:pt-12 mt-8 md:mt-12 border-t border-emerald-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center">
+              <FiAward className="text-emerald-600 text-xl" />
+            </div>
+            
+            <div>
+              <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-1">
+                The Spirit of Matungulu
+              </span>
+              <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight">
+                School Motto
+              </h3>
+            </div>
+          </div>
 
+          <div className="md:text-right">
+            <p className="text-xl md:text-2xl lg:text-3xl font-black italic text-emerald-700 tracking-tight">
+              "{motto || "Strive for Excellence"}"
+            </p>
+            <div className="flex items-center justify-end gap-2 mt-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-600" />
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
+                Matungulu Girls High School
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative Element */}
+        <div className="absolute -top-3 right-0 text-emerald-200/30 text-6xl font-black select-none">
+          "
+        </div>
       </div>
     </div>
   );
 };
-
 
 
 const ModernUniformRequirementsSection = ({ 
