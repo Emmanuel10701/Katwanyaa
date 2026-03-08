@@ -1904,7 +1904,7 @@ const ModernFAQItem = ({ faq, index, openFaq, setOpenFaq }) => {
                     </div>
                     <div className="w-px h-3 bg-slate-200" />
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider">
-                      Updated 2026
+                      Updated {dateFns.format(new Date(faq.updatedAt), 'PPP')}
                     </span>
                   </div>
                 </div>
@@ -2483,7 +2483,7 @@ return (
     <div className="mb-10 text-center md:text-left">
       <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100/50 rounded-full mb-4">
         <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">Admissions 2026</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">Admissions {dateFns.format(new Date(), 'PPP')}</span>
       </div>
       <h3 className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter mb-4 leading-none">
         Your <span className="text-blue-600">Future</span> Starts Here
