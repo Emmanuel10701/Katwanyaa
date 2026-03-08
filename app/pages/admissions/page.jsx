@@ -2076,7 +2076,6 @@ export default function ComprehensiveAdmissions() {
     { id: 'academics', label: 'Academics', icon: FiBookOpen },
     { id: 'career-paths', label: 'Career compass', icon: FiBriefcase },
     { id: 'requirements', label: 'Requirements', icon: FiFileText },
-    { id: 'fees', label: 'Fee Structure', icon: IoReceiptOutline },
     { id: 'results', label: 'Results', icon: IoStatsChartOutline }, // New Results tab
     { id: 'faq', label: 'FAQ', icon: FiHelpCircle },
   ];
@@ -2792,112 +2791,111 @@ return (
                 admissionFeeTerm={documentData?.admissionFeeTerm}
               />
 
-      {/* Required Documents - Modern Grid */}
-<div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl p-6 md:p-10 overflow-hidden">
-  <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
-    <div>
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-3 bg-slate-900 rounded-2xl shadow-xl shadow-slate-200">
-          <IoDocumentTextOutline className="text-white text-xl md:text-2xl" />
-        </div>
-        <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
-          Required Documents
-        </h3>
-      </div>
-      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
-        Essential paperwork for admission processing
-      </p>
-    </div>
-    
-    <div className="flex items-center gap-2 px-5 py-2.5 bg-blue-50 text-blue-700 rounded-2xl border border-blue-100">
-      <IoCheckmarkCircleOutline className="text-lg" />
-      <span className="text-[10px] font-black uppercase tracking-widest">Mandatory Set</span>
-    </div>
-  </div>
-
-  {/* Document Cards Grid */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    {(schoolData?.admissionDocumentsRequired?.length > 0 ? schoolData.admissionDocumentsRequired : [
-      "Original KCPE Certificate",
-      "Birth Certificate",
-      "Passport Size Photos (4)",
-      "Medical Report",
-      "Transfer Letter (if applicable)",
-      "Previous School Reports"
-    ]).map((doc, index) => (
-      <div 
-        key={index}
-        className="group relative bg-white border-2 border-slate-50 rounded-[2rem] p-6 transition-all hover:border-blue-400 hover:shadow-2xl"
-      >
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
-              <IoDocumentTextOutline className="text-slate-400 group-hover:text-white text-xl" />
+   {/* Required Documents - Modern Grid */}
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl p-6 md:p-10 overflow-hidden">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-3 bg-slate-900 rounded-2xl shadow-xl shadow-slate-200">
+              <IoDocumentTextOutline className="text-white text-xl md:text-2xl" />
             </div>
-            <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black border-4 border-white">
-              {index + 1}
-            </div>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter">
+              Required Documents
+            </h3>
           </div>
-          
-          <div className="min-w-0">
-            <h4 className="font-black text-slate-900 text-sm leading-tight uppercase tracking-tight truncate group-hover:whitespace-normal">
-              {doc}
-            </h4>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">
-                Required
-              </span>
-              {index === 0 && (
-                <span className="text-[9px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded uppercase tracking-wider">
-                  Original
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    ))}
-  </div>
-
-{/* Important Notes - Full-Screen Mobile Strategy */}
-<div className="mt-8 md:mt-12 p-6 md:p-12 bg-slate-900 rounded-none md:rounded-[2.5rem] relative overflow-hidden border-y border-white/5 md:border shadow-2xl">
-  {/* Amber Glow - Repositioned for mobile visibility */}
-  <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-amber-500/10 blur-[60px] md:blur-[80px] rounded-full -mr-24 -mt-24 md:-mr-32 md:-mt-32"></div>
-  
-  <div className="relative z-10">
-    <div className="flex items-center gap-4 mb-8">
-      <div className="p-2.5 bg-amber-500 rounded-xl shadow-lg shadow-amber-500/20">
-        <FiAlertTriangle className="text-slate-900 text-lg md:text-xl" />
-      </div>
-      <h4 className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-[0.3em] md:tracking-[0.4em]">
-        Important <span className="text-amber-500">Submission</span> Notes
-      </h4>
-    </div>
-    
-    {/* Grid: 1 column on mobile, 2 on desktop */}
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 md:gap-y-5">
-      {[
-        "All documents must be original or certified copies",
-        "Documents should be submitted in a clear plastic folder",
-        "Incomplete applications will not be processed",
-        "Submit copies along with originals for verification"
-      ].map((note, i) => (
-        <div key={i} className="flex items-start gap-4 group">
-          {/* Bullet Point with subtle pulse for high visibility */}
-          <div className="relative mt-1.5 shrink-0">
-            <div className="w-2 h-2 rounded-full bg-amber-500 z-10 relative" />
-            <div className="absolute inset-0 w-2 h-2 rounded-full bg-amber-500 animate-ping opacity-20" />
-          </div>
-          
-          <p className="text-[12px] md:text-[13px] font-bold text-slate-400 leading-relaxed transition-colors group-hover:text-white">
-            {note}
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">
+            Essential paperwork for admission processing
           </p>
         </div>
-      ))}
+        
+        <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100">
+          <IoCheckmarkCircleOutline className="text-lg" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Mandatory Set</span>
+        </div>
+      </div>
+
+  {/* Document Cards Grid */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+  {(schoolData?.admissionDocumentsRequired?.length > 0 ? schoolData.admissionDocumentsRequired : [
+    "Original KCPE  or KPSEA or KJSEA Certificate",
+    "Birth Certificate",
+    "Passport Size Photos (4)",
+    "Medical Report",
+    "Transfer Letter (if applicable)",
+    "Previous School Reports"
+  ]).map((doc, index) => (
+    <div 
+      key={index}
+      className="relative bg-white border-2 border-slate-100 rounded-[1rem] p-4 sm:p-6 shadow-sm"
+    >
+      <div className="flex items-center gap-4">
+        {/* Icon & Counter */}
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <IoDocumentTextOutline className="text-emerald-600 text-xl" />
+          </div>
+          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[10px] font-black border-4 border-white">
+            {index + 1}
+          </div>
+        </div>
+        
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          <h4 className="font-black text-slate-900 text-sm leading-tight uppercase tracking-tight break-words">
+            {doc}
+          </h4>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase tracking-wider">
+              Required
+            </span>
+            {index === 0 && (
+              <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase tracking-wider">
+                Original
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
+  ))}
 </div>
-</div>
+
+      {/* Important Notes - Full-Screen Mobile Strategy */}
+      <div className="mt-8 md:mt-12 p-6 md:p-12 bg-slate-900 rounded-none md:rounded-[2.5rem] relative overflow-hidden border-y border-white/5 md:border shadow-2xl">
+        <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-amber-500/10 blur-[60px] md:blur-[80px] rounded-full -mr-24 -mt-24 md:-mr-32 md:-mt-32"></div>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="p-2.5 bg-amber-500 rounded-xl shadow-lg shadow-amber-500/20">
+              <FiAlertTriangle className="text-slate-900 text-lg md:text-xl" />
+            </div>
+            <h4 className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-[0.3em] md:tracking-[0.4em]">
+              Important <span className="text-amber-500">Submission</span> Notes
+            </h4>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 md:gap-y-5">
+            {[
+              "All documents must be original or certified copies",
+              "Documents should be submitted in a clear plastic folder",
+              "Incomplete applications will not be processed",
+              "Submit copies along with originals for verification"
+            ].map((note, i) => (
+              <div key={i} className="flex items-start gap-4 group">
+                <div className="relative mt-1.5 shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 z-10 relative" />
+                  <div className="absolute inset-0 w-2 h-2 rounded-full bg-amber-500 animate-ping opacity-20" />
+                </div>
+                
+                <p className="text-[12px] md:text-[13px] font-bold text-slate-400 leading-relaxed transition-colors group-hover:text-white">
+                  {note}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
 
 {/* Transfer Process - Modern Timeline Optimized for All Screens */}
 <div className="bg-slate-900 rounded-none md:rounded-[3rem] p-6 md:p-12 text-white relative overflow-hidden">
@@ -3023,56 +3021,6 @@ return (
          
             </div>
           )}
-
-{activeTab === 'fees' && (
-  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 md:space-y-12">
-    
-    {/* Layout shifts between 1 and 2 columns based on data availability */}
-    <div className={`grid gap-0 md:gap-12 ${
-      documentData?.feesDayDistributionJson?.length > 0 && documentData?.feesBoardingDistributionJson?.length > 0 
-      ? "lg:grid-cols-2" 
-      : "grid-cols-1"
-    }`}>
-      
-      {/* Boarding Section */}
-      {documentData?.feesBoardingDistributionJson?.length > 0 && (
-        <ModernFeeCard
-          variant="dark"
-          feeType="Boarding School"
-          total={documentData?.feesBoardingDistributionJson?.reduce((sum, i) => sum + (i.amount || 0), 0)}
-          distribution={documentData?.feesBoardingDistributionJson}
-          pdfPath={documentData?.feesBoardingDistributionPdf}
-          year={documentData?.feesBoardingYear || "2026"}
-          term={documentData?.feesBoardingTerm || "Term 1"}
-          icon={IoBookOutline}
-          badge="Full Board"
-        />
-      )}
-
-      {/* Day Section */}
-      {documentData?.feesDayDistributionJson?.length > 0 && (
-        <ModernFeeCard
-          variant="light"
-          feeType="Day School"
-          total={documentData?.feesDayDistributionJson?.reduce((sum, i) => sum + (i.amount || 0), 0)}
-          distribution={documentData?.feesDayDistributionJson}
-          pdfPath={documentData?.feesDayDistributionPdf}
-          year={documentData?.feesDayYear || "2026"}
-          term={documentData?.feesDayTerm || "Term 1"}
-          icon={FiHome}
-          badge="Standard"
-        />
-      )}
-    </div>
-
-    {/* Optional: Empty State */}
-    {!documentData?.feesDayDistributionJson?.length && !documentData?.feesBoardingDistributionJson?.length && (
-      <div className="p-20 text-center border-2 border-dashed border-slate-200 rounded-[2rem]">
-        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Fees Structure Not Available</p>
-      </div>
-    )}
-  </div>
-)}
 
 {activeTab === 'results' && (
   <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6 md:space-y-12">
