@@ -34,12 +34,12 @@ export const metadata = {
   metadataBase: new URL("https://katwanyaa.vercel.app"),
 
   title: {
-    default: "A.I.C Katwanyaa Senior High School",
-    template: "%s | Katwanyaa Senior High School",
+    default: "A.I.C Katwanyaa Senior School",
+    template: "%s | Katwanyaa Senior School",
   },
 
   description:
-    "The official website of A.I.C Katwanyaa Senior High School in Matungulu, Machakos County. Dedicated to academic excellence, Christian values, and holistic student development in Kenya.",
+    "The official website of A.I.C Katwanyaa Senior School in Matungulu, Machakos County. Dedicated to academic excellence, Christian values, and holistic student development in Kenya.",
   
   keywords: [
     "Katwanyaa Senior High School",
@@ -72,7 +72,7 @@ export const metadata = {
     
   ],
 
-  authors: [{ name: "A.I.C Katwanyaa Senior High School" }],
+  authors: [{ name: "A.I.C Katwanyaa Senior School" }],
   
   alternates: {
     canonical: "/",
@@ -80,7 +80,7 @@ export const metadata = {
 
   /* Open Graph (Social Media Sharing) */
   openGraph: {
-    title: "A.I.C Katwanyaa High School",
+    title: "A.I.C Katwanyaa School",
     description: "Official school website.",
     url: "https://katwanyaa.vercel.app",
     siteName: "Katwanyaa High School",
@@ -91,7 +91,7 @@ export const metadata = {
         url: "/katz.jpeg",
         width: 1200,
         height: 630,
-        alt: "A.I.C Katwanyaa Senior High School",
+        alt: "A.I.C Katwanyaa Senior School",
       },
     ],
   },
@@ -99,7 +99,7 @@ export const metadata = {
   /* Twitter Card */
   twitter: {
     card: "summary_large_image",
-    title: "A.I.C Katwanyaa Senior High School",
+    title: "A.I.C Katwanyaa Senior School",
     description: "Empowering students through education and faith in Machakos County.",
     images: ["/katz.jpeg"],
   },
@@ -134,8 +134,8 @@ export default function RootLayout({ children }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "School",
-    "name": "A.I.C Katwanyaa Senior High School",
-    "alternateName": "Katwanyaa High School",
+    "name": "A.I.C Katwanyaa Senior School",
+    "alternateName": "Katwanyaa Senior School",
     "url": "https://katwanyaa.vercel.app",
     "logo": "https://katwanyaa.vercel.app/katz.jpeg",
     "image": "https://katwanyaa.vercel.app/katz.jpeg",
