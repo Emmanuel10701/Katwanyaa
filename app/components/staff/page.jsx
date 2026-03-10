@@ -2444,7 +2444,7 @@ const handleSubmit = async (formData, id) => {
         <div className="h-10 w-1.5 bg-orange-500 rounded-full shadow-[0_0_20px_rgba(249,115,22,0.5)]" />
         <div>
           <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-orange-400">
-            katwanyaa High School 
+            Katwanyaa Senior School 
           </h2>
           <p className="text-[9px] italic font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
             "Education is Light"

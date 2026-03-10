@@ -227,7 +227,7 @@ export default function ModernFooter() {
                 
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight break-words">
-                 Katwanyaa High School 
+                 Katwanyaa Senior School 
                   </h3>
                   <div className="text-white text-sm font-medium flex items-center gap-2 mt-2 flex-wrap">
                     <FiTarget className="flex-shrink-0 w-4 h-4" />
@@ -442,7 +442,7 @@ export default function ModernFooter() {
           <div className="mt-12 lg:mt-16 pt-8 border-t border-gray-700">
             <div className="flex flex-col gap-6 w-full">
               <div className="text-gray-300 text-sm font-normal text-center break-words px-4">
-                <p>© {currentYear} Katwanyaa High School, Matungulu Machakos. All rights reserved.</p>
+                <p>© {currentYear} Katwanyaa Senior School, Matungulu Machakos. All rights reserved.</p>
               </div>
 
               <div className="flex items-center justify-center gap-4 sm:gap-6 text-sm font-normal flex-wrap">

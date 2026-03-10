@@ -1228,7 +1228,7 @@ setGrowthMetrics({
               <div className="h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
               <div>
                 <h2 className="text-xs font-black uppercase tracking-[0.3em] text-blue-400">
-                  Katwanyaa High School
+                  Katwanyaa Senior School
                 </h2>
                 <p className="text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
                   "Education is Light"
@@ -1723,7 +1723,7 @@ const StatCard = ({ icon: Icon, label, value, change, color, subtitle, trend }) 
                   <div className="h-6 w-1 bg-blue-500 rounded-full shadow-[0_0_12px_rgba(59,99,235,0.4)]" />
                   <div>
                     <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
-                      Katwanyaa High School
+                      Katwanyaa Senior School
                     </h2>
                     <p className="text-[9px] italic font-medium text-white/50 tracking-widest uppercase">
                       "Education is Light"

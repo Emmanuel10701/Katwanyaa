@@ -12,13 +12,13 @@ import {
 import { IoRocketOutline } from 'react-icons/io5';
 import { useRouter } from 'next/navigation';
 
-// Enhanced Hero Slides with Modern Design - Updated with accurate Katwanyaa High School in Matungulu information
+// Enhanced Hero Slides with Modern Design - Updated with accurate Katwanyaa Senior School in Matungulu information
 const heroSlides = [
   {
     title: "Katwanyaa senior School",
     subtitle: "Matungulu, Machakos County",
     gradient: "from-blue-500 via-cyan-400 to-purple-600",
-    description: "Katwanyaa High School is a public secondary school located in Matungulu sub-county, Machakos County, Kenya. The school is committed to providing quality education and holistic development to students from the region.",
+    description: "Katwanyaa Senior School is a public secondary school located in Matungulu sub-county, Machakos County, Kenya. The school is committed to providing quality education and holistic development to students from the region.",
     background: "bg-gradient-to-br from-blue-900/90 via-indigo-900/80 to-purple-900/70",
     image: "/hero/katz8.jpeg",
     stats: { 
@@ -56,7 +56,7 @@ const heroSlides = [
     title: "Community Partnership",
     subtitle: "Local Engagement",
     gradient: "from-cyan-500 via-blue-400 to-indigo-600",
-    description: "As a community-based institution in Matungulu, Katwanyaa High School works closely with parents and local stakeholders to provide relevant education that addresses community needs.",
+    description: "As a community-based institution in Matungulu, Katwanyaa Senior School works closely with parents and local stakeholders to provide relevant education that addresses community needs.",
     background: "bg-gradient-to-br from-cyan-900/90 via-blue-900/80 to-indigo-900/70",
     image: "/bg/14.jpeg",
     stats: { 

@@ -73,7 +73,7 @@ const staticCategories = {
   general: {
     name: "Overview",
     icon: 'school',
-    content: `🏫 A.I.C KATWANYAA HIGH SCHOOL
+    content: `🏫 A.I.C Katwanyaa Senior SCHOOL
 
 **A Public County School in Machakos**
 
@@ -322,7 +322,7 @@ Steps:
 • Admissions: katwanyaaschool@yahoo.com
 
 **Physical Address:**
-A.I.C Katwanyaa High School
+A.I.C Katwanyaa Senior School
 Kambusu, Matungulu Sub-County
 Machakos County
 P.O. Box 363 – 90131 Tala, Kenya
@@ -752,7 +752,7 @@ export default function ChatBot() {
   }, [schoolData, documentData]);
 
   const getWelcomeMessage = () => {
-    const schoolName = schoolData?.name || 'A.I.C KATWANYAA HIGH SCHOOL';
+    const schoolName = schoolData?.name || 'A.I.C Katwanyaa Senior SCHOOL';
     const motto = schoolData?.motto ? `\n\n**${schoolData.motto}** ✨` : '\n\n**Education is Light** ✨';
     const studentCount = schoolData?.studentCount || '1000+';
     const staffCount = schoolData?.staffCount || '50+';
@@ -931,7 +931,7 @@ ${schoolData ? 'For the most current information, choose a category below! 👇'
 
       <div className="min-w-0 flex flex-col">
         <h3 className="text-sm sm:text-base font-black text-white truncate leading-tight">
-          {schoolData?.name || 'Katwanyaa High School'}
+          {schoolData?.name || 'Katwanyaa Senior School'}
         </h3>
         <p className="text-blue-200 text-[10px] sm:text-xs truncate opacity-80 font-medium">
           {schoolData?.motto || 'Education is Light'}

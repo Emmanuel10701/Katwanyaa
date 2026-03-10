@@ -31,7 +31,7 @@ function getVerificationEmailTemplate(user, verificationCode) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Verification Code - Katwanyaa High School</title>
+      <title>Verification Code - Katwanyaa Senior School</title>
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f7fafc; padding: 20px; }
@@ -50,7 +50,7 @@ function getVerificationEmailTemplate(user, verificationCode) {
       <div class="container">
         <div class="header">
           <h1>🔐 Login Verification</h1>
-          <p>Katwanyaa High School Admin System</p>
+          <p>Katwanyaa Senior School Admin System</p>
         </div>
         <div class="content">
           <h2 style="color: #2d3748; margin-bottom: 10px;">Hello ${user.name},</h2>
@@ -70,7 +70,7 @@ function getVerificationEmailTemplate(user, verificationCode) {
           </p>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Katwanyaa High School. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Katwanyaa Senior School. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -137,7 +137,7 @@ async function sendVerificationEmail(user, verificationCode) {
   try {
     const mailOptions = {
       from: {
-        name: 'Katwanyaa High School Security',
+        name: 'Katwanyaa Senior School Security',
         address: process.env.EMAIL_USER
       },
       to: user.email,

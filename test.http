@@ -35,7 +35,7 @@ Content-Type: application/json
   "applicationDeadline": "2026-03-10",
   "contactEmail": "hr@katwanyaa.sch.ke",
   "contactPhone": "+254723456789",
-  "location": "Katwanyaa High School, Matungulu Sub County"
+  "location": "Katwanyaa Senior School, Matungulu Sub County"
 }
 
 ### 3. Create ICT Support Staff Job
@@ -55,7 +55,7 @@ Content-Type: application/json
   "applicationDeadline": "2026-03-20",
   "contactEmail": "ictsupport@katwanyaa.sch.ke",
   "contactPhone": "+254734567890",
-  "location": "Katwanyaa High School"
+  "location": "Katwanyaa Senior School"
 }
 
 ### 4. Create Guidance and Counseling Intern
@@ -75,7 +75,7 @@ Content-Type: application/json
   "applicationDeadline": "2026-02-28",
   "contactEmail": "guidance@katwanyaa.sch.ke",
   "contactPhone": "+254745678901",
-  "location": "Katwanyaa High School"
+  "location": "Katwanyaa Senior School"
 }
 
 ### 5. Create School Nurse (Part-time)

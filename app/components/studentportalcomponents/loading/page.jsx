@@ -43,7 +43,7 @@ export default function LoadingScreen() {
           {/* School Name with Gradient */}
           <div>
             <h2 className="md:text-3xl font-bold text-white mb-2 text-lg sm:text-3xl">
-              Katwanyaa High School
+              Katwanyaa Senior School
             </h2>
             <div className="h-1 w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>

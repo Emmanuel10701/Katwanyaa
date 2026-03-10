@@ -3481,7 +3481,7 @@ const confirmDeleteTeam = async () => {
           <div className="h-7 w-1 bg-gradient-to-b from-amber-500 via-yellow-500 to-orange-500 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400">
-              Katwanyaa High School
+              Katwanyaa Senior School
             </h2>
             <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
               Student Support Services

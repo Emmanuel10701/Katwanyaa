@@ -56,7 +56,7 @@ export default function NavigationSidebar({
                 <h2 className="font-bold text-gray-900 text-base sm:text-lg lg:text-xl truncate">
                   Student Portal
                 </h2>
-                <p className="text-gray-500 text-xs sm:text-sm truncate">Katwanyaa High </p>
+                <p className="text-gray-500 text-xs sm:text-sm truncate">Katwanyaa Senior </p>
               </div>
             </div>
             

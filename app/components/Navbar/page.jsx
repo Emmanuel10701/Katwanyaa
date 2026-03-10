@@ -222,7 +222,7 @@ export default function ModernNavbar() {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                 <Image
                   src="/katz.jpeg"
-                  alt="Katwanyaa High School Logo"
+                  alt="Katwanyaa Senior School Logo"
                   width={48}
                   height={48}
                   className="relative z-10 filter drop-shadow-sm group-hover:scale-100 transition-transform duration-300 w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14"

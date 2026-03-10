@@ -30,7 +30,7 @@ async function sendTest() {
 
         const response = await sms.send({
             to: [finalNumber],
-            message: `Katwanyaa High Test: ${new Date().toLocaleTimeString()}`,
+            message: `Katwanyaa Senior Test: ${new Date().toLocaleTimeString()}`,
             // NOTE: If in sandbox, 'from' must be omitted or be a registered shortcode
             // from: '20880' 
         });

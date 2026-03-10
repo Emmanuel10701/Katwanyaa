@@ -705,7 +705,7 @@ const TeamMemberModal = ({ member, isOpen, onClose }) => {
             {activeTab === 'overview' && (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <p className="text-slate-600 text-xs sm:text-base leading-relaxed">
-                  {member.bio || `Dedicated ${roleStyle.label} at Katwanyaa High.`}
+                  {member.bio || `Dedicated ${roleStyle.label} at Katwanyaa Senior.`}
                 </p>
               </div>
             )}
@@ -1472,7 +1472,7 @@ if (loading) {
         <div className="h-10 w-1.5 bg-purple-500 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.5)]" />
         <div>
           <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-purple-400">
-            Katwanyaa High School
+            Katwanyaa Senior School
           </h2>
           <p className="text-[9px] italic font-bold text-white/40 tracking-[0.2em] uppercase mt-1">
             Student Support Services

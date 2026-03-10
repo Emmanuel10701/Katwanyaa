@@ -1130,7 +1130,7 @@ const handleSaveAdmin = async (e) => {
           <div className="h-8 w-1 bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">
-              Katwanyaa High School
+              Katwanyaa Senior School
             </h2>
             <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
               Central Authority Hub

@@ -2282,7 +2282,7 @@ export default function ComprehensiveAdmissions() {
         <div className="h-8 md:h-10 w-1 bg-blue-500 rounded-full shadow-[0_0_10px_rgba(59,99,235,0.5)]" />
         <div className="flex flex-col min-w-0"> {/* min-w-0 allows truncation/proper flex shrinking */}
           <h2 className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.3em] text-blue-400 leading-tight truncate">
-            {schoolData?.name || 'Katwanyaa High School School'}
+            {schoolData?.name || 'Katwanyaa Senior School School'}
           </h2>
           <p className="text-[8px] md:text-[9px] font-bold text-white/40 tracking-[0.1em] sm:tracking-[0.2em] uppercase mt-0.5 sm:mt-1 italic">
             "Education is Light "
@@ -2371,7 +2371,7 @@ return (
           </h3>
           <p className={`text-[11px] md:text-sm font-bold leading-snug mt-1 ${isOpen ? 'text-emerald-100' : 'text-slate-400'}`}>
             {isOpen 
-              ? 'Join Katwanyaa High School for the upcoming academic year.' 
+              ? 'Join Katwanyaa Senior School for the upcoming academic year.' 
               : 'The application window has officially ended for this period.'}
           </p>
         </div>
@@ -2518,7 +2518,7 @@ return (
         <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">SChool Profile</span>
       </div>
       <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tighter leading-[1.1]">
-        Why <span className="text-blue-600 whitespace-nowrap">Katwanyaa High School?</span>
+        Why <span className="text-blue-600 whitespace-nowrap">Katwanyaa Senior School?</span>
       </h2>
     </div>
     
@@ -2606,7 +2606,7 @@ return (
             Academic <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Programs</span>
           </h2>
        <p className="text-slate-600 text-md md:text-lg font-medium leading-relaxed ">
-  Katwanyaa High School offers a future-ready, holistic curriculum 
+  Katwanyaa Senior School offers a future-ready, holistic curriculum 
   specifically designed to cultivate critical thinking, academic excellence, 
   and global leadership. We empower our students to navigate the complexities 
   of the modern world with integrity, innovation, and a commitment to excellence.

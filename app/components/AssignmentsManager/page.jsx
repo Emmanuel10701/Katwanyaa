@@ -2406,7 +2406,7 @@ export default function AssignmentsManager() {
                           rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-200">
-              Katwanyaa High School
+              Katwanyaa Senior School
             </h2>
             <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
               Academic Tasks

@@ -3,11 +3,11 @@ import { prisma } from '../../../libs/prisma';
 import nodemailer from 'nodemailer';
 
 // School Information
-const SCHOOL_NAME = 'Katwanyaa High School';
+const SCHOOL_NAME = 'Katwanyaa Senior School';
 const SCHOOL_LOCATION = 'Matungulu, Machakos County';
 const SCHOOL_MOTTO = 'Education is Light';
 const CONTACT_PHONE = '+254720123456';
-const CONTACT_EMAIL = 'info@katwanyaa highSchool.sc.ke';
+const CONTACT_EMAIL = 'info@Katwanyaa SeniorSchool.sc.ke';
 
 // Email Templates
 const emailTemplates = {

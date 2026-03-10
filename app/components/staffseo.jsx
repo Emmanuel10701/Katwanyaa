@@ -39,7 +39,7 @@ export default function StaffProfilePage() {
   const [showShareModal, setShowShareModal] = useState(false);
 
   // School description - mobile shortened version
-  const schoolDescription = "Katwanyaa High School provides exceptional education through trained professionals dedicated to holistic student development and academic excellence.";
+  const schoolDescription = "Katwanyaa Senior School provides exceptional education through trained professionals dedicated to holistic student development and academic excellence.";
 
 // In the transformStaffData function, update the image handling:
 const transformStaffData = (apiData) => {
@@ -94,7 +94,7 @@ const transformStaffData = (apiData) => {
     email: apiData.email || '',
     phone: apiData.phone || '',
     image: getImageUrl(apiData.image), // Use the helper function
-    bio: apiData.bio || `A committed educator at Katwanyaa High School with a passion for student success and educational excellence.`,
+    bio: apiData.bio || `A committed educator at Katwanyaa Senior School with a passion for student success and educational excellence.`,
     expertise: expertise,
     responsibilities: responsibilities,
     achievements: achievements,
@@ -148,8 +148,8 @@ const transformStaffData = (apiData) => {
   const SeoHead = () => {
     if (!staff) return null;
     
-    const profileTitle = `${staff.name} - ${staff.position} at Katwanyaa High School`;
-    const profileDescription = staff.bio || `Meet ${staff.name}, ${staff.position} at Katwanyaa High School. ${schoolDescription}`;
+    const profileTitle = `${staff.name} - ${staff.position} at Katwanyaa Senior School`;
+    const profileDescription = staff.bio || `Meet ${staff.name}, ${staff.position} at Katwanyaa Senior School. ${schoolDescription}`;
     const profileUrl = typeof window !== 'undefined' ? window.location.href : `https://katwanyaahighschool.edu.ke/staff/${staff.id}`;
     
     return (
@@ -157,8 +157,8 @@ const transformStaffData = (apiData) => {
         <title>{profileTitle}</title>
         <meta name="title" content={profileTitle} />
         <meta name="description" content={profileDescription} />
-        <meta name="keywords" content={`${staff.name}, ${staff.position}, Katwanyaa High School, teacher profile, ${staff.department}`} />
-        <meta name="author" content="Katwanyaa High School" />
+        <meta name="keywords" content={`${staff.name}, ${staff.position}, Katwanyaa Senior School, teacher profile, ${staff.department}`} />
+        <meta name="author" content="Katwanyaa Senior School" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="profile" />
@@ -166,7 +166,7 @@ const transformStaffData = (apiData) => {
         <meta property="og:title" content={profileTitle} />
         <meta property="og:description" content={profileDescription} />
         <meta property="og:image" content={staff.image} />
-        <meta property="og:site_name" content="Katwanyaa High School" />
+        <meta property="og:site_name" content="Katwanyaa Senior School" />
         <meta property="profile:first_name" content={staff.name.split(' ')[0]} />
         <meta property="profile:last_name" content={staff.name.split(' ').slice(1).join(' ')} />
         
@@ -189,7 +189,7 @@ const transformStaffData = (apiData) => {
               "jobTitle": staff.position,
               "worksFor": {
                 "@type": "EducationalOrganization",
-                "name": "Katwanyaa High School",
+                "name": "Katwanyaa Senior School",
                 "description": schoolDescription,
                 "url": "https://katwanyaahighschool.edu.ke"
               },
@@ -211,7 +211,7 @@ const ShareModal = () => {
   if (!showShareModal || !staff) return null;
 
   const profileUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = `Check out ${staff.name}'s profile - ${staff.position} at Katwanyaa High School `;
+  const shareText = `Check out ${staff.name}'s profile - ${staff.position} at Katwanyaa Senior School `;
   
   const handleCopy = async () => {
     await navigator.clipboard.writeText(profileUrl);
@@ -300,7 +300,7 @@ const ShareModal = () => {
         </div>
         
         <div className="bg-slate-50 p-4 text-center">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Katwanyaa High School</p>
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Katwanyaa Senior School</p>
         </div>
       </div>
     </div>
@@ -337,7 +337,7 @@ if (loading) {
           ))}
         </div>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-[200px] leading-relaxed">
-          Katwanyaa High School  Professional Directory
+          Katwanyaa Senior School  Professional Directory
         </p>
       </div>
 
@@ -401,11 +401,11 @@ if (loading) {
                 <FaGraduationCap className="text-white text-xs sm:text-sm" />
               </div>
               <span className="font-bold text-gray-800 text-xs sm:text-sm hidden xs:block sm:hidden md:block">
-                Katwanyaa High School
+                Katwanyaa Senior School
               </span>
               <span className="font-bold text-gray-800 hidden sm:block md:hidden">KHS</span>
               <span className="font-bold text-gray-800 hidden md:block lg:hidden">Katwanyaa</span>
-              <span className="font-bold text-gray-800 hidden lg:block">Katwanyaa High School</span>
+              <span className="font-bold text-gray-800 hidden lg:block">Katwanyaa Senior School</span>
             </div>
 
             <div className="flex gap-1 sm:gap-2">
@@ -444,7 +444,7 @@ className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray
       {/* School Badge - responsive sizing */}
       <div className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 bg-white/10 backdrop-blur-md px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-full border border-white/20">
         <span className="text-white text-[10px] sm:text-xs lg:text-sm font-medium tracking-wide whitespace-nowrap">
-          🏫 Katwanyaa High School
+          🏫 Katwanyaa Senior School
         </span>
       </div>
     </div>
@@ -710,7 +710,7 @@ className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray
         <div className="flex items-center gap-1.5 text-[8px] sm:text-[10px] lg:text-xs text-gray-400">
           <span className="whitespace-nowrap">Updated 2024</span>
           <span className="w-0.5 h-0.5 sm:w-1 sm:h-1 bg-gray-300 rounded-full"></span>
-          <span className="whitespace-nowrap">Katwanyaa High School</span>
+          <span className="whitespace-nowrap">Katwanyaa Senior School</span>
         </div>
       </div>
     </div>
@@ -733,7 +733,7 @@ className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray
         
         <div className="mt-6 text-center">
           <h4 className="font-black text-slate-900 text-sm sm:text-lg uppercase tracking-[0.3em] leading-none mb-2">
-            Katwanyaa High School
+            Katwanyaa Senior School
           </h4>
           <div className="flex items-center justify-center gap-2">
             <div className="h-px w-4 bg-blue-600/30" />
@@ -756,7 +756,7 @@ className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 sm:bg-gradient-to-br sm:from-gray
         </p>
         <div className="w-1 h-1 rounded-full bg-slate-200" />
         <p className="text-[10px] sm:text-xs font-black uppercase tracking-tighter text-slate-300">
-          © {new Date().getFullYear()} Katwanyaa High School
+          © {new Date().getFullYear()} Katwanyaa Senior School
         </p>
       </div>
 

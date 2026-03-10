@@ -90,7 +90,7 @@ export default function MapComponent() {
             <Popup className="custom-popup">
               <div className="p-1 max-w-[180px]">
                 <h3 className="font-bold text-gray-900 text-xs sm:text-sm">
-                  Katwanyaa High School
+                  Katwanyaa Senior School
                 </h3>
                 <p className="text-[10px] text-gray-500 mt-1 mb-2">
                   Tala-Kambusu Road, Machakos

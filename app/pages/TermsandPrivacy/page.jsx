@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 
-// Data for all terms and conditions with detailed descriptions for Katwanyaa High School
+// Data for all terms and conditions with detailed descriptions for Katwanyaa Senior School
 
 
 const allTerms = [
   { 
     id: 1,
     title: "1. School Registration and Enrollment",
-    intro: "Katwanyaa High School maintains rigorous standards for student enrollment to ensure academic excellence and maintain our reputation as a leading educational institution.",
+    intro: "Katwanyaa Senior School maintains rigorous standards for student enrollment to ensure academic excellence and maintain our reputation as a leading educational institution.",
     subSections: [
       { subTitle: "1.1. Eligibility Criteria:", content: "Admission is open to students who have completed primary education (Class 8) and attained the minimum required KCPE score as determined by the school board annually." },
       { subTitle: "1.2. Documentation Required:", content: "Original birth certificate, KCPE result slip, transfer letter (if applicable), medical records, and four passport-sized photographs must be submitted during registration." },
@@ -19,7 +19,7 @@ const allTerms = [
   { 
     id: 2,
     title: "2. Academic Requirements and Expectations",
-    intro: "Katwanyaa High School is committed to academic excellence and expects students to maintain high standards of academic performance and conduct.",
+    intro: "Katwanyaa Senior School is committed to academic excellence and expects students to maintain high standards of academic performance and conduct.",
     subSections: [
       { subTitle: "2.1. Minimum Attendance:", content: "Students must maintain at least 85% attendance in all subjects. Medical certificates must be provided for any absence exceeding two days." },
       { subTitle: "2.2. Academic Performance:", content: "Students must maintain a minimum grade of C- in all subjects. Those failing two or more subjects will be placed on academic probation with mandatory remedial classes." },
@@ -39,7 +39,7 @@ const allTerms = [
   { 
     id: 4,
     title: "4. Code of Conduct and Discipline",
-    intro: "Katwanyaa High School maintains high standards of discipline to create a conducive learning environment for all students.",
+    intro: "Katwanyaa Senior School maintains high standards of discipline to create a conducive learning environment for all students.",
     subSections: [
       { subTitle: "4.1. School Uniform:", content: "Complete school uniform must be worn at all times during school hours. Uniform includes prescribed shoes, socks, tie, and badge. No alterations allowed." },
       { subTitle: "4.2. Prohibited Items:", content: "Mobile phones, electronic devices, drugs, alcohol, tobacco products, weapons, and inappropriate literature are strictly prohibited on school premises." },
@@ -198,13 +198,13 @@ export default function TermsAndConditions() {
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">KH</span>
                 </div>
-                <span className="text-sm font-bold text-blue-900 uppercase tracking-wider">Katwanyaa High School</span>
+                <span className="text-sm font-bold text-blue-900 uppercase tracking-wider">Katwanyaa Senior School</span>
               </div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 mb-2 leading-tight">
                 School Rules & Regulations
               </h1>
               <p className="text-sm sm:text-base text-slate-600 max-w-2xl">
-                Official policies and guidelines governing student conduct, academics, and school operations at Katwanyaa High School
+                Official policies and guidelines governing student conduct, academics, and school operations at Katwanyaa Senior School
               </p>
             </div>
             
@@ -452,7 +452,7 @@ export default function TermsAndConditions() {
           
           <div className="text-center mt-8">
             <p className="text-xs text-slate-500">
-              © 2024 Katwanyaa High School. All rights reserved. 
+              © 2024 Katwanyaa Senior School. All rights reserved. 
               <span className="block mt-1">For queries, contact: principal@katwanyaa.sc.ke | Tel: +254 712 345 678</span>
             </p>
           </div>

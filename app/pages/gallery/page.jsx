@@ -87,7 +87,7 @@ const ModernHeroBanner = ({ stats, onRefresh }) => {
               <div className="h-6 sm:h-8 w-1 bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,99,235,0.5)]" />
               <div>
                 <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-blue-400">
-                 Katwanyaa High School
+                 Katwanyaa Senior School
                 </h2>
                 <p className="text-[8px] sm:text-[10px] italic font-medium text-white/60 tracking-widest uppercase">
                   "Education is Light"               
@@ -1393,7 +1393,7 @@ if (loading) {
             Loading school galleries...
           </p>
           <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-widest mt-1 font-bold">
-            Katwanyaa High School
+            Katwanyaa Senior School
           </p>
         </div>
       </Stack>

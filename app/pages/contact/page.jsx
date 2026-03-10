@@ -285,7 +285,7 @@ export default function ContactPage() {
 
           {/* Modern High-Density Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-white mb-8 tracking-tight leading-[0.95]">
-            Katwanyaa High <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 via-orange-300 to-white/70">school.</span>
+            Katwanyaa Senior <span className="text-transparent bg-clip-text bg-gradient-to-br from-amber-400 via-orange-300 to-white/70">school.</span>
           </h1>
 
           {/* Rich Narrative Description */}

@@ -1447,7 +1447,7 @@ const EmptyState = () => (
                           rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-200">
-              Katwanyaa High School            </h2>
+              Katwanyaa Senior School            </h2>
             <p className="text-[9px] italic font-medium text-white/40 tracking-widest uppercase">
               Student Support Services
             </p>

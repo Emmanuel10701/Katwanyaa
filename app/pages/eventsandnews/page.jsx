@@ -1160,7 +1160,7 @@ if (loading) {
             Updating news & events...
           </p>
           <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-widest mt-1 font-bold">
-            Katwanyaa High School
+            Katwanyaa Senior School
           </p>
         </div>
       </Stack>
@@ -1201,7 +1201,7 @@ if (loading) {
               School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-purple-400">Events & News</span>
             </h1>
             <p className="text-slate-400 text-xs sm:text-lg mt-2 font-medium leading-relaxed max-w-2xl opacity-80">
-              Stay updated with the heartbeat and happenings at Katwanyaa High.
+              Stay updated with the heartbeat and happenings at Katwanyaa Senior.
             </p>
           </div>
 

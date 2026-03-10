@@ -441,7 +441,7 @@ const router = useRouter();
                   Loading fee structure...
                 </p>
                 <p className="text-slate-400 text-[10px] sm:text-xs uppercase tracking-widest mt-1 font-bold">
-                  Katwanyaa High School
+                  Katwanyaa Senior School
                 </p>
               </div>
             </Stack>
@@ -479,7 +479,7 @@ const router = useRouter();
                   School <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-purple-400">Fees</span>
                 </h1>
                 <p className="text-slate-400 text-sm sm:text-lg mt-2 font-medium max-w-2xl">
-                  Transparent fee structure for all programs at Katwanyaa High School.
+                  Transparent fee structure for all programs at Katwanyaa Senior School.
                 </p>
               </div>
               
@@ -739,7 +739,7 @@ const router = useRouter();
                   <IoReceiptOutline className="text-purple-600 flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5" />
                   <div className="min-w-0">
                     <p className="text-[8px] sm:text-xs font-bold text-slate-400">Account Name</p>
-                    <p className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-900 truncate">Katwanyaa High School</p>
+                    <p className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-900 truncate">Katwanyaa Senior School</p>
                   </div>
                 </div>
               </div>

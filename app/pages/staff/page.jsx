@@ -439,7 +439,7 @@ const StaffCard = ({ staff }) => {
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
           <span className="flex items-center gap-1">
             <FiMapPin size={12} className="text-blue-500" />
-            {staff.location || 'Katwanyaa High School'}
+            {staff.location || 'Katwanyaa Senior School'}
           </span>
           <span className="flex items-center gap-1">
             <FiCalendar size={12} className="text-indigo-500" />
@@ -576,7 +576,7 @@ export default function StaffDirectory() {
           bio: staff.bio,
           responsibilities: staff.responsibilities || [],
           achievements: staff.achievements || [],
-          location: 'Katwanyaa High School',
+          location: 'Katwanyaa Senior School',
           joinDate: '2020'
         }));
         

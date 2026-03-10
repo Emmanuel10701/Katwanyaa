@@ -371,7 +371,7 @@ export default function AdminDashboard() {
             <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center overflow-hidden">
               <img 
                 src="/katz.jpeg" 
-                alt="Katwanyaa High School Logo" 
+                alt="Katwanyaa Senior School Logo" 
                 className="w-full h-full object-contain p-2"
               />
             </div>
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
         <div className="text-center space-y-4 md:space-y-6 px-2">
           <div>
             <h2 className="text-xl md:text-3xl font-bold text-white mb-2 leading-tight">
-              Katwanyaa High School
+              Katwanyaa Senior School
             </h2>
             <div className="h-1 w-32 md:w-48 mx-auto bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
           </div>

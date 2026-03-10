@@ -28,30 +28,30 @@ export async function generateMetadata({ params }) {
   if (!staff) {
     // Return generic metadata that works for all staff pages
     return {
-      title: "Staff Profile | Katwanyaa High School",
-      description: "Meet our dedicated educators and staff members at Katwanyaa High School",
+      title: "Staff Profile | Katwanyaa Senior School",
+      description: "Meet our dedicated educators and staff members at Katwanyaa Senior School",
       openGraph: {
-        title: "Staff Profile | Katwanyaa High School",
+        title: "Staff Profile | Katwanyaa Senior School",
         description: "Professional educators dedicated to student success",
         images: [
           {
             url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://katwanyaa.vercel.app'}/katz.jpeg`,
             width: 1200,
             height: 630,
-            alt: 'Katwanyaa High School Staff'
+            alt: 'Katwanyaa Senior School Staff'
           }
         ],
       },
       twitter: {
         card: 'summary_large_image',
-        title: "Staff Profile | Katwanyaa High School",
+        title: "Staff Profile | Katwanyaa Senior School",
         description: "Professional educators dedicated to student success",
       }
     };
   }
 
-  const title = `${staff.name} | ${staff.position} | Katwanyaa High School`;
-  const description = staff.bio || `Meet ${staff.name}, a dedicated ${staff.position} at Katwanyaa High School specializing in ${staff.department}.`;
+  const title = `${staff.name} | ${staff.position} | Katwanyaa Senior School`;
+  const description = staff.bio || `Meet ${staff.name}, a dedicated ${staff.position} at Katwanyaa Senior School specializing in ${staff.department}.`;
   
   // Fix the image URL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://katwanyaa.vercel.app';
